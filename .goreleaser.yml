@@ -63,4 +63,4 @@ release:
   disable: false
   github:
     owner: cld9x
-    name: test
+    name: xbvr
