@@ -1,0 +1,12 @@
+/.idea
+.DS_Store
+
+npm-debug.log
+yarn-error.log
+go.sum
+test.db
+
+/dist/
+/node_modules/
+/xbase/assets/
+/ui/public/static/bundle.*

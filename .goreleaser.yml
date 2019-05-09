@@ -1,0 +1,66 @@
+before:
+  hooks:
+    - go mod download
+    - go get github.com/UnnoTed/fileb0x
+    - go get github.com/go-bindata/go-bindata
+    - go generate ./...
+builds:
+- id: xbvr-mac
+  binary: xbvr
+  env:
+    - CGO_ENABLED=1
+    - CC=o64-clang
+    - CXX=o64-clang++
+  goos:
+    - darwin
+  goarch:
+    - amd64
+- id: xbvr-windows
+  binary: xbvr
+  env:
+    - CGO_ENABLED=1
+    - CC=x86_64-w64-mingw32-gcc
+    - CXX=x86_64-w64-mingw32-g++
+  goos:
+    - windows
+  goarch:
+    - amd64
+- id: xbvr-linux-amd64
+  binary: xbvr
+  env:
+    - CGO_ENABLED=1
+  goos:
+    - linux
+  goarch:
+    - amd64
+- id: xbvr-linux-arm
+  binary: xbvr
+  env:
+    - CGO_ENABLED=1
+    - CC=arm-linux-gnueabi-gcc
+  goos:
+    - linux
+  goarch:
+    - arm
+  goarm:
+    - 6
+    - 7
+archives:
+- replacements:
+    darwin: macOS
+    linux: Linux
+    windows: Windows
+    amd64: x86_64
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+release:
+  disable: false
+  github:
+    owner: cld9x
+    name: test

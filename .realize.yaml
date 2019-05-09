@@ -1,0 +1,32 @@
+settings:
+  legacy:
+    force: false
+    interval: 0s
+server:
+  status: true
+  open: false
+  host: localhost
+  port: 5001
+schema:
+- name: xbvr
+  env:
+    DEBUG: 1
+  path: .
+  commands:
+    generate:
+      status: true
+    run:
+      status: true
+  args:
+  - run
+  watcher:
+    extensions:
+    - go
+    paths:
+    - /
+    ignore:
+      paths:
+      - .git
+      - .realize
+      - node_modules/
+      - ui/

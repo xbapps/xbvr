@@ -1,0 +1,37 @@
+kind: pipeline
+name: default
+
+workspace:
+  base: /go
+  path: appsrc/
+
+steps:
+  - name: fetch
+    image: docker:git
+    when:
+      event:
+        - tag
+    commands:
+        - git fetch --tags
+
+  - name: ui
+    image: node
+    when:
+      event:
+        - tag
+    commands:
+      - cd ui
+      - yarn install
+      - yarn build
+
+  - name: build
+    image: mailchain/goreleaser-xcgo:latest
+    environment:
+      GITHUB_TOKEN:
+        from_secret: GITHUB_TOKEN
+    when:
+      event:
+        - tag
+    commands:
+      - apt-get update && apt-get install -y gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
+      - goreleaser --skip-validate --rm-dist

@@ -1,0 +1,19 @@
+pkg = "assets"
+dest = "./xbase/assets/"
+fmt = false
+
+[compression]
+compress = true
+method = "DefaultCompression"
+keep = false
+
+clean = false
+output = "ab0x.go"
+unexporTed = false
+spread = false
+debug = true
+
+[[custom]]
+files = ["./ui/public/"]
+base = "./ui/public/"
+exclude = [".DS_Store"]
