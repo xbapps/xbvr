@@ -18,6 +18,7 @@ require (
 	github.com/djherbis/times v1.2.0
 	github.com/emicklei/go-restful v2.9.3+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
+	github.com/gammazero/nexus v2.1.1-0.20190402111811-fce688586772+incompatible
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
 	github.com/getlantern/errors v0.0.0-20180829142810-e24b7f4ff7c7 // indirect
 	github.com/getlantern/golog v0.0.0-20170508214112-cca714f7feb5 // indirect
@@ -40,6 +41,7 @@ require (
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
 	github.com/gorilla/mux v1.6.2
+	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/gowww/log v0.0.0-20170712202755-af3772f4bb12
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
 	github.com/imdario/mergo v0.3.7 // indirect
@@ -47,6 +49,7 @@ require (
 	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/kamilsk/retry/v4 v4.1.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
+	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pty v1.1.4 // indirect
 	github.com/labstack/echo v3.3.10+incompatible
@@ -78,6 +81,7 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
 	github.com/thoas/go-funk v0.4.0
+	github.com/ugorji/go v1.1.4 // indirect
 	github.com/vansante/go-ffprobe v1.0.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	golang.org/x/crypto v0.0.0-20190506204251-e1dfcc566284 // indirect

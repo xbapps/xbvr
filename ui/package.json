@@ -25,6 +25,7 @@
     "svelte-routing": "1.0.0",
     "svero": "0.4.3",
     "videojs-hotkeys": "0.2.25",
-    "videojs-vr": "1.5.0"
+    "videojs-vr": "1.5.0",
+    "wampy": "6.2.1"
   }
 }
