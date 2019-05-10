@@ -20,13 +20,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/anacrolix/ffprobe"
 	"github.com/cld9x/xbvr/dms/dlna"
 	"github.com/cld9x/xbvr/dms/soap"
 	"github.com/cld9x/xbvr/dms/ssdp"
 	"github.com/cld9x/xbvr/dms/transcode"
 	"github.com/cld9x/xbvr/dms/upnp"
 	"github.com/cld9x/xbvr/dms/upnpav"
-	"github.com/anacrolix/ffprobe"
 )
 
 const (
@@ -214,7 +214,7 @@ type Icon struct {
 	io.ReadSeeker
 }
 
-type 	Server struct {
+type Server struct {
 	HTTPConn       net.Listener
 	FriendlyName   string
 	Interfaces     []net.Interface
@@ -522,8 +522,8 @@ func (me *Server) serviceControlHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//AwoX/1.1 UPnP/1.0 DLNADOC/1.50
-	//log.Println(r.UserAgent())
+	// AwoX/1.1 UPnP/1.0 DLNADOC/1.50
+	// log.Println(r.UserAgent())
 	w.Header().Set("Content-Type", `text/xml; charset="utf-8"`)
 	w.Header().Set("Ext", "")
 	w.Header().Set("Server", serverField)
@@ -554,20 +554,20 @@ func (me *Server) serveIcon(w http.ResponseWriter, r *http.Request) {
 	sceneId := r.URL.Query().Get("scene")
 	data := XbaseGetScene(sceneId)
 
-	read, write := io.Pipe()
+	fmt.Println(sceneId)
 
-	go func() {
-		defer write.Close()
-		resp, err := http.Get("http://127.0.0.1:9999/img/700x/" + strings.Replace(data.CoverURL, "://", ":/", -1))
-		if err != nil {
-			return
-		}
-		defer resp.Body.Close()
-		io.Copy(write, resp.Body)
+	resp, err := http.Get("http://127.0.0.1:9999/img/700x/" + strings.Replace(data.CoverURL, "://", ":/", -1))
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
 
-	}()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
 
-	io.Copy(w, read)
+	http.ServeContent(w, r, "", time.Now(), bytes.NewReader(bodyBytes))
 }
 
 func (server *Server) contentDirectoryInitialEvent(urls []*url.URL, sid string) {

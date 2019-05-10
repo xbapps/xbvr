@@ -230,19 +230,6 @@ func (me *contentDirectoryService) sceneToContainer(scene XbaseScene, parent str
 		Res:    make([]upnpav.Resource, 0, 2),
 	}
 
-	item.Res = append(item.Res, upnpav.Resource{
-		URL: (&url.URL{
-			Scheme: "http",
-			Host:   host,
-			Path:   iconPath,
-			RawQuery: url.Values{
-				"scene": {scene.SceneID},
-				"c":     {"jpeg"},
-			}.Encode(),
-		}).String(),
-		ProtocolInfo: "http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN",
-	})
-
 	file := scene.File[0]
 	mimeType := "video/mp4"
 
@@ -262,6 +249,19 @@ func (me *contentDirectoryService) sceneToContainer(scene XbaseScene, parent str
 		// Duration:   resDuration,
 		Size: uint64(file.Size),
 		// Resolution: resolution,
+	})
+
+	item.Res = append(item.Res, upnpav.Resource{
+		URL: (&url.URL{
+			Scheme: "http",
+			Host:   host,
+			Path:   iconPath,
+			RawQuery: url.Values{
+				"scene": {scene.SceneID},
+				"c":     {"jpeg"},
+			}.Encode(),
+		}).String(),
+		ProtocolInfo: "http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN",
 	})
 
 	return item

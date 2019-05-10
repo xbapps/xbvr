@@ -1,4 +1,4 @@
-//+build !unix,!windows
+// +build !unix,!windows
 
 package dms
 

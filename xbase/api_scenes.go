@@ -104,7 +104,7 @@ func (i SceneResource) getFiltersForState(req *restful.Request, resp *restful.Re
 		}
 	}
 
-	if req.QueryParameter("is_available") != "" {
+	if req.QueryParameter("is_accessible") != "" {
 		q_is_accessible, err := strconv.ParseBool(req.QueryParameter("is_accessible"))
 		if err == nil {
 			tx = tx.Where("is_accessible = ?", q_is_accessible)
@@ -181,7 +181,7 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		}
 	}
 
-	if req.QueryParameter("is_available") != "" {
+	if req.QueryParameter("is_accessible") != "" {
 		q_is_accessible, err := strconv.ParseBool(req.QueryParameter("is_accessible"))
 		if err == nil {
 			tx = tx.Where("is_accessible = ?", q_is_accessible)
