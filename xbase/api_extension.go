@@ -5,28 +5,11 @@ import (
 	"strings"
 
 	"github.com/araddon/dateparse"
+	"github.com/cld9x/xbvr/xbase/scrape"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
 )
-
-type ExtScene struct {
-	SceneID     string   `json:"_id"`
-	SiteID      string   `json:"scene_id"`
-	SceneType   string   `json:"scene_type"`
-	Title       string   `json:"title"`
-	Studio      string   `json:"studio"`
-	Site        string   `json:"site"`
-	Covers      []string `json:"covers"`
-	Gallery     []string `json:"gallery"`
-	Tags        []string `json:"tags"`
-	Cast        []string `json:"cast"`
-	Filenames   []string `json:"filename"`
-	Duration    int      `json:"duration"`
-	Synopsis    string   `json:"synopsis"`
-	Released    string   `json:"released"`
-	HomepageURL string   `json:"homepage_url"`
-}
 
 type ExtSceneResponse struct {
 	Status string      `json:"status"`
@@ -54,7 +37,7 @@ func (i ExtResource) WebService() *restful.WebService {
 
 	ws.Route(ws.POST("/scene").To(i.createScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(ExtScene{}).
+		Reads(scrape.ScrapedScene{}).
 		Writes(ExtSceneResponse{}).
 		Returns(http.StatusCreated, "Created", Scene{}).
 		Returns(http.StatusConflict, "Already exist", ExtSceneResponse{}))
@@ -77,7 +60,7 @@ func (i ExtResource) checkScene(req *restful.Request, resp *restful.Response) {
 	err := localScene.GetIfExist(id)
 
 	// Output
-	out := ExtScene{}
+	out := scrape.ScrapedScene{}
 	SceneToExt(localScene, &out)
 
 	if err == gorm.ErrRecordNotFound {
@@ -89,7 +72,7 @@ func (i ExtResource) checkScene(req *restful.Request, resp *restful.Response) {
 }
 
 func (i ExtResource) createScene(req *restful.Request, resp *restful.Response) {
-	obj := ExtScene{}
+	obj := scrape.ScrapedScene{}
 	err := req.ReadEntity(&obj)
 	if err != nil {
 		APIError(req, resp, http.StatusInternalServerError, err)
@@ -101,7 +84,7 @@ func (i ExtResource) createScene(req *restful.Request, resp *restful.Response) {
 	err = localScene.GetIfExist(obj.SceneID)
 
 	// Output
-	// out := ExtScene{}
+	// out := ScrapedScene{}
 	// SceneToExt(localScene, &out)
 	// if err == nil {
 	// 	resp.WriteHeaderAndEntity(http.StatusConflict, ExtSceneResponse{Status: "exist", Scene: out})
@@ -184,7 +167,7 @@ func (i ExtResource) createScene(req *restful.Request, resp *restful.Response) {
 	resp.WriteHeader(http.StatusOK)
 }
 
-func SceneToExt(in Scene, out *ExtScene) {
+func SceneToExt(in Scene, out *scrape.ScrapedScene) {
 	out.SceneID = in.SceneID
 	out.SiteID = ""
 	out.SceneType = in.SceneType

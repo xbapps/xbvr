@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cld9x/xbvr/xbase"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
+	"github.com/thoas/go-funk"
 )
 
-func ScrapeBadoink() {
+func ScrapeBadoink(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -38,7 +38,7 @@ func ScrapeBadoink() {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := xbase.ExtScene{}
+		sc := ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Badoink"
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
@@ -126,7 +126,7 @@ func ScrapeBadoink() {
 	})
 
 	trailerCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := e.Request.Ctx.GetAny("scene").(xbase.ExtScene)
+		sc := e.Request.Ctx.GetAny("scene").(ScrapedScene)
 
 		e.ForEach(`dl8-video source`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
@@ -145,8 +145,7 @@ func ScrapeBadoink() {
 			}
 		})
 
-		ns := xbase.Scene{}
-		ns.CreateUpdateFromExternal(sc)
+		*out = append(*out, sc)
 	})
 
 	siteCollector.OnHTML(`div.pagination a`, func(e *colly.HTMLElement) {
@@ -158,9 +157,7 @@ func ScrapeBadoink() {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
-		ts := xbase.Scene{}
-		ts.GetIfExistURL(sceneURL)
-		if ts.SceneURL != sceneURL {
+		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
@@ -169,4 +166,6 @@ func ScrapeBadoink() {
 	siteCollector.Visit("https://18vr.com/vrpornvideos")
 	siteCollector.Visit("https://vrcosplayx.com/cosplaypornvideos")
 	siteCollector.Visit("https://babevr.com/vrpornvideos")
+
+	return nil
 }

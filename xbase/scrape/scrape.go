@@ -15,6 +15,24 @@ var sceneCacheDir string
 
 var userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36"
 
+type ScrapedScene struct {
+	SceneID     string   `json:"_id"`
+	SiteID      string   `json:"scene_id"`
+	SceneType   string   `json:"scene_type"`
+	Title       string   `json:"title"`
+	Studio      string   `json:"studio"`
+	Site        string   `json:"site"`
+	Covers      []string `json:"covers"`
+	Gallery     []string `json:"gallery"`
+	Tags        []string `json:"tags"`
+	Cast        []string `json:"cast"`
+	Filenames   []string `json:"filename"`
+	Duration    int      `json:"duration"`
+	Synopsis    string   `json:"synopsis"`
+	Released    string   `json:"released"`
+	HomepageURL string   `json:"homepage_url"`
+}
+
 func init() {
 	appDir = appdir.New("xbvr").UserConfig()
 

@@ -5,14 +5,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cld9x/xbvr/xbase"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/robertkrimen/otto"
+	"github.com/thoas/go-funk"
 )
 
-func ScrapeNA() {
+func ScrapeNA(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.naughtyamerica.com"),
 		colly.CacheDir(siteCacheDir),
@@ -34,7 +34,7 @@ func ScrapeNA() {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := xbase.ExtScene{}
+		sc := ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "NaughtyAmerica"
 		sc.Site = "NaughtyAmerica VR"
@@ -106,11 +106,6 @@ func ScrapeNA() {
 			sc.Tags = append(sc.Tags, e.Text)
 		})
 
-		// Cast (from tags)
-		// e.ForEach(`div.scene-info span.scene-title a`, func(id int, e *colly.HTMLElement) {
-		// 	sc.Cast = append(sc.Cast, e.Text)
-		// })
-
 		// Cast (extract from JavaScript)
 		e.ForEach(`script`, func(id int, e *colly.HTMLElement) {
 			if strings.Contains(e.Text, "femaleStar") {
@@ -129,8 +124,7 @@ func ScrapeNA() {
 			}
 		})
 
-		ns := xbase.Scene{}
-		ns.CreateUpdateFromExternal(sc)
+		*out = append(*out, sc)
 	})
 
 	siteCollector.OnHTML(`ul[class=pagination] li a`, func(e *colly.HTMLElement) {
@@ -142,12 +136,10 @@ func ScrapeNA() {
 		sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
 
 		// If scene exist in database, there's no need to scrape
-		ts := xbase.Scene{}
-		ts.GetIfExistURL(sceneURL)
-		if ts.SceneURL != sceneURL {
+		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
 
-	siteCollector.Visit("https://www.naughtyamerica.com/vr-porn")
+	return siteCollector.Visit("https://www.naughtyamerica.com/vr-porn")
 }

@@ -3,8 +3,45 @@ package xbase
 import (
 	"path"
 
+	"github.com/cld9x/xbvr/xbase/scrape"
 	"github.com/go-test/deep"
 )
+
+func CleanTags() {
+	RenameTags()
+	CountTags()
+}
+
+func Scrape() {
+	if !CheckLock("scrape") {
+		CreateLock("scrape")
+
+		// Get all known scenes
+		var scenes []Scene
+		db, _ := GetDB()
+		db.Find(&scenes)
+		db.Close()
+
+		var knownScenes []string
+		for i := range scenes {
+			knownScenes = append(knownScenes, scenes[i].SceneURL)
+		}
+
+		// Start scraping
+		var collectedScenes []scrape.ScrapedScene
+
+		scrape.ScrapeNA(knownScenes, &collectedScenes)
+		scrape.ScrapeBadoink(knownScenes, &collectedScenes)
+		scrape.ScrapeMilfVR(knownScenes, &collectedScenes)
+		scrape.ScrapeVRB(knownScenes, &collectedScenes)
+		scrape.ScrapeWankz(knownScenes, &collectedScenes)
+		scrape.ScrapeVirtualTaboo(knownScenes, &collectedScenes)
+
+		log.Infof("Found %v new scenes", len(collectedScenes))
+	}
+
+	RemoveLock("scrape")
+}
 
 func RenameTags() {
 	db, _ := GetDB()
@@ -59,68 +96,73 @@ func CountTags() {
 }
 
 func UpdateScenes() {
-	db, _ := GetDB()
-	defer db.Close()
+	if !CheckLock("update-scenes") {
+		CreateLock("update-scenes")
 
-	var files []File
-	var scenes []Scene
-	var changed = false
+		db, _ := GetDB()
+		defer db.Close()
 
-	db.Model(&File{}).Find(&files)
+		var files []File
+		var scenes []Scene
+		var changed= false
 
-	for i := range files {
-		fn := files[i].Filename
+		db.Model(&File{}).Find(&files)
 
-		var pfn PossibleFilename
-		db.Where("name LIKE ?", path.Base(fn)).First(&pfn)
-		db.Model(&pfn).Preload("Cast").Preload("Tags").Related(&scenes, "Scenes")
+		for i := range files {
+			fn := files[i].Filename
 
-		if len(scenes) == 1 {
-			files[i].SceneID = scenes[0].ID
-			files[i].Save()
-		}
-	}
+			var pfn PossibleFilename
+			db.Where("name LIKE ?", path.Base(fn)).First(&pfn)
+			db.Model(&pfn).Preload("Cast").Preload("Tags").Related(&scenes, "Scenes")
 
-	db.Model(&Scene{}).Find(&scenes)
-
-	for i := range scenes {
-		// Check if file with scene association exists
-		files, err := scenes[i].GetFiles()
-		if err != nil {
-			return
-		}
-
-		changed = false
-
-		if len(files) > 0 {
-			if !scenes[i].IsAvailable {
-				scenes[i].IsAvailable = true
-				changed = true
+			if len(scenes) == 1 {
+				files[i].SceneID = scenes[0].ID
+				files[i].Save()
 			}
-			for j := range files {
-				if files[j].Exists() {
-					if !scenes[i].IsAccessible {
-						scenes[i].IsAccessible = true
-						changed = true
-					}
-				} else {
-					if scenes[i].IsAccessible {
-						scenes[i].IsAccessible = false
-						changed = true
+		}
+
+		db.Model(&Scene{}).Find(&scenes)
+
+		for i := range scenes {
+			// Check if file with scene association exists
+			files, err := scenes[i].GetFiles()
+			if err != nil {
+				return
+			}
+
+			changed = false
+
+			if len(files) > 0 {
+				if !scenes[i].IsAvailable {
+					scenes[i].IsAvailable = true
+					changed = true
+				}
+				for j := range files {
+					if files[j].Exists() {
+						if !scenes[i].IsAccessible {
+							scenes[i].IsAccessible = true
+							changed = true
+						}
+					} else {
+						if scenes[i].IsAccessible {
+							scenes[i].IsAccessible = false
+							changed = true
+						}
 					}
 				}
+			} else {
+				if scenes[i].IsAvailable {
+					scenes[i].IsAvailable = false
+					changed = true
+				}
 			}
-		} else {
-			if scenes[i].IsAvailable {
-				scenes[i].IsAvailable = false
-				changed = true
+
+			if changed {
+				scenes[i].Save()
 			}
-		}
 
-		if changed {
-			scenes[i].Save()
 		}
-
 	}
 
+	RemoveLock("update-scenes")
 }

@@ -62,4 +62,6 @@ func init() {
 
 	db.AutoMigrate(&File{})
 	db.AutoMigrate(&Volume{})
+
+	db.AutoMigrate(&KV{})
 }

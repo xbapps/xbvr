@@ -5,14 +5,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cld9x/xbvr/xbase"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeVirtualTaboo() {
+func ScrapeVirtualTaboo(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualtaboo.com"),
 		colly.CacheDir(siteCacheDir),
@@ -34,7 +33,7 @@ func ScrapeVirtualTaboo() {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := xbase.ExtScene{}
+		sc := ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VirtualTaboo"
 		sc.Site = "VirtualTaboo"
@@ -105,8 +104,7 @@ func ScrapeVirtualTaboo() {
 			}
 		})
 
-		ns := xbase.Scene{}
-		ns.CreateUpdateFromExternal(sc)
+		*out = append(*out, sc)
 	})
 
 	siteCollector.OnHTML(`ul.pagination a`, func(e *colly.HTMLElement) {
@@ -118,12 +116,10 @@ func ScrapeVirtualTaboo() {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
-		ts := xbase.Scene{}
-		ts.GetIfExistURL(sceneURL)
-		if ts.SceneURL != sceneURL {
+		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
 
-	siteCollector.Visit("https://virtualtaboo.com/videos")
+	return siteCollector.Visit("https://virtualtaboo.com/videos")
 }

@@ -34,22 +34,6 @@ func ActionAddVolume(c *cli.Context) {
 	}
 }
 
-func ActionRescanVolumes(c *cli.Context) {
-	xbase.RescanVolumes()
-}
-
-func ActionSaveLocalInfo(c *cli.Context) {
-	db, _ := xbase.GetDB()
-	defer db.Close()
-
-	var vol []xbase.Volume
-	db.Find(&vol)
-
-	for i := range vol {
-		vol[i].SaveLocalInfo()
-	}
-}
-
 func init() {
 	RegisterCommand(cli.Command{
 		Name:  "volume",
@@ -60,18 +44,6 @@ func init() {
 				Category: "volume",
 				Usage:    "add new volume",
 				Action:   ActionAddVolume,
-			},
-			{
-				Name:     "rescan",
-				Category: "volume",
-				Usage:    "rescan Volumes",
-				Action:   ActionRescanVolumes,
-			},
-			{
-				Name:     "localinfo",
-				Category: "volume",
-				Usage:    "save File info",
-				Action:   ActionSaveLocalInfo,
 			},
 		},
 	})

@@ -20,6 +20,10 @@ var (
 )
 
 func StartServer() {
+	// Remove old locks
+	RemoveLock("scrape")
+	RemoveLock("update-scenes")
+
 	CheckVolumes()
 
 	// API endpoints

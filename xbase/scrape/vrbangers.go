@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cld9x/xbvr/xbase"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
+	"github.com/thoas/go-funk"
 )
 
-func ScrapeVRB() {
+func ScrapeVRB(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("vrbangers.com"),
 		colly.CacheDir(siteCacheDir),
@@ -33,7 +33,7 @@ func ScrapeVRB() {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := xbase.ExtScene{}
+		sc := ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRBangers"
 		sc.Site = "VRBangers"
@@ -113,9 +113,7 @@ func ScrapeVRB() {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(strings.Replace(e.Text, ",", "", -1)))
 		})
 
-		// spew.Dump(sc)
-		ns := xbase.Scene{}
-		ns.CreateUpdateFromExternal(sc)
+		*out = append(*out, sc)
 	})
 
 	siteCollector.OnHTML(`div.wp-pagenavi a.page`, func(e *colly.HTMLElement) {
@@ -127,12 +125,10 @@ func ScrapeVRB() {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
-		ts := xbase.Scene{}
-		ts.GetIfExistURL(sceneURL)
-		if ts.SceneURL != sceneURL {
+		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
 
-	siteCollector.Visit("https://vrbangers.com/videos/")
+	return siteCollector.Visit("https://vrbangers.com/videos/")
 }

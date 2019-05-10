@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/araddon/dateparse"
+	"github.com/cld9x/xbvr/xbase/scrape"
 )
 
 type PossibleFilename struct {
@@ -74,7 +75,7 @@ func (o *Scene) GetFiles() ([]File, error) {
 	return files, nil
 }
 
-func (o *Scene) CreateUpdateFromExternal(ext ExtScene) error {
+func (o *Scene) CreateUpdateFromExternal(ext scrape.ScrapedScene) error {
 	// Check if scene exist
 	// o.GetIfExist(ext.SceneID)
 

@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cld9x/xbvr/xbase"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
+	"github.com/thoas/go-funk"
 )
 
-func ScrapeWankz() {
+func ScrapeWankz(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.wankzvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -33,7 +33,7 @@ func ScrapeWankz() {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := xbase.ExtScene{}
+		sc := ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Wankz"
 		sc.Site = "WankzVR"
@@ -100,9 +100,7 @@ func ScrapeWankz() {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
-		// spew.Dump(sc)
-		ns := xbase.Scene{}
-		ns.CreateUpdateFromExternal(sc)
+		*out = append(*out, sc)
 	})
 
 	siteCollector.OnHTML(`nav.pager a`, func(e *colly.HTMLElement) {
@@ -115,12 +113,10 @@ func ScrapeWankz() {
 		sceneURL = strings.Replace(sceneURL, "/preview", "", -1)
 
 		// If scene exist in database, there's no need to scrape
-		ts := xbase.Scene{}
-		ts.GetIfExistURL(sceneURL)
-		if ts.SceneURL != sceneURL && !strings.Contains(sceneURL, "/join") {
+		if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/join") {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
 
-	siteCollector.Visit("https://www.wankzvr.com/videos")
+	return siteCollector.Visit("https://www.wankzvr.com/videos")
 }
