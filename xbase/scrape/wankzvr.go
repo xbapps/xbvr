@@ -117,7 +117,7 @@ func ScrapeWankz() {
 		// If scene exist in database, there's no need to scrape
 		ts := xbase.Scene{}
 		ts.GetIfExistURL(sceneURL)
-		if ts.SceneURL != sceneURL {
+		if ts.SceneURL != sceneURL && !strings.Contains(sceneURL, "/join") {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
