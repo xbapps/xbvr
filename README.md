@@ -1,5 +1,7 @@
 # XBVR
 
+[![Build Status](https://cloud.drone.io/api/badges/cld9x/xbvr/status.svg)](https://cloud.drone.io/cld9x/xbvr) ![GitHub release](https://img.shields.io/github/release/cld9x/xbvr.svg)
+
 <img src="https://i.imgur.com/Q3UdJhV.jpg" width="500"/>
 
 All-in-one tool for your VR porn library.
