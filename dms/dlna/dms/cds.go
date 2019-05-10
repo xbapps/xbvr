@@ -216,12 +216,24 @@ func (me *contentDirectoryService) sceneToContainer(scene XbaseScene, parent str
 		return nil
 	}
 
+	iconURI := (&url.URL{
+		Scheme: "http",
+		Host:   host,
+		Path:   iconPath,
+		RawQuery: url.Values{
+			"scene": {scene.SceneID},
+			"c":     {"jpeg"},
+		}.Encode(),
+	}).String()
+
 	// Object goes first
 	obj := upnpav.Object{
-		ID:         scene.SceneID,
-		Restricted: 1,
-		ParentID:   parent,
-		Title:      strings.Join(c, ", ") + " - " + scene.Title + " _180_180x180_3dh_LR.mp4",
+		ID:          scene.SceneID,
+		Restricted:  1,
+		ParentID:    parent,
+		Title:       strings.Join(c, ", ") + " - " + scene.Title + " _180_180x180_3dh_LR.mp4",
+		Icon:        iconURI,
+		AlbumArtURI: iconURI,
 	}
 
 	// Wrap up
@@ -252,16 +264,8 @@ func (me *contentDirectoryService) sceneToContainer(scene XbaseScene, parent str
 	})
 
 	item.Res = append(item.Res, upnpav.Resource{
-		URL: (&url.URL{
-			Scheme: "http",
-			Host:   host,
-			Path:   iconPath,
-			RawQuery: url.Values{
-				"scene": {scene.SceneID},
-				"c":     {"jpeg"},
-			}.Encode(),
-		}).String(),
-		ProtocolInfo: "http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN",
+		URL:          iconURI,
+		ProtocolInfo: "http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED",
 	})
 
 	return item
