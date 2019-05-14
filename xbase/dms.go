@@ -82,7 +82,7 @@ func (cache *fFprobeCache) load(path string) error {
 	for _, item := range items {
 		cache.Set(item.Key, item.Value)
 	}
-	log.Printf("added %d items from cache", len(items))
+	// log.Printf("added %d items from cache", len(items))
 	return nil
 }
 

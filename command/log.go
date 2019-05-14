@@ -1,10 +1,11 @@
 package command
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/x-cray/logrus-prefixed-formatter"
 	"os"
 	"runtime"
+
+	"github.com/sirupsen/logrus"
+	"github.com/x-cray/logrus-prefixed-formatter"
 )
 
 var log = logrus.New()

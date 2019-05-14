@@ -37,7 +37,6 @@ func StartServer() {
 	ws.Route(ws.GET("/").To(redirectUI))
 
 	restful.Add(ws)
-	restful.Add(ExtResource{}.WebService())
 	restful.Add(SceneResource{}.WebService())
 	restful.Add(TaskResource{}.WebService())
 	restful.Add(DMSResource{}.WebService())

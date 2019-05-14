@@ -421,7 +421,7 @@ func init() {
 }
 
 func getDefaultFriendlyName() string {
-	return "xbvr"
+	return "XBVR"
 }
 
 func xmlMarshalOrPanic(value interface{}) []byte {
@@ -774,9 +774,7 @@ func (srv *Server) Serve() (err error) {
 		return
 	}
 	srv.closed = make(chan struct{})
-	if srv.FriendlyName == "" {
-		srv.FriendlyName = getDefaultFriendlyName()
-	}
+	srv.FriendlyName = getDefaultFriendlyName()
 	if srv.HTTPConn == nil {
 		srv.HTTPConn, err = net.Listen("tcp", "")
 		if err != nil {

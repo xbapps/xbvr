@@ -13,7 +13,6 @@ type File struct {
 
 	Path        string    `json:"path"`
 	Filename    string    `json:"filename"`
-	Hash        string    `json:"-"`
 	Size        int64     `json:"size"`
 	CreatedTime time.Time `json:"created_time"`
 	UpdatedTime time.Time `json:"updated_time"`

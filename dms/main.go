@@ -176,14 +176,14 @@ func main() {
 		NoTranscode:    config.NoTranscode,
 		NoProbe:        config.NoProbe,
 		Icons: []dms.Icon{
-			dms.Icon{
+			{
 				Width:      48,
 				Height:     48,
 				Depth:      8,
 				Mimetype:   "image/png",
 				ReadSeeker: bytes.NewReader(MustAsset("data/VGC Sonic.png")),
 			},
-			dms.Icon{
+			{
 				Width:      128,
 				Height:     128,
 				Depth:      8,
@@ -228,7 +228,7 @@ func (cache *fFprobeCache) load(path string) error {
 	for _, item := range items {
 		cache.Set(item.Key, item.Value)
 	}
-	log.Printf("added %d items from cache", len(items))
+	// log.Printf("added %d items from cache", len(items))
 	return nil
 }
 

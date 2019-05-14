@@ -78,10 +78,10 @@ func (o *Volume) Rescan() error {
 		})
 
 		bar := pb.StartNew(len(procList))
+		bar.Output = nil
 		for _, path := range procList {
 			fStat, _ := os.Stat(path)
 			fTimes, _ := times.Stat(path)
-			// fHash, _ := hashFileXX(path)
 
 			var fl File
 			fl = File{
@@ -90,21 +90,20 @@ func (o *Volume) Rescan() error {
 				Size:        fStat.Size(),
 				CreatedTime: fTimes.BirthTime(),
 				UpdatedTime: fTimes.ModTime(),
-				// Hash:        fHash,
 			}
 
 			ffdata, err := ffprobe.GetProbeData(path, time.Second*3)
 			if err != nil {
 				log.Errorf("Error running ffprobe", path, err)
+			} else {
+				vs := ffdata.GetFirstVideoStream()
+				bitRate, _ := strconv.Atoi(vs.BitRate)
+				fl.VideoAvgFrameRate = vs.AvgFrameRate
+				fl.VideoBitRate = bitRate
+				fl.VideoCodecName = vs.CodecName
+				fl.VideoWidth = vs.Width
+				fl.VideoHeight = vs.Height
 			}
-
-			vs := ffdata.GetFirstVideoStream()
-			bitRate, _ := strconv.Atoi(vs.BitRate)
-			fl.VideoAvgFrameRate = vs.AvgFrameRate
-			fl.VideoBitRate = bitRate
-			fl.VideoCodecName = vs.CodecName
-			fl.VideoWidth = vs.Width
-			fl.VideoHeight = vs.Height
 
 			err = fl.Save()
 			if err != nil {
