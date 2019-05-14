@@ -36,8 +36,21 @@ func Scrape() {
 		scrape.ScrapeVRB(knownScenes, &collectedScenes)
 		scrape.ScrapeWankz(knownScenes, &collectedScenes)
 		scrape.ScrapeVirtualTaboo(knownScenes, &collectedScenes)
+		scrape.ScrapeVirtualRealPorn(knownScenes, &collectedScenes)
 
-		log.Infof("Found %v new scenes", len(collectedScenes))
+		if len(collectedScenes) > 0 {
+			log.Infof("Scraped %v new scenes", len(collectedScenes))
+
+			db, _ := GetDB()
+			for i := range collectedScenes {
+				SceneCreateUpdateFromExternal(db, collectedScenes[i])
+			}
+			db.Close()
+
+			log.Infof("Saved %v new scenes", len(collectedScenes))
+		} else {
+			log.Infof("No new scenes scraped")
+		}
 	}
 
 	RemoveLock("scrape")

@@ -72,7 +72,6 @@ type XbaseScene struct {
 	SceneURL        string    `json:"scene_url"`
 	Rating          int       `json:"rating"`
 	Favourite       bool      `json:"favourite"`
-	Wishlist        bool      `json:"wishlist"`
 	Watchlist       bool      `json:"watchlist"`
 	IsAvailable     bool      `json:"is_available"`
 	IsAccessible    bool      `json:"is_accessible"`

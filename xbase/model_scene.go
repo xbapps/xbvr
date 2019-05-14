@@ -6,6 +6,7 @@ import (
 
 	"github.com/araddon/dateparse"
 	"github.com/cld9x/xbvr/xbase/scrape"
+	"github.com/jinzhu/gorm"
 )
 
 type PossibleFilename struct {
@@ -38,7 +39,6 @@ type Scene struct {
 	SceneURL        string             `json:"scene_url"`
 	Rating          int                `json:"rating"`
 	Favourite       bool               `json:"favourite"`
-	Wishlist        bool               `json:"wishlist"`
 	Watchlist       bool               `json:"watchlist"`
 	IsAvailable     bool               `json:"is_available"`
 	IsAccessible    bool               `json:"is_accessible"`
@@ -75,14 +75,8 @@ func (o *Scene) GetFiles() ([]File, error) {
 	return files, nil
 }
 
-func (o *Scene) CreateUpdateFromExternal(ext scrape.ScrapedScene) error {
-	// Check if scene exist
-	// o.GetIfExist(ext.SceneID)
-
-	// Save
-	db, _ := GetDB()
-	defer db.Close()
-
+func SceneCreateUpdateFromExternal(db *gorm.DB, ext scrape.ScrapedScene) error {
+	var o Scene
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)
 
 	o.SceneID = ext.SceneID

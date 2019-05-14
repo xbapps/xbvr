@@ -4,10 +4,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/cld9x/xbvr/command"
 	"github.com/cld9x/xbvr/xbase"
 	"gopkg.in/urfave/cli.v1"
-	"os"
 )
 
 var version = "CURRENT"

@@ -23,7 +23,7 @@ func ScrapeBadoink(knownScenes []string, out *[]ScrapedScene) error {
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
 	)
-	trailerCollector := siteCollector.Clone()
+	trailerCollector := sceneCollector.Clone()
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
