@@ -7,7 +7,7 @@ before:
 builds:
 - id: xbvr-mac
   binary: xbvr
-  main: cmd/tray/main.go
+#  main: cmd/tray/main.go
   env:
     - CGO_ENABLED=1
     - CC=o64-clang
