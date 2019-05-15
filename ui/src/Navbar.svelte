@@ -8,19 +8,10 @@
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
       <a class="navbar-item">
-        <Link to="scenes">Scenes</Link>
+        <Link to="./">Scenes</Link>
       </a>
-
       <a class="navbar-item">
-        <Link to="files">Files</Link>
-      </a>
-
-      <a class="navbar-item">
-        <Link to="volumes">Volumes</Link>
-      </a>
-
-      <a class="navbar-item">
-        <Link to="options">Options</Link>
+        <Link to="./options">Options</Link>
       </a>
     </div>
   </div>

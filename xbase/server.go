@@ -40,6 +40,7 @@ func StartServer() {
 	restful.Add(SceneResource{}.WebService())
 	restful.Add(TaskResource{}.WebService())
 	restful.Add(DMSResource{}.WebService())
+	restful.Add(ConfigResource{}.WebService())
 
 	// Static files
 	if DEBUG == "" {

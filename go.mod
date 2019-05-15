@@ -45,7 +45,7 @@ require (
 	github.com/gowww/log v0.0.0-20170712202755-af3772f4bb12
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
 	github.com/imdario/mergo v0.3.7 // indirect
-	github.com/jinzhu/gorm v1.9.5
+	github.com/jinzhu/gorm v1.9.8
 	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/kamilsk/retry/v4 v4.1.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
@@ -97,7 +97,7 @@ require (
 	golang.org/x/tools v0.0.0-20190509001310-e31d36578abb // indirect
 	google.golang.org/genproto v0.0.0-20190508193815-b515fa19cec8 // indirect
 	google.golang.org/grpc v1.20.1 // indirect
-	gopkg.in/cheggaaa/pb.v1 v1.0.27
+	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect

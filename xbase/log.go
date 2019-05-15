@@ -13,7 +13,7 @@ import (
 var log = logrus.New()
 
 func APIError(req *restful.Request, resp *restful.Response, status int, err error) {
-	log.Error(req.Request.URL.String(), err)
+	// log.Error(req.Request.URL.String(), err)
 	resp.WriteError(status, err)
 }
 

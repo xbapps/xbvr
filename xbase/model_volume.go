@@ -22,10 +22,10 @@ import (
 
 type Volume struct {
 	gorm.Model
-	Path        string
-	LastScan    time.Time
-	IsEnabled   bool
-	IsAvailable bool
+	Path        string    `json:"path"`
+	LastScan    time.Time `json:"last_scan"`
+	IsEnabled   bool      `json:"-"`
+	IsAvailable bool      `json:"is_available"`
 }
 
 func (o *Volume) IsMounted() bool {

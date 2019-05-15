@@ -1,11 +1,18 @@
 package xbase
 
 import (
-	"path"
+	"time"
 
 	"github.com/cld9x/xbvr/xbase/scrape"
 	"github.com/go-test/deep"
+	"gopkg.in/resty.v1"
 )
+
+type Bundle struct {
+	Timestamp     time.Time             `json:"timestamp"`
+	BundleVersion string                `json:"bundle_version"`
+	Scenes        []scrape.ScrapedScene `json:"scenes"`
+}
 
 func CleanTags() {
 	RenameTags()
@@ -15,6 +22,8 @@ func CleanTags() {
 func Scrape() {
 	if !CheckLock("scrape") {
 		CreateLock("scrape")
+
+		tlog := log.WithField("task", "scrape")
 
 		// Get all known scenes
 		var scenes []Scene
@@ -30,16 +39,29 @@ func Scrape() {
 		// Start scraping
 		var collectedScenes []scrape.ScrapedScene
 
+		tlog.Infof("Scraping NaughtyAmericaVR")
 		scrape.ScrapeNA(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping BadoinkVR / 18VR / VRCosplayX / BabeVR")
 		scrape.ScrapeBadoink(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping MilfVR")
 		scrape.ScrapeMilfVR(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping VRBangers")
 		scrape.ScrapeVRB(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping WankzVR")
 		scrape.ScrapeWankz(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping VirtualTaboo")
 		scrape.ScrapeVirtualTaboo(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping VirtualRealPorn")
 		scrape.ScrapeVirtualRealPorn(knownScenes, &collectedScenes)
 
 		if len(collectedScenes) > 0 {
-			log.Infof("Scraped %v new scenes", len(collectedScenes))
+			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
 
 			db, _ := GetDB()
 			for i := range collectedScenes {
@@ -47,12 +69,35 @@ func Scrape() {
 			}
 			db.Close()
 
-			log.Infof("Saved %v new scenes", len(collectedScenes))
+			tlog.Infof("Saved %v new scenes", len(collectedScenes))
 		} else {
-			log.Infof("No new scenes scraped")
+			tlog.Infof("No new scenes scraped")
 		}
 	}
 
+	RemoveLock("scrape")
+}
+
+func ImportBundle() {
+	if !CheckLock("scrape") {
+		CreateLock("scrape")
+
+		tlog := log.WithField("task", "scrape")
+
+		var bundleData Bundle
+		resp, err := resty.R().SetResult(&bundleData).Get("http://127.0.0.1:9999/static/bundle.json")
+
+		tlog.Info(err)
+
+		if err == nil && resp.StatusCode() == 200 {
+			db, _ := GetDB()
+			for i := range bundleData.Scenes {
+				tlog.Infof("Importing %v of %v scenes", i+1, len(bundleData.Scenes))
+				SceneCreateUpdateFromExternal(db, bundleData.Scenes[i])
+			}
+			db.Close()
+		}
+	}
 	RemoveLock("scrape")
 }
 
@@ -105,77 +150,5 @@ func CountTags() {
 		tags[i].Save()
 	}
 
-	db.Where("count = ?", 0).Delete(&Tag{})
-}
-
-func UpdateScenes() {
-	if !CheckLock("update-scenes") {
-		CreateLock("update-scenes")
-
-		db, _ := GetDB()
-		defer db.Close()
-
-		var files []File
-		var scenes []Scene
-		var changed= false
-
-		db.Model(&File{}).Find(&files)
-
-		for i := range files {
-			fn := files[i].Filename
-
-			var pfn PossibleFilename
-			db.Where("name LIKE ?", path.Base(fn)).First(&pfn)
-			db.Model(&pfn).Preload("Cast").Preload("Tags").Related(&scenes, "Scenes")
-
-			if len(scenes) == 1 {
-				files[i].SceneID = scenes[0].ID
-				files[i].Save()
-			}
-		}
-
-		db.Model(&Scene{}).Find(&scenes)
-
-		for i := range scenes {
-			// Check if file with scene association exists
-			files, err := scenes[i].GetFiles()
-			if err != nil {
-				return
-			}
-
-			changed = false
-
-			if len(files) > 0 {
-				if !scenes[i].IsAvailable {
-					scenes[i].IsAvailable = true
-					changed = true
-				}
-				for j := range files {
-					if files[j].Exists() {
-						if !scenes[i].IsAccessible {
-							scenes[i].IsAccessible = true
-							changed = true
-						}
-					} else {
-						if scenes[i].IsAccessible {
-							scenes[i].IsAccessible = false
-							changed = true
-						}
-					}
-				}
-			} else {
-				if scenes[i].IsAvailable {
-					scenes[i].IsAvailable = false
-					changed = true
-				}
-			}
-
-			if changed {
-				scenes[i].Save()
-			}
-
-		}
-	}
-
-	RemoveLock("update-scenes")
+	// db.Where("count = ?", 0).Delete(&Tag{})
 }

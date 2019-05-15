@@ -25,6 +25,9 @@ func (i TaskResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/scrape").To(i.scrape).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/import-bundle").To(i.importBundle).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	return ws
 }
 
@@ -38,4 +41,8 @@ func (i TaskResource) cleanTags(req *restful.Request, resp *restful.Response) {
 
 func (i TaskResource) scrape(req *restful.Request, resp *restful.Response) {
 	go Scrape()
+}
+
+func (i TaskResource) importBundle(req *restful.Request, resp *restful.Response) {
+	go ImportBundle()
 }

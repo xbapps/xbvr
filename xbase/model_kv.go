@@ -1,5 +1,9 @@
 package xbase
 
+import (
+	"github.com/gammazero/nexus/client"
+)
+
 type KV struct {
 	Key   string `json:"key" gorm:"primary_key" gorm:"unique_index"`
 	Value string `json:"value"`
@@ -22,6 +26,11 @@ func (o *KV) Delete() {
 func CreateLock(lock string) {
 	obj := KV{Key: "lock-" + lock, Value: "1"}
 	obj.Save()
+
+	publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
+	if err == nil {
+		publisher.Publish("lock.change", nil, nil, map[string]interface{}{"name": lock, "locked": true})
+	}
 }
 
 func CheckLock(lock string) bool {
@@ -41,4 +50,9 @@ func RemoveLock(lock string) {
 	defer db.Close()
 
 	db.Where("key = ?", "lock-"+lock).Delete(&KV{})
+
+	publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
+	if err == nil {
+		publisher.Publish("lock.change", nil, nil, map[string]interface{}{"name": lock, "locked": false})
+	}
 }
