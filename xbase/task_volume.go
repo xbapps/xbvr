@@ -1,9 +1,19 @@
 package xbase
 
 import (
+	"os"
 	"path"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 
+	"github.com/djherbis/times"
+	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
+	"github.com/thoas/go-funk"
+	"github.com/vansante/go-ffprobe"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func RescanVolumes() {
@@ -13,19 +23,98 @@ func RescanVolumes() {
 		db, _ := GetDB()
 		defer db.Close()
 
-		log.WithFields(logrus.Fields{"task": "rescan"}).Infof("Start scanning volumes")
+		tlog := log.WithFields(logrus.Fields{"task": "rescan"})
+
+		tlog.Infof("Start scanning volumes")
 
 		var vol []Volume
 		db.Find(&vol)
 
 		for i := range vol {
 			log.Infof("Scanning %v", vol[i].Path)
-			vol[i].Rescan()
+
+			if vol[i].IsMounted() {
+				notAllowedFn := []string{".DS_Store", ".tmp"}
+				allowedExt := []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov"}
+
+				var procList []string
+
+				_ = filepath.Walk(vol[i].Path, func(path string, f os.FileInfo, err error) error {
+					if !f.Mode().IsDir() {
+						// Make sure the filename should be considered
+						if !funk.Contains(notAllowedFn, filepath.Base(path)) && funk.Contains(allowedExt, strings.ToLower(filepath.Ext(path))) {
+
+							// cleanPath := strings.Replace(path, o.Path+string(os.PathSeparator), "", -1)
+
+							var fl File
+							err = db.Where(&File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
+
+							if err == gorm.ErrRecordNotFound {
+								procList = append(procList, path)
+							}
+						}
+					}
+					return nil
+				})
+
+				bar := pb.StartNew(len(procList))
+				bar.Output = nil
+				for j, pth := range procList {
+					fStat, _ := os.Stat(pth)
+					fTimes, _ := times.Stat(pth)
+
+					var fl File
+					fl = File{
+						Path:        filepath.Dir(pth),
+						Filename:    filepath.Base(pth),
+						Size:        fStat.Size(),
+						CreatedTime: fTimes.BirthTime(),
+						UpdatedTime: fTimes.ModTime(),
+					}
+
+					ffdata, err := ffprobe.GetProbeData(pth, time.Second*3)
+					if err != nil {
+						tlog.Errorf("Error running ffprobe", pth, err)
+					} else {
+						vs := ffdata.GetFirstVideoStream()
+						bitRate, _ := strconv.Atoi(vs.BitRate)
+						fl.VideoAvgFrameRate = vs.AvgFrameRate
+						fl.VideoBitRate = bitRate
+						fl.VideoCodecName = vs.CodecName
+						fl.VideoWidth = vs.Width
+						fl.VideoHeight = vs.Height
+					}
+
+					err = fl.Save()
+					if err != nil {
+						tlog.Errorf("New file %s, but got error %s", pth, err)
+					}
+
+					bar.Increment()
+					tlog.Infof("Scanning %v (%v/%v)", vol[i].Path, j+1, len(procList))
+				}
+
+				bar.Finish()
+
+				vol[i].LastScan = time.Now()
+				vol[i].Save()
+
+				// Check if files are still present at the location
+				allFiles := vol[i].Files()
+				for i := range allFiles {
+					if !allFiles[i].Exists() {
+						log.Info(allFiles[i].GetPath())
+						db, _ := GetDB()
+						db.Delete(&allFiles[i])
+						db.Close()
+					}
+				}
+			}
 		}
 
 		// Match Scene to File
 
-		log.WithFields(logrus.Fields{"task": "rescan"}).Infof("Matching Scenes to known filenames")
+		tlog.Infof("Matching Scenes to known filenames")
 
 		var files []File
 		var scenes []Scene
@@ -44,11 +133,13 @@ func RescanVolumes() {
 				files[i].SceneID = scenes[0].ID
 				files[i].Save()
 			}
+
+			tlog.Infof("Matching Scenes to known filenames (%v/%v)", i+1, len(files))
 		}
 
 		// Update scene statuses
 
-		log.WithFields(logrus.Fields{"task": "rescan"}).Infof("Update status of Scenes")
+		tlog.Infof("Update status of Scenes")
 
 		db.Model(&Scene{}).Find(&scenes)
 
@@ -89,6 +180,8 @@ func RescanVolumes() {
 			if changed {
 				scenes[i].Save()
 			}
+
+			tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
 		}
 
 		log.WithFields(logrus.Fields{"task": "rescan"}).Infof("Scanning complete")

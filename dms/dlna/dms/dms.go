@@ -554,8 +554,6 @@ func (me *Server) serveIcon(w http.ResponseWriter, r *http.Request) {
 	sceneId := r.URL.Query().Get("scene")
 	data := XbaseGetScene(sceneId)
 
-	fmt.Println(sceneId)
-
 	resp, err := http.Get("http://127.0.0.1:9999/img/700x/" + strings.Replace(data.CoverURL, "://", ":/", -1))
 	if err != nil {
 		return

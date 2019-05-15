@@ -6,18 +6,12 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/creasty/defaults"
-	"github.com/djherbis/times"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"github.com/thoas/go-funk"
-	"github.com/vansante/go-ffprobe"
-	"gopkg.in/cheggaaa/pb.v1"
 )
 
 type Volume struct {
@@ -48,89 +42,6 @@ func (o *Volume) Files() []File {
 	db.Where("path LIKE ?", o.Path+"%").Find(&allFiles)
 	db.Close()
 	return allFiles
-}
-
-func (o *Volume) Rescan() error {
-	if o.IsMounted() {
-		notAllowedFn := []string{".DS_Store", ".tmp"}
-		allowedExt := []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov"}
-
-		procList := make([]string, 0)
-
-		_ = filepath.Walk(o.Path, func(path string, f os.FileInfo, err error) error {
-			if !f.Mode().IsDir() {
-				// Make sure the filename should be considered
-				if !funk.Contains(notAllowedFn, filepath.Base(path)) && funk.Contains(allowedExt, strings.ToLower(filepath.Ext(path))) {
-
-					// cleanPath := strings.Replace(path, o.Path+string(os.PathSeparator), "", -1)
-
-					var fl File
-					db, _ := GetDB()
-					err = db.Where(&File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
-					db.Close()
-
-					if err == gorm.ErrRecordNotFound {
-						procList = append(procList, path)
-					}
-				}
-			}
-			return nil
-		})
-
-		bar := pb.StartNew(len(procList))
-		bar.Output = nil
-		for _, path := range procList {
-			fStat, _ := os.Stat(path)
-			fTimes, _ := times.Stat(path)
-
-			var fl File
-			fl = File{
-				Path:        filepath.Dir(path),
-				Filename:    filepath.Base(path),
-				Size:        fStat.Size(),
-				CreatedTime: fTimes.BirthTime(),
-				UpdatedTime: fTimes.ModTime(),
-			}
-
-			ffdata, err := ffprobe.GetProbeData(path, time.Second*3)
-			if err != nil {
-				log.Errorf("Error running ffprobe", path, err)
-			} else {
-				vs := ffdata.GetFirstVideoStream()
-				bitRate, _ := strconv.Atoi(vs.BitRate)
-				fl.VideoAvgFrameRate = vs.AvgFrameRate
-				fl.VideoBitRate = bitRate
-				fl.VideoCodecName = vs.CodecName
-				fl.VideoWidth = vs.Width
-				fl.VideoHeight = vs.Height
-			}
-
-			err = fl.Save()
-			if err != nil {
-				log.Errorf("New file %s, but got error %s", path, err)
-			}
-
-			bar.Increment()
-		}
-
-		bar.Finish()
-
-		o.LastScan = time.Now()
-		o.Save()
-
-		// Check if files are still present at the location
-		allFiles := o.Files()
-		for i := range allFiles {
-			if !allFiles[i].Exists() {
-				log.Info(allFiles[i].GetPath())
-				db, _ := GetDB()
-				db.Delete(&allFiles[i])
-				db.Close()
-			}
-		}
-	}
-
-	return nil
 }
 
 func (o *Volume) SaveLocalInfo() {
