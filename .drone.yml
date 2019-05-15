@@ -26,7 +26,7 @@ steps:
       - cd ui
       - yarn install
       - yarn build
-      - curl -o ui/public/static/bundle.json "$BUNDLE_URL"
+      - curl -o public/static/bundle.json "$BUNDLE_URL"
 
   - name: build
     image: mailchain/goreleaser-xcgo:latest
