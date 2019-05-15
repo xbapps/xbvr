@@ -7,6 +7,7 @@ before:
 builds:
 - id: xbvr-mac
   binary: xbvr
+  main: cmd/tray/main.go
   env:
     - CGO_ENABLED=1
     - CC=o64-clang
@@ -15,6 +16,8 @@ builds:
     - darwin
   goarch:
     - amd64
+  hooks:
+    post: ./appify.sh -s dist/darwin_amd64/xbvr -i ui/public/icons/xbvr-mac.icns -n XBVR
 - id: xbvr-windows
   binary: xbvr
   env:
