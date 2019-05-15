@@ -10,11 +10,7 @@
       <Filters/>
     </div>
 
-    <div class="column">
-        <div class="columns is-multiline">
-          <SceneList />
-        </div>
-    </div>
+    <SceneList />
 
   </div>
 </div>

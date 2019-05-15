@@ -1088,10 +1088,10 @@ kleur@^3.0.0:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-ky@0.10.0:
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/ky/-/ky-0.10.0.tgz#b736665a484962f02d8e2498ab27cfb316cfb7d7"
-  integrity sha512-2OiL0TJiex7tGTUvYOrijLbXKV9rb9IJcLvDh+m5+v87ZhBThIlXwEjaC8/H0e8zMW+hq4HCznVBIdbNMsSQKg==
+ky@0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/ky/-/ky-0.11.0.tgz#032e01e10979f9f16682f6acff7daf43cafa5507"
+  integrity sha512-8EHh1PfPKrERUf5XTSSUkuvfMygg6qyFmW7fqjjHxoGTySMQ5TfF006QenZmtcSSbJmd71wLYY04xxIS7vNpJg==
 
 livereload@^0.7.0:
   version "0.7.0"
@@ -1722,10 +1722,10 @@ rollup-plugin-livereload@^1.0.0:
   dependencies:
     livereload "^0.7.0"
 
-rollup-plugin-node-resolve@^4.2.3:
-  version "4.2.3"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-node-resolve/-/rollup-plugin-node-resolve-4.2.3.tgz#638a373a54287d19fcc088fdd1c6fd8a58e4d90a"
-  integrity sha512-r+WaesPzdGEynpLZLALFEDugA4ACa5zn7bc/+LVX4vAXQQ8IgDHv0xfsSvJ8tDXUtprfBtrDtRFg27ifKjcJTg==
+rollup-plugin-node-resolve@^4.2.4:
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-node-resolve/-/rollup-plugin-node-resolve-4.2.4.tgz#7d370f8d6fd3031006a0032c38262dd9be3c6250"
+  integrity sha512-t/64I6l7fZ9BxqD3XlX4ZeO6+5RLKyfpwE2CiPNUKa+GocPlQhf/C208ou8y3AwtNsc6bjSk/8/6y/YAyxCIvw==
   dependencies:
     "@types/resolve" "0.0.8"
     builtin-modules "^3.1.0"
@@ -1878,23 +1878,23 @@ signal-exit@^3.0.0:
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
   integrity sha1-tf3AjxKH6hF4Yo5BXiUTK3NkbG0=
 
-sirv-cli@^0.4.0:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/sirv-cli/-/sirv-cli-0.4.1.tgz#ce33c6ace002b821692a672b84500ca8fd88e2cc"
-  integrity sha512-dgI9CXtErbkYKZ1ZIQEdHpEMqlJAtXX1jq1OMXJkxLvWeDzvJbZFftrBIPe7Q0trSuiEFJRJ/GF1803n25mNDQ==
+sirv-cli@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/sirv-cli/-/sirv-cli-0.4.2.tgz#86ed7f9df7982d4a350dacbb13063e85f0b6a75f"
+  integrity sha512-fw1NUFOuuH1uxmZlPaGAnT9ax8g2vug6QbRibxtbNf58UygerYmlqAIN+CVSLmd4kcr+mat/BlNSwAc+gNyrKg==
   dependencies:
     console-clear "^1.1.0"
     get-port "^3.2.0"
     kleur "^3.0.0"
     local-access "^1.0.1"
     sade "^1.4.0"
-    sirv "^0.4.1"
+    sirv "^0.4.2"
     tinydate "^1.0.0"
 
-sirv@^0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/sirv/-/sirv-0.4.1.tgz#e4e5c5024abfade7f43d2edfd5d1e6f5a2d5a893"
-  integrity sha512-wjZMiB3jA/SbW6zWpLOAU3LGzCDHaVJsdaQwH9sTYFWJI6IdWe5Op1KhI8js+PXuNPFjNzlJCt233/R3+o/1YA==
+sirv@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/sirv/-/sirv-0.4.2.tgz#842ed22f3aab58faee84eea66cf66066e123d6db"
+  integrity sha512-dQbZnsMaIiTQPZmbGmktz+c74zt/hyrJEB4tdp2Jj0RNv9J6B/OWR5RyrZEvIn9fyh9Zlg2OlE2XzKz6wMKGAw==
   dependencies:
     "@polka/url" "^0.5.0"
     mime "^2.3.1"
@@ -2094,15 +2094,15 @@ svelte-routing@1.0.0:
   resolved "https://registry.yarnpkg.com/svelte-routing/-/svelte-routing-1.0.0.tgz#9132344964af8907a4a4d0d56a458a1a36937853"
   integrity sha512-GI8FA/WABMbhL4+N7hK6/vs5f4TXEQQot7qQ7LT+lp8H4i9pqNFyOSdSZ58Kf0mDkykN30HE/A4vpwzjp2STdw==
 
-svelte@^3.0.0:
-  version "3.2.1"
-  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.2.1.tgz#2bd89dbb49de623cea72730a4acaf92b4c1ec8e4"
-  integrity sha512-DH3WZHua5t87AjvCx8gU5cLQlhRF/KCyRWLpz4TXWwDVs1FEibIhXTXUWRd0EqU8/m/1e4stzL4MnboF8LxyHg==
+svelte@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.3.0.tgz#03ac695c7814eeae934b9a8f8b55094395b788ca"
+  integrity sha512-iJYkIJDvAak1kizEYnE4b4eJ17D25fU0adW7GjDgO0klbjcAFlqtWEGFJa9kpJOlUtNLilcF09k4Y9TDmK/vjg==
 
-svero@0.4.3:
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/svero/-/svero-0.4.3.tgz#93486d0073537b27948d6652209c0a2337c26ebd"
-  integrity sha512-8xkrxySsiDcGwUidDjqF4NgM5WdkMFndNWuGipSVt9yolGlrsnDe5LQ1uGEM3p0Ou0KMw+rH+usawdjqq27MTg==
+svero@0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/svero/-/svero-0.5.0.tgz#61f88f8a912407df62c7d3cf8007b96becc7b743"
+  integrity sha512-5FbOERdDHve+gUbhDt0mN1lsyUD6h3bfn6P3p+CYus9C+YH5ZXx1YjU6SV+1Mnn8+Krrhl5VoVA4O5QgkjbqSQ==
   dependencies:
     path-parser "^4.2.0"
 
@@ -2275,10 +2275,10 @@ wampy-cra@^0.1.1:
   dependencies:
     crypto-js "^3.1.6"
 
-wampy@6.2.1:
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/wampy/-/wampy-6.2.1.tgz#29aa5ac38d8e699a565c595238b990df16976ea5"
-  integrity sha512-VoyHdcxqv+nPeXeGazOzVG5LpFVZL45nDLaOt0UiJKdFye58pVZGayrVXUn9Pw73NzdDX5rQ/O05NeO5ymJjmA==
+wampy@6.2.2:
+  version "6.2.2"
+  resolved "https://registry.yarnpkg.com/wampy/-/wampy-6.2.2.tgz#7f352c404be6ff0d9e158339d267d4b2d4f817e0"
+  integrity sha512-hcJ/PceDyEPbh62y/jHJOJs5HtaoINzLmkrADhqCraZziqaTFn2ALSLYXTHuWQJ+W0nao/IDqDgDDjewmaxHTw==
   dependencies:
     msgpack5 "^4.2.1"
     wampy-cra "^0.1.1"

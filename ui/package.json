@@ -6,11 +6,11 @@
     "rollup": "^1.10.1",
     "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-livereload": "^1.0.0",
-    "rollup-plugin-node-resolve": "^4.2.3",
+    "rollup-plugin-node-resolve": "^4.2.4",
     "rollup-plugin-svelte": "^5.0.3",
     "rollup-plugin-terser": "^4.0.4",
-    "sirv-cli": "^0.4.0",
-    "svelte": "^3.0.0"
+    "sirv-cli": "^0.4.2",
+    "svelte": "^3.3.0"
   },
   "scripts": {
     "build": "rollup -c",
@@ -21,11 +21,11 @@
   },
   "dependencies": {
     "date-fns": "1.30.1",
-    "ky": "0.10.0",
+    "ky": "0.11.0",
     "svelte-routing": "1.0.0",
-    "svero": "0.4.3",
+    "svero": "0.5.0",
     "videojs-hotkeys": "0.2.25",
     "videojs-vr": "1.5.0",
-    "wampy": "6.2.1"
+    "wampy": "6.2.2"
   }
 }

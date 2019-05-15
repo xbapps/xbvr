@@ -8,29 +8,16 @@
   let items = [];
   let data = {};
 
+  let offset = 0;
+  let limit = 80;
+  let total = 0;
+
   let is_available = "1";
   let is_accessible = "1";
 
   let modal;
 
-  dlState.subscribe(value => {
-    items = [];
-    getData();
-  });
-  tag.subscribe(value => {
-    items = [];
-    getData();
-  });
-  cast.subscribe(value => {
-    items = [];
-    getData();
-  });
-  site.subscribe(value => {
-    items = [];
-    getData();
-  });
-
-  async function getData() {
+  async function getData(iOffset) {
     switch ($dlState) {
       case "any":
         is_available = "";
@@ -53,8 +40,8 @@
     data = await ky
       .get(`/api/scene/list`, {
         searchParams: {
-          offset: 0,
-          limit: 128,
+          offset: iOffset,
+          limit: limit,
           is_available: is_available,
           is_accessible: is_accessible,
           tag: $tag,
@@ -63,7 +50,14 @@
         }
       })
       .json();
-    items = data.scenes;
+
+    if (iOffset === 0) {
+      items = [];
+    }
+
+    items = items.concat(data.scenes);
+    offset = iOffset + limit;
+    total = data.results;
   }
 
   function getSizeClass(cardSize) {
@@ -95,31 +89,64 @@
     modal.$on("close-modal", e => {
       modal.$destroy();
     });
-
   }
-  onMount(getData);
+
+  onMount(() => {
+    getData(offset);
+
+      dlState.subscribe(value => {
+        offset = 0;
+        getData(offset);
+      });
+      tag.subscribe(value => {
+        offset = 0;
+        getData(offset);
+      });
+      cast.subscribe(value => {
+        offset = 0;
+        getData(offset);
+      });
+      site.subscribe(value => {
+        offset = 0;
+        getData(offset);
+      });
+  });
 </script>
 
-{#each items as item}
-<div class="column is-multiline {getSizeClass($cardSize)}">
-	<div class="card">
+<div class="column">
+    <div class="columns is-multiline">
 
-		<div class="card-image">
-			{#if item.is_available}
-			<figure class="image" on:click="{() => item.is_accessible && play(item)}">
-				<img src={getImageURL(item.cover_url)} alt="" />
-			</figure>
-			{:else}
-			<figure class="image">
-				<img src={getImageURL(item.cover_url)} alt="" style="opacity:0.35;" />
-			</figure>
-			{/if}
-		</div>
+      {#each items as item}
+      <div class="column is-multiline {getSizeClass($cardSize)}">
+        <div class="card">
 
-		{#if $showInfo}
-    <time datetime="">{format(parse(item.release_date), "YYYY-MM-DD")}</time>
-		{/if}
+          <div class="card-image">
+            {#if item.is_available}
+            <figure class="image" on:click="{() => item.is_accessible && play(item)}">
+              <img src={getImageURL(item.cover_url)} alt="" />
+            </figure>
+            {:else}
+            <figure class="image">
+              <img src={getImageURL(item.cover_url)} alt="" style="opacity:0.35;" />
+            </figure>
+            {/if}
+          </div>
 
-	</div>
+          {#if $showInfo}
+          <time datetime="">{format(parse(item.release_date), "YYYY-MM-DD")}</time>
+          {/if}
+
+        </div>
+      </div>
+      {/each}
+
+    </div>
+
+    {#if items.length < total}
+    <div class="column is-full">
+    	  <a class="button is-fullwidth" on:click={()=>getData(offset)}>Load more</a>
+    </div>
+    {/if}
+
 </div>
-{/each}
+
