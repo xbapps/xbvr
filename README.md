@@ -20,22 +20,10 @@ Latest version is always available at [releases page](https://github.com/cld9x/x
 
 ## Quick start
 
-NOTE: all the below will become obsolete at some point as the ultimate goal is to move everything into web-based UI, so no command line interactions would be neccesary.
+Once launched, web UI is available at `http://127.0.0.1:9999`.
 
-To get started, you'll need to add some *volumes* (folders) first, you can do that via command line interface:
+At first there will be nothing interesting, so click through to Options -> Scene Data and import bundled data. Wait for it to finish, and then go to Options -> Folders and add path to the folders where your media files are stored.
 
-    xbvr volumes add <PATH_TO_FOLDER>
+When it's all done, you should see your media not only in web UI, but also through DLNA server in your favourite VR player.
 
-Let's scrape some metadata (it takes some time!):
-
-    xbvr task scrape
-
-Now let's scan and match data to files:
-
-    xbvr volume rescan
-
-After all of this, you can finally run the app:
-
-    xbvr run
-
-Once launched, web UI is available at `http://127.0.0.1:9999` and you should be able to see new DLNA source in your VR player of choice.
+Enjoy!
