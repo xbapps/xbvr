@@ -18,6 +18,8 @@ All-in-one tool for your VR porn library.
 
 Latest version is always available at [releases page](https://github.com/cld9x/xbvr/releases).
 
+Also make sure you have `ffprobe` installed somewhere on the system path - it could be downloaded from [ffbinaries](https://ffbinaries.com/downloads).
+
 ## Quick start
 
 Once launched, web UI is available at `http://127.0.0.1:9999`.
