@@ -30,6 +30,7 @@ func StartServer() {
 	RemoveLock("scrape")
 	RemoveLock("update-scenes")
 
+	CheckDependencies()
 	CheckVolumes()
 
 	// API endpoints

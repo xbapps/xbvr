@@ -4,6 +4,7 @@ require (
 	github.com/ProtonMail/go-appdir v1.0.0
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
+	github.com/Smerity/govarint v0.0.0-20150407073650-7265e41f48f1 // indirect
 	github.com/UnnoTed/fileb0x v1.1.3 // indirect
 	github.com/anacrolix/envpprof v1.0.0 // indirect
 	github.com/anacrolix/ffprobe v0.0.0-20190307025918-9b483c5f7751
@@ -13,9 +14,16 @@ require (
 	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
 	github.com/araddon/dateparse v0.0.0-20190426192744-0d74ffceef83
 	github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb // indirect
+	github.com/blevesearch/bleve v0.7.0 // indirect
+	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
+	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
+	github.com/boltdb/bolt v1.3.1 // indirect
+	github.com/couchbase/vellum v0.0.0-20190328134517-462e86d8716b // indirect
 	github.com/creasty/defaults v1.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/djherbis/times v1.2.0
+	github.com/dsnet/compress v0.0.1 // indirect
+	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/emicklei/go-restful v2.9.3+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
 	github.com/gammazero/nexus v2.1.1-0.20190402111811-fce688586772+incompatible
@@ -59,6 +67,7 @@ require (
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-zglob v0.0.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
+	github.com/mholt/archiver v3.1.1+incompatible
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
@@ -66,6 +75,7 @@ require (
 	github.com/mozillazg/go-unidecode v0.1.0 // indirect
 	github.com/muesli/smartcrop v0.3.0 // indirect
 	github.com/nleeper/goment v0.0.0-20190304152151-62477c661bec
+	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20150712133111-4e1c5567d7c2 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.8.1
@@ -78,12 +88,17 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
+	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
 	github.com/thoas/go-funk v0.4.0
+	github.com/tidwall/gjson v1.2.1
+	github.com/tidwall/match v1.0.1 // indirect
+	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65 // indirect
 	github.com/ugorji/go v1.1.4 // indirect
 	github.com/vansante/go-ffprobe v1.0.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
+	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	golang.org/x/crypto v0.0.0-20190506204251-e1dfcc566284 // indirect
 	golang.org/x/exp v0.0.0-20190509005604-ec0fef3eb65a // indirect
 	golang.org/x/image v0.0.0-20190507092727-e4e5bf290fec // indirect

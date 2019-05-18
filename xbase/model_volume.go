@@ -61,7 +61,7 @@ func (o *Volume) SaveLocalInfo() {
 			db.Model(&pfn).Preload("Cast").Preload("Tags").Related(&scenes, "Scenes")
 
 			if len(scenes) == 1 {
-				downloadFile(scenes[0].CoverURL, files[i].GetPath()+".png")
+				downloadLocalImage(scenes[0].CoverURL, files[i].GetPath()+".png")
 				saveJSON(scenes[0], files[i].GetPath()+".json")
 
 				files[i].SceneID = scenes[0].ID
@@ -76,7 +76,7 @@ func caseInsensitiveContains(s, substr string) bool {
 	return strings.Contains(s, substr)
 }
 
-func downloadFile(url, destPath string) error {
+func downloadLocalImage(url, destPath string) error {
 	resp, err := http.Get("http://127.0.0.1:9999/img/700x/" + strings.Replace(url, "://", ":/", -1))
 	if err != nil {
 		return err
