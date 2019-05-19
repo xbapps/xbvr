@@ -2,7 +2,6 @@ before:
   hooks:
     - go mod download
     - go get github.com/UnnoTed/fileb0x
-    - go get github.com/go-bindata/go-bindata
     - go generate ./...
 builds:
 - id: xbvr-mac

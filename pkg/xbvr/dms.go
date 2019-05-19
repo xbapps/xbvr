@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cld9x/xbvr/pkg/assets"
 	"github.com/cld9x/xbvr/pkg/dms/dlna/dms"
 	"github.com/cld9x/xbvr/pkg/dms/rrcache"
 )
@@ -176,18 +177,18 @@ func StartDMS() {
 		NoProbe:        config.NoProbe,
 		Icons: []dms.Icon{
 			{
-				Width:      48,
-				Height:     48,
+				Width:      32,
+				Height:     32,
 				Depth:      8,
 				Mimetype:   "image/png",
-				ReadSeeker: bytes.NewReader(MustAsset("data/VGC Sonic.png")),
+				ReadSeeker: bytes.NewReader(assets.FileIconsXbvr32Png),
 			},
 			{
 				Width:      128,
 				Height:     128,
 				Depth:      8,
 				Mimetype:   "image/png",
-				ReadSeeker: bytes.NewReader(MustAsset("data/VGC Sonic 128.png")),
+				ReadSeeker: bytes.NewReader(assets.FileIconsXbvr128Png),
 			},
 		},
 		StallEventSubscribe: config.StallEventSubscribe,

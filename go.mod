@@ -34,7 +34,6 @@ require (
 	github.com/getlantern/hidden v0.0.0-20160523043807-d52a649ab33a // indirect
 	github.com/getlantern/ops v0.0.0-20170904182230-37353306c908 // indirect
 	github.com/getlantern/systray v0.0.0-20190131073753-26d5b920200d
-	github.com/go-bindata/go-bindata v3.1.1+incompatible // indirect
 	github.com/go-openapi/jsonpointer v0.19.0 // indirect
 	github.com/go-openapi/jsonreference v0.19.0 // indirect
 	github.com/go-openapi/spec v0.19.0 // indirect
