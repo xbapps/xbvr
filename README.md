@@ -18,7 +18,7 @@ All-in-one tool for your VR porn library.
 
 Latest version is always available at [releases page](https://github.com/cld9x/xbvr/releases).
 
-Also make sure you have `ffprobe` installed somewhere on the system path - it could be downloaded from [ffbinaries](https://ffbinaries.com/downloads).
+Please note that during first run XBVR automatically downloads `ffprobe` and `ffmpeg` binaries [ffbinaries site](https://ffbinaries.com/downloads).
 
 ## Quick start
 
