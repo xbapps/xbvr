@@ -89,6 +89,8 @@ func downloadFfbinaries(tool string) error {
 		return err
 	}
 
+	err = os.Remove(filepath.Join(binDir, tool+".zip"))
+
 	return nil
 }
 
