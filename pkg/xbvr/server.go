@@ -30,7 +30,7 @@ func StartServer(version, commit, branch, date string) {
 	RemoveLock("scrape")
 	RemoveLock("update-scenes")
 
-	CheckDependencies()
+	go CheckDependencies()
 	CheckVolumes()
 
 	// API endpoints

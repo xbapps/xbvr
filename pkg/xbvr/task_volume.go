@@ -20,6 +20,8 @@ func RescanVolumes() {
 	if !CheckLock("rescan") {
 		CreateLock("rescan")
 
+		CheckVolumes()
+
 		db, _ := GetDB()
 		defer db.Close()
 
