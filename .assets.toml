@@ -1,17 +1,12 @@
 pkg = "assets"
-dest = "./xbase/assets/"
+dest = "./pkg/assets/"
 fmt = false
-
-[compression]
-compress = false
-method = "DefaultCompression"
-keep = false
 
 clean = false
 output = "ab0x.go"
 unexporTed = false
-spread = false
-debug = true
+spread = true
+debug = false
 
 [[custom]]
 files = ["./ui/public/"]

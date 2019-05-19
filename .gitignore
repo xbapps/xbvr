@@ -8,5 +8,5 @@ test.db
 
 /dist/
 /node_modules/
-/xbase/assets/
+/pkg/assets/
 /ui/public/static/bundle.*
