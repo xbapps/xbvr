@@ -13,13 +13,13 @@ import (
 
 func ScrapeBadoink(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com"),
+		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
 	)
 
 	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com"),
+		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
 	)
@@ -58,6 +58,10 @@ func ScrapeBadoink(knownScenes []string, out *[]ScrapedScene) error {
 
 		if e.Request.URL.Host == "18vr.com" {
 			sc.Site = "18VR"
+		}
+
+		if e.Request.URL.Host == "kinkvr.com" {
+			sc.Site = "KinkVR"
 		}
 
 		// Scene ID - get from URL
@@ -158,6 +162,7 @@ func ScrapeBadoink(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector.Visit("https://18vr.com/vrpornvideos")
 	siteCollector.Visit("https://vrcosplayx.com/cosplaypornvideos")
 	siteCollector.Visit("https://babevr.com/vrpornvideos")
+	siteCollector.Visit("https://kinkvr.com/bdsm-vr-videos")
 
 	return nil
 }

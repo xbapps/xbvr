@@ -42,7 +42,7 @@ func Scrape() {
 		tlog.Infof("Scraping NaughtyAmericaVR")
 		scrape.ScrapeNA(knownScenes, &collectedScenes)
 
-		tlog.Infof("Scraping BadoinkVR / 18VR / VRCosplayX / BabeVR")
+		tlog.Infof("Scraping BadoinkVR / 18VR / VRCosplayX / BabeVR / KinkVR")
 		scrape.ScrapeBadoink(knownScenes, &collectedScenes)
 
 		tlog.Infof("Scraping MilfVR")
