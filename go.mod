@@ -14,7 +14,7 @@ require (
 	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
 	github.com/araddon/dateparse v0.0.0-20190426192744-0d74ffceef83
 	github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb // indirect
-	github.com/blevesearch/bleve v0.7.0 // indirect
+	github.com/blevesearch/bleve v0.7.0
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
@@ -24,7 +24,7 @@ require (
 	github.com/djherbis/times v1.2.0
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/emicklei/go-restful v2.9.3+incompatible
+	github.com/emicklei/go-restful v2.9.5+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
 	github.com/gammazero/nexus v2.1.1-0.20190402111811-fce688586772+incompatible
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
@@ -47,7 +47,6 @@ require (
 	github.com/google/pprof v0.0.0-20190502144155-8358a9778bd1 // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
-	github.com/gorilla/mux v1.6.2
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/gowww/log v0.0.0-20170712202755-af3772f4bb12
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
@@ -83,7 +82,7 @@ require (
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/simplereach/timeutils v1.2.0 // indirect
-	github.com/sirupsen/logrus v1.4.0
+	github.com/sirupsen/logrus v1.4.2
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
@@ -98,7 +97,6 @@ require (
 	github.com/vansante/go-ffprobe v1.0.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	golang.org/x/crypto v0.0.0-20190506204251-e1dfcc566284 // indirect
 	golang.org/x/exp v0.0.0-20190509005604-ec0fef3eb65a // indirect
 	golang.org/x/image v0.0.0-20190507092727-e4e5bf290fec // indirect
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422 // indirect
