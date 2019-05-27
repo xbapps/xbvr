@@ -22,7 +22,7 @@
   "dependencies": {
     "date-fns": "1.30.1",
     "ky": "0.11.0",
-    "svelte-routing": "1.0.0",
+    "svelte-routing": "1.1.1",
     "svero": "0.5.0",
     "videojs-hotkeys": "0.2.25",
     "videojs-vr": "1.5.0",
