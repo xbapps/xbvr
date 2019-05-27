@@ -43,29 +43,32 @@ func Scrape() {
 		// Start scraping
 		var collectedScenes []scrape.ScrapedScene
 
-		tlog.Infof("Scraping NaughtyAmericaVR")
-		scrape.ScrapeNA(knownScenes, &collectedScenes)
-
 		tlog.Infof("Scraping BadoinkVR / 18VR / VRCosplayX / BabeVR / KinkVR")
 		scrape.ScrapeBadoink(knownScenes, &collectedScenes)
 
 		tlog.Infof("Scraping MilfVR")
 		scrape.ScrapeMilfVR(knownScenes, &collectedScenes)
 
-		tlog.Infof("Scraping VRBangers")
-		scrape.ScrapeVRB(knownScenes, &collectedScenes)
+		tlog.Infof("Scraping NaughtyAmericaVR")
+		scrape.ScrapeNA(knownScenes, &collectedScenes)
 
-		tlog.Infof("Scraping WankzVR")
-		scrape.ScrapeWankz(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping VirtualTaboo")
-		scrape.ScrapeVirtualTaboo(knownScenes, &collectedScenes)
+		tlog.Infof("Scraping SexBabesVR")
+		scrape.ScrapeSexBabesVR(knownScenes, &collectedScenes)
 
 		tlog.Infof("Scraping VirtualRealPorn")
 		scrape.ScrapeVirtualRealPorn(knownScenes, &collectedScenes)
 
+		tlog.Infof("Scraping VirtualTaboo")
+		scrape.ScrapeVirtualTaboo(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping VRBangers")
+		scrape.ScrapeVRB(knownScenes, &collectedScenes)
+
 		tlog.Infof("Scraping VRHush")
 		scrape.ScrapeVRHush(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping WankzVR")
+		scrape.ScrapeWankz(knownScenes, &collectedScenes)
 
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
