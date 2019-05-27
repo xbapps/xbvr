@@ -1,7 +1,7 @@
 <script>
   import ky from "ky";
   import {onMount} from "svelte";
-  import { cardSize, showInfo, dlState, tag, cast, site } from "../store/filters.js"
+  import { cardSize, showInfo, dlState, tag, cast, site, release_month } from "../store/filters.js"
 
   let filters = {};
 
@@ -43,6 +43,7 @@
     $cast = "";
     $site = "";
     $tag = "";
+    $release_month = "";
   }
 
   onMount(getData);
@@ -74,6 +75,27 @@
         <option value="missing">Not downloaded</option>
       </select>
     </div>
+  </div>
+</div>
+
+<label class="label">Release date</label>
+<div class="field has-addons">
+  <div class="control is-expanded">
+    <div class="select is-fullwidth">
+      <select bind:value={$release_month}>
+        <option></option>
+        {#if filters.release_month}
+          {#each filters.release_month.reverse() as t}<option>{t}</option>{/each}
+        {/if}
+      </select>
+    </div>
+  </div>
+  <div class="control">
+    <button type="submit" class="button is-light" on:click="{e=>{$release_month=''}}">
+      <span class="icon">
+        <i class="fas fa-times" />
+      </span>
+    </button>
   </div>
 </div>
 

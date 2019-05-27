@@ -507,6 +507,27 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 				}
 			}
 
+			if strings.HasPrefix(obj.Path, "released/") {
+				id := strings.Split(obj.Path, "/")
+
+				listURL := (&url.URL{
+					Scheme: "http",
+					Host:   "127.0.0.1:9999",
+					Path:   "/api/scene/list",
+					RawQuery: url.Values{
+						"is_accessible": {"1"},
+						"released":      {id[1]},
+					}.Encode(),
+				}).String()
+
+				var data XbaseScenes
+				resty.R().SetResult(&data).Get(listURL)
+
+				for i := range data.Scenes {
+					objs = append(objs, me.sceneToContainer(data.Scenes[i], "released/"+id[1], host))
+				}
+			}
+
 			result, err := xml.Marshal(objs)
 			if err != nil {
 				return nil, err

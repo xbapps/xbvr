@@ -13,14 +13,15 @@ import (
 // })
 
 type ResponseGetScenes struct {
-	Results int         `json:"results"`
+	Results int     `json:"results"`
 	Scenes  []Scene `json:"scenes"`
 }
 
 type ResponseGetFilters struct {
-	Cast  []string `json:"cast"`
-	Tags  []string `json:"tags"`
-	Sites []string `json:"sites"`
+	Cast          []string `json:"cast"`
+	Tags          []string `json:"tags"`
+	Sites         []string `json:"sites"`
+	ReleaseMonths []string `json:"release_month"`
 }
 
 type SceneResource struct{}
@@ -144,7 +145,15 @@ func (i SceneResource) getFiltersForState(req *restful.Request, resp *restful.Re
 		}
 	}
 
-	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetFilters{Tags: outTags, Cast: outCast, Sites: outSites})
+	// Available release dates (YYYY-MM)
+	tx.Select("strftime('%Y-%m', release_date) as release_date_text").
+		Group("strftime('%Y-%m', release_date)").Find(&scenes)
+	var outRelease []string
+	for i := range scenes {
+		outRelease = append(outRelease, scenes[i].ReleaseDateText)
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetFilters{Tags: outTags, Cast: outCast, Sites: outSites, ReleaseMonths: outRelease})
 }
 
 func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
@@ -207,6 +216,11 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 			Joins("left join scene_cast on scene_cast.scene_id=scenes.id").
 			Joins("left join actors on actors.id=scene_cast.actor_id").
 			Where(&Actor{Name: q_cast})
+	}
+
+	q_released := req.QueryParameter("released")
+	if q_released != "" {
+		tx = tx.Where("release_date_text LIKE ?", q_released+"%")
 	}
 
 	// Count totals first

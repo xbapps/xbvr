@@ -2,7 +2,7 @@
   import ky from "ky";
   import { onMount, afterUpdate } from "svelte";
   import { parse, format } from "date-fns";
-  import { cardSize, showInfo, dlState, tag, cast, site } from "../store/filters.js"
+  import { cardSize, showInfo, dlState, tag, cast, site, release_month } from "../store/filters.js"
   import Video from "./Video.svelte";
 
   let items = [];
@@ -47,6 +47,7 @@
           tag: $tag,
           cast: $cast,
           site: $site,
+          released: $release_month,
         }
       })
       .json();
@@ -107,6 +108,10 @@
         getData(offset);
       });
       site.subscribe(value => {
+        offset = 0;
+        getData(offset);
+      });
+      release_month.subscribe(value => {
         offset = 0;
         getData(offset);
       });
