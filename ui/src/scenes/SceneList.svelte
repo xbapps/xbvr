@@ -119,39 +119,45 @@
 </script>
 
 <div class="column">
-    <div class="columns is-multiline">
+  <div class="columns is-multiline is-full">
+    <div class="column">
+      <strong>{total} results</strong>
+    </div>
+  </div>
 
-      {#each items as item}
-      <div class="column is-multiline {getSizeClass($cardSize)}">
-        <div class="card">
+  <div class="columns is-multiline">
 
-          <div class="card-image">
-            {#if item.is_available}
-            <figure class="image" on:click="{() => item.is_accessible && play(item)}">
-              <img src={getImageURL(item.cover_url)} alt="" />
-            </figure>
-            {:else}
-            <figure class="image">
-              <img src={getImageURL(item.cover_url)} alt="" style="opacity:0.35;" />
-            </figure>
-            {/if}
-          </div>
+    {#each items as item}
+    <div class="column is-multiline {getSizeClass($cardSize)}">
+      <div class="card">
 
-          {#if $showInfo}
-          <time datetime="">{format(parse(item.release_date), "YYYY-MM-DD")}</time>
+        <div class="card-image">
+          {#if item.is_available}
+          <figure class="image" on:click="{() => item.is_accessible && play(item)}">
+            <img src={getImageURL(item.cover_url)} alt="" />
+          </figure>
+          {:else}
+          <figure class="image">
+            <img src={getImageURL(item.cover_url)} alt="" style="opacity:0.35;" />
+          </figure>
           {/if}
-
         </div>
+
+        {#if $showInfo}
+        <time datetime="">{format(parse(item.release_date), "YYYY-MM-DD")}</time>
+        {/if}
+
       </div>
-      {/each}
-
     </div>
+    {/each}
 
-    {#if items.length < total}
-    <div class="column is-full">
-    	  <a class="button is-fullwidth" on:click={()=>getData(offset)}>Load more</a>
-    </div>
-    {/if}
+  </div>
+
+  {#if items.length < total}
+  <div class="column is-full">
+      <a class="button is-fullwidth" on:click={()=>getData(offset)}>Load more</a>
+  </div>
+  {/if}
 
 </div>
 
