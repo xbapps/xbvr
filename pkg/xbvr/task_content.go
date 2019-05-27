@@ -60,6 +60,9 @@ func Scrape() {
 		tlog.Infof("Scraping VirtualRealPorn")
 		scrape.ScrapeVirtualRealPorn(knownScenes, &collectedScenes)
 
+		tlog.Infof("Scraping VRHush")
+		scrape.ScrapeVRHush(knownScenes, &collectedScenes)
+
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
 
