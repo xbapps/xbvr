@@ -26,11 +26,11 @@ type Scene struct {
 	SceneType       string             `json:"scene_type"`
 	Studio          string             `json:"studio"`
 	Site            string             `json:"site"`
-	Tags            []Tag          `gorm:"many2many:scene_tags;" json:"tags"`
-	Cast            []Actor        `gorm:"many2many:scene_cast;" json:"cast"`
+	Tags            []Tag              `gorm:"many2many:scene_tags;" json:"tags"`
+	Cast            []Actor            `gorm:"many2many:scene_cast;" json:"cast"`
 	Filenames       []PossibleFilename `gorm:"many2many:scene_filenames;" json:"filename"`
-	Images          []Image        `json:"images"`
-	Files           []File         `json:"file"`
+	Images          []Image            `json:"images"`
+	Files           []File             `json:"file"`
 	Duration        int                `json:"duration"`
 	Synopsis        string             `json:"synopsis" sql:"type:text;"`
 	ReleaseDate     time.Time          `json:"release_date"`

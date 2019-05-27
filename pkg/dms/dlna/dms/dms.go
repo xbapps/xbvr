@@ -376,14 +376,14 @@ func (me *Server) serveDLNATranscode(w http.ResponseWriter, r *http.Request, pat
 	if !ok {
 		return
 	}
-	ffInfo, _ := me.ffmpegProbe(path_)
-	if ffInfo != nil {
-		if duration, err := ffInfo.Duration(); err == nil {
-			s := fmt.Sprintf("%f", duration.Seconds())
-			w.Header().Set("content-duration", s)
-			w.Header().Set("x-content-duration", s)
-		}
-	}
+	// ffInfo, _ := me.ffmpegProbe(path_)
+	// if ffInfo != nil {
+	// 	if duration, err := ffInfo.Duration(); err == nil {
+	// 		s := fmt.Sprintf("%f", duration.Seconds())
+	// 		w.Header().Set("content-duration", s)
+	// 		w.Header().Set("x-content-duration", s)
+	// 	}
+	// }
 	stderrPath := func() string {
 		u, _ := user.Current()
 		return filepath.Join(u.HomeDir, ".dms", "log", tsname, filepath.Base(path_))
@@ -869,29 +869,6 @@ func (me *Server) location(ip net.IP) string {
 		Path: rootDescPath,
 	}
 	return url.String()
-}
-
-// Can return nil info with nil err if an earlier Probe gave an error.
-func (srv *Server) ffmpegProbe(path string) (info *ffprobe.Info, err error) {
-	// We don't want relative paths in the cache.
-	path, err = filepath.Abs(path)
-	if err != nil {
-		return
-	}
-	fi, err := os.Stat(path)
-	if err != nil {
-		return
-	}
-	key := ffmpegInfoCacheKey{path, fi.ModTime().UnixNano()}
-	value, ok := srv.FFProbeCache.Get(key)
-	if !ok {
-		info, err = ffprobe.Run(path)
-		err = suppressFFmpegProbeDataErrors(err)
-		srv.FFProbeCache.Set(key, info)
-		return
-	}
-	info = value.(*ffprobe.Info)
-	return
 }
 
 // IgnorePath detects if a file/directory should be ignored.

@@ -130,21 +130,6 @@ func (me *contentDirectoryService) cdsObjectToUpnpavObject(cdsObject object, fil
 		nativeBitrate uint
 		resDuration   string
 	)
-	if !me.NoProbe {
-		ffInfo, probeErr := me.ffmpegProbe(entryFilePath)
-		switch probeErr {
-		case nil:
-			if ffInfo != nil {
-				nativeBitrate, _ = ffInfo.Bitrate()
-				if d, err := ffInfo.Duration(); err == nil {
-					resDuration = FormatDurationSexagesimal(d)
-				}
-			}
-		case ffprobe.ExeNotFound:
-		default:
-			log.Printf("error probing %s: %s", entryFilePath, probeErr)
-		}
-	}
 	if obj.Title == "" {
 		obj.Title = fileInfo.Name()
 	}
