@@ -29,3 +29,7 @@ At first there will be nothing interesting, so click through to Options -> Scene
 When it's all done, you should see your media not only in web UI, but also through DLNA server in your favourite VR player.
 
 Enjoy!
+
+## Questions/suggestions
+
+Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG).
