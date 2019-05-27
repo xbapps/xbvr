@@ -24,7 +24,7 @@ require (
 	github.com/djherbis/times v1.2.0
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/emicklei/go-restful v2.9.3+incompatible
+	github.com/emicklei/go-restful v2.9.5+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
 	github.com/gammazero/nexus v2.1.1-0.20190402111811-fce688586772+incompatible
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
