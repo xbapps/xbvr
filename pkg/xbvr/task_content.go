@@ -1,6 +1,8 @@
 package xbvr
 
 import (
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/cld9x/xbvr/pkg/scrape"
@@ -24,6 +26,8 @@ func Scrape() {
 		CreateLock("scrape")
 
 		tlog := log.WithField("task", "scrape")
+
+		os.RemoveAll(filepath.Join(cacheDir, "site_cache"))
 
 		// Get all known scenes
 		var scenes []Scene
@@ -89,8 +93,6 @@ func ImportBundle() {
 
 		var bundleData Bundle
 		resp, err := resty.R().SetResult(&bundleData).Get("http://127.0.0.1:9999/static/bundle.json")
-
-		tlog.Info(err)
 
 		if err == nil && resp.StatusCode() == 200 {
 			db, _ := GetDB()
