@@ -50,14 +50,14 @@ func (o *Scene) GetIfExist(id string) error {
 	db, _ := GetDB()
 	defer db.Close()
 
-	return db.Preload("Tags").Preload("Cast").Preload("Filenames").Where(&Scene{SceneID: id}).First(o).Error
+	return db.Preload("Tags").Preload("Cast").Where(&Scene{SceneID: id}).First(o).Error
 }
 
 func (o *Scene) GetIfExistURL(u string) error {
 	db, _ := GetDB()
 	defer db.Close()
 
-	return db.Preload("Tags").Preload("Cast").Preload("Filenames").Where(&Scene{SceneURL: u}).First(o).Error
+	return db.Preload("Tags").Preload("Cast").Where(&Scene{SceneURL: u}).First(o).Error
 }
 
 func (o *Scene) GetFiles() ([]File, error) {

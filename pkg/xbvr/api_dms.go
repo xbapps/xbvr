@@ -50,7 +50,6 @@ func (i DMSResource) sceneById(req *restful.Request, resp *restful.Response) {
 	var scene Scene
 	db.Preload("Cast").
 		Preload("Tags").
-		Preload("Filenames").
 		Preload("Images").
 		Preload("Files").
 		Where(&Scene{SceneID: sceneId}).FirstOrCreate(&scene)
@@ -68,7 +67,6 @@ func (i DMSResource) base(req *restful.Request, resp *restful.Response) {
 		Model(&scenes).
 		Preload("Cast").
 		Preload("Tags").
-		Preload("Filenames").
 		Preload("Images").
 		Preload("Files")
 

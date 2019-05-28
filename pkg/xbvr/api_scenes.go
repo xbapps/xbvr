@@ -94,7 +94,6 @@ func (i SceneResource) getFiltersForState(req *restful.Request, resp *restful.Re
 		Model(&scenes).
 		Preload("Cast").
 		Preload("Tags").
-		Preload("Filenames").
 		Preload("Images").
 		Preload("Files")
 
@@ -179,7 +178,6 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		Model(&scenes).
 		Preload("Cast").
 		Preload("Tags").
-		Preload("Filenames").
 		Preload("Images").
 		Preload("Files")
 
