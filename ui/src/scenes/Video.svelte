@@ -22,10 +22,11 @@
 
   onMount(() => {
     let player = videojs(videoElement);
-    player.vr({
+    let vr = player.vr({
       projection: '360',
       forceCardboard: false
     });
+
     player.hotkeys({
       alwaysCaptureHotkeys: true,
       volumeStep: 0.1,
@@ -41,6 +42,10 @@
           }
         }
       }
+    });
+
+    player.on("loadedmetadata", function() {
+      vr.camera.position.set(-1, 0, -1);
     });
   });
 </script>
