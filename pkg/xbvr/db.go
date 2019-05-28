@@ -58,7 +58,6 @@ func init() {
 	db.AutoMigrate(&Actor{})
 	db.AutoMigrate(&Tag{})
 	db.AutoMigrate(&Image{})
-	db.AutoMigrate(&PossibleFilename{})
 
 	db.AutoMigrate(&File{})
 	db.AutoMigrate(&Volume{})

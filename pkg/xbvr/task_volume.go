@@ -127,9 +127,7 @@ func RescanVolumes() {
 		for i := range files {
 			fn := files[i].Filename
 
-			var pfn PossibleFilename
-			db.Where("name LIKE ?", path.Base(fn)).First(&pfn)
-			db.Model(&pfn).Preload("Cast").Preload("Tags").Related(&scenes, "Scenes")
+			db.Raw("select scenes.* from scenes, json_each(filenames_arr) where json_each.value = ?", path.Base(fn)).Scan(&scenes)
 
 			if len(scenes) == 1 {
 				files[i].SceneID = scenes[0].ID

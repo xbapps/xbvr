@@ -1,6 +1,7 @@
 package xbvr
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -8,12 +9,6 @@ import (
 	"github.com/cld9x/xbvr/pkg/scrape"
 	"github.com/jinzhu/gorm"
 )
-
-type PossibleFilename struct {
-	ID     uint    `gorm:"primary_key" json:"id"`
-	Name   string  `gorm:"unique_index" json:"name"`
-	Scenes []Scene `gorm:"many2many:scene_filenames;" json:"scenes"`
-}
 
 type Scene struct {
 	ID        uint       `gorm:"primary_key" json:"id"`
@@ -28,7 +23,7 @@ type Scene struct {
 	Site            string             `json:"site"`
 	Tags            []Tag              `gorm:"many2many:scene_tags;" json:"tags"`
 	Cast            []Actor            `gorm:"many2many:scene_cast;" json:"cast"`
-	Filenames       []PossibleFilename `gorm:"many2many:scene_filenames;" json:"filename"`
+	FilenamesArr    string             `json:"filenames_arr" sql:"type:text;"`
 	Images          []Image            `json:"images"`
 	Files           []File             `json:"file"`
 	Duration        int                `json:"duration"`
@@ -97,6 +92,12 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext scrape.ScrapedScene) error {
 		}
 	}
 
+	// Store filenames as JSON
+	pfTxt, err := json.Marshal(ext.Filenames)
+	if err == nil {
+		o.FilenamesArr = string(pfTxt)
+	}
+
 	db.Save(o)
 
 	// Clean & Associate Tags
@@ -116,14 +117,6 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext scrape.ScrapedScene) error {
 		tmpActor = Actor{}
 		db.Where(&Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&tmpActor)
 		db.Model(&o).Association("Cast").Append(tmpActor)
-	}
-
-	// Associate Filenames
-	var tmpSceneFilename PossibleFilename
-	for _, name := range ext.Filenames {
-		tmpSceneFilename = PossibleFilename{}
-		db.Where(&PossibleFilename{Name: name}).FirstOrCreate(&tmpSceneFilename)
-		db.Model(&o).Association("Filenames").Append(tmpSceneFilename)
 	}
 
 	// Associate Images (but first remove old ones)

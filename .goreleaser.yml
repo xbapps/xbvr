@@ -7,6 +7,8 @@ builds:
 - id: xbvr-mac
   binary: xbvr
 #  main: cmd/tray/main.go
+  flags:
+    - -tags=json1
   env:
     - CGO_ENABLED=1
     - CC=o64-clang
@@ -19,6 +21,8 @@ builds:
 #    post: ./appify.sh -s dist/darwin_amd64/xbvr -i ui/public/icons/xbvr-mac.icns -n XBVR
 - id: xbvr-windows
   binary: xbvr
+  flags:
+    - -tags=json1
   env:
     - CGO_ENABLED=1
     - CC=x86_64-w64-mingw32-gcc
@@ -29,6 +33,8 @@ builds:
     - amd64
 - id: xbvr-linux-amd64
   binary: xbvr
+  flags:
+    - -tags=json1
   env:
     - CGO_ENABLED=1
   goos:
@@ -37,6 +43,8 @@ builds:
     - amd64
 - id: xbvr-linux-arm
   binary: xbvr
+  flags:
+    - -tags=json1
   env:
     - CGO_ENABLED=1
     - CC=arm-linux-gnueabi-gcc
