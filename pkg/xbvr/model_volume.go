@@ -20,6 +20,7 @@ type Volume struct {
 	LastScan    time.Time `json:"last_scan"`
 	IsEnabled   bool      `json:"-"`
 	IsAvailable bool      `json:"is_available"`
+	FileCount   int       `json:"file_count"`
 }
 
 func (o *Volume) IsMounted() bool {
@@ -102,14 +103,14 @@ func downloadLocalImage(url, destPath string) error {
 }
 
 type InfoFile struct {
-	Position         float32   `json:"position" default:"0.0"`
-	DisplayName      string    `json:"display"`
-	PresetID         int       `json:"presetId" default:"0"`
-	RememberPosition int       `json:"rememberPosition" default:"1"`
-	Present          bool      `json:"present" default:"false"`
-	PlaybackType     int       `json:"playbackType" default:"15"`
-	Type             int       `json:"type" default:"1"`
-	SceneDetails     Scene `json:"scene_details"`
+	Position         float32 `json:"position" default:"0.0"`
+	DisplayName      string  `json:"display"`
+	PresetID         int     `json:"presetId" default:"0"`
+	RememberPosition int     `json:"rememberPosition" default:"1"`
+	Present          bool    `json:"present" default:"false"`
+	PlaybackType     int     `json:"playbackType" default:"15"`
+	Type             int     `json:"type" default:"1"`
+	SceneDetails     Scene   `json:"scene_details"`
 }
 
 func saveJSON(sc Scene, destPath string) error {

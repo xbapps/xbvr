@@ -40,13 +40,13 @@ func RescanVolumes() {
 				allowedExt := []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov"}
 
 				var procList []string
+				var fileCount = 0
 
 				_ = filepath.Walk(vol[i].Path, func(path string, f os.FileInfo, err error) error {
 					if !f.Mode().IsDir() {
 						// Make sure the filename should be considered
 						if !funk.Contains(notAllowedFn, filepath.Base(path)) && funk.Contains(allowedExt, strings.ToLower(filepath.Ext(path))) {
-
-							// cleanPath := strings.Replace(path, o.Path+string(os.PathSeparator), "", -1)
+							fileCount += 1
 
 							var fl File
 							err = db.Where(&File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
@@ -98,6 +98,7 @@ func RescanVolumes() {
 
 				bar.Finish()
 
+				vol[i].FileCount = fileCount
 				vol[i].LastScan = time.Now()
 				vol[i].Save()
 
@@ -116,12 +117,11 @@ func RescanVolumes() {
 
 		// Match Scene to File
 
-		tlog.Infof("Matching Scenes to known filenames")
-
 		var files []File
 		var scenes []Scene
-		var changed= false
+		var changed = false
 
+		tlog.Infof("Matching Scenes to known filenames")
 		db.Model(&File{}).Find(&files)
 
 		for i := range files {
@@ -136,13 +136,14 @@ func RescanVolumes() {
 				files[i].Save()
 			}
 
-			tlog.Infof("Matching Scenes to known filenames (%v/%v)", i+1, len(files))
+			if (i % 50) == 0 {
+				tlog.Infof("Matching Scenes to known filenames (%v/%v)", i+1, len(files))
+			}
 		}
 
 		// Update scene statuses
 
 		tlog.Infof("Update status of Scenes")
-
 		db.Model(&Scene{}).Find(&scenes)
 
 		for i := range scenes {
@@ -183,7 +184,9 @@ func RescanVolumes() {
 				scenes[i].Save()
 			}
 
-			tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+			if (i % 70) == 0 {
+				tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+			}
 		}
 
 		log.WithFields(logrus.Fields{"task": "rescan"}).Infof("Scanning complete")

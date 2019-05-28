@@ -7,6 +7,7 @@
         <tr>
           <th>Path</th>
           <th>Available</th>
+          <th># of files</th>
           <th>Last scan</th>
           <th></th>
         </tr>
@@ -22,6 +23,7 @@
             </span>
             {/if}
           </td>
+          <td>{v.file_count}</td>
           <td>{distanceInWordsToNow(parse(v.last_scan))} ago</td>
           <td></td>
         </tr>
