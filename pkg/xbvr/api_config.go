@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	
+
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/pkg/errors"
@@ -42,7 +42,10 @@ func (i ConfigResource) listVolume(req *restful.Request, resp *restful.Response)
 	defer db.Close()
 
 	var vol []Volume
-	db.Model(&Volume{}).Order("last_scan desc").Find(&vol)
+	db.Raw(`select path, last_scan,is_available, is_enabled,
+       	(select count(*) from files where files.path like volumes.path || "%") as file_count,
+       	(select sum(files.size) from files where files.path like volumes.path || "%") as total_size
+		from volumes order by last_scan desc;`).Scan(&vol)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, vol)
 }

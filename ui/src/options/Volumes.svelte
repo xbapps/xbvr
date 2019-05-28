@@ -8,6 +8,7 @@
           <th>Path</th>
           <th>Available</th>
           <th># of files</th>
+          <th>Total size</th>
           <th>Last scan</th>
           <th></th>
         </tr>
@@ -24,6 +25,7 @@
             {/if}
           </td>
           <td>{v.file_count}</td>
+          <td>{prettyBytes(v.total_size)}</td>
           <td>{distanceInWordsToNow(parse(v.last_scan))} ago</td>
           <td></td>
         </tr>
@@ -70,6 +72,7 @@
   import { lockRescan, lastRescanMessage } from "../store/log.js";
   import { parse, format, distanceInWordsToNow } from "date-fns";
   import { onMount } from "svelte";
+  import prettyBytes from "pretty-bytes";
   import ky from "ky";
 
   let volumes = [];
