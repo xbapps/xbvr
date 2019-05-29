@@ -6,7 +6,7 @@ import (
 
 type KV struct {
 	Key   string `json:"key" gorm:"primary_key" gorm:"unique_index"`
-	Value string `json:"value"`
+	Value string `json:"value" sql:"type:text;"`
 }
 
 func (o *KV) Save() {
