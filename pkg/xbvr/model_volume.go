@@ -9,12 +9,13 @@ import (
 
 type Volume struct {
 	gorm.Model
-	Path        string    `json:"path"`
-	LastScan    time.Time `json:"last_scan"`
-	IsEnabled   bool      `json:"-"`
-	IsAvailable bool      `json:"is_available"`
-	FileCount   int       `gorm:"-" json:"file_count"`
-	TotalSize   int       `gorm:"-" json:"total_size"`
+	Path           string    `json:"path"`
+	LastScan       time.Time `json:"last_scan"`
+	IsEnabled      bool      `json:"-"`
+	IsAvailable    bool      `json:"is_available"`
+	FileCount      int       `gorm:"-" json:"file_count"`
+	UnmatchedCount int       `gorm:"-" json:"unmatched_count"`
+	TotalSize      int       `gorm:"-" json:"total_size"`
 }
 
 func (o *Volume) IsMounted() bool {

@@ -8,6 +8,7 @@
           <th>Path</th>
           <th>Available</th>
           <th># of files</th>
+          <th>Not matched</th>
           <th>Total size</th>
           <th>Last scan</th>
           <th></th>
@@ -25,6 +26,7 @@
             {/if}
           </td>
           <td>{v.file_count}</td>
+          <td>{v.unmatched_count}</td>
           <td>{prettyBytes(v.total_size)}</td>
           <td>{distanceInWordsToNow(parse(v.last_scan))} ago</td>
           <td></td>
