@@ -94,7 +94,6 @@ func (i SceneResource) getFiltersForState(req *restful.Request, resp *restful.Re
 		Model(&scenes).
 		Preload("Cast").
 		Preload("Tags").
-		Preload("Images").
 		Preload("Files")
 
 	if req.QueryParameter("is_available") != "" {
@@ -178,7 +177,6 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		Model(&scenes).
 		Preload("Cast").
 		Preload("Tags").
-		Preload("Images").
 		Preload("Files")
 
 	if req.QueryParameter("is_available") != "" {
