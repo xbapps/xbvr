@@ -7,9 +7,9 @@ import (
 )
 
 type File struct {
-	ID        uint       `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time  `json:"created_at" json:"-"`
-	UpdatedAt time.Time  `json:"updated_at" json:"-"`
+	ID        uint      `gorm:"primary_key" json:"id"`
+	CreatedAt time.Time `json:"created_at" json:"-"`
+	UpdatedAt time.Time `json:"updated_at" json:"-"`
 
 	Path        string    `json:"path"`
 	Filename    string    `json:"filename"`
@@ -17,7 +17,7 @@ type File struct {
 	CreatedTime time.Time `json:"created_time"`
 	UpdatedTime time.Time `json:"updated_time"`
 	SceneID     uint      `json:"-"`
-	Scene       Scene `json:"-"`
+	Scene       Scene     `json:"-"`
 
 	VideoWidth        int    `json:"video_width"`
 	VideoHeight       int    `json:"video_height"`

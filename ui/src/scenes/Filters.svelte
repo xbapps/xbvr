@@ -1,7 +1,7 @@
 <script>
   import ky from "ky";
   import {onMount} from "svelte";
-  import { cardSize, showInfo, dlState, tag, cast, site, release_month } from "../store/filters.js"
+  import { cardSize, dlState, tag, cast, site, release_month } from "../store/filters.js"
 
   let filters = {};
 
@@ -53,15 +53,6 @@
 <div class="field">
   <label class="label">Cover size</label>
   <input type=range bind:value={$cardSize} min=1 max=3>
-</div>
-
-<div class="field">
-  <label class="label">Show info</label>
-  <div class="field">
-    <label class="checkbox">
-      <input type="checkbox" bind:checked={$showInfo}> Show info
-    </label>
-  </div>
 </div>
 
 <div class="field">

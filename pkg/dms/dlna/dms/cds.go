@@ -365,6 +365,22 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 				}})
 
 				objs = append(objs, upnpav.Container{Object: upnpav.Object{
+					ID:         "watchlist",
+					Restricted: 1,
+					ParentID:   "0",
+					Class:      "object.container.storageFolder",
+					Title:      "watchlist",
+				}})
+
+				objs = append(objs, upnpav.Container{Object: upnpav.Object{
+					ID:         "favourites",
+					Restricted: 1,
+					ParentID:   "0",
+					Class:      "object.container.storageFolder",
+					Title:      "favourites",
+				}})
+
+				objs = append(objs, upnpav.Container{Object: upnpav.Object{
 					ID:         "all",
 					Restricted: 1,
 					ParentID:   "0",
@@ -525,6 +541,46 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "released/"+id[1], host))
+				}
+			}
+
+			// Watchlist
+			if obj.Path == "watchlist" {
+				listURL := (&url.URL{
+					Scheme: "http",
+					Host:   "127.0.0.1:9999",
+					Path:   "/api/scene/list",
+					RawQuery: url.Values{
+						"is_accessible": {"1"},
+						"list":          {"watchlist"},
+					}.Encode(),
+				}).String()
+
+				var data XbaseScenes
+				resty.R().SetResult(&data).Get(listURL)
+
+				for i := range data.Scenes {
+					objs = append(objs, me.sceneToContainer(data.Scenes[i], "watchlist", host))
+				}
+			}
+
+			// Favourites
+			if obj.Path == "favourites" {
+				listURL := (&url.URL{
+					Scheme: "http",
+					Host:   "127.0.0.1:9999",
+					Path:   "/api/scene/list",
+					RawQuery: url.Values{
+						"is_accessible": {"1"},
+						"list":          {"favourite"},
+					}.Encode(),
+				}).String()
+
+				var data XbaseScenes
+				resty.R().SetResult(&data).Get(listURL)
+
+				for i := range data.Scenes {
+					objs = append(objs, me.sceneToContainer(data.Scenes[i], "favourites", host))
 				}
 			}
 

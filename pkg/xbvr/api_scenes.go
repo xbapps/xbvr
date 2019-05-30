@@ -8,9 +8,10 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi"
 )
 
-// http.HandleFunc("/single_file.css", func(w http.ResponseWriter, r *http.Request) {
-// 	http.ServeFile(w, r, "../foo/bar.css")
-// })
+type RequestToggleList struct {
+	SceneID string `json:"scene_id"`
+	List    string `json:"list"`
+}
 
 type ResponseGetScenes struct {
 	Results int     `json:"results"`
@@ -37,6 +38,10 @@ func (i SceneResource) WebService() *restful.WebService {
 
 	ws.Route(ws.GET("/list").To(i.getScenes).
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseGetScenes{}))
+
+	ws.Route(ws.POST("/toggle").To(i.toggleList).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
@@ -193,6 +198,14 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		}
 	}
 
+	if req.QueryParameter("list") == "watchlist" {
+		tx = tx.Where("watchlist = ?", true)
+	}
+
+	if req.QueryParameter("list") == "favourite" {
+		tx = tx.Where("favourite = ?", true)
+	}
+
 	q_site := req.QueryParameter("site")
 	if q_site != "" {
 		tx = tx.Where("site = ?", q_site)
@@ -230,4 +243,37 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		Find(&scenes)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetScenes{Results: total, Scenes: scenes})
+}
+
+func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) {
+	var r RequestToggleList
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	if r.SceneID == "" && r.List == "" {
+		return
+	}
+
+	db, _ := GetDB()
+	defer db.Close()
+
+	var scene Scene
+	err = scene.GetIfExist(r.SceneID)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	if r.List == "watchlist" {
+		scene.Watchlist = !scene.Watchlist
+	}
+
+	if r.List == "favourite" {
+		scene.Favourite = !scene.Favourite
+	}
+
+	scene.Save()
 }

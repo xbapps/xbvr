@@ -2,10 +2,10 @@
   import ky from "ky";
   import { onMount, afterUpdate } from "svelte";
   import { parse, format } from "date-fns";
-  import { cardSize, showInfo, dlState, tag, cast, site, release_month } from "../store/filters.js"
+  import { cardSize, dlState, tag, cast, site, release_month } from "../store/filters.js"
+  import { items } from "../store/scene_list.js";
   import Video from "./Video.svelte";
 
-  let items = [];
   let data = {};
 
   let offset = 0;
@@ -53,10 +53,10 @@
       .json();
 
     if (iOffset === 0) {
-      items = [];
+      items.reset();
     }
 
-    items = items.concat(data.scenes);
+    items.append($items, data.scenes);
     offset = iOffset + limit;
     total = data.results;
   }
@@ -127,9 +127,9 @@
 
   <div class="columns is-multiline">
 
-    {#each items as item}
+    {#each $items as item}
     <div class="column is-multiline {getSizeClass($cardSize)}">
-      <div class="card">
+      <div class="card is-shadowless">
 
         <div class="card-image">
           {#if item.is_available}
@@ -143,9 +143,40 @@
           {/if}
         </div>
 
-        {#if $showInfo}
-        <time datetime="">{format(parse(item.release_date), "YYYY-MM-DD")}</time>
-        {/if}
+        <div style="padding-top:4px;">
+          {#if item.favourite}
+          <a class="button is-danger is-small" on:click="{()=>items.toggleList($items, item.scene_id, 'favourite')}">
+            <span class="icon is-small">
+              <i class="fas fa-heart"></i>
+            </span>
+          </a>
+          {:else}
+          <a class="button is-danger is-outlined is-small" on:click="{()=>items.toggleList($items, item.scene_id, 'favourite')}">
+            <span class="icon is-small">
+              <i class="far fa-heart"></i>
+            </span>
+          </a>
+          {/if}
+
+          {#if item.watchlist}
+          <a class="button is-primary is-small" on:click="{()=>items.toggleList($items, item.scene_id, 'watchlist')}">
+            <span class="icon is-small">
+              <i class="fas fa-calendar-check"></i>
+            </span>
+          </a>
+          {:else}
+          <a class="button is-primary is-outlined is-small" on:click="{()=>items.toggleList($items, item.scene_id, 'watchlist')}">
+            <span class="icon is-small">
+              <i class="far fa-calendar-check"></i>
+            </span>
+          </a>
+          {/if}
+
+          <span class="is-pulled-right" style="font-size:11px;text-align:right;">
+            {item.site}<br/>
+            {format(parse(item.release_date), "YYYY-MM-DD")}
+          </span>
+        </div>
 
       </div>
     </div>
@@ -153,9 +184,9 @@
 
   </div>
 
-  {#if items.length < total}
+  {#if $items.length < total}
   <div class="column is-full">
-      <a class="button is-fullwidth" on:click={()=>getData(offset)}>Load more</a>
+    <a class="button is-fullwidth" on:click={()=>getData(offset)}>Load more</a>
   </div>
   {/if}
 
