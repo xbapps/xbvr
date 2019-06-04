@@ -122,7 +122,7 @@ func RescanVolumes() {
 		for i := range files {
 			fn := files[i].Filename
 
-			err := db.Raw("select scenes.* from scenes, json_each(scenes.filenames_arr) where json_each.value = ? group by scenes.scene_id", path.Base(fn)).Scan(&scenes).Error
+			err := db.Raw("select scenes.* from scenes, json_each(scenes.filenames_arr) where lower(json_each.value) = ? group by scenes.scene_id", strings.ToLower(path.Base(fn))).Scan(&scenes).Error
 			if err != nil {
 				log.Error(err, "when matching "+path.Base(fn))
 			}
