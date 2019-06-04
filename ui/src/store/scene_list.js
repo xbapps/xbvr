@@ -31,7 +31,9 @@ function createSceneList() {
 
       set(tmp)
     },
-    reset: () => set([])
+    reset: () => {
+      set([]);
+    }
   };
 }
 
