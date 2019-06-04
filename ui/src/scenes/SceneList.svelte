@@ -80,11 +80,11 @@
     }
   }
 
-  function play(scene) {
+  function play(scene_index) {
     modal = new Video({
     	target: document.body,
     	props: {
-    		fileId: scene.file[0].id,
+    		fileId: $items[scene_index].file[0].id,
     	}
     });
     modal.$on("close-modal", e => {
@@ -127,13 +127,13 @@
 
   <div class="columns is-multiline">
 
-    {#each $items as {is_available, cover_url, is_accessible, favourite, watchlist, scene_id, site, release_date}}
+    {#each $items as {is_available, cover_url, is_accessible, favourite, watchlist, scene_id, site, release_date}, id}
     <div class="column is-multiline {getSizeClass($cardSize)}">
       <div class="card is-shadowless">
 
         <div class="card-image">
           {#if is_available}
-          <figure class="image" on:click="{() => is_accessible && play(item)}">
+          <figure class="image" on:click="{() => is_accessible && play(id)}">
             <img src={getImageURL(cover_url)} alt="" />
           </figure>
           {:else}
