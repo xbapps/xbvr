@@ -5,7 +5,7 @@
       <source src="/api/dms/file/{fileId}" type="video/mp4">
     </video>
   </div>
-  <button class="modal-close is-large" aria-label="close" on:click="{() => dispatch('close-modal')}"></button>
+  <button class="modal-close is-large" aria-label="close" on:click="{() => { player.dispose(); dispatch('close-modal'); }}"></button>
 </div>
 
 <script>
@@ -17,11 +17,12 @@
   export let fileId;
 
   let videoElement;
+  let player;
 
   const dispatch = createEventDispatcher();
 
   onMount(() => {
-    let player = videojs(videoElement);
+    player = videojs(videoElement);
     let vr = player.vr({
       projection: '360',
       forceCardboard: false
@@ -38,6 +39,7 @@
             return event.which === 27
           },
           handler: function(player, options, event) {
+            player.dispose();
             dispatch('close-modal')
           }
         }
