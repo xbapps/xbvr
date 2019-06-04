@@ -127,45 +127,45 @@
 
   <div class="columns is-multiline">
 
-    {#each $items as item}
+    {#each $items as {is_available, cover_url, is_accessible, favourite, watchlist, scene_id, site, release_date}}
     <div class="column is-multiline {getSizeClass($cardSize)}">
       <div class="card is-shadowless">
 
         <div class="card-image">
-          {#if item.is_available}
-          <figure class="image" on:click="{() => item.is_accessible && play(item)}">
-            <img src={getImageURL(item.cover_url)} alt="" />
+          {#if is_available}
+          <figure class="image" on:click="{() => is_accessible && play(item)}">
+            <img src={getImageURL(cover_url)} alt="" />
           </figure>
           {:else}
           <figure class="image">
-            <img src={getImageURL(item.cover_url)} alt="" style="opacity:0.35;" />
+            <img src={getImageURL(cover_url)} alt="" style="opacity:0.35;" />
           </figure>
           {/if}
         </div>
 
         <div style="padding-top:4px;">
-          {#if item.favourite}
-          <a class="button is-danger is-small" on:click="{()=>items.toggleList($items, item.scene_id, 'favourite')}">
+          {#if favourite}
+          <a class="button is-danger is-small" on:click="{()=>items.toggleList($items, scene_id, 'favourite')}">
             <span class="icon is-small">
               <i class="fas fa-heart"></i>
             </span>
           </a>
           {:else}
-          <a class="button is-danger is-outlined is-small" on:click="{()=>items.toggleList($items, item.scene_id, 'favourite')}">
+          <a class="button is-danger is-outlined is-small" on:click="{()=>items.toggleList($items, scene_id, 'favourite')}">
             <span class="icon is-small">
               <i class="far fa-heart"></i>
             </span>
           </a>
           {/if}
 
-          {#if item.watchlist}
-          <a class="button is-primary is-small" on:click="{()=>items.toggleList($items, item.scene_id, 'watchlist')}">
+          {#if watchlist}
+          <a class="button is-primary is-small" on:click="{()=>items.toggleList($items, scene_id, 'watchlist')}">
             <span class="icon is-small">
               <i class="fas fa-calendar-check"></i>
             </span>
           </a>
           {:else}
-          <a class="button is-primary is-outlined is-small" on:click="{()=>items.toggleList($items, item.scene_id, 'watchlist')}">
+          <a class="button is-primary is-outlined is-small" on:click="{()=>items.toggleList($items, scene_id, 'watchlist')}">
             <span class="icon is-small">
               <i class="far fa-calendar-check"></i>
             </span>
@@ -173,8 +173,8 @@
           {/if}
 
           <span class="is-pulled-right" style="font-size:11px;text-align:right;">
-            {item.site}<br/>
-            {format(parse(item.release_date), "YYYY-MM-DD")}
+            {site}<br/>
+            {format(parse(release_date), "YYYY-MM-DD")}
           </span>
         </div>
 
