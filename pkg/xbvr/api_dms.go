@@ -34,6 +34,9 @@ func (i DMSResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/scene").To(i.sceneById).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/file").To(i.fileById).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.GET("/file/{file-id}").To(i.getFile).
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
@@ -51,9 +54,24 @@ func (i DMSResource) sceneById(req *restful.Request, resp *restful.Response) {
 	db.Preload("Cast").
 		Preload("Tags").
 		Preload("Files").
-		Where(&Scene{SceneID: sceneId}).FirstOrCreate(&scene)
+		Where(&Scene{SceneID: sceneId}).First(&scene)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+
+func (i DMSResource) fileById(req *restful.Request, resp *restful.Response) {
+	fileId, err := strconv.Atoi(req.QueryParameter("id"))
+	if err != nil {
+		return
+	}
+
+	db, _ := GetDB()
+	defer db.Close()
+
+	var file File
+	db.Where(&File{ID: uint(fileId)}).First(&file)
+
+	resp.WriteHeaderAndEntity(http.StatusOK, file)
 }
 
 func (i DMSResource) base(req *restful.Request, resp *restful.Response) {
