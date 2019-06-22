@@ -14,6 +14,21 @@ type XbaseBase struct {
 	Volumes      []XbaseVolume `json:"volumes"`
 }
 
+type XbaseFile struct {
+	ID           int         `json:"ID"`
+	CreatedAt    time.Time   `json:"CreatedAt"`
+	UpdatedAt    time.Time   `json:"UpdatedAt"`
+	DeletedAt    interface{} `json:"DeletedAt"`
+	Path         string      `json:"path"`
+	Filename     string      `json:"filename"`
+	Size         int64       `json:"size"`
+	CreatedTime  time.Time   `json:"created_time"`
+	UpdatedTime  time.Time   `json:"updated_time"`
+	VideoWidth   int         `json:"video_width"`
+	VideoHeight  int         `json:"video_height"`
+	VideoBitrate uint        `json:"video_bitrate"`
+}
+
 type XbaseScenes struct {
 	Results int          `json:"results"`
 	Scenes  []XbaseScene `json:"scenes"`
@@ -50,31 +65,18 @@ type XbaseScene struct {
 		Type        string `json:"type"`
 		Orientation string `json:"orientation"`
 	} `json:"images"`
-	File []struct {
-		ID           int         `json:"ID"`
-		CreatedAt    time.Time   `json:"CreatedAt"`
-		UpdatedAt    time.Time   `json:"UpdatedAt"`
-		DeletedAt    interface{} `json:"DeletedAt"`
-		Path         string      `json:"path"`
-		Filename     string      `json:"filename"`
-		Size         int64       `json:"size"`
-		CreatedTime  time.Time   `json:"created_time"`
-		UpdatedTime  time.Time   `json:"updated_time"`
-		VideoWidth   int         `json:"video_width"`
-		VideoHeight  int         `json:"video_height"`
-		VideoBitrate uint         `json:"video_bitrate"`
-	} `json:"file"`
-	Duration        int       `json:"duration"`
-	Synopsis        string    `json:"synopsis"`
-	ReleaseDate     time.Time `json:"release_date"`
-	ReleaseDateText string    `json:"release_date_text"`
-	CoverURL        string    `json:"cover_url"`
-	SceneURL        string    `json:"scene_url"`
-	Rating          int       `json:"rating"`
-	Favourite       bool      `json:"favourite"`
-	Watchlist       bool      `json:"watchlist"`
-	IsAvailable     bool      `json:"is_available"`
-	IsAccessible    bool      `json:"is_accessible"`
+	File            []XbaseFile `json:"file"`
+	Duration        int         `json:"duration"`
+	Synopsis        string      `json:"synopsis"`
+	ReleaseDate     time.Time   `json:"release_date"`
+	ReleaseDateText string      `json:"release_date_text"`
+	CoverURL        string      `json:"cover_url"`
+	SceneURL        string      `json:"scene_url"`
+	Rating          int         `json:"rating"`
+	Favourite       bool        `json:"favourite"`
+	Watchlist       bool        `json:"watchlist"`
+	IsAvailable     bool        `json:"is_available"`
+	IsAccessible    bool        `json:"is_accessible"`
 }
 
 type XbaseVolume struct {
@@ -89,6 +91,12 @@ func XbaseGet() XbaseBase {
 
 func XbaseGetScene(id string) XbaseScene {
 	var data XbaseScene
-	resty.R().SetResult(&data).Get("http://127.0.0.1:9999/api/dms/scene?id="+id)
+	resty.R().SetResult(&data).Get("http://127.0.0.1:9999/api/dms/scene?id=" + id)
+	return data
+}
+
+func XbaseGetFile(id string) XbaseFile {
+	var data XbaseFile
+	resty.R().SetResult(&data).Get("http://127.0.0.1:9999/api/dms/file?id=" + id)
 	return data
 }

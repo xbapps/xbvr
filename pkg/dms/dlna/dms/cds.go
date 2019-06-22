@@ -191,6 +191,42 @@ func (me *contentDirectoryService) cdsObjectToUpnpavObject(cdsObject object, fil
 	return
 }
 
+func (me *contentDirectoryService) xbaseFileToContainer(file XbaseFile, parent string, host string) interface{} {
+	obj := upnpav.Object{
+		ID:          fmt.Sprintf("file-%v", file.ID),
+		Restricted:  1,
+		ParentID:    parent,
+		Title:       file.Filename,
+	}
+
+	mimeType := "video/mp4"
+
+	item := upnpav.Item{
+		Object: obj,
+		Res:    make([]upnpav.Resource, 0, 2),
+	}
+
+	item.Res = append(item.Res, upnpav.Resource{
+		URL: (&url.URL{
+			Scheme: "http",
+			Host:   host,
+			Path:   resPath,
+			RawQuery: url.Values{
+				"file": {fmt.Sprintf("%v", file.ID)},
+			}.Encode(),
+		}).String(),
+		ProtocolInfo: fmt.Sprintf("http-get:*:%s:%s", mimeType, dlna.ContentFeatures{
+			SupportRange: true,
+		}.String()),
+		Bitrate: file.VideoBitrate,
+		// Duration:   resDuration,
+		Size: uint64(file.Size),
+		// Resolution: resolution,
+	})
+
+	return item
+}
+
 func (me *contentDirectoryService) sceneToContainer(scene XbaseScene, parent string, host string) interface{} {
 	c := make([]string, 0)
 	for i := range scene.Cast {
@@ -388,6 +424,13 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 					Title:      "all",
 				}})
 
+				objs = append(objs, upnpav.Container{Object: upnpav.Object{
+					ID:         "not-matched",
+					Restricted: 1,
+					ParentID:   "0",
+					Class:      "object.container.storageFolder",
+					Title:      "not-matched",
+				}})
 			}
 
 			// All videos
@@ -581,6 +624,22 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "favourites", host))
+				}
+			}
+
+			// Unmatched
+			if obj.Path == "not-matched" {
+				listURL := (&url.URL{
+					Scheme: "http",
+					Host:   "127.0.0.1:9999",
+					Path:   "/api/files/list/unmatched",
+				}).String()
+
+				var data []XbaseFile
+				resty.R().SetResult(&data).Get(listURL)
+
+				for i := range data {
+					objs = append(objs, me.xbaseFileToContainer(data[i], "unmatched", host))
 				}
 			}
 

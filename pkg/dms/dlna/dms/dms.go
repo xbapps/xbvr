@@ -696,16 +696,30 @@ func (server *Server) initMux(mux *http.ServeMux) {
 	mux.HandleFunc(iconPath, server.serveIcon)
 	mux.HandleFunc(resPath, func(w http.ResponseWriter, r *http.Request) {
 		sceneId := r.URL.Query().Get("scene")
-		data := XbaseGetScene(sceneId)
+		fileId := r.URL.Query().Get("file")
 
-		filePath := filepath.Join(data.File[0].Path, data.File[0].Filename)
-		mimeType, err := MimeTypeByPath(filePath)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		filePath := ""
+
+		if sceneId != "" {
+			data := XbaseGetScene(sceneId)
+			filePath = filepath.Join(data.File[0].Path, data.File[0].Filename)
 		}
-		w.Header().Set("Content-Type", string(mimeType))
-		http.ServeFile(w, r, filePath)
+
+		if fileId != "" {
+			data := XbaseGetFile(fileId)
+			filePath = filepath.Join(data.Path, data.Filename)
+		}
+
+		if filePath != "" {
+			mimeType, err := MimeTypeByPath(filePath)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", string(mimeType))
+			http.ServeFile(w, r, filePath)
+		}
+
 		return
 
 		// if ignored, err := server.IgnorePath(filePath); err != nil {
