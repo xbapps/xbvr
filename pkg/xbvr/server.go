@@ -42,6 +42,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(TaskResource{}.WebService())
 	restful.Add(DMSResource{}.WebService())
 	restful.Add(ConfigResource{}.WebService())
+	restful.Add(FilesResource{}.WebService())
 
 	// Static files
 	if DEBUG == "" {

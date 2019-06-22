@@ -193,10 +193,10 @@ func (me *contentDirectoryService) cdsObjectToUpnpavObject(cdsObject object, fil
 
 func (me *contentDirectoryService) xbaseFileToContainer(file XbaseFile, parent string, host string) interface{} {
 	obj := upnpav.Object{
-		ID:          fmt.Sprintf("file-%v", file.ID),
-		Restricted:  1,
-		ParentID:    parent,
-		Title:       file.Filename,
+		ID:         fmt.Sprintf("file-%v", file.ID),
+		Restricted: 1,
+		ParentID:   parent,
+		Title:      file.Filename,
 	}
 
 	mimeType := "video/mp4"
@@ -639,7 +639,9 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 				resty.R().SetResult(&data).Get(listURL)
 
 				for i := range data {
-					objs = append(objs, me.xbaseFileToContainer(data[i], "unmatched", host))
+					if _, err := os.Stat(filepath.Join(data[i].Path, data[i].Filename)); err == nil {
+						objs = append(objs, me.xbaseFileToContainer(data[i], "unmatched", host))
+					}
 				}
 			}
 
