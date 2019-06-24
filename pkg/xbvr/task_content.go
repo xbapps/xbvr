@@ -43,6 +43,7 @@ func Scrape() {
 		// Start scraping
 		var collectedScenes []scrape.ScrapedScene
 
+
 		tlog.Infof("Scraping BadoinkVR / 18VR / VRCosplayX / BabeVR / KinkVR")
 		scrape.ScrapeBadoink(knownScenes, &collectedScenes)
 
@@ -69,6 +70,10 @@ func Scrape() {
 
 		tlog.Infof("Scraping WankzVR")
 		scrape.ScrapeWankz(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping Czech VR")
+		scrape.ScrapeCzechVR(knownScenes, &collectedScenes)
+
 
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
