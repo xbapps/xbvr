@@ -1,12 +1,10 @@
 <div class="columns">
   <div class="column">
     <p>
-      Releases metadata is required for XBVR to function.
-      Recommended path is to import bundled data first, then scrape from sites if neccesary.
+      Releases metadata is required for XBVR to function as intended.
     </p>
     <hr/>
-    <div class="button is-button is-primary" on:click={taskLoadBundle}>Import bundled data</div>
-    <div class="button is-button is-primary" on:click={taskScrape}>Scrape</div>
+    <div class="button is-button is-primary" on:click={taskScrape}>Run scraper</div>
   </div>
 </div>
 
