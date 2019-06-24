@@ -16,9 +16,6 @@ steps:
 
   - name: ui
     image: node
-    environment:
-      BUNDLE_URL:
-        from_secret: BUNDLE_URL
     when:
       event:
         - tag
@@ -26,7 +23,6 @@ steps:
       - cd ui
       - yarn install
       - yarn build
-      - curl -o public/static/bundle.json "$BUNDLE_URL"
 
   - name: build
     image: mailchain/goreleaser-xcgo:latest
