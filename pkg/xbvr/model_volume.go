@@ -15,7 +15,7 @@ type Volume struct {
 	IsAvailable    bool      `json:"is_available"`
 	FileCount      int       `gorm:"-" json:"file_count"`
 	UnmatchedCount int       `gorm:"-" json:"unmatched_count"`
-	TotalSize      int       `gorm:"-" json:"total_size"`
+	TotalSize      int64     `gorm:"-" json:"total_size"`
 }
 
 func (o *Volume) IsMounted() bool {
