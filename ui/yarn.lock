@@ -2123,10 +2123,10 @@ svelte-routing@1.1.1:
   resolved "https://registry.yarnpkg.com/svelte-routing/-/svelte-routing-1.1.1.tgz#9bab1205b7a9ccdccc01678bb97b31e849afbb03"
   integrity sha512-aJDrn50CCQOPbzrMcE0yxxMVgl75uLxdmB06sZ3vr3NuCXS4zXdZyZMpHpP7+uPlxp1fcMy0/VBbKGVuroedVw==
 
-svelte@^3.4.4:
-  version "3.4.4"
-  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.4.4.tgz#8dcb60796b2b5a47175371f0763a612bf33a0944"
-  integrity sha512-O9tzroEWVPOQe1QITW1jP8LAJwXmCfDDGdkOCa9Y6NlJ+gQwn+/rhFbMQ+vu2PWPLZt1gxN8DjTFM4nOBuMLFg==
+svelte@^3.6.7:
+  version "3.6.7"
+  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.6.7.tgz#20e814b79aac4009d4bc1ecf0c9287a6bf7e96fb"
+  integrity sha512-9HzhPxWNLi+ZBhxL3HJ8jwwu+u+XfHtVF3uEJ2m8/JOdnaTC9D2qiEwOncgI7z/pN+VumgKQtZoHtvYCW6fHqg==
 
 svero@0.5.0:
   version "0.5.0"
