@@ -1,12 +1,14 @@
 /.idea
 .DS_Store
 
-npm-debug.log
-yarn-error.log
 go.sum
 test.db
 
 /dist/
-/node_modules/
 /pkg/assets/
+
+/ui/node_modules/
+/ui/dist/
 /ui/public/static/bundle.*
+npm-debug.log
+yarn-error.log

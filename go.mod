@@ -12,7 +12,7 @@ require (
 	github.com/antchfx/htmlquery v1.0.0 // indirect
 	github.com/antchfx/xmlquery v1.0.0 // indirect
 	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
-	github.com/araddon/dateparse v0.0.0-20190426192744-0d74ffceef83
+	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb // indirect
 	github.com/blevesearch/bleve v0.7.0
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
@@ -24,8 +24,8 @@ require (
 	github.com/djherbis/times v1.2.0
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/emicklei/go-restful v2.9.5+incompatible
-	github.com/emicklei/go-restful-openapi v1.0.0
+	github.com/emicklei/go-restful v2.9.6+incompatible
+	github.com/emicklei/go-restful-openapi v1.2.0
 	github.com/gammazero/nexus v2.1.1-0.20190402111811-fce688586772+incompatible
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
 	github.com/getlantern/errors v0.0.0-20180829142810-e24b7f4ff7c7 // indirect
@@ -33,7 +33,7 @@ require (
 	github.com/getlantern/hex v0.0.0-20160523043825-083fba3033ad // indirect
 	github.com/getlantern/hidden v0.0.0-20160523043807-d52a649ab33a // indirect
 	github.com/getlantern/ops v0.0.0-20170904182230-37353306c908 // indirect
-	github.com/getlantern/systray v0.0.0-20190131073753-26d5b920200d
+	github.com/getlantern/systray v0.0.0-20190626064521-f2fa635d0474
 	github.com/go-openapi/jsonpointer v0.19.0 // indirect
 	github.com/go-openapi/jsonreference v0.19.0 // indirect
 	github.com/go-openapi/spec v0.19.0 // indirect
@@ -51,7 +51,7 @@ require (
 	github.com/gowww/log v0.0.0-20170712202755-af3772f4bb12
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
 	github.com/imdario/mergo v0.3.7 // indirect
-	github.com/jinzhu/gorm v1.9.8
+	github.com/jinzhu/gorm v1.9.10
 	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/kamilsk/retry/v4 v4.1.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
@@ -63,6 +63,7 @@ require (
 	github.com/marcsauter/single v0.0.0-20181104081128-f8bf46f26ec0
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
+	github.com/mattn/go-sqlite3 v1.10.1-0.20190529084313-070b17a2fdf5
 	github.com/mattn/go-zglob v0.0.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/mholt/archiver v3.1.1+incompatible
@@ -115,5 +116,5 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/urfave/cli.v1 v1.20.0
 	honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a // indirect
-	willnorris.com/go/imageproxy v0.8.1-0.20190422234945-d4246a08fdec
+	willnorris.com/go/imageproxy v0.9.0
 )

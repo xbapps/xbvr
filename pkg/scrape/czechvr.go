@@ -99,7 +99,7 @@ func ScrapeCzechVR(knownScenes []string, out *[]ScrapedScene) error {
 			if (id == 1) {
 				tmp := strings.Split(e.Attr("href"), "/")
 				parts := strings.Split(tmp[len(tmp)-1], "-")
-				base := parts[0]+"-"+parts[1]+"-"+parts[2]
+				base := parts[0] + "-" + parts[1] + "-" + parts[2]
 
 				filenames := []string{
 					"1920x960-30fps-smartphone_lq",
@@ -124,8 +124,6 @@ func ScrapeCzechVR(knownScenes []string, out *[]ScrapedScene) error {
 				sc.Filenames = filenames
 			}
 		})
-
-		//log.Printf("%+v\n", sc)
 
 		*out = append(*out, sc)
 	})
