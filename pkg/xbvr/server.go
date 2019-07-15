@@ -1,7 +1,6 @@
 package xbvr
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -46,17 +45,10 @@ func StartServer(version, commit, branch, date string) {
 
 	// Static files
 	if DEBUG == "" {
-		http.Handle("/static/", http.FileServer(assets.HTTP))
+		http.Handle("/ui/", http.StripPrefix("/ui", http.FileServer(assets.HTTP)))
 	} else {
-		http.Handle("/static/", http.FileServer(http.Dir("ui/public")))
+		http.Handle("/ui/", http.StripPrefix("/ui", http.FileServer(http.Dir("ui/dist"))))
 	}
-
-	// SPA
-	http.HandleFunc("/ui/", func(resp http.ResponseWriter, req *http.Request) {
-		b, _ := assets.ReadFile("index.html")
-		resp.Header().Set("Content-Type", "text/html; charset=utf-8")
-		fmt.Fprint(resp, string(b))
-	})
 
 	// Imageproxy
 	p := imageproxy.NewProxy(nil, diskCache(filepath.Join(appDir, "imageproxy")))

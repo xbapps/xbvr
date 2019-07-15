@@ -9,6 +9,6 @@ spread = true
 debug = false
 
 [[custom]]
-files = ["./ui/public/"]
-base = "./ui/public/"
+files = ["./ui/dist/"]
+base = "./ui/dist/"
 exclude = [".DS_Store"]
