@@ -126,7 +126,6 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.cardSize = value;
-          console.log(value);
         }
       },
       dlState: {

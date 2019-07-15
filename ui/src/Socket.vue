@@ -17,7 +17,6 @@
         realm: "default",
         onConnect: () => {
           this.wsStatus = "connected";
-          console.log("connected");
         },
         onClose: () => {
           this.wsStatus = "disconnected";
