@@ -91,7 +91,7 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
 	github.com/thoas/go-funk v0.4.0
-	github.com/tidwall/gjson v1.2.1
+	github.com/tidwall/gjson v1.3.2
 	github.com/tidwall/match v1.0.1 // indirect
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65 // indirect
 	github.com/ugorji/go v1.1.4 // indirect
