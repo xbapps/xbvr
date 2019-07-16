@@ -29,7 +29,7 @@
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.2.3",
     "less": "^3.0.4",
-    "less-loader": "^4.1.0",
+    "less-loader": "^5.0.0",
     "vue-template-compiler": "^2.5.21"
   },
   "eslintConfig": {
