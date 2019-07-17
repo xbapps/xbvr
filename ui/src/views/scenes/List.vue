@@ -26,7 +26,7 @@
     name: "List",
     components: {SceneCard},
     mounted() {
-      this.$store.dispatch("loadList", {offset: 0});
+      this.$store.dispatch("sceneList/load", {offset: 0});
     },
     computed: {
       cardSizeClass() {
@@ -50,7 +50,7 @@
     },
     methods: {
       async loadMore() {
-        this.$store.dispatch("loadList", {offset: this.$store.state.sceneList.offset});
+        this.$store.dispatch("sceneList/load", {offset: this.$store.state.sceneList.offset});
       }
     }
   }

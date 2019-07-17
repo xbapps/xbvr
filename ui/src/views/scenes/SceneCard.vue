@@ -30,7 +30,7 @@
       </a>
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
-        {{item.site}}<br/>
+        <a :href="item.scene_url" target="_blank">{{item.site}}</a><br/>
         {{format(parse(item.release_date), "YYYY-MM-DD")}}
       </span>
     </div>
@@ -55,11 +55,11 @@
         }
       },
       toggleList(scene_id, list) {
-        this.$store.commit("toggleSceneList", {scene_id: scene_id, list: list});
+        this.$store.commit("sceneList/toggleSceneList", {scene_id: scene_id, list: list});
       },
       showDetails(scene) {
         if (scene.is_accessible) {
-          this.$store.commit("showDetailsOverlay", {scene: scene});
+          this.$store.commit("overlay/showDetails", {scene: scene});
         }
       }
     }

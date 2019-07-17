@@ -66,7 +66,7 @@
   import {distanceInWordsToNow, parse} from "date-fns";
 
   export default {
-    name: "OptionsFolders.vue",
+    name: "OptionsFolders",
     data() {
       return {
         volumes: [],

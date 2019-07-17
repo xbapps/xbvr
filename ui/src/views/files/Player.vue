@@ -26,12 +26,9 @@
       }
     },
     computed: {
-      item() {
-        return this.$store.state.overlay.details.scene;
-      },
       sourceUrl() {
-        if (this.$store.state.overlay.details.scene.is_available) {
-          return "/api/dms/file/" + this.$store.state.overlay.details.scene.file[0].id;
+        if (this.$store.state.overlay.player.file) {
+          return "/api/dms/file/" + this.$store.state.overlay.player.file.id;
         }
         return "";
       }
@@ -55,7 +52,7 @@
             },
             handler: (player, options, event) => {
               this.player.dispose();
-              this.$store.commit("overlay/hideDetails");
+              this.$store.commit("overlay/hidePlayer");
             }
           }
         }
@@ -68,7 +65,7 @@
     methods: {
       close() {
         this.player.dispose();
-        this.$store.commit("overlay/hideDetails");
+        this.$store.commit("overlay/hidePlayer");
       },
     }
   }
