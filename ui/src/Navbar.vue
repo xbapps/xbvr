@@ -12,6 +12,9 @@
           <router-link to="./">Scenes</router-link>
         </a>
         <a class="navbar-item">
+          <router-link to="./files">Files</router-link>
+        </a>
+        <a class="navbar-item">
           <router-link to="./options">Options</router-link>
         </a>
       </div>

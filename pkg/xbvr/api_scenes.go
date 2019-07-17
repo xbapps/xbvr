@@ -45,6 +45,10 @@ func (i SceneResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
+	ws.Route(ws.GET("/search").To(i.searchScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseGetScenes{}))
+
 	ws.Route(ws.GET("/filters/all").To(i.getFiltersAll).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetFilters{}))
@@ -276,4 +280,29 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 	}
 
 	scene.Save()
+}
+
+func (i SceneResource) searchScene(req *restful.Request, resp *restful.Response) {
+	q := "%" + req.QueryParameter("q") + "%"
+
+	db, _ := GetDB()
+	defer db.Close()
+
+	var scenes []Scene
+	db.Raw(`select scenes.*
+			from scenes
+					 left join scene_tags on scene_tags.scene_id = scenes.id
+					 left join tags on tags.id = scene_tags.tag_id
+					 left join scene_cast on scene_cast.scene_id = scenes.id
+					 left join actors on actors.id = scene_cast.actor_id
+			where tags.name like ?
+			   or actors.name like ?
+			   or scenes.title like ?
+			   or scenes.synopsis like ?
+			   or scenes.scene_id like ?
+			   or scenes.filenames_arr like ?
+               or scenes.site like ?
+			group by scenes.scene_id;`, q, q, q, q, q, q, q).Scan(&scenes)
+
+	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetScenes{Results: len(scenes), Scenes: scenes})
 }

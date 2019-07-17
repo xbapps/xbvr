@@ -96,24 +96,24 @@
   export default {
     name: "Filters",
     mounted() {
-      this.$store.dispatch("loadFilters");
+      this.$store.dispatch("sceneList/filters");
     },
     methods: {
       clearReleaseMonth() {
         this.$store.state.sceneList.filters.releaseMonth = "";
-        this.$store.dispatch("loadList", {offset: 0});
+        this.$store.dispatch("sceneList/load", {offset: 0});
       },
       clearCast() {
         this.$store.state.sceneList.filters.cast = "";
-        this.$store.dispatch("loadList", {offset: 0});
+        this.$store.dispatch("sceneList/load", {offset: 0});
       },
       clearSite() {
         this.$store.state.sceneList.filters.site = "";
-        this.$store.dispatch("loadList", {offset: 0});
+        this.$store.dispatch("sceneList/load", {offset: 0});
       },
       clearTag() {
         this.$store.state.sceneList.filters.tag = "";
-        this.$store.dispatch("loadList", {offset: 0});
+        this.$store.dispatch("sceneList/load", {offset: 0});
       },
     },
     computed: {
@@ -154,8 +154,8 @@
               break;
           }
 
-          this.$store.dispatch("loadList", {offset: 0});
-          this.$store.dispatch("loadFilters");
+          this.$store.dispatch("sceneList/load", {offset: 0});
+          this.$store.dispatch("sceneList/filters");
         }
       },
       releaseMonth: {
@@ -164,7 +164,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.releaseMonth = value;
-          this.$store.dispatch("loadList", {offset: 0});
+          this.$store.dispatch("sceneList/load", {offset: 0});
         }
       },
       cast: {
@@ -173,7 +173,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.cast = value;
-          this.$store.dispatch("loadList", {offset: 0});
+          this.$store.dispatch("sceneList/load", {offset: 0});
         }
       },
       site: {
@@ -182,7 +182,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.site = value;
-          this.$store.dispatch("loadList", {offset: 0});
+          this.$store.dispatch("sceneList/load", {offset: 0});
         }
       },
       tag: {
@@ -191,7 +191,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.tag = value;
-          this.$store.dispatch("loadList", {offset: 0});
+          this.$store.dispatch("sceneList/load", {offset: 0});
         }
       },
     }

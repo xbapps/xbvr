@@ -23,7 +23,7 @@
     components: {Filters, List, Details},
     computed: {
       showOverlay() {
-        return this.$store.state.detailsOverlay.show;
+        return this.$store.state.overlay.details.show;
       }
     }
   }
