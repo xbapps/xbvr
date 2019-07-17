@@ -45,7 +45,7 @@ func ScrapeWankz(knownScenes []string, out *[]ScrapedScene) error {
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Title
-		e.ForEach(`header h2`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`header h1`, func(id int, e *colly.HTMLElement) {
 			sc.Title = e.Text
 		})
 
