@@ -61,12 +61,18 @@ func RescanVolumes() {
 					fStat, _ := os.Stat(pth)
 					fTimes, _ := times.Stat(pth)
 
+					var birthtime time.Time
+					if fTimes.HasBirthTime() {
+						birthtime = fTimes.BirthTime()
+					} else {
+						birthtime = fTimes.ModTime()
+					}
 					var fl File
 					fl = File{
 						Path:        filepath.Dir(pth),
 						Filename:    filepath.Base(pth),
 						Size:        fStat.Size(),
-						CreatedTime: fTimes.BirthTime(),
+						CreatedTime: birthtime,
 						UpdatedTime: fTimes.ModTime(),
 					}
 
