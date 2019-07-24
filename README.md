@@ -1,35 +1,56 @@
-# XBVR
-
 [![Build Status](https://cloud.drone.io/api/badges/cld9x/xbvr/status.svg)](https://cloud.drone.io/cld9x/xbvr) ![GitHub release](https://img.shields.io/github/release/cld9x/xbvr.svg)
+<br>
+<sup><sub><em>Windows 10 • OSX • Linux • Raspberry Pi</em></sub></sup>
 
-<img src="https://i.imgur.com/Q3UdJhV.jpg" width="500"/>
+<h1 align="center">
+    <img src="https://i.imgur.com/T2UvcHc.png" width="250"/>
+</h1>
 
-All-in-one tool for your VR porn library.
+<h3 align="center">
+    The ultimate tool for managing your VR porn library.
+</h3>
+
+<p align="center">
+    <strong>
+        <a href="https://feedback.xbvr.app/">Suggestions</a>
+        •
+        <a href="https://discord.gg/wdCHXAG">Discord</a>
+    </strong>
+</p>
+
+<p align="center" stlye="text-shadow: 2px 2px">
+    <kbd><img src="https://i.imgur.com/Q3UdJhV.jpg" width="500"/></kbd>
+    <br>
+</p>
+
 
 ## Features
 
-- scan multiple folders for content
-- built-in scrapers for popular VR sites - including filenames of downloadable media, so your files could be automatically matched with metadata
-- built-in DLNA streaming server compatible with popular VR players (Pigasus, Skybox, Mobile Station VR)
-- browse your content by cast, site, tags, release date using web UI (taxonomy also reflected in DLNA)
-- available for Windows, macOS, Linux (including ARM builds for RaspberryPi)
+- Automatically match title, tags, cast, cover image, and more to your videos
+- Support for all the most popular VR sites: Badoink, Czech, Milf, NaughtyAmerica, SexBabes, VirtualRealPorn, VirtualTaboo, VRBangers, VRHush, and Wankz
+- Built-in DLNA streaming server compatible with popular VR players (Pigasus, Skybox, Mobile Station VR)
+- Sleek and simple web UI
+- Browse your content by cast, site, tags, and release date
+- Available for Windows, macOS, Linux (including ARM builds for RaspberryPi)
 
 ## Download
 
-Latest version is always available at [releases page](https://github.com/cld9x/xbvr/releases).
+The latest version is always available on the [releases page](https://github.com/cld9x/xbvr/releases).
 
-Please note that during first run XBVR automatically downloads `ffprobe` and `ffmpeg` binaries [ffbinaries site](https://ffbinaries.com/downloads).
+Please note that during the first run XBVR automatically installs `ffprobe` and `ffmpeg` codecs from https://ffbinaries.com/downloads.
 
-## Quick start
+## Quick Start
 
 Once launched, web UI is available at `http://127.0.0.1:9999`.
 
-At first there will be nothing interesting, so click through to Options -> Scene Data and import bundled data. Wait for it to finish, and then go to Options -> Folders and add path to the folders where your media files are stored.
+Before anything else, you must allow the app to scan sites and populate its scene metadata library. Click through to Options -> Scene Data and "Run scraper". This can take several minutes to complete. Wait for it to finish, and then go to Options -> Folders and add the folders where your video files are stored.
 
 When it's all done, you should see your media not only in web UI, but also through DLNA server in your favourite VR player.
 
 Enjoy!
 
-## Questions/suggestions
+## Questions & Suggestions
+
+Submit and vote on features at: https://feedback.xbvr.app/.
 
 Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG).
