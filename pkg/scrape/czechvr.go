@@ -41,52 +41,52 @@ func ScrapeCzechVR(knownScenes []string, out *[]ScrapedScene) error {
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Title
-		e.ForEach(`div.nazev h2 span.desktop`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.nazev h2 span.desktop`, func(id int, e *colly.HTMLElement) {
 			sc.Site = strings.TrimSpace(e.Text)
 		})
 
-		e.ForEach(`div.nazev h2`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.nazev h2`, func(id int, e *colly.HTMLElement) {
 			fullTitle := strings.TrimSpace(e.Text)
 			sc.Title = strings.Split(fullTitle, " - ")[1]
 			tmp := strings.Split(strings.Split(fullTitle, " - ")[0], " ")
 			sc.SiteID = tmp[len(tmp)-1]
+			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 		})
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
-		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post dl8-video`, func(id int, e *colly.HTMLElement) {
 			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("poster")))
 		})
 
 		// Gallery
-		e.ForEach(`div.galerka a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.galerka a`, func(id int, e *colly.HTMLElement) {
 			base := e.Request.AbsoluteURL(e.Attr("href"))
 			base = strings.Split(base, "?")[0]
 			sc.Gallery = append(sc.Gallery, base)
 		})
 
 		// Synopsis
-		e.ForEach(`div.textDetail`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.textDetail`, func(id int, e *colly.HTMLElement) {
 			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
 		// Tags
-		e.ForEach(`div.tagyall div.tag`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.tagyall div.tag`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 
 		// Cast
-		e.ForEach(`div.featuring a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.featuring a`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
 		// Date
-		e.ForEach(`div.nazev div.datum`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.nazev div.datum`, func(id int, e *colly.HTMLElement) {
 			tmpDate, _ := goment.New(e.Text, "MMM DD, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
 		})
 
 		// Duration
-		e.ForEach(`div.nazev div.casDetail span.desktop`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.nazev div.casDetail span.desktop`, func(id int, e *colly.HTMLElement) {
 			tmpDuration, err := strconv.Atoi(strings.Split(e.Text, ":")[0])
 
 			if err == nil {
@@ -95,8 +95,8 @@ func ScrapeCzechVR(knownScenes []string, out *[]ScrapedScene) error {
 		})
 
 		// Filenames
-		e.ForEach(`div.download a.trailer`, func(id int, e *colly.HTMLElement) {
-			if (id == 1) {
+		e.ForEach(`div.post div.download a.trailer`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
 				tmp := strings.Split(e.Attr("href"), "/")
 				parts := strings.Split(tmp[len(tmp)-1], "-")
 				base := parts[0] + "-" + parts[1] + "-" + parts[2]
