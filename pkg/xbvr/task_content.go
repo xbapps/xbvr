@@ -77,6 +77,9 @@ func Scrape() {
 		tlog.Infof("Scraping StasyQVR")
 		scrape.ScrapeStasyQVR(knownScenes, &collectedScenes)
 
+		tlog.Infof("Scraping TmwVRnet")
+		scrape.ScrapeTmwVRnet(knownScenes, &collectedScenes)
+
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
 
