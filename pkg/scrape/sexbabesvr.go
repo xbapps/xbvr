@@ -103,7 +103,9 @@ func ScrapeSexBabesVR(knownScenes []string, out *[]ScrapedScene) error {
 			base = strings.Replace(base, "attachment; filename=", "", -1)
 			base = strings.Replace(base, "\"", "", -1)
 			base = strings.Replace(base, "_trailer", "", -1)
-			sc.Filenames = append(sc.Filenames, base)
+			if !funk.ContainsString(sc.Filenames, base) {
+				sc.Filenames = append(sc.Filenames, base)
+			}
 		})
 
 		*out = append(*out, sc)
