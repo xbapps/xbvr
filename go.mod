@@ -63,7 +63,7 @@ require (
 	github.com/marcsauter/single v0.0.0-20181104081128-f8bf46f26ec0
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
-	github.com/mattn/go-sqlite3 v1.10.1-0.20190529084313-070b17a2fdf5
+	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/mattn/go-zglob v0.0.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/mholt/archiver v3.1.1+incompatible
@@ -91,9 +91,7 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
 	github.com/thoas/go-funk v0.4.0
-	github.com/tidwall/gjson v1.2.1
-	github.com/tidwall/match v1.0.1 // indirect
-	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65 // indirect
+	github.com/tidwall/gjson v1.3.2
 	github.com/ugorji/go v1.1.4 // indirect
 	github.com/vansante/go-ffprobe v1.0.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
