@@ -30,6 +30,7 @@ func CreateLock(lock string) {
 	publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
 	if err == nil {
 		publisher.Publish("lock.change", nil, nil, map[string]interface{}{"name": lock, "locked": true})
+		publisher.Close()
 	}
 }
 
@@ -54,5 +55,6 @@ func RemoveLock(lock string) {
 	publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
 	if err == nil {
 		publisher.Publish("lock.change", nil, nil, map[string]interface{}{"name": lock, "locked": false})
+		publisher.Close()
 	}
 }

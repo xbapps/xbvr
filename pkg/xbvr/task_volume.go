@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/djherbis/times"
+	"github.com/gammazero/nexus/client"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
@@ -192,6 +193,14 @@ func RescanVolumes() {
 		}
 
 		log.WithFields(logrus.Fields{"task": "rescan"}).Infof("Scanning complete")
+
+		// Inform UI about state change
+		publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
+		if err == nil {
+			publisher.Publish("state.change.optionsFolders", nil, nil, nil)
+			publisher.Close()
+		}
+
 	}
 
 	RemoveLock("rescan")

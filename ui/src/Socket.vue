@@ -3,7 +3,7 @@
 </template>
 
 <script>
-  import { Wampy } from "wampy";
+  import {Wampy} from "wampy";
 
   export default {
     name: "Socket",
@@ -32,36 +32,38 @@
         }
       });
 
-      ws
-        .subscribe("service.log", (dataArr, dataObj) => {
-          if (dataArr.argsDict.level == "debug") {
-            console.debug(dataArr.argsDict.message);
-          }
-          if (dataArr.argsDict.level == "info") {
-            console.info(dataArr.argsDict.message);
-          }
-          if (dataArr.argsDict.level == "error") {
-            console.error(dataArr.argsDict.message);
-          }
+      ws.subscribe("service.log", (dataArr, dataObj) => {
+        if (dataArr.argsDict.level == "debug") {
+          console.debug(dataArr.argsDict.message);
+        }
+        if (dataArr.argsDict.level == "info") {
+          console.info(dataArr.argsDict.message);
+        }
+        if (dataArr.argsDict.level == "error") {
+          console.error(dataArr.argsDict.message);
+        }
 
-          if (dataArr.argsDict.data.task === "scrape") {
-            this.$store.state.messages.lastScrapeMessage = dataArr.argsDict;
-          }
+        if (dataArr.argsDict.data.task === "scrape") {
+          this.$store.state.messages.lastScrapeMessage = dataArr.argsDict;
+        }
 
-          if (dataArr.argsDict.data.task === "rescan") {
-            this.$store.state.messages.lastRescanMessage = dataArr.argsDict;
-          }
-        });
+        if (dataArr.argsDict.data.task === "rescan") {
+          this.$store.state.messages.lastRescanMessage = dataArr.argsDict;
+        }
+      });
 
-      ws
-        .subscribe("lock.change", (dataArr, dataObj) => {
-          if (dataArr.argsDict.name === "scrape") {
-            this.$store.state.messages.lockScrape = dataArr.argsDict.locked;
-          }
-          if (dataArr.argsDict.name === "rescan") {
-            this.$store.state.messages.lockRescan = dataArr.argsDict.locked;
-          }
-        })
+      ws.subscribe("lock.change", (dataArr, dataObj) => {
+        if (dataArr.argsDict.name === "scrape") {
+          this.$store.state.messages.lockScrape = dataArr.argsDict.locked;
+        }
+        if (dataArr.argsDict.name === "rescan") {
+          this.$store.state.messages.lockRescan = dataArr.argsDict.locked;
+        }
+      });
+
+      ws.subscribe("state.change.optionsFolders", (arr, obj) => {
+        this.$store.dispatch("optionsFolders/load");
+      });
     }
   }
 </script>

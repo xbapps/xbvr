@@ -2,7 +2,7 @@
   <div>
     <div class="columns">
       <div class="column is-two-thirds">
-        <div v-if="volumes.length > 0">
+        <div v-if="items.length > 0">
           <table class="table">
             <thead>
             <tr>
@@ -16,7 +16,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="v in volumes" v-bind:key="v.path">
+            <tr v-for="v in items" v-bind:key="v.path">
               <td>{{v.path}}</td>
               <td>
                 <b-icon pack="fas" icon="check" size="is-small" v-if="v.is_available"></b-icon>
@@ -30,7 +30,7 @@
             </tbody>
           </table>
 
-          <div class="button is-button is-primary" v-on:click="taskRescan()">Rescan</div>
+          <div class="button is-button is-primary" v-on:click="taskRescan">Rescan</div>
         </div>
       </div>
 
@@ -42,7 +42,7 @@
           </div>
         </div>
         <div class="control">
-          <button class="button is-link" v-on:click='addFolder()'>Add new folder</button>
+          <button class="button is-link" v-on:click='addFolder'>Add new folder</button>
         </div>
       </div>
     </div>
@@ -77,21 +77,21 @@
       }
     },
     mounted() {
-      this.getData();
+      this.$store.dispatch("optionsFolders/load");
     },
     methods: {
-      getData: async function getData() {
-        this.volumes = await ky.get(`/api/config/volume`).json();
-      },
       taskRescan: function () {
         ky.get(`/api/task/rescan`);
       },
       addFolder: async function () {
         await ky.post(`/api/config/volume`, {json: {path: this.newVolumePath}}).json();
-        this.getData();
+        this.$store.dispatch("optionsFolders/load");
       }
     },
     computed: {
+      items() {
+        return this.$store.state.optionsFolders.items;
+      },
       lastMessage() {
         return this.$store.state.messages.lastRescanMessage;
       },
