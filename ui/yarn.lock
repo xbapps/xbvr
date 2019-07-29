@@ -5431,10 +5431,10 @@ kind-of@^6.0.0, kind-of@^6.0.2:
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.2.tgz#01146b36a6218e64e58f3a8d66de5d7fc6f6d051"
   integrity sha512-s5kLOcnH0XqDO+FvuaLX8DDjZ18CGFk7VygH40QoKPUQhW4e2rvM0rwUq0t8IQDOwYSeLK01U90OjzBTme2QqA==
 
-ky@0.11.1:
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/ky/-/ky-0.11.1.tgz#0bdffb441eb92ac910124ac6cd63088db9e66b5f"
-  integrity sha512-ppp6nrKXRTCMVsWP0sDDdLJXXNnH+5defcpQNiNE712/KpdGwG87290ldFAGsx4CAI/F2eVg3Exql0Oo/eGU5A==
+ky@0.11.2:
+  version "0.11.2"
+  resolved "https://registry.yarnpkg.com/ky/-/ky-0.11.2.tgz#4ffe6621d9d9ab61bf0f5500542e3a96d1ba0815"
+  integrity sha512-5Aou5BWue5/mkPqIRqzSWW+0Hkl403pr/2AIrCKYw7cVl/Xoe8Xe4KLBO0PRjbz7GnRe1/8wW1KhqQNFFE7/GQ==
 
 last-run@^1.1.0:
   version "1.1.1"
