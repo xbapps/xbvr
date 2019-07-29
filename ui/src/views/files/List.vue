@@ -2,7 +2,7 @@
   <div>
     <div class="columns">
       <div class="column">
-        <div v-if="files.length > 0">
+        <div v-if="items.length > 0">
           <table class="table">
             <thead>
             <tr>
@@ -14,7 +14,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr v-for="v in files" v-bind:key="v.id">
+            <tr v-for="v in items" v-bind:key="v.id">
               <td>{{v.filename}}</td>
               <td>{{v.path}}</td>
               <td nowrap>{{prettyBytes(v.size)}}</td>
@@ -49,7 +49,6 @@
 </template>
 
 <script>
-  import ky from "ky";
   import prettyBytes from "pretty-bytes";
   import {distanceInWordsToNow, parse} from "date-fns";
   import BButton from "buefy/src/components/button/Button";
@@ -65,13 +64,15 @@
         distanceInWordsToNow,
       }
     },
+    computed: {
+      items() {
+        return this.$store.state.files.items;
+      },
+    },
     mounted() {
-      this.getData();
+      this.$store.dispatch("files/load");
     },
     methods: {
-      getData: async function getData() {
-        this.files = await ky.get(`/api/files/list/unmatched`).json();
-      },
       play(file) {
         this.$store.commit("overlay/showPlayer", {file: file});
       },
@@ -79,8 +80,6 @@
         this.$store.commit("overlay/showMatch", {file: file});
       }
     },
-    computed: {
-    }
   }
 </script>
 

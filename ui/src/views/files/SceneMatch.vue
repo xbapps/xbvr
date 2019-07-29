@@ -96,6 +96,8 @@
           }
         });
 
+        this.$store.dispatch("files/load");
+
         this.$store.commit("overlay/hideMatch");
       },
       close() {
