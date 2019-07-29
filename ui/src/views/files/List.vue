@@ -27,6 +27,22 @@
             </tbody>
           </table>
         </div>
+        <div v-else>
+          <section class="hero is-large">
+            <div class="hero-body">
+              <div class="container has-text-centered">
+                <h1 class="title">
+                  <span class="icon">
+                    <i class="far fa-check-circle is-superlarge"></i>
+                  </span>
+                </h1>
+                <h2 class="subtitle">
+                  All of your files are linked to scenes
+                </h2>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   </div>
@@ -67,3 +83,14 @@
     }
   }
 </script>
+
+<style scoped>
+  .is-superlarge {
+    height: 96px;
+    max-height: 96px;
+    max-width: 96px;
+    min-height: 96px;
+    min-width: 96px;
+    width: 96px;
+  }
+</style>
