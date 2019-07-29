@@ -4,6 +4,7 @@ import Vuex from "vuex";
 import sceneList from "./sceneList";
 import messages from "./messages";
 import overlay from "./overlay";
+import files from "./files";
 
 
 Vue.use(Vuex);
@@ -13,5 +14,6 @@ export default new Vuex.Store({
     sceneList,
     messages,
     overlay,
+    files,
   }
 })
