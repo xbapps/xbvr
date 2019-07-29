@@ -24,7 +24,11 @@
                   :show-detail-icon="true">
             <template slot-scope="props">
               <b-table-column field="cover_url" label="Image" width="120">
-                <img :src="getImageURL(props.row.cover_url)"/>
+                <vue-load-image>
+                  <img slot="image" :src="getImageURL(props.row.cover_url)"/>
+                  <img slot="preloader" src="/ui/images/blank.png"/>
+                  <img slot="error" src="/ui/images/blank.png"/>
+                </vue-load-image>
               </b-table-column>
               <b-table-column field="site" label="Site">
                 {{ props.row.site }}
@@ -54,9 +58,11 @@
 <script>
   import ky from "ky";
   import {format, parse} from "date-fns";
+  import VueLoadImage from "vue-load-image";
 
   export default {
     name: "SceneMatch",
+    components: {VueLoadImage,},
     data() {
       return {
         data: [],

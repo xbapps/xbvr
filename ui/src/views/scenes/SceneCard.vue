@@ -2,7 +2,11 @@
   <div class="card is-shadowless">
     <div class="card-image">
       <figure class="image" @click="showDetails(item)">
-        <img :src="getImageURL(item.cover_url)" v-bind:class="{'transparent': !item.is_available}"/>
+        <vue-load-image>
+          <img slot="image" :src="getImageURL(item.cover_url)" v-bind:class="{'transparent': !item.is_available}"/>
+          <img slot="preloader" src="/ui/images/blank.png"/>
+          <img slot="error" src="/ui/images/blank.png"/>
+        </vue-load-image>
       </figure>
     </div>
 
@@ -39,10 +43,12 @@
 
 <script>
   import {format, parse} from "date-fns";
+  import VueLoadImage from "vue-load-image";
 
   export default {
     name: "SceneCard",
     props: {item: Object},
+    components: {VueLoadImage,},
     data() {
       return {format, parse}
     },
@@ -70,6 +76,7 @@
   .transparent {
     opacity: 0.35;
   }
+
   .button {
     margin-right: 3px;
   }
