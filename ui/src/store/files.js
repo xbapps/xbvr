@@ -6,7 +6,9 @@ const state = {
 
 const actions = {
   load({state}, params) {
-    state.items = ky.get(`/api/files/list/unmatched`).json();
+    ky.get(`/api/files/list/unmatched`).json().then(data => {
+      state.items = data;
+    });
   },
 };
 
