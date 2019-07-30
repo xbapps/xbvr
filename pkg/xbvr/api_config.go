@@ -76,15 +76,15 @@ func (i ConfigResource) addVolume(req *restful.Request, resp *restful.Response) 
 	db.Where(&Volume{Path: path}).Find(&vol)
 
 	if len(vol) > 0 {
-		tlog.Error("Volume already exists")
-		APIError(req, resp, 400, errors.New("Volume already exists"))
+		tlog.Error("Folder already exists")
+		APIError(req, resp, 400, errors.New("Folder already exists"))
 		return
 	}
 
 	nv := Volume{Path: path, IsEnabled: true, IsAvailable: true}
 	nv.Save()
 
-	tlog.Info("Added new volume", path)
+	tlog.Info("Added new folder", path)
 }
 
 func (i ConfigResource) deleteVolume(req *restful.Request, resp *restful.Response) {
