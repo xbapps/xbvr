@@ -81,8 +81,14 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	tmp, err := json.Marshal(pfTxt)
 	if err == nil {
 		scene.FilenamesArr = string(tmp)
-		scene.Save()
 	}
+
+	// Finally, update scene available/accessible status
+	scene.IsAvailable = true
+	if f.Exists() {
+		scene.IsAccessible = true
+	}
+	scene.Save()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, nil)
 }
