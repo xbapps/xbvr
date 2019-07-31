@@ -192,7 +192,7 @@ func RescanVolumes() {
 			}
 		}
 
-		log.WithFields(logrus.Fields{"task": "rescan"}).Infof("Scanning complete")
+		tlog.Infof("Scanning complete")
 
 		// Inform UI about state change
 		publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
