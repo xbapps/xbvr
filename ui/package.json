@@ -10,7 +10,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.3.1",
     "@mdi/font": "3.8.95",
-    "buefy": "0.7.10",
+    "buefy": "0.8.1",
     "date-fns": "1.30.1",
     "ky": "0.11.2",
     "pretty-bytes": "5.3.0",
