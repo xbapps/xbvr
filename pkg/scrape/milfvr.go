@@ -93,7 +93,7 @@ func ScrapeMilfVR(knownScenes []string, out *[]ScrapedScene) error {
 
 		// Date
 		e.ForEach(`i.icon-bell`, func(id int, e *colly.HTMLElement) {
-			tmpDate, _ := goment.New(e.DOM.Parent().Text(), "DD MMMM, YYYY")
+			tmpDate, _ := goment.New(e.DOM.Parent().Text(), "DD MMM, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
 		})
 
