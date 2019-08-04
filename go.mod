@@ -81,7 +81,7 @@ require (
 	github.com/thoas/go-funk v0.4.0
 	github.com/tidwall/gjson v1.3.2
 	github.com/ugorji/go v1.1.4 // indirect
-	github.com/vansante/go-ffprobe v1.0.0
+	github.com/vansante/go-ffprobe v1.1.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	golang.org/x/image v0.0.0-20190507092727-e4e5bf290fec // indirect
