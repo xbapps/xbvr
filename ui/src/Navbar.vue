@@ -1,5 +1,5 @@
 <template>
-  <b-navbar :fixed-top="true">
+  <b-navbar :fixed-top="true" type="is-light">
     <template slot="brand">
       <b-navbar-item>
         <h1 class="title">XBVR <small>{{currentVersion}}</small></h1>
@@ -30,6 +30,9 @@
       }
     },
     mounted() {
+      let d = document.documentElement;
+      d.className += " has-navbar-fixed-top";
+
       ky.get(`/api/config/version-check`).json().then(data => {
         this.currentVersion = data.current_version;
         this.latestVersion = data.latest_version;
