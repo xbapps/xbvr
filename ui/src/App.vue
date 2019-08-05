@@ -1,7 +1,9 @@
 <template>
   <div>
     <Navbar/>
-    <router-view/>
+    <div class="pad">
+      <router-view/>
+    </div>
     <Socket/>
   </div>
 </template>
@@ -14,3 +16,9 @@
     components: {Navbar, Socket},
   }
 </script>
+
+<style scoped>
+  .pad {
+    margin-top: 1em;
+  }
+</style>
