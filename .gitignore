@@ -12,3 +12,4 @@ test.db
 /ui/public/static/bundle.*
 npm-debug.log
 yarn-error.log
+/test_cache
