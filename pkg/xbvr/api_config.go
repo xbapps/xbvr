@@ -8,10 +8,17 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+	"gopkg.in/resty.v1"
 )
 
 type NewVolumeRequest struct {
 	Path string `json:"path"`
+}
+
+type VersionCheckResponse struct {
+	CurrentVersion string `json:"current_version"`
+	LatestVersion  string `json:"latest_version"`
 }
 
 type ConfigResource struct{}
@@ -25,6 +32,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
+	ws.Route(ws.GET("/version-check").To(i.versionCheck).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.GET("/volume").To(i.listVolume).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -35,6 +45,24 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
+}
+
+func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Response) {
+	out := VersionCheckResponse{LatestVersion: currentVersion, CurrentVersion: currentVersion}
+
+	if currentVersion != "CURRENT" {
+		r, err := resty.R().
+			SetHeader("User-Agent", "XBVR/"+currentVersion).
+			Get("https://updates.xbvr.app/latest.json")
+		if err != nil || r.StatusCode() != 200 {
+			resp.WriteHeaderAndEntity(http.StatusOK, out)
+			return
+		}
+
+		out.LatestVersion = gjson.Get(r.String(), "latestVersion").String()
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, out)
 }
 
 func (i ConfigResource) listVolume(req *restful.Request, resp *restful.Response) {
