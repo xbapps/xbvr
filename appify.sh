@@ -119,5 +119,5 @@ EOF
 echo "Application bundle created at '$PWD/$APPNAME.app'"
 echo
 
-mv $PWD/$APPNAME.app dist/darwin_amd64
-rm $APPSCRIPT
+#mv $PWD/$APPNAME.app dist/darwin_amd64
+#rm $APPSCRIPT

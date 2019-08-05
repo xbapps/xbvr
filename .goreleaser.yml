@@ -5,8 +5,8 @@ before:
     - go generate ./...
 builds:
 - id: xbvr-mac
-  binary: xbvr
-#  main: cmd/tray/main.go
+  binary: XBVR.app/Contents/MacOS/XBVR
+  main: pkg/tray/main.go
   flags:
     - -tags=json1
   env:
@@ -17,12 +17,14 @@ builds:
     - darwin
   goarch:
     - amd64
-#  hooks:
-#    post: ./appify.sh -s dist/darwin_amd64/xbvr -i ui/public/icons/xbvr-mac.icns -n XBVR
+  hooks:
+    post: ./appify.sh -s ./dist/darwin_amd64/XBVR.app/Contents/MacOS/XBVR -i ./ui/public/icons/xbvr-mac.icns -n XBVR
 - id: xbvr-windows
   binary: xbvr
+  main: pkg/tray/main.go
   flags:
     - -tags=json1
+    - -H=windowsgui
   env:
     - CGO_ENABLED=1
     - CC=x86_64-w64-mingw32-gcc
@@ -56,11 +58,29 @@ builds:
     - 6
     - 7
 archives:
-- replacements:
-    darwin: macOS
+- id: archive-linux
+  builds:
+    - xbvr-linux-amd64
+    - xbvr-linux-arm
+  replacements:
     linux: Linux
     windows: Windows
     amd64: x86_64
+- id: archive-win
+  builds:
+    - xbvr-windows
+  format: zip
+  replacements:
+    windows: Windows
+- id: archive-mac
+  builds:
+    - xbvr-mac
+  format: zip
+  replacements:
+    darwin: macOS
+  files:
+    - XBVR.app/Contents/Resources/XBVR.icns
+    - XBVR.app/Contents/Info.plist
 snapshot:
   name_template: "{{ .Tag }}-next"
 changelog:
