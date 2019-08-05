@@ -24,7 +24,8 @@ builds:
   main: pkg/tray/main.go
   flags:
     - -tags=json1
-    - -H windowsgui
+  ldflags:
+    - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser -H windowsgui
   env:
     - CGO_ENABLED=1
     - CC=x86_64-w64-mingw32-gcc
