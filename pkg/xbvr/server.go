@@ -19,12 +19,15 @@ import (
 )
 
 var (
-	DEBUG    = os.Getenv("DEBUG")
-	httpAddr = "0.0.0.0:9999"
-	wsAddr   = "0.0.0.0:9998"
+	DEBUG          = os.Getenv("DEBUG")
+	httpAddr       = "0.0.0.0:9999"
+	wsAddr         = "0.0.0.0:9998"
+	currentVersion = ""
 )
 
 func StartServer(version, commit, branch, date string) {
+	currentVersion = version
+
 	// Remove old locks
 	RemoveLock("scrape")
 	RemoveLock("update-scenes")
