@@ -25,13 +25,17 @@ steps:
       - yarn build
 
   - name: build
-    image: mailchain/goreleaser-xcgo:latest
+    image: cld9x/goreleaser-xcgo:latest
     environment:
       GITHUB_TOKEN:
         from_secret: GITHUB_TOKEN
+      DOCKER_LOGIN:
+        from_secret: DOCKER_LOGIN
+      DOCKER_PASSWORD:
+        from_secret: DOCKER_PASSWORD
     when:
       event:
         - tag
     commands:
-      - apt-get update && apt-get install -y gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
+      - echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_LOGIN --password-stdin
       - goreleaser --skip-validate --rm-dist
