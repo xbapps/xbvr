@@ -45,4 +45,4 @@ steps:
       repo: cld9x/xbvr
       auto_tag: true
       build_args:
-        - DRONE_TAG: DRONE_TAG
+        - DRONE_TAG: $$TAG
