@@ -85,25 +85,6 @@ archives:
     - XBVR.app/Contents/Resources/XBVR.icns
     - XBVR.app/Contents/Info.plist
 
-dockers:
-  - goos: linux
-    goarch: amd64
-    binaries:
-      - xbvr-linux-amd64
-    image_templates:
-      - "cld9x/xbvr:latest"
-      - "cld9x/xbvr:{{ .Tag }}"
-    dockerfile: Dockerfile
-  - goos: linux
-    goarch: arm
-    goarm: "7"
-    binaries:
-      - xbvr-linux-arm
-    image_templates:
-      - "cld9x/xbvr:latest"
-      - "cld9x/xbvr:{{ .Tag }}"
-    dockerfile: Dockerfile
-
 snapshot:
   name_template: "{{ .Tag }}-next"
 

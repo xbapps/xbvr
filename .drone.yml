@@ -29,13 +29,20 @@ steps:
     environment:
       GITHUB_TOKEN:
         from_secret: GITHUB_TOKEN
-      DOCKER_LOGIN:
-        from_secret: DOCKER_LOGIN
-      DOCKER_PASSWORD:
-        from_secret: DOCKER_PASSWORD
     when:
       event:
         - tag
     commands:
-      - echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_LOGIN --password-stdin
       - goreleaser --skip-validate --rm-dist
+
+  - name: docker
+    image: plugins/docker
+    settings:
+      username:
+        from_secret: DOCKER_LOGIN
+      password:
+        from_secret: DOCKER_PASSWORD
+      repo: cld9x/xbvr
+      auto_tag: true
+      build_args:
+        - DRONE_TAG: $DRONE_TAG

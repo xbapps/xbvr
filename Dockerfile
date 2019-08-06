@@ -1,8 +1,11 @@
-# Actual image
-FROM alpine
-RUN apk add --no-cache bash ca-certificates
+FROM ubuntu:19.04
+RUN apt update && apt install -y wget ca-certificates
 
-COPY xbvr /usr/local/bin/xbvr
+ARG DRONE_TAG
+
+RUN wget -O /tmp/xbvr.tgz "https://github.com/cld9x/xbvr/releases/download/"$DRONE_TAG"/xbvr_"$DRONE_TAG"_Linux_x86_64.tar.gz" && \
+    tar xvfz /tmp/xbvr.tgz -C /usr/local/bin/ && \
+    rm /tmp/xbvr.tgz
 
 EXPOSE 9999
-ENTRYPOINT ["/usr/local/bin/xbvr"]
+CMD ["/usr/local/bin/xbvr"]
