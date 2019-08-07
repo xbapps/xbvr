@@ -37,6 +37,8 @@
 
 The latest version is always available on the [releases page](https://github.com/cld9x/xbvr/releases).
 
+App is also available in form of Docker image, which makes it possible to run in more specialized environments such as QNAP NAS - downloads at [Docker Hub](https://hub.docker.com/r/cld9x/xbvr). 
+
 Please note that during the first run XBVR automatically installs `ffprobe` and `ffmpeg` codecs from [ffbinaries site](https://ffbinaries.com/downloads).
 
 ## Quick Start
