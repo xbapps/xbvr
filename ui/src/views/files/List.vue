@@ -5,29 +5,26 @@
         <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
 
         <div v-if="items.length > 0 && !isLoading">
-          <table class="table">
-            <thead>
-            <tr>
-              <th>File</th>
-              <th>Folder</th>
-              <th>Size</th>
-              <th>Resolution</th>
-              <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="v in items" v-bind:key="v.id">
-              <td>{{v.filename}}</td>
-              <td>{{v.path}}</td>
-              <td nowrap>{{prettyBytes(v.size)}}</td>
-              <td>{{v.video_width}}x{{v.video_height}}</td>
-              <td nowrap>
-                <b-button @click="play(v)">Play</b-button>&nbsp;
-                <b-button @click="match(v)">Match to scene</b-button>
-              </td>
-            </tr>
-            </tbody>
-          </table>
+          <b-table :data="items" ref="table">
+            <template slot-scope="props">
+              <b-table-column field="filename" label="File" sortable>
+                {{props.row.filename}}
+              </b-table-column>
+              <b-table-column field="path" label="Folder" sortable>
+                {{props.row.path}}
+              </b-table-column>
+              <b-table-column field="size" label="Size" sortable style="white-space: nowrap;">
+                {{prettyBytes(props.row.size)}}
+              </b-table-column>
+              <b-table-column field="video_height" label="Resolution" sortable>
+                {{props.row.video_width}}x{{props.row.video_height}}
+              </b-table-column>
+              <b-table-column style="white-space: nowrap;">
+                <b-button @click="play(props.row)">Play</b-button>&nbsp;
+                <b-button @click="match(props.row)">Match to scene</b-button>
+              </b-table-column>
+            </template>
+          </b-table>
         </div>
         <div v-if="items.length === 0 && !isLoading">
           <section class="hero is-large">
