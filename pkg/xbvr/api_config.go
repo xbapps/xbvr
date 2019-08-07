@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/blang/semver"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/pkg/errors"
@@ -19,6 +20,7 @@ type NewVolumeRequest struct {
 type VersionCheckResponse struct {
 	CurrentVersion string `json:"current_version"`
 	LatestVersion  string `json:"latest_version"`
+	UpdateNotify   bool   `json:"update_notify"`
 }
 
 type ConfigResource struct{}
@@ -48,7 +50,7 @@ func (i ConfigResource) WebService() *restful.WebService {
 }
 
 func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Response) {
-	out := VersionCheckResponse{LatestVersion: currentVersion, CurrentVersion: currentVersion}
+	out := VersionCheckResponse{LatestVersion: currentVersion, CurrentVersion: currentVersion, UpdateNotify: false}
 
 	if currentVersion != "CURRENT" {
 		r, err := resty.R().
@@ -60,6 +62,13 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 		}
 
 		out.LatestVersion = gjson.Get(r.String(), "latestVersion").String()
+
+		// Decide if UI notification is needed
+		sCurrent := semver.MustParse(out.LatestVersion)
+		sLatest := semver.MustParse(currentVersion)
+		if sLatest.GT(sCurrent) {
+			out.UpdateNotify = true
+		}
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, out)

@@ -11,6 +11,7 @@ require (
 	github.com/antchfx/xmlquery v1.0.0 // indirect
 	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/blevesearch/bleve v0.8.0
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect

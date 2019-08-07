@@ -37,7 +37,7 @@
         this.currentVersion = data.current_version;
         this.latestVersion = data.latest_version;
 
-        if (this.currentVersion !== this.latestVersion && this.currentVersion !== "CURRENT") {
+        if (data.update_notify && this.currentVersion !== "CURRENT") {
           this.$buefy.snackbar.open({
             message: `Version ${this.latestVersion} available!`,
             type: 'is-warning',
