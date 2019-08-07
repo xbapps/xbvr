@@ -8,4 +8,6 @@ RUN wget -O /tmp/xbvr.tgz "https://github.com/cld9x/xbvr/releases/download/"$DRO
     rm /tmp/xbvr.tgz
 
 EXPOSE 9999
+VOLUME /root/.config/
+
 CMD ["/usr/local/bin/xbvr"]
