@@ -64,8 +64,8 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 		out.LatestVersion = gjson.Get(r.String(), "latestVersion").String()
 
 		// Decide if UI notification is needed
-		sCurrent := semver.MustParse(out.LatestVersion)
-		sLatest := semver.MustParse(currentVersion)
+		sLatest := semver.MustParse(out.LatestVersion)
+		sCurrent := semver.MustParse(currentVersion)
 		if sLatest.GT(sCurrent) {
 			out.UpdateNotify = true
 		}
