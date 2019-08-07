@@ -3,32 +3,37 @@
     <div class="columns">
       <div class="column is-two-thirds">
         <div v-if="items.length > 0">
-          <table class="table">
-            <thead>
-            <tr>
-              <th>Path</th>
-              <th>Available</th>
-              <th># of files</th>
-              <th>Not matched</th>
-              <th>Total size</th>
-              <th>Last scan</th>
-              <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="v in items" v-bind:key="v.path">
-              <td>{{v.path}}</td>
-              <td>
-                <b-icon pack="fas" icon="check" size="is-small" v-if="v.is_available"></b-icon>
-              </td>
-              <td>{{v.file_count}}</td>
-              <td>{{v.unmatched_count}}</td>
-              <td>{{prettyBytes(v.total_size)}}</td>
-              <td>{{distanceInWordsToNow(parse(v.last_scan))}} ago</td>
+          <b-table :data="items"
+                   ref="table" default-sort="is_available" default-sort-direction="desc">
+            <template slot-scope="props">
+              <b-table-column field="path" label="Path" sortable>
+                {{props.row.path}}
+              </b-table-column>
+              <b-table-column field="is_available" label="Available" sortable>
+                <b-icon pack="fas" icon="check" size="is-small" v-if="props.row.is_available"></b-icon>
+              </b-table-column>
+              <b-table-column field="file_count" label="# of files" sortable>
+                {{props.row.file_count}}
+              </b-table-column>
+              <b-table-column field="unmatched_count" label="Not matched" sortable>
+                {{props.row.unmatched_count}}
+              </b-table-column>
+              <b-table-column field="total_size" label="Total size" sortable>
+                {{prettyBytes(props.row.total_size)}}
+              </b-table-column>
+              <b-table-column field="last_scan" label="Last scan" sortable>
+                {{distanceInWordsToNow(parse(props.row.last_scan))}} ago
+              </b-table-column>
+            </template>
+            <template slot="footer">
               <td></td>
-            </tr>
-            </tbody>
-          </table>
+              <td></td>
+              <td>{{total.files}}</td>
+              <td>{{total.unmatched}}</td>
+              <td>{{prettyBytes(total.size)}}</td>
+              <td></td>
+            </template>
+          </b-table>
 
           <div class="button is-button is-primary" v-on:click="taskRescan">Rescan</div>
         </div>
@@ -89,6 +94,15 @@
       }
     },
     computed: {
+      total() {
+        let files = 0, unmatched = 0, size = 0;
+        this.$store.state.optionsFolders.items.map(v => {
+          files = files + v.file_count;
+          unmatched = unmatched + v.unmatched_count;
+          size = size + v.total_size;
+        });
+        return {files, unmatched, size}
+      },
       items() {
         return this.$store.state.optionsFolders.items;
       },
