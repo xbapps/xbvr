@@ -37,6 +37,9 @@ steps:
 
   - name: docker
     image: plugins/docker:18.09
+    when:
+      event:
+        - tag
     settings:
       username:
         from_secret: DOCKER_LOGIN
@@ -45,4 +48,4 @@ steps:
       repo: cld9x/xbvr
       auto_tag: true
       build_args:
-        - DRONE_TAG: "${DRONE_TAG}"
+        DRONE_TAG: "${DRONE_TAG}"
