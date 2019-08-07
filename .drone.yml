@@ -36,7 +36,7 @@ steps:
       - goreleaser --skip-validate --rm-dist
 
   - name: docker
-    image: plugins/docker
+    image: plugins/docker:18.09
     settings:
       username:
         from_secret: DOCKER_LOGIN
