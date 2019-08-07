@@ -2,7 +2,9 @@
   <div>
     <div class="columns">
       <div class="column">
-        <div v-if="items.length > 0">
+        <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
+
+        <div v-if="items.length > 0 && !isLoading">
           <table class="table">
             <thead>
             <tr>
@@ -27,7 +29,7 @@
             </tbody>
           </table>
         </div>
-        <div v-else>
+        <div v-if="items.length === 0 && !isLoading">
           <section class="hero is-large">
             <div class="hero-body">
               <div class="container has-text-centered">
@@ -65,6 +67,9 @@
       }
     },
     computed: {
+      isLoading() {
+        return this.$store.state.files.isLoading;
+      },
       items() {
         return this.$store.state.files.items;
       },

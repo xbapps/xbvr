@@ -2,6 +2,7 @@ import ky from "ky";
 
 const state = {
   items: [],
+  isLoading: false,
   offset: 0,
   total: 0,
   limit: 80,
@@ -57,6 +58,8 @@ const actions = {
   async load({state}, params) {
     let iOffset = params.offset || 0;
 
+    state.isLoading = true;
+
     let data = await ky
       .get(`/api/scene/list`, {
         searchParams: {
@@ -71,6 +74,8 @@ const actions = {
         }
       })
       .json();
+
+    state.isLoading = false;
 
     if (iOffset === 0) {
       state.items = [];

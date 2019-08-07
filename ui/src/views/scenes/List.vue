@@ -1,5 +1,7 @@
 <template>
   <div class="column">
+    <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
+
     <div class="columns is-multiline is-full">
       <div class="column">
         <strong>{{total}} results</strong>
@@ -40,6 +42,9 @@
           default:
             return "is-one-fifth";
         }
+      },
+      isLoading() {
+        return this.$store.state.sceneList.isLoading;
       },
       items() {
         return this.$store.state.sceneList.items;
