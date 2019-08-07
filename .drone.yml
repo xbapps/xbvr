@@ -47,4 +47,4 @@ steps:
         from_secret: DOCKER_PASSWORD
       repo: cld9x/xbvr
       auto_tag: true
-      build_args: DRONE_TAG="${DRONE_TAG}"
+      build_args: DRONE_TAG=${DRONE_TAG}
