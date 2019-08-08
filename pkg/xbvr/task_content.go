@@ -101,14 +101,14 @@ func Scrape() {
 	RemoveLock("scrape")
 }
 
-func ImportBundle() {
+func ImportBundle(url string) {
 	if !CheckLock("scrape") {
 		CreateLock("scrape")
 
 		tlog := log.WithField("task", "scrape")
 
 		var bundleData Bundle
-		resp, err := resty.R().SetResult(&bundleData).Get("http://127.0.0.1:9999/static/bundle.json")
+		resp, err := resty.R().SetResult(&bundleData).Get(url)
 
 		if err == nil && resp.StatusCode() == 200 {
 			db, _ := GetDB()

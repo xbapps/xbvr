@@ -44,5 +44,6 @@ func (i TaskResource) scrape(req *restful.Request, resp *restful.Response) {
 }
 
 func (i TaskResource) importBundle(req *restful.Request, resp *restful.Response) {
-	go ImportBundle()
+	url := req.QueryParameter("url")
+	go ImportBundle(url)
 }
