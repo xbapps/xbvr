@@ -69,7 +69,7 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.8.1
 	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
-	github.com/rs/cors v1.6.0
+	github.com/rs/cors v1.7.0
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/satori/go.uuid v0.0.0-20180103174451-36e9d2ebbde5
