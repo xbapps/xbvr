@@ -12,7 +12,7 @@
     "@mdi/font": "3.9.96",
     "buefy": "0.8.2",
     "date-fns": "1.30.1",
-    "ky": "0.11.2",
+    "ky": "0.12.0",
     "pretty-bytes": "5.3.0",
     "videojs-hotkeys": "0.2.25",
     "videojs-vr": "1.5.0",
