@@ -725,10 +725,10 @@
     cssnano-preset-default "^4.0.0"
     postcss "^7.0.0"
 
-"@mdi/font@3.9.96":
-  version "3.9.96"
-  resolved "https://registry.yarnpkg.com/@mdi/font/-/font-3.9.96.tgz#0c957f1f07e45bd56e6c87cbd1c0d44c8002d129"
-  integrity sha512-mGzfr/4hNQaR9mY4nFDyMgL6ouTyDMrp4sEPHLXFy403EMbdrkVLHX/aHfnrgUgXMxS54ozN7vMjeqTbj9eE9w==
+"@mdi/font@4.1.95":
+  version "4.1.95"
+  resolved "https://registry.yarnpkg.com/@mdi/font/-/font-4.1.95.tgz#8a1ee05601757c57eb073f21c28e259ca2fe1102"
+  integrity sha512-/XhFVHkaBEVSaskmfhe/9sne+Sxkl8rUVdtSk5SCUAiPlFKidzYPDOWi9WGRiYYy8/OC4KuAHTRHvCNPywCxgg==
 
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"
