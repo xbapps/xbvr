@@ -3,12 +3,13 @@ package xbvr
 import (
 	"os"
 	"time"
-
-	"github.com/jinzhu/gorm"
 )
 
 type Volume struct {
-	gorm.Model
+	ID        uint `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
 	Path           string    `json:"path"`
 	LastScan       time.Time `json:"last_scan"`
 	IsEnabled      bool      `json:"-"`

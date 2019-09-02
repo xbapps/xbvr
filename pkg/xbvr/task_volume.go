@@ -48,7 +48,7 @@ func RescanVolumes() {
 							var fl File
 							err = db.Where(&File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
 
-							if err == gorm.ErrRecordNotFound {
+							if err == gorm.ErrRecordNotFound || fl.VolumeID == 0 || fl.VideoDuration == 0 || fl.VideoProjection == "" {
 								procList = append(procList, path)
 							}
 						}
@@ -69,13 +69,15 @@ func RescanVolumes() {
 						birthtime = fTimes.ModTime()
 					}
 					var fl File
-					fl = File{
-						Path:        filepath.Dir(pth),
-						Filename:    filepath.Base(pth),
-						Size:        fStat.Size(),
-						CreatedTime: birthtime,
-						UpdatedTime: fTimes.ModTime(),
-					}
+					db.Where(&File{
+						Path:     filepath.Dir(pth),
+						Filename: filepath.Base(pth),
+					}).FirstOrCreate(&fl)
+
+					fl.Size = fStat.Size()
+					fl.CreatedTime = birthtime
+					fl.UpdatedTime = fTimes.ModTime()
+					fl.VolumeID = vol[i].ID
 
 					ffdata, err := ffprobe.GetProbeData(pth, time.Second*3)
 					if err != nil {
@@ -88,6 +90,17 @@ func RescanVolumes() {
 						fl.VideoCodecName = vs.CodecName
 						fl.VideoWidth = vs.Width
 						fl.VideoHeight = vs.Height
+						if dur, err := strconv.ParseFloat(vs.Duration, 64); err == nil {
+							fl.VideoDuration = dur
+						}
+
+						if vs.Height*2 == vs.Width || vs.Width > vs.Height {
+							fl.VideoProjection = "180_sbs"
+						}
+
+						if vs.Height == vs.Width {
+							fl.VideoProjection = "360_tb"
+						}
 					}
 
 					err = fl.Save()

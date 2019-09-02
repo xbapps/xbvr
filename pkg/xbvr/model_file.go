@@ -11,6 +11,7 @@ type File struct {
 	CreatedAt time.Time `json:"created_at" json:"-"`
 	UpdatedAt time.Time `json:"updated_at" json:"-"`
 
+	VolumeID    uint      `json:"volume_id"`
 	Path        string    `json:"path"`
 	Filename    string    `json:"filename"`
 	Size        int64     `json:"size"`
@@ -19,11 +20,13 @@ type File struct {
 	SceneID     uint      `json:"-"`
 	Scene       Scene     `json:"-"`
 
-	VideoWidth        int    `json:"video_width"`
-	VideoHeight       int    `json:"video_height"`
-	VideoBitRate      int    `json:"video_bitrate"`
-	VideoAvgFrameRate string `json:"-"`
-	VideoCodecName    string `json:"-"`
+	VideoWidth        int     `json:"video_width"`
+	VideoHeight       int     `json:"video_height"`
+	VideoBitRate      int     `json:"video_bitrate"`
+	VideoAvgFrameRate string  `json:"-"`
+	VideoCodecName    string  `json:"-"`
+	VideoDuration     float64 `json:"duration"`
+	VideoProjection   string  `json:"projection"`
 }
 
 func (f *File) GetPath() string {
