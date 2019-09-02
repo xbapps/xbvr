@@ -9,6 +9,8 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/robertkrimen/otto"
 	"github.com/thoas/go-funk"
+	"github.com/tidwall/gjson"
+	"gopkg.in/resty.v1"
 )
 
 func ScrapeVirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
@@ -124,13 +126,12 @@ func ScrapeVirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 				fpName = strings.Replace(fpName, "_-_Trailer", "", -1)
 				fpName = strings.Replace(fpName, "_-_Smartphone", "", -1)
 
-
 				var outFilenames []string
 				postfix := []string{"-_180x180_3dh"}
 
 				for i := range postfix {
-					outFilenames = append(outFilenames, fpName + "_" + postfix[i] + ".mp4")
-					outFilenames = append(outFilenames, strings.Replace(fpName, ".com", "", -1) + "_" + postfix[i] + ".mp4")
+					outFilenames = append(outFilenames, fpName+"_"+postfix[i]+".mp4")
+					outFilenames = append(outFilenames, strings.Replace(fpName, ".com", "", -1)+"_"+postfix[i]+".mp4")
 				}
 
 				sc.Filenames = outFilenames
@@ -143,7 +144,7 @@ func ScrapeVirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 		for i := range tmpCast {
 			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
 		}
-
+		
 		*out = append(*out, sc)
 	})
 
@@ -176,5 +177,31 @@ func ScrapeVirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://virtualrealporn.com/vr-porn-videos/")
+	// Request scenes via ajax interface
+	r, err := resty.R().
+		SetHeader("User-Agent", userAgent).
+		SetHeader("Accept", "application/json, text/javascript, */*; q=0.01").
+		SetHeader("Referer", "https://virtualrealporn.com/").
+		SetHeader("X-Requested-With", "XMLHttpRequest").
+		SetHeader("Authority", "virtualrealporn.com").
+		SetFormData(map[string]string{
+			"action": "get_videos_list",
+			"p":      "1",
+			"vpp":    "1000",
+			"sq":     "",
+			"so":     "date-DESC",
+			"pid":    "8",
+		}).
+		Post("https://virtualrealporn.com/wp-admin/admin-ajax.php")
+	if err == nil || r.StatusCode() == 200 {
+		urls := gjson.Get(r.String(), "data.movies.#.permalink").Array()
+		for i := range urls {
+			sceneURL := urls[i].String()
+			if !funk.ContainsString(knownScenes, sceneURL) {
+				sceneCollector.Visit(sceneURL)
+			}
+		}
+	}
+
+	return siteCollector.Visit("https://virtualrealporn.com/")
 }
