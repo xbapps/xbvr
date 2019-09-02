@@ -30,9 +30,6 @@
       }
     },
     mounted() {
-      let d = document.documentElement;
-      d.className += " has-navbar-fixed-top";
-
       ky.get(`/api/config/version-check`).json().then(data => {
         this.currentVersion = data.current_version;
         this.latestVersion = data.latest_version;

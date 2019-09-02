@@ -22,7 +22,7 @@
                 {{prettyBytes(props.row.total_size)}}
               </b-table-column>
               <b-table-column field="last_scan" label="Last scan" sortable>
-                {{distanceInWordsToNow(parse(props.row.last_scan))}} ago
+                {{formatDistanceToNow(parseISO(props.row.last_scan))}} ago
               </b-table-column>
             </template>
             <template slot="footer">
@@ -68,7 +68,7 @@
 <script>
   import ky from "ky";
   import prettyBytes from "pretty-bytes";
-  import {distanceInWordsToNow, parse} from "date-fns";
+  import {formatDistanceToNow, parseISO} from "date-fns";
 
   export default {
     name: "OptionsFolders",
@@ -77,8 +77,8 @@
         volumes: [],
         newVolumePath: "",
         prettyBytes,
-        parse,
-        distanceInWordsToNow,
+        parseISO,
+        formatDistanceToNow,
       }
     },
     mounted() {
