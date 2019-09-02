@@ -37,7 +37,7 @@
                 {{ props.row.title }}
               </b-table-column>
               <b-table-column field="release_date" label="Release date">
-                {{format(parse(props.row.release_date), "YYYY-MM-DD")}}
+                {{format(parseISO(props.row.release_date), "yyyy-MM-dd")}}
               </b-table-column>
             </template>
             <template slot="detail" slot-scope="props">
@@ -57,7 +57,7 @@
 
 <script>
   import ky from "ky";
-  import {format, parse} from "date-fns";
+  import {format, parseISO} from "date-fns";
   import VueLoadImage from "vue-load-image";
 
   export default {
@@ -67,7 +67,7 @@
       return {
         data: [],
         queryString: "",
-        format, parse
+        format, parseISO
       }
     },
     computed: {

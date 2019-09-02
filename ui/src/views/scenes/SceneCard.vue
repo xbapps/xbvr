@@ -35,14 +35,14 @@
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
         <a :href="item.scene_url" target="_blank">{{item.site}}</a><br/>
-        {{format(parse(item.release_date), "YYYY-MM-DD")}}
+        {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
       </span>
     </div>
   </div>
 </template>
 
 <script>
-  import {format, parse} from "date-fns";
+  import {format, parseISO} from "date-fns";
   import VueLoadImage from "vue-load-image";
 
   export default {
@@ -50,7 +50,7 @@
     props: {item: Object},
     components: {VueLoadImage,},
     data() {
-      return {format, parse}
+      return {format, parseISO}
     },
     methods: {
       getImageURL(u) {
