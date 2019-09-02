@@ -9,9 +9,7 @@
             <template slot-scope="props">
               <b-table-column field="filename" label="File" sortable>
                 {{props.row.filename}}
-              </b-table-column>
-              <b-table-column field="path" label="Folder" sortable>
-                {{props.row.path}}
+                <br/><small>{{props.row.path}}</small>
               </b-table-column>
               <b-table-column field="size" label="Size" sortable style="white-space: nowrap;">
                 {{prettyBytes(props.row.size)}}
@@ -86,6 +84,7 @@
 </script>
 
 <style scoped>
+  small { opacity: 0.6; }
   .is-superlarge {
     height: 96px;
     max-height: 96px;
