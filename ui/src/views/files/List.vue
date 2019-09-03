@@ -47,7 +47,7 @@
 
 <script>
   import prettyBytes from "pretty-bytes";
-  import {distanceInWordsToNow, parse} from "date-fns";
+  import {parse} from "date-fns";
   import BButton from "buefy/src/components/button/Button";
 
   export default {
@@ -58,7 +58,6 @@
         files: [],
         prettyBytes,
         parse,
-        distanceInWordsToNow,
       }
     },
     computed: {
@@ -84,7 +83,10 @@
 </script>
 
 <style scoped>
-  small { opacity: 0.6; }
+  small {
+    opacity: 0.6;
+  }
+
   .is-superlarge {
     height: 96px;
     max-height: 96px;
