@@ -45,6 +45,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(DMSResource{}.WebService())
 	restful.Add(ConfigResource{}.WebService())
 	restful.Add(FilesResource{}.WebService())
+	restful.Add(DeoVRResource{}.WebService())
 
 	// Static files
 	if DEBUG == "" {
