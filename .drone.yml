@@ -27,6 +27,7 @@ steps:
   - name: build
     image: cld9x/goreleaser-xcgo:latest
     environment:
+      GOPROXY: "https://proxy.golang.org/"
       GITHUB_TOKEN:
         from_secret: GITHUB_TOKEN
     when:
