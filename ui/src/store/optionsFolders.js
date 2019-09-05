@@ -6,7 +6,7 @@ const state = {
 
 const actions = {
   async load({state}, params) {
-    state.items = await ky.get(`/api/config/volume`).json();
+    state.items = await ky.get(`/api/config/folder`).json();
   },
 };
 
