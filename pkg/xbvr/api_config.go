@@ -4,10 +4,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/blang/semver"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
+	"github.com/gammazero/nexus/client"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"gopkg.in/resty.v1"
@@ -37,13 +40,14 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/version-check").To(i.versionCheck).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.GET("/volume").To(i.listVolume).
+	ws.Route(ws.GET("/folder").To(i.listFolders).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.POST("/volume").To(i.addVolume).
+	ws.Route(ws.POST("/folder").To(i.addFolder).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.DELETE("/volume").To(i.deleteVolume).
+	ws.Route(ws.DELETE("/folder/{folder-id}").To(i.removeFolder).
+		Param(ws.PathParameter("folder-id", "Folder ID").DataType("int")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
@@ -74,12 +78,12 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
 }
 
-func (i ConfigResource) listVolume(req *restful.Request, resp *restful.Response) {
+func (i ConfigResource) listFolders(req *restful.Request, resp *restful.Response) {
 	db, _ := GetDB()
 	defer db.Close()
 
 	var vol []Volume
-	db.Raw(`select path, last_scan,is_available, is_enabled,
+	db.Raw(`select id, path, last_scan,is_available, is_enabled,
        	(select count(*) from files where files.path like volumes.path || "%") as file_count,
 		(select count(*) from files where files.path like volumes.path || "%" and files.scene_id = 0) as unmatched_count,
        	(select sum(files.size) from files where files.path like volumes.path || "%") as total_size
@@ -88,7 +92,7 @@ func (i ConfigResource) listVolume(req *restful.Request, resp *restful.Response)
 	resp.WriteHeaderAndEntity(http.StatusOK, vol)
 }
 
-func (i ConfigResource) addVolume(req *restful.Request, resp *restful.Response) {
+func (i ConfigResource) addFolder(req *restful.Request, resp *restful.Response) {
 	tlog := log.WithField("task", "rescan")
 
 	var r NewVolumeRequest
@@ -122,8 +126,47 @@ func (i ConfigResource) addVolume(req *restful.Request, resp *restful.Response) 
 	nv.Save()
 
 	tlog.Info("Added new folder", path)
+
+	// Inform UI about state change
+	publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
+	if err == nil {
+		publisher.Publish("state.change.optionsFolders", nil, nil, nil)
+		publisher.Close()
+	}
+
+	resp.WriteHeader(http.StatusOK)
 }
 
-func (i ConfigResource) deleteVolume(req *restful.Request, resp *restful.Response) {
+func (i ConfigResource) removeFolder(req *restful.Request, resp *restful.Response) {
+	log.Info("delete?")
+	id, err := strconv.Atoi(req.PathParameter("folder-id"))
+	if err != nil {
+		resp.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
+	db, _ := GetDB()
+	defer db.Close()
+
+	vol := Volume{}
+	err = db.First(&vol, id).Error
+
+	if err == gorm.ErrRecordNotFound {
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	db.Where("volume_id = ?", id).Delete(File{})
+	db.Delete(&vol)
+
+	// Inform UI about state change
+	publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
+	if err == nil {
+		publisher.Publish("state.change.optionsFolders", nil, nil, nil)
+		publisher.Close()
+	}
+
+	log.WithField("task", "rescan").Info("Removed folder", vol.Path)
+
+	resp.WriteHeader(http.StatusOK)
 }

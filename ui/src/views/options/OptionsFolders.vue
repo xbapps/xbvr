@@ -24,6 +24,11 @@
               <b-table-column field="last_scan" label="Last scan" sortable>
                 {{formatDistanceToNow(parseISO(props.row.last_scan))}} ago
               </b-table-column>
+              <b-table-column field="actions">
+                <button class="button is-danger is-small is-outlined" v-on:click='removeFolder(props.row)'>
+                  <b-icon pack="mdi" icon="close-circle" size="is-small"></b-icon>
+                </button>
+              </b-table-column>
             </template>
             <template slot="footer">
               <td></td>
@@ -31,6 +36,7 @@
               <td>{{total.files}}</td>
               <td>{{total.unmatched}}</td>
               <td>{{prettyBytes(total.size)}}</td>
+              <td></td>
               <td></td>
             </template>
           </b-table>
@@ -89,8 +95,18 @@
         ky.get(`/api/task/rescan`);
       },
       addFolder: async function () {
-        await ky.post(`/api/config/volume`, {json: {path: this.newVolumePath}}).json();
-        this.$store.dispatch("optionsFolders/load");
+        await ky.post(`/api/config/folder`, {json: {path: this.newVolumePath}});
+      },
+      removeFolder: function (folder) {
+        this.$buefy.dialog.confirm({
+          title: 'Remove folder',
+          message: `You're about to remove folder <strong>${folder.path}</strong> and its files from database.`,
+          type: 'is-danger',
+          hasIcon: true,
+          onConfirm: function () {
+            ky.delete(`/api/config/folder/${folder.ID}`);
+          }
+        });
       }
     },
     computed: {
