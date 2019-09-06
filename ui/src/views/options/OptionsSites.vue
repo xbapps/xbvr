@@ -8,6 +8,16 @@
         <hr/>
         <div class="button is-button is-primary" v-on:click="taskScrape()">Run scraper</div>
       </div>
+      <div class="column">
+        <p>
+          Once releases metadata is collected, you should populate search index.
+        </p>
+        <p>
+          Warning: this is CPU-intensive process.
+        </p>
+        <hr/>
+        <div class="button is-button is-primary" v-on:click="taskIndex()">Index scenes</div>
+      </div>
     </div>
     <div class="columns">
       <div class="column is-full">
@@ -28,9 +38,12 @@
   export default {
     name: "OptionsSites.vue",
     methods: {
-      taskScrape: function () {
+      taskScrape() {
         ky.get(`/api/task/scrape`);
-      }
+      },
+      taskIndex() {
+        ky.get(`/api/task/index`);
+      },
     },
     computed: {
       lastMessage() {

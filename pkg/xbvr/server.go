@@ -29,6 +29,7 @@ func StartServer(version, commit, branch, date string) {
 	currentVersion = version
 
 	// Remove old locks
+	RemoveLock("index")
 	RemoveLock("scrape")
 	RemoveLock("update-scenes")
 

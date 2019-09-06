@@ -3,7 +3,9 @@ package xbvr
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
+	"github.com/blevesearch/bleve"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 )
@@ -45,7 +47,7 @@ func (i SceneResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
-	ws.Route(ws.GET("/search").To(i.searchScene).
+	ws.Route(ws.GET("/search").To(i.searchSceneIndex).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
@@ -282,7 +284,7 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 	scene.Save()
 }
 
-func (i SceneResource) searchScene(req *restful.Request, resp *restful.Response) {
+func (i SceneResource) searchSceneDB(req *restful.Request, resp *restful.Response) {
 	q := "%" + req.QueryParameter("q") + "%"
 
 	db, _ := GetDB()
@@ -303,6 +305,48 @@ func (i SceneResource) searchScene(req *restful.Request, resp *restful.Response)
 			   or scenes.filenames_arr like ?
                or scenes.site like ?
 			group by scenes.scene_id;`, q, q, q, q, q, q, q).Scan(&scenes)
+
+	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetScenes{Results: len(scenes), Scenes: scenes})
+}
+
+func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Response) {
+	q := req.QueryParameter("q")
+	q = strings.Replace(q, ".", " ", -1)
+	q = strings.Replace(q, "_", " ", -1)
+	q = strings.Replace(q, "+", " ", -1)
+	q = strings.Replace(q, "-", " ", -1)
+
+	db, _ := GetDB()
+	defer db.Close()
+
+	idx := NewIndex("scenes")
+	defer idx.bleve.Close()
+	query := bleve.NewQueryStringQuery(q)
+
+	searchRequest := bleve.NewSearchRequest(query)
+	searchRequest.Fields = []string{"fulltext"}
+	searchRequest.IncludeLocations = true
+	searchRequest.From = 0
+	searchRequest.Size = 25
+	searchRequest.SortBy([]string{"-_score"})
+
+	searchResults, err := idx.bleve.Search(searchRequest)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var scenes []Scene
+	for _, v := range searchResults.Hits {
+		var scene Scene
+		err := scene.GetIfExist(v.ID)
+		if err != nil {
+			continue
+		}
+
+		scene.Score = v.Score
+		scenes = append(scenes, scene)
+	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetScenes{Results: len(scenes), Scenes: scenes})
 }
