@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.3.1",
-    "@mdi/font": "4.2.95",
+    "@mdi/font": "4.3.95",
     "buefy": "0.8.3",
     "date-fns": "2.0.1",
     "ky": "0.12.0",
