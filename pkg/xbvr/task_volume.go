@@ -176,8 +176,13 @@ func RescanVolumes() {
 					scenes[i].IsAvailable = true
 					changed = true
 				}
+
+				var newestFileDate time.Time
 				for j := range files {
 					if files[j].Exists() {
+						if files[j].CreatedTime.After(newestFileDate) {
+							newestFileDate = files[j].CreatedTime
+						}
 						if !scenes[i].IsAccessible {
 							scenes[i].IsAccessible = true
 							changed = true
@@ -188,6 +193,11 @@ func RescanVolumes() {
 							changed = true
 						}
 					}
+				}
+
+				if !newestFileDate.Equal(scenes[i].AddedDate) {
+					scenes[i].AddedDate = newestFileDate
+					changed = true
 				}
 			} else {
 				if scenes[i].IsAvailable {
