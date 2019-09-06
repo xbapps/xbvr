@@ -7,7 +7,6 @@
         <button class="delete" @click="close" aria-label="close"></button>
       </header>
       <section class="modal-card-body">
-        <p style="text-wrap: initial">{{file.filename}}</p>
         <div>
           <b-field label="Search">
             <div class="control">
@@ -30,14 +29,20 @@
                   <img slot="error" src="/ui/images/blank.png"/>
                 </vue-load-image>
               </b-table-column>
-              <b-table-column field="site" label="Site">
+              <b-table-column field="site" label="Site" sortable>
                 {{ props.row.site }}
               </b-table-column>
-              <b-table-column field="title" label="Title">
-                {{ props.row.title }}
+              <b-table-column field="title" label="Title" sortable>
+                <p v-if="props.row.title">{{ props.row.title }}</p>
+                <small>
+                  <b-tag rounded v-for="i in props.row.cast" :key="i.id">{{i.name}}</b-tag>
+                </small>
               </b-table-column>
-              <b-table-column field="release_date" label="Release date">
+              <b-table-column field="release_date" label="Release date" sortable>
                 {{format(parseISO(props.row.release_date), "yyyy-MM-dd")}}
+              </b-table-column>
+              <b-table-column field="_score" label="Score" sortable>
+                <b-progress show-value :value="props.row._score * 100"></b-progress>
               </b-table-column>
             </template>
             <template slot="detail" slot-scope="props">
@@ -76,6 +81,8 @@
       },
     },
     mounted() {
+      this.queryString = this.file.filename;
+      this.loadData();
     },
     methods: {
       loadData: async function loadData() {
@@ -117,5 +124,7 @@
 </script>
 
 <style scoped>
-
+  .modal-card {
+    width: 80%;
+  }
 </style>

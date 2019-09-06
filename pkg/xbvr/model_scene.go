@@ -37,6 +37,9 @@ type Scene struct {
 	Watchlist       bool      `json:"watchlist"`
 	IsAvailable     bool      `json:"is_available"`
 	IsAccessible    bool      `json:"is_accessible"`
+
+	Fulltext string  `gorm:"-" json:"fulltext"`
+	Score    float64 `gorm:"-" json:"_score"`
 }
 
 type Image struct {
@@ -50,6 +53,14 @@ func (i *Scene) Save() error {
 	err := db.Save(i).Error
 	db.Close()
 	return err
+}
+
+func (i *Scene) ToJSON() ([]byte, error) {
+	return json.Marshal(i)
+}
+
+func (i *Scene) FromJSON(data []byte) error {
+	return json.Unmarshal(data, &i)
 }
 
 func (o *Scene) GetIfExist(id string) error {
