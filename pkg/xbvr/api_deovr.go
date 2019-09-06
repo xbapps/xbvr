@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 )
@@ -33,6 +34,7 @@ type DeoScene struct {
 	Title          string             `json:"title"`
 	Description    string             `json:"description"`
 	IsFavorite     bool               `json:"isFavorite"`
+	Is3D           bool               `json:"is3d"`
 	ThumbnailURL   string             `json:"thumbnailUrl"`
 	ScreenType     string             `json:"screenType"`
 	StereoMode     string             `json:"stereoMode"`
@@ -43,7 +45,7 @@ type DeoScene struct {
 }
 
 type DeoSceneActor struct {
-	ID   int    `json:"id"`
+	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -71,18 +73,18 @@ func (i DeoVRResource) WebService() *restful.WebService {
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.GET("").To(i.getScenes).
+	ws.Route(ws.GET("").To(i.getDeoLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
 
-	ws.Route(ws.GET("/{scene-id}").To(i.getScene).
+	ws.Route(ws.GET("/{scene-id}").To(i.getDeoScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoScene{}))
 
 	return ws
 }
 
-func (i DeoVRResource) getScene(req *restful.Request, resp *restful.Response) {
+func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response) {
 	db, _ := GetDB()
 	defer db.Close()
 
@@ -98,6 +100,30 @@ func (i DeoVRResource) getScene(req *restful.Request, resp *restful.Response) {
 
 	var stereoMode string
 	var screenType string
+
+	var actors []DeoSceneActor
+	for i := range scene.Cast {
+		actors = append(actors, DeoSceneActor{
+			ID:   scene.Cast[i].ID,
+			Name: scene.Cast[i].Name,
+		})
+	}
+
+	var sources []DeoSceneEncoding
+	for i := range scene.Files {
+		sources = append(sources, DeoSceneEncoding{
+			Name: fmt.Sprintf("File %v/%v - %v", i+1, len(scene.Files), humanize.Bytes(uint64(scene.Files[i].Size))),
+			VideoSources: []DeoSceneVideoSource{
+				{
+					Resolution: scene.Files[i].VideoHeight,
+					Height:     scene.Files[i].VideoHeight,
+					Width:      scene.Files[i].VideoWidth,
+					Size:       scene.Files[i].Size,
+					URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, scene.Files[i].ID),
+				},
+			},
+		})
+	}
 
 	if scene.Files[0].VideoProjection == "180_sbs" {
 		stereoMode = "sbs"
@@ -116,30 +142,15 @@ func (i DeoVRResource) getScene(req *restful.Request, resp *restful.Response) {
 		IsFavorite:   scene.Favourite,
 		ThumbnailURL: baseURL + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1),
 		StereoMode:   stereoMode,
+		Is3D:         true,
 		ScreenType:   screenType,
-		Encodings: []DeoSceneEncoding{
-			{
-				Name: "default",
-				VideoSources: []DeoSceneVideoSource{
-					{
-						Resolution: scene.Files[0].VideoHeight,
-						Height:     scene.Files[0].VideoHeight,
-						Width:      scene.Files[0].VideoWidth,
-						Size:       scene.Files[0].Size,
-						URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, scene.Files[0].ID),
-					},
-				},
-			},
-		},
+		Encodings:    sources,
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, deoScene)
 }
 
-func (i DeoVRResource) getScenes(req *restful.Request, resp *restful.Response) {
-	var limit = 100
-	var offset = 0
-
+func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Response) {
 	db, _ := GetDB()
 	defer db.Close()
 
@@ -148,8 +159,6 @@ func (i DeoVRResource) getScenes(req *restful.Request, resp *restful.Response) {
 		Where("is_available = ?", true).
 		Where("is_accessible = ?", true).
 		Order("release_date desc").
-		Limit(limit).
-		Offset(offset).
 		Find(&recent)
 
 	var favourite []Scene
@@ -158,8 +167,6 @@ func (i DeoVRResource) getScenes(req *restful.Request, resp *restful.Response) {
 		Where("is_accessible = ?", true).
 		Where("favourite = ?", true).
 		Order("release_date desc").
-		Limit(limit).
-		Offset(offset).
 		Find(&favourite)
 
 	var watchlist []Scene
@@ -168,8 +175,6 @@ func (i DeoVRResource) getScenes(req *restful.Request, resp *restful.Response) {
 		Where("is_accessible = ?", true).
 		Where("watchlist = ?", true).
 		Order("release_date desc").
-		Limit(limit).
-		Offset(offset).
 		Find(&watchlist)
 
 	lib := DeoLibrary{
