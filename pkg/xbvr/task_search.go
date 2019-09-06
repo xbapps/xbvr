@@ -92,10 +92,10 @@ func SearchIndex() {
 			}
 
 			for i := range scenes {
-				if _, err := idx.bleve.Document(scenes[i].SceneID); err != nil {
+				if _, err := idx.GetScene(scenes[i].SceneID); err != nil {
 					err := idx.PutScene(scenes[i])
 					if err != nil {
-						log.Fatal(err)
+						log.Error(err)
 					}
 				}
 				current = current + 1
