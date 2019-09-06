@@ -32,11 +32,13 @@ type Scene struct {
 	ReleaseDateText string    `json:"release_date_text"`
 	CoverURL        string    `json:"cover_url"`
 	SceneURL        string    `json:"scene_url"`
-	Rating          int       `json:"rating"`
-	Favourite       bool      `json:"favourite"`
-	Watchlist       bool      `json:"watchlist"`
-	IsAvailable     bool      `json:"is_available"`
-	IsAccessible    bool      `json:"is_accessible"`
+
+	Rating       int       `json:"rating"`
+	Favourite    bool      `json:"favourite"`
+	Watchlist    bool      `json:"watchlist"`
+	IsAvailable  bool      `json:"is_available"`
+	IsAccessible bool      `json:"is_accessible"`
+	AddedDate    time.Time `json:"added_date"`
 
 	Fulltext string  `gorm:"-" json:"fulltext"`
 	Score    float64 `gorm:"-" json:"_score"`
