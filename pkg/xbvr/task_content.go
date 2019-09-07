@@ -1,6 +1,9 @@
 package xbvr
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -10,9 +13,9 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-type Bundle struct {
+type ContentBundle struct {
 	Timestamp     time.Time             `json:"timestamp"`
-	BundleVersion string                `json:"bundle_version"`
+	BundleVersion string                `json:"bundleVersion"`
 	Scenes        []scrape.ScrapedScene `json:"scenes"`
 }
 
@@ -144,13 +147,57 @@ func ScrapeJAVR(queryString string) {
 	RemoveLock("scrape")
 }
 
+func ExportBundle() {
+	if !CheckLock("scrape") {
+		CreateLock("scrape")
+
+		tlog := log.WithField("task", "scrape")
+		tlog.Info("Exporting content bundle...")
+
+		var knownScenes []string
+		var collectedScenes []scrape.ScrapedScene
+
+		scrape.ScrapeBadoink(knownScenes, &collectedScenes)
+		scrape.ScrapeMilfVR(knownScenes, &collectedScenes)
+		scrape.ScrapeNA(knownScenes, &collectedScenes)
+		scrape.ScrapeSexBabesVR(knownScenes, &collectedScenes)
+		scrape.ScrapeVirtualRealPorn(knownScenes, &collectedScenes)
+		scrape.ScrapeVirtualTaboo(knownScenes, &collectedScenes)
+		scrape.ScrapeVRB(knownScenes, &collectedScenes)
+		scrape.ScrapeVRHush(knownScenes, &collectedScenes)
+		scrape.ScrapeWankz(knownScenes, &collectedScenes)
+		scrape.ScrapeCzechVR(knownScenes, &collectedScenes)
+		scrape.ScrapeStasyQVR(knownScenes, &collectedScenes)
+		scrape.ScrapeTmwVRnet(knownScenes, &collectedScenes)
+		scrape.ScrapeDDFNetworkVR(knownScenes, &collectedScenes)
+		scrape.ScrapeVRLatina(knownScenes, &collectedScenes)
+
+		out := ContentBundle{
+			Timestamp:     time.Now().UTC(),
+			BundleVersion: "1",
+			Scenes:        collectedScenes,
+		}
+
+		content, err := json.MarshalIndent(out, "", " ")
+		if err == nil {
+			fName := filepath.Join(appDir, fmt.Sprintf("content-bundle-%v.json", time.Now().Unix()))
+			err = ioutil.WriteFile(fName, content, 0644)
+			if err == nil {
+				tlog.Infof("Export complete, file saved to %v", fName)
+			}
+		}
+	}
+	RemoveLock("scrape")
+}
+
 func ImportBundle(url string) {
 	if !CheckLock("scrape") {
 		CreateLock("scrape")
 
 		tlog := log.WithField("task", "scrape")
 
-		var bundleData Bundle
+		var bundleData ContentBundle
+		tlog.Infof("Downloading bundle from URL...")
 		resp, err := resty.R().SetResult(&bundleData).Get(url)
 
 		if err == nil && resp.StatusCode() == 200 {
@@ -160,6 +207,10 @@ func ImportBundle(url string) {
 				SceneCreateUpdateFromExternal(db, bundleData.Scenes[i])
 			}
 			db.Close()
+
+			tlog.Infof("Import complete")
+		} else {
+			tlog.Infof("Download failed!")
 		}
 	}
 	RemoveLock("scrape")

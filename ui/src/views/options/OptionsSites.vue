@@ -14,11 +14,11 @@
           <h3 class="title">JAVR via R18 (experimental)</h3>
           <p>
             You can scrape JAVR releases by using:
+          </p>
           <ul>
             <li>R18 URL to the exact scene (preferred method)</li>
             <li>production code (XXXX-001)</li>
           </ul>
-          </p>
           <p>
             <b-field grouped>
               <b-input v-model="javrQuery" placeholder="URL or ID" type="search" icon="magnify"></b-input>
@@ -40,6 +40,24 @@
           </p>
           <div class="button is-button is-primary" v-on:click="taskIndex()">Index scenes</div>
           <hr/>
+        </div>
+        <div class="content">
+          <h3>Import scene data</h3>
+          <p>
+            You can import existing content bundles in JSON format from URL.
+          </p>
+          <b-field grouped>
+            <b-input v-model="bundleURL" placeholder="Bundle URL" type="search" icon="web"></b-input>
+            <div class="button is-button is-primary" v-on:click="importContent">Import content bundle</div>
+          </b-field>
+          <hr/>
+        </div>
+        <div class="content">
+          <h3>Export scene data</h3>
+          <p>
+            If you already have scraped scene data, you can export it below.
+          </p>
+          <b-button type="is-primary" @click="exportContent">Export content bundle</b-button>
         </div>
       </div>
     </div>
@@ -63,7 +81,8 @@
     name: "OptionsSites.vue",
     data() {
       return {
-        javrQuery: ""
+        javrQuery: "",
+        bundleURL: "",
       }
     },
     methods: {
@@ -75,7 +94,15 @@
       },
       scrapeJAVR() {
         ky.post(`/api/task/scrape-javr`, {json: {q: this.javrQuery}});
-      }
+      },
+      importContent() {
+        if (this.bundleURL !== "") {
+          ky.get(`/api/task/bundle/import`, {searchParams: {url: this.bundleURL}});
+        }
+      },
+      exportContent() {
+        ky.get(`/api/task/bundle/export`);
+      },
     },
     computed: {
       lastMessage() {
