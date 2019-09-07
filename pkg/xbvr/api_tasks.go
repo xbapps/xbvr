@@ -32,7 +32,10 @@ func (i TaskResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/index").To(i.index).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.GET("/import-bundle").To(i.importBundle).
+	ws.Route(ws.GET("/bundle/import").To(i.importBundle).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/bundle/export").To(i.exportBundle).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/scrape-javr").To(i.scrapeJAVR).
@@ -60,6 +63,10 @@ func (i TaskResource) scrape(req *restful.Request, resp *restful.Response) {
 func (i TaskResource) importBundle(req *restful.Request, resp *restful.Response) {
 	url := req.QueryParameter("url")
 	go ImportBundle(url)
+}
+
+func (i TaskResource) exportBundle(req *restful.Request, resp *restful.Response) {
+	go ExportBundle()
 }
 
 func (i TaskResource) scrapeJAVR(req *restful.Request, resp *restful.Response) {
