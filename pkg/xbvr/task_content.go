@@ -83,6 +83,9 @@ func Scrape() {
 		tlog.Infof("Scraping DDFNetworkVR")
 		scrape.ScrapeDDFNetworkVR(knownScenes, &collectedScenes)
 
+		tlog.Infof("Scraping VRLatina")
+		scrape.ScrapeVRLatina(knownScenes, &collectedScenes)
+
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
 

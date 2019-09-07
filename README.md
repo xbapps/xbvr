@@ -1,6 +1,6 @@
 [![Build Status](https://cloud.drone.io/api/badges/cld9x/xbvr/status.svg)](https://cloud.drone.io/cld9x/xbvr) ![GitHub release](https://img.shields.io/github/release/cld9x/xbvr.svg)
 <br>
-<sup><sub><em>Windows 10 • OSX • Linux • Raspberry Pi</em></sub></sup>
+<sup><sub><em>Windows 10 • macOS • Linux • Raspberry Pi</em></sub></sup>
 
 <h1 align="center">
     <img src="https://i.imgur.com/T2UvcHc.png" width="250"/>
@@ -27,7 +27,8 @@
 ## Features
 
 - Automatically match title, tags, cast, cover image, and more to your videos
-- Support for all the most popular VR sites: BadoinkVR, CzechVR Network, DDFNetworkVR, MilfVR, NaughtyAmericaVR, SexBabesVR, StasyQVR, TmwVRnet, VirtualRealPorn, VirtualTaboo, VRBangers, VRHush, and WankzVR
+- Support for all the most popular VR sites: BadoinkVR, CzechVR Network, DDFNetworkVR, MilfVR, NaughtyAmericaVR, SexBabesVR, StasyQVR, TmwVRnet, VirtualRealPorn, VirtualTaboo, VRBangers, VRHush, VRLatina and WankzVR
+- Supports DeoVR web mode
 - Built-in DLNA streaming server compatible with popular VR players (Pigasus, Skybox, Mobile Station VR)
 - Sleek and simple web UI
 - Browse your content by cast, site, tags, and release date
