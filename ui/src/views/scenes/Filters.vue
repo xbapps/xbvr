@@ -19,6 +19,20 @@
       </div>
     </div>
 
+    <label class="label">Sort by</label>
+    <div class="field has-addons">
+      <div class="control is-expanded">
+        <div class="select is-fullwidth">
+          <select v-model="sort">
+            <option value="release_desc">↓ Release date</option>
+            <option value="release_asc">↑ Release date</option>
+            <option value="added_desc">↓ Date added</option>
+            <option value="added_asc">↑ Date added</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <div v-if="Object.keys(filters).length !== 0">
       <label class="label">Release date</label>
       <div class="field has-addons">
@@ -88,6 +102,7 @@
           </button>
         </div>
       </div>
+
     </div>
   </div>
 </template>
@@ -191,6 +206,15 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.tag = value;
+          this.$store.dispatch("sceneList/load", {offset: 0});
+        }
+      },
+      sort: {
+        get() {
+          return this.$store.state.sceneList.filters.sort;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.sort = value;
           this.$store.dispatch("sceneList/load", {offset: 0});
         }
       },
