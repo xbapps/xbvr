@@ -9,6 +9,7 @@ import (
 	"github.com/gocolly/colly"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"mvdan.cc/xurls/v2"
 )
 
 func ScrapeVRLatina(knownScenes []string, out *[]ScrapedScene) error {
