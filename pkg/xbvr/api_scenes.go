@@ -188,7 +188,9 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		Model(&scenes).
 		Preload("Cast").
 		Preload("Tags").
-		Preload("Files")
+		Preload("Files").
+		Preload("History").
+		Preload("Cuepoints")
 
 	if req.QueryParameter("is_available") != "" {
 		q_is_available, err := strconv.ParseBool(req.QueryParameter("is_available"))
@@ -202,6 +204,15 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		if err == nil {
 			tx = tx.Where("is_accessible = ?", q_is_accessible)
 		}
+	}
+
+	q_is_watched := req.QueryParameter("is_watched")
+	switch q_is_watched {
+	case "1":
+		tx = tx.Where("is_watched = ?", true)
+	case "0":
+		tx = tx.Where("is_watched = ?", false)
+	default:
 	}
 
 	if req.QueryParameter("list") == "watchlist" {
@@ -248,6 +259,8 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		tx = tx.Order("release_date desc")
 	case "release_asc":
 		tx = tx.Order("release_date asc")
+	case "random":
+		tx = tx.Order("random()")
 	default:
 		tx = tx.Order("release_date desc")
 	}

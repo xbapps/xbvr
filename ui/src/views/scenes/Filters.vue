@@ -28,6 +28,20 @@
             <option value="release_asc">↑ Release date</option>
             <option value="added_desc">↓ Date added</option>
             <option value="added_asc">↑ Date added</option>
+            <option value="random">↯ Random</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <label class="label">Watch status</label>
+    <div class="field has-addons">
+      <div class="control is-expanded">
+        <div class="select is-fullwidth">
+          <select v-model="isWatched">
+            <option value="">Everything</option>
+            <option value="1">Watched</option>
+            <option value="0">Unwatched</option>
           </select>
         </div>
       </div>
@@ -215,6 +229,15 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.sort = value;
+          this.$store.dispatch("sceneList/load", {offset: 0});
+        }
+      },
+      isWatched: {
+        get() {
+          return this.$store.state.sceneList.filters.isWatched;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.isWatched = value;
           this.$store.dispatch("sceneList/load", {offset: 0});
         }
       },
