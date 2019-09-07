@@ -9,7 +9,7 @@
               <b-table-column field="path" label="Path" sortable>
                 {{props.row.path}}
               </b-table-column>
-              <b-table-column field="is_available" label="Available" sortable>
+              <b-table-column field="is_available" label="Avail" sortable>
                 <b-icon pack="fas" icon="check" size="is-small" v-if="props.row.is_available"></b-icon>
               </b-table-column>
               <b-table-column field="file_count" label="# of files" sortable>
@@ -104,7 +104,7 @@
           type: 'is-danger',
           hasIcon: true,
           onConfirm: function () {
-            ky.delete(`/api/config/folder/${folder.ID}`);
+            ky.delete(`/api/config/folder/${folder.id}`);
           }
         });
       }

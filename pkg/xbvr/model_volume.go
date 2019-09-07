@@ -6,9 +6,9 @@ import (
 )
 
 type Volume struct {
-	ID        uint `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uint      `gorm:"primary_key" json:"id"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
 
 	Path           string    `json:"path"`
 	LastScan       time.Time `json:"last_scan"`
