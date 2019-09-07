@@ -38,8 +38,11 @@
                   <b-tag rounded v-for="i in props.row.cast" :key="i.id">{{i.name}}</b-tag>
                 </small>
               </b-table-column>
-              <b-table-column field="release_date" label="Release date" sortable>
+              <b-table-column field="release_date" label="Release date" sortable nowrap>
                 {{format(parseISO(props.row.release_date), "yyyy-MM-dd")}}
+              </b-table-column>
+              <b-table-column field="scene_id" label="ID" sortable nowrap>
+                {{props.row.scene_id}}
               </b-table-column>
               <b-table-column field="_score" label="Score" sortable>
                 <b-progress show-value :value="props.row._score * 100"></b-progress>
