@@ -43,7 +43,6 @@ func Scrape() {
 		// Start scraping
 		var collectedScenes []scrape.ScrapedScene
 
-
 		tlog.Infof("Scraping BadoinkVR / 18VR / VRCosplayX / BabeVR / KinkVR")
 		scrape.ScrapeBadoink(knownScenes, &collectedScenes)
 
@@ -101,6 +100,47 @@ func Scrape() {
 		}
 	}
 
+	RemoveLock("scrape")
+}
+
+func ScrapeJAVR(queryString string) {
+	if !CheckLock("scrape") {
+		CreateLock("scrape")
+
+		tlog := log.WithField("task", "scrape")
+
+		// Get all known scenes
+		var scenes []Scene
+		db, _ := GetDB()
+		db.Find(&scenes)
+		db.Close()
+
+		var knownScenes []string
+		for i := range scenes {
+			knownScenes = append(knownScenes, scenes[i].SceneURL)
+		}
+
+		// Start scraping
+		var collectedScenes []scrape.ScrapedScene
+
+		tlog.Infof("Scraping R18")
+		scrape.ScrapeR18(knownScenes, &collectedScenes, queryString)
+
+		if len(collectedScenes) > 0 {
+			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
+
+			db, _ := GetDB()
+			for i := range collectedScenes {
+				SceneCreateUpdateFromExternal(db, collectedScenes[i])
+			}
+			db.Close()
+
+			tlog.Infof("Saved %v new scenes", len(collectedScenes))
+		} else {
+			tlog.Infof("No new scenes scraped")
+		}
+
+	}
 	RemoveLock("scrape")
 }
 
