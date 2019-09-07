@@ -10,6 +10,25 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// SceneCuepoint data model
+type SceneCuepoint struct {
+	ID        uint      `gorm:"primary_key" json:"id"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
+
+	SceneID   uint    `json:"-"`
+	TimeStart float64 `json:"time_start"`
+	Name      string  `json:"name"`
+}
+
+func (o *SceneCuepoint) Save() error {
+	db, _ := GetDB()
+	err := db.Save(o).Error
+	db.Close()
+	return err
+}
+
+// Scene data model
 type Scene struct {
 	ID        uint       `gorm:"primary_key" json:"id"`
 	CreatedAt time.Time  `json:"created_at"`
@@ -33,12 +52,15 @@ type Scene struct {
 	CoverURL        string    `json:"cover_url"`
 	SceneURL        string    `json:"scene_url"`
 
-	Rating       int       `json:"rating"`
-	Favourite    bool      `json:"favourite"`
-	Watchlist    bool      `json:"watchlist"`
-	IsAvailable  bool      `json:"is_available"`
-	IsAccessible bool      `json:"is_accessible"`
-	AddedDate    time.Time `json:"added_date"`
+	Rating       int             `json:"rating"`
+	Favourite    bool            `json:"favourite" gorm:"default:false"`
+	Watchlist    bool            `json:"watchlist" gorm:"default:false"`
+	IsAvailable  bool            `json:"is_available" gorm:"default:false"`
+	IsAccessible bool            `json:"is_accessible" gorm:"default:false"`
+	IsWatched    bool            `json:"is_watched" gorm:"default:false"`
+	Cuepoints    []SceneCuepoint `json:"cuepoints"`
+	History      []History       `json:"history"`
+	AddedDate    time.Time       `json:"added_date"`
 
 	Fulltext string  `gorm:"-" json:"fulltext"`
 	Score    float64 `gorm:"-" json:"_score"`
@@ -69,14 +91,39 @@ func (o *Scene) GetIfExist(id string) error {
 	db, _ := GetDB()
 	defer db.Close()
 
-	return db.Preload("Tags").Preload("Cast").Where(&Scene{SceneID: id}).First(o).Error
+	return db.
+		Preload("Tags").
+		Preload("Cast").
+		Preload("Files").
+		Preload("History").
+		Preload("Cuepoints").
+		Where(&Scene{SceneID: id}).First(o).Error
+}
+
+func (o *Scene) GetIfExistByPK(id uint) error {
+	db, _ := GetDB()
+	defer db.Close()
+
+	return db.
+		Preload("Tags").
+		Preload("Cast").
+		Preload("Files").
+		Preload("History").
+		Preload("Cuepoints").
+		Where(&Scene{ID: id}).First(o).Error
 }
 
 func (o *Scene) GetIfExistURL(u string) error {
 	db, _ := GetDB()
 	defer db.Close()
 
-	return db.Preload("Tags").Preload("Cast").Where(&Scene{SceneURL: u}).First(o).Error
+	return db.
+		Preload("Tags").
+		Preload("Cast").
+		Preload("Files").
+		Preload("History").
+		Preload("Cuepoints").
+		Where(&Scene{SceneURL: u}).First(o).Error
 }
 
 func (o *Scene) GetFiles() ([]File, error) {
