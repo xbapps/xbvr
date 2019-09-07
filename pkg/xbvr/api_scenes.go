@@ -238,12 +238,25 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		tx = tx.Where("release_date_text LIKE ?", q_released+"%")
 	}
 
+	q_sort := req.QueryParameter("sort")
+	switch q_sort {
+	case "added_desc":
+		tx = tx.Order("added_date desc")
+	case "added_asc":
+		tx = tx.Order("added_date asc")
+	case "release_desc":
+		tx = tx.Order("release_date desc")
+	case "release_asc":
+		tx = tx.Order("release_date asc")
+	default:
+		tx = tx.Order("release_date desc")
+	}
+
 	// Count totals first
 	tx.Count(&total)
 
 	// Get scenes
 	tx.
-		Order("release_date desc").
 		Limit(limit).
 		Offset(offset).
 		Find(&scenes)

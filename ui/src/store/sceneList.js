@@ -16,6 +16,7 @@ const state = {
     cast: "",
     site: "",
     tag: "",
+    sort: "release_desc",
   }
 };
 
@@ -71,6 +72,7 @@ const actions = {
           cast: state.filters.cast,
           site: state.filters.site,
           released: state.filters.releaseMonth,
+          sort: state.filters.sort,
         }
       })
       .json();

@@ -93,5 +93,6 @@ require (
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
+	mvdan.cc/xurls/v2 v2.0.0
 	willnorris.com/go/imageproxy v0.9.0
 )

@@ -180,7 +180,7 @@ func RescanVolumes() {
 				var newestFileDate time.Time
 				for j := range files {
 					if files[j].Exists() {
-						if files[j].CreatedTime.After(newestFileDate) {
+						if files[j].CreatedTime.Before(newestFileDate) || newestFileDate.IsZero() {
 							newestFileDate = files[j].CreatedTime
 						}
 						if !scenes[i].IsAccessible {
