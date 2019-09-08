@@ -28,6 +28,7 @@
             <option value="release_asc">↑ Release date</option>
             <option value="added_desc">↓ Date added</option>
             <option value="added_asc">↑ Date added</option>
+            <option value="last_opened">↻ Recently viewed</option>
             <option value="random">↯ Random</option>
           </select>
         </div>
