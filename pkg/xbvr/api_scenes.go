@@ -259,6 +259,10 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		tx = tx.Order("release_date desc")
 	case "release_asc":
 		tx = tx.Order("release_date asc")
+	case "last_opened":
+		tx = tx.
+			Where("last_opened > ?", "0001-01-01 00:00:00+00:00").
+			Order("last_opened desc")
 	case "random":
 		tx = tx.Order("random()")
 	default:

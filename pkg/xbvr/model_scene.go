@@ -61,6 +61,7 @@ type Scene struct {
 	Cuepoints    []SceneCuepoint `json:"cuepoints"`
 	History      []History       `json:"history"`
 	AddedDate    time.Time       `json:"added_date"`
+	LastOpened   time.Time       `json:"last_opened"`
 
 	Fulltext string  `gorm:"-" json:"fulltext"`
 	Score    float64 `gorm:"-" json:"_score"`
