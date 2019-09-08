@@ -195,7 +195,7 @@ func RescanVolumes() {
 					}
 				}
 
-				if !newestFileDate.Equal(scenes[i].AddedDate) {
+				if !newestFileDate.Equal(scenes[i].AddedDate) && !newestFileDate.IsZero() {
 					scenes[i].AddedDate = newestFileDate
 					changed = true
 				}

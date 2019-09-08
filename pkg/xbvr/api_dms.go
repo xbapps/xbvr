@@ -195,6 +195,13 @@ func newWatchSession() {
 	obj := History{SceneID: lastSessionSceneID, TimeStart: lastSessionStart}
 	obj.Save()
 
+	var scene Scene
+	err := scene.GetIfExistByPK(lastSessionSceneID)
+	if err == nil {
+		scene.LastOpened = time.Now()
+		scene.Save()
+	}
+
 	lastSessionID = obj.ID
 }
 
