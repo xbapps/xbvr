@@ -52,7 +52,7 @@ type Scene struct {
 	CoverURL        string    `json:"cover_url"`
 	SceneURL        string    `json:"scene_url"`
 
-	Rating       int             `json:"rating"`
+	StarRating   float64         `json:"star_rating"`
 	Favourite    bool            `json:"favourite" gorm:"default:false"`
 	Watchlist    bool            `json:"watchlist" gorm:"default:false"`
 	IsAvailable  bool            `json:"is_available" gorm:"default:false"`

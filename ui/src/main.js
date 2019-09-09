@@ -15,6 +15,10 @@ import '@fortawesome/fontawesome-free/js/all';
 import '@mdi/font/css/materialdesignicons.css';
 
 Vue.config.productionTip = false;
+Vue.config.keyCodes = {
+  arrowLeft: 37,
+  arrowRight: 39,
+};
 Vue.use(Buefy);
 Vue.use(vueDebounce);
 

@@ -29,19 +29,25 @@ type DeoListItem struct {
 	VideoURL     string `json:"video_url"`
 }
 
+type DeoSceneTimestamp struct {
+	TS   uint   `json:"ts"`
+	Name string `json:"name"`
+}
+
 type DeoScene struct {
-	ID             uint               `json:"id"`
-	Title          string             `json:"title"`
-	Description    string             `json:"description"`
-	IsFavorite     bool               `json:"isFavorite"`
-	Is3D           bool               `json:"is3d"`
-	ThumbnailURL   string             `json:"thumbnailUrl"`
-	ScreenType     string             `json:"screenType"`
-	StereoMode     string             `json:"stereoMode"`
-	VideoLength    int                `json:"videoLength"`
-	VideoThumbnail string             `json:"videoThumbnail"`
-	VideoPreview   string             `json:"videoPreview"`
-	Encodings      []DeoSceneEncoding `json:"encodings"`
+	ID             uint                `json:"id"`
+	Title          string              `json:"title"`
+	Description    string              `json:"description"`
+	IsFavorite     bool                `json:"isFavorite"`
+	Is3D           bool                `json:"is3d"`
+	ThumbnailURL   string              `json:"thumbnailUrl"`
+	ScreenType     string              `json:"screenType"`
+	StereoMode     string              `json:"stereoMode"`
+	VideoLength    int                 `json:"videoLength"`
+	VideoThumbnail string              `json:"videoThumbnail"`
+	VideoPreview   string              `json:"videoPreview"`
+	Encodings      []DeoSceneEncoding  `json:"encodings"`
+	Timestamps     []DeoSceneTimestamp `json:"timeStamps"`
 }
 
 type DeoSceneActor struct {
@@ -88,12 +94,11 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	db, _ := GetDB()
 	defer db.Close()
 
-	log.Info(req.PathParameter("scene-id"))
-
 	var scene Scene
 	db.Preload("Cast").
 		Preload("Tags").
 		Preload("Files").
+		Preload("Cuepoints").
 		Where(&Scene{SceneID: req.PathParameter("scene-id")}).First(&scene)
 
 	baseURL := "http://" + getBaseURL() + ":9999"
@@ -109,6 +114,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		})
 	}
 
+	var videoLength float64
+
 	var sources []DeoSceneEncoding
 	for i := range scene.Files {
 		sources = append(sources, DeoSceneEncoding{
@@ -122,6 +129,16 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 					URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, scene.Files[i].ID),
 				},
 			},
+		})
+
+		videoLength = scene.Files[i].VideoDuration
+	}
+
+	var cuepoints []DeoSceneTimestamp
+	for i := range scene.Cuepoints {
+		cuepoints = append(cuepoints, DeoSceneTimestamp{
+			TS:   uint(scene.Cuepoints[i].TimeStart),
+			Name: scene.Cuepoints[i].Name,
 		})
 	}
 
@@ -145,6 +162,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Is3D:         true,
 		ScreenType:   screenType,
 		Encodings:    sources,
+		VideoLength:  int(videoLength),
+		Timestamps:   cuepoints,
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, deoScene)
