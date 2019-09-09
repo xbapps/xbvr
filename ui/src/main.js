@@ -10,7 +10,6 @@ import 'buefy/dist/buefy.css';
 
 import 'video.js/dist/video-js.css';
 import 'videojs-vr/dist/videojs-vr.css';
-// import '@fortawesome/fontawesome-free/css/all.css';
 import '@fortawesome/fontawesome-free/js/all';
 import '@mdi/font/css/materialdesignicons.css';
 

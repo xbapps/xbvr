@@ -3,13 +3,13 @@
 
 go.sum
 test.db
+/test_cache
 
 /dist/
 /pkg/assets/
 
-/ui/node_modules/
+node_modules/
 /ui/dist/
 /ui/public/static/bundle.*
 npm-debug.log
 yarn-error.log
-/test_cache

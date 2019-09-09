@@ -57,3 +57,16 @@ Enjoy!
 Submit and vote on features at [Feedback site](https://feedback.xbvr.app/).
 
 Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG).
+
+## Development
+
+Make sure you have following installed:
+
+- Go 1.12
+- Node.js 10.x
+- Yarn 1.17.x
+- fileb0x (run `go get github.com/UnnoTed/fileb0x` outside project directory)
+- modd (run `go get github.com/cortesi/modd/cmd/modd` outside project directory)
+
+Once all of the above is installed, running `modd` from project directory launches file-watchers providing livereload for both Go and JavaScript.
+ 
