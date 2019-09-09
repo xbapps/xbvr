@@ -33,6 +33,10 @@
         <b-icon pack="far" icon="calendar-check" size="is-small"></b-icon>
       </a>
 
+      <a class="button is-outlined is-small" v-if="item.is_watched">
+        <b-icon pack="far" icon="eye" size="is-small"/>
+      </a>
+
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
         <a :href="item.scene_url" target="_blank">{{item.site}}</a><br/>
         {{format(parseISO(item.release_date), "yyyy-MM-dd")}}

@@ -3,6 +3,9 @@ package xbvr
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
 
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
@@ -28,6 +31,9 @@ func (i FilesResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/match").To(i.matchFile).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.DELETE("/file/{file-id}").To(i.removeFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
@@ -91,4 +97,32 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	scene.Save()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, nil)
+}
+
+func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) {
+	fileId, err := strconv.Atoi(req.PathParameter("file-id"))
+	if err != nil {
+		return
+	}
+
+	var file File
+	var scene Scene
+	db, _ := GetDB()
+	err = db.Where(&File{ID: uint(fileId)}).First(&file).Error
+	if err == nil {
+		err := os.Remove(filepath.Join(file.Path, file.Filename))
+		if err == nil {
+			db.Delete(&file)
+		} else {
+			log.Errorf("Error deleting file ", err)
+		}
+		if file.SceneID != 0 {
+			scene.GetIfExistByPK(file.SceneID)
+		}
+	} else {
+		log.Errorf("Error deleting file ", err)
+	}
+	db.Close()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }

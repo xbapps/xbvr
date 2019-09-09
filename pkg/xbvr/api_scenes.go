@@ -15,6 +15,15 @@ type RequestToggleList struct {
 	List    string `json:"list"`
 }
 
+type RequestSceneCuepoint struct {
+	TimeStart float64 `json:"time_start"`
+	Name      string  `json:"name"`
+}
+
+type RequestSceneRating struct {
+	Rating float64 `json:"rating"`
+}
+
 type ResponseGetScenes struct {
 	Results int     `json:"results"`
 	Scenes  []Scene `json:"scenes"`
@@ -42,6 +51,14 @@ func (i SceneResource) WebService() *restful.WebService {
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
+
+	ws.Route(ws.POST("/cuepoint/{scene-id}").To(i.addSceneCuepoint).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(Scene{}))
+
+	ws.Route(ws.POST("/rate/{scene-id}").To(i.rateScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(Scene{}))
 
 	ws.Route(ws.POST("/toggle").To(i.toggleList).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -259,6 +276,14 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		tx = tx.Order("release_date desc")
 	case "release_asc":
 		tx = tx.Order("release_date asc")
+	case "rating_desc":
+		tx = tx.
+			Where("star_rating > ?", 0).
+			Order("star_rating desc")
+	case "rating_asc":
+		tx = tx.
+			Where("star_rating > ?", 0).
+			Order("star_rating asc")
 	case "last_opened":
 		tx = tx.
 			Where("last_opened > ?", "0001-01-01 00:00:00+00:00").
@@ -379,4 +404,62 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetScenes{Results: len(scenes), Scenes: scenes})
+}
+
+func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Response) {
+	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var r RequestSceneCuepoint
+	err = req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var scene Scene
+	db, _ := GetDB()
+	err = scene.GetIfExistByPK(uint(sceneId))
+	if err == nil {
+		t := SceneCuepoint{
+			SceneID:   scene.ID,
+			TimeStart: r.TimeStart,
+			Name:      r.Name,
+		}
+		t.Save()
+
+		scene.GetIfExistByPK(uint(sceneId))
+	}
+	db.Close()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+
+func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
+	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var r RequestSceneRating
+	err = req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var scene Scene
+	db, _ := GetDB()
+	err = scene.GetIfExistByPK(uint(sceneId))
+	if err == nil {
+		scene.StarRating = r.Rating
+		scene.Save()
+	}
+	db.Close()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
