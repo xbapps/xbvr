@@ -68,9 +68,7 @@
         this.$store.commit("sceneList/toggleSceneList", {scene_id: scene_id, list: list});
       },
       showDetails(scene) {
-        if (scene.is_accessible) {
-          this.$store.commit("overlay/showDetails", {scene: scene});
-        }
+        this.$store.commit("overlay/showDetails", {scene: scene});
       }
     }
   }
