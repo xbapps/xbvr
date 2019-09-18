@@ -32,7 +32,7 @@
                   <small class="is-pulled-right">{{format(parseISO(item.release_date), "yyyy-MM-dd")}}</small>
                 </h3>
                 <small>{{item.site}}</small>
-                <star-rating @rating-selected="setRating" :increment="0.5" :star-size="20"></star-rating>
+                <star-rating :rating="item.star_rating" @rating-selected="setRating" :increment="0.5" :star-size="20" />
               </div>
             </div>
 
