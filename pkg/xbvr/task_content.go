@@ -87,6 +87,9 @@ func Scrape() {
 
 		tlog.Infof("Scraping VRLatina")
 		scrape.ScrapeVRLatina(knownScenes, &collectedScenes)
+		
+		tlog.Infof("Scraping HoloGirlsVR")
+                scrape.ScrapeHoloGirlsVR(knownScenes, &collectedScenes)
 
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
