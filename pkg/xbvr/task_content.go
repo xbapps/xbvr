@@ -91,6 +91,9 @@ func Scrape() {
 		tlog.Infof("Scraping HoloGirlsVR")
                 scrape.ScrapeHoloGirlsVR(knownScenes, &collectedScenes)
 
+		tlog.Infof("Scraping LethalHardcoreVR / WhorecraftVR")
+                scrape.ScrapeLethalHardcoreVR(knownScenes, &collectedScenes)
+		
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
 
