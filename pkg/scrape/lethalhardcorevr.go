@@ -110,7 +110,9 @@ func ScrapeLethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
         k := strings.Split(e.Attr("content"), ",")
         for i, tag := range k {
                 if i == len(k)-1 {
-                        tag = strings.Replace(tag, sc.Cast[0], "", -1)
+                        if funk.ContainsString(sc.Cast, tag) {
+                                tag = strings.Replace(tag, sc.Cast[0], "", -1)
+                        }
                 }
                 tag = strings.ToLower(strings.TrimSpace(tag))
                 if isGoodTag(tag) {
