@@ -27,7 +27,7 @@
 ## Features
 
 - Automatically match title, tags, cast, cover image, and more to your videos
-- Support for all the most popular VR sites: BadoinkVR, CzechVR Network, DDFNetworkVR, MilfVR, NaughtyAmericaVR, SexBabesVR, StasyQVR, TmwVRnet, VirtualRealPorn, VirtualTaboo, VRBangers, VRHush, VRLatina and WankzVR
+- Support for all the most popular VR sites: BadoinkVR, CzechVR Network, DDFNetworkVR, HologirlsVR, LethalHardcoreVR, MilfVR, NaughtyAmericaVR, SexBabesVR, StasyQVR, TmwVRnet, VirtualRealPorn, VirtualTaboo, VRBangers, VRHush, VRLatina and WankzVR
 - Supports DeoVR web mode
 - Built-in DLNA streaming server compatible with popular VR players (Pigasus, Skybox, Mobile Station VR)
 - Sleek and simple web UI
