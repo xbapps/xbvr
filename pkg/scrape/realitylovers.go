@@ -33,7 +33,7 @@ func ScrapeRealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	sceneCollector.OnHTML("html", func(e *colly.HTMLElement) {
+	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "RealityLovers"
