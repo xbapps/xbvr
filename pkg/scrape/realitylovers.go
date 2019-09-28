@@ -4,6 +4,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -23,7 +24,16 @@ func ScrapeRealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 		log.Println("visiting", r.URL.String())
 	})
 
-	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+	sceneCollector.OnError(func(r *colly.Response, err error) {
+		if r.StatusCode == 429 {
+			log.Println("Error:", r.StatusCode, err)
+			log.Println("Waiting 2 seconds before next request...")
+			time.Sleep(2 * time.Second)
+			r.Request.Retry()
+		}
+	})
+
+	sceneCollector.OnHTML("html", func(e *colly.HTMLElement) {
 		sc := ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "RealityLovers"

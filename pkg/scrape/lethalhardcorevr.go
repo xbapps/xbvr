@@ -4,6 +4,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -43,6 +44,24 @@ func ScrapeLethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
 
 	sceneCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
+	})
+
+	siteCollector.OnError(func(r *colly.Response, err error) {
+		if r.StatusCode == 429 {
+			log.Println("Error:", r.StatusCode, err)
+			log.Println("Waiting 2 seconds before next request...")
+			time.Sleep(2 * time.Second)
+			r.Request.Retry()
+		}
+	})
+
+	sceneCollector.OnError(func(r *colly.Response, err error) {
+		if r.StatusCode == 429 {
+			log.Println("Error:", r.StatusCode, err)
+			log.Println("Waiting 2 seconds before next request...")
+			time.Sleep(2 * time.Second)
+			r.Request.Retry()
+		}
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
