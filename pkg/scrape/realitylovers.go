@@ -2,12 +2,11 @@ package scrape
 
 import (
 	"log"
-	"strconv"
+	"regexp"
 	"strings"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
-	"github.com/robertkrimen/otto"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"gopkg.in/resty.v1"
@@ -44,52 +43,31 @@ func ScrapeRealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 		// Release date
 		sc.Released = e.Request.Ctx.Get("released")
 
+		// Cast
+		e.ForEach(`a[itemprop="actor"]`, func(id int, e *colly.HTMLElement) {
+			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+		})
+
 		// Gallery
 		e.ForEach(`img.videoClip__Details--galleryItem`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, strings.Fields(e.Attr("data-big"))[0])
+			imageURL := strings.Fields(e.Attr("data-big"))[0]
+			sc.Gallery = append(sc.Gallery, strings.Replace(imageURL, "https:", "http:", 1))
 		})
 
 		// Tags
 		e.ForEach(`.videoClip__Details__categoryTag`, func(id int, e *colly.HTMLElement) {
-			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
+			tag := strings.TrimSpace(e.Text)
+			sc.Tags = append(sc.Tags, tag)
 		})
 
 		// Synopsis
 		e.ForEach(`p[itemprop="description"]`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = append(sc.Tags, strings.TrimSpace(e.Text))
-		})
-
-		// Duration / Release date / Synopsis
-		e.ForEach(`script[type='application/ld+json'][class!='yoast-schema-graph']`, func(id int, e *colly.HTMLElement) {
-			vm := otto.New()
-
-			script := "sin = " + e.Text
-			script = script + ";\nduration = sin['duration']; datePublished = sin['datePublished']; desc = sin['description'];"
-			script = script + "cast = []; sin['actors'].map(function(o){cast.push(o.url)});"
-
-			vm.Run(script)
-
-			out1, _ := vm.Get("duration")
-			duration, _ := out1.ToString()
-			sc.Duration, _ = strconv.Atoi(strings.Split(duration, ":")[0])
-
-			out2, _ := vm.Get("datePublished")
-			relDate, _ := out2.ToString()
-			sc.Released = relDate
-
-			out3, _ := vm.Get("desc")
-			desc, _ := out3.ToString()
-			sc.Synopsis = desc
-
-			out4, _ := vm.Get("cast")
-			cast, _ := out4.Export()
-			castx, ok := cast.([]string)
-
-			if ok {
-				for i := range castx {
-					tmpCast = append(tmpCast, castx[i])
-				}
-			}
+			reLeadcloseWhtsp := regexp.MustCompile(`^[\s\p{Zs}]+|[\s\p{Zs}]+$`)
+			reInsideWhtsp := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
+			synopsis := reLeadcloseWhtsp.ReplaceAllString(e.Text, "")
+			synopsis = reInsideWhtsp.ReplaceAllString(synopsis, " ")
+			synopsis = strings.TrimSuffix(synopsis, " … Read more")
+			sc.Synopsis = synopsis
 		})
 
 		*out = append(*out, sc)
@@ -102,7 +80,7 @@ func ScrapeRealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 		SetHeader("accept", "application/json, text/plain, */*").
 		SetHeader("referer", "https://realitylovers.com/videos").
 		SetHeader("origin", "https://realitylovers.com").
-		SetHeader(":authority", "realitylovers.com").
+		SetHeader("authority", "realitylovers.com").
 		SetBody(`{"searchQuery":"","categoryId":null,"perspective":null,"actorId":null,"offset":"5000","isInitialLoad":true,"sortBy":"NEWEST","videoView":"MEDIUM","device":"DESKTOP"}`).
 		Post("https://realitylovers.com/videos/search")
 	if err == nil || r.StatusCode() == 200 {
@@ -111,8 +89,9 @@ func ScrapeRealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 			sceneURL := "https://realitylovers.com/" + value.Get("videoUri").String()
 			if !funk.ContainsString(knownScenes, sceneURL) {
 				ctx := colly.NewContext()
-				ctx.Put("cover", strings.Fields(value.Get("mainImageSrcset").String())[0])
-				ctx.Put("id", value.Get("videoUri").String())
+				cover := strings.Fields(value.Get("mainImageSrcset").String())[0]
+				ctx.Put("cover", strings.Replace(cover, "https:", "http:", 1))
+				ctx.Put("id", value.Get("id").String())
 				ctx.Put("released", value.Get("released").String())
 				ctx.Put("title", value.Get("title").String())
 				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
