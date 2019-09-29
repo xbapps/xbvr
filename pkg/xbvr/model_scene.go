@@ -149,7 +149,9 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext scrape.ScrapedScene) error {
 	o.Duration = ext.Duration
 	o.Synopsis = ext.Synopsis
 	o.ReleaseDateText = ext.Released
-	o.CoverURL = ext.Covers[0]
+	if ext.Covers != nil {
+		o.CoverURL = ext.Covers[0]	
+	}
 	o.SceneURL = ext.HomepageURL
 
 	if ext.Released != "" {
