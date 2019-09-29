@@ -183,6 +183,7 @@ func ExportBundle() {
 		scrape.ScrapeTmwVRnet(knownScenes, &collectedScenes)
 		scrape.ScrapeDDFNetworkVR(knownScenes, &collectedScenes)
 		scrape.ScrapeVRLatina(knownScenes, &collectedScenes)
+		scrape.ScrapeHoloGirlsVR(knownScenes, &collectedScenes)
 		scrape.ScrapeLethalHardcoreVR(knownScenes, &collectedScenes)
 		scrape.ScrapeRealityLovers(knownScenes, &collectedScenes)
 		scrape.ScrapeRealJamVR(knownScenes, &collectedScenes)
