@@ -97,6 +97,9 @@ func Scrape() {
 		tlog.Infof("Scraping RealityLovers")
 		scrape.ScrapeRealityLovers(knownScenes, &collectedScenes)
 
+		tlog.Infof("Scraping RealJam VR")
+		scrape.ScrapeRealJamVR(knownScenes, &collectedScenes)
+
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
 
@@ -183,6 +186,7 @@ func ExportBundle() {
 		scrape.ScrapeHoloGirlsVR(knownScenes, &collectedScenes)
 		scrape.ScrapeLethalHardcoreVR(knownScenes, &collectedScenes)
 		scrape.ScrapeRealityLovers(knownScenes, &collectedScenes)
+		scrape.ScrapeRealJamVR(knownScenes, &collectedScenes)
 
 		out := ContentBundle{
 			Timestamp:     time.Now().UTC(),
