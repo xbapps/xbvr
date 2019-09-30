@@ -87,13 +87,16 @@ func Scrape() {
 
 		tlog.Infof("Scraping VRLatina")
 		scrape.ScrapeVRLatina(knownScenes, &collectedScenes)
-		
+
 		tlog.Infof("Scraping HoloGirlsVR")
-                scrape.ScrapeHoloGirlsVR(knownScenes, &collectedScenes)
+		scrape.ScrapeHoloGirlsVR(knownScenes, &collectedScenes)
 
 		tlog.Infof("Scraping LethalHardcoreVR / WhorecraftVR")
-                scrape.ScrapeLethalHardcoreVR(knownScenes, &collectedScenes)
-		
+		scrape.ScrapeLethalHardcoreVR(knownScenes, &collectedScenes)
+
+		tlog.Infof("Scraping RealityLovers")
+		scrape.ScrapeRealityLovers(knownScenes, &collectedScenes)
+
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
 
@@ -177,6 +180,9 @@ func ExportBundle() {
 		scrape.ScrapeTmwVRnet(knownScenes, &collectedScenes)
 		scrape.ScrapeDDFNetworkVR(knownScenes, &collectedScenes)
 		scrape.ScrapeVRLatina(knownScenes, &collectedScenes)
+		scrape.ScrapeHoloGirlsVR(knownScenes, &collectedScenes)
+		scrape.ScrapeLethalHardcoreVR(knownScenes, &collectedScenes)
+		scrape.ScrapeRealityLovers(knownScenes, &collectedScenes)
 
 		out := ContentBundle{
 			Timestamp:     time.Now().UTC(),
