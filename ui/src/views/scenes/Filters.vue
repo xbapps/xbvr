@@ -70,54 +70,18 @@
 
 
       <label class="label">Cast</label>
-      <div class="field has-addons">
-        <div class="control is-expanded">
-          <div class="select is-fullwidth">
-            <select v-model="cast">
-              <option></option>
-              <option v-for="t in filters.cast" :key="t">{{t}}</option>
-            </select>
-          </div>
-        </div>
-        <div class="control">
-          <button type="submit" class="button is-light" @click="clearCast">
-            <b-icon pack="fas" icon="times" size="is-small"></b-icon>
-          </button>
-        </div>
+      <div class="field">
+        <b-taginput v-model="cast" autocomplete :data="filteredCast" @typing="getFilteredCast"></b-taginput>
       </div>
 
       <label class="label">Site</label>
-      <div class="field has-addons">
-        <div class="control is-expanded">
-          <div class="select is-fullwidth">
-            <select v-model="site">
-              <option></option>
-              <option v-for="t in filters.sites" :key="t">{{t}}</option>
-            </select>
-          </div>
-        </div>
-        <div class="control">
-          <button type="submit" class="button is-light" @click="clearSite">
-            <b-icon pack="fas" icon="times" size="is-small"></b-icon>
-          </button>
-        </div>
+      <div class="field">
+        <b-taginput v-model="sites" autocomplete :data="filteredSites" @typing="getFilteredSites"></b-taginput>
       </div>
 
       <label class="label">Tags</label>
-      <div class="field has-addons">
-        <div class="control is-expanded">
-          <div class="select is-fullwidth">
-            <select v-model="tag">
-              <option></option>
-              <option v-for="t in filters.tags" :key="t">{{t}}</option>
-            </select>
-          </div>
-        </div>
-        <div class="control">
-          <button type="submit" class="button is-light" @click="clearTag">
-            <b-icon pack="fas" icon="times" size="is-small"></b-icon>
-          </button>
-        </div>
+      <div class="field">
+        <b-taginput v-model="tags" autocomplete :data="filteredTags" @typing="getFilteredTags"></b-taginput>
       </div>
 
     </div>
@@ -130,21 +94,31 @@
     mounted() {
       this.$store.dispatch("sceneList/filters");
     },
+    data() {
+      return {
+        filteredCast: [],
+        filteredSites: [],
+        filteredTags: [],
+      }
+    },
     methods: {
+      getFilteredCast(text) {
+        this.filteredCast = this.filters.cast.filter((option) => {
+          return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
+        })
+      },
+      getFilteredSites(text) {
+        this.filteredSites = this.filters.sites.filter((option) => {
+          return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
+        })
+      },
+      getFilteredTags(text) {
+        this.filteredTags = this.filters.tags.filter((option) => {
+          return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
+        })
+      },
       clearReleaseMonth() {
         this.$store.state.sceneList.filters.releaseMonth = "";
-        this.$store.dispatch("sceneList/load", {offset: 0});
-      },
-      clearCast() {
-        this.$store.state.sceneList.filters.cast = "";
-        this.$store.dispatch("sceneList/load", {offset: 0});
-      },
-      clearSite() {
-        this.$store.state.sceneList.filters.site = "";
-        this.$store.dispatch("sceneList/load", {offset: 0});
-      },
-      clearTag() {
-        this.$store.state.sceneList.filters.tag = "";
         this.$store.dispatch("sceneList/load", {offset: 0});
       },
     },
@@ -208,21 +182,21 @@
           this.$store.dispatch("sceneList/load", {offset: 0});
         }
       },
-      site: {
+      sites: {
         get() {
-          return this.$store.state.sceneList.filters.site;
+          return this.$store.state.sceneList.filters.sites;
         },
         set(value) {
-          this.$store.state.sceneList.filters.site = value;
+          this.$store.state.sceneList.filters.sites = value;
           this.$store.dispatch("sceneList/load", {offset: 0});
         }
       },
-      tag: {
+      tags: {
         get() {
-          return this.$store.state.sceneList.filters.tag;
+          return this.$store.state.sceneList.filters.tags;
         },
         set(value) {
-          this.$store.state.sceneList.filters.tag = value;
+          this.$store.state.sceneList.filters.tags = value;
           this.$store.dispatch("sceneList/load", {offset: 0});
         }
       },

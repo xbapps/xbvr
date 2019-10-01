@@ -6,7 +6,11 @@ const state = {
   offset: 0,
   total: 0,
   limit: 80,
-  filterOpts: {},
+  filterOpts: {
+    cast: [],
+    sites: [],
+    tags: [],
+  },
   filters: {
     dlState: "available",
     isAvailable: "1",
@@ -14,16 +18,16 @@ const state = {
     isWatched: "",
     cardSize: 1,
     releaseMonth: "",
-    cast: "",
-    site: "",
-    tag: "",
+    cast: [],
+    sites: [],
+    tags: [],
     sort: "release_desc",
   }
 };
 
 const mutations = {
   toggleSceneList(state, payload) {
-    state.items.map(obj => {
+    state.items = state.items.map(obj => {
       if (obj.scene_id === payload.scene_id) {
         if (payload.list === "watchlist") {
           obj.watchlist = !obj.watchlist;
@@ -70,9 +74,9 @@ const actions = {
           is_available: state.filters.isAvailable,
           is_accessible: state.filters.isAccessible,
           is_watched: state.filters.isWatched,
-          tag: state.filters.tag,
-          cast: state.filters.cast,
-          site: state.filters.site,
+          tags: state.filters.tags.join(","),
+          cast: state.filters.cast.join(","),
+          sites: state.filters.sites.join(","),
           released: state.filters.releaseMonth,
           sort: state.filters.sort,
         }

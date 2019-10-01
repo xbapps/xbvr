@@ -240,17 +240,18 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		tx = tx.Where("favourite = ?", true)
 	}
 
-	q_site := req.QueryParameter("site")
-	if q_site != "" {
-		tx = tx.Where("site = ?", q_site)
+	q_sites := req.QueryParameter("sites")
+	if q_sites != "" {
+		tx = tx.Where("site IN (?)", strings.Split(q_sites, ","))
 	}
 
-	q_tag := req.QueryParameter("tag")
-	if q_tag != "" {
+	q_tags := req.QueryParameter("tags")
+	if q_tags != "" {
 		tx = tx.
 			Joins("left join scene_tags on scene_tags.scene_id=scenes.id").
 			Joins("left join tags on tags.id=scene_tags.tag_id").
-			Where(&Tag{Name: q_tag})
+			// Where(&Tag{Name: q_tag})
+			Where("tags.name IN (?)", strings.Split(q_tags, ","))
 	}
 
 	q_cast := req.QueryParameter("cast")
@@ -258,7 +259,7 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		tx = tx.
 			Joins("left join scene_cast on scene_cast.scene_id=scenes.id").
 			Joins("left join actors on actors.id=scene_cast.actor_id").
-			Where(&Actor{Name: q_cast})
+			Where("actors.name IN (?)", strings.Split(q_cast, ","))
 	}
 
 	q_released := req.QueryParameter("released")
@@ -295,10 +296,13 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 	}
 
 	// Count totals first
-	tx.Count(&total)
+	tx.
+		Group("scenes.scene_id").
+		Count(&total)
 
 	// Get scenes
 	tx.
+		Group("scenes.scene_id").
 		Limit(limit).
 		Offset(offset).
 		Find(&scenes)
