@@ -1,7 +1,11 @@
 package scrape
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
+	"log"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/ProtonMail/go-appdir"
@@ -31,6 +35,16 @@ type ScrapedScene struct {
 	Synopsis    string   `json:"synopsis"`
 	Released    string   `json:"released"`
 	HomepageURL string   `json:"homepage_url"`
+}
+
+func unCache(URL string, cacheDir string) {
+	sum := sha1.Sum([]byte(URL))
+	hash := hex.EncodeToString(sum[:])
+	dir := path.Join(cacheDir, hash[:2])
+	filename := path.Join(dir, hash)
+	if err := os.Remove(filename); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func init() {
