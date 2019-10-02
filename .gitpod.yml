@@ -3,3 +3,10 @@ image:
 tasks:
   - name: Continuous Build
     command: cd /workspace/xbvr && modd
+ports:
+  - port: 9999
+    onOpen: open-preview
+  - port: 1338
+    onOpen: ignore
+  - port: 9998
+    onOpen: ignore
