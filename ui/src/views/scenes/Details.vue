@@ -1,9 +1,9 @@
 <template>
   <div class="modal is-active">
     <GlobalEvents
-            @keyup.esc="close"
-            @keydown.arrowLeft="playerStepBack"
-            @keydown.arrowRight="playerStepForward"
+      @keyup.esc="close"
+      @keydown.arrowLeft="playerStepBack"
+      @keydown.arrowRight="playerStepForward"
     />
 
     <div class="modal-background"></div>
@@ -32,14 +32,26 @@
                   <small class="is-pulled-right">{{format(parseISO(item.release_date), "yyyy-MM-dd")}}</small>
                 </h3>
                 <small>{{item.site}}</small>
-                <star-rating :rating="item.star_rating" @rating-selected="setRating" :increment="0.5" :star-size="20" />
+                <div class="columns">
+                  <div class="column">
+                    <star-rating :rating="item.star_rating" @rating-selected="setRating" :increment="0.5"
+                                 :star-size="20"/>
+                  </div>
+                  <div class="column">
+                    <div class="is-pulled-right">
+                      <watchlist-button :item="item"/>&nbsp;
+                      <favourite-button :item="item"/>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div class="block-tags block">
               <b-taglist>
-                <b-tag v-for="(c, idx) in item.cast" :key="idx" size="is-small" type="is-warning">{{c.name}}</b-tag>
-                <b-tag v-for="(tag, idx) in item.tags" :key="idx" size="is-small" type="is-info">
+                <b-tag v-for="(c, idx) in item.cast" :key="'cast' + idx" size="is-small" type="is-warning">{{c.name}}
+                </b-tag>
+                <b-tag v-for="(tag, idx) in item.tags" :key="'tag' + idx" size="is-small" type="is-info">
                   {{tag.name}} ({{tag.count}})
                 </b-tag>
               </b-taglist>
@@ -146,10 +158,12 @@
   import VueGallery from 'vue-gallery';
   import GlobalEvents from 'vue-global-events';
   import StarRating from 'vue-star-rating';
+  import FavouriteButton from "../../components/FavouriteButton";
+  import WatchlistButton from "../../components/WatchlistButton";
 
   export default {
     name: "Details",
-    components: {VueLoadImage, VueGallery, GlobalEvents, StarRating},
+    components: {VueLoadImage, VueGallery, GlobalEvents, StarRating, WatchlistButton, FavouriteButton},
     data() {
       return {
         index: 1,
