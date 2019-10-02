@@ -76,7 +76,7 @@ This project is configured for use in Gitpod. It will provide you with a pre-bui
 
 When the workspace loads, modd runs and will build and start XBVR automatically. Every time you make a change to a file, modd will automatically compile the relevant code.
 
-Once XBVR is compiled and launches, you will receive a notification that some ports are exposed. The only port you care about is 9999. Clicking on the "Open Preview" button will launch the currently compiled version right in the IDE window. Clicking on the "Open Browser" button will launch the currently compiled version in a new browser tab. After the notifications disappear, you can relaunch them from the status bar under ports.
+Once XBVR is compiled and starts, a preview panel will open in the IDE. As you modify files, the preview panel will reload with the latest changes.
 
 Currently, it's only possible to test XBVR core and Browser applications using Gitpod. Because DLNA requires a local network, you won't be able to connect to the DLNA server running in Gitpod. For most people, this is fine.
 
