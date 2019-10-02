@@ -8,8 +8,10 @@ import (
 
 	"github.com/cld9x/xbvr/pkg/assets"
 	"github.com/emicklei/go-restful"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/gammazero/nexus/router"
 	"github.com/gammazero/nexus/wamp"
+	"github.com/go-openapi/spec"
 	wwwlog "github.com/gowww/log"
 	"github.com/gregjones/httpcache/diskcache"
 	"github.com/koding/websocketproxy"
@@ -38,7 +40,10 @@ func StartServer(version, commit, branch, date string) {
 
 	// API endpoints
 	ws := new(restful.WebService)
-	ws.Route(ws.GET("/").To(redirectUI))
+	ws.Route(ws.GET("/").To(func(req *restful.Request, resp *restful.Response) {
+		resp.AddHeader("Location", "/ui/")
+		resp.WriteHeader(http.StatusFound)
+	}))
 
 	restful.Add(ws)
 	restful.Add(SceneResource{}.WebService())
@@ -47,6 +52,40 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(ConfigResource{}.WebService())
 	restful.Add(FilesResource{}.WebService())
 	restful.Add(DeoVRResource{}.WebService())
+
+	config := restfulspec.Config{
+		WebServices: restful.RegisteredWebServices(),
+		APIPath:     "/api.json",
+		PostBuildSwaggerObjectHandler: func(swo *spec.Swagger) {
+			var e = spec.VendorExtensible{}
+			e.AddExtension("x-logo", map[string]interface{}{
+				"url": "/ui/icons/xbvr-512.png",
+			})
+
+			swo.Info = &spec.Info{
+				InfoProps: spec.InfoProps{
+					Title:   "XBVR API",
+					Version: currentVersion,
+				},
+				VendorExtensible: e,
+			}
+			swo.Tags = []spec.Tag{
+				{
+					TagProps: spec.TagProps{
+						Name:        "Config",
+						Description: "Endpoints used by options screen",
+					},
+				},
+				{
+					TagProps: spec.TagProps{
+						Name:        "DeoVR",
+						Description: "Endpoints for interfacing with DeoVR player",
+					},
+				},
+			}
+		},
+	}
+	restful.Add(restfulspec.NewOpenAPIService(config))
 
 	// Static files
 	if DEBUG == "" {
@@ -121,11 +160,6 @@ func StartServer(version, commit, branch, date string) {
 		log.Infof("Running in DEBUG mode")
 		log.Fatal(http.ListenAndServe(httpAddr, wwwlog.Handle(handler, &wwwlog.Options{Color: true})))
 	}
-}
-
-func redirectUI(req *restful.Request, resp *restful.Response) {
-	resp.AddHeader("Location", "/ui/")
-	resp.WriteHeader(http.StatusFound)
 }
 
 func diskCache(path string) *diskcache.Cache {
