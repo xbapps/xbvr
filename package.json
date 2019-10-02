@@ -8,11 +8,13 @@
     "lint": "cd ui && vue-cli-service lint"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "5.10.2",
-    "@mdi/font": "4.3.95",
-    "buefy": "0.8.3",
-    "date-fns": "2.1.0",
-    "ky": "0.13.0",
+    "@fortawesome/fontawesome-free": "5.11.2",
+    "@fortawesome/fontawesome-svg-core": "1.2.25",
+    "@mdi/font": "4.4.95",
+    "buefy": "0.8.4",
+    "bulma-prefers-dark": "0.1.0-beta.0",
+    "date-fns": "2.4.1",
+    "ky": "0.14.0",
     "pretty-bytes": "5.3.0",
     "videojs-hotkeys": "0.2.25",
     "videojs-vr": "1.5.0",
@@ -36,6 +38,8 @@
     "eslint-plugin-vue": "5.2.3",
     "less": "3.10.3",
     "less-loader": "5.0.0",
+    "node-sass": "4.12.0",
+    "sass-loader": "8.0.0",
     "simple-progress-webpack-plugin": "1.1.2",
     "vue-template-compiler": "2.6.10"
   },
