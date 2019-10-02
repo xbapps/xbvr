@@ -11,27 +11,9 @@
     </div>
 
     <div style="padding-top:4px;">
-      <a class="button is-danger is-small"
-         @click="toggleList(item.scene_id, 'favourite')"
-         v-show="item.favourite">
-        <b-icon pack="fas" icon="heart" size="is-small"></b-icon>
-      </a>
-      <a class="button is-danger is-outlined is-small"
-         @click="toggleList(item.scene_id, 'favourite')"
-         v-show="!item.favourite">
-        <b-icon pack="far" icon="heart" size="is-small"></b-icon>
-      </a>
 
-      <a class="button is-primary is-small"
-         @click="toggleList(item.scene_id, 'watchlist')"
-         v-show="item.watchlist">
-        <b-icon pack="fas" icon="calendar-check" size="is-small"></b-icon>
-      </a>
-      <a class="button is-primary is-outlined is-small"
-         @click="toggleList(item.scene_id, 'watchlist')"
-         v-show="!item.watchlist">
-        <b-icon pack="far" icon="calendar-check" size="is-small"></b-icon>
-      </a>
+      <watchlist-button :item="item"/>
+      <favourite-button :item="item"/>
 
       <a class="button is-outlined is-small" v-if="item.is_watched">
         <b-icon pack="far" icon="eye" size="is-small"/>
@@ -48,11 +30,13 @@
 <script>
   import {format, parseISO} from "date-fns";
   import VueLoadImage from "vue-load-image";
+  import WatchlistButton from "../../components/WatchlistButton";
+  import FavouriteButton from "../../components/FavouriteButton";
 
   export default {
     name: "SceneCard",
     props: {item: Object},
-    components: {VueLoadImage,},
+    components: {VueLoadImage, WatchlistButton, FavouriteButton},
     data() {
       return {format, parseISO}
     },
@@ -63,9 +47,6 @@
         } else {
           return u;
         }
-      },
-      toggleList(scene_id, list) {
-        this.$store.commit("sceneList/toggleSceneList", {scene_id: scene_id, list: list});
       },
       showDetails(scene) {
         this.$store.commit("overlay/showDetails", {scene: scene});
