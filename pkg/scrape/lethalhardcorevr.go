@@ -99,9 +99,11 @@ func ScrapeLethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
 		})
 
 		// Cast
-		e.ForEach(`div.item-page-details img`, func(id int, e *colly.HTMLElement) {
+		r := strings.NewReplacer("(", "",
+					 ")", "")
+		e.ForEach(`div.item-page-details .overlay small`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Attr("title")))
+				sc.Cast = append(sc.Cast, strings.TrimSpace(r.Replace(e.Text)))
 			}
 		})
 
