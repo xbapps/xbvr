@@ -69,4 +69,21 @@ Make sure you have following installed:
 - modd (run `go get github.com/cortesi/modd/cmd/modd` outside project directory)
 
 Once all of the above is installed, running `modd` from project directory launches file-watchers providing livereload for both Go and JavaScript.
- 
+
+## Development in Gitpod
+
+This project is configured for use in Gitpod. It will provide you with a pre-built development environment with all the tools needed to compile XBVR.
+
+When the workspace loads, modd runs and will build and start XBVR automatically. Every time you make a change to a file, modd will automatically compile the relevant code.
+
+Once XBVR is compiled and launches, you will receive a notification that some ports are exposed. The only port you care about is 9999. Clicking on the "Open Preview" button will launch the currently compiled version right in the IDE window. Clicking on the "Open Browser" button will launch the currently compiled version in a new browser tab. After the notifications disappear, you can relaunch them from the status bar under ports.
+
+Currently, it's only possible to test XBVR core and Browser applications using Gitpod. Because DLNA requires a local network, you won't be able to connect to the DLNA server running in Gitpod. For most people, this is fine.
+
+sqlite3 is included in the terminal. The XBVR database is located at /home/gitpod/.config/xbvr/main.db
+
+Gitpod has GitHub integration and, once authorized, can fork this repo into your account, push/pull changes, and create pull requests.
+
+Ready to get started?
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/cld9x/xbvr)
