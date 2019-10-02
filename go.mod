@@ -1,5 +1,7 @@
 module github.com/cld9x/xbvr
 
+go 1.13
+
 require (
 	github.com/ProtonMail/go-appdir v1.0.0
 	github.com/PuerkitoBio/goquery v1.5.0
@@ -25,7 +27,7 @@ require (
 	github.com/dukex/mixpanel v0.0.0-20180925151559-f8d5594f958e
 	github.com/dustin/go-humanize v0.0.0-20180421182945-02af3965c54e
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/emicklei/go-restful v2.9.6+incompatible
+	github.com/emicklei/go-restful v2.10.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.2.0
 	github.com/etcd-io/bbolt v1.3.3 // indirect
 	github.com/fatih/color v1.7.0 // indirect
@@ -37,7 +39,7 @@ require (
 	github.com/getlantern/hidden v0.0.0-20160523043807-d52a649ab33a // indirect
 	github.com/getlantern/ops v0.0.0-20170904182230-37353306c908 // indirect
 	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
-	github.com/go-openapi/spec v0.19.2
+	github.com/go-openapi/spec v0.19.3
 	github.com/go-test/deep v1.0.3
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
@@ -45,9 +47,9 @@ require (
 	github.com/gowww/log v0.0.0-20170712202755-af3772f4bb12
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/imdario/mergo v0.3.7
-	github.com/jinzhu/gorm v1.9.10
+	github.com/jinzhu/gorm v1.9.11
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.6 // indirect
+	github.com/json-iterator/go v1.1.7 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
@@ -93,6 +95,6 @@ require (
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	mvdan.cc/xurls/v2 v2.0.0
+	mvdan.cc/xurls/v2 v2.1.0
 	willnorris.com/go/imageproxy v0.9.0
 )
