@@ -11,7 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeStasyQVR(knownScenes []string, out *[]ScrapedScene) error {
+func StasyQVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("stasyqvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -122,4 +122,8 @@ func ScrapeStasyQVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector.Visit("https://stasyqvr.com/virtualreality/list")
 
 	return nil
+}
+
+func init() {
+	registerScraper("stasyqvr", "StasyQVR", StasyQVR)
 }

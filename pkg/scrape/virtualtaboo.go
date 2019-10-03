@@ -11,7 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeVirtualTaboo(knownScenes []string, out *[]ScrapedScene) error {
+func VirtualTaboo(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualtaboo.com"),
 		colly.CacheDir(siteCacheDir),
@@ -122,4 +122,8 @@ func ScrapeVirtualTaboo(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	return siteCollector.Visit("https://virtualtaboo.com/videos")
+}
+
+func init() {
+	registerScraper("virtualtaboo", "VirtualTaboo", VirtualTaboo)
 }

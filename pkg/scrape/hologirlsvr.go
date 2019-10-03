@@ -10,7 +10,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeHoloGirlsVR(knownScenes []string, out *[]ScrapedScene) error {
+func HoloGirlsVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.hologirlsvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -99,4 +99,8 @@ func ScrapeHoloGirlsVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	return siteCollector.Visit("https://www.hologirlsvr.com/Scenes")
+}
+
+func init() {
+	registerScraper("hologirlsvr", "HoloGirlsVR", HoloGirlsVR)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeVRB(knownScenes []string, out *[]ScrapedScene) error {
+func VRBangers(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("vrbangers.com"),
 		colly.CacheDir(siteCacheDir),
@@ -131,4 +131,8 @@ func ScrapeVRB(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	return siteCollector.Visit("https://vrbangers.com/videos/")
+}
+
+func init() {
+	registerScraper("vrbangers", "VRBangers", VRBangers)
 }

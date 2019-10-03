@@ -13,7 +13,7 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-func ScrapeRealityLovers(knownScenes []string, out *[]ScrapedScene) error {
+func RealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 	const maxRetries = 15
 
 	sceneCollector := colly.NewCollector(
@@ -126,4 +126,8 @@ func ScrapeRealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 	}
 
 	return nil
+}
+
+func init() {
+	registerScraper("realitylovers", "RealityLovers", RealityLovers)
 }

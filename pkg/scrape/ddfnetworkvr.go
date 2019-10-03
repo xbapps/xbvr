@@ -11,7 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeDDFNetworkVR(knownScenes []string, out *[]ScrapedScene) error {
+func DDFNetworkVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("ddfnetworkvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -123,4 +123,8 @@ func ScrapeDDFNetworkVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector.Visit("https://ddfnetworkvr.com/")
 
 	return nil
+}
+
+func init() {
+	registerScraper("ddfnetworkvr", "DDFNetworkVR", DDFNetworkVR)
 }

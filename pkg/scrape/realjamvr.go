@@ -13,7 +13,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeRealJamVR(knownScenes []string, out *[]ScrapedScene) error {
+func RealJamVR(knownScenes []string, out *[]ScrapedScene) error {
 	const maxRetries = 15
 
 	siteCollector := colly.NewCollector(
@@ -153,4 +153,8 @@ func ScrapeRealJamVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	return siteCollector.Visit("https://realjamvr.com/virtualreality/list")
+}
+
+func init() {
+	registerScraper("realjamvr", "RealJam VR", RealJamVR)
 }

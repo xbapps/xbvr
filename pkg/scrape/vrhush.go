@@ -11,7 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeVRHush(knownScenes []string, out *[]ScrapedScene) error {
+func VRHush(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("vrhush.com"),
 		colly.CacheDir(siteCacheDir),
@@ -149,4 +149,8 @@ func ScrapeVRHush(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector.Visit("https://vrhush.com/scenes")
 
 	return nil
+}
+
+func init() {
+	registerScraper("vrhush", "VRHush", VRHush)
 }

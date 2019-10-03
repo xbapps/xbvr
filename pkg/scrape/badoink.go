@@ -11,7 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeBadoink(knownScenes []string, out *[]ScrapedScene) error {
+func BadoinkVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -165,4 +165,8 @@ func ScrapeBadoink(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector.Visit("https://kinkvr.com/bdsm-vr-videos")
 
 	return nil
+}
+
+func init() {
+	registerScraper("badoinkvr", "BadoinkVR / 18VR / VRCosplayX / BabeVR / KinkVR", BadoinkVR)
 }

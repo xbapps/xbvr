@@ -12,7 +12,7 @@ import (
 	"mvdan.cc/xurls/v2"
 )
 
-func ScrapeVRLatina(knownScenes []string, out *[]ScrapedScene) error {
+func VRLatina(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("vrlatina.com"),
 		colly.CacheDir(siteCacheDir),
@@ -114,4 +114,8 @@ func ScrapeVRLatina(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	return siteCollector.Visit("https://vrlatina.com/videos/?typ=newest")
+}
+
+func init() {
+	registerScraper("vrlatina", "VRLatina", VRLatina)
 }

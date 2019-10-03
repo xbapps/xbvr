@@ -46,59 +46,16 @@ func Scrape() {
 		// Start scraping
 		var collectedScenes []scrape.ScrapedScene
 
-		tlog.Infof("Scraping BadoinkVR / 18VR / VRCosplayX / BabeVR / KinkVR")
-		scrape.ScrapeBadoink(knownScenes, &collectedScenes)
+		scrapers := scrape.GetScrapers()
 
-		tlog.Infof("Scraping MilfVR")
-		scrape.ScrapeMilfVR(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping NaughtyAmericaVR")
-		scrape.ScrapeNA(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping SexBabesVR")
-		scrape.ScrapeSexBabesVR(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping VirtualRealPorn")
-		scrape.ScrapeVirtualRealPorn(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping VirtualTaboo")
-		scrape.ScrapeVirtualTaboo(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping VRBangers")
-		scrape.ScrapeVRB(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping VRHush")
-		scrape.ScrapeVRHush(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping WankzVR")
-		scrape.ScrapeWankz(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping Czech VR")
-		scrape.ScrapeCzechVR(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping StasyQVR")
-		scrape.ScrapeStasyQVR(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping TmwVRnet")
-		scrape.ScrapeTmwVRnet(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping DDFNetworkVR")
-		scrape.ScrapeDDFNetworkVR(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping VRLatina")
-		scrape.ScrapeVRLatina(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping HoloGirlsVR")
-		scrape.ScrapeHoloGirlsVR(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping LethalHardcoreVR / WhorecraftVR")
-		scrape.ScrapeLethalHardcoreVR(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping RealityLovers")
-		scrape.ScrapeRealityLovers(knownScenes, &collectedScenes)
-
-		tlog.Infof("Scraping RealJam VR")
-		scrape.ScrapeRealJamVR(knownScenes, &collectedScenes)
+		if len(scrapers) > 0 {
+			for _, scraper := range scrapers {
+				tlog.Infof("Scraping %s", scraper.Name)
+				scraper.Scrape(knownScenes, &collectedScenes)
+			}
+		} else {
+			tlog.Info("No scrapers registered!")
+		}
 
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
@@ -169,24 +126,16 @@ func ExportBundle() {
 		var knownScenes []string
 		var collectedScenes []scrape.ScrapedScene
 
-		scrape.ScrapeBadoink(knownScenes, &collectedScenes)
-		scrape.ScrapeMilfVR(knownScenes, &collectedScenes)
-		scrape.ScrapeNA(knownScenes, &collectedScenes)
-		scrape.ScrapeSexBabesVR(knownScenes, &collectedScenes)
-		scrape.ScrapeVirtualRealPorn(knownScenes, &collectedScenes)
-		scrape.ScrapeVirtualTaboo(knownScenes, &collectedScenes)
-		scrape.ScrapeVRB(knownScenes, &collectedScenes)
-		scrape.ScrapeVRHush(knownScenes, &collectedScenes)
-		scrape.ScrapeWankz(knownScenes, &collectedScenes)
-		scrape.ScrapeCzechVR(knownScenes, &collectedScenes)
-		scrape.ScrapeStasyQVR(knownScenes, &collectedScenes)
-		scrape.ScrapeTmwVRnet(knownScenes, &collectedScenes)
-		scrape.ScrapeDDFNetworkVR(knownScenes, &collectedScenes)
-		scrape.ScrapeVRLatina(knownScenes, &collectedScenes)
-		scrape.ScrapeHoloGirlsVR(knownScenes, &collectedScenes)
-		scrape.ScrapeLethalHardcoreVR(knownScenes, &collectedScenes)
-		scrape.ScrapeRealityLovers(knownScenes, &collectedScenes)
-		scrape.ScrapeRealJamVR(knownScenes, &collectedScenes)
+		scrapers := scrape.GetScrapers()
+
+		if len(scrapers) > 0 {
+			for _, scraper := range scrapers {
+				tlog.Infof("Scraping %s", scraper.Name)
+				scraper.Scrape(knownScenes, &collectedScenes)
+			}
+		} else {
+			tlog.Info("No scrapers registered!")
+		}
 
 		out := ContentBundle{
 			Timestamp:     time.Now().UTC(),
