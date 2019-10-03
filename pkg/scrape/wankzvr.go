@@ -11,7 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeWankz(knownScenes []string, out *[]ScrapedScene) error {
+func WankzVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.wankzvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -119,4 +119,8 @@ func ScrapeWankz(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	return siteCollector.Visit("https://www.wankzvr.com/videos")
+}
+
+func init() {
+	registerScraper("wankzvr", "WankzVR", WankzVR)
 }

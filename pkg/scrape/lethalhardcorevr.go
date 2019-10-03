@@ -24,7 +24,7 @@ func isGoodTag(lookup string) bool {
 	return true
 }
 
-func ScrapeLethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
+func LethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("lethalhardcorevr.com", "whorecraftvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -100,7 +100,7 @@ func ScrapeLethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
 
 		// Cast
 		r := strings.NewReplacer("(", "",
-					 ")", "")
+			")", "")
 		e.ForEach(`div.item-page-details .overlay small`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				sc.Cast = append(sc.Cast, strings.TrimSpace(r.Replace(e.Text)))
@@ -141,4 +141,8 @@ func ScrapeLethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector.Visit("https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
 
 	return nil
+}
+
+func init() {
+	registerScraper("lethalhardcorevr", "LethalHardcoreVR / WhorecraftVR", LethalHardcoreVR)
 }

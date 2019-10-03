@@ -13,7 +13,7 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-func ScrapeVirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
+func VirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualrealporn.com"),
 		colly.CacheDir(siteCacheDir),
@@ -144,7 +144,7 @@ func ScrapeVirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 		for i := range tmpCast {
 			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
 		}
-		
+
 		*out = append(*out, sc)
 	})
 
@@ -204,4 +204,8 @@ func ScrapeVirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 	}
 
 	return siteCollector.Visit("https://virtualrealporn.com/")
+}
+
+func init() {
+	registerScraper("virtualrealporn", "VirtualRealPorn", VirtualRealPorn)
 }
