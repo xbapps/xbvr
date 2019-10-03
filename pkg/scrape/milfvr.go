@@ -12,7 +12,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeMilfVR(knownScenes []string, out *[]ScrapedScene) error {
+func MilfVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.milfvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -117,4 +117,8 @@ func ScrapeMilfVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	return siteCollector.Visit("https://www.milfvr.com/videos")
+}
+
+func init() {
+	registerScraper("milfvr", "MilfVR", MilfVR)
 }

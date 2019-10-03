@@ -23,10 +23,10 @@ var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (K
 type scraperFunc func([]string, *[]ScrapedScene) error
 
 type Scraper struct {
-	ID string
-	Name string
+	ID      string
+	Name    string
 	Enabled bool
-	Scrape scraperFunc
+	Scrape  scraperFunc
 }
 
 type ScrapedScene struct {

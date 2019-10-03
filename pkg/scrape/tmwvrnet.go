@@ -11,7 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeTmwVRnet(knownScenes []string, out *[]ScrapedScene) error {
+func TmwVRnet(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("tmwvrnet.com"),
 		colly.CacheDir(siteCacheDir),
@@ -117,4 +117,8 @@ func ScrapeTmwVRnet(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector.Visit("https://tmwvrnet.com/categories/movies.html")
 
 	return nil
+}
+
+func init() {
+	registerScraper("tmwvrnet", "TmwVRnet", TmwVRnet)
 }

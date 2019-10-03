@@ -12,7 +12,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func ScrapeNA(knownScenes []string, out *[]ScrapedScene) error {
+func NaughtyAmericaVR(knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.naughtyamerica.com"),
 		colly.CacheDir(siteCacheDir),
@@ -142,4 +142,8 @@ func ScrapeNA(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	return siteCollector.Visit("https://www.naughtyamerica.com/vr-porn")
+}
+
+func init() {
+	registerScraper("naughtyamericavr", "NaughtyAmericaVR", NaughtyAmericaVR)
 }
