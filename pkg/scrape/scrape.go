@@ -16,8 +16,18 @@ var cacheDir string
 
 var siteCacheDir string
 var sceneCacheDir string
+var scrapers []Scraper
 
 var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
+
+type scraperFunc func([]string, *[]ScrapedScene) error
+
+type Scraper struct {
+	ID string
+	Name string
+	Enabled bool
+	Scrape scraperFunc
+}
 
 type ScrapedScene struct {
 	SceneID     string   `json:"_id"`
@@ -35,6 +45,18 @@ type ScrapedScene struct {
 	Synopsis    string   `json:"synopsis"`
 	Released    string   `json:"released"`
 	HomepageURL string   `json:"homepage_url"`
+}
+
+func registerScraper(id string, name string, f scraperFunc) {
+	s := Scraper{}
+	s.ID = id
+	s.Name = name
+	s.Scrape = f
+	scrapers = append(scrapers, s)
+}
+
+func GetScrapers() []Scraper {
+	return scrapers
 }
 
 func unCache(URL string, cacheDir string) {
