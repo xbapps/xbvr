@@ -24,7 +24,7 @@ func isGoodTag(lookup string) bool {
 	return true
 }
 
-func LethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
+func LethalHardcoreSite(knownScenes []string, out *[]ScrapedScene, URL string) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("lethalhardcorevr.com", "whorecraftvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -137,12 +137,20 @@ func LethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	siteCollector.Visit("https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
-	siteCollector.Visit("https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
-
+	siteCollector.Visit(URL)
 	return nil
 }
 
+func WhorecraftVR(knownScenes []string, out *[]ScrapedScene) error {
+	return LethalHardcoreSite(knownScenes, out, "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
+}
+
+func LethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
+	return LethalHardcoreSite(knownScenes, out, "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
+}
+
+
 func init() {
-	registerScraper("lethalhardcorevr", "LethalHardcoreVR / WhorecraftVR", LethalHardcoreVR)
+	registerScraper("whorecraftvr", "WhorecraftVR", WhorecraftVR)
+	registerScraper("lethalhardcorevr", "LethalHardcoreVR", LethalHardcoreVR)
 }
