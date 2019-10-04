@@ -31,7 +31,7 @@ require (
 	github.com/emicklei/go-restful-openapi v1.2.0
 	github.com/etcd-io/bbolt v1.3.3 // indirect
 	github.com/fatih/color v1.7.0 // indirect
-	github.com/gammazero/nexus v0.0.0-20190831203304-1942ef1e1a87
+	github.com/gammazero/nexus/v3 v3.0.0
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
 	github.com/getlantern/errors v0.0.0-20180829142810-e24b7f4ff7c7 // indirect
 	github.com/getlantern/golog v0.0.0-20170508214112-cca714f7feb5 // indirect
@@ -90,8 +90,8 @@ require (
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.3 // indirect
-	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
-	golang.org/x/sys v0.0.0-20190902133755-9109b7679e13
+	golang.org/x/net v0.0.0-20190912160710-24e19bdeb0f2
+	golang.org/x/sys v0.0.0-20190913121621-c3b328c6e5a7
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect

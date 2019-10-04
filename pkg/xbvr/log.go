@@ -1,11 +1,12 @@
 package xbvr
 
 import (
+	"context"
 	"os"
 	"runtime"
 
 	"github.com/emicklei/go-restful"
-	"github.com/gammazero/nexus/client"
+	"github.com/gammazero/nexus/v3/client"
 	"github.com/sirupsen/logrus"
 	"github.com/x-cray/logrus-prefixed-formatter"
 )
@@ -24,7 +25,7 @@ type WampHook struct {
 func NewWampHook() *WampHook {
 	wh := &WampHook{}
 
-	publisher, _ := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{
+	publisher, _ := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{
 		Realm: "default",
 	})
 
