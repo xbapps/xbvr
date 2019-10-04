@@ -13,7 +13,10 @@
               {{props.row.name}}
             </b-table-column>
             <b-table-column field="last_update" label="Last update" sortable>
-              {{formatDistanceToNow(parseISO(props.row.last_update))}} ago
+              <span v-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
+                {{formatDistanceToNow(parseISO(props.row.last_update))}} ago
+              </span>
+              <span v-else>Never</span>
             </b-table-column>
           </template>
           <template slot="top-left">
