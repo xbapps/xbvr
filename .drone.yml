@@ -25,7 +25,7 @@ steps:
       - yarn build
 
   - name: build
-    image: cld9x/goreleaser-xcgo:latest
+    image: xbapps/goreleaser-xcgo:latest
     environment:
       GOPROXY: "https://proxy.golang.org/"
       GITHUB_TOKEN:
