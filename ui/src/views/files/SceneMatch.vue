@@ -8,6 +8,7 @@
       </header>
       <section class="modal-card-body">
         <div>
+          <h6 class="title is-6">{{ file.filename }}</h6>
           <b-field label="Search">
             <div class="control">
               <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
