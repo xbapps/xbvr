@@ -11,7 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func BadoinkVR(knownScenes []string, out *[]ScrapedScene) error {
+func BadoinkSite(knownScenes []string, out *[]ScrapedScene, URL string) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -158,15 +158,34 @@ func BadoinkVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	siteCollector.Visit("https://badoinkvr.com/vrpornvideos")
-	siteCollector.Visit("https://18vr.com/vrpornvideos")
-	siteCollector.Visit("https://vrcosplayx.com/cosplaypornvideos")
-	siteCollector.Visit("https://babevr.com/vrpornvideos")
-	siteCollector.Visit("https://kinkvr.com/bdsm-vr-videos")
-
+	siteCollector.Visit(URL)
 	return nil
 }
 
+func BadoinkVR(knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(knownScenes, out, "https://badoinkvr.com/vrpornvideos")
+}
+
+func B18VR(knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(knownScenes, out, "https://18vr.com/vrpornvideos")
+}
+
+func VRCosplayX(knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(knownScenes, out, "https://vrcosplayx.com/cosplaypornvideos")
+}
+
+func BabeVR(knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(knownScenes, out, "https://babevr.com/vrpornvideos")
+}
+
+func KinkVR(knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(knownScenes, out, "https://kinkvr.com/bdsm-vr-videos")
+}
+
 func init() {
-	registerScraper("badoinkvr", "BadoinkVR / 18VR / VRCosplayX / BabeVR / KinkVR", BadoinkVR)
+	registerScraper("badoinkvr", "BadoinkVR", BadoinkVR)
+	registerScraper("18vr", "18VR", B18VR)
+	registerScraper("vrcosplayx", "VRCosplayX", VRCosplayX)
+	registerScraper("babevr", "BabeVR", BabeVR)
+	registerScraper("kinkvr", "KinkVR", KinkVR)
 }
