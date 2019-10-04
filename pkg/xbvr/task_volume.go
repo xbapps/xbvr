@@ -1,6 +1,7 @@
 package xbvr
 
 import (
+	"context"
 	"os"
 	"path"
 	"path/filepath"
@@ -9,7 +10,7 @@ import (
 	"time"
 
 	"github.com/djherbis/times"
-	"github.com/gammazero/nexus/client"
+	"github.com/gammazero/nexus/v3/client"
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
@@ -218,7 +219,7 @@ func RescanVolumes() {
 		tlog.Infof("Scanning complete")
 
 		// Inform UI about state change
-		publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
+		publisher, err := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
 		if err == nil {
 			publisher.Publish("state.change.optionsFolders", nil, nil, nil)
 			publisher.Close()

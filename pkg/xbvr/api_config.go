@@ -1,6 +1,7 @@
 package xbvr
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,7 +10,7 @@ import (
 	"github.com/blang/semver"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
-	"github.com/gammazero/nexus/client"
+	"github.com/gammazero/nexus/v3/client"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -128,7 +129,7 @@ func (i ConfigResource) addFolder(req *restful.Request, resp *restful.Response) 
 	tlog.Info("Added new folder", path)
 
 	// Inform UI about state change
-	publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
+	publisher, err := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
 	if err == nil {
 		publisher.Publish("state.change.optionsFolders", nil, nil, nil)
 		publisher.Close()
@@ -160,7 +161,7 @@ func (i ConfigResource) removeFolder(req *restful.Request, resp *restful.Respons
 	db.Delete(&vol)
 
 	// Inform UI about state change
-	publisher, err := client.ConnectNet("ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
+	publisher, err := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
 	if err == nil {
 		publisher.Publish("state.change.optionsFolders", nil, nil, nil)
 		publisher.Close()
