@@ -57,6 +57,8 @@ func Scrape() {
 					if site.ID == scraper.ID {
 						tlog.Infof("Scraping %s", scraper.Name)
 						scraper.Scrape(knownScenes, &collectedScenes)
+						site.LastUpdate = time.Now()
+						site.Save()
 					}
 				}
 			}
