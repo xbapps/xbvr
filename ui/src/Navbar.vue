@@ -42,7 +42,7 @@
             actionText: 'Download now',
             indefinite: true,
             onAction: () => {
-              window.location = "https://github.com/cld9x/xbvr/releases";
+              window.location = "https://github.com/xbapps/xbvr/releases";
             }
           })
         }

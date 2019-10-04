@@ -3,7 +3,7 @@ package main
 //go:generate fileb0x .assets.toml
 
 import (
-	"github.com/cld9x/xbvr/pkg/xbvr"
+	"github.com/xbapps/xbvr/pkg/xbvr"
 )
 
 var version = "CURRENT"

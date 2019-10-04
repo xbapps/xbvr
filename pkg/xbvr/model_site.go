@@ -3,7 +3,7 @@ package xbvr
 import (
 	"time"
 
-	"github.com/cld9x/xbvr/pkg/scrape"
+	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
 type Site struct {

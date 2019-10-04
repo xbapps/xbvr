@@ -1,4 +1,4 @@
-[![Build Status](https://cloud.drone.io/api/badges/cld9x/xbvr/status.svg)](https://cloud.drone.io/cld9x/xbvr) ![GitHub release](https://img.shields.io/github/release/cld9x/xbvr.svg)
+[![Build Status](https://cloud.drone.io/api/badges/xbapps/xbvr/status.svg)](https://cloud.drone.io/xbapps/xbvr) ![GitHub release](https://img.shields.io/github/release/xbapps/xbvr.svg)
 <br>
 <sup><sub><em>Windows 10 • macOS • Linux • Raspberry Pi</em></sub></sup>
 
@@ -36,9 +36,9 @@
 
 ## Download
 
-The latest version is always available on the [releases page](https://github.com/cld9x/xbvr/releases).
+The latest version is always available on the [releases page](https://github.com/xbapps/xbvr/releases).
 
-App is also available in form of Docker image, which makes it possible to run in more specialized environments such as QNAP NAS - downloads at [Docker Hub](https://hub.docker.com/r/cld9x/xbvr). 
+App is also available in form of Docker image, which makes it possible to run in more specialized environments such as QNAP NAS - downloads at [Docker Hub](https://hub.docker.com/r/xbapps/xbvr). 
 
 Please note that during the first run XBVR automatically installs `ffprobe` and `ffmpeg` codecs from [ffbinaries site](https://ffbinaries.com/downloads).
 
@@ -86,4 +86,4 @@ Gitpod has GitHub integration and, once authorized, can fork this repo into your
 
 Ready to get started?
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/cld9x/xbvr)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/xbapps/xbvr)

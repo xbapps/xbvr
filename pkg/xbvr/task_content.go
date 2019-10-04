@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/cld9x/xbvr/pkg/scrape"
 	"github.com/go-test/deep"
+	"github.com/xbapps/xbvr/pkg/scrape"
 	"gopkg.in/resty.v1"
 )
 

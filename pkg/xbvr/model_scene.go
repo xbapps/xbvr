@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/araddon/dateparse"
-	"github.com/cld9x/xbvr/pkg/scrape"
 	"github.com/jinzhu/gorm"
+	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
 // SceneCuepoint data model
@@ -150,7 +150,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext scrape.ScrapedScene) error {
 	o.Synopsis = ext.Synopsis
 	o.ReleaseDateText = ext.Released
 	if ext.Covers != nil {
-		o.CoverURL = ext.Covers[0]	
+		o.CoverURL = ext.Covers[0]
 	}
 	o.SceneURL = ext.HomepageURL
 
