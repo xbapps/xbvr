@@ -9,7 +9,7 @@ builds:
   binary: XBVR.app/Contents/MacOS/XBVR
   main: pkg/tray/main.go
   flags:
-    - -tags="json1 fts5"
+    - '-tags="json1 fts5"'
   env:
     - CGO_ENABLED=1
     - CC=o64-clang
@@ -24,7 +24,7 @@ builds:
   binary: xbvr
   main: pkg/tray/main.go
   flags:
-    - -tags="json1 fts5"
+    - '-tags="json1 fts5"'
   ldflags:
     - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser -H windowsgui
   env:
@@ -38,7 +38,7 @@ builds:
 - id: xbvr-linux-amd64
   binary: xbvr
   flags:
-    - -tags="json1 fts5"
+    - '-tags="json1 fts5"'
   env:
     - CGO_ENABLED=1
   goos:
@@ -48,7 +48,7 @@ builds:
 - id: xbvr-linux-arm
   binary: xbvr
   flags:
-    - -tags="json1 fts5"
+    - '-tags="json1 fts5"'
   env:
     - CGO_ENABLED=1
     - CC=arm-linux-gnueabi-gcc
