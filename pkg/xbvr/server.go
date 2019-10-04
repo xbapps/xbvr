@@ -38,6 +38,8 @@ func StartServer(version, commit, branch, date string) {
 	go CheckDependencies()
 	CheckVolumes()
 
+	InitSites()
+
 	// API endpoints
 	ws := new(restful.WebService)
 	ws.Route(ws.GET("/").To(func(req *restful.Request, resp *restful.Response) {

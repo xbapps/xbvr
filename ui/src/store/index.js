@@ -6,6 +6,7 @@ import messages from "./messages";
 import overlay from "./overlay";
 import files from "./files";
 import optionsFolders from "./optionsFolders";
+import optionsSites from "./optionsSites";
 
 
 Vue.use(Vuex);
@@ -17,5 +18,6 @@ export default new Vuex.Store({
     overlay,
     files,
     optionsFolders,
+    optionsSites,
   }
 })

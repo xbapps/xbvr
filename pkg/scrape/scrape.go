@@ -25,7 +25,6 @@ type scraperFunc func([]string, *[]ScrapedScene) error
 type Scraper struct {
 	ID      string
 	Name    string
-	Enabled bool
 	Scrape  scraperFunc
 }
 

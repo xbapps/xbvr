@@ -36,7 +36,6 @@ func Scrape() {
 		var scenes []Scene
 		db, _ := GetDB()
 		db.Find(&scenes)
-		db.Close()
 
 		var knownScenes []string
 		for i := range scenes {
@@ -48,13 +47,21 @@ func Scrape() {
 
 		scrapers := scrape.GetScrapers()
 
-		if len(scrapers) > 0 {
-			for _, scraper := range scrapers {
-				tlog.Infof("Scraping %s", scraper.Name)
-				scraper.Scrape(knownScenes, &collectedScenes)
+		var sites []Site
+		db.Where(&Site{IsEnabled: true}).Find(&sites)
+		db.Close()
+
+		if len(sites) > 0 {
+			for _, site := range sites {
+				for _, scraper := range scrapers {
+					if site.ID == scraper.ID {
+						tlog.Infof("Scraping %s", scraper.Name)
+						scraper.Scrape(knownScenes, &collectedScenes)
+					}
+				}
 			}
 		} else {
-			tlog.Info("No scrapers registered!")
+			tlog.Info("No sites enabled!")
 		}
 
 		if len(collectedScenes) > 0 {

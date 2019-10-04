@@ -148,5 +148,5 @@ func CzechVR(knownScenes []string, out *[]ScrapedScene) error {
 }
 
 func init() {
-	registerScraper("czechvr", "Czech VR", CzechVR)
+	registerScraper("czechvr", "Czech VR (all sites)", CzechVR)
 }

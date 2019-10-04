@@ -30,5 +30,6 @@ func init() {
 	db.AutoMigrate(&Volume{})
 	db.AutoMigrate(&History{})
 
+	db.AutoMigrate(&Site{})
 	db.AutoMigrate(&KV{})
 }
