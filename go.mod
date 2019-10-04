@@ -1,4 +1,4 @@
-module github.com/cld9x/xbvr
+module github.com/xbapps/xbvr
 
 go 1.13
 

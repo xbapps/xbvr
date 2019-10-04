@@ -16,9 +16,9 @@ import (
 	"time"
 
 	"github.com/anacrolix/ffprobe"
-	"github.com/cld9x/xbvr/pkg/dms/dlna"
-	"github.com/cld9x/xbvr/pkg/dms/upnp"
-	"github.com/cld9x/xbvr/pkg/dms/upnpav"
+	"github.com/xbapps/xbvr/pkg/dms/dlna"
+	"github.com/xbapps/xbvr/pkg/dms/upnp"
+	"github.com/xbapps/xbvr/pkg/dms/upnpav"
 	"gopkg.in/resty.v1"
 )
 

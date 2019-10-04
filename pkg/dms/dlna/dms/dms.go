@@ -21,12 +21,12 @@ import (
 	"time"
 
 	"github.com/anacrolix/ffprobe"
-	"github.com/cld9x/xbvr/pkg/dms/dlna"
-	"github.com/cld9x/xbvr/pkg/dms/soap"
-	"github.com/cld9x/xbvr/pkg/dms/ssdp"
-	"github.com/cld9x/xbvr/pkg/dms/transcode"
-	"github.com/cld9x/xbvr/pkg/dms/upnp"
-	"github.com/cld9x/xbvr/pkg/dms/upnpav"
+	"github.com/xbapps/xbvr/pkg/dms/dlna"
+	"github.com/xbapps/xbvr/pkg/dms/soap"
+	"github.com/xbapps/xbvr/pkg/dms/ssdp"
+	"github.com/xbapps/xbvr/pkg/dms/transcode"
+	"github.com/xbapps/xbvr/pkg/dms/upnp"
+	"github.com/xbapps/xbvr/pkg/dms/upnpav"
 )
 
 const (

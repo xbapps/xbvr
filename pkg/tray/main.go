@@ -6,11 +6,11 @@ import (
 	"runtime"
 
 	"github.com/ProtonMail/go-appdir"
-	"github.com/cld9x/xbvr/pkg/assets"
-	"github.com/cld9x/xbvr/pkg/xbvr"
 	"github.com/getlantern/systray"
 	"github.com/marcsauter/single"
 	"github.com/skratchdot/open-golang/open"
+	"github.com/xbapps/xbvr/pkg/assets"
+	"github.com/xbapps/xbvr/pkg/xbvr"
 )
 
 var version = "CURRENT"

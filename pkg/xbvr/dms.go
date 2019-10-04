@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/cld9x/xbvr/pkg/assets"
-	"github.com/cld9x/xbvr/pkg/dms/dlna/dms"
+	"github.com/xbapps/xbvr/pkg/assets"
+	"github.com/xbapps/xbvr/pkg/dms/dlna/dms"
 )
 
 type dmsConfig struct {

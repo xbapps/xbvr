@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cld9x/xbvr/pkg/assets"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/gammazero/nexus/v3/router"
@@ -17,6 +16,7 @@ import (
 	"github.com/koding/websocketproxy"
 	"github.com/peterbourgon/diskv"
 	"github.com/rs/cors"
+	"github.com/xbapps/xbvr/pkg/assets"
 	"willnorris.com/go/imageproxy"
 )
 

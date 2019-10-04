@@ -46,6 +46,6 @@ steps:
         from_secret: DOCKER_LOGIN
       password:
         from_secret: DOCKER_PASSWORD
-      repo: cld9x/xbvr
+      repo: xbapps/xbvr
       auto_tag: true
       build_args: DRONE_TAG=${DRONE_TAG}
