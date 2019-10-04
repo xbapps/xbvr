@@ -2,45 +2,26 @@
   <div>
     <div class="columns">
       <div class="column">
-        <div class="content">
-          <h3>Mainstream sites</h3>
-          <p>
-            Releases metadata is required for XBVR to function as intended.
-          </p>
-          <div class="button is-button is-primary" v-on:click="taskScrape()">Run scraper</div>
-          <hr/>
-        </div>
-        <div class="content">
-          <h3 class="title">JAVR via R18 (experimental)</h3>
-          <p>
-            You can scrape JAVR releases by using:
-          </p>
-          <ul>
-            <li>R18 URL to the exact scene (preferred method)</li>
-            <li>production code (XXXX-001)</li>
-          </ul>
-          <p>
-            <b-field grouped>
-              <b-input v-model="javrQuery" placeholder="URL or ID" type="search" icon="magnify"></b-input>
-              <div class="button is-button is-primary" v-on:click="scrapeJAVR()">Get release</div>
-            </b-field>
-          </p>
-
-        </div>
+        <b-table :data="items" ref="table"
+                 paginated per-page="12" pagination-position="top">
+          <template slot-scope="props">
+            <b-table-column field="is_enabled" label="" width="20">
+              <b-switch :value="props.row.is_enabled"
+                        @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/>
+            </b-table-column>
+            <b-table-column field="name" label="Site" sortable>
+              {{props.row.name}}
+            </b-table-column>
+            <b-table-column field="last_update" label="Last update" sortable>
+              {{formatDistanceToNow(parseISO(props.row.last_update))}} ago
+            </b-table-column>
+          </template>
+          <template slot="top-left">
+            <div class="button is-button is-primary" v-on:click="taskScrape()">Run scraper</div>
+          </template>
+        </b-table>
       </div>
       <div class="column">
-        <div class="content">
-          <h3>Scene search index (experimental)</h3>
-          <p>
-            Once releases metadata is collected, you should populate search index.<br/>
-            This needs to be done whenever new scenes are scraped.
-          </p>
-          <p>
-            Warning: this is CPU-intensive process.
-          </p>
-          <div class="button is-button is-primary" v-on:click="taskIndex()">Index scenes</div>
-          <hr/>
-        </div>
         <div class="content">
           <h3>Import scene data</h3>
           <p>
@@ -76,24 +57,21 @@
 
 <script>
   import ky from "ky";
+  import {formatDistanceToNow, parseISO} from "date-fns";
 
   export default {
-    name: "OptionsSites.vue",
+    name: "OptionsSites",
     data() {
       return {
-        javrQuery: "",
         bundleURL: "",
       }
+    },
+    mounted() {
+      this.$store.dispatch("optionsSites/load");
     },
     methods: {
       taskScrape() {
         ky.get(`/api/task/scrape`);
-      },
-      taskIndex() {
-        ky.get(`/api/task/index`);
-      },
-      scrapeJAVR() {
-        ky.post(`/api/task/scrape-javr`, {json: {q: this.javrQuery}});
       },
       importContent() {
         if (this.bundleURL !== "") {
@@ -103,8 +81,13 @@
       exportContent() {
         ky.get(`/api/task/bundle/export`);
       },
+      parseISO,
+      formatDistanceToNow,
     },
     computed: {
+      items() {
+        return this.$store.state.optionsSites.items;
+      },
       lastMessage() {
         return this.$store.state.messages.lastScrapeMessage;
       },

@@ -41,6 +41,12 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/version-check").To(i.versionCheck).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/sites").To(i.listSites).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.PUT("/sites/{site}").To(i.toggleSite).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.GET("/folder").To(i.listFolders).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -77,6 +83,39 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
+}
+
+func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var sites []Site
+	db.Find(&sites)
+
+	resp.WriteHeaderAndEntity(http.StatusOK, sites)
+}
+
+func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {
+	db, _ := GetDB()
+	defer db.Close()
+
+	id := req.PathParameter("site")
+	if id == "" {
+		return
+	}
+
+	var site Site
+	err := site.GetIfExist(id)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	site.IsEnabled = !site.IsEnabled
+	site.Save()
+
+	var sites []Site
+	db.Find(&sites)
+	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
 func (i ConfigResource) listFolders(req *restful.Request, resp *restful.Response) {
