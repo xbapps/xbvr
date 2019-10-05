@@ -7,7 +7,7 @@ RUN wget -O /tmp/xbvr.tgz "https://github.com/xbapps/xbvr/releases/download/"$DR
     tar xvfz /tmp/xbvr.tgz -C /usr/local/bin/ && \
     rm /tmp/xbvr.tgz
 
-EXPOSE 9999
+EXPOSE 9998-9999
 VOLUME /root/.config/
 
-CMD ["/usr/local/bin/xbvr"]
+ENTRYPOINT ["/usr/local/bin/xbvr"]
