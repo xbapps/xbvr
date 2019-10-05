@@ -38,7 +38,13 @@
 
 The latest version is always available on the [releases page](https://github.com/xbapps/xbvr/releases).
 
-App is also available in form of Docker image, which makes it possible to run in more specialized environments such as QNAP NAS - downloads at [Docker Hub](https://hub.docker.com/r/xbapps/xbvr). 
+App is also available in form of Docker image, which makes it possible to run in more specialized environments such as QNAP NAS - downloads at [Docker Hub](https://hub.docker.com/r/xbapps/xbvr).
+
+To run this container in docker:
+
+```docker run --name=xbvr --net=host -p 9999:9999 --restart=always --mount type=bind,source=/path/to/your/videos,target=/videos,readonly xbapps/xbvr:latest```
+
+Adding `-d` to the docker command will run the container in the background.
 
 Please note that during the first run XBVR automatically installs `ffprobe` and `ffmpeg` codecs from [ffbinaries site](https://ffbinaries.com/downloads).
 
