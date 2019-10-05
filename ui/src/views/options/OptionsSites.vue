@@ -3,7 +3,7 @@
     <div class="columns">
       <div class="column">
         <b-table :data="items" ref="table"
-                 paginated per-page="12" pagination-position="top">
+                 paginated per-page="12" pagination-position="both" default-sort="name">
           <template slot-scope="props">
             <b-table-column field="is_enabled" label="" width="20">
               <b-switch :value="props.row.is_enabled"
