@@ -24,13 +24,43 @@ func CleanTags() {
 	CountTags()
 }
 
+func runScrapers(knownScenes []string) []scrape.ScrapedScene {
+	os.RemoveAll(filepath.Join(cacheDir, "site_cache"))
+
+	var collectedScenes []scrape.ScrapedScene
+
+	scrapers := scrape.GetScrapers()
+
+	var sites []Site
+	db, _ := GetDB()
+	db.Where(&Site{IsEnabled: true}).Find(&sites)
+	db.Close()
+
+	tlog := log.WithField("task", "scrape")
+
+	if len(sites) > 0 {
+		for _, site := range sites {
+			for _, scraper := range scrapers {
+				if site.ID == scraper.ID {
+					tlog.Infof("Scraping %s", scraper.Name)
+					scraper.Scrape(knownScenes, &collectedScenes)
+					site.LastUpdate = time.Now()
+					site.Save()
+				}
+			}
+		}
+	} else {
+		tlog.Info("No sites enabled!")
+	}
+
+	return collectedScenes
+}
+
 func Scrape() {
 	if !CheckLock("scrape") {
 		CreateLock("scrape")
 
 		tlog := log.WithField("task", "scrape")
-
-		os.RemoveAll(filepath.Join(cacheDir, "site_cache"))
 
 		// Get all known scenes
 		var scenes []Scene
@@ -43,28 +73,7 @@ func Scrape() {
 		}
 
 		// Start scraping
-		var collectedScenes []scrape.ScrapedScene
-
-		scrapers := scrape.GetScrapers()
-
-		var sites []Site
-		db.Where(&Site{IsEnabled: true}).Find(&sites)
-		db.Close()
-
-		if len(sites) > 0 {
-			for _, site := range sites {
-				for _, scraper := range scrapers {
-					if site.ID == scraper.ID {
-						tlog.Infof("Scraping %s", scraper.Name)
-						scraper.Scrape(knownScenes, &collectedScenes)
-						site.LastUpdate = time.Now()
-						site.Save()
-					}
-				}
-			}
-		} else {
-			tlog.Info("No sites enabled!")
-		}
+		collectedScenes := runScrapers(knownScenes)
 
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
@@ -133,18 +142,7 @@ func ExportBundle() {
 		tlog.Info("Exporting content bundle...")
 
 		var knownScenes []string
-		var collectedScenes []scrape.ScrapedScene
-
-		scrapers := scrape.GetScrapers()
-
-		if len(scrapers) > 0 {
-			for _, scraper := range scrapers {
-				tlog.Infof("Scraping %s", scraper.Name)
-				scraper.Scrape(knownScenes, &collectedScenes)
-			}
-		} else {
-			tlog.Info("No scrapers registered!")
-		}
+		collectedScenes := runScrapers(knownScenes)
 
 		out := ContentBundle{
 			Timestamp:     time.Now().UTC(),
