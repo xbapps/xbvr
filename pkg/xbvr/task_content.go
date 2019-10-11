@@ -6,12 +6,15 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/go-test/deep"
 	"github.com/xbapps/xbvr/pkg/scrape"
 	"gopkg.in/resty.v1"
 )
+
+var enableThreading = os.Getenv("XBVR_THREADING")
 
 type ContentBundle struct {
 	Timestamp     time.Time             `json:"timestamp"`
@@ -38,12 +41,21 @@ func runScrapers(knownScenes []string) []scrape.ScrapedScene {
 
 	tlog := log.WithField("task", "scrape")
 
+	var wg sync.WaitGroup
+
 	if len(sites) > 0 {
 		for _, site := range sites {
 			for _, scraper := range scrapers {
 				if site.ID == scraper.ID {
 					tlog.Infof("Scraping %s", scraper.Name)
-					scraper.Scrape(knownScenes, &collectedScenes)
+					wg.Add(1)
+					if enableThreading != "" {
+						scrape.SetMaxThreads(6, 2)
+						go scraper.Scrape(&wg, knownScenes, &collectedScenes)
+					} else {
+						scrape.SetMaxThreads(2, 2)
+						scraper.Scrape(&wg, knownScenes, &collectedScenes)
+					}
 					site.LastUpdate = time.Now()
 					site.Save()
 				}
@@ -53,13 +65,15 @@ func runScrapers(knownScenes []string) []scrape.ScrapedScene {
 		tlog.Info("No sites enabled!")
 	}
 
+	wg.Wait()
+
 	return collectedScenes
 }
 
 func Scrape() {
 	if !CheckLock("scrape") {
 		CreateLock("scrape")
-
+		t0 := time.Now()
 		tlog := log.WithField("task", "scrape")
 
 		// Get all known scenes
@@ -76,15 +90,16 @@ func Scrape() {
 		collectedScenes := runScrapers(knownScenes)
 
 		if len(collectedScenes) > 0 {
-			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
+			tlog.Infof("Scraped %v new scenes in %v", len(collectedScenes), time.Now().Sub(t0))
 
+			t0 := time.Now()
 			db, _ := GetDB()
 			for i := range collectedScenes {
 				SceneCreateUpdateFromExternal(db, collectedScenes[i])
 			}
 			db.Close()
 
-			tlog.Infof("Saved %v new scenes", len(collectedScenes))
+			tlog.Infof("Saved %v new scenes in %v", len(collectedScenes), time.Now().Sub(t0))
 		} else {
 			tlog.Infof("No new scenes scraped")
 		}
@@ -137,6 +152,7 @@ func ScrapeJAVR(queryString string) {
 func ExportBundle() {
 	if !CheckLock("scrape") {
 		CreateLock("scrape")
+		t0 := time.Now()
 
 		tlog := log.WithField("task", "scrape")
 		tlog.Info("Exporting content bundle...")
@@ -155,7 +171,7 @@ func ExportBundle() {
 			fName := filepath.Join(appDir, fmt.Sprintf("content-bundle-%v.json", time.Now().Unix()))
 			err = ioutil.WriteFile(fName, content, 0644)
 			if err == nil {
-				tlog.Infof("Export complete, file saved to %v", fName)
+				tlog.Infof("Export completed in %v, file saved to %v", time.Now().Sub(t0), fName)
 			}
 		}
 	}

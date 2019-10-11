@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -11,19 +12,25 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func BadoinkSite(knownScenes []string, out *[]ScrapedScene, URL string) error {
+func BadoinkSite(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene, URL string) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
+
 	trailerCollector := sceneCollector.Clone()
+	trailerCollector.Async = false
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -159,27 +166,32 @@ func BadoinkSite(knownScenes []string, out *[]ScrapedScene, URL string) error {
 	})
 
 	siteCollector.Visit(URL)
+
+	siteCollector.Wait()
+	sceneCollector.Wait()
+
+	wg.Done()
 	return nil
 }
 
-func BadoinkVR(knownScenes []string, out *[]ScrapedScene) error {
-	return BadoinkSite(knownScenes, out, "https://badoinkvr.com/vrpornvideos")
+func BadoinkVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(wg, knownScenes, out, "https://badoinkvr.com/vrpornvideos")
 }
 
-func B18VR(knownScenes []string, out *[]ScrapedScene) error {
-	return BadoinkSite(knownScenes, out, "https://18vr.com/vrpornvideos")
+func B18VR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(wg, knownScenes, out, "https://18vr.com/vrpornvideos")
 }
 
-func VRCosplayX(knownScenes []string, out *[]ScrapedScene) error {
-	return BadoinkSite(knownScenes, out, "https://vrcosplayx.com/cosplaypornvideos")
+func VRCosplayX(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(wg, knownScenes, out, "https://vrcosplayx.com/cosplaypornvideos")
 }
 
-func BabeVR(knownScenes []string, out *[]ScrapedScene) error {
-	return BadoinkSite(knownScenes, out, "https://babevr.com/vrpornvideos")
+func BabeVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(wg, knownScenes, out, "https://babevr.com/vrpornvideos")
 }
 
-func KinkVR(knownScenes []string, out *[]ScrapedScene) error {
-	return BadoinkSite(knownScenes, out, "https://kinkvr.com/bdsm-vr-videos")
+func KinkVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+	return BadoinkSite(wg, knownScenes, out, "https://kinkvr.com/bdsm-vr-videos")
 }
 
 func init() {

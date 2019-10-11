@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -11,19 +12,23 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func StasyQVR(knownScenes []string, out *[]ScrapedScene) error {
+func StasyQVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("stasyqvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
 		colly.MaxDepth(5),
+		colly.Async(true),
 	)
+	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("stasyqvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -121,6 +126,10 @@ func StasyQVR(knownScenes []string, out *[]ScrapedScene) error {
 
 	siteCollector.Visit("https://stasyqvr.com/virtualreality/list")
 
+	siteCollector.Wait()
+	sceneCollector.Wait()
+
+	wg.Done()
 	return nil
 }
 

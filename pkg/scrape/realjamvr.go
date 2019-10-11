@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gocolly/colly"
@@ -13,20 +14,24 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func RealJamVR(knownScenes []string, out *[]ScrapedScene) error {
+func RealJamVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
 	const maxRetries = 15
 
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("realjamvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("realjamvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		attempt := r.Ctx.GetAny("attempt")
@@ -152,7 +157,13 @@ func RealJamVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://realjamvr.com/virtualreality/list")
+	siteCollector.Visit("https://realjamvr.com/virtualreality/list")
+
+	siteCollector.Wait()
+	sceneCollector.Wait()
+
+	wg.Done()
+	return nil
 }
 
 func init() {

@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -13,25 +14,31 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-func VirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
+func VirtualRealPorn(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualrealporn.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualrealporn.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	castCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualrealporn.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
 		colly.AllowURLRevisit(),
+		colly.Async(true),
 	)
+	castCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollySubThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -145,6 +152,7 @@ func VirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
 		}
 
+		castCollector.Wait()
 		*out = append(*out, sc)
 	})
 
@@ -203,7 +211,13 @@ func VirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	}
 
-	return siteCollector.Visit("https://virtualrealporn.com/")
+	siteCollector.Visit("https://virtualrealporn.com/")
+
+	siteCollector.Wait()
+	sceneCollector.Wait()
+
+	wg.Done()
+	return nil
 }
 
 func init() {

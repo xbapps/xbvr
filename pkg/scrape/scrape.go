@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 
 	"github.com/ProtonMail/go-appdir"
 )
@@ -14,13 +15,17 @@ import (
 var appDir string
 var cacheDir string
 
+// These should be configurable by the user... not sure how yet
+var maxCollyThreads = 1
+var maxCollySubThreads = 1
+
 var siteCacheDir string
 var sceneCacheDir string
 var scrapers []Scraper
 
 var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
 
-type scraperFunc func([]string, *[]ScrapedScene) error
+type scraperFunc func(*sync.WaitGroup, []string, *[]ScrapedScene) error
 
 type Scraper struct {
 	ID      string
@@ -52,6 +57,11 @@ func registerScraper(id string, name string, f scraperFunc) {
 	s.Name = name
 	s.Scrape = f
 	scrapers = append(scrapers, s)
+}
+
+func SetMaxThreads(mainThreads int, subThreads int) {
+	maxCollyThreads = mainThreads
+	maxCollySubThreads = subThreads
 }
 
 func GetScrapers() []Scraper {

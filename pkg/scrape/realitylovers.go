@@ -4,6 +4,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gocolly/colly"
@@ -13,7 +14,7 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-func RealityLovers(knownScenes []string, out *[]ScrapedScene) error {
+func RealityLovers(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
 	const maxRetries = 15
 
 	sceneCollector := colly.NewCollector(
@@ -125,6 +126,9 @@ func RealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 		})
 	}
 
+	sceneCollector.Wait()
+
+	wg.Done()
 	return nil
 }
 

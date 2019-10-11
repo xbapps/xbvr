@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -12,18 +13,22 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func NaughtyAmericaVR(knownScenes []string, out *[]ScrapedScene) error {
+func NaughtyAmericaVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.naughtyamerica.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("www.naughtyamerica.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -141,7 +146,13 @@ func NaughtyAmericaVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://www.naughtyamerica.com/vr-porn")
+	siteCollector.Visit("https://www.naughtyamerica.com/vr-porn")
+
+	siteCollector.Wait()
+	sceneCollector.Wait()
+
+	wg.Done()
+	return nil
 }
 
 func init() {

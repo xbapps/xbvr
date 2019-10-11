@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
@@ -12,18 +13,22 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func MilfVR(knownScenes []string, out *[]ScrapedScene) error {
+func MilfVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.milfvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("www.milfvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -116,7 +121,13 @@ func MilfVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://www.milfvr.com/videos")
+	siteCollector.Visit("https://www.milfvr.com/videos")
+
+	siteCollector.Wait()
+	sceneCollector.Wait()
+
+	wg.Done()
+	return nil
 }
 
 func init() {

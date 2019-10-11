@@ -4,6 +4,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -24,18 +25,22 @@ func isGoodTag(lookup string) bool {
 	return true
 }
 
-func LethalHardcoreSite(knownScenes []string, out *[]ScrapedScene, URL string) error {
+func LethalHardcoreSite(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene, URL string) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("lethalhardcorevr.com", "whorecraftvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("lethalhardcorevr.com", "whorecraftvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -138,15 +143,20 @@ func LethalHardcoreSite(knownScenes []string, out *[]ScrapedScene, URL string) e
 	})
 
 	siteCollector.Visit(URL)
+
+	siteCollector.Wait()
+	sceneCollector.Wait()
+
+	wg.Done()
 	return nil
 }
 
-func WhorecraftVR(knownScenes []string, out *[]ScrapedScene) error {
-	return LethalHardcoreSite(knownScenes, out, "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
+func WhorecraftVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+	return LethalHardcoreSite(wg, knownScenes, out, "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
 }
 
-func LethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
-	return LethalHardcoreSite(knownScenes, out, "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
+func LethalHardcoreVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+	return LethalHardcoreSite(wg, knownScenes, out, "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
 }
 
 

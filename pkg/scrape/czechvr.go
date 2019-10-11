@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -11,19 +12,23 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func CzechVR(knownScenes []string, out *[]ScrapedScene) error {
+func CzechVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.czechvrnetwork.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
 		colly.MaxDepth(5),
+		colly.Async(true),
 	)
+	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("www.czechvrnetwork.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -144,6 +149,10 @@ func CzechVR(knownScenes []string, out *[]ScrapedScene) error {
 
 	siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos?next=1")
 
+	siteCollector.Wait()
+	sceneCollector.Wait()
+
+	wg.Done()
 	return nil
 }
 

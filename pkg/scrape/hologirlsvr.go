@@ -4,24 +4,29 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
 )
 
-func HoloGirlsVR(knownScenes []string, out *[]ScrapedScene) error {
+func HoloGirlsVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.hologirlsvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("www.hologirlsvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
+		colly.Async(true),
 	)
+	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -98,7 +103,13 @@ func HoloGirlsVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://www.hologirlsvr.com/Scenes")
+	siteCollector.Visit("https://www.hologirlsvr.com/Scenes")
+
+	siteCollector.Wait()
+	sceneCollector.Wait()
+
+	wg.Done()
+	return nil
 }
 
 func init() {
