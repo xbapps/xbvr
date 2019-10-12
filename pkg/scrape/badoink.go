@@ -12,25 +12,21 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func BadoinkSite(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene, URL string) error {
+func BadoinkSite(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene, URL string) error {
+	defer wg.Done()
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	trailerCollector := sceneCollector.Clone()
-	trailerCollector.Async = false
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -148,7 +144,7 @@ func BadoinkSite(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene, 
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.pagination a`, func(e *colly.HTMLElement) {
@@ -167,30 +163,26 @@ func BadoinkSite(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene, 
 
 	siteCollector.Visit(URL)
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 
-func BadoinkVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func BadoinkVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
 	return BadoinkSite(wg, knownScenes, out, "https://badoinkvr.com/vrpornvideos")
 }
 
-func B18VR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func B18VR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
 	return BadoinkSite(wg, knownScenes, out, "https://18vr.com/vrpornvideos")
 }
 
-func VRCosplayX(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func VRCosplayX(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
 	return BadoinkSite(wg, knownScenes, out, "https://vrcosplayx.com/cosplaypornvideos")
 }
 
-func BabeVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func BabeVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
 	return BadoinkSite(wg, knownScenes, out, "https://babevr.com/vrpornvideos")
 }
 
-func KinkVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func KinkVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
 	return BadoinkSite(wg, knownScenes, out, "https://kinkvr.com/bdsm-vr-videos")
 }
 

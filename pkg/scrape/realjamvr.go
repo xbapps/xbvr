@@ -14,24 +14,21 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func RealJamVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func RealJamVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
 	const maxRetries = 15
 
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("realjamvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("realjamvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		attempt := r.Ctx.GetAny("attempt")
@@ -140,7 +137,7 @@ func RealJamVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) er
 			sc.Filenames = append(sc.Filenames, strings.ReplaceAll(f, " ", "_"))
 		}
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`#pagination a`, func(e *colly.HTMLElement) {
@@ -159,10 +156,6 @@ func RealJamVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) er
 
 	siteCollector.Visit("https://realjamvr.com/virtualreality/list")
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 

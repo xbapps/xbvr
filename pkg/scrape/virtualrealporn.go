@@ -14,31 +14,27 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-func VirtualRealPorn(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func VirtualRealPorn(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualrealporn.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualrealporn.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	castCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualrealporn.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
 		colly.AllowURLRevisit(),
-		colly.Async(true),
 	)
-	castCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollySubThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -152,8 +148,7 @@ func VirtualRealPorn(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedSce
 			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
 		}
 
-		castCollector.Wait()
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	castCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -213,10 +208,6 @@ func VirtualRealPorn(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedSce
 
 	siteCollector.Visit("https://virtualrealporn.com/")
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 

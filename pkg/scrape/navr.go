@@ -13,14 +13,14 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func NaughtyAmericaVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func NaughtyAmericaVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.naughtyamerica.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("www.naughtyamerica.com"),
@@ -28,7 +28,6 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedSc
 		colly.UserAgent(userAgent),
 		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -129,7 +128,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedSc
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`ul[class=pagination] li a`, func(e *colly.HTMLElement) {
@@ -148,10 +147,6 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedSc
 
 	siteCollector.Visit("https://www.naughtyamerica.com/vr-porn")
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 

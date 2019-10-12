@@ -12,22 +12,20 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func VirtualTaboo(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func VirtualTaboo(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualtaboo.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualtaboo.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -109,7 +107,7 @@ func VirtualTaboo(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene)
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`ul.pagination a`, func(e *colly.HTMLElement) {
@@ -128,10 +126,6 @@ func VirtualTaboo(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene)
 
 	siteCollector.Visit("https://virtualtaboo.com/videos")
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 

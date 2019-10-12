@@ -13,22 +13,20 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func SexBabesVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func SexBabesVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("sexbabesvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("sexbabesvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -113,7 +111,7 @@ func SexBabesVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) e
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.pager li.is-active a`, func(e *colly.HTMLElement) {
@@ -132,10 +130,6 @@ func SexBabesVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) e
 
 	siteCollector.Visit("https://sexbabesvr.com/virtualreality/list")
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 

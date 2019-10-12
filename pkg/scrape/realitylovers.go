@@ -14,7 +14,8 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-func RealityLovers(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func RealityLovers(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
 	const maxRetries = 15
 
 	sceneCollector := colly.NewCollector(
@@ -96,7 +97,7 @@ func RealityLovers(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene
 			sc.Synopsis = synopsis
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	// Request scenes via REST API
@@ -126,9 +127,6 @@ func RealityLovers(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene
 		})
 	}
 
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 

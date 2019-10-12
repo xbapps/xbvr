@@ -11,22 +11,20 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func HoloGirlsVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func HoloGirlsVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.hologirlsvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("www.hologirlsvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -86,7 +84,7 @@ func HoloGirlsVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) 
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.pagination-container li a`, func(e *colly.HTMLElement) {
@@ -105,10 +103,6 @@ func HoloGirlsVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) 
 
 	siteCollector.Visit("https://www.hologirlsvr.com/Scenes")
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 

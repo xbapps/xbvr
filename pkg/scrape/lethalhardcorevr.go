@@ -25,22 +25,20 @@ func isGoodTag(lookup string) bool {
 	return true
 }
 
-func LethalHardcoreSite(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene, URL string) error {
+func LethalHardcoreSite(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene, URL string) error {
+	defer wg.Done()
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("lethalhardcorevr.com", "whorecraftvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("lethalhardcorevr.com", "whorecraftvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -130,7 +128,7 @@ func LethalHardcoreSite(wg *sync.WaitGroup, knownScenes []string, out *[]Scraped
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.poster-grid-item a`, func(e *colly.HTMLElement) {
@@ -144,18 +142,14 @@ func LethalHardcoreSite(wg *sync.WaitGroup, knownScenes []string, out *[]Scraped
 
 	siteCollector.Visit(URL)
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 
-func WhorecraftVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func WhorecraftVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
 	return LethalHardcoreSite(wg, knownScenes, out, "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
 }
 
-func LethalHardcoreVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func LethalHardcoreVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
 	return LethalHardcoreSite(wg, knownScenes, out, "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
 }
 

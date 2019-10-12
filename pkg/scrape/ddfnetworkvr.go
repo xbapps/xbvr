@@ -12,23 +12,21 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func DDFNetworkVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func DDFNetworkVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("ddfnetworkvr.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
 		colly.MaxDepth(5),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("ddfnetworkvr.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -108,7 +106,7 @@ func DDFNetworkVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene)
 		// Filenames
 		// NOTE: no way to guess filename
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`ul.pagination a.page-link`, func(e *colly.HTMLElement) {
@@ -127,10 +125,6 @@ func DDFNetworkVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene)
 
 	siteCollector.Visit("https://ddfnetworkvr.com/")
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 

@@ -27,10 +27,8 @@ func CleanTags() {
 	CountTags()
 }
 
-func runScrapers(knownScenes []string) []scrape.ScrapedScene {
+func runScrapers(knownScenes []string, collectedScenes chan<- scrape.ScrapedScene) {
 	os.RemoveAll(filepath.Join(cacheDir, "site_cache"))
-
-	var collectedScenes []scrape.ScrapedScene
 
 	scrapers := scrape.GetScrapers()
 
@@ -42,22 +40,20 @@ func runScrapers(knownScenes []string) []scrape.ScrapedScene {
 	tlog := log.WithField("task", "scrape")
 
 	var wg sync.WaitGroup
+	var enabledSites []Site
 
 	if len(sites) > 0 {
 		for _, site := range sites {
 			for _, scraper := range scrapers {
 				if site.ID == scraper.ID {
-					tlog.Infof("Scraping %s", scraper.Name)
 					wg.Add(1)
+					enabledSites = append(enabledSites, site)
+					tlog.Infof("Scraping %s", scraper.Name)
 					if enableThreading != "" {
-						scrape.SetMaxThreads(6, 2)
-						go scraper.Scrape(&wg, knownScenes, &collectedScenes)
+						go scraper.Scrape(&wg, knownScenes, collectedScenes)
 					} else {
-						scrape.SetMaxThreads(2, 2)
-						scraper.Scrape(&wg, knownScenes, &collectedScenes)
+						scraper.Scrape(&wg, knownScenes, collectedScenes)
 					}
-					site.LastUpdate = time.Now()
-					site.Save()
 				}
 			}
 		}
@@ -66,8 +62,34 @@ func runScrapers(knownScenes []string) []scrape.ScrapedScene {
 	}
 
 	wg.Wait()
+	for _, site := range enabledSites {
+		site.LastUpdate = time.Now()
+		site.Save()
+	}
+}
 
-	return collectedScenes
+func sceneSliceAppender(collectedScenes *[]scrape.ScrapedScene, scenes <-chan scrape.ScrapedScene) {
+	tlog := log.WithField("task", "scrape")
+    for scene := range scenes {
+		tlog.Infof("Appending scene (%v)", scene.Title)
+        *collectedScenes = append(*collectedScenes, scene)
+    }
+}
+
+func sceneDBWriter(wg *sync.WaitGroup, scenes <-chan scrape.ScrapedScene) {
+	defer wg.Done()
+
+	db, _ := GetDB()
+	defer db.Close()
+    for scene := range scenes {
+		if os.Getenv("DEBUG") != "" {
+			log.Printf("Saving %v", scene.SceneID)
+		}
+		SceneCreateUpdateFromExternal(db, scene)
+		if os.Getenv("DEBUG") != "" {
+			log.Printf("Saved %v", scene.SceneID)
+		}
+	}
 }
 
 func Scrape() {
@@ -80,29 +102,29 @@ func Scrape() {
 		var scenes []Scene
 		db, _ := GetDB()
 		db.Find(&scenes)
+		db.Close()
 
 		var knownScenes []string
 		for i := range scenes {
 			knownScenes = append(knownScenes, scenes[i].SceneURL)
 		}
 
+		collectedScenes := make(chan scrape.ScrapedScene, 250)
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go sceneDBWriter(&wg, collectedScenes)
+
 		// Start scraping
-		collectedScenes := runScrapers(knownScenes)
+		runScrapers(knownScenes, collectedScenes)
+		tlog.Infof("Scraped new scenes in %v", time.Now().Sub(t0))
 
-		if len(collectedScenes) > 0 {
-			tlog.Infof("Scraped %v new scenes in %v", len(collectedScenes), time.Now().Sub(t0))
+		// Notify DB Writer threads that there are no more scenes
+		close(collectedScenes)
 
-			t0 := time.Now()
-			db, _ := GetDB()
-			for i := range collectedScenes {
-				SceneCreateUpdateFromExternal(db, collectedScenes[i])
-			}
-			db.Close()
-
-			tlog.Infof("Saved %v new scenes in %v", len(collectedScenes), time.Now().Sub(t0))
-		} else {
-			tlog.Infof("No new scenes scraped")
-		}
+		// Wait for DB Writer threads to complete
+		wg.Wait()
+		tlog.Infof("Saved new scenes in %v", time.Now().Sub(t0))
 	}
 
 	RemoveLock("scrape")
@@ -158,12 +180,17 @@ func ExportBundle() {
 		tlog.Info("Exporting content bundle...")
 
 		var knownScenes []string
-		collectedScenes := runScrapers(knownScenes)
+		collectedScenes := make(chan scrape.ScrapedScene, 100)
+
+		var scrapedScenes []scrape.ScrapedScene
+		go sceneSliceAppender(&scrapedScenes, collectedScenes)
+
+		runScrapers(knownScenes, collectedScenes)
 
 		out := ContentBundle{
 			Timestamp:     time.Now().UTC(),
 			BundleVersion: "1",
-			Scenes:        collectedScenes,
+			Scenes:        scrapedScenes,
 		}
 
 		content, err := json.MarshalIndent(out, "", " ")

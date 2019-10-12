@@ -12,23 +12,21 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func CzechVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func CzechVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.czechvrnetwork.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
 		colly.MaxDepth(5),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("www.czechvrnetwork.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -130,7 +128,7 @@ func CzechVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) erro
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div#StrankovaniDesktop span.stred a,div#StrankovaniDesktopHome span.stred a`, func(e *colly.HTMLElement) {
@@ -149,10 +147,6 @@ func CzechVR(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) erro
 
 	siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos?next=1")
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 

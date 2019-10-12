@@ -13,22 +13,20 @@ import (
 	"mvdan.cc/xurls/v2"
 )
 
-func VRLatina(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) error {
+func VRLatina(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+	defer wg.Done()
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("vrlatina.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	siteCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	sceneCollector := colly.NewCollector(
 		colly.AllowedDomains("vrlatina.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
-	sceneCollector.Limit(&colly.LimitRule{DomainGlob: "*", Parallelism: maxCollyThreads})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
 		log.Println("visiting", r.URL.String())
@@ -101,7 +99,7 @@ func VRLatina(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) err
 			sc.SceneID = fmt.Sprintf("vrlatina-%v", sc.SiteID)
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`span.pagination-wrap-inn a`, func(e *colly.HTMLElement) {
@@ -120,10 +118,6 @@ func VRLatina(wg *sync.WaitGroup, knownScenes []string, out *[]ScrapedScene) err
 
 	siteCollector.Visit("https://vrlatina.com/videos/?typ=newest")
 
-	siteCollector.Wait()
-	sceneCollector.Wait()
-
-	wg.Done()
 	return nil
 }
 
