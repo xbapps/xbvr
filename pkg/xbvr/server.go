@@ -150,6 +150,10 @@ func StartServer(version, commit, branch, date string) {
 
 	log.Infof("XBVR %v (build date %v) starting...", version, date)
 
+	if os.Getenv("XBVR_THREADING") != "" {
+		log.Infof("Scraper threading mode enabled")
+	}
+
 	// DMS
 	go StartDMS()
 

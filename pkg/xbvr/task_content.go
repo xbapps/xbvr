@@ -27,27 +27,31 @@ func CleanTags() {
 	CountTags()
 }
 
-func runScrapers(knownScenes []string, collectedScenes chan<- scrape.ScrapedScene) {
+func runScrapers(knownScenes []string, scrapeAll bool, collectedScenes chan<- scrape.ScrapedScene) {
 	os.RemoveAll(filepath.Join(cacheDir, "site_cache"))
 
 	scrapers := scrape.GetScrapers()
 
 	var sites []Site
 	db, _ := GetDB()
-	db.Where(&Site{IsEnabled: true}).Find(&sites)
+	if scrapeAll {
+		db.Find(&sites)
+	} else {
+		db.Where(&Site{IsEnabled: true}).Find(&sites)
+	}
 	db.Close()
 
 	tlog := log.WithField("task", "scrape")
 
 	var wg sync.WaitGroup
-	var enabledSites []Site
+	var scrapedSites []Site
 
 	if len(sites) > 0 {
 		for _, site := range sites {
 			for _, scraper := range scrapers {
 				if site.ID == scraper.ID {
 					wg.Add(1)
-					enabledSites = append(enabledSites, site)
+					scrapedSites = append(scrapedSites, site)
 					tlog.Infof("Scraping %s", scraper.Name)
 					if enableThreading != "" {
 						go scraper.Scrape(&wg, knownScenes, collectedScenes)
@@ -62,7 +66,7 @@ func runScrapers(knownScenes []string, collectedScenes chan<- scrape.ScrapedScen
 	}
 
 	wg.Wait()
-	for _, site := range enabledSites {
+	for _, site := range scrapedSites {
 		site.LastUpdate = time.Now()
 		site.Save()
 	}
@@ -92,7 +96,7 @@ func sceneDBWriter(wg *sync.WaitGroup, scenes <-chan scrape.ScrapedScene) {
 	}
 }
 
-func Scrape() {
+func Scrape(scrapeAll bool) {
 	if !CheckLock("scrape") {
 		CreateLock("scrape")
 		t0 := time.Now()
@@ -116,7 +120,7 @@ func Scrape() {
 		go sceneDBWriter(&wg, collectedScenes)
 
 		// Start scraping
-		runScrapers(knownScenes, collectedScenes)
+		runScrapers(knownScenes, scrapeAll, collectedScenes)
 		tlog.Infof("Scraped new scenes in %v", time.Now().Sub(t0))
 
 		// Notify DB Writer threads that there are no more scenes
@@ -185,7 +189,7 @@ func ExportBundle() {
 		var scrapedScenes []scrape.ScrapedScene
 		go sceneSliceAppender(&scrapedScenes, collectedScenes)
 
-		runScrapers(knownScenes, collectedScenes)
+		runScrapers(knownScenes, false, collectedScenes)
 
 		out := ContentBundle{
 			Timestamp:     time.Now().UTC(),

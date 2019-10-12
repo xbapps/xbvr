@@ -20,7 +20,10 @@
             </b-table-column>
           </template>
           <template slot="top-left">
-            <div class="button is-button is-primary" v-on:click="taskScrape()">Run scraper</div>
+            <div class="buttons">
+              <a class="button is-primary" v-on:click="taskScrape()">Run Selected Scrapers</a>
+              <a class="button is-primary" v-on:click="taskScrapeAll()">Run All Scrapers</a>
+            </div>
           </template>
         </b-table>
       </div>
@@ -75,6 +78,9 @@
     methods: {
       taskScrape() {
         ky.get(`/api/task/scrape`);
+      },
+      taskScrapeAll() {
+        ky.get(`/api/task/scrape/all`);
       },
       importContent() {
         if (this.bundleURL !== "") {
