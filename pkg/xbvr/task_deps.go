@@ -12,11 +12,12 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/vansante/go-ffprobe"
 	"gopkg.in/resty.v1"
+	"github.com/xbapps/xbvr/pkg/common"
 )
 
 func CheckDependencies() {
 	// Check ffprobe
-	ffprobePath := filepath.Join(binDir, "ffprobe")
+	ffprobePath := filepath.Join(common.BinDir, "ffprobe")
 	if runtime.GOOS == "windows" {
 		ffprobePath = ffprobePath + ".exe"
 	}
@@ -26,7 +27,7 @@ func CheckDependencies() {
 	}
 
 	// Check ffmpeg
-	ffmpegPath := filepath.Join(binDir, "ffmpeg")
+	ffmpegPath := filepath.Join(common.BinDir, "ffmpeg")
 	if runtime.GOOS == "windows" {
 		ffmpegPath = ffmpegPath + ".exe"
 	}
@@ -79,17 +80,17 @@ func downloadFfbinaries(tool string) error {
 
 	url := gjson.Get(resp.String(), "bin."+platformId+"."+tool)
 
-	err = downloadFile(url.String(), filepath.Join(binDir, tool+".zip"))
+	err = downloadFile(url.String(), filepath.Join(common.BinDir, tool+".zip"))
 	if err != nil {
 		return err
 	}
 
-	err = archiver.Unarchive(filepath.Join(binDir, tool+".zip"), binDir)
+	err = archiver.Unarchive(filepath.Join(common.BinDir, tool+".zip"), common.BinDir)
 	if err != nil {
 		return err
 	}
 
-	err = os.Remove(filepath.Join(binDir, tool+".zip"))
+	err = os.Remove(filepath.Join(common.BinDir, tool+".zip"))
 
 	return nil
 }

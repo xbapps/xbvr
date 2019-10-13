@@ -8,6 +8,7 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 type RequestToggleList struct {
@@ -25,8 +26,8 @@ type RequestSceneRating struct {
 }
 
 type ResponseGetScenes struct {
-	Results int     `json:"results"`
-	Scenes  []Scene `json:"scenes"`
+	Results int     		`json:"results"`
+	Scenes  []models.Scene 	`json:"scenes"`
 }
 
 type ResponseGetFilters struct {
@@ -54,11 +55,11 @@ func (i SceneResource) WebService() *restful.WebService {
 
 	ws.Route(ws.POST("/cuepoint/{scene-id}").To(i.addSceneCuepoint).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(Scene{}))
+		Writes(models.Scene{}))
 
 	ws.Route(ws.POST("/rate/{scene-id}").To(i.rateScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(Scene{}))
+		Writes(models.Scene{}))
 
 	ws.Route(ws.POST("/toggle").To(i.toggleList).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -80,27 +81,27 @@ func (i SceneResource) WebService() *restful.WebService {
 }
 
 func (i SceneResource) getFiltersAll(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var tags []Tag
-	db.Model(&Tag{}).Order("name").Find(&tags)
+	var tags []models.Tag
+	db.Model(&models.Tag{}).Order("name").Find(&tags)
 
 	var outTags []string
 	for i := range tags {
 		outTags = append(outTags, tags[i].Name)
 	}
 
-	var actors []Actor
-	db.Model(&Actor{}).Order("name").Find(&actors)
+	var actors []models.Actor
+	db.Model(&models.Actor{}).Order("name").Find(&actors)
 
 	var outCast []string
 	for i := range actors {
 		outCast = append(outCast, actors[i].Name)
 	}
 
-	var scenes []Scene
-	db.Model(&Scene{}).Order("site").Group("site").Find(&scenes)
+	var scenes []models.Scene
+	db.Model(&models.Scene{}).Order("site").Group("site").Find(&scenes)
 
 	var outSites []string
 	for i := range scenes {
@@ -113,11 +114,11 @@ func (i SceneResource) getFiltersAll(req *restful.Request, resp *restful.Respons
 }
 
 func (i SceneResource) getFiltersForState(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
 	// Get all accessible scenes
-	var scenes []Scene
+	var scenes []models.Scene
 	tx := db.
 		Model(&scenes).
 		Preload("Cast").
@@ -197,10 +198,10 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		offset = q_offset
 	}
 
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var scenes []Scene
+	var scenes []models.Scene
 	tx := db.
 		Model(&scenes).
 		Preload("Cast").
@@ -322,10 +323,10 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var scene Scene
+	var scene models.Scene
 	err = scene.GetIfExist(r.SceneID)
 	if err != nil {
 		log.Error(err)
@@ -346,10 +347,10 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 func (i SceneResource) searchSceneDB(req *restful.Request, resp *restful.Response) {
 	q := "%" + req.QueryParameter("q") + "%"
 
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var scenes []Scene
+	var scenes []models.Scene
 	db.Raw(`select scenes.*
 			from scenes
 					 left join scene_tags on scene_tags.scene_id = scenes.id
@@ -375,7 +376,7 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 	q = strings.Replace(q, "+", " ", -1)
 	q = strings.Replace(q, "-", " ", -1)
 
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
 	idx := NewIndex("scenes")
@@ -395,9 +396,9 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 		return
 	}
 
-	var scenes []Scene
+	var scenes []models.Scene
 	for _, v := range searchResults.Hits {
-		var scene Scene
+		var scene models.Scene
 		err := scene.GetIfExist(v.ID)
 		if err != nil {
 			continue
@@ -424,11 +425,11 @@ func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Resp
 		return
 	}
 
-	var scene Scene
-	db, _ := GetDB()
+	var scene models.Scene
+	db, _ := models.GetDB()
 	err = scene.GetIfExistByPK(uint(sceneId))
 	if err == nil {
-		t := SceneCuepoint{
+		t := models.SceneCuepoint{
 			SceneID:   scene.ID,
 			TimeStart: r.TimeStart,
 			Name:      r.Name,
@@ -456,8 +457,8 @@ func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
 		return
 	}
 
-	var scene Scene
-	db, _ := GetDB()
+	var scene models.Scene
+	db, _ := models.GetDB()
 	err = scene.GetIfExistByPK(uint(sceneId))
 	if err == nil {
 		scene.StarRating = r.Rating

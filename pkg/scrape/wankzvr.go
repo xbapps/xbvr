@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -10,10 +9,12 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func WankzVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
+	logScrapeStart("wankzvr", "WankzVR")
 
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.wankzvr.com"),
@@ -36,7 +37,7 @@ func WankzVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) 
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Wankz"
 		sc.Site = "WankzVR"
@@ -123,6 +124,10 @@ func WankzVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) 
 
 	siteCollector.Visit("https://www.wankzvr.com/videos")
 
+	if updateSite {
+		updateSiteLastUpdate("wankzvr")
+	}
+	logScrapeFinished("wankzvr", "WankzVR")
 	return nil
 }
 

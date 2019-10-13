@@ -47,6 +47,20 @@
           this.$store.state.messages.lastScrapeMessage = dataArr.argsDict;
         }
 
+        if (dataArr.argsDict.data.task === "scraperProgress") {
+          if (dataArr.argsDict.message === "DONE") {
+            this.$store.state.messages.runningScrapers = [];
+          }
+
+          if (dataArr.argsDict.data.started) {
+            this.$store.state.messages.runningScrapers.push(dataArr.argsDict.data.scraperID);
+          }
+
+          if (dataArr.argsDict.data.completed) {
+            this.$store.state.messages.runningScrapers.splice(this.$store.state.messages.runningScrapers.indexOf(dataArr.argsDict.data.scraperID), 1);
+          }
+        }
+
         if (dataArr.argsDict.data.task === "rescan") {
           this.$store.state.messages.lastRescanMessage = dataArr.argsDict;
         }

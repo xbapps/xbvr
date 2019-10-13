@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -10,10 +9,12 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TmwVRnet(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
+	logScrapeStart("tmwvrnet", "TmwVRnet")
 
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("tmwvrnet.com"),
@@ -37,7 +38,7 @@ func TmwVRnet(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene)
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "TeenMegaWorld"
 		sc.Site = "TmwVRnet"
@@ -119,6 +120,10 @@ func TmwVRnet(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene)
 
 	siteCollector.Visit("https://tmwvrnet.com/categories/movies.html")
 
+	if updateSite {
+		updateSiteLastUpdate("tmwvrnet")
+	}
+	logScrapeFinished("tmwvrnet", "TmwVRnet")
 	return nil
 }
 

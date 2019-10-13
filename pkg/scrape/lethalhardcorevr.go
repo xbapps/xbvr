@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"log"
 	"regexp"
 	"strings"
 	"sync"
@@ -9,6 +8,7 @@ import (
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 func isGoodTag(lookup string) bool {
@@ -25,8 +25,9 @@ func isGoodTag(lookup string) bool {
 	return true
 }
 
-func LethalHardcoreSite(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene, URL string) error {
+func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
 	defer wg.Done()
+	logScrapeStart(scraperID, siteID)
 
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("lethalhardcorevr.com", "whorecraftvr.com"),
@@ -49,19 +50,13 @@ func LethalHardcoreSite(wg *sync.WaitGroup, knownScenes []string, out chan<- Scr
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Celestial Productions"
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Site ID
-		if e.Request.URL.Host == "whorecraftvr.com" {
-			sc.Site = "WhorecraftVR"
-		}
-
-		if e.Request.URL.Host == "lethalhardcorevr.com" {
-			sc.Site = "LethalHardcoreVR"
-		}
+		sc.Site = siteID
 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "/")
@@ -142,15 +137,19 @@ func LethalHardcoreSite(wg *sync.WaitGroup, knownScenes []string, out chan<- Scr
 
 	siteCollector.Visit(URL)
 
+	if updateSite {
+		updateSiteLastUpdate(scraperID)
+	}
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
-func WhorecraftVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
-	return LethalHardcoreSite(wg, knownScenes, out, "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
+func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "lethalhardcorevr", "LethalHardcoreVR", "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
 }
 
-func LethalHardcoreVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
-	return LethalHardcoreSite(wg, knownScenes, out, "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
+func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "whorecraftvr", "WhorecraftVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
 }
 
 

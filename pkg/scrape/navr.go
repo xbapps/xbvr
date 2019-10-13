@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -11,10 +10,12 @@ import (
 	"github.com/nleeper/goment"
 	"github.com/robertkrimen/otto"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func NaughtyAmericaVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
+	logScrapeStart("naughtyamericavr", "NaughtyAmerica VR")
 
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.naughtyamerica.com"),
@@ -38,7 +39,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, knownScenes []string, out chan<- Scrap
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "NaughtyAmerica"
 		sc.Site = "NaughtyAmerica VR"
@@ -147,6 +148,10 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, knownScenes []string, out chan<- Scrap
 
 	siteCollector.Visit("https://www.naughtyamerica.com/vr-porn")
 
+	if updateSite {
+		updateSiteLastUpdate("naughtyamericavr")
+	}
+	logScrapeFinished("naughtyamericavr", "NaughtyAmerica VR")
 	return nil
 }
 

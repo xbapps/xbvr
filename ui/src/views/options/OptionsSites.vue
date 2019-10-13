@@ -13,7 +13,10 @@
               {{props.row.name}}
             </b-table-column>
             <b-table-column field="last_update" label="Last update" sortable>
-              <span v-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
+              <span v-if="runningScrapers.includes(props.row.id)">
+                <b-progress type="is-primary"></b-progress>
+              </span>
+              <span v-else-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
                 {{formatDistanceToNow(parseISO(props.row.last_update))}} ago
               </span>
               <span v-else>Never</span>
@@ -102,6 +105,10 @@
       },
       lock() {
         return this.$store.state.messages.lockScrape;
+      },
+      runningScrapers() {
+        this.$store.dispatch("optionsSites/load");
+        return this.$store.state.messages.runningScrapers;
       }
     }
   }

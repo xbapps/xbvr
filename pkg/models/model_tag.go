@@ -1,4 +1,4 @@
-package xbvr
+package models
 
 import (
 	"strings"
@@ -21,7 +21,7 @@ func (t *Tag) Save() error {
 	return err
 }
 
-func convertTag(t string) string {
+func ConvertTag(t string) string {
 	t = strings.ToLower(t)
 
 	if funk.Contains([]string{"180", "60fps", "60 fps", "5k", "5k+", "big dick", "big cocks", "axaxqxrrysrwqua", "girl-boy", "virtual reality", "vr porn"}, t) {

@@ -1,4 +1,4 @@
-package xbvr
+package models
 
 import (
 	"os"

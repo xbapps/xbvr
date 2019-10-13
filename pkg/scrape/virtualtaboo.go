@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -10,10 +9,12 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VirtualTaboo(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
+	logScrapeStart("virtualtaboo", "VirtualTaboo")
 
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualtaboo.com"),
@@ -36,7 +37,7 @@ func VirtualTaboo(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedSc
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VirtualTaboo"
 		sc.Site = "VirtualTaboo"
@@ -126,6 +127,10 @@ func VirtualTaboo(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedSc
 
 	siteCollector.Visit("https://virtualtaboo.com/videos")
 
+	if updateSite {
+		updateSiteLastUpdate("virtualtaboo")
+	}
+	logScrapeFinished("virtualtaboo", "VirtualTaboo")
 	return nil
 }
 

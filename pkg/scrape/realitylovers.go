@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"log"
 	"regexp"
 	"strings"
 	"sync"
@@ -12,10 +11,12 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"gopkg.in/resty.v1"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func RealityLovers(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
+	logScrapeStart("realitylovers", "RealityLovers")
 	const maxRetries = 15
 
 	sceneCollector := colly.NewCollector(
@@ -51,7 +52,7 @@ func RealityLovers(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedS
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "RealityLovers"
 		sc.Site = "RealityLovers"
@@ -127,6 +128,10 @@ func RealityLovers(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedS
 		})
 	}
 
+	if updateSite {
+		updateSiteLastUpdate("realitylovers")
+	}
+	logScrapeFinished("realitylovers", "RealityLovers")
 	return nil
 }
 

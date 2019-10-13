@@ -1,16 +1,16 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func ScrapeR18(knownScenes []string, out *[]ScrapedScene, queryString string) error {
+func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString string) error {
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.r18.com"),
 		// colly.CacheDir(siteCacheDir),
@@ -32,7 +32,7 @@ func ScrapeR18(knownScenes []string, out *[]ScrapedScene, queryString string) er
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "JAVR"
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]

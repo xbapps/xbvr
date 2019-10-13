@@ -9,6 +9,7 @@ import (
 
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 type MatchFileRequest struct {
@@ -40,17 +41,17 @@ func (i FilesResource) WebService() *restful.WebService {
 }
 
 func (i FilesResource) listUnmatchedFiles(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var files []File
+	var files []models.File
 	db.Raw(`select files.* from files where files.scene_id = 0;`).Scan(&files)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, files)
 }
 
 func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
 	var r MatchFileRequest
@@ -61,15 +62,15 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	}
 
 	// Assign Scene to File
-	var scene Scene
+	var scene models.Scene
 	err = scene.GetIfExist(r.SceneID)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	var f File
-	err = db.Where(&File{ID: r.FileID}).First(&f).Error
+	var f models.File
+	err = db.Where(&models.File{ID: r.FileID}).First(&f).Error
 	if err == nil {
 		f.SceneID = scene.ID
 		f.Save()
@@ -105,10 +106,10 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	var file File
-	var scene Scene
-	db, _ := GetDB()
-	err = db.Where(&File{ID: uint(fileId)}).First(&file).Error
+	var file models.File
+	var scene models.Scene
+	db, _ := models.GetDB()
+	err = db.Where(&models.File{ID: uint(fileId)}).First(&file).Error
 	if err == nil {
 		err := os.Remove(filepath.Join(file.Path, file.Filename))
 		if err == nil {

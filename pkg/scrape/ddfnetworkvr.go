@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -10,10 +9,12 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func DDFNetworkVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
+	logScrapeStart("ddfnetworkvr", "DDFNetworkVR")
 
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("ddfnetworkvr.com"),
@@ -37,7 +38,7 @@ func DDFNetworkVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedSc
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "DDFNetwork"
 		sc.Site = "DDFNetworkVR"
@@ -125,6 +126,10 @@ func DDFNetworkVR(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedSc
 
 	siteCollector.Visit("https://ddfnetworkvr.com/")
 
+	if updateSite {
+		updateSiteLastUpdate("ddfnetworkvr")
+	}
+	logScrapeFinished("ddfnetworkvr", "DDFNetworkVR")
 	return nil
 }
 

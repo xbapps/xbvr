@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -10,10 +9,12 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRBangers(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene) error {
+func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
+	logScrapeStart("vrbangers", "VRBangers")
 
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("vrbangers.com"),
@@ -36,7 +37,7 @@ func VRBangers(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRBangers"
 		sc.Site = "VRBangers"
@@ -135,6 +136,10 @@ func VRBangers(wg *sync.WaitGroup, knownScenes []string, out chan<- ScrapedScene
 
 	siteCollector.Visit("https://vrbangers.com/videos/")
 
+	if updateSite {
+		updateSiteLastUpdate("vrbangers")
+	}
+	logScrapeFinished("vrbangers", "VRBangers")
 	return nil
 }
 
