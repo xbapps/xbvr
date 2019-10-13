@@ -40,14 +40,13 @@ func RescanVolumes() {
 			log.Infof("Scanning %v", vol[i].Path)
 
 			if vol[i].IsMounted() {
-				notAllowedFn := []string{".DS_Store", ".tmp"}
 				allowedExt := []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov"}
 
 				var procList []string
 				_ = filepath.Walk(vol[i].Path, func(path string, f os.FileInfo, err error) error {
 					if !f.Mode().IsDir() {
 						// Make sure the filename should be considered
-						if !funk.Contains(notAllowedFn, filepath.Base(path)) && funk.Contains(allowedExt, strings.ToLower(filepath.Ext(path))) {
+						if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(allowedExt, strings.ToLower(filepath.Ext(path))) {
 							var fl models.File
 							err = db.Where(&models.File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
 
