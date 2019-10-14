@@ -11,6 +11,9 @@
                 {{props.row.filename}}
                 <br/><small>{{props.row.path}}</small>
               </b-table-column>
+              <b-table-column field="created_time" label="Created" sortable style="white-space: nowrap;">
+                {{format(parseISO(props.row.created_time), "yyyy-MM-dd hh:mm:ss")}}
+              </b-table-column>
               <b-table-column field="size" label="Size" sortable style="white-space: nowrap;">
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
@@ -47,7 +50,7 @@
 
 <script>
   import prettyBytes from "pretty-bytes";
-  import {parse} from "date-fns";
+  import {format, parseISO} from "date-fns";
   import BButton from "buefy/src/components/button/Button";
 
   export default {
@@ -57,7 +60,8 @@
       return {
         files: [],
         prettyBytes,
-        parse,
+        format,
+        parseISO,
       }
     },
     computed: {
