@@ -1,17 +1,21 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TmwVRnet(knownScenes []string, out *[]ScrapedScene) error {
+func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("tmwvrnet", "TmwVRnet")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("tmwvrnet.com"),
 		colly.CacheDir(siteCacheDir),
@@ -34,7 +38,7 @@ func TmwVRnet(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "TeenMegaWorld"
 		sc.Site = "TmwVRnet"
@@ -95,7 +99,7 @@ func TmwVRnet(knownScenes []string, out *[]ScrapedScene) error {
 		// Filenames
 		// NOTE: no way to guess filename
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`ul.pagination a.in_stditem`, func(e *colly.HTMLElement) {
@@ -116,6 +120,10 @@ func TmwVRnet(knownScenes []string, out *[]ScrapedScene) error {
 
 	siteCollector.Visit("https://tmwvrnet.com/categories/movies.html")
 
+	if updateSite {
+		updateSiteLastUpdate("tmwvrnet")
+	}
+	logScrapeFinished("tmwvrnet", "TmwVRnet")
 	return nil
 }
 

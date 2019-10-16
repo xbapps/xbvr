@@ -1,17 +1,21 @@
 package scrape
 
 import (
-	"log"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func StasyQVR(knownScenes []string, out *[]ScrapedScene) error {
+func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("stasyqvr", "StasyQVR")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("stasyqvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -34,7 +38,7 @@ func StasyQVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "StasyQ"
 		sc.Site = "StasyQVR"
@@ -100,7 +104,7 @@ func StasyQVR(knownScenes []string, out *[]ScrapedScene) error {
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.pagination div.select-links a`, func(e *colly.HTMLElement) {
@@ -121,6 +125,10 @@ func StasyQVR(knownScenes []string, out *[]ScrapedScene) error {
 
 	siteCollector.Visit("https://stasyqvr.com/virtualreality/list")
 
+	if updateSite {
+		updateSiteLastUpdate("stasyqvr")
+	}
+	logScrapeFinished("stasyqvr", "StasyQVR")
 	return nil
 }
 

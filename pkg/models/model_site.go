@@ -1,9 +1,7 @@
-package xbvr
+package models
 
 import (
 	"time"
-
-	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
 type Site struct {
@@ -32,7 +30,7 @@ func InitSites() {
 	db, _ := GetDB()
 	defer db.Close()
 
-	scrapers := scrape.GetScrapers()
+	scrapers := GetScrapers()
 	for i := range scrapers {
 		var st Site
 		db.Where(&Site{ID: scrapers[i].ID}).FirstOrCreate(&st)

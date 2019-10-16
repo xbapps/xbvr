@@ -1,19 +1,23 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/robertkrimen/otto"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/resty.v1"
 )
 
-func VirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
+func VirtualRealPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("virtualrealporn", "VirtualRealPorn")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("virtualrealporn.com"),
 		colly.CacheDir(siteCacheDir),
@@ -46,7 +50,7 @@ func VirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VirtualRealPorn"
 		sc.Site = "VirtualRealPorn"
@@ -145,11 +149,11 @@ func VirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
 		}
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	castCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := e.Request.Ctx.GetAny("scene").(*ScrapedScene)
+		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 
 		var name string
 		e.ForEach(`h1.model-title`, func(id int, e *colly.HTMLElement) {
@@ -203,7 +207,13 @@ func VirtualRealPorn(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	}
 
-	return siteCollector.Visit("https://virtualrealporn.com/")
+	siteCollector.Visit("https://virtualrealporn.com/")
+
+	if updateSite {
+		updateSiteLastUpdate("virtualrealporn")
+	}
+	logScrapeFinished("virtualrealporn", "VirtualRealPorn")
+	return nil
 }
 
 func init() {

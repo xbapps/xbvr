@@ -1,4 +1,4 @@
-package xbvr
+package models
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/araddon/dateparse"
 	"github.com/jinzhu/gorm"
-	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
 // SceneCuepoint data model
@@ -137,7 +136,7 @@ func (o *Scene) GetFiles() ([]File, error) {
 	return files, nil
 }
 
-func SceneCreateUpdateFromExternal(db *gorm.DB, ext scrape.ScrapedScene) error {
+func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var o Scene
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)
 
@@ -194,7 +193,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext scrape.ScrapedScene) error {
 	// Clean & Associate Tags
 	var tmpTag Tag
 	for _, name := range ext.Tags {
-		tagClean := convertTag(name)
+		tagClean := ConvertTag(name)
 		if tagClean != "" {
 			tmpTag = Tag{}
 			db.Where(&Tag{Name: tagClean}).FirstOrCreate(&tmpTag)

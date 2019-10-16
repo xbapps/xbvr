@@ -2,21 +2,33 @@ package xbvr
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-test/deep"
+	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
 	"gopkg.in/resty.v1"
 )
 
+var enableThreading = os.Getenv("XBVR_THREADING")
+
 type ContentBundle struct {
 	Timestamp     time.Time             `json:"timestamp"`
 	BundleVersion string                `json:"bundleVersion"`
-	Scenes        []scrape.ScrapedScene `json:"scenes"`
+	Scenes        []models.ScrapedScene `json:"scenes"`
+}
+
+type ScraperStatus struct {
+	ID        string `json:"id"`
+	Completed bool   `json:"completed"`
 }
 
 func CleanTags() {
@@ -24,75 +36,122 @@ func CleanTags() {
 	CountTags()
 }
 
-func Scrape() {
-	if !CheckLock("scrape") {
-		CreateLock("scrape")
+func runScrapers(knownScenes []string, scrapeAll bool, updateSite bool, collectedScenes chan<- models.ScrapedScene) error {
+	os.RemoveAll(filepath.Join(common.CacheDir, "site_cache"))
 
-		tlog := log.WithField("task", "scrape")
+	scrapers := models.GetScrapers()
 
-		os.RemoveAll(filepath.Join(cacheDir, "site_cache"))
+	var sites []models.Site
+	db, _ := models.GetDB()
+	if scrapeAll {
+		db.Find(&sites)
+	} else {
+		db.Where(&models.Site{IsEnabled: true}).Find(&sites)
+	}
+	db.Close()
 
-		// Get all known scenes
-		var scenes []Scene
-		db, _ := GetDB()
-		db.Find(&scenes)
+	var wg sync.WaitGroup
 
-		var knownScenes []string
-		for i := range scenes {
-			knownScenes = append(knownScenes, scenes[i].SceneURL)
-		}
-
-		// Start scraping
-		var collectedScenes []scrape.ScrapedScene
-
-		scrapers := scrape.GetScrapers()
-
-		var sites []Site
-		db.Where(&Site{IsEnabled: true}).Find(&sites)
-		db.Close()
-
-		if len(sites) > 0 {
-			for _, site := range sites {
-				for _, scraper := range scrapers {
-					if site.ID == scraper.ID {
-						tlog.Infof("Scraping %s", scraper.Name)
-						scraper.Scrape(knownScenes, &collectedScenes)
-						site.LastUpdate = time.Now()
-						site.Save()
+	if len(sites) > 0 {
+		for _, site := range sites {
+			for _, scraper := range scrapers {
+				if site.ID == scraper.ID {
+					wg.Add(1)
+					if enableThreading != "" {
+						go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes)
+					} else {
+						scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes)
 					}
 				}
 			}
-		} else {
-			tlog.Info("No sites enabled!")
+		}
+	} else {
+		return errors.New("No sites enabled!")
+	}
+
+	wg.Wait()
+	return nil
+}
+
+func sceneSliceAppender(collectedScenes *[]models.ScrapedScene, scenes <-chan models.ScrapedScene) {
+	for scene := range scenes {
+		*collectedScenes = append(*collectedScenes, scene)
+	}
+}
+
+func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedScene) {
+	defer wg.Done()
+
+	db, _ := models.GetDB()
+	defer db.Close()
+	for scene := range scenes {
+		if os.Getenv("DEBUG") != "" {
+			log.Printf("Saving %v", scene.SceneID)
+		}
+		models.SceneCreateUpdateFromExternal(db, scene)
+		atomic.AddUint64(i, 1)
+		if os.Getenv("DEBUG") != "" {
+			log.Printf("Saved %v", scene.SceneID)
+		}
+	}
+}
+
+func Scrape(scrapeAll bool) {
+	if !models.CheckLock("scrape") {
+		models.CreateLock("scrape")
+		t0 := time.Now()
+		tlog := log.WithField("task", "scrape")
+		tlog.Infof("Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
+
+		// Get all known scenes
+		var scenes []models.Scene
+		db, _ := models.GetDB()
+		db.Find(&scenes)
+		db.Close()
+
+		var knownScenes []string
+		for i := range scenes {
+			knownScenes = append(knownScenes, scenes[i].SceneURL)
 		}
 
-		if len(collectedScenes) > 0 {
-			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
+		collectedScenes := make(chan models.ScrapedScene, 250)
+		var sceneCount uint64
 
-			db, _ := GetDB()
-			for i := range collectedScenes {
-				SceneCreateUpdateFromExternal(db, collectedScenes[i])
-			}
-			db.Close()
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go sceneDBWriter(&wg, &sceneCount, collectedScenes)
 
-			tlog.Infof("Saved %v new scenes", len(collectedScenes))
+		// Start scraping
+		if e := runScrapers(knownScenes, scrapeAll, true, collectedScenes); e != nil {
+			tlog.Info(e)
 		} else {
-			tlog.Infof("No new scenes scraped")
+			// Notify DB Writer threads that there are no more scenes
+			close(collectedScenes)
+
+			// Wait for DB Writer threads to complete
+			wg.Wait()
+
+			// Send a signal to clean up the progress bars just in case
+			log.WithField("task", "scraperProgress").Info("DONE")
+
+			tlog.Infof("Scraped %v new scenes in %s",
+				sceneCount,
+				time.Now().Sub(t0).Round(time.Second))
 		}
 	}
 
-	RemoveLock("scrape")
+	models.RemoveLock("scrape")
 }
 
 func ScrapeJAVR(queryString string) {
-	if !CheckLock("scrape") {
-		CreateLock("scrape")
+	if !models.CheckLock("scrape") {
+		models.CreateLock("scrape")
 
 		tlog := log.WithField("task", "scrape")
 
 		// Get all known scenes
-		var scenes []Scene
-		db, _ := GetDB()
+		var scenes []models.Scene
+		db, _ := models.GetDB()
 		db.Find(&scenes)
 		db.Close()
 
@@ -102,7 +161,7 @@ func ScrapeJAVR(queryString string) {
 		}
 
 		// Start scraping
-		var collectedScenes []scrape.ScrapedScene
+		var collectedScenes []models.ScrapedScene
 
 		tlog.Infof("Scraping R18")
 		scrape.ScrapeR18(knownScenes, &collectedScenes, queryString)
@@ -110,9 +169,9 @@ func ScrapeJAVR(queryString string) {
 		if len(collectedScenes) > 0 {
 			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
 
-			db, _ := GetDB()
+			db, _ := models.GetDB()
 			for i := range collectedScenes {
-				SceneCreateUpdateFromExternal(db, collectedScenes[i])
+				models.SceneCreateUpdateFromExternal(db, collectedScenes[i])
 			}
 			db.Close()
 
@@ -122,51 +181,46 @@ func ScrapeJAVR(queryString string) {
 		}
 
 	}
-	RemoveLock("scrape")
+	models.RemoveLock("scrape")
 }
 
 func ExportBundle() {
-	if !CheckLock("scrape") {
-		CreateLock("scrape")
+	if !models.CheckLock("scrape") {
+		models.CreateLock("scrape")
+		t0 := time.Now()
 
 		tlog := log.WithField("task", "scrape")
 		tlog.Info("Exporting content bundle...")
 
 		var knownScenes []string
-		var collectedScenes []scrape.ScrapedScene
+		collectedScenes := make(chan models.ScrapedScene, 100)
 
-		scrapers := scrape.GetScrapers()
+		var scrapedScenes []models.ScrapedScene
+		go sceneSliceAppender(&scrapedScenes, collectedScenes)
 
-		if len(scrapers) > 0 {
-			for _, scraper := range scrapers {
-				tlog.Infof("Scraping %s", scraper.Name)
-				scraper.Scrape(knownScenes, &collectedScenes)
-			}
-		} else {
-			tlog.Info("No scrapers registered!")
-		}
+		runScrapers(knownScenes, false, false, collectedScenes)
 
 		out := ContentBundle{
 			Timestamp:     time.Now().UTC(),
 			BundleVersion: "1",
-			Scenes:        collectedScenes,
+			Scenes:        scrapedScenes,
 		}
 
 		content, err := json.MarshalIndent(out, "", " ")
 		if err == nil {
-			fName := filepath.Join(appDir, fmt.Sprintf("content-bundle-%v.json", time.Now().Unix()))
+			fName := filepath.Join(common.AppDir, fmt.Sprintf("content-bundle-%v.json", time.Now().Unix()))
 			err = ioutil.WriteFile(fName, content, 0644)
 			if err == nil {
-				tlog.Infof("Export complete, file saved to %v", fName)
+				tlog.Infof("Export completed in %v, file saved to %v", time.Now().Sub(t0), fName)
 			}
 		}
 	}
-	RemoveLock("scrape")
+	models.RemoveLock("scrape")
 }
 
 func ImportBundle(url string) {
-	if !CheckLock("scrape") {
-		CreateLock("scrape")
+	if !models.CheckLock("scrape") {
+		models.CreateLock("scrape")
 
 		tlog := log.WithField("task", "scrape")
 
@@ -175,10 +229,10 @@ func ImportBundle(url string) {
 		resp, err := resty.R().SetResult(&bundleData).Get(url)
 
 		if err == nil && resp.StatusCode() == 200 {
-			db, _ := GetDB()
+			db, _ := models.GetDB()
 			for i := range bundleData.Scenes {
 				tlog.Infof("Importing %v of %v scenes", i+1, len(bundleData.Scenes))
-				SceneCreateUpdateFromExternal(db, bundleData.Scenes[i])
+				models.SceneCreateUpdateFromExternal(db, bundleData.Scenes[i])
 			}
 			db.Close()
 
@@ -187,25 +241,25 @@ func ImportBundle(url string) {
 			tlog.Infof("Download failed!")
 		}
 	}
-	RemoveLock("scrape")
+	models.RemoveLock("scrape")
 }
 
 func RenameTags() {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var scenes []Scene
+	var scenes []models.Scene
 	db.Find(&scenes)
 
 	for i := range scenes {
-		currentTags := make([]Tag, 0)
+		currentTags := make([]models.Tag, 0)
 		db.Model(&scenes[i]).Related(&currentTags, "Tags")
 
-		newTags := make([]Tag, 0)
+		newTags := make([]models.Tag, 0)
 		for j := range currentTags {
-			nt := Tag{}
-			if convertTag(currentTags[j].Name) != "" {
-				db.Where(&Tag{Name: convertTag(currentTags[j].Name)}).FirstOrCreate(&nt)
+			nt := models.Tag{}
+			if models.ConvertTag(currentTags[j].Name) != "" {
+				db.Where(&models.Tag{Name: models.ConvertTag(currentTags[j].Name)}).FirstOrCreate(&nt)
 				newTags = append(newTags, nt)
 			}
 		}
@@ -225,14 +279,14 @@ func RenameTags() {
 }
 
 func CountTags() {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var tags []Tag
-	db.Model(&Tag{}).Find(&tags)
+	var tags []models.Tag
+	db.Model(&models.Tag{}).Find(&tags)
 
 	for i := range tags {
-		var scenes []Scene
+		var scenes []models.Scene
 		db.Model(tags[i]).Related(&scenes, "Scenes")
 
 		tags[i].Count = len(scenes)

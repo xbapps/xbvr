@@ -8,14 +8,15 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 type DMSDataResponse struct {
-	Sites        []string `json:"sites"`
-	Actors       []string `json:"actors"`
-	Tags         []string `json:"tags"`
-	ReleaseGroup []string `json:"release_group"`
-	Volumes      []Volume `json:"volumes"`
+	Sites        []string        `json:"sites"`
+	Actors       []string        `json:"actors"`
+	Tags         []string        `json:"tags"`
+	ReleaseGroup []string        `json:"release_group"`
+	Volumes      []models.Volume `json:"volumes"`
 }
 
 type DMSResource struct{}
@@ -55,14 +56,14 @@ func (i DMSResource) WebService() *restful.WebService {
 func (i DMSResource) sceneById(req *restful.Request, resp *restful.Response) {
 	sceneId := req.QueryParameter("id")
 
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var scene Scene
+	var scene models.Scene
 	db.Preload("Cast").
 		Preload("Tags").
 		Preload("Files").
-		Where(&Scene{SceneID: sceneId}).First(&scene)
+		Where(&models.Scene{SceneID: sceneId}).First(&scene)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
@@ -73,21 +74,21 @@ func (i DMSResource) fileById(req *restful.Request, resp *restful.Response) {
 		return
 	}
 
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var file File
-	db.Where(&File{ID: uint(fileId)}).First(&file)
+	var file models.File
+	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, file)
 }
 
 func (i DMSResource) base(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
 	// Get all accessible scenes
-	var scenes []Scene
+	var scenes []models.Scene
 	tx := db.
 		Model(&scenes).
 		Preload("Cast").
@@ -138,7 +139,7 @@ func (i DMSResource) base(req *restful.Request, resp *restful.Response) {
 	}
 
 	// Available volumes
-	var vol []Volume
+	var vol []models.Volume
 	db.Where("is_available = ?", true).Find(&vol)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, DMSDataResponse{Sites: outSites, Tags: outTags, Actors: outCast, Volumes: vol, ReleaseGroup: outRelease})
@@ -153,10 +154,10 @@ func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
 	}
 
 	// Check if scene exist
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	f := File{}
+	f := models.File{}
 	err = db.First(&f, id).Error
 
 	// Track current session
@@ -192,10 +193,10 @@ func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
 }
 
 func newWatchSession() {
-	obj := History{SceneID: lastSessionSceneID, TimeStart: lastSessionStart}
+	obj := models.History{SceneID: lastSessionSceneID, TimeStart: lastSessionStart}
 	obj.Save()
 
-	var scene Scene
+	var scene models.Scene
 	err := scene.GetIfExistByPK(lastSessionSceneID)
 	if err == nil {
 		scene.LastOpened = time.Now()
@@ -206,14 +207,14 @@ func newWatchSession() {
 }
 
 func watchSessionFlush() {
-	var obj History
+	var obj models.History
 	err := obj.GetIfExist(lastSessionID)
 	if err == nil {
 		obj.TimeEnd = lastSessionEnd
 		obj.Duration = time.Since(lastSessionStart).Seconds()
 		obj.Save()
 
-		var scene Scene
+		var scene models.Scene
 		err := scene.GetIfExistByPK(lastSessionSceneID)
 		if err == nil {
 			if !scene.IsWatched {

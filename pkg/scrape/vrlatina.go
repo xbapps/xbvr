@@ -2,17 +2,21 @@ package scrape
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 	"mvdan.cc/xurls/v2"
 )
 
-func VRLatina(knownScenes []string, out *[]ScrapedScene) error {
+func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("vrlatina", "VRLatina")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("vrlatina.com"),
 		colly.CacheDir(siteCacheDir),
@@ -34,7 +38,7 @@ func VRLatina(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRLatina"
 		sc.Site = "VRLatina"
@@ -96,7 +100,7 @@ func VRLatina(knownScenes []string, out *[]ScrapedScene) error {
 			sc.SceneID = fmt.Sprintf("vrlatina-%v", sc.SiteID)
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`span.pagination-wrap-inn a`, func(e *colly.HTMLElement) {
@@ -113,7 +117,13 @@ func VRLatina(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://vrlatina.com/videos/?typ=newest")
+	siteCollector.Visit("https://vrlatina.com/videos/?typ=newest")
+
+	if updateSite {
+		updateSiteLastUpdate("vrlatina")
+	}
+	logScrapeFinished("vrlatina", "VRLatina")
+	return nil
 }
 
 func init() {

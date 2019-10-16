@@ -1,19 +1,22 @@
 package scrape
 
 import (
-	"log"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/resty.v1"
 )
 
-func RealityLovers(knownScenes []string, out *[]ScrapedScene) error {
+func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("realitylovers", "RealityLovers")
 	const maxRetries = 15
 
 	sceneCollector := colly.NewCollector(
@@ -49,7 +52,7 @@ func RealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "RealityLovers"
 		sc.Site = "RealityLovers"
@@ -95,7 +98,7 @@ func RealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 			sc.Synopsis = synopsis
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	// Request scenes via REST API
@@ -125,6 +128,10 @@ func RealityLovers(knownScenes []string, out *[]ScrapedScene) error {
 		})
 	}
 
+	if updateSite {
+		updateSiteLastUpdate("realitylovers")
+	}
+	logScrapeFinished("realitylovers", "RealityLovers")
 	return nil
 }
 

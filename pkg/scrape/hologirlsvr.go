@@ -1,16 +1,20 @@
 package scrape
 
 import (
-	"log"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func HoloGirlsVR(knownScenes []string, out *[]ScrapedScene) error {
+func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("hologirlsvr", "HoloGirlsVR")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.hologirlsvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -32,7 +36,7 @@ func HoloGirlsVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "HoloFilm Productions"
 		sc.Site = "HoloGirlsVR"
@@ -81,7 +85,7 @@ func HoloGirlsVR(knownScenes []string, out *[]ScrapedScene) error {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.pagination-container li a`, func(e *colly.HTMLElement) {
@@ -98,7 +102,13 @@ func HoloGirlsVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://www.hologirlsvr.com/Scenes")
+	siteCollector.Visit("https://www.hologirlsvr.com/Scenes")
+
+	if updateSite {
+		updateSiteLastUpdate("hologirlsvr")
+	}
+	logScrapeFinished("hologirlsvr", "HoloGirlsVR")
+	return nil
 }
 
 func init() {

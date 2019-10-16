@@ -1,17 +1,21 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func DDFNetworkVR(knownScenes []string, out *[]ScrapedScene) error {
+func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("ddfnetworkvr", "DDFNetworkVR")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("ddfnetworkvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -34,7 +38,7 @@ func DDFNetworkVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "DDFNetwork"
 		sc.Site = "DDFNetworkVR"
@@ -103,7 +107,7 @@ func DDFNetworkVR(knownScenes []string, out *[]ScrapedScene) error {
 		// Filenames
 		// NOTE: no way to guess filename
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`ul.pagination a.page-link`, func(e *colly.HTMLElement) {
@@ -122,6 +126,10 @@ func DDFNetworkVR(knownScenes []string, out *[]ScrapedScene) error {
 
 	siteCollector.Visit("https://ddfnetworkvr.com/")
 
+	if updateSite {
+		updateSiteLastUpdate("ddfnetworkvr")
+	}
+	logScrapeFinished("ddfnetworkvr", "DDFNetworkVR")
 	return nil
 }
 

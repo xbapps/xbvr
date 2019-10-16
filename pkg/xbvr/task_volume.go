@@ -15,23 +15,25 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	"github.com/vansante/go-ffprobe"
+	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func RescanVolumes() {
-	if !CheckLock("rescan") {
-		CreateLock("rescan")
+	if !models.CheckLock("rescan") {
+		models.CreateLock("rescan")
 
-		CheckVolumes()
+		models.CheckVolumes()
 
-		db, _ := GetDB()
+		db, _ := models.GetDB()
 		defer db.Close()
 
 		tlog := log.WithFields(logrus.Fields{"task": "rescan"})
 
 		tlog.Infof("Start scanning volumes")
 
-		var vol []Volume
+		var vol []models.Volume
 		db.Find(&vol)
 
 		for i := range vol {
@@ -45,8 +47,8 @@ func RescanVolumes() {
 					if !f.Mode().IsDir() {
 						// Make sure the filename should be considered
 						if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(allowedExt, strings.ToLower(filepath.Ext(path))) {
-							var fl File
-							err = db.Where(&File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
+							var fl models.File
+							err = db.Where(&models.File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
 
 							if err == gorm.ErrRecordNotFound || fl.VolumeID == 0 || fl.VideoDuration == 0 || fl.VideoProjection == "" {
 								procList = append(procList, path)
@@ -68,8 +70,8 @@ func RescanVolumes() {
 					} else {
 						birthtime = fTimes.ModTime()
 					}
-					var fl File
-					db.Where(&File{
+					var fl models.File
+					db.Where(&models.File{
 						Path:     filepath.Dir(pth),
 						Filename: filepath.Base(pth),
 					}).FirstOrCreate(&fl)
@@ -122,7 +124,7 @@ func RescanVolumes() {
 				for i := range allFiles {
 					if !allFiles[i].Exists() {
 						log.Info(allFiles[i].GetPath())
-						db, _ := GetDB()
+						db, _ := models.GetDB()
 						db.Delete(&allFiles[i])
 						db.Close()
 					}
@@ -132,12 +134,12 @@ func RescanVolumes() {
 
 		// Match Scene to File
 
-		var files []File
-		var scenes []Scene
+		var files []models.File
+		var scenes []models.Scene
 		var changed = false
 
 		tlog.Infof("Matching Scenes to known filenames")
-		db.Model(&File{}).Find(&files)
+		db.Model(&models.File{}).Find(&files)
 
 		for i := range files {
 			fn := files[i].Filename
@@ -160,7 +162,7 @@ func RescanVolumes() {
 		// Update scene statuses
 
 		tlog.Infof("Update status of Scenes")
-		db.Model(&Scene{}).Find(&scenes)
+		db.Model(&models.Scene{}).Find(&scenes)
 
 		for i := range scenes {
 			// Check if file with scene association exists
@@ -218,7 +220,7 @@ func RescanVolumes() {
 		tlog.Infof("Scanning complete")
 
 		// Inform UI about state change
-		publisher, err := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
+		publisher, err := client.ConnectNet(context.Background(), "ws://"+common.WsAddr+"/ws", client.Config{Realm: "default"})
 		if err == nil {
 			publisher.Publish("state.change.optionsFolders", nil, nil, nil)
 			publisher.Close()
@@ -226,5 +228,5 @@ func RescanVolumes() {
 
 	}
 
-	RemoveLock("rescan")
+	models.RemoveLock("rescan")
 }

@@ -1,4 +1,4 @@
-package xbvr
+package models
 
 import (
 	"strings"
@@ -7,11 +7,11 @@ import (
 )
 
 type Tag struct {
-	ID     uint        `gorm:"primary_key" json:"id"`
+	ID     uint    `gorm:"primary_key" json:"id"`
 	Scenes []Scene `gorm:"many2many:scene_tags;" json:"scenes"`
-	Name   string      `gorm:"index" json:"name"`
-	Clean  string      `gorm:"index" json:"clean"`
-	Count  int         `json:"count"`
+	Name   string  `gorm:"index" json:"name"`
+	Clean  string  `gorm:"index" json:"clean"`
+	Count  int     `json:"count"`
 }
 
 func (t *Tag) Save() error {
@@ -21,7 +21,7 @@ func (t *Tag) Save() error {
 	return err
 }
 
-func convertTag(t string) string {
+func ConvertTag(t string) string {
 	t = strings.ToLower(t)
 
 	if funk.Contains([]string{"180", "60fps", "60 fps", "5k", "5k+", "big dick", "big cocks", "axaxqxrrysrwqua", "girl-boy", "virtual reality", "vr porn"}, t) {

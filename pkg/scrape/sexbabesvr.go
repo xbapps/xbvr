@@ -1,18 +1,22 @@
 package scrape
 
 import (
-	"log"
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func SexBabesVR(knownScenes []string, out *[]ScrapedScene) error {
+func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("sexbabesvr", "SexBabesVR")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("sexbabesvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -34,7 +38,7 @@ func SexBabesVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "SexBabesVR"
 		sc.Site = "SexBabesVR"
@@ -108,7 +112,7 @@ func SexBabesVR(knownScenes []string, out *[]ScrapedScene) error {
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.pager li.is-active a`, func(e *colly.HTMLElement) {
@@ -127,6 +131,10 @@ func SexBabesVR(knownScenes []string, out *[]ScrapedScene) error {
 
 	siteCollector.Visit("https://sexbabesvr.com/virtualreality/list")
 
+	if updateSite {
+		updateSiteLastUpdate("sexbabesvr")
+	}
+	logScrapeFinished("sexbabesvr", "SexBabesVR")
 	return nil
 }
 
