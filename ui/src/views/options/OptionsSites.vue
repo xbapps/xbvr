@@ -13,14 +13,20 @@
               {{props.row.name}}
             </b-table-column>
             <b-table-column field="last_update" label="Last update" sortable>
-              <span v-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
+              <span v-if="runningScrapers.includes(props.row.id)">
+                <b-progress type="is-primary"></b-progress>
+              </span>
+              <span v-else-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
                 {{formatDistanceToNow(parseISO(props.row.last_update))}} ago
               </span>
               <span v-else>Never</span>
             </b-table-column>
           </template>
           <template slot="top-left">
-            <div class="button is-button is-primary" v-on:click="taskScrape()">Run scraper</div>
+            <div class="buttons">
+              <a class="button is-primary" v-on:click="taskScrape()">Run Selected Scrapers</a>
+              <a class="button is-primary" v-on:click="taskScrapeAll()">Run All Scrapers</a>
+            </div>
           </template>
         </b-table>
       </div>
@@ -76,6 +82,9 @@
       taskScrape() {
         ky.get(`/api/task/scrape`);
       },
+      taskScrapeAll() {
+        ky.get(`/api/task/scrape/all`);
+      },
       importContent() {
         if (this.bundleURL !== "") {
           ky.get(`/api/task/bundle/import`, {searchParams: {url: this.bundleURL}});
@@ -96,6 +105,10 @@
       },
       lock() {
         return this.$store.state.messages.lockScrape;
+      },
+      runningScrapers() {
+        this.$store.dispatch("optionsSites/load");
+        return this.$store.state.messages.runningScrapers;
       }
     }
   }

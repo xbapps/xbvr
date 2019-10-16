@@ -14,6 +14,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/resty.v1"
 )
 
@@ -86,17 +87,17 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 }
 
 func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var sites []Site
+	var sites []models.Site
 	db.Find(&sites)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
 func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
 	id := req.PathParameter("site")
@@ -104,7 +105,7 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 		return
 	}
 
-	var site Site
+	var site models.Site
 	err := site.GetIfExist(id)
 	if err != nil {
 		log.Error(err)
@@ -113,16 +114,16 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 	site.IsEnabled = !site.IsEnabled
 	site.Save()
 
-	var sites []Site
+	var sites []models.Site
 	db.Find(&sites)
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
 func (i ConfigResource) listFolders(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var vol []Volume
+	var vol []models.Volume
 	db.Raw(`select id, path, last_scan,is_available, is_enabled,
        	(select count(*) from files where files.path like volumes.path || "%") as file_count,
 		(select count(*) from files where files.path like volumes.path || "%" and files.scene_id = 0) as unmatched_count,
@@ -150,11 +151,11 @@ func (i ConfigResource) addFolder(req *restful.Request, resp *restful.Response) 
 
 	path, _ := filepath.Abs(r.Path)
 
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var vol []Volume
-	db.Where(&Volume{Path: path}).Find(&vol)
+	var vol []models.Volume
+	db.Where(&models.Volume{Path: path}).Find(&vol)
 
 	if len(vol) > 0 {
 		tlog.Error("Folder already exists")
@@ -162,7 +163,7 @@ func (i ConfigResource) addFolder(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	nv := Volume{Path: path, IsEnabled: true, IsAvailable: true}
+	nv := models.Volume{Path: path, IsEnabled: true, IsAvailable: true}
 	nv.Save()
 
 	tlog.Info("Added new folder", path)
@@ -185,10 +186,10 @@ func (i ConfigResource) removeFolder(req *restful.Request, resp *restful.Respons
 		return
 	}
 
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	vol := Volume{}
+	vol := models.Volume{}
 	err = db.First(&vol, id).Error
 
 	if err == gorm.ErrRecordNotFound {
@@ -196,7 +197,7 @@ func (i ConfigResource) removeFolder(req *restful.Request, resp *restful.Respons
 		return
 	}
 
-	db.Where("volume_id = ?", id).Delete(File{})
+	db.Where("volume_id = ?", id).Delete(models.File{})
 	db.Delete(&vol)
 
 	// Inform UI about state change

@@ -3,6 +3,8 @@ const state = {
   lastScrapeMessage: "",
   lockRescan: false,
   lastRescanMessage: "",
+  lastProgressMessage: "",
+  runningScrapers: [],
 };
 
 export default {

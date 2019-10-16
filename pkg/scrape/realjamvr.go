@@ -1,19 +1,22 @@
 package scrape
 
 import (
-	"log"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func RealJamVR(knownScenes []string, out *[]ScrapedScene) error {
+func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("realjamvr", "RealJam VR")
 	const maxRetries = 15
 
 	siteCollector := colly.NewCollector(
@@ -81,7 +84,7 @@ func RealJamVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Real Jam Network"
 		sc.Site = "RealJam VR"
@@ -135,7 +138,7 @@ func RealJamVR(knownScenes []string, out *[]ScrapedScene) error {
 			sc.Filenames = append(sc.Filenames, strings.ReplaceAll(f, " ", "_"))
 		}
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`#pagination a`, func(e *colly.HTMLElement) {
@@ -152,7 +155,13 @@ func RealJamVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://realjamvr.com/virtualreality/list")
+	siteCollector.Visit("https://realjamvr.com/virtualreality/list")
+
+	if updateSite {
+		updateSiteLastUpdate("realjamvr")
+	}
+	logScrapeFinished("realjamvr", "RealJam VR")
+	return nil
 }
 
 func init() {

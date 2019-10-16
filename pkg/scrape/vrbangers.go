@@ -1,17 +1,21 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRBangers(knownScenes []string, out *[]ScrapedScene) error {
+func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("vrbangers", "VRBangers")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("vrbangers.com"),
 		colly.CacheDir(siteCacheDir),
@@ -33,7 +37,7 @@ func VRBangers(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRBangers"
 		sc.Site = "VRBangers"
@@ -113,7 +117,7 @@ func VRBangers(knownScenes []string, out *[]ScrapedScene) error {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(strings.Replace(e.Text, ",", "", -1)))
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.wp-pagenavi a.page`, func(e *colly.HTMLElement) {
@@ -130,7 +134,13 @@ func VRBangers(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://vrbangers.com/videos/")
+	siteCollector.Visit("https://vrbangers.com/videos/")
+
+	if updateSite {
+		updateSiteLastUpdate("vrbangers")
+	}
+	logScrapeFinished("vrbangers", "VRBangers")
+	return nil
 }
 
 func init() {

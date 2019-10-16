@@ -1,18 +1,22 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func MilfVR(knownScenes []string, out *[]ScrapedScene) error {
+func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("milfvr", "MilfVR")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.milfvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -34,7 +38,7 @@ func MilfVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Wankz"
 		sc.Site = "MilfVR"
@@ -99,7 +103,7 @@ func MilfVR(knownScenes []string, out *[]ScrapedScene) error {
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.pager a`, func(e *colly.HTMLElement) {
@@ -116,7 +120,13 @@ func MilfVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://www.milfvr.com/videos")
+	siteCollector.Visit("https://www.milfvr.com/videos")
+
+	if updateSite {
+		updateSiteLastUpdate("milfvr")
+	}
+	logScrapeFinished("milfvr", "MilfVR")
+	return nil
 }
 
 func init() {

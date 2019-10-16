@@ -1,17 +1,21 @@
 package scrape
 
 import (
-	"log"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRHush(knownScenes []string, out *[]ScrapedScene) error {
+func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("vrhush", "VRHush")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("vrhush.com"),
 		colly.CacheDir(siteCacheDir),
@@ -44,7 +48,7 @@ func VRHush(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRHush"
 		sc.Site = "VRHush"
@@ -109,11 +113,11 @@ func VRHush(knownScenes []string, out *[]ScrapedScene) error {
 			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
 		}
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	castCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := e.Request.Ctx.GetAny("scene").(*ScrapedScene)
+		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 
 		var name string
 		e.ForEach(`h1#model-name`, func(id int, e *colly.HTMLElement) {
@@ -148,6 +152,10 @@ func VRHush(knownScenes []string, out *[]ScrapedScene) error {
 
 	siteCollector.Visit("https://vrhush.com/scenes")
 
+	if updateSite {
+		updateSiteLastUpdate("vrhush")
+	}
+	logScrapeFinished("vrhush", "VRHush")
 	return nil
 }
 

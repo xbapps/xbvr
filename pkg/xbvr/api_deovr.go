@@ -10,6 +10,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 type DeoLibrary struct {
@@ -91,15 +92,15 @@ func (i DeoVRResource) WebService() *restful.WebService {
 }
 
 func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var scene Scene
+	var scene models.Scene
 	db.Preload("Cast").
 		Preload("Tags").
 		Preload("Files").
 		Preload("Cuepoints").
-		Where(&Scene{SceneID: req.PathParameter("scene-id")}).First(&scene)
+		Where(&models.Scene{SceneID: req.PathParameter("scene-id")}).First(&scene)
 
 	baseURL := "http://" + getBaseURL() + ":9999"
 
@@ -170,17 +171,17 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 }
 
 func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Response) {
-	db, _ := GetDB()
+	db, _ := models.GetDB()
 	defer db.Close()
 
-	var recent []Scene
+	var recent []models.Scene
 	db.Model(&recent).
 		Where("is_available = ?", true).
 		Where("is_accessible = ?", true).
 		Order("release_date desc").
 		Find(&recent)
 
-	var favourite []Scene
+	var favourite []models.Scene
 	db.Model(&favourite).
 		Where("is_available = ?", true).
 		Where("is_accessible = ?", true).
@@ -188,7 +189,7 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 		Order("release_date desc").
 		Find(&favourite)
 
-	var watchlist []Scene
+	var watchlist []models.Scene
 	db.Model(&watchlist).
 		Where("is_available = ?", true).
 		Where("is_accessible = ?", true).
@@ -240,7 +241,7 @@ func getBaseURL() string {
 	return hostname
 }
 
-func scenesToDeoList(scenes []Scene) []DeoListItem {
+func scenesToDeoList(scenes []models.Scene) []DeoListItem {
 	baseURL := "http://" + getBaseURL() + ":9999"
 
 	var list []DeoListItem

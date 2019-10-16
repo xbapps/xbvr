@@ -1,13 +1,14 @@
 package scrape
 
 import (
-	"log"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 func isGoodTag(lookup string) bool {
@@ -24,7 +25,10 @@ func isGoodTag(lookup string) bool {
 	return true
 }
 
-func LethalHardcoreSite(knownScenes []string, out *[]ScrapedScene, URL string) error {
+func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+	defer wg.Done()
+	logScrapeStart(scraperID, siteID)
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("lethalhardcorevr.com", "whorecraftvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -46,19 +50,13 @@ func LethalHardcoreSite(knownScenes []string, out *[]ScrapedScene, URL string) e
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Celestial Productions"
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Site ID
-		if e.Request.URL.Host == "whorecraftvr.com" {
-			sc.Site = "WhorecraftVR"
-		}
-
-		if e.Request.URL.Host == "lethalhardcorevr.com" {
-			sc.Site = "LethalHardcoreVR"
-		}
+		sc.Site = siteID
 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "/")
@@ -125,7 +123,7 @@ func LethalHardcoreSite(knownScenes []string, out *[]ScrapedScene, URL string) e
 			}
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`div.poster-grid-item a`, func(e *colly.HTMLElement) {
@@ -138,17 +136,21 @@ func LethalHardcoreSite(knownScenes []string, out *[]ScrapedScene, URL string) e
 	})
 
 	siteCollector.Visit(URL)
+
+	if updateSite {
+		updateSiteLastUpdate(scraperID)
+	}
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
-func WhorecraftVR(knownScenes []string, out *[]ScrapedScene) error {
-	return LethalHardcoreSite(knownScenes, out, "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
+func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "lethalhardcorevr", "LethalHardcoreVR", "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
 }
 
-func LethalHardcoreVR(knownScenes []string, out *[]ScrapedScene) error {
-	return LethalHardcoreSite(knownScenes, out, "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
+func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "whorecraftvr", "WhorecraftVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
 }
-
 
 func init() {
 	registerScraper("whorecraftvr", "WhorecraftVR", WhorecraftVR)

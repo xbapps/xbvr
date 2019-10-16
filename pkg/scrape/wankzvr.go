@@ -1,17 +1,21 @@
 package scrape
 
 import (
-	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func WankzVR(knownScenes []string, out *[]ScrapedScene) error {
+func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	defer wg.Done()
+	logScrapeStart("wankzvr", "WankzVR")
+
 	siteCollector := colly.NewCollector(
 		colly.AllowedDomains("www.wankzvr.com"),
 		colly.CacheDir(siteCacheDir),
@@ -33,7 +37,7 @@ func WankzVR(knownScenes []string, out *[]ScrapedScene) error {
 	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := ScrapedScene{}
+		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Wankz"
 		sc.Site = "WankzVR"
@@ -100,7 +104,7 @@ func WankzVR(knownScenes []string, out *[]ScrapedScene) error {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
-		*out = append(*out, sc)
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`nav.pager a`, func(e *colly.HTMLElement) {
@@ -118,7 +122,13 @@ func WankzVR(knownScenes []string, out *[]ScrapedScene) error {
 		}
 	})
 
-	return siteCollector.Visit("https://www.wankzvr.com/videos")
+	siteCollector.Visit("https://www.wankzvr.com/videos")
+
+	if updateSite {
+		updateSiteLastUpdate("wankzvr")
+	}
+	logScrapeFinished("wankzvr", "WankzVR")
+	return nil
 }
 
 func init() {

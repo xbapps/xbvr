@@ -7,6 +7,8 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/index/scorch"
 	"github.com/sirupsen/logrus"
+	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 type Index struct {
@@ -16,7 +18,7 @@ type Index struct {
 func NewIndex(name string) *Index {
 	i := new(Index)
 
-	path := filepath.Join(indexDir, name)
+	path := filepath.Join(common.IndexDir, name)
 
 	mapping := bleve.NewIndexMapping()
 	idx, err := bleve.NewUsing(path, mapping, scorch.Name, scorch.Name, nil)
@@ -28,22 +30,22 @@ func NewIndex(name string) *Index {
 	return i
 }
 
-func (i *Index) GetScene(id string) (Scene, error) {
+func (i *Index) GetScene(id string) (models.Scene, error) {
 	if _, err := i.bleve.Document(id); err != nil {
-		return Scene{}, err
+		return models.Scene{}, err
 	}
 
 	data, err := i.bleve.GetInternal(i.formatInternalKey(id))
 	if err != nil {
-		return Scene{}, err
+		return models.Scene{}, err
 	}
 
-	s := Scene{}
+	s := models.Scene{}
 	err = s.FromJSON(data)
 	return s, err
 }
 
-func (i *Index) PutScene(scene Scene) error {
+func (i *Index) PutScene(scene models.Scene) error {
 	scene.Fulltext = fmt.Sprintf("%v %v %v", scene.Title, scene.Site, scene.Synopsis)
 
 	databytes, err := scene.ToJSON()
@@ -68,21 +70,21 @@ func (i *Index) formatInternalKey(id string) []byte {
 }
 
 func SearchIndex() {
-	if !CheckLock("index") {
-		CreateLock("index")
+	if !models.CheckLock("index") {
+		models.CreateLock("index")
 
 		tlog := log.WithFields(logrus.Fields{"task": "scrape"})
 
 		idx := NewIndex("scenes")
 
-		db, _ := GetDB()
+		db, _ := models.GetDB()
 		defer db.Close()
 
 		total := 0
 		offset := 0
 		current := 0
-		var scenes []Scene
-		tx := db.Model(Scene{}).Preload("Cast").Preload("Tags")
+		var scenes []models.Scene
+		tx := db.Model(models.Scene{}).Preload("Cast").Preload("Tags")
 		tx.Count(&total)
 
 		for {
@@ -110,6 +112,6 @@ func SearchIndex() {
 
 		tlog.Infof("Search index built!")
 
-		RemoveLock("index")
+		models.RemoveLock("index")
 	}
 }
