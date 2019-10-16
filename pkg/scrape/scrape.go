@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ProtonMail/go-appdir"
 	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
-	"github.com/ProtonMail/go-appdir"
 )
 
 var log = &common.Log
@@ -29,20 +29,20 @@ func registerScraper(id string, name string, f models.ScraperFunc) {
 
 func logScrapeStart(id string, name string) {
 	log.WithFields(logrus.Fields{
-		"task": "scraperProgress",
+		"task":      "scraperProgress",
 		"scraperID": id,
-		"progress":   0,
-		"started": true,
+		"progress":  0,
+		"started":   true,
 		"completed": false,
 	}).Infof("Starting %v scraper", name)
 }
 
 func logScrapeFinished(id string, name string) {
 	log.WithFields(logrus.Fields{
-		"task": "scraperProgress",
+		"task":      "scraperProgress",
 		"scraperID": id,
-		"progress":   0,
-		"started": false,
+		"progress":  0,
+		"started":   false,
 		"completed": true,
 	}).Infof("Finished %v scraper", name)
 }

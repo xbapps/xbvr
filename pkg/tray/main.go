@@ -52,7 +52,6 @@ func onReady() {
 
 	mQuit := systray.AddMenuItem("Quit", "Quit XBVR")
 
-
 	for {
 		select {
 		case <-mOpenUI.ClickedCh:

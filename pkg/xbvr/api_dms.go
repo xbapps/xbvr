@@ -12,10 +12,10 @@ import (
 )
 
 type DMSDataResponse struct {
-	Sites        []string `json:"sites"`
-	Actors       []string `json:"actors"`
-	Tags         []string `json:"tags"`
-	ReleaseGroup []string `json:"release_group"`
+	Sites        []string        `json:"sites"`
+	Actors       []string        `json:"actors"`
+	Tags         []string        `json:"tags"`
+	ReleaseGroup []string        `json:"release_group"`
 	Volumes      []models.Volume `json:"volumes"`
 }
 

@@ -10,8 +10,8 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
-	"gopkg.in/resty.v1"
 	"github.com/xbapps/xbvr/pkg/models"
+	"gopkg.in/resty.v1"
 )
 
 func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {

@@ -149,7 +149,6 @@ func StartServer(version, commit, branch, date string) {
 	wampHook := common.NewWampHook()
 	log.AddHook(wampHook)
 
-
 	log.Infof("XBVR %v (build date %v) starting...", version, date)
 
 	if os.Getenv("XBVR_THREADING") != "" {

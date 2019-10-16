@@ -9,8 +9,8 @@ import (
 	"github.com/gocolly/colly"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
-	"mvdan.cc/xurls/v2"
 	"github.com/xbapps/xbvr/pkg/models"
+	"mvdan.cc/xurls/v2"
 )
 
 func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {

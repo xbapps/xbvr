@@ -9,9 +9,9 @@ var scrapers []Scraper
 type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene) error
 
 type Scraper struct {
-	ID      string
-	Name    string
-	Scrape  ScraperFunc
+	ID     string
+	Name   string
+	Scrape ScraperFunc
 }
 
 type ScrapedScene struct {

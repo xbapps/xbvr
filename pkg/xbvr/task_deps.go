@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/vansante/go-ffprobe"
-	"gopkg.in/resty.v1"
 	"github.com/xbapps/xbvr/pkg/common"
+	"gopkg.in/resty.v1"
 )
 
 func CheckDependencies() {

@@ -171,7 +171,7 @@ func BabeVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func KinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "kinkvr",  "KinkVR", "https://kinkvr.com/bdsm-vr-videos")
+	return BadoinkSite(wg, updateSite, knownScenes, out, "kinkvr", "KinkVR", "https://kinkvr.com/bdsm-vr-videos")
 }
 
 func init() {

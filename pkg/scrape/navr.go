@@ -27,7 +27,6 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		colly.AllowedDomains("www.naughtyamerica.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
-		colly.Async(true),
 	)
 
 	siteCollector.OnRequest(func(r *colly.Request) {

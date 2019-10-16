@@ -27,8 +27,8 @@ type ContentBundle struct {
 }
 
 type ScraperStatus struct {
-	ID			string	`json:"id"`
-	Completed	bool	`json:"completed"`
+	ID        string `json:"id"`
+	Completed bool   `json:"completed"`
 }
 
 func CleanTags() {
@@ -74,9 +74,9 @@ func runScrapers(knownScenes []string, scrapeAll bool, updateSite bool, collecte
 }
 
 func sceneSliceAppender(collectedScenes *[]models.ScrapedScene, scenes <-chan models.ScrapedScene) {
-    for scene := range scenes {
-        *collectedScenes = append(*collectedScenes, scene)
-    }
+	for scene := range scenes {
+		*collectedScenes = append(*collectedScenes, scene)
+	}
 }
 
 func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedScene) {
@@ -84,7 +84,7 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 
 	db, _ := models.GetDB()
 	defer db.Close()
-    for scene := range scenes {
+	for scene := range scenes {
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saving %v", scene.SceneID)
 		}
@@ -123,8 +123,8 @@ func Scrape(scrapeAll bool) {
 
 		// Start scraping
 		if e := runScrapers(knownScenes, scrapeAll, true, collectedScenes); e != nil {
-            tlog.Info(e)
-        } else {
+			tlog.Info(e)
+		} else {
 			// Notify DB Writer threads that there are no more scenes
 			close(collectedScenes)
 
@@ -135,8 +135,8 @@ func Scrape(scrapeAll bool) {
 			log.WithField("task", "scraperProgress").Info("DONE")
 
 			tlog.Infof("Scraped %v new scenes in %s",
-					   sceneCount,
-					   time.Now().Sub(t0).Round(time.Second))
+				sceneCount,
+				time.Now().Sub(t0).Round(time.Second))
 		}
 	}
 

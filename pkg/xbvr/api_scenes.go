@@ -26,8 +26,8 @@ type RequestSceneRating struct {
 }
 
 type ResponseGetScenes struct {
-	Results int     		`json:"results"`
-	Scenes  []models.Scene 	`json:"scenes"`
+	Results int            `json:"results"`
+	Scenes  []models.Scene `json:"scenes"`
 }
 
 type ResponseGetFilters struct {

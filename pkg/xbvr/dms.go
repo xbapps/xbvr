@@ -26,12 +26,12 @@ type dmsConfig struct {
 
 func StartDMS() {
 	var config = &dmsConfig{
-		Path:             "",
-		IfName:           "",
-		Http:             ":1338",
-		FriendlyName:     "",
-		LogHeaders:       false,
-		NotifyInterval:   30 * time.Second,
+		Path:           "",
+		IfName:         "",
+		Http:           ":1338",
+		FriendlyName:   "",
+		LogHeaders:     false,
+		NotifyInterval: 30 * time.Second,
 	}
 
 	dmsServer := &dms.Server{

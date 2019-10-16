@@ -15,9 +15,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	"github.com/vansante/go-ffprobe"
-	"gopkg.in/cheggaaa/pb.v1"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func RescanVolumes() {

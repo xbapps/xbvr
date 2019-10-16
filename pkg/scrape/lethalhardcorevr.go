@@ -152,7 +152,6 @@ func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "whorecraftvr", "WhorecraftVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
 }
 
-
 func init() {
 	registerScraper("whorecraftvr", "WhorecraftVR", WhorecraftVR)
 	registerScraper("lethalhardcorevr", "LethalHardcoreVR", LethalHardcoreVR)

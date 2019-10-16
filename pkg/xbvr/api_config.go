@@ -14,8 +14,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
-	"gopkg.in/resty.v1"
 	"github.com/xbapps/xbvr/pkg/models"
+	"gopkg.in/resty.v1"
 )
 
 type NewVolumeRequest struct {
