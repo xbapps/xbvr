@@ -3,6 +3,7 @@ package xbvr
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/index/scorch"
@@ -46,7 +47,14 @@ func (i *Index) GetScene(id string) (models.Scene, error) {
 }
 
 func (i *Index) PutScene(scene models.Scene) error {
-	scene.Fulltext = fmt.Sprintf("%v %v %v", scene.Title, scene.Site, scene.Synopsis)
+	cast := ""
+	castConcat := ""
+	for _, c := range scene.Cast {
+		cast = cast + " " + c.Name
+		castConcat = castConcat + " " + strings.Replace(c.Name, " ", "", -1)
+	}
+
+	scene.Fulltext = fmt.Sprintf("%v %v %v %v %v", scene.Title, scene.Site, scene.Synopsis, cast, castConcat)
 
 	databytes, err := scene.ToJSON()
 	if err != nil {
