@@ -46,6 +46,22 @@
 
           <div class="button is-button is-primary" v-on:click="taskRescan">Rescan</div>
         </div>
+        <div v-else>
+          <section class="hero">
+            <div class="hero-body">
+              <div class="container has-text-centered">
+                <h1 class="title">
+                  <span class="icon">
+                    <b-icon pack="mdi" icon="folder-outline" size="is-large"></b-icon>
+                  </span>
+                </h1>
+                <h2 class="subtitle">
+                  Add folders with VR videos
+                </h2>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       <div class="column">
