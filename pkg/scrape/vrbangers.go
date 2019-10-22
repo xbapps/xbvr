@@ -17,13 +17,13 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	logScrapeStart(scraperID, siteID)
 
 	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com","vrbtrans.com"),
+		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
 	)
 
 	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com","vrbtrans.com"),
+		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
 	)
