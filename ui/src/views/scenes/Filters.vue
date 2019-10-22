@@ -1,11 +1,6 @@
 <template>
   <div>
     <div class="field">
-      <label class="label">Cover size</label>
-      <input type=range v-model="cardSize" min=1 max=3>
-    </div>
-
-    <div class="field">
       <label class="label">State</label>
       <div class="control is-expanded">
         <div class="select is-fullwidth">
@@ -125,14 +120,6 @@
     computed: {
       filters() {
         return this.$store.state.sceneList.filterOpts;
-      },
-      cardSize: {
-        get() {
-          return this.$store.state.sceneList.filters.cardSize;
-        },
-        set(value) {
-          this.$store.state.sceneList.filters.cardSize = value;
-        }
       },
       dlState: {
         get() {

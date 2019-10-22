@@ -2,8 +2,11 @@
   <div>
     <div class="columns">
       <div class="column">
-        <b-table :data="items" ref="table"
-                 paginated per-page="12" pagination-position="both" default-sort="name">
+        <div class="buttons">
+          <a class="button is-primary" v-on:click="taskScrape()">Run Selected Scrapers</a>
+          <a class="button is-primary" v-on:click="taskScrapeAll()">Run All Scrapers</a>
+        </div>
+        <b-table :data="items" ref="table" default-sort="name">
           <template slot-scope="props">
             <b-table-column field="is_enabled" label="" width="20">
               <b-switch :value="props.row.is_enabled"
@@ -21,12 +24,6 @@
               </span>
               <span v-else>Never</span>
             </b-table-column>
-          </template>
-          <template slot="top-left">
-            <div class="buttons">
-              <a class="button is-primary" v-on:click="taskScrape()">Run Selected Scrapers</a>
-              <a class="button is-primary" v-on:click="taskScrapeAll()">Run All Scrapers</a>
-            </div>
           </template>
         </b-table>
       </div>

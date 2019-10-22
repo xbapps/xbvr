@@ -19,19 +19,19 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 	logScrapeStart(scraperID, siteID)
 
 	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("virtualrealporn.com","virtualrealtrans.com"),
+		colly.AllowedDomains("virtualrealporn.com", "virtualrealtrans.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
 	)
 
 	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("virtualrealporn.com","virtualrealtrans.com"),
+		colly.AllowedDomains("virtualrealporn.com", "virtualrealtrans.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
 	)
 
 	castCollector := colly.NewCollector(
-		colly.AllowedDomains("virtualrealporn.com","virtualrealtrans.com"),
+		colly.AllowedDomains("virtualrealporn.com", "virtualrealtrans.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
 		colly.AllowURLRevisit(),
@@ -166,8 +166,8 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 				gender = strings.Split(e.Text, " ")[1]
 			}
 		})
-
-		if gender == "Female" {
+		
+		if gender == "Female" || gender == "Transgender" {
 			sc.Cast = append(sc.Cast, name)
 		}
 	})
@@ -196,7 +196,8 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			"so":     "date-DESC",
 			"pid":    "8",
 		}).
-		Post("https://"+scraperID+".com/wp-admin/admin-ajax.php")
+		Post("https://" + scraperID + ".com/wp-admin/admin-ajax.php")
+
 	if err == nil || r.StatusCode() == 200 {
 		urls := gjson.Get(r.String(), "data.movies.#.permalink").Array()
 		for i := range urls {
@@ -225,5 +226,5 @@ func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 
 func init() {
 	registerScraper("virtualrealporn", "VirtualRealPorn", VirtualRealPorn)
-  registerScraper("virtualrealtrans", "VirtualRealTrans", VirtualRealTrans)
+	registerScraper("virtualrealtrans", "VirtualRealTrans", VirtualRealTrans)
 }
