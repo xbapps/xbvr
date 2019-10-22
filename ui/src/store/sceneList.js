@@ -16,7 +16,7 @@ const state = {
     isAvailable: "1",
     isAccessible: "1",
     isWatched: "",
-    cardSize: 1,
+    cardSize: "1",
     releaseMonth: "",
     cast: [],
     sites: [],

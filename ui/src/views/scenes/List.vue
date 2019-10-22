@@ -6,6 +6,22 @@
       <div class="column">
         <strong>{{total}} results</strong>
       </div>
+      <div class="column">
+        <div class="is-pulled-right">
+          <b-field>
+            <span class="list-header-label">Card size</span>
+            <b-radio-button v-model="cardSize" native-value="1" size="is-small">
+              S
+            </b-radio-button>
+            <b-radio-button v-model="cardSize" native-value="2" size="is-small">
+              M
+            </b-radio-button>
+            <b-radio-button v-model="cardSize" native-value="3" size="is-small">
+              L
+            </b-radio-button>
+          </b-field>
+        </div>
+      </div>
     </div>
 
     <div class="columns is-multiline">
@@ -31,6 +47,14 @@
       this.$store.dispatch("sceneList/load", {offset: 0});
     },
     computed: {
+      cardSize: {
+        get() {
+          return this.$store.state.sceneList.filters.cardSize;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.cardSize = value;
+        }
+      },
       cardSizeClass() {
         switch (this.$store.state.sceneList.filters.cardSize) {
           case "1":
@@ -60,3 +84,9 @@
     }
   }
 </script>
+
+<style scoped>
+  .list-header-label {
+    padding-right: 1em;
+  }
+</style>
