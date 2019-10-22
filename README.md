@@ -42,9 +42,16 @@ App is also available in form of Docker image, which makes it possible to run in
 
 To run this container in docker:
 
-```docker run --name=xbvr --net=host -p 9999:9999 --restart=always --mount type=bind,source=/path/to/your/videos,target=/videos,readonly xbapps/xbvr:latest```
+```
+docker run -t --name=xbvr --net=host --restart=always \
+   --mount type=bind,source=/path/to/your/videos,target=/videos,readonly \
+   --mount source=xbvr-config,target=/root/.config/ \
+   xbapps/xbvr:latest
+```
 
 Adding `-d` to the docker command will run the container in the background.
+
+In docker, your videos will be mounted at /videos and you should add this path in Options -> Folders.
 
 Please note that during the first run XBVR automatically installs `ffprobe` and `ffmpeg` codecs from [ffbinaries site](https://ffbinaries.com/downloads).
 
