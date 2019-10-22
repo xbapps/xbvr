@@ -12,18 +12,18 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
 	defer wg.Done()
-	logScrapeStart("vrbangers", "VRBangers")
+	logScrapeStart(scraperID, siteID)
 
 	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com"),
+		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
 	)
 
 	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com"),
+		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
 	)
@@ -40,7 +40,7 @@ func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRBangers"
-		sc.Site = "VRBangers"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -134,15 +134,23 @@ func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		}
 	})
 
-	siteCollector.Visit("https://vrbangers.com/videos/")
+	siteCollector.Visit(URL)
 
 	if updateSite {
-		updateSiteLastUpdate("vrbangers")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("vrbangers", "VRBangers")
+	logScrapeFinished(scraperID, siteID)
 	return nil
+}
+
+func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbangers", "VRBangers", "https://vrbangers.com/videos/")
+}
+func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbtrans", "VRBTrans", "https://vrbtrans.com/videos/")
 }
 
 func init() {
 	registerScraper("vrbangers", "VRBangers", VRBangers)
+	registerScraper("vrbtrans", "VRBTrans", VRBTrans)
 }
