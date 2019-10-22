@@ -91,7 +91,7 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 	defer db.Close()
 
 	var sites []models.Site
-	db.Find(&sites)
+	db.Order("is_enabled desc").Find(&sites)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
@@ -115,7 +115,7 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 	site.Save()
 
 	var sites []models.Site
-	db.Find(&sites)
+	db.Order("is_enabled desc").Find(&sites)
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
