@@ -33,7 +33,7 @@ RUN cd /app && \
     go generate && \
     go build -tags='json1' -ldflags '-w' -o xbvr main.go
 
-FROM FROM gcr.io/distroless/base-debian10
+FROM gcr.io/distroless/base
 COPY --from=build-env /app/xbvr /
 
 EXPOSE 9998-9999

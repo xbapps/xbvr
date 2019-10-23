@@ -7,7 +7,7 @@ RUN wget -O /tmp/xbvr.tgz "https://github.com/xbapps/xbvr/releases/download/"$DR
     tar xvfz /tmp/xbvr.tgz -C /usr/local/bin/ && \
     rm /tmp/xbvr.tgz
 
-FROM gcr.io/distroless/base-debian10
+FROM gcr.io/distroless/base
 COPY --from=temp /usr/local/bin/xbvr /
 
 EXPOSE 9998-9999
