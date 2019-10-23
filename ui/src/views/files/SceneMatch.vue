@@ -18,10 +18,7 @@
                   :data="data"
                   ref="table"
                   paginated
-                  per-page="5"
-                  detailed
-                  detail-key="cover_url"
-                  :show-detail-icon="true">
+                  per-page="5">
             <template slot-scope="props">
               <b-table-column field="cover_url" label="Image" width="120">
                 <vue-load-image>
@@ -48,11 +45,9 @@
               <b-table-column field="_score" label="Score" sortable>
                 <b-progress show-value :value="props.row._score * 100"></b-progress>
               </b-table-column>
-            </template>
-            <template slot="detail" slot-scope="props">
-              <article class="media">
-                <button class="button" @click="assign(props.row.scene_id)">Assign file with this scene</button>
-              </article>
+              <b-table-column field="_assign">
+                  <button class="button" @click="assign(props.row.scene_id)">Assign</button>
+              </b-table-column>
             </template>
           </b-table>
         </div>
