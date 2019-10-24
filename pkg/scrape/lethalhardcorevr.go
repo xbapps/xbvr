@@ -144,12 +144,12 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 	return nil
 }
 
-func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "lethalhardcorevr", "LethalHardcoreVR", "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
+func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "lethalhardcorevr", "LethalHardcoreVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
 }
 
-func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "whorecraftvr", "WhorecraftVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
+func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "whorecraftvr", "WhorecraftVR", "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
 }
 
 func init() {
