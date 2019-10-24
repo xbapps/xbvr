@@ -12,7 +12,7 @@
 
 <p align="center">
     <strong>
-        <a href="https://feedback.xbvr.app/">Suggestions</a>
+        <a href="https://github.com/xbapps/xbvr/issues">Suggestions</a>
         •
         <a href="https://discord.gg/wdCHXAG">Discord</a>
     </strong>
@@ -59,8 +59,6 @@ When it's all done, you should see your media not only in web UI, but also throu
 Enjoy!
 
 ## Questions & Suggestions
-
-Submit and vote on features at [Feedback site](https://feedback.xbvr.app/).
 
 Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG).
 
