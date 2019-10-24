@@ -12,6 +12,8 @@
 
 <p align="center">
     <strong>
+        <a href="https://github.com/xbapps/xbvr/issues">Suggestions</a>
+        •
         <a href="https://discord.gg/wdCHXAG">Discord</a>
     </strong>
 </p>
