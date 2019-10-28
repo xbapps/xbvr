@@ -102,7 +102,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Preload("Cuepoints").
 		Where(&models.Scene{SceneID: req.PathParameter("scene-id")}).First(&scene)
 
-	baseURL := "http://" + getBaseURL() + ":9999"
+	baseURL := "http://" + req.Request.Host
 
 	var stereoMode string
 	var screenType string
@@ -202,15 +202,15 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 		Scenes: []DeoListScenes{
 			{
 				Name: "Recent releases",
-				List: scenesToDeoList(recent),
+				List: scenesToDeoList(req, recent),
 			},
 			{
 				Name: "Favourites",
-				List: scenesToDeoList(favourite),
+				List: scenesToDeoList(req, favourite),
 			},
 			{
 				Name: "Watchlist",
-				List: scenesToDeoList(watchlist),
+				List: scenesToDeoList(req, watchlist),
 			},
 		},
 	}
@@ -241,8 +241,8 @@ func getBaseURL() string {
 	return hostname
 }
 
-func scenesToDeoList(scenes []models.Scene) []DeoListItem {
-	baseURL := "http://" + getBaseURL() + ":9999"
+func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem {
+	baseURL := "http://" + req.Request.Host
 
 	var list []DeoListItem
 	for i := range scenes {
