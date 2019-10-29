@@ -595,7 +595,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 					Path:   "/api/scene/list",
 					RawQuery: url.Values{
 						"is_accessible": {"1"},
-						"list":          {"watchlist"},
+						"lists":         {"watchlist"},
 					}.Encode(),
 				}).String()
 
@@ -615,7 +615,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 					Path:   "/api/scene/list",
 					RawQuery: url.Values{
 						"is_accessible": {"1"},
-						"list":          {"favourite"},
+						"lists":         {"favourite"},
 					}.Encode(),
 				}).String()
 

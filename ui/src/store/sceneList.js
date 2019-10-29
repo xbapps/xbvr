@@ -13,6 +13,7 @@ const state = {
   },
   filters: {
     dlState: "available",
+    lists: [],
     isAvailable: "1",
     isAccessible: "1",
     isWatched: "",
@@ -71,6 +72,7 @@ const actions = {
         searchParams: {
           offset: iOffset,
           limit: state.limit,
+          lists: state.filters.lists.join(","),
           is_available: state.filters.isAvailable,
           is_accessible: state.filters.isAccessible,
           is_watched: state.filters.isWatched,
