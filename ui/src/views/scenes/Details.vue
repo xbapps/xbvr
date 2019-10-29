@@ -49,11 +49,8 @@
 
             <div class="block-tags block">
               <b-taglist>
-                <b-tag v-for="(c, idx) in item.cast" :key="'cast' + idx" size="is-small" type="is-warning">{{c.name}}
-                </b-tag>
-                <b-tag v-for="(tag, idx) in item.tags" :key="'tag' + idx" size="is-small" type="is-info">
-                  {{tag.name}} ({{tag.count}})
-                </b-tag>
+                <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])' class="tag is-warning is-small">{{c.name}}</a>
+                <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])' class="tag is-info is-small">{{tag.name}} ({{tag.count}}</a>
               </b-taglist>
             </div>
 
@@ -260,6 +257,20 @@
       });
     },
     methods: {
+      showCastScenes(actor) {
+        this.$store.state.sceneList.filters.cast = actor;
+        this.$store.state.sceneList.filters.sites = [];
+        this.$store.state.sceneList.filters.tags = [];
+        this.$store.dispatch("sceneList/load", {offset: 0});
+        this.close();
+      },
+      showTagScenes(tag) {
+        this.$store.state.sceneList.filters.cast = [];
+        this.$store.state.sceneList.filters.sites = [];
+        this.$store.state.sceneList.filters.tags = tag;
+        this.$store.dispatch("sceneList/load", {offset: 0});
+        this.close();
+      },
       playFile(file) {
         this.player.src({type: "video/mp4", src: "/api/dms/file/" + file.id + "?dnt=1"});
         this.player.play();
