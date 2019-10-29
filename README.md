@@ -80,11 +80,13 @@ This project is configured for use in Gitpod. It will provide you with a pre-bui
 
 When the workspace loads, modd runs and will build and start XBVR automatically. Every time you make a change to a file, modd will automatically compile the relevant code.
 
-Once XBVR is compiled and starts, a preview panel will open in the IDE. As you modify files, the preview panel will reload with the latest changes.
+Once XBVR is compiled and starts, a preview panel will open in the IDE. As you modify go files, the preview panel will reload with the latest changes. If you make changes to Vue, you'll need to reload the browser to load the updated JavaScript.
 
 Currently, it's only possible to test XBVR core and Browser applications using Gitpod. Because DLNA requires a local network, you won't be able to connect to the DLNA server running in Gitpod. For most people, this is fine.
 
 sqlite3 is included in the terminal. The XBVR database is located at /home/gitpod/.config/xbvr/main.db
+
+sqlite-web is also included. To browse the db, you can run `sqlite_web /home/gitpod/.config/xbvr/main.db`.
 
 Gitpod has GitHub integration and, once authorized, can fork this repo into your account, push/pull changes, and create pull requests.
 
