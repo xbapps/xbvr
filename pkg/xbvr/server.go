@@ -1,10 +1,13 @@
 package xbvr
 
 import (
+	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
@@ -158,7 +161,13 @@ func StartServer(version, commit, branch, date string) {
 	// DMS
 	go StartDMS()
 
-	log.Infof("Web UI available at http://%v/", httpAddr)
+	addrs, _ := net.InterfaceAddrs()
+	ips := []string{}
+	for _, addr := range addrs {
+		ip, _ := addr.(*net.IPNet)
+		ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+	}
+	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Database file stored at %s", common.AppDir)
 
 	if DEBUG == "" {
