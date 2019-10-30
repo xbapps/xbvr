@@ -80,23 +80,23 @@ func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString str
 		})
 
 		// Scene ID
-    var contentID string
+		var contentID string
 		e.ForEach(`div.product-details dt:contains("Content ID")+dd`, func(id int, e *colly.HTMLElement) {
 			contentID = strings.TrimSpace(e.Text)
-    })
-
-    var dvdID string
-		e.ForEach(`div.product-details dt:contains("DVD ID")+dd`, func(id int, e *colly.HTMLElement) {
-      dvdID = strings.TrimSpace(e.Text)
 		})
 
-  	if dvdID == "----" {
-      sc.SceneID = contentID
-  	  sc.SiteID = contentID
-    } else {
-      sc.SceneID = dvdID
-      sc.SiteID = dvdID
-    }
+		var dvdID string
+		e.ForEach(`div.product-details dt:contains("DVD ID")+dd`, func(id int, e *colly.HTMLElement) {
+			dvdID = strings.TrimSpace(e.Text)
+		})
+
+		if dvdID == "----" {
+			sc.SceneID = contentID
+			sc.SiteID = contentID
+		} else {
+			sc.SceneID = dvdID
+			sc.SiteID = dvdID
+		}
 
 		sc.Tags = append(sc.Tags, "JAVR")
 		*out = append(*out, sc)
