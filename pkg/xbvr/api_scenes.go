@@ -8,6 +8,7 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -233,12 +234,14 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 	default:
 	}
 
-	if req.QueryParameter("list") == "watchlist" {
-		tx = tx.Where("watchlist = ?", true)
-	}
-
-	if req.QueryParameter("list") == "favourite" {
-		tx = tx.Where("favourite = ?", true)
+	q_lists := req.QueryParameter("lists")
+	if q_lists != "" {
+		if funk.ContainsString(strings.Split(q_lists, ","), "watchlist") {
+			tx = tx.Where("watchlist = ?", true)
+		}
+		if funk.ContainsString(strings.Split(q_lists, ","), "favourite") {
+			tx = tx.Where("favourite = ?", true)
+		}
 	}
 
 	q_sites := req.QueryParameter("sites")
@@ -251,7 +254,6 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		tx = tx.
 			Joins("left join scene_tags on scene_tags.scene_id=scenes.id").
 			Joins("left join tags on tags.id=scene_tags.tag_id").
-			// Where(&Tag{Name: q_tag})
 			Where("tags.name IN (?)", strings.Split(q_tags, ","))
 	}
 

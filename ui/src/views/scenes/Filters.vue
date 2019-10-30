@@ -14,6 +14,20 @@
       </div>
     </div>
 
+    <div class="field">
+      <label class="label">List</label>
+      <b-field>
+        <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
+          <b-icon pack="mdi" icon="calendar-check" size="is-small"/>
+          <span>Watchlist</span>
+        </b-checkbox-button>
+        <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
+          <b-icon pack="mdi" icon="heart" size="is-small"/>
+          <span>Favourite</span>
+        </b-checkbox-button>
+      </b-field>
+    </div>
+
     <label class="label">Sort by</label>
     <div class="field has-addons">
       <div class="control is-expanded">
@@ -120,6 +134,15 @@
     computed: {
       filters() {
         return this.$store.state.sceneList.filterOpts;
+      },
+      lists: {
+        get() {
+          return this.$store.state.sceneList.filters.lists;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.lists = value;
+          this.$store.dispatch("sceneList/load", {offset: 0});
+        }
       },
       dlState: {
         get() {
