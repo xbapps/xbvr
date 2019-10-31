@@ -6,7 +6,7 @@ import store from './store';
 import vueDebounce from 'vue-debounce';
 
 import Buefy from 'buefy';
-import 'buefy/dist/buefy.css';
+require('./xbvr.scss');
 
 import 'video.js/dist/video-js.css';
 import 'videojs-vr/dist/videojs-vr.css';
