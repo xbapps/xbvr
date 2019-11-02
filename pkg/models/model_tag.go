@@ -60,7 +60,7 @@ func ConvertTag(t string) string {
 		return "big tits"
 	}
 
-	if funk.Contains([]string{"blow job"}, t) {
+	if funk.Contains([]string{"blow job", "blowjobs"}, t) {
 		return "blowjob"
 	}
 
@@ -112,7 +112,7 @@ func ConvertTag(t string) string {
 		return "girlfriend"
 	}
 
-	if funk.Contains([]string{"hand job"}, t) {
+	if funk.Contains([]string{"hand job", "hand jobs", "handjobs"}, t) {
 		return "handjob"
 	}
 
