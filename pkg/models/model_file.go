@@ -40,6 +40,13 @@ func (f *File) Save() error {
 	return err
 }
 
+func (f *File) GetIfExist(id uint) error {
+	db, _ := GetDB()
+	defer db.Close()
+
+	return db.Where(&File{ID: id}).First(f).Error
+}
+
 func (f *File) Exists() bool {
 	if _, err := os.Stat(f.GetPath()); os.IsNotExist(err) {
 		return false

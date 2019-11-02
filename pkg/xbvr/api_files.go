@@ -17,6 +17,10 @@ type MatchFileRequest struct {
 	FileID  uint   `json:"file_id"`
 }
 
+type UnMatchFileRequest struct {
+	FileID  uint   `json:"file_id"`
+}
+
 type FilesResource struct{}
 
 func (i FilesResource) WebService() *restful.WebService {
@@ -34,6 +38,10 @@ func (i FilesResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/match").To(i.matchFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.POST("/unmatch").To(i.unMatchFile).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
 	ws.Route(ws.DELETE("/file/{file-id}").To(i.removeFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -48,6 +56,70 @@ func (i FilesResource) listUnmatchedFiles(req *restful.Request, resp *restful.Re
 	db.Raw(`select files.* from files where files.scene_id = 0;`).Scan(&files)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, files)
+}
+
+func (i FilesResource) unMatchFile(req *restful.Request, resp *restful.Response) {
+	var r UnMatchFileRequest
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var f models.File
+	err = f.GetIfExist(r.FileID)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	sceneID := f.SceneID
+
+	f.SceneID = 0
+	f.Save()
+
+	var scene models.Scene
+	err = scene.GetIfExistByPK(sceneID)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var pfTxt []string
+	err = json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var newFilenamesArr []string
+	for _, fn := range pfTxt {
+		if fn != f.Filename {
+			newFilenamesArr = append(newFilenamesArr, fn)
+		}
+	}
+
+	tmp, err := json.Marshal(newFilenamesArr)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	scene.FilenamesArr = string(tmp)
+	scene.Save()
+
+	files, err := scene.GetFiles()
+	if err != nil {
+		return
+	}
+
+	if len(files) == 0 {
+		scene.IsAvailable = false
+		scene.IsAccessible = false
+		scene.Save()
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
 
 func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
@@ -70,7 +142,7 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	}
 
 	var f models.File
-	err = db.Where(&models.File{ID: r.FileID}).First(&f).Error
+	err = f.GetIfExist(r.FileID)
 	if err == nil {
 		f.SceneID = scene.ID
 		f.Save()
@@ -109,7 +181,7 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 	var file models.File
 	var scene models.Scene
 	db, _ := models.GetDB()
-	err = db.Where(&models.File{ID: uint(fileId)}).First(&file).Error
+	err = file.GetIfExist(uint(fileId))
 	if err == nil {
 		err := os.Remove(filepath.Join(file.Path, file.Filename))
 		if err == nil {

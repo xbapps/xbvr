@@ -111,6 +111,9 @@
                           {{format(parseISO(f.created_time), "yyyy-MM-dd")}}</small>
                       </div>
                       <div class="media-right">
+                        <button class="button is-danger is-small is-outlined" @click='unmatchFile(f)'>
+                          Unmatch
+                        </button>
                         <button class="button is-danger is-small is-outlined" @click='removeFile(f)'>
                           <b-icon pack="fas" icon="trash" size="is-small"></b-icon>
                         </button>
@@ -281,8 +284,22 @@
           message: `You're about to remove file <strong>${file.filename}</strong> from <strong>disk</strong>.`,
           type: 'is-danger',
           hasIcon: true,
-          onConfirm: function () {
+          onConfirm: () => {
             ky.delete(`/api/files/file/${file.id}`).json().then(data => {
+              this.$store.commit("overlay/showDetails", {scene: data});
+            });
+          }
+        });
+      },
+      unmatchFile(file) {
+        this.$buefy.dialog.confirm({
+          title: 'Unmatch file',
+          message: `You're about to unmatch file <strong>${file.filename}</strong>.`,
+          type: 'is-warning',
+          hasIcon: true,
+          onConfirm: () => {
+            ky.post(`/api/files/unmatch`, {json:{file_id: file.id}}).json().then(data => {
+              this.$store.dispatch("sceneList/load", {offset: 0});
               this.$store.commit("overlay/showDetails", {scene: data});
             });
           }
