@@ -24,7 +24,11 @@ func (t *Tag) Save() error {
 func ConvertTag(t string) string {
 	t = strings.ToLower(t)
 
-	if funk.Contains([]string{"180", "60fps", "60 fps", "5k", "5k+", "big dick", "big cocks", "axaxqxrrysrwqua", "girl-boy", "virtual reality", "vr porn"}, t) {
+	if funk.Contains([]string{"180", "60fps", "60 fps", "5k", "5k+", "big dick", "big cocks",
+							  "axaxqxrrysrwqua", "girl-boy", "virtual reality",
+							  "virtual reality porn", "vr porn", "180 vr porn", "xxxsex vr",
+							  "xxx vr porn", "VRconk", "sex onbed",
+							},t) {
 		return ""
 	}
 
@@ -48,7 +52,7 @@ func ConvertTag(t string) string {
 		return "athletic body"
 	}
 
-	if funk.Contains([]string{"threesome bgg", "bgg", "girl-girl-boy"}, t) {
+	if funk.Contains([]string{"threesome bgg", "bgg", "girl-girl-boy", "ffm threesome"}, t) {
 		return "threesome ffm"
 	}
 
@@ -266,6 +270,14 @@ func ConvertTag(t string) string {
 
 	if funk.Contains([]string{"double penetration"}, t) {
 		return "dp"
+	}
+
+	if funk.Contains([]string{"pov fucking"}, t) {
+		return "pov"
+	}
+
+	if funk.Contains([]string{"xxx parody", "xxx parody vr porn"}, t) {
+		return "parody"
 	}
 
 	return t
