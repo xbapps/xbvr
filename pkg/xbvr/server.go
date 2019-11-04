@@ -161,6 +161,9 @@ func StartServer(version, commit, branch, date string) {
 	// DMS
 	go StartDMS()
 
+	// Cron
+	SetupCron()
+
 	addrs, _ := net.InterfaceAddrs()
 	ips := []string{}
 	for _, addr := range addrs {
