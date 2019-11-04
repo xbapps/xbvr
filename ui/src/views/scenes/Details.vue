@@ -6,6 +6,9 @@
       @keydown.arrowRight="playerStepForward"
       @keydown.o="prevScene"
       @keydown.p="nextScene"
+      @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
+      @keydown.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+      @keydown.g="toggleGallery"
     />
 
     <div class="modal-background"></div>
@@ -263,7 +266,7 @@
         this.updatePlayer();
       },
       updatePlayer() {
-        console.log("uP!")
+        this.index = null;
         this.player.reset();
 
         let vr = this.player.vr({
@@ -395,6 +398,13 @@
         this.player.currentTime(seekTime);
         if (wasPlaying) {
           this.player.play();
+        }
+      },
+      toggleGallery() {
+        if (this.index === null) {
+          this.index = 1;
+        } else {
+          this.index = null;
         }
       },
       format,
