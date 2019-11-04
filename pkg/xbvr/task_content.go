@@ -18,8 +18,6 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-var enableThreading = os.Getenv("XBVR_THREADING")
-
 type ContentBundle struct {
 	Timestamp     time.Time             `json:"timestamp"`
 	BundleVersion string                `json:"bundleVersion"`
@@ -57,11 +55,7 @@ func runScrapers(knownScenes []string, scrapeAll bool, updateSite bool, collecte
 			for _, scraper := range scrapers {
 				if site.ID == scraper.ID {
 					wg.Add(1)
-					if enableThreading != "" {
-						go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes)
-					} else {
-						scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes)
-					}
+					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes)
 				}
 			}
 		}
