@@ -50,7 +50,7 @@
             <div class="block-tags block">
               <b-taglist>
                 <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])' class="tag is-warning is-small">{{c.name}}</a>
-                <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])' class="tag is-info is-small">{{tag.name}} ({{tag.count}}</a>
+                <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])' class="tag is-info is-small">{{tag.name}} ({{tag.count}})</a>
               </b-taglist>
             </div>
 

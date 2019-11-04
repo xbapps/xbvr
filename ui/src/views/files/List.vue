@@ -5,7 +5,7 @@
         <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
 
         <div v-if="items.length > 0 && !isLoading">
-          <b-table :data="items" ref="table">
+          <b-table :data="items" ref="table" default-sort="filename">
             <template slot-scope="props">
               <b-table-column field="filename" label="File" sortable>
                 {{props.row.filename}}
