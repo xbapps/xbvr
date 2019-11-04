@@ -111,6 +111,9 @@
       }
     },
     methods: {
+      reload() {
+        this.$router.push({name: 'scenes', query: this.$store.getters['sceneList/filterQueryParams']});
+      },
       getFilteredCast(text) {
         this.filteredCast = this.filters.cast.filter((option) => {
           return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
@@ -128,7 +131,7 @@
       },
       clearReleaseMonth() {
         this.$store.state.sceneList.filters.releaseMonth = "";
-        this.$store.dispatch("sceneList/load", {offset: 0});
+        this.reload();
       },
     },
     computed: {
@@ -141,7 +144,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.lists = value;
-          this.$store.dispatch("sceneList/load", {offset: 0});
+          this.reload();
         }
       },
       dlState: {
@@ -170,7 +173,7 @@
               break;
           }
 
-          this.$store.dispatch("sceneList/load", {offset: 0});
+          this.reload();
           this.$store.dispatch("sceneList/filters");
         }
       },
@@ -180,7 +183,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.releaseMonth = value;
-          this.$store.dispatch("sceneList/load", {offset: 0});
+          this.reload();
         }
       },
       cast: {
@@ -189,7 +192,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.cast = value;
-          this.$store.dispatch("sceneList/load", {offset: 0});
+          this.reload();
         }
       },
       sites: {
@@ -198,7 +201,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.sites = value;
-          this.$store.dispatch("sceneList/load", {offset: 0});
+          this.reload();
         }
       },
       tags: {
@@ -207,7 +210,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.tags = value;
-          this.$store.dispatch("sceneList/load", {offset: 0});
+          this.reload();
         }
       },
       sort: {
@@ -216,7 +219,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.sort = value;
-          this.$store.dispatch("sceneList/load", {offset: 0});
+          this.reload();
         }
       },
       isWatched: {
@@ -225,7 +228,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.isWatched = value;
-          this.$store.dispatch("sceneList/load", {offset: 0});
+          this.reload();
         }
       },
     }

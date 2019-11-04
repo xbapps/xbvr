@@ -43,9 +43,6 @@
   export default {
     name: "List",
     components: {SceneCard},
-    mounted() {
-      this.$store.dispatch("sceneList/load", {offset: 0});
-    },
     computed: {
       cardSize: {
         get() {
