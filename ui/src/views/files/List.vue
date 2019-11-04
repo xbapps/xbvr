@@ -51,11 +51,9 @@
 <script>
   import prettyBytes from "pretty-bytes";
   import {format, parseISO} from "date-fns";
-  import BButton from "buefy/src/components/button/Button";
 
   export default {
     name: "List",
-    components: {BButton},
     data() {
       return {
         files: [],
