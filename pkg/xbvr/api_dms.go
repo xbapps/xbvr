@@ -228,7 +228,8 @@ func watchSessionFlush() {
 }
 
 func checkForDeadSession() {
-	if time.Since(lastSessionEnd).Seconds() > 60 {
+	if time.Since(lastSessionEnd).Seconds() > 60 && lastSessionSceneID != 0 && lastSessionID != 0 {
+		watchSessionFlush()
 		lastSessionID = 0
 		lastSessionSceneID = 0
 	}

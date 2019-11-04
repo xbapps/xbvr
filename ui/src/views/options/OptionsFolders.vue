@@ -1,93 +1,82 @@
 <template>
-  <div>
-    <div class="columns">
-      <div class="column is-two-thirds">
-        <div v-if="items.length > 0">
-          <b-table :data="items"
-                   ref="table" default-sort="is_available" default-sort-direction="desc">
-            <template slot-scope="props">
-              <b-table-column field="path" label="Path" sortable>
-                {{props.row.path}}
-              </b-table-column>
-              <b-table-column field="is_available" label="Avail" sortable>
-                <b-icon pack="fas" icon="check" size="is-small" v-if="props.row.is_available"></b-icon>
-              </b-table-column>
-              <b-table-column field="file_count" label="# of files" sortable>
-                {{props.row.file_count}}
-              </b-table-column>
-              <b-table-column field="unmatched_count" label="Not matched" sortable>
-                {{props.row.unmatched_count}}
-              </b-table-column>
-              <b-table-column field="total_size" label="Total size" sortable>
-                {{prettyBytes(props.row.total_size)}}
-              </b-table-column>
-              <b-table-column field="last_scan" label="Last scan" sortable>
+  <div class="content">
+    <h3 class="title">Folders</h3>
+    <div v-if="items.length > 0">
+      <b-table :data="items"
+               ref="table" default-sort="is_available" default-sort-direction="desc">
+        <template slot-scope="props">
+          <b-table-column field="path" label="Path" sortable>
+            {{props.row.path}}
+          </b-table-column>
+          <b-table-column field="is_available" label="Avail" sortable>
+            <b-icon pack="fas" icon="check" size="is-small" v-if="props.row.is_available"></b-icon>
+          </b-table-column>
+          <b-table-column field="file_count" label="# of files" sortable>
+            {{props.row.file_count}}
+          </b-table-column>
+          <b-table-column field="unmatched_count" label="Not matched" sortable>
+            {{props.row.unmatched_count}}
+          </b-table-column>
+          <b-table-column field="total_size" label="Total size" sortable>
+            {{prettyBytes(props.row.total_size)}}
+          </b-table-column>
+          <b-table-column field="last_scan" label="Last scan" sortable>
                 <span v-if="props.row.last_scan !== '0001-01-01T00:00:00Z'">
                   {{formatDistanceToNow(parseISO(props.row.last_scan))}} ago
                 </span>
-                <span v-else>Never</span>
-              </b-table-column>
-              <b-table-column field="actions">
-                <button class="button is-danger is-small is-outlined" v-on:click='removeFolder(props.row)'>
-                  <b-icon pack="mdi" icon="close-circle" size="is-small"></b-icon>
-                </button>
-              </b-table-column>
-            </template>
-            <template slot="footer">
-              <td></td>
-              <td></td>
-              <td>{{total.files}}</td>
-              <td>{{total.unmatched}}</td>
-              <td>{{prettyBytes(total.size)}}</td>
-              <td></td>
-              <td></td>
-            </template>
-          </b-table>
+            <span v-else>never</span>
+          </b-table-column>
+          <b-table-column field="actions">
+            <button class="button is-danger is-small is-outlined" v-on:click='removeFolder(props.row)'>
+              <b-icon pack="mdi" icon="close-circle" size="is-small"></b-icon>
+            </button>
+          </b-table-column>
+        </template>
+        <template slot="footer">
+          <td></td>
+          <td></td>
+          <td>{{total.files}}</td>
+          <td>{{total.unmatched}}</td>
+          <td>{{prettyBytes(total.size)}}</td>
+          <td></td>
+          <td></td>
+        </template>
+      </b-table>
 
-          <div class="button is-button is-primary" v-on:click="taskRescan">Rescan</div>
-        </div>
-        <div v-else>
-          <section class="hero">
-            <div class="hero-body">
-              <div class="container has-text-centered">
-                <h1 class="title">
+      <div class="button is-button is-primary" v-on:click="taskRescan">Rescan</div>
+    </div>
+    <div v-else>
+      <section class="hero">
+        <div class="hero-body">
+          <div class="container has-text-centered">
+            <h1 class="title">
                   <span class="icon">
                     <b-icon pack="mdi" icon="folder-outline" size="is-large"></b-icon>
                   </span>
-                </h1>
-                <h2 class="subtitle">
-                  Add folders with VR videos
-                </h2>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-
-      <div class="column">
-        <div class="field">
-          <label class="label">Path to folder with content</label>
-          <div class="control">
-            <input class="input" type="text" v-model='newVolumePath'>
+            </h1>
+            <h2 class="subtitle">
+              Add folders with VR videos
+            </h2>
           </div>
         </div>
-        <div class="control">
-          <button class="button is-link" v-on:click='addFolder'>Add new folder</button>
-        </div>
-      </div>
+      </section>
     </div>
 
-    <div class="columns">
-      <div class="column is-full">
-        <b-message v-if="Object.keys(lastMessage).length !== 0">
-          <span class="icon" v-if="lock">
-            <i class="fas fa-spinner fa-pulse"></i>
-          </span>
-          {{lastMessage.message}}
-        </b-message>
+    <hr/>
+
+    <h3 class="title">Add folder</h3>
+    <div class="field">
+      <label class="label">Path to folder with content</label>
+      <div class="control">
+        <input class="input" type="text" v-model='newVolumePath'>
       </div>
     </div>
+    <div class="control">
+      <button class="button is-link" v-on:click='addFolder'>Add new folder</button>
+    </div>
+
   </div>
+
 </template>
 
 <script>
@@ -141,12 +130,6 @@
       items() {
         return this.$store.state.optionsFolders.items;
       },
-      lastMessage() {
-        return this.$store.state.messages.lastRescanMessage;
-      },
-      lock() {
-        return this.$store.state.messages.lockRescan;
-      }
     }
   }
 </script>

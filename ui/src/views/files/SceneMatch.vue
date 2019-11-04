@@ -15,10 +15,10 @@
             </div>
           </b-field>
           <b-table
-                  :data="data"
-                  ref="table"
-                  paginated
-                  per-page="5">
+            :data="data"
+            ref="table"
+            paginated
+            per-page="5">
             <template slot-scope="props">
               <b-table-column field="cover_url" label="Image" width="120">
                 <vue-load-image>
@@ -46,16 +46,15 @@
                 <b-progress show-value :value="props.row._score * 100"></b-progress>
               </b-table-column>
               <b-table-column field="_assign">
-                  <button class="button" @click="assign(props.row.scene_id)">Assign</button>
+                <button class="button" @click="assign(props.row.scene_id)">Assign</button>
               </b-table-column>
             </template>
           </b-table>
         </div>
       </section>
-      <footer class="modal-card-foot">
-        <!--        <button class="button is-small" @click="close">Cancel</button>-->
-      </footer>
     </div>
+    <a class="prev" @click="prevFile" v-if="$store.getters['files/prevFile'](file) !== null">&#10094;</a>
+    <a class="next" @click="nextFile" v-if="$store.getters['files/nextFile'](file) !== null">&#10095;</a>
   </div>
 </template>
 
@@ -80,10 +79,13 @@
       },
     },
     mounted() {
-      this.queryString = this.file.filename;
-      this.loadData();
+      this.initView();
     },
     methods: {
+      initView() {
+        this.queryString = this.file.filename;
+        this.loadData();
+      },
       loadData: async function loadData() {
         let resp = await ky.get(`/api/scene/search`, {
           searchParams: {
@@ -110,7 +112,26 @@
 
         this.$store.dispatch("files/load");
 
-        this.$store.commit("overlay/hideMatch");
+        let data = this.$store.getters['files/nextFile'](this.file);
+        if (data !== null) {
+          this.nextFile();
+        } else {
+          this.$store.commit("overlay/hideMatch");
+        }
+      },
+      nextFile() {
+        let data = this.$store.getters['files/nextFile'](this.file);
+        if (data !== null) {
+          this.$store.commit("overlay/showMatch", {file: data});
+          this.initView();
+        }
+      },
+      prevFile() {
+        let data = this.$store.getters['files/prevFile'](this.file);
+        if (data !== null) {
+          this.$store.commit("overlay/showMatch", {file: data});
+          this.initView();
+        }
       },
       close() {
         this.$store.commit("overlay/hideMatch");
@@ -125,5 +146,30 @@
 <style scoped>
   .modal-card {
     width: 80%;
+  }
+
+  .prev, .next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    width: auto;
+    padding: 16px;
+    margin-top: -50px;
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+    border-radius: 0 3px 3px 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .next {
+    right: 0;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .prev {
+    left: 0;
+    border-radius: 3px 0 0 3px;
   }
 </style>

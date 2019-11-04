@@ -26,6 +26,23 @@ const state = {
   }
 };
 
+const getters = {
+  prevScene: (state) => (currentScene) => {
+    let i = state.items.findIndex(item => item.scene_id == currentScene.scene_id);
+    if (i === 0) {
+      return null;
+    }
+    return state.items[i - 1];
+  },
+  nextScene: (state) => (currentScene) => {
+    let i = state.items.findIndex(item => item.scene_id == currentScene.scene_id);
+    if (i === state.items.length - 1) {
+      return null;
+    }
+    return state.items[i + 1];
+  },
+};
+
 const mutations = {
   toggleSceneList(state, payload) {
     state.items = state.items.map(obj => {
@@ -46,6 +63,14 @@ const mutations = {
         list: payload.list,
       }
     });
+  },
+  updateScene(state, payload) {
+    state.items = state.items.map(obj => {
+      if (obj.scene_id === payload.scene_id) {
+        obj = payload;
+      }
+      return obj;
+    })
   },
 };
 
@@ -100,6 +125,7 @@ const actions = {
 export default {
   namespaced: true,
   state,
+  getters,
   mutations,
   actions,
 }
