@@ -25,7 +25,7 @@
                 <span v-if="props.row.last_scan !== '0001-01-01T00:00:00Z'">
                   {{formatDistanceToNow(parseISO(props.row.last_scan))}} ago
                 </span>
-                <span v-else>Never</span>
+                <span v-else>never</span>
               </b-table-column>
               <b-table-column field="actions">
                 <button class="button is-danger is-small is-outlined" v-on:click='removeFolder(props.row)'>

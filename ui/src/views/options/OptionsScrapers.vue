@@ -22,7 +22,7 @@
               <span v-else-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
                 {{formatDistanceToNow(parseISO(props.row.last_update))}} ago
               </span>
-              <span v-else>Never</span>
+              <span v-else>never</span>
             </b-table-column>
           </template>
         </b-table>
