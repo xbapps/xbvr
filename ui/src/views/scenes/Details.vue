@@ -327,14 +327,11 @@
         return new Date(seconds * 1000).toISOString().substr(11, 8);
       },
       setRating(val) {
-        var x = ky.post(`/api/scene/rate/${this.item.id}`,
-                        {json: {rating: val},
-                         hooks: {afterResponse: [
-				                          (_request, _options, response) => {
-                                    this.$store.dispatch("sceneList/load", {offset: 0});},
-                                  ],
-                                },
-                        });
+        ky.post(`/api/scene/rate/${this.item.id}`, {json: {rating: val}});
+
+        let updatedScene = Object.assign({}, this.item);
+        updatedScene.star_rating = val;
+        this.$store.commit('sceneList/updateScene', updatedScene);
       },
       playerStepBack() {
         let wasPlaying = !this.player.paused();

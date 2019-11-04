@@ -47,6 +47,14 @@ const mutations = {
       }
     });
   },
+  updateScene(state, payload) {
+    state.items = state.items.map(obj => {
+      if (obj.scene_id === payload.scene_id) {
+        obj = payload;
+      }
+      return obj;
+    })
+  },
 };
 
 const actions = {
