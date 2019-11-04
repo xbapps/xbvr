@@ -5,19 +5,19 @@
         <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
 
         <div v-if="items.length > 0 && !isLoading">
-          <b-table :data="items" ref="table" default-sort="filename">
+          <b-table :data="items" ref="table">
             <template slot-scope="props">
-              <b-table-column field="filename" label="File" sortable>
+              <b-table-column field="filename" label="File">
                 {{props.row.filename}}
                 <br/><small>{{props.row.path}}</small>
               </b-table-column>
-              <b-table-column field="created_time" label="Created" sortable style="white-space: nowrap;">
+              <b-table-column field="created_time" label="Created" style="white-space: nowrap;">
                 {{format(parseISO(props.row.created_time), "yyyy-MM-dd hh:mm:ss")}}
               </b-table-column>
-              <b-table-column field="size" label="Size" sortable style="white-space: nowrap;">
+              <b-table-column field="size" label="Size" style="white-space: nowrap;">
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
-              <b-table-column field="video_height" label="Resolution" sortable>
+              <b-table-column field="video_height" label="Resolution">
                 {{props.row.video_width}}x{{props.row.video_height}}
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
