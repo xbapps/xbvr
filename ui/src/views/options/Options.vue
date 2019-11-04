@@ -1,27 +1,48 @@
 <template>
   <div class="container">
-    <div class="tabs is-medium is-boxed">
-      <ul>
-        <li v-bind:class="{'is-active': active==='folders'}"><a v-on:click="setActive('folders')">Folders</a></li>
-        <li v-bind:class="{'is-active': active==='scrapers'}"><a v-on:click="setActive('scrapers')">Scrapers</a></li>
-        <li v-bind:class="{'is-active': active==='experimental'}"><a v-on:click="setActive('experimental')">Experimental</a></li>
-      </ul>
+    <div class="columns">
+
+      <div class="column is-one-fifth custom-menu">
+        <b-menu>
+          <b-menu-list label="Options">
+            <b-menu-item label="Folders" :active="active==='folders'"
+                         @click="setActive('folders')"/>
+            <b-menu-item label="Scene data" :expanded="true" @click="setActive('data-scrapers')">
+              <b-menu-item label="Mainstream scrapers" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
+              <b-menu-item label="JAVR scrapers" :active="active==='data-javr'"
+                           @click="setActive('data-javr')"/>
+              <b-menu-item label="Search index" :active="active==='data-search-index'"
+                           @click="setActive('data-search-index')"/>
+              <b-menu-item label="Data import/export" :active="active==='data-import-export'"
+                           @click="setActive('data-import-export')"/>
+            </b-menu-item>
+          </b-menu-list>
+        </b-menu>
+      </div>
+
+      <div class="column">
+        <div style="padding-top:2em">
+          <Folders v-show="active==='folders'"/>
+          <SceneDataScrapers v-show="active==='data-scrapers'"/>
+          <SceneDataImportExport v-show="active==='data-import-export'"/>
+          <SceneDataJAVR v-show="active==='data-javr'"/>
+          <SceneDataSearchIndex v-show="active==='data-search-index'"/>
+        </div>
+      </div>
+
     </div>
-
-    <Folders v-show="active==='folders'"/>
-    <Scrapers v-show="active==='scrapers'"/>
-    <Experimental v-show="active==='experimental'"/>
-
   </div>
 </template>
 
 <script>
   import Folders from "./OptionsFolders.vue";
-  import Scrapers from "./OptionsScrapers.vue";
-  import Experimental from "./OptionsExperimental.vue";
+  import SceneDataScrapers from "./OptionsSceneDataScrapers.vue";
+  import SceneDataJAVR from "./OptionsSceneDataJAVR";
+  import SceneDataSearchIndex from "./OptionsSceneDataSearchIndex";
+  import SceneDataImportExport from "./OptionsSceneDataImportExport";
 
   export default {
-    components: {Folders, Scrapers, Experimental},
+    components: {Folders, SceneDataScrapers, SceneDataJAVR, SceneDataSearchIndex, SceneDataImportExport},
     data: function () {
       return {
         active: "folders",
@@ -31,6 +52,6 @@
       setActive: function (e) {
         this.active = e;
       }
-    }
+    },
   }
 </script>
