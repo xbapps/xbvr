@@ -328,6 +328,10 @@
       },
       setRating(val) {
         ky.post(`/api/scene/rate/${this.item.id}`, {json: {rating: val}});
+
+        let updatedScene = Object.assign({}, this.item);
+        updatedScene.star_rating = val;
+        this.$store.commit('sceneList/updateScene', updatedScene);
       },
       playerStepBack() {
         let wasPlaying = !this.player.paused();
