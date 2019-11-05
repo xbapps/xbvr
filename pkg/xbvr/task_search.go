@@ -23,7 +23,7 @@ type SceneIndexed struct {
 func NewIndex(name string) *Index {
 	i := new(Index)
 
-	path := filepath.Join(common.IndexDir, name)
+	path := filepath.Join(common.IndexDirV2, name)
 
 	mapping := bleve.NewIndexMapping()
 	idx, err := bleve.NewUsing(path, mapping, scorch.Name, scorch.Name, nil)
