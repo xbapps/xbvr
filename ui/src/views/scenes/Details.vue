@@ -305,7 +305,7 @@
           message: `You're about to remove file <strong>${file.filename}</strong> from <strong>disk</strong>.`,
           type: 'is-danger',
           hasIcon: true,
-          onConfirm: function () {
+          onConfirm: () => {
             ky.delete(`/api/files/file/${file.id}`).json().then(data => {
               this.$store.commit("overlay/showDetails", {scene: data});
             });
