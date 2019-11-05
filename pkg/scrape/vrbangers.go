@@ -146,6 +146,7 @@ func VRBangersSiteNew(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 				maxPage = page
 			}
 		})
+		maxPage = (maxPage / 10) + 1
 		fastAjaxUrl := "https://vrbangers.com/wp-content/themes/vrbangers/fastAjax/index.php"
 		if securityToken != "" {
 			for i := 1; i <= maxPage; i++ {
@@ -157,7 +158,7 @@ func VRBangersSiteNew(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 					"sortBy":   "latest",
 					"page":     strconv.Itoa(i),
 					"pageSlug": "videos",
-					"perPage":  "12",
+					"perPage":  "120",
 				}
 				log.Println("visiting page " + strconv.Itoa(i))
 
