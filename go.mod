@@ -54,10 +54,11 @@ require (
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/marcsauter/single v0.0.0-20181104081128-f8bf46f26ec0
+	github.com/markphelps/optional v0.7.0
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/mattn/go-sqlite3 v1.11.0 // indirect
+	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/mholt/archiver v3.1.1+incompatible
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

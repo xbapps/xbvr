@@ -21,6 +21,21 @@
   export default {
     name: "Scenes",
     components: {Filters, List, Details},
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        if (to.query !== undefined) {
+          vm.$store.commit('sceneList/stateFromQuery', to.query);
+        }
+        vm.$store.dispatch("sceneList/load", {offset: 0});
+      });
+    },
+    beforeRouteUpdate(to, from, next) {
+      if (to.query !== undefined) {
+        this.$store.commit('sceneList/stateFromQuery', to.query);
+      }
+      this.$store.dispatch("sceneList/load", {offset: 0});
+      next();
+    },
     computed: {
       showOverlay() {
         return this.$store.state.overlay.details.show;

@@ -53,7 +53,7 @@
             <div class="block-tags block">
               <b-taglist>
                 <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])'
-                   class="tag is-warning is-small">{{c.name}}</a>
+                   class="tag is-warning is-small">{{c.name}} ({{c.count}})</a>
                 <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])'
                    class="tag is-info is-small">{{tag.name}} ({{tag.count}})</a>
               </b-taglist>
@@ -285,14 +285,20 @@
         this.$store.state.sceneList.filters.cast = actor;
         this.$store.state.sceneList.filters.sites = [];
         this.$store.state.sceneList.filters.tags = [];
-        this.$store.dispatch("sceneList/load", {offset: 0});
+        this.$router.push({
+          name: 'scenes',
+          query: {q: this.$store.getters['sceneList/filterQueryParams']}
+        });
         this.close();
       },
       showTagScenes(tag) {
         this.$store.state.sceneList.filters.cast = [];
         this.$store.state.sceneList.filters.sites = [];
         this.$store.state.sceneList.filters.tags = tag;
-        this.$store.dispatch("sceneList/load", {offset: 0});
+        this.$router.push({
+          name: 'scenes',
+          query: {q: this.$store.getters['sceneList/filterQueryParams']}
+        });
         this.close();
       },
       playFile(file) {
