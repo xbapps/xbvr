@@ -285,14 +285,20 @@
         this.$store.state.sceneList.filters.cast = actor;
         this.$store.state.sceneList.filters.sites = [];
         this.$store.state.sceneList.filters.tags = [];
-        this.$store.dispatch("sceneList/load", {offset: 0});
+        this.$router.push({
+          name: 'scenes',
+          query: {q: this.$store.getters['sceneList/filterQueryParams']}
+        });
         this.close();
       },
       showTagScenes(tag) {
         this.$store.state.sceneList.filters.cast = [];
         this.$store.state.sceneList.filters.sites = [];
         this.$store.state.sceneList.filters.tags = tag;
-        this.$store.dispatch("sceneList/load", {offset: 0});
+        this.$router.push({
+          name: 'scenes',
+          query: {q: this.$store.getters['sceneList/filterQueryParams']}
+        });
         this.close();
       },
       playFile(file) {

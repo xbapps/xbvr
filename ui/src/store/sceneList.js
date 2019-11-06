@@ -1,4 +1,5 @@
 import ky from "ky";
+import Vue from "vue";
 
 function defaultValue(v, d) {
   if (v === undefined) {
@@ -9,11 +10,12 @@ function defaultValue(v, d) {
 
 const defaultFilterState = {
   dlState: "available",
-  lists: [],
-  isAvailable: "1",
-  isAccessible: "1",
-  isWatched: "",
   cardSize: "1",
+
+  lists: [],
+  isAvailable: true,
+  isAccessible: true,
+  isWatched: null,
   releaseMonth: "",
   cast: [],
   sites: [],
@@ -37,17 +39,10 @@ const state = {
 
 const getters = {
   filterQueryParams: (state) => {
-    return {
-      lists: state.filters.lists.join(","),
-      is_available: state.filters.isAvailable,
-      is_accessible: state.filters.isAccessible,
-      is_watched: state.filters.isWatched,
-      tags: state.filters.tags.join(","),
-      cast: state.filters.cast.join(","),
-      sites: state.filters.sites.join(","),
-      released: state.filters.releaseMonth,
-      sort: state.filters.sort,
-    }
+    const st = Object.assign({}, state.filters);
+    delete st.cardSize;
+
+    return Buffer.from(JSON.stringify(st)).toString("base64");
   },
   prevScene: (state) => (currentScene) => {
     let i = state.items.findIndex(item => item.scene_id == currentScene.scene_id);
@@ -96,30 +91,18 @@ const mutations = {
   },
   stateFromQuery(state, payload) {
     try {
-      state.filters.lists = defaultValue(payload.lists.split(",").filter(el => el !== ""), defaultFilterState.lists);
-      state.filters.isAvailable = defaultValue(payload.is_available, defaultFilterState.isAvailable);
-      state.filters.isAccessible = defaultValue(payload.is_accessible, defaultFilterState.isAccessible);
-      state.filters.isWatched = defaultValue(payload.is_watched, defaultFilterState.isWatched);
-      state.filters.tags = defaultValue(payload.tags.split(",").filter(el => el !== ""), defaultFilterState.tags);
-      state.filters.cast = defaultValue(payload.cast.split(",").filter(el => el !== ""), defaultFilterState.cast);
-      state.filters.sites = defaultValue(payload.sites.split(",").filter(el => el !== ""), defaultFilterState.sites);
-      state.filters.releaseMonth = defaultValue(payload.released, defaultFilterState.releaseMonth);
-      state.filters.sort = defaultValue(payload.sort, defaultFilterState.sort);
+      const obj = JSON.parse(Buffer.from(payload.q, "base64").toString("utf-8"));
+      for (let [k, v] of Object.entries(obj)) {
+        Vue.set(state.filters, k, v)
+      }
     } catch (err) {
-      state.filters = defaultFilterState;
     }
   }
 };
 
 const actions = {
   async filters({state}) {
-    state.filterOpts = await ky
-      .get(`/api/scene/filters/state`, {
-        searchParams: {
-          is_available: state.filters.isAvailable,
-          is_accessible: state.filters.isAccessible,
-        }
-      }).json();
+    state.filterOpts = await ky.get(`/api/scene/filters`).json();
 
     // Reverse list of release months for display purposes
     state.filterOpts.release_month = state.filterOpts.release_month.reverse()
@@ -129,12 +112,12 @@ const actions = {
 
     state.isLoading = true;
 
-    let q = Object.assign({}, getters.filterQueryParams);
+    let q = Object.assign({}, state.filters);
     q.offset = iOffset;
     q.limit = state.limit;
 
     let data = await ky
-      .get(`/api/scene/list`, {searchParams: q})
+      .post(`/api/scene/list`, {json: q})
       .json();
 
     state.isLoading = false;

@@ -51,9 +51,9 @@
       <div class="control is-expanded">
         <div class="select is-fullwidth">
           <select v-model="isWatched">
-            <option value="">Everything</option>
-            <option value="1">Watched</option>
-            <option value="0">Unwatched</option>
+            <option :value="null">Everything</option>
+            <option :value="true">Watched</option>
+            <option :value="false">Unwatched</option>
           </select>
         </div>
       </div>
@@ -112,7 +112,12 @@
     },
     methods: {
       reload() {
-        this.$router.push({name: 'scenes', query: this.$store.getters['sceneList/filterQueryParams']});
+        this.$router.push({
+          name: 'scenes',
+          query: {
+            q: this.$store.getters['sceneList/filterQueryParams']
+          }
+        });
       },
       getFilteredCast(text) {
         this.filteredCast = this.filters.cast.filter((option) => {
@@ -156,25 +161,24 @@
 
           switch (this.$store.state.sceneList.filters.dlState) {
             case "any":
-              this.$store.state.sceneList.filters.isAvailable = "";
-              this.$store.state.sceneList.filters.isAccessible = "";
+              this.$store.state.sceneList.filters.isAvailable = null;
+              this.$store.state.sceneList.filters.isAccessible = null;
               break;
             case "available":
-              this.$store.state.sceneList.filters.isAvailable = "1";
-              this.$store.state.sceneList.filters.isAccessible = "1";
+              this.$store.state.sceneList.filters.isAvailable = true;
+              this.$store.state.sceneList.filters.isAccessible = true;
               break;
             case "downloaded":
-              this.$store.state.sceneList.filters.isAvailable = "1";
-              this.$store.state.sceneList.filters.isAccessible = "";
+              this.$store.state.sceneList.filters.isAvailable = true;
+              this.$store.state.sceneList.filters.isAccessible = null;
               break;
             case "missing":
-              this.$store.state.sceneList.filters.isAvailable = "0";
-              this.$store.state.sceneList.filters.isAccessible = "";
+              this.$store.state.sceneList.filters.isAvailable = false;
+              this.$store.state.sceneList.filters.isAccessible = null;
               break;
           }
 
           this.reload();
-          this.$store.dispatch("sceneList/filters");
         }
       },
       releaseMonth: {
