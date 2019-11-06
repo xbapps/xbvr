@@ -10,6 +10,14 @@ type Actor struct {
 	UpdatedAt time.Time  `json:"-"`
 	DeletedAt *time.Time `sql:"index" json:"-"`
 
-	Name  string `gorm:"unique_index" json:"name"`
-	Count int    `json:"count"`
+	Name   string  `gorm:"unique_index" json:"name"`
+	Scenes []Scene `gorm:"many2many:scene_cast;" json:"-"`
+	Count  int     `json:"count"`
+}
+
+func (i *Actor) Save() error {
+	db, _ := GetDB()
+	err := db.Save(i).Error
+	db.Close()
+	return err
 }
