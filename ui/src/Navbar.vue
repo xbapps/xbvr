@@ -6,14 +6,14 @@
       </b-navbar-item>
     </template>
     <template slot="start">
-      <b-navbar-item>
-        <router-link to="./">Scenes</router-link>
+      <b-navbar-item tag="router-link" :to="{ path: './' }">
+        Scenes
       </b-navbar-item>
-      <b-navbar-item>
-        <router-link to="./files">Files</router-link>
+      <b-navbar-item tag="router-link" :to="{ path: './files' }">
+        Files
       </b-navbar-item>
-      <b-navbar-item>
-        <router-link to="./options">Options</router-link>
+      <b-navbar-item tag="router-link" :to="{ path: './options' }">
+        Options
       </b-navbar-item>
     </template>
     <template slot="end">
