@@ -50,3 +50,4 @@ steps:
       auto_tag: true
       tags: latest
       build_args: DRONE_TAG=${DRONE_TAG}
+      dockerfile: .drone.dockerfile
