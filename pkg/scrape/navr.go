@@ -81,7 +81,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 
 		// Cover URLs
 		e.ForEach(`img.start-card`, func(id int, e *colly.HTMLElement) {
-      sc.Covers = append(sc.Covers, "https:"+e.Attr("src"))
+			sc.Covers = append(sc.Covers, "https:"+e.Attr("src"))
 		})
 
 		// Gallery
