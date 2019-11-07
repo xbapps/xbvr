@@ -31,6 +31,12 @@ func (i FilesResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/list/unmatched").To(i.listUnmatchedFiles).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/list/matched").To(i.listMatchedFiles).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/list/all").To(i.listAllFiles).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.POST("/match").To(i.matchFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -38,6 +44,26 @@ func (i FilesResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
+}
+
+func (i FilesResource) listAllFiles(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var files []models.File
+	db.Raw(`select files.* from files;`).Scan(&files)
+
+	resp.WriteHeaderAndEntity(http.StatusOK, files)
+}
+
+func (i FilesResource) listMatchedFiles(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var files []models.File
+	db.Raw(`select files.* from files where files.scene_id != 0;`).Scan(&files)
+
+	resp.WriteHeaderAndEntity(http.StatusOK, files)
 }
 
 func (i FilesResource) listUnmatchedFiles(req *restful.Request, resp *restful.Response) {

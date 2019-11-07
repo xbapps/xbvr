@@ -17,12 +17,21 @@
               <b-table-column field="size" label="Size" style="white-space: nowrap;">
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
-              <b-table-column field="video_height" label="Resolution">
-                {{props.row.video_width}}x{{props.row.video_height}}
+              <b-table-column field="video_height" label="Width">
+                {{props.row.video_width}}
+              </b-table-column>
+              <b-table-column field="video_height" label="Height">
+                {{props.row.video_height}}
+              </b-table-column>
+              <b-table-column field="video_bitrate" label="Bitrate">
+                {{prettyBytes(props.row.video_bitrate)}}
+              </b-table-column>
+              <b-table-column field="video_bitrate" label="FPS">
+                {{prettyFps(props.row.video_avgfps)}}
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
                 <b-button @click="play(props.row)">Play</b-button>&nbsp;
-                <b-button @click="match(props.row)">Match to scene</b-button>
+                <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">Match</b-button>
               </b-table-column>
             </template>
           </b-table>
@@ -51,7 +60,7 @@
 <script>
   import prettyBytes from "pretty-bytes";
   import {format, parseISO} from "date-fns";
-
+  
   export default {
     name: "List",
     data() {
@@ -68,7 +77,7 @@
       },
       items() {
         return this.$store.state.files.items;
-      },
+      }
     },
     mounted() {
       this.$store.dispatch("files/load");
@@ -79,6 +88,9 @@
       },
       match(file) {
         this.$store.commit("overlay/showMatch", {file: file});
+      },
+      prettyFps(framerate) {
+        return Math.round(parseInt(framerate.split('/')[0])/parseInt(framerate.split('/')[1])).toString();
       }
     },
   }
