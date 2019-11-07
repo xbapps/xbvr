@@ -1,14 +1,14 @@
 <template>
   <div>
     <div class="field">
-      <label class="label">State</label>
+      <label class="label">{{$t("State")}}</label>
       <div class="control is-expanded">
         <div class="select is-fullwidth">
           <select v-model="dlState">
-            <option value="any">Any</option>
-            <option value="available">Available right now</option>
-            <option value="downloaded">Downloaded</option>
-            <option value="missing">Not downloaded</option>
+            <option value="any">{{$t("Any")}}</option>
+            <option value="available">{{$t("Available right now")}}</option>
+            <option value="downloaded">{{$t("Downloaded")}}</option>
+            <option value="missing">{{$t("Not downloaded")}}</option>
           </select>
         </div>
       </div>
@@ -19,28 +19,28 @@
       <b-field>
         <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
           <b-icon pack="mdi" icon="calendar-check" size="is-small"/>
-          <span>Watchlist</span>
+          <span>{{$t("Watchlist")}}</span>
         </b-checkbox-button>
         <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
           <b-icon pack="mdi" icon="heart" size="is-small"/>
-          <span>Favourite</span>
+          <span>{{$t("Favourite")}}</span>
         </b-checkbox-button>
       </b-field>
     </div>
 
-    <label class="label">Sort by</label>
+    <label class="label">{{$t("Sort by")}}</label>
     <div class="field has-addons">
       <div class="control is-expanded">
         <div class="select is-fullwidth">
           <select v-model="sort">
-            <option value="release_desc">↓ Release date</option>
-            <option value="release_asc">↑ Release date</option>
-            <option value="added_desc">↓ Date added</option>
-            <option value="added_asc">↑ Date added</option>
-            <option value="rating_desc">↓ Rating</option>
-            <option value="rating_asc">↑ Rating</option>
-            <option value="last_opened">↻ Recently viewed</option>
-            <option value="random">↯ Random</option>
+            <option value="release_desc">↓ {{$t("Release date")}}</option>
+            <option value="release_asc">↑ {{$t("Release date")}}</option>
+            <option value="added_desc">↓ {{$t("Date added")}}</option>
+            <option value="added_asc">↑ {{$t("Date added")}}</option>
+            <option value="rating_desc">↓ {{$t("Rating")}}</option>
+            <option value="rating_asc">↑ {{$t("Rating")}}</option>
+            <option value="last_opened">↻ {{$t("Recently viewed")}}}</option>
+            <option value="random">↯ {{$t("Random")}}</option>
           </select>
         </div>
       </div>
