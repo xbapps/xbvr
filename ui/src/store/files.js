@@ -25,7 +25,7 @@ const getters = {
 const actions = {
   load({state}, params) {
     state.isLoading = true;
-    ky.get(`/api/files/list/unmatched`).json().then(data => {
+    ky.get(`/api/files/list/all`).json().then(data => {
       state.items = data;
       state.isLoading = false;
     });
