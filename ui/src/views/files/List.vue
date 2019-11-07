@@ -7,22 +7,22 @@
         <div v-if="items.length > 0 && !isLoading">
           <b-table :data="items" ref="table">
             <template slot-scope="props">
-              <b-table-column field="filename" label="File">
+              <b-table-column field="filename" :label="$t('File')">
                 {{props.row.filename}}
                 <br/><small>{{props.row.path}}</small>
               </b-table-column>
-              <b-table-column field="created_time" label="Created" style="white-space: nowrap;">
+              <b-table-column field="created_time" :label="$t('Created')" style="white-space: nowrap;">
                 {{format(parseISO(props.row.created_time), "yyyy-MM-dd hh:mm:ss")}}
               </b-table-column>
-              <b-table-column field="size" label="Size" style="white-space: nowrap;">
+              <b-table-column field="size" :label="$t('Size')" style="white-space: nowrap;">
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
-              <b-table-column field="video_height" label="Resolution">
+              <b-table-column field="video_height" :label="$t('Resolution')">
                 {{props.row.video_width}}x{{props.row.video_height}}
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
-                <b-button @click="play(props.row)">Play</b-button>&nbsp;
-                <b-button @click="match(props.row)">Match to scene</b-button>
+                <b-button @click="play(props.row)">{{$t('Play')}}</b-button>&nbsp;
+                <b-button @click="match(props.row)">{{$t('Match to scene')}}</b-button>
               </b-table-column>
             </template>
           </b-table>
@@ -37,7 +37,7 @@
                   </span>
                 </h1>
                 <h2 class="subtitle">
-                  All of your files are linked to scenes
+                  {{$t('All of your files are linked to scenes')}}
                 </h2>
               </div>
             </div>

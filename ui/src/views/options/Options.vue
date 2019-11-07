@@ -4,16 +4,16 @@
 
       <div class="column is-one-fifth custom-menu">
         <b-menu>
-          <b-menu-list label="Options">
-            <b-menu-item label="Folders" :active="active==='folders'"
+          <b-menu-list :label="$t('Options')">
+            <b-menu-item :label="$t('Folders')" :active="active==='folders'"
                          @click="setActive('folders')"/>
-            <b-menu-item label="Scene data" :expanded="true" @click="setActive('data-scrapers')">
-              <b-menu-item label="Mainstream scrapers" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
-              <b-menu-item label="JAVR scrapers" :active="active==='data-javr'"
+            <b-menu-item :label="$t('Scene data')" :expanded="true" @click="setActive('data-scrapers')">
+              <b-menu-item :label="$t('Mainstream scrapers')" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
+              <b-menu-item :label="$t('JAVR scrapers')" :active="active==='data-javr'"
                            @click="setActive('data-javr')"/>
-              <b-menu-item label="Search index" :active="active==='data-search-index'"
+              <b-menu-item :label="$t('Search index')" :active="active==='data-search-index'"
                            @click="setActive('data-search-index')"/>
-              <b-menu-item label="Data import/export" :active="active==='data-import-export'"
+              <b-menu-item :label="$t('Data import/export')" :active="active==='data-import-export'"
                            @click="setActive('data-import-export')"/>
             </b-menu-item>
           </b-menu-list>

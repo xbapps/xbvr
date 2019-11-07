@@ -3,13 +3,13 @@
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Match file to scene</p>
+        <p class="modal-card-title">{{$t("Match file to scene")}}</p>
         <button class="delete" @click="close" aria-label="close"></button>
       </header>
       <section class="modal-card-body">
         <div>
           <h6 class="title is-6">{{ file.filename }}</h6>
-          <b-field label="Search">
+          <b-field :label="$t('Search')">
             <div class="control">
               <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
             </div>
@@ -20,33 +20,33 @@
             paginated
             per-page="5">
             <template slot-scope="props">
-              <b-table-column field="cover_url" label="Image" width="120">
+              <b-table-column field="cover_url" :label="$t('Image')" width="120">
                 <vue-load-image>
                   <img slot="image" :src="getImageURL(props.row.cover_url)"/>
                   <img slot="preloader" src="/ui/images/blank.png"/>
                   <img slot="error" src="/ui/images/blank.png"/>
                 </vue-load-image>
               </b-table-column>
-              <b-table-column field="site" label="Site" sortable>
+              <b-table-column field="site" :label="$t('Site')" sortable>
                 {{ props.row.site }}
               </b-table-column>
-              <b-table-column field="title" label="Title" sortable>
+              <b-table-column field="title" :label="$t('Title')" sortable>
                 <p v-if="props.row.title">{{ props.row.title }}</p>
                 <small>
                   <b-tag rounded v-for="i in props.row.cast" :key="i.id">{{i.name}}</b-tag>
                 </small>
               </b-table-column>
-              <b-table-column field="release_date" label="Release date" sortable nowrap>
+              <b-table-column field="release_date" :label="$t('Release date')" sortable nowrap>
                 {{format(parseISO(props.row.release_date), "yyyy-MM-dd")}}
               </b-table-column>
-              <b-table-column field="scene_id" label="ID" sortable nowrap>
+              <b-table-column field="scene_id" :label="$t('ID')" sortable nowrap>
                 {{props.row.scene_id}}
               </b-table-column>
-              <b-table-column field="_score" label="Score" sortable>
+              <b-table-column field="_score" :label="$t('Score')" sortable>
                 <b-progress show-value :value="props.row._score * 100"></b-progress>
               </b-table-column>
               <b-table-column field="_assign">
-                <button class="button" @click="assign(props.row.scene_id)">Assign</button>
+                <button class="button" @click="assign(props.row.scene_id)">{{$t("Assign")}}</button>
               </b-table-column>
             </template>
           </b-table>

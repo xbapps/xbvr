@@ -7,24 +7,24 @@
     </template>
     <template slot="start">
       <b-navbar-item>
-        <router-link to="./">Scenes</router-link>
+        <router-link to="./">{{$t('Scenes')}}</router-link>
       </b-navbar-item>
       <b-navbar-item>
-        <router-link to="./files">Files</router-link>
+        <router-link to="./files">{{$t('Files')}}</router-link>
       </b-navbar-item>
       <b-navbar-item>
-        <router-link to="./options">Options</router-link>
+        <router-link to="./options">{{$t('Options')}}</router-link>
       </b-navbar-item>
     </template>
     <template slot="end">
       <b-navbar-item>
         <table style="font-size:0.9em">
           <tr v-if="Object.keys(lastRescanMessage).length !== 0">
-            <th><span :class="[lockRescan ? 'pulsate' : '']">Files →</span></th>
+            <th><span :class="[lockRescan ? 'pulsate' : '']">{{$t('Files')}} →</span></th>
             <td>{{lastRescanMessage.message}}</td>
           </tr>
           <tr v-if="Object.keys(lastScrapeMessage).length !== 0">
-            <th><span :class="[lockScrape ? 'pulsate' : '']">Data →</span></th>
+            <th><span :class="[lockScrape ? 'pulsate' : '']">{{$t('Data')}} →</span></th>
             <td>{{lastScrapeMessage.message}}</td>
           </tr>
         </table>
@@ -67,7 +67,7 @@
             message: `Version ${this.latestVersion} available!`,
             type: 'is-warning',
             position: 'is-top',
-            actionText: 'Download now',
+            actionText: this.$t('Download now'),
             indefinite: true,
             onAction: () => {
               window.location = "https://github.com/xbapps/xbvr/releases";

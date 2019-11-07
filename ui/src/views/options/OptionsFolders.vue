@@ -1,26 +1,26 @@
 <template>
   <div class="content">
-    <h3 class="title">Folders</h3>
+    <h3 class="title">{{$t('Folders')}}</h3>
     <div v-if="items.length > 0">
       <b-table :data="items"
                ref="table" default-sort="is_available" default-sort-direction="desc">
         <template slot-scope="props">
-          <b-table-column field="path" label="Path" sortable>
+          <b-table-column field="path" :label="$t('Path')" sortable>
             {{props.row.path}}
           </b-table-column>
-          <b-table-column field="is_available" label="Avail" sortable>
+          <b-table-column field="is_available" :label="$t('Avail')" sortable>
             <b-icon pack="fas" icon="check" size="is-small" v-if="props.row.is_available"></b-icon>
           </b-table-column>
-          <b-table-column field="file_count" label="# of files" sortable>
+          <b-table-column field="file_count" :label="$t('# of files')" sortable>
             {{props.row.file_count}}
           </b-table-column>
-          <b-table-column field="unmatched_count" label="Not matched" sortable>
+          <b-table-column field="unmatched_count" :label="$t('Not matched')" sortable>
             {{props.row.unmatched_count}}
           </b-table-column>
-          <b-table-column field="total_size" label="Total size" sortable>
+          <b-table-column field="total_size" :label="$t('Total size')" sortable>
             {{prettyBytes(props.row.total_size)}}
           </b-table-column>
-          <b-table-column field="last_scan" label="Last scan" sortable>
+          <b-table-column field="last_scan" :label="$t('Last scan')" sortable>
                 <span v-if="props.row.last_scan !== '0001-01-01T00:00:00Z'">
                   {{formatDistanceToNow(parseISO(props.row.last_scan))}} ago
                 </span>
@@ -43,7 +43,7 @@
         </template>
       </b-table>
 
-      <div class="button is-button is-primary" v-on:click="taskRescan">Rescan</div>
+      <div class="button is-button is-primary" v-on:click="taskRescan">{{$t('Rescan')}}</div>
     </div>
     <div v-else>
       <section class="hero">
@@ -55,7 +55,7 @@
                   </span>
             </h1>
             <h2 class="subtitle">
-              Add folders with VR videos
+              {{$t('Add folders with VR videos')}}
             </h2>
           </div>
         </div>
@@ -64,15 +64,15 @@
 
     <hr/>
 
-    <h3 class="title">Add folder</h3>
+    <h3 class="title">{{$t('Add folder')}}</h3>
     <div class="field">
-      <label class="label">Path to folder with content</label>
+      <label class="label">{{$t('Path to folder with content')}}</label>
       <div class="control">
         <input class="input" type="text" v-model='newVolumePath'>
       </div>
     </div>
     <div class="control">
-      <button class="button is-link" v-on:click='addFolder'>Add new folder</button>
+      <button class="button is-link" v-on:click='addFolder'>{{$t('Add new folder')}}</button>
     </div>
 
   </div>
@@ -107,7 +107,7 @@
       },
       removeFolder: function (folder) {
         this.$buefy.dialog.confirm({
-          title: 'Remove folder',
+          title: this.$t('Remove folder'),
           message: `You're about to remove folder <strong>${folder.path}</strong> and its files from database.`,
           type: 'is-danger',
           hasIcon: true,
