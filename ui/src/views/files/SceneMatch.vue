@@ -83,7 +83,8 @@
     },
     methods: {
       initView() {
-        this.queryString = this.file.filename;
+        this.queryString = this.file.filename.replaceAll(".", " ").replaceAll("_", " ").replaceAll("+", " ")
+          .replaceAll("-", " ");
         this.loadData();
       },
       loadData: async function loadData() {
