@@ -3,7 +3,6 @@ package xbvr
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/blevesearch/bleve"
 	"github.com/davecgh/go-spew/spew"
@@ -320,10 +319,6 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 
 func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Response) {
 	q := req.QueryParameter("q")
-	q = strings.Replace(q, ".", " ", -1)
-	q = strings.Replace(q, "_", " ", -1)
-	q = strings.Replace(q, "+", " ", -1)
-	q = strings.Replace(q, "-", " ", -1)
 
 	db, _ := models.GetDB()
 	defer db.Close()
