@@ -1,13 +1,28 @@
 <template>
   <div>
     <div class="columns">
+      <div class="column is-one-fifth">
+        <div class="field">
+          <label class="label">Status</label>
+          <b-field>
+            <b-checkbox-button v-model="lists" native-value="all" type="is-primary">
+              <span>All</span>
+            </b-checkbox-button>
+            <b-checkbox-button v-model="lists" native-value="matched" type="is-danger">
+              <span>Matched</span>
+            </b-checkbox-button>
+            <b-checkbox-button v-model="lists" native-value="unmatched" type="is-danger">
+              <span>Unmatched</span>
+            </b-checkbox-button>
+          </b-field>
+        </div>
+      </div>
       <div class="column">
         <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
-
         <div v-if="items.length > 0 && !isLoading">
           <b-table :data="items" ref="table">
             <template slot-scope="props">
-              <b-table-column field="filename" label="File">
+              <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename" label="File">
                 {{props.row.filename}}
                 <br/><small>{{props.row.path}}</small>
               </b-table-column>
@@ -17,7 +32,7 @@
               <b-table-column field="size" label="Size" style="white-space: nowrap;">
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
-              <b-table-column field="video_height" label="Width">
+              <b-table-column field="video_width" label="Width">
                 {{props.row.video_width}}
               </b-table-column>
               <b-table-column field="video_height" label="Height">
@@ -26,7 +41,7 @@
               <b-table-column field="video_bitrate" label="Bitrate">
                 {{prettyBytes(props.row.video_bitrate)}}
               </b-table-column>
-              <b-table-column field="video_bitrate" label="FPS">
+              <b-table-column field="video_avgfps" label="FPS">
                 {{prettyFps(props.row.video_avgfps)}}
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
