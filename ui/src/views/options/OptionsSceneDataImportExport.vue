@@ -1,22 +1,22 @@
 <template>
   <div>
     <div class="content">
-      <h3>Import scene data</h3>
+      <h3>{{$t("Import scene data")}}</h3>
       <p>
-        You can import existing content bundles in JSON format from URL.
+        {{$t("You can import existing content bundles in JSON format from URL.")}}
       </p>
       <b-field grouped>
-        <b-input v-model="bundleURL" placeholder="Bundle URL" type="search" icon="web"></b-input>
-        <div class="button is-button is-primary" v-on:click="importContent">Import content bundle</div>
+        <b-input v-model="bundleURL" :placeholder="$t('Bundle URL')" type="search" icon="web"></b-input>
+        <div class="button is-button is-primary" v-on:click="importContent">{{$t('Import content bundle')}}</div>
       </b-field>
       <hr/>
     </div>
     <div class="content">
-      <h3>Export scene data</h3>
+      <h3>{{$t('Export scene data')}}</h3>
       <p>
-        If you already have scraped scene data, you can export it below.
+        {{$t('If you already have scraped scene data, you can export it below.')}}
       </p>
-      <b-button type="is-primary" @click="exportContent">Export content bundle</b-button>
+      <b-button type="is-primary" @click="exportContent">{{$t('Export content bundle')}}</b-button>
     </div>
   </div>
 </template>

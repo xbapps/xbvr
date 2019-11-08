@@ -22,14 +22,14 @@
         <div v-if="items.length > 0 && !isLoading">
           <b-table :data="items" ref="table">
             <template slot-scope="props">
-              <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename" label="File">
+              <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename" :label="$t('File')">
                 {{props.row.filename}}
                 <br/><small>{{props.row.path}}</small>
               </b-table-column>
-              <b-table-column field="created_time" label="Created" style="white-space: nowrap;">
+              <b-table-column field="created_time" :label="$t('Created')" style="white-space: nowrap;">
                 {{format(parseISO(props.row.created_time), "yyyy-MM-dd hh:mm:ss")}}
               </b-table-column>
-              <b-table-column field="size" label="Size" style="white-space: nowrap;">
+              <b-table-column field="size" :label="$t('Size')" style="white-space: nowrap;">
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
               <b-table-column field="video_width" label="Width">
@@ -45,8 +45,8 @@
                 {{prettyFps(props.row.video_avgfps)}}
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
-                <b-button @click="play(props.row)">Play</b-button>&nbsp;
-                <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">Match</b-button>
+                <b-button @click="play(props.row)">{{$t('Play')}}</b-button>&nbsp;
+                <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">{{$t('Match')}}</b-button>
               </b-table-column>
             </template>
           </b-table>
@@ -61,7 +61,7 @@
                   </span>
                 </h1>
                 <h2 class="subtitle">
-                  All of your files are linked to scenes
+                  {{$t('All of your files are linked to scenes')}}
                 </h2>
               </div>
             </div>
