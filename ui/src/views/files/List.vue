@@ -5,15 +5,15 @@
         <div class="field">
           <label class="label">Status</label>
           <b-field>
-            <b-checkbox-button v-model="lists" native-value="all" type="is-primary">
+            <b-radio-button v-model="statuses" native-value="all">
               <span>All</span>
-            </b-checkbox-button>
-            <b-checkbox-button v-model="lists" native-value="matched" type="is-danger">
+            </b-radio-button>
+            <b-radio-button v-model="statuses" native-value="matched">
               <span>Matched</span>
-            </b-checkbox-button>
-            <b-checkbox-button v-model="lists" native-value="unmatched" type="is-danger">
+            </b-radio-button>
+            <b-radio-button v-model="statuses" native-value="unmatched">
               <span>Unmatched</span>
-            </b-checkbox-button>
+            </b-radio-button>
           </b-field>
         </div>
       </div>
