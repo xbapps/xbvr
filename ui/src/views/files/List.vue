@@ -1,22 +1,6 @@
 <template>
   <div>
     <div class="columns">
-      <div class="column is-one-fifth">
-        <div class="field">
-          <label class="label">Status</label>
-          <b-field>
-            <b-radio-button v-model="statuses" native-value="all">
-              <span>All</span>
-            </b-radio-button>
-            <b-radio-button v-model="statuses" native-value="matched">
-              <span>Matched</span>
-            </b-radio-button>
-            <b-radio-button v-model="statuses" native-value="unmatched">
-              <span>Unmatched</span>
-            </b-radio-button>
-          </b-field>
-        </div>
-      </div>
       <div class="column">
         <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
         <div v-if="items.length > 0 && !isLoading">
