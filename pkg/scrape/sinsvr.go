@@ -53,10 +53,6 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		sc.Gallery = e.ChildAttrs(`img[itemprop="thumbnail"]`, "data-srcset")
 
-		// e.ForEach(`img[itemprop="thumbnail"]`, func(id int, e *colly.HTMLElement) {
-		// 	sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("data-srcset")))
-		// })
-
 		e.ForEach(`.c-video-meta span`, func(id int, e *colly.HTMLElement) {
 			c := e.Attr("class")
 			if strings.Contains(c, "u-mr--nine") {
