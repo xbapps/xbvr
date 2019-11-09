@@ -80,8 +80,17 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		})
 
 		// Cover URLs
-		e.ForEach(`img.start-card`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, "https:"+e.Attr("src"))
+		e.ForEach(`a.play-trailer img.start-card`, func(id int, e *colly.HTMLElement) {
+			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
+			base := strings.Split(strings.Replace(e.Attr("src"), "//", "", -1), "/")
+
+			base[8] = "vertical"
+			base[9] = "400x605c.jpg"
+			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+
+			base[8] = "horizontal"
+			base[9] = "1252x708c.jpg"
+			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 		})
 
 		// Gallery
@@ -93,7 +102,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 
 		// Synopsis
 		e.ForEach(`div.synopsis`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(strings.Replace(e.Text, "Synopsis", "", -1))
+			sc.Synopsis = strings.TrimSpace(strings.Replace(e.Text, "Synopsis:", "", -1))
 		})
 
 		// Tags
