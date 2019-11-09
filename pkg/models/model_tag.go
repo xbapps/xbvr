@@ -22,13 +22,14 @@ func (t *Tag) Save() error {
 }
 
 func ConvertTag(t string) string {
-	t = strings.ToLower(t)
+	t = strings.TrimSpace(strings.ToLower(t))
 
 	if funk.Contains([]string{"180", "60fps", "60 fps", "5k", "5k+", "big dick", "big cocks",
-							  "axaxqxrrysrwqua", "girl-boy", "virtual reality",
-							  "virtual reality porn", "vr porn", "180 vr porn", "xxxsex vr",
-							  "xxx vr porn", "VRconk", "sex onbed", "pornstars",
-							},t) {
+		"axaxqxrrysrwqua", "girl-boy", "virtual reality", "sex", "new",
+		"virtual reality porn", "vr porn", "180 vr porn", "xxxsex vr",
+		"xxx vr porn", "VRconk", "sex onbed", "pornstars", "vr", "vrp",
+		"bg", "coming soon", "vr 1080p porn",
+	}, t) {
 		return ""
 	}
 
@@ -60,7 +61,7 @@ func ConvertTag(t string) string {
 		return "threesome fmm"
 	}
 
-	if funk.Contains([]string{"big boobs"}, t) {
+	if funk.Contains([]string{"big boobs", "big tits porn"}, t) {
 		return "big tits"
 	}
 
@@ -152,7 +153,7 @@ func ConvertTag(t string) string {
 		return "squirting"
 	}
 
-	if funk.Contains([]string{"teens"}, t) {
+	if funk.Contains([]string{"teens", "18"}, t) {
 		return "teen"
 	}
 
@@ -204,7 +205,7 @@ func ConvertTag(t string) string {
 		return "tattoos"
 	}
 
-	if funk.Contains([]string{"piercing", "pirced pussy"}, t) {
+	if funk.Contains([]string{"piercing", "pirced pussy", "pierced navel"}, t) {
 		return "piercings"
 	}
 
