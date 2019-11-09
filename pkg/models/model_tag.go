@@ -27,7 +27,7 @@ func ConvertTag(t string) string {
 	if funk.Contains([]string{"180", "60fps", "60 fps", "5k", "5k+", "big dick", "big cocks",
 							  "axaxqxrrysrwqua", "girl-boy", "virtual reality",
 							  "virtual reality porn", "vr porn", "180 vr porn", "xxxsex vr",
-							  "xxx vr porn", "VRconk", "sex onbed",
+							  "xxx vr porn", "VRconk", "sex onbed", "pornstars",
 							},t) {
 		return ""
 	}
@@ -124,7 +124,7 @@ func ConvertTag(t string) string {
 		return "latina"
 	}
 
-	if funk.Contains([]string{"lesbian love", "lesbians"}, t) {
+	if funk.Contains([]string{"lesbian love", "lesbians", "girlgirl", "girl-on-girl"}, t) {
 		return "lesbian"
 	}
 
@@ -200,7 +200,7 @@ func ConvertTag(t string) string {
 		return "no tattoos"
 	}
 
-	if funk.Contains([]string{"tattoo", "tatoos"}, t) {
+	if funk.Contains([]string{"tattoo", "tatoos", "tattoo(s)"}, t) {
 		return "tattoos"
 	}
 
@@ -272,12 +272,20 @@ func ConvertTag(t string) string {
 		return "dp"
 	}
 
-	if funk.Contains([]string{"pov fucking"}, t) {
+	if funk.Contains([]string{"pov fucking", "pov vr"}, t) {
 		return "pov"
 	}
 
 	if funk.Contains([]string{"xxx parody", "xxx parody vr porn"}, t) {
 		return "parody"
+	}
+
+	if funk.Contains([]string{"fingering"}, t) {
+		return "masturbation"
+	}
+
+	if funk.Contains([]string{"solo models"}, t) {
+		return "solo"
 	}
 
 	return t
