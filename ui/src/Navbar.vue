@@ -6,14 +6,14 @@
       </b-navbar-item>
     </template>
     <template slot="start">
-      <b-navbar-item>
-        <router-link to="./">{{$t('Scenes')}}</router-link>
+      <b-navbar-item tag="router-link" :to="{ path: './' }">
+        {{$t('Scenes')}}
       </b-navbar-item>
-      <b-navbar-item>
-        <router-link to="./files">{{$t('Files')}}</router-link>
+      <b-navbar-item tag="router-link" :to="{ path: './files' }">
+        {{$t('Files')}}
       </b-navbar-item>
-      <b-navbar-item>
-        <router-link to="./options">{{$t('Options')}}</router-link>
+      <b-navbar-item tag="router-link" :to="{ path: './options' }">
+        {{$t('Options')}}
       </b-navbar-item>
     </template>
     <template slot="end">
