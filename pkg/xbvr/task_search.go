@@ -52,7 +52,7 @@ func (i *Index) PutScene(scene models.Scene) error {
 	}
 
 	si := SceneIndexed{
-		Fulltext: fmt.Sprintf("%v %v %v %v %v", scene.Title, scene.Site, scene.Synopsis, cast, castConcat),
+		Fulltext: fmt.Sprintf("%v %v %v %v %v %v", scene.SceneID, scene.Title, scene.Site, scene.Synopsis, cast, castConcat),
 	}
 	if err := i.bleve.Index(scene.SceneID, si); err != nil {
 		return err

@@ -436,7 +436,9 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			// All videos
 			if obj.Path == "all" {
 				var data XbaseScenes
-				resty.R().SetResult(&data).Get("http://127.0.0.1:9999/api/scene/list?is_accessible=1")
+				resty.R().SetHeader("Content-Type", "application/json").
+					SetBody(`{"isAccessible":true}`).
+					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "all", host))
@@ -461,18 +463,10 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if strings.HasPrefix(obj.Path, "sites/") {
 				id := strings.Split(obj.Path, "/")
 
-				listURL := (&url.URL{
-					Scheme: "http",
-					Host:   "127.0.0.1:9999",
-					Path:   "/api/scene/list",
-					RawQuery: url.Values{
-						"is_accessible": {"1"},
-						"site":          {id[1]},
-					}.Encode(),
-				}).String()
-
 				var data XbaseScenes
-				resty.R().SetResult(&data).Get(listURL)
+				resty.R().SetHeader("Content-Type", "application/json").
+					SetBody(`{"isAccessible":true, "site":"` + id[1] + `"}`).
+					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "sites/"+id[1], host))
@@ -497,18 +491,10 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if strings.HasPrefix(obj.Path, "tags/") {
 				id := strings.Split(obj.Path, "/")
 
-				listURL := (&url.URL{
-					Scheme: "http",
-					Host:   "127.0.0.1:9999",
-					Path:   "/api/scene/list",
-					RawQuery: url.Values{
-						"is_accessible": {"1"},
-						"tag":           {id[1]},
-					}.Encode(),
-				}).String()
-
 				var data XbaseScenes
-				resty.R().SetResult(&data).Get(listURL)
+				resty.R().SetHeader("Content-Type", "application/json").
+					SetBody(`{"isAccessible":true, "tag":"` + id[1] + `"}`).
+					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "tags/"+id[1], host))
@@ -533,18 +519,10 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if strings.HasPrefix(obj.Path, "actors/") {
 				id := strings.Split(obj.Path, "/")
 
-				listURL := (&url.URL{
-					Scheme: "http",
-					Host:   "127.0.0.1:9999",
-					Path:   "/api/scene/list",
-					RawQuery: url.Values{
-						"is_accessible": {"1"},
-						"cast":          {id[1]},
-					}.Encode(),
-				}).String()
-
 				var data XbaseScenes
-				resty.R().SetResult(&data).Get(listURL)
+				resty.R().SetHeader("Content-Type", "application/json").
+					SetBody(`{"isAccessible":true, "cast":"` + id[1] + `"}`).
+					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "actors/"+id[1], host))
@@ -569,18 +547,10 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if strings.HasPrefix(obj.Path, "released/") {
 				id := strings.Split(obj.Path, "/")
 
-				listURL := (&url.URL{
-					Scheme: "http",
-					Host:   "127.0.0.1:9999",
-					Path:   "/api/scene/list",
-					RawQuery: url.Values{
-						"is_accessible": {"1"},
-						"released":      {id[1]},
-					}.Encode(),
-				}).String()
-
 				var data XbaseScenes
-				resty.R().SetResult(&data).Get(listURL)
+				resty.R().SetHeader("Content-Type", "application/json").
+					SetBody(`{"isAccessible":true, "released":"` + id[1] + `"}`).
+					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "released/"+id[1], host))
@@ -589,18 +559,10 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// Watchlist
 			if obj.Path == "watchlist" {
-				listURL := (&url.URL{
-					Scheme: "http",
-					Host:   "127.0.0.1:9999",
-					Path:   "/api/scene/list",
-					RawQuery: url.Values{
-						"is_accessible": {"1"},
-						"lists":         {"watchlist"},
-					}.Encode(),
-				}).String()
-
 				var data XbaseScenes
-				resty.R().SetResult(&data).Get(listURL)
+				resty.R().SetHeader("Content-Type", "application/json").
+					SetBody(`{"isAccessible":true, "lists":["watchlist"]}`).
+					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "watchlist", host))
@@ -609,18 +571,10 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// Favourites
 			if obj.Path == "favourites" {
-				listURL := (&url.URL{
-					Scheme: "http",
-					Host:   "127.0.0.1:9999",
-					Path:   "/api/scene/list",
-					RawQuery: url.Values{
-						"is_accessible": {"1"},
-						"lists":         {"favourite"},
-					}.Encode(),
-				}).String()
-
 				var data XbaseScenes
-				resty.R().SetResult(&data).Get(listURL)
+				resty.R().SetHeader("Content-Type", "application/json").
+					SetBody(`{"isAccessible":true, "lists":["favourite"]}`).
+					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "favourites", host))

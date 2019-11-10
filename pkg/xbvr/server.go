@@ -163,7 +163,9 @@ func StartServer(version, commit, branch, date string) {
 	ips := []string{}
 	for _, addr := range addrs {
 		ip, _ := addr.(*net.IPNet)
+		if ip.IP.To4() != nil {
 		ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+	}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Database file stored at %s", common.AppDir)
