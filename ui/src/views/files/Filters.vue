@@ -17,9 +17,15 @@
           </b-field>
         </div>
         <div class="column">
+          <label class="label">Name</label>
+          <b-field>
+              <b-input v-model="fileName"></b-input>
+          </b-field>
+        </div>
+        <div class="column">
           <label class="label">Created When</label>
           <b-field>
-            <b-datepicker v-model="fileCreation" multiple>
+            <b-datepicker v-model="fileCreation" range>
             </b-datepicker>
           </b-field>
         </div>
