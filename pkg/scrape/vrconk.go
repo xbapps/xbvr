@@ -16,27 +16,9 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	defer wg.Done()
 	logScrapeStart("vrconk", "VRCONK")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.vrconk.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
+	sceneCollector := createCollector("www.vrconk.com")
+	siteCollector := createCollector("www.vrconk.com")
 
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.vrconk.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	// <meta property="og:title" content="Scary Movie">
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
@@ -102,7 +84,6 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.OnHTML(`a[data-mb="shuffle-thumbs"]`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
-		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/signup") {
 			sceneCollector.Visit(sceneURL)
 		}

@@ -16,26 +16,9 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	defer wg.Done()
 	logScrapeStart("czechvr", "CzechVR")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.czechvrnetwork.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-		colly.MaxDepth(5),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.czechvrnetwork.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.czechvrnetwork.com")
+	siteCollector := createCollector("www.czechvrnetwork.com")
+	siteCollector.MaxDepth = 5
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

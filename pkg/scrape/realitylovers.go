@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -17,39 +16,8 @@ import (
 func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
 	logScrapeStart("realitylovers", "RealityLovers")
-	const maxRetries = 15
 
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("realitylovers.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		attempt := r.Ctx.GetAny("attempt")
-
-		if attempt == nil {
-			r.Ctx.Put("attempt", 1)
-		}
-
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnError(func(r *colly.Response, err error) {
-		attempt := r.Ctx.GetAny("attempt").(int)
-
-		if r.StatusCode == 429 {
-			log.Println("Error:", r.StatusCode, err)
-
-			if attempt <= maxRetries {
-				unCache(r.Request.URL.String(), sceneCollector.CacheDir)
-				log.Println("Waiting 2 seconds before next request...")
-				r.Ctx.Put("attempt", attempt+1)
-				time.Sleep(2 * time.Second)
-				r.Request.Retry()
-			}
-		}
-	})
+	sceneCollector := createCollector("realitylovers.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

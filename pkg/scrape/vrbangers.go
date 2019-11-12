@@ -20,30 +20,10 @@ func VRBangersSiteNew(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 
 	securityToken := ""
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	ajaxCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com")
+	siteCollector := createCollector("vrbangers.com", "vrbtrans.com")
+	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com")
+	ajaxCollector.CacheDir = ""
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -196,25 +176,8 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com")
+	siteCollector := createCollector("vrbangers.com", "vrbtrans.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

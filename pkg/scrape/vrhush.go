@@ -16,36 +16,10 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	defer wg.Done()
 	logScrapeStart("vrhush", "VRHush")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrhush.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrhush.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	castCollector := colly.NewCollector(
-		colly.AllowedDomains("vrhush.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-		colly.AllowURLRevisit(),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	castCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("vrhush.com")
+	siteCollector := createCollector("vrhush.com")
+	castCollector := createCollector("vrhush.com")
+	castCollector.AllowURLRevisit = true
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

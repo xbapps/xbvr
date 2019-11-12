@@ -15,25 +15,8 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	defer wg.Done()
 	logScrapeStart("hologirlsvr", "HoloGirlsVR")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.hologirlsvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.hologirlsvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.hologirlsvr.com")
+	siteCollector := createCollector("www.hologirlsvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

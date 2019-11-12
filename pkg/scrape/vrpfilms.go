@@ -17,25 +17,8 @@ func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	defer wg.Done()
 	logScrapeStart("vrpfilms", "VRP Films")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrpfilms.com", "www.vrpfilms.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrpfilms.com", "www.vrpfilms.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("vrpfilms.com", "www.vrpfilms.com")
+	siteCollector := createCollector("vrpfilms.com", "www.vrpfilms.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

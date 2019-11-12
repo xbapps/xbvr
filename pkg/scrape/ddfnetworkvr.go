@@ -16,26 +16,9 @@ func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	defer wg.Done()
 	logScrapeStart("ddfnetworkvr", "DDFNetworkVR")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("ddfnetworkvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-		colly.MaxDepth(5),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("ddfnetworkvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("ddfnetworkvr.com")
+	siteCollector := createCollector("ddfnetworkvr.com")
+	siteCollector.MaxDepth = 5
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

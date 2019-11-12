@@ -16,25 +16,8 @@ func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	defer wg.Done()
 	logScrapeStart("wankzvr", "WankzVR")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.wankzvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.wankzvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.wankzvr.com")
+	siteCollector := createCollector("www.wankzvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

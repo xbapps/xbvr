@@ -18,36 +18,10 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("virtualrealporn.com", "virtualrealtrans.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("virtualrealporn.com", "virtualrealtrans.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	castCollector := colly.NewCollector(
-		colly.AllowedDomains("virtualrealporn.com", "virtualrealtrans.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-		colly.AllowURLRevisit(),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	castCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
+	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
+	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
+	castCollector.AllowURLRevisit = true
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

@@ -16,26 +16,9 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	defer wg.Done()
 	logScrapeStart("tmwvrnet", "TmwVRnet")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("tmwvrnet.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-		colly.MaxDepth(5),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("tmwvrnet.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("tmwvrnet.com")
+	siteCollector := createCollector("tmwvrnet.com")
+	siteCollector.MaxDepth = 5
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

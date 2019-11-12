@@ -16,25 +16,8 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	defer wg.Done()
 	logScrapeStart("sinsvr", "SinsVR")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("sinsvr.com", "www.sinsvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("sinsvr.com", "www.sinsvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("sinsvr.com", "www.sinsvr.com")
+	siteCollector := createCollector("sinsvr.com", "www.sinsvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

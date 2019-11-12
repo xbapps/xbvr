@@ -16,26 +16,9 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	defer wg.Done()
 	logScrapeStart("stasyqvr", "StasyQVR")
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("stasyqvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-		colly.MaxDepth(5),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("stasyqvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("stasyqvr.com")
+	siteCollector := createCollector("stasyqvr.com")
+	siteCollector.MaxDepth = 5
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
