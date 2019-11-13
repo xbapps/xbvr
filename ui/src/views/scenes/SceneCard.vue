@@ -21,7 +21,9 @@
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
         <a :href="item.scene_url" target="_blank">{{item.site}}</a><br/>
-        {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
+        <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
+          {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
+        </span>
       </span>
     </div>
   </div>
