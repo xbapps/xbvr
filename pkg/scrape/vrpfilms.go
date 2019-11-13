@@ -15,7 +15,9 @@ import (
 
 func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("vrpfilms", "VRP Films")
+	scraperID := "vrpfilms"
+	siteID := "VRP Films"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("vrpfilms.com", "www.vrpfilms.com")
 	siteCollector := createCollector("vrpfilms.com", "www.vrpfilms.com")
@@ -24,7 +26,7 @@ func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRP Films"
-		sc.Site = "VRP Films"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from download link. It's the closest thing they have to a scene id
@@ -126,9 +128,9 @@ func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	siteCollector.Visit("https://vrpfilms.com/vrp-movies")
 
 	if updateSite {
-		updateSiteLastUpdate("vrpfilms")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("vrpfilms", "VRP Films")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

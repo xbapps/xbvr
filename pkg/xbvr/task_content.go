@@ -35,7 +35,7 @@ func CleanTags() {
 }
 
 func runScrapers(knownScenes []string, scrapeAll bool, updateSite bool, collectedScenes chan<- models.ScrapedScene) error {
-	os.RemoveAll(filepath.Join(common.CacheDir, "site_cache"))
+	defer scrape.DeleteScrapeCache()
 
 	scrapers := models.GetScrapers()
 
@@ -129,7 +129,7 @@ func Scrape(scrapeAll bool) {
 			log.WithField("task", "scraperProgress").Info("DONE")
 
 			CountTags()
-			
+
 			tlog.Infof("Scraped %v new scenes in %s",
 				sceneCount,
 				time.Now().Sub(t0).Round(time.Second))

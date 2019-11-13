@@ -15,7 +15,9 @@ import (
 
 func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("realitylovers", "RealityLovers")
+	scraperID := "realitylovers"
+	siteID := "RealityLovers"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("realitylovers.com")
 
@@ -23,7 +25,7 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "RealityLovers"
-		sc.Site = "RealityLovers"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID
@@ -97,9 +99,9 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	}
 
 	if updateSite {
-		updateSiteLastUpdate("realitylovers")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("realitylovers", "RealityLovers")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

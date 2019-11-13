@@ -15,7 +15,9 @@ import (
 
 func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("naughtyamericavr", "NaughtyAmerica VR")
+	scraperID := "naughtyamericavr"
+	siteID := "NaughtyAmerica VR"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("www.naughtyamerica.com")
 	siteCollector := createCollector("www.naughtyamerica.com")
@@ -24,7 +26,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "NaughtyAmerica"
-		sc.Site = "NaughtyAmerica VR"
+		sc.Site = siteID
 		sc.Title = ""
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
@@ -131,9 +133,9 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 	siteCollector.Visit("https://www.naughtyamerica.com/vr-porn")
 
 	if updateSite {
-		updateSiteLastUpdate("naughtyamericavr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("naughtyamericavr", "NaughtyAmerica VR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

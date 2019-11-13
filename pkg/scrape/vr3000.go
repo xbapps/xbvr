@@ -16,23 +16,17 @@ import (
 
 func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("vr3000", "VR3000")
+	scraperID := "vr3000"
+	siteID := "VR3000"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vr3000.com", "www.vr3000.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	siteCollector := createCollector("vr3000.com", "www.vr3000.com")
 
 	siteCollector.OnHTML(`.row.no-gutter`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VR3000"
-		sc.Site = "VR3000"
+		sc.Site = siteID
 
 		if e.ChildText(`.welldescription`) != "" {
 			coverURL := e.ChildAttr(`.col-lg-12 img`, "src")
@@ -126,9 +120,9 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.Visit("https://www.vr3000.com")
 
 	if updateSite {
-		updateSiteLastUpdate("vr3000")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("vr3000", "VR3000")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

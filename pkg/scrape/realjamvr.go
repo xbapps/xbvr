@@ -15,7 +15,9 @@ import (
 
 func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("realjamvr", "RealJam VR")
+	scraperID := "realjamvr"
+	siteID := "RealJam VR"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("realjamvr.com")
 	siteCollector := createCollector("realjamvr.com")
@@ -24,7 +26,7 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Real Jam Network"
-		sc.Site = "RealJam VR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -95,9 +97,9 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	siteCollector.Visit("https://realjamvr.com/virtualreality/list")
 
 	if updateSite {
-		updateSiteLastUpdate("realjamvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("realjamvr", "RealJam VR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

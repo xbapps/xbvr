@@ -15,7 +15,9 @@ import (
 
 func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("vrlatina", "VRLatina")
+	scraperID := "vrlatina"
+	siteID := "VRLatina"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("vrlatina.com")
 	siteCollector := createCollector("vrlatina.com")
@@ -24,7 +26,7 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRLatina"
-		sc.Site = "VRLatina"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Title
@@ -103,9 +105,9 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	siteCollector.Visit("https://vrlatina.com/videos/?typ=newest")
 
 	if updateSite {
-		updateSiteLastUpdate("vrlatina")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("vrlatina", "VRLatina")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

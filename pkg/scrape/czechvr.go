@@ -14,7 +14,9 @@ import (
 
 func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("czechvr", "CzechVR")
+	scraperID := "czechvr"
+	siteID := "CzechVR"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("www.czechvrnetwork.com")
 	siteCollector := createCollector("www.czechvrnetwork.com")
@@ -132,9 +134,9 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos?next=1")
 
 	if updateSite {
-		updateSiteLastUpdate("czechvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("czechvr", "CzechVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

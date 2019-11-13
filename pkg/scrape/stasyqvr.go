@@ -14,7 +14,9 @@ import (
 
 func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("stasyqvr", "StasyQVR")
+	scraperID := "stasyqvr"
+	siteID := "StasyQVR"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("stasyqvr.com")
 	siteCollector := createCollector("stasyqvr.com")
@@ -24,7 +26,7 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "StasyQ"
-		sc.Site = "StasyQVR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -109,9 +111,9 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	siteCollector.Visit("https://stasyqvr.com/virtualreality/list")
 
 	if updateSite {
-		updateSiteLastUpdate("stasyqvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("stasyqvr", "StasyQVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

@@ -14,7 +14,9 @@ import (
 
 func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("virtualtaboo", "VirtualTaboo")
+	scraperID := "virtualtaboo"
+	siteID := "VirtualTaboo"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("virtualtaboo.com")
 	siteCollector := createCollector("virtualtaboo.com")
@@ -23,7 +25,7 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VirtualTaboo"
-		sc.Site = "VirtualTaboo"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -111,9 +113,9 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	siteCollector.Visit("https://virtualtaboo.com/videos")
 
 	if updateSite {
-		updateSiteLastUpdate("virtualtaboo")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("virtualtaboo", "VirtualTaboo")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

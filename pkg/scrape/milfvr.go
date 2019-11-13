@@ -15,7 +15,9 @@ import (
 
 func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("milfvr", "MilfVR")
+	scraperID := "milfvr"
+	siteID := "MilfVR"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("www.milfvr.com")
 	siteCollector := createCollector("www.milfvr.com")
@@ -24,7 +26,7 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Wankz"
-		sc.Site = "MilfVR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -106,9 +108,9 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.Visit("https://www.milfvr.com/videos")
 
 	if updateSite {
-		updateSiteLastUpdate("milfvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("milfvr", "MilfVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

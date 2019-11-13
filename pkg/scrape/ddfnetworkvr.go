@@ -14,7 +14,9 @@ import (
 
 func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("ddfnetworkvr", "DDFNetworkVR")
+	scraperID := "ddfnetworkvr"
+	siteID := "DDFNetworkVR"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("ddfnetworkvr.com")
 	siteCollector := createCollector("ddfnetworkvr.com")
@@ -24,7 +26,7 @@ func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "DDFNetwork"
-		sc.Site = "DDFNetworkVR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// ID
@@ -110,9 +112,9 @@ func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	siteCollector.Visit("https://ddfnetworkvr.com/")
 
 	if updateSite {
-		updateSiteLastUpdate("ddfnetworkvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("ddfnetworkvr", "DDFNetworkVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

@@ -14,7 +14,9 @@ import (
 
 func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("vrconk", "VRCONK")
+	scraperID := "vrconk"
+	siteID := "VRCONK"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("www.vrconk.com")
 	siteCollector := createCollector("www.vrconk.com")
@@ -23,7 +25,7 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRCONK"
-		sc.Site = "VRCONK"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -99,9 +101,9 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.Visit("https://www.vrconk.com/")
 
 	if updateSite {
-		updateSiteLastUpdate("vrconk")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("vrconk", "VRCONK")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

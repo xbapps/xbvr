@@ -14,7 +14,9 @@ import (
 
 func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("tmwvrnet", "TmwVRnet")
+	scraperID := "tmwvrnet"
+	siteID := "TmwVRnet"
+	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("tmwvrnet.com")
 	siteCollector := createCollector("tmwvrnet.com")
@@ -24,7 +26,7 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "TeenMegaWorld"
-		sc.Site = "TmwVRnet"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Date
@@ -104,9 +106,9 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	siteCollector.Visit("https://tmwvrnet.com/categories/movies.html")
 
 	if updateSite {
-		updateSiteLastUpdate("tmwvrnet")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("tmwvrnet", "TmwVRnet")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
