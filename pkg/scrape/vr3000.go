@@ -100,12 +100,20 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`div.welldescription a.btn-primary`, "href"))
 			if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/join") {
 				sc.HomepageURL = sceneURL
+<<<<<<< HEAD
 			}
 		}
 
 		if sc.Title != "" {
 			out <- sc
 		}
+=======
+				if sc.Title != "" {
+					out <- sc
+				}
+			}
+		}
+>>>>>>> upstream/master
 	})
 
 	siteCollector.OnHTML(`script`, func(e *colly.HTMLElement) {

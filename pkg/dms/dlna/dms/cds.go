@@ -521,7 +521,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				var data XbaseScenes
 				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"isAccessible":true, "cast":"` + id[1] + `"}`).
+					SetBody(`{"isAccessible":true, "cast":["` + id[1] + `"]}`).
 					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
 
 				for i := range data.Scenes {
@@ -549,7 +549,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				var data XbaseScenes
 				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"isAccessible":true, "released":"` + id[1] + `"}`).
+					SetBody(`{"isAccessible":true, "releaseMonth":"` + id[1] + `"}`).
 					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
 
 				for i := range data.Scenes {
