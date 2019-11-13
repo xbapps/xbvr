@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/ProtonMail/go-appdir"
@@ -45,6 +46,13 @@ func logScrapeFinished(id string, name string) {
 		"started":   false,
 		"completed": true,
 	}).Infof("Finished %v scraper", name)
+}
+
+func trimSpaceFromSlice(s []string) []string {
+	for i := range s {
+      s[i] = strings.TrimSpace(s[i])
+	}
+	return s
 }
 
 func unCache(URL string, cacheDir string) {

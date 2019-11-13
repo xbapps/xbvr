@@ -34,7 +34,7 @@ func CleanTags() {
 	CountTags()
 }
 
-func runScrapers(knownScenes []string, scrapeAll bool, updateSite bool, collectedScenes chan<- models.ScrapedScene) error {
+func runSceneScrapers(knownScenes []string, scrapeAll bool, updateSite bool, collectedScenes chan<- models.ScrapedScene) error {
 	os.RemoveAll(filepath.Join(common.CacheDir, "site_cache"))
 
 	scrapers := models.GetScrapers()
@@ -70,6 +70,23 @@ func runScrapers(knownScenes []string, scrapeAll bool, updateSite bool, collecte
 func sceneSliceAppender(collectedScenes *[]models.ScrapedScene, scenes <-chan models.ScrapedScene) {
 	for scene := range scenes {
 		*collectedScenes = append(*collectedScenes, scene)
+	}
+}
+
+func actorDBWriter(wg *sync.WaitGroup, i *uint64, actors <-chan models.ScrapedActor) {
+	defer wg.Done()
+
+	db, _ := models.GetDB()
+	defer db.Close()
+	for actor := range actors {
+		if os.Getenv("DEBUG") != "" {
+			log.Printf("Saving %v", actor.Name)
+		}
+		models.ActorCreateUpdateFromExternal(db, actor)
+		atomic.AddUint64(i, 1)
+		if os.Getenv("DEBUG") != "" {
+			log.Printf("Saved %v", actor.Name)
+		}
 	}
 }
 
@@ -116,7 +133,7 @@ func Scrape(scrapeAll bool) {
 		go sceneDBWriter(&wg, &sceneCount, collectedScenes)
 
 		// Start scraping
-		if e := runScrapers(knownScenes, scrapeAll, true, collectedScenes); e != nil {
+		if e := runSceneScrapers(knownScenes, scrapeAll, true, collectedScenes); e != nil {
 			tlog.Info(e)
 		} else {
 			// Notify DB Writer threads that there are no more scenes
@@ -129,11 +146,32 @@ func Scrape(scrapeAll bool) {
 			log.WithField("task", "scraperProgress").Info("DONE")
 
 			CountTags()
-			
+
 			tlog.Infof("Scraped %v new scenes in %s",
 				sceneCount,
 				time.Now().Sub(t0).Round(time.Second))
 		}
+
+		t0 = time.Now()
+		collectedActors := make(chan models.ScrapedActor, 250)
+		var actorCount uint64
+
+		wg.Add(1)
+		go actorDBWriter(&wg, &actorCount, collectedActors)
+
+		var awg sync.WaitGroup
+		awg.Add(1)
+		tlog.Infof("Updating Actor database")
+		go scrape.Actors(&wg, collectedActors)
+		awg.Wait()
+
+		close(collectedActors)
+		// Wait for DB Writer threads to complete
+		wg.Wait()
+
+		tlog.Infof("Scraped %v actors in %s",
+				   sceneCount,
+				   time.Now().Sub(t0).Round(time.Second))
 	}
 
 	models.RemoveLock("scrape")
@@ -194,7 +232,7 @@ func ExportBundle() {
 		var scrapedScenes []models.ScrapedScene
 		go sceneSliceAppender(&scrapedScenes, collectedScenes)
 
-		runScrapers(knownScenes, false, false, collectedScenes)
+		runSceneScrapers(knownScenes, false, false, collectedScenes)
 
 		out := ContentBundle{
 			Timestamp:     time.Now().UTC(),
