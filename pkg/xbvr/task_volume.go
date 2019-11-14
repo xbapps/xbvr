@@ -138,7 +138,7 @@ func RescanVolumes() {
 		var scenes []models.Scene
 
 		tlog.Infof("Matching Scenes to known filenames")
-		db.Model(&models.File{}).Find(&files)
+		db.Model(&models.File{}).Where("files.scene_id = 0").Find(&files)
 
 		for i := range files {
 			fn := files[i].Filename
