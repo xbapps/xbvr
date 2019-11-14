@@ -87,7 +87,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 
 		// Synopsis
 		e.ForEach(`div.synopsis`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(strings.Replace(e.Text, "Synopsis:", "", -1))
+			sc.Synopsis = strings.TrimSpace(strings.Replace(e.Text, "Synopsis", "", -1))
 		})
 
 		// Tags
