@@ -30,8 +30,14 @@
                 {{props.row.video_avgfps_val}}
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
-                <b-button @click="play(props.row)">{{$t('Play')}}</b-button>&nbsp;
+                <b-button @click="play(props.row)">{{$t('Play')}}</b-button>
+                &nbsp;
                 <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">{{$t('Match')}}</b-button>
+                <b-button v-else disabled>{{$t('Match')}}</b-button>
+                &nbsp;
+                <button class="button is-danger is-outlined" @click='removeFile(props.row)'>
+                  <b-icon pack="fas" icon="trash"></b-icon>
+                </button>
               </b-table-column>
             </template>
           </b-table>
@@ -60,6 +66,7 @@
 <script>
   import prettyBytes from "pretty-bytes";
   import {format, parseISO} from "date-fns";
+  import ky from "ky";
 
   export default {
     name: "List",
@@ -97,7 +104,20 @@
       },
       match(file) {
         this.$store.commit("overlay/showMatch", {file: file});
-      }
+      },
+      removeFile(file) {
+        this.$buefy.dialog.confirm({
+          title: 'Remove file',
+          message: `You're about to remove file <strong>${file.filename}</strong> from <strong>disk</strong>.`,
+          type: 'is-danger',
+          hasIcon: true,
+          onConfirm: () => {
+            ky.delete(`/api/files/file/${file.id}`).json().then(data => {
+              this.$store.dispatch("files/load");
+            });
+          }
+        });
+      },
     },
   }
 </script>
