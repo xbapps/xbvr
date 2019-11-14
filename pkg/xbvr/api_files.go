@@ -99,9 +99,9 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 		tx = tx.Order("video_width asc")
 	case "video_width_desc":
 		tx = tx.Order("video_width desc")
-	case "video_bit_rate_asc":
+	case "video_bitrate_asc":
 		tx = tx.Order("video_bit_rate asc")
-	case "video_bit_rate_desc":
+	case "video_bitrate_desc":
 		tx = tx.Order("video_bit_rate desc")
 	}
 
