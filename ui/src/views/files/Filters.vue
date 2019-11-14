@@ -19,7 +19,7 @@
         <div class="column is-one-fifth">
           <label class="label">{{$t("Created between")}}</label>
           <b-field>
-            <b-datepicker v-model="fileCreation" range>
+            <b-datepicker v-model="fileCreation" editable range>
             </b-datepicker>
           </b-field>
         </div>
