@@ -26,8 +26,8 @@
               <b-table-column field="video_bitrate" :label="$t('Bitrate')" style="white-space: nowrap;" sortable>
                 {{prettyBytes(props.row.video_bitrate)}}
               </b-table-column>
-              <b-table-column field="video_avgfps" :label="$t('FPS')" style="white-space: nowrap;">
-                {{prettyFps(props.row.video_avgfps)}}
+              <b-table-column field="video_avgfps_val" :label="$t('FPS')" style="white-space: nowrap;" sortable>
+                {{props.row.video_avgfps_val}}
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
                 <b-button @click="play(props.row)">{{$t('Play')}}</b-button>&nbsp;
@@ -97,9 +97,6 @@
       },
       match(file) {
         this.$store.commit("overlay/showMatch", {file: file});
-      },
-      prettyFps(framerate) {
-        return Math.round(parseInt(framerate.split('/')[0]) / parseInt(framerate.split('/')[1])).toString();
       }
     },
   }

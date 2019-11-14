@@ -103,6 +103,8 @@ func RescanVolumes() {
 						if vs.Height == vs.Width {
 							fl.VideoProjection = "360_tb"
 						}
+
+						fl.CalculateFramerate()
 					}
 
 					err = fl.Save()
