@@ -6,15 +6,23 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-type MatchFileRequest struct {
+type RequestMatchFile struct {
 	SceneID string `json:"scene_id"`
 	FileID  uint   `json:"file_id"`
+}
+
+type RequestFileList struct {
+	State       optional.String   `json:"state"`
+	CreatedDate []optional.String `json:"createdDate"`
+	Sort        optional.String   `json:"sort"`
 }
 
 type FilesResource struct{}
@@ -28,7 +36,7 @@ func (i FilesResource) WebService() *restful.WebService {
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.GET("/list/unmatched").To(i.listUnmatchedFiles).
+	ws.Route(ws.POST("/list").To(i.listFiles).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.GET("/list/matched").To(i.listMatchedFiles).
@@ -46,32 +54,64 @@ func (i FilesResource) WebService() *restful.WebService {
 	return ws
 }
 
-func (i FilesResource) listAllFiles(req *restful.Request, resp *restful.Response) {
+func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	var files []models.File
-	db.Raw(`select files.* from files;`).Scan(&files)
-
-	resp.WriteHeaderAndEntity(http.StatusOK, files)
-}
-
-func (i FilesResource) listMatchedFiles(req *restful.Request, resp *restful.Response) {
-	db, _ := models.GetDB()
-	defer db.Close()
+	var r RequestFileList
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 
 	var files []models.File
-	db.Raw(`select files.* from files where files.scene_id != 0;`).Scan(&files)
+	tx := db.Model(&files)
 
-	resp.WriteHeaderAndEntity(http.StatusOK, files)
-}
+	// State
+	switch r.State.OrElse("") {
+	case "matched":
+		tx = tx.Where("files.scene_id != 0")
+	case "unmatched":
+		tx = tx.Where("files.scene_id = 0")
+	}
 
-func (i FilesResource) listUnmatchedFiles(req *restful.Request, resp *restful.Response) {
-	db, _ := models.GetDB()
-	defer db.Close()
+	// Creation date
+	if len(r.CreatedDate) == 2 {
+		t0, _ := time.Parse(time.RFC3339, r.CreatedDate[0].OrElse(""))
+		t1, _ := time.Parse(time.RFC3339, r.CreatedDate[1].OrElse(""))
+		tx = tx.Where("files.created_time > ? AND files.created_time < ?", t0, t1)
+	}
 
-	var files []models.File
-	db.Raw(`select files.* from files where files.scene_id = 0;`).Scan(&files)
+	// Sorting
+	switch r.Sort.OrElse("") {
+	case "filename_asc":
+		tx = tx.Order("filename asc")
+	case "filename_desc":
+		tx = tx.Order("filename desc")
+	case "created_time_asc":
+		tx = tx.Order("created_time asc")
+	case "created_time_desc":
+		tx = tx.Order("created_time desc")
+	case "size_asc":
+		tx = tx.Order("size asc")
+	case "size_desc":
+		tx = tx.Order("size desc")
+	case "video_height_asc":
+		tx = tx.Order("video_height asc")
+	case "video_height_desc":
+		tx = tx.Order("video_height desc")
+	case "video_width_asc":
+		tx = tx.Order("video_width asc")
+	case "video_width_desc":
+		tx = tx.Order("video_width desc")
+	case "video_bit_rate_asc":
+		tx = tx.Order("video_bit_rate asc")
+	case "video_bit_rate_desc":
+		tx = tx.Order("video_bit_rate desc")
+	}
+
+	tx.Find(&files)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, files)
 }
@@ -80,7 +120,7 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	var r MatchFileRequest
+	var r RequestMatchFile
 	err := req.ReadEntity(&r)
 	if err != nil {
 		log.Error(err)
@@ -149,6 +189,8 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 	} else {
 		log.Errorf("Error deleting file ", err)
 	}
+
+	scene.UpdateStatus()
 	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
