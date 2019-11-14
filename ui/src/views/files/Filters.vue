@@ -24,6 +24,9 @@
                 <b-button size="is-small" @click="setRange(subDays(new Date(), 7), new Date())">
                   <span>Last 7 days</span>
                 </b-button>
+                <b-button size="is-small" @click="setRange(subDays(new Date(), 14), new Date())">
+                  <span>Last 14 days</span>
+                </b-button>
                 <b-button size="is-small" @click="setRange(subDays(new Date(), 30), new Date())">
                   <span>Last 30 days</span>
                 </b-button>
