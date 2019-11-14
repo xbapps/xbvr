@@ -123,6 +123,8 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 	} else {
 		log.Errorf("Error deleting file ", err)
 	}
+
+	scene.UpdateStatus()
 	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
