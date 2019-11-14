@@ -83,6 +83,7 @@
     },
     methods: {
       initView() {
+        this.data = [];
         this.queryString = this.file.filename.replace(/\./g, " ").replace(/\_/g, " ").replace(/\+/g, " ").replace(/\-/g, " ");
         this.loadData();
       },
