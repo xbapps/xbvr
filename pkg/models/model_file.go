@@ -17,13 +17,13 @@ type File struct {
 	Size        int64     `json:"size"`
 	CreatedTime time.Time `json:"created_time"`
 	UpdatedTime time.Time `json:"updated_time"`
-	SceneID     uint      `json:"-"`
+	SceneID     uint      `json:"scene_id"`
 	Scene       Scene     `json:"-"`
 
 	VideoWidth        int     `json:"video_width"`
 	VideoHeight       int     `json:"video_height"`
 	VideoBitRate      int     `json:"video_bitrate"`
-	VideoAvgFrameRate string  `json:"-"`
+	VideoAvgFrameRate string  `json:"video_avgfps"`
 	VideoCodecName    string  `json:"-"`
 	VideoDuration     float64 `json:"duration"`
 	VideoProjection   string  `json:"projection"`
