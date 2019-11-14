@@ -103,6 +103,10 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 		tx = tx.Order("video_bit_rate asc")
 	case "video_bitrate_desc":
 		tx = tx.Order("video_bit_rate desc")
+	case "video_avgfps_val_asc":
+		tx = tx.Order("video_avg_frame_rate_val asc")
+	case "video_avgfps_val_desc":
+		tx = tx.Order("video_avg_frame_rate_val desc")
 	}
 
 	tx.Find(&files)
