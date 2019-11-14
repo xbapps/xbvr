@@ -39,12 +39,6 @@ func (i FilesResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/list").To(i.listFiles).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.GET("/list/matched").To(i.listMatchedFiles).
-		Metadata(restfulspec.KeyOpenAPITags, tags))
-
-	ws.Route(ws.GET("/list/all").To(i.listAllFiles).
-		Metadata(restfulspec.KeyOpenAPITags, tags))
-
 	ws.Route(ws.POST("/match").To(i.matchFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 

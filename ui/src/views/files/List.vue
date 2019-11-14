@@ -59,7 +59,7 @@
 <script>
   import prettyBytes from "pretty-bytes";
   import {format, parseISO} from "date-fns";
-  
+
   export default {
     name: "List",
     data() {
