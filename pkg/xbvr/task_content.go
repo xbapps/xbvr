@@ -128,8 +128,10 @@ func Scrape(scrapeAll bool) {
 			// Send a signal to clean up the progress bars just in case
 			log.WithField("task", "scraperProgress").Info("DONE")
 
+			tlog.Infof("Updating tag counts")
 			CountTags()
-			
+			SearchIndex()
+
 			tlog.Infof("Scraped %v new scenes in %s",
 				sceneCount,
 				time.Now().Sub(t0).Round(time.Second))
@@ -285,8 +287,10 @@ func CountTags() {
 		var scenes []models.Scene
 		db.Model(tags[i]).Related(&scenes, "Scenes")
 
-		tags[i].Count = len(scenes)
-		tags[i].Save()
+		if tags[i].Count != len(scenes) {
+			tags[i].Count = len(scenes)
+			tags[i].Save()
+		}
 	}
 
 	var cast []models.Actor
@@ -295,8 +299,10 @@ func CountTags() {
 		var scenes []models.Scene
 		db.Model(cast[i]).Related(&scenes, "Scenes")
 
-		cast[i].Count = len(scenes)
-		cast[i].Save()
+		if cast[i].Count != len(scenes) {
+			cast[i].Count = len(scenes)
+			cast[i].Save()
+		}
 	}
 
 	// db.Where("count = ?", 0).Delete(&Tag{})
