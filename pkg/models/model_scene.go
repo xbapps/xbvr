@@ -136,6 +136,55 @@ func (o *Scene) GetFiles() ([]File, error) {
 	return files, nil
 }
 
+func (o *Scene) UpdateStatus() {
+	// Check if file with scene association exists
+	files, err := o.GetFiles()
+	if err != nil {
+		return
+	}
+
+	changed := false
+
+	if len(files) > 0 {
+		if !o.IsAvailable {
+			o.IsAvailable = true
+			changed = true
+		}
+
+		var newestFileDate time.Time
+		for j := range files {
+			if files[j].Exists() {
+				if files[j].CreatedTime.Before(newestFileDate) || newestFileDate.IsZero() {
+					newestFileDate = files[j].CreatedTime
+				}
+				if !o.IsAccessible {
+					o.IsAccessible = true
+					changed = true
+				}
+			} else {
+				if o.IsAccessible {
+					o.IsAccessible = false
+					changed = true
+				}
+			}
+		}
+
+		if !newestFileDate.Equal(o.AddedDate) && !newestFileDate.IsZero() {
+			o.AddedDate = newestFileDate
+			changed = true
+		}
+	} else {
+		if o.IsAvailable {
+			o.IsAvailable = false
+			changed = true
+		}
+	}
+
+	if changed {
+		o.Save()
+	}
+}
+
 func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var o Scene
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)

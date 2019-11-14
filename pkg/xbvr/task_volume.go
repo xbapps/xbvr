@@ -136,7 +136,6 @@ func RescanVolumes() {
 
 		var files []models.File
 		var scenes []models.Scene
-		var changed = false
 
 		tlog.Infof("Matching Scenes to known filenames")
 		db.Model(&models.File{}).Find(&files)
@@ -165,53 +164,7 @@ func RescanVolumes() {
 		db.Model(&models.Scene{}).Find(&scenes)
 
 		for i := range scenes {
-			// Check if file with scene association exists
-			files, err := scenes[i].GetFiles()
-			if err != nil {
-				return
-			}
-
-			changed = false
-
-			if len(files) > 0 {
-				if !scenes[i].IsAvailable {
-					scenes[i].IsAvailable = true
-					changed = true
-				}
-
-				var newestFileDate time.Time
-				for j := range files {
-					if files[j].Exists() {
-						if files[j].CreatedTime.Before(newestFileDate) || newestFileDate.IsZero() {
-							newestFileDate = files[j].CreatedTime
-						}
-						if !scenes[i].IsAccessible {
-							scenes[i].IsAccessible = true
-							changed = true
-						}
-					} else {
-						if scenes[i].IsAccessible {
-							scenes[i].IsAccessible = false
-							changed = true
-						}
-					}
-				}
-
-				if !newestFileDate.Equal(scenes[i].AddedDate) && !newestFileDate.IsZero() {
-					scenes[i].AddedDate = newestFileDate
-					changed = true
-				}
-			} else {
-				if scenes[i].IsAvailable {
-					scenes[i].IsAvailable = false
-					changed = true
-				}
-			}
-
-			if changed {
-				scenes[i].Save()
-			}
-
+			scenes[i].UpdateStatus()
 			if (i % 70) == 0 {
 				tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
 			}
