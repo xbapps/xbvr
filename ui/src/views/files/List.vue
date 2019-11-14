@@ -6,7 +6,8 @@
         <div v-if="items.length > 0 && !isLoading">
           <b-table :data="items" ref="table" backend-sorting :default-sort="[sortField, sortOrder]" @sort="onSort">
             <template slot-scope="props">
-              <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename" :label="$t('File')" sortable>
+              <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename" :label="$t('File')"
+                              sortable>
                 {{props.row.filename}}
                 <br/><small>{{props.row.path}}</small>
               </b-table-column>
@@ -16,16 +17,16 @@
               <b-table-column field="size" :label="$t('Size')" style="white-space: nowrap;" sortable>
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
-              <b-table-column field="video_width" label="Width" sortable>
+              <b-table-column field="video_width" :label="$t('Width')" sortable>
                 {{props.row.video_width}}
               </b-table-column>
-              <b-table-column field="video_height" label="Height" sortable>
+              <b-table-column field="video_height" :label="$t('Height')" sortable>
                 {{props.row.video_height}}
               </b-table-column>
-              <b-table-column field="video_bitrate" label="Bitrate" style="white-space: nowrap;" sortable>
+              <b-table-column field="video_bitrate" :label="$t('Bitrate')" style="white-space: nowrap;" sortable>
                 {{prettyBytes(props.row.video_bitrate)}}
               </b-table-column>
-              <b-table-column field="video_avgfps" label="FPS" style="white-space: nowrap;">
+              <b-table-column field="video_avgfps" :label="$t('FPS')" style="white-space: nowrap;">
                 {{prettyFps(props.row.video_avgfps)}}
               </b-table-column>
               <b-table-column style="white-space: nowrap;">

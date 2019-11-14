@@ -3,21 +3,21 @@
     <section>
       <div class="columns">
         <div class="column is-one-fifth">
-          <label class="label">State</label>
+          <label class="label">{{$t("State")}}</label>
           <b-field>
             <b-radio-button v-model="fileState" native-value="all">
-              <span>All</span>
+              <span>{{$t("All")}}</span>
             </b-radio-button>
             <b-radio-button v-model="fileState" native-value="matched">
-              <span>Matched</span>
+              <span>{{$t("Matched")}}</span>
             </b-radio-button>
             <b-radio-button v-model="fileState" native-value="unmatched">
-              Unmatched
+              <span>{{$t("Unmatched")}}</span>
             </b-radio-button>
           </b-field>
         </div>
         <div class="column is-one-fifth">
-          <label class="label">Created between</label>
+          <label class="label">{{$t("Created between")}}</label>
           <b-field>
             <b-datepicker v-model="fileCreation" range>
             </b-datepicker>
@@ -46,7 +46,6 @@
           return this.$store.state.files.filters.createdDate;
         },
         set(value) {
-          console.log(value);
           this.$store.state.files.filters.createdDate = value;
           this.$store.dispatch("files/load");
         }
