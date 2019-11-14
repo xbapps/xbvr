@@ -26,6 +26,9 @@
               <b-table-column field="video_bitrate" :label="$t('Bitrate')" style="white-space: nowrap;" sortable>
                 {{prettyBytes(props.row.video_bitrate)}}
               </b-table-column>
+              <b-table-column field="duration" :label="$t('Duration')" style="white-space: nowrap;" sortable>
+                {{humanizeSeconds(props.row.duration)}}
+              </b-table-column>
               <b-table-column field="video_avgfps_val" :label="$t('FPS')" style="white-space: nowrap;" sortable>
                 {{props.row.video_avgfps_val}}
               </b-table-column>
@@ -104,6 +107,9 @@
       },
       match(file) {
         this.$store.commit("overlay/showMatch", {file: file});
+      },
+      humanizeSeconds(seconds) {
+        return new Date(seconds * 1000).toISOString().substr(11, 8);
       },
       removeFile(file) {
         this.$buefy.dialog.confirm({

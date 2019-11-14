@@ -64,5 +64,6 @@
   "Height": "Height",
   "Bitrate": "Bitrate",
   "FPS": "FPS",
-  "No files matching your selection": "No files matching your selection"
+  "No files matching your selection": "No files matching your selection",
+  "Duration": "Duration"
 }
