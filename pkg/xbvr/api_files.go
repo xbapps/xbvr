@@ -87,6 +87,10 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 		tx = tx.Order("created_time asc")
 	case "created_time_desc":
 		tx = tx.Order("created_time desc")
+	case "duration_asc":
+		tx = tx.Order("video_duration asc")
+	case "duration_desc":
+		tx = tx.Order("video_duration desc")
 	case "size_asc":
 		tx = tx.Order("size asc")
 	case "size_desc":
