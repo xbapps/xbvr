@@ -20,7 +20,18 @@
           <label class="label">{{$t("Created between")}}</label>
           <b-field>
             <b-datepicker v-model="fileCreation" editable range>
+              <div class="buttons">
+                <b-button size="is-small" @click="setRange(subDays(new Date(), 7), new Date())">
+                  <span>Last 7 days</span>
+                </b-button>
+                <b-button size="is-small" @click="setRange(subDays(new Date(), 30), new Date())">
+                  <span>Last 30 days</span>
+                </b-button>
+              </div>
             </b-datepicker>
+            <button class="button is-light" @click="clearRange">
+              <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+            </button>
           </b-field>
         </div>
       </div>
@@ -29,8 +40,19 @@
 </template>
 
 <script>
+  import {subDays} from "date-fns";
+
   export default {
     name: "Filters",
+    methods: {
+      clearRange() {
+        this.fileCreation = [];
+      },
+      setRange(start, end) {
+        this.fileCreation = [start, end];
+      },
+      subDays,
+    },
     computed: {
       fileState: {
         get() {
