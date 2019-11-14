@@ -1,6 +1,9 @@
 <template>
   <div>
     <div class="container is-fluid">
+      <div>
+        <Filters/>
+      </div>
       <div class="columns">
         <div class="column">
           <List/>
@@ -13,13 +16,14 @@
 </template>
 
 <script>
+  import Filters from "./Filters";
   import List from "./List";
   import Player from "./Player";
   import SceneMatch from "./SceneMatch";
 
   export default {
     name: "Files",
-    components: {List, Player, SceneMatch},
+    components: {Filters, List, Player, SceneMatch},
     computed: {
       showPlayerOverlay() {
         return this.$store.state.overlay.player.show;
