@@ -1,20 +1,25 @@
 import ky from "ky";
 
 const state = {
-  items: [],
   isLoading: false,
+  items: [],
+  filters: {
+    sort: "",
+    state: "unmatched",
+    createdDate: [],
+  }
 };
 
 const getters = {
-  prevFile: (state) => (currentScene) => {
-    let i = state.items.findIndex(item => item.id == currentScene.id);
+  prevFile: (state) => (currentFile) => {
+    let i = state.items.findIndex(item => item.id == currentFile.id);
     if (i === 0) {
       return null;
     }
     return state.items[i - 1];
   },
-  nextFile: (state) => (currentScene) => {
-    let i = state.items.findIndex(item => item.id == currentScene.id);
+  nextFile: (state) => (currentFile) => {
+    let i = state.items.findIndex(item => item.id == currentFile.id);
     if (i === state.items.length - 1) {
       return null;
     }
@@ -25,10 +30,12 @@ const getters = {
 const actions = {
   load({state}, params) {
     state.isLoading = true;
-    ky.get(`/api/files/list/all`).json().then(data => {
-      state.items = data;
-      state.isLoading = false;
-    });
+    ky.post(`/api/files/list`, {json: state.filters})
+      .json()
+      .then(data => {
+        state.items = data;
+        state.isLoading = false;
+      });
   },
 };
 
