@@ -4,7 +4,7 @@
       <div class="column">
         <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
         <div v-if="items.length > 0 && !isLoading">
-          <b-table :data="items" ref="table" backend-sorting @sort="onSort">
+          <b-table :data="items" ref="table" backend-sorting :default-sort="[sortField, sortOrder]" @sort="onSort">
             <template slot-scope="props">
               <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename" :label="$t('File')" sortable>
                 {{props.row.filename}}
@@ -68,6 +68,8 @@
         prettyBytes,
         format,
         parseISO,
+        sortField: 'filename',
+        sortOrder: 'asc',
       }
     },
     computed: {
@@ -79,10 +81,13 @@
       }
     },
     mounted() {
+      this.$store.state.files.filters.sort = `filename_asc`;
       this.$store.dispatch("files/load");
     },
     methods: {
       onSort(field, order) {
+        this.sortField = field;
+        this.sortOrder = order;
         this.$store.state.files.filters.sort = `${field}_${order}`;
         this.$store.dispatch("files/load");
       },
