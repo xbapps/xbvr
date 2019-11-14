@@ -85,6 +85,7 @@ require (
 	golang.org/x/net v0.0.0-20191112182307-2180aed22343
 	golang.org/x/sys v0.0.0-20191112214154-59a1497f0cea
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
+	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	mvdan.cc/xurls/v2 v2.1.0
