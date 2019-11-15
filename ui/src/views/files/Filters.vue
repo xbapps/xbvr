@@ -2,7 +2,7 @@
   <div class="field">
     <section>
       <div class="columns">
-        <div class="column is-one-fifth">
+        <div class="column">
           <label class="label">{{$t("State")}}</label>
           <b-field>
             <b-radio-button v-model="fileState" native-value="all">
@@ -16,7 +16,16 @@
             </b-radio-button>
           </b-field>
         </div>
-        <div class="column is-one-fifth">
+        <div class="column">
+          <label class="label">Filename</label>
+          <b-field>
+            <b-input v-model="fileName"></b-input>
+            <button class="button is-light" @click="clearFilename">
+              <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+            </button>
+          </b-field>
+        </div>
+        <div class="column">
           <label class="label">{{$t("Created between")}}</label>
           <b-field>
             <b-datepicker v-model="fileCreation" editable range>
@@ -34,7 +43,7 @@
             </button>
           </b-field>
         </div>
-        <div class="column is-one-fifth">
+        <div class="column">
           <label class="label">Resolution</label>
           <b-dropdown v-model="fileResolutions" multiple hoverable aria-role="list">
               <button class="button is-primary" type="button" slot="trigger">
@@ -58,7 +67,28 @@
               </b-dropdown-item>
           </b-dropdown>
         </div>
-        <div class="column is-one-fifth">
+        <div class="column">
+          <label class="label">Bitrate</label>
+          <b-dropdown v-model="fileBitrates" multiple hoverable aria-role="list">
+              <button class="button is-primary" type="button" slot="trigger">
+                  <span>Selected ({{fileBitrates.length}})</span>
+                  <b-icon icon="menu-down"></b-icon>
+              </button>
+              <b-dropdown-item value="low" aria-role="listitem">
+                  <span>Low (Below 15 Mbps)</span>
+              </b-dropdown-item>
+              <b-dropdown-item value="medium" aria-role="listitem">
+                  <span>Medium (15 to 24 Mbps)</span>
+              </b-dropdown-item>
+              <b-dropdown-item value="high" aria-role="listitem">
+                  <span>High (25 to 35 Mbps)</span>
+              </b-dropdown-item>
+              <b-dropdown-item value="ultra" aria-role="listitem">
+                  <span>Ultra (Above 35 Mbps)</span>
+              </b-dropdown-item>
+          </b-dropdown>
+        </div>
+        <div class="column">
           <label class="label">Framerate</label>
           <b-dropdown v-model="fileFramerates" multiple hoverable aria-role="list">
               <button class="button is-primary" type="button" slot="trigger">
@@ -87,6 +117,9 @@
   export default {
     name: "Filters",
     methods: {
+      clearFilename() {
+        this.fileName = '';
+      },
       clearRange() {
         this.fileCreation = [];
       },
@@ -96,6 +129,24 @@
       subDays,
     },
     computed: {
+      fileName: {
+        get() {
+          return this.$store.state.files.filters.filename;
+        },
+        set(value) {
+          this.$store.state.files.filters.filename = value;
+          this.$store.dispatch("files/load");
+        }
+      },
+      fileBitrates: {
+        get() {
+          return this.$store.state.files.filters.bitrates;
+        },
+        set(values) {
+          this.$store.state.files.filters.bitrates = values;
+          this.$store.dispatch("files/load");
+        }
+      },
       fileFramerates: {
         get() {
           return this.$store.state.files.filters.framerates;
