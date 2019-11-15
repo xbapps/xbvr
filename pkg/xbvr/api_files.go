@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -23,6 +24,7 @@ type RequestFileList struct {
 	State       optional.String   `json:"state"`
 	CreatedDate []optional.String `json:"createdDate"`
 	Sort        optional.String   `json:"sort"`
+	Resolutions []optional.String `json:"resolutions"`
 }
 
 type FilesResource struct{}
@@ -68,6 +70,29 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 		tx = tx.Where("files.scene_id != 0")
 	case "unmatched":
 		tx = tx.Where("files.scene_id = 0")
+	}
+
+	// Resolution
+	whereClauses := []string{}
+	if len(r.Resolutions) > 0 {
+		for _, resolution := range r.Resolutions {
+			if resolution.OrElse("") == "below4k" {
+				whereClauses = append(whereClauses, "video_height between 0 and 1899")
+			}
+			if resolution.OrElse("") == "4k" {
+				whereClauses = append(whereClauses, "video_height between 1900 and 2449")
+			}
+			if resolution.OrElse("") == "5k" {
+				whereClauses = append(whereClauses, "video_height between 2450 and 2899")
+			}
+			if resolution.OrElse("") == "6k" {
+				whereClauses = append(whereClauses, "video_height between 2900 and 3299")
+			}
+			if resolution.OrElse("") == "above6k" {
+				whereClauses = append(whereClauses, "video_height between 3300 and 9999")
+			}
+		}
+		tx = tx.Where(strings.Join(whereClauses, " OR "))
 	}
 
 	// Creation date

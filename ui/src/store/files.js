@@ -7,6 +7,7 @@ const state = {
     sort: "",
     state: "unmatched",
     createdDate: [],
+    resolutions: []
   }
 };
 
