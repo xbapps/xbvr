@@ -8,7 +8,9 @@ const state = {
     state: "unmatched",
     createdDate: [],
     resolutions: [],
-    framerates: []
+    framerates: [],
+    bitrates: [],
+    filename: ""
   }
 };
 

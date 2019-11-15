@@ -26,6 +26,8 @@ type RequestFileList struct {
 	Sort        optional.String   `json:"sort"`
 	Resolutions []optional.String `json:"resolutions"`
 	Framerates  []optional.String `json:"framerates"`
+	Bitrates    []optional.String `json:"bitrates"`
+	Filename    optional.String   `json:"filename"`
 }
 
 type FilesResource struct{}
@@ -96,6 +98,27 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 		tx = tx.Where(strings.Join(resolutionClauses, " OR "))
 	}
 
+	// Bitrate
+	bitrateClauses := []string{}
+	if len(r.Bitrates) > 0 {
+		for _, bitrate := range r.Bitrates {
+			if bitrate.OrElse("") == "low" {
+				bitrateClauses = append(bitrateClauses, "video_bit_rate between 0 and 14999999")
+			}
+			if bitrate.OrElse("") == "medium" {
+				bitrateClauses = append(bitrateClauses, "video_bit_rate between 15000000 and 24999999")
+			}
+			if bitrate.OrElse("") == "high" {
+				bitrateClauses = append(bitrateClauses, "video_bit_rate between 25000000 and 35000000")
+			}
+			if bitrate.OrElse("") == "ultra" {
+				bitrateClauses = append(bitrateClauses, "video_bit_rate between 35000001 and 999999999")
+			}
+		}
+		tx = tx.Where(strings.Join(bitrateClauses, " OR "))
+	}
+
+	// Framerate
 	framerateClauses := []string{}
 	if len(r.Framerates) > 0 {
 		for _, framerate := range r.Framerates {
@@ -110,6 +133,11 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 			}
 		}
 		tx = tx.Where(strings.Join(framerateClauses, " OR "))
+	}
+
+	// Filename
+	if len(r.Filename.OrElse("")) > 0 {
+		tx = tx.Where("filename like ?", "%"+r.Filename.OrElse("")+"%")
 	}
 
 	// Creation date
