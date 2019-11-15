@@ -58,6 +58,24 @@
               </b-dropdown-item>
           </b-dropdown>
         </div>
+        <div class="column is-one-fifth">
+          <label class="label">Framerate</label>
+          <b-dropdown v-model="fileFramerates" multiple hoverable aria-role="list">
+              <button class="button is-primary" type="button" slot="trigger">
+                  <span>Selected ({{fileFramerates.length}})</span>
+                  <b-icon icon="menu-down"></b-icon>
+              </button>
+              <b-dropdown-item value="30fps" aria-role="listitem">
+                  <span>30</span>
+              </b-dropdown-item>
+              <b-dropdown-item value="60fps" aria-role="listitem">
+                  <span>60</span>
+              </b-dropdown-item>
+              <b-dropdown-item value="other" aria-role="listitem">
+                  <span>Other</span>
+              </b-dropdown-item>
+          </b-dropdown>
+        </div>
       </div>
     </section>
   </div>
@@ -78,6 +96,15 @@
       subDays,
     },
     computed: {
+      fileFramerates: {
+        get() {
+          return this.$store.state.files.filters.framerates;
+        },
+        set(values) {
+          this.$store.state.files.filters.framerates = values;
+          this.$store.dispatch("files/load");
+        }
+      },
       fileResolutions: {
         get() {
           return this.$store.state.files.filters.resolutions;

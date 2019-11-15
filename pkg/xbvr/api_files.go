@@ -25,6 +25,7 @@ type RequestFileList struct {
 	CreatedDate []optional.String `json:"createdDate"`
 	Sort        optional.String   `json:"sort"`
 	Resolutions []optional.String `json:"resolutions"`
+	Framerates  []optional.String `json:"framerates"`
 }
 
 type FilesResource struct{}
@@ -73,26 +74,42 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 	}
 
 	// Resolution
-	whereClauses := []string{}
+	resolutionClauses := []string{}
 	if len(r.Resolutions) > 0 {
 		for _, resolution := range r.Resolutions {
 			if resolution.OrElse("") == "below4k" {
-				whereClauses = append(whereClauses, "video_height between 0 and 1899")
+				resolutionClauses = append(resolutionClauses, "video_height between 0 and 1899")
 			}
 			if resolution.OrElse("") == "4k" {
-				whereClauses = append(whereClauses, "video_height between 1900 and 2449")
+				resolutionClauses = append(resolutionClauses, "video_height between 1900 and 2449")
 			}
 			if resolution.OrElse("") == "5k" {
-				whereClauses = append(whereClauses, "video_height between 2450 and 2899")
+				resolutionClauses = append(resolutionClauses, "video_height between 2450 and 2899")
 			}
 			if resolution.OrElse("") == "6k" {
-				whereClauses = append(whereClauses, "video_height between 2900 and 3299")
+				resolutionClauses = append(resolutionClauses, "video_height between 2900 and 3299")
 			}
 			if resolution.OrElse("") == "above6k" {
-				whereClauses = append(whereClauses, "video_height between 3300 and 9999")
+				resolutionClauses = append(resolutionClauses, "video_height between 3300 and 9999")
 			}
 		}
-		tx = tx.Where(strings.Join(whereClauses, " OR "))
+		tx = tx.Where(strings.Join(resolutionClauses, " OR "))
+	}
+
+	framerateClauses := []string{}
+	if len(r.Framerates) > 0 {
+		for _, framerate := range r.Framerates {
+			if framerate.OrElse("") == "30fps" {
+				framerateClauses = append(framerateClauses, "video_avg_frame_rate_val = 30.0")
+			}
+			if framerate.OrElse("") == "60fps" {
+				framerateClauses = append(framerateClauses, "video_avg_frame_rate_val = 60.0")
+			}
+			if framerate.OrElse("") == "other" {
+				framerateClauses = append(framerateClauses, "(video_avg_frame_rate_val != 30.0 AND video_avg_frame_rate_val != 60.0)")
+			}
+		}
+		tx = tx.Where(strings.Join(framerateClauses, " OR "))
 	}
 
 	// Creation date

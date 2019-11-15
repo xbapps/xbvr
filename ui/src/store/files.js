@@ -7,7 +7,8 @@ const state = {
     sort: "",
     state: "unmatched",
     createdDate: [],
-    resolutions: []
+    resolutions: [],
+    framerates: []
   }
 };
 
