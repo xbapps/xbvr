@@ -63,7 +63,22 @@
   "Width": "Width",
   "Height": "Height",
   "Bitrate": "Bitrate",
+  "Framerate": "Framerate",
   "FPS": "FPS",
   "No files matching your selection": "No files matching your selection",
-  "Duration": "Duration"
+  "Duration": "Duration",
+  "Filename": "Filename",
+  "Resolution": "Resolution",
+  "Bitrate": "Bitrate",
+  "Above": "Above",
+  "Below": "Below",
+  "to": "to",
+  "Other": "Other",
+  "Last": "Last",
+  "Days": "Days",
+  "Selected": "Selected",
+  "Low": "Low",
+  "Medium": "Medium",
+  "High": "High",
+  "Ultra": "Ultra"
 }
