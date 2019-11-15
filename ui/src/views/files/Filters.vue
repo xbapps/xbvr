@@ -138,7 +138,9 @@
         },
         set(value) {
           this.$store.state.files.filters.filename = value;
-          this.$store.dispatch("files/load");
+          if (value.length > 3 || value.length == 0) {
+            this.$store.dispatch("files/load");
+          }
         }
       },
       fileBitrates: {
