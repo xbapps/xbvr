@@ -1,8 +1,6 @@
 package scrape
 
 import (
-	"encoding/json"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,21 +16,14 @@ func VRBangersSiteNew(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	securityToken := ""
-
 	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
+		colly.AllowedDomains("vrbangers.com"),
 		colly.CacheDir(siteCacheDir),
 		colly.UserAgent(userAgent),
 	)
 
-	ajaxCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
-		colly.UserAgent(userAgent),
-	)
-
 	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
+		colly.AllowedDomains("vrbangers.com"),
 		colly.CacheDir(sceneCacheDir),
 		colly.UserAgent(userAgent),
 	)
@@ -129,58 +120,22 @@ func VRBangersSiteNew(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`script`, func(e *colly.HTMLElement) {
-		if strings.HasPrefix(e.Text, "var config=") {
-			re := regexp.MustCompile("\"security\":\"(\\w+)\"")
-			securityToken = re.FindStringSubmatch(e.Text)[1]
-		}
-	})
-
-	siteCollector.OnHTML(`div.pagination`, func(e *colly.HTMLElement) {
-		re := regexp.MustCompile("https://vrbangers.com/videos/page/(\\d+)/")
-		maxPage := 0
-		e.ForEach(`a.page-numbers`, func(id int, e *colly.HTMLElement) {
-			matches := re.FindStringSubmatch(e.Attr("href"))
-			page, err := strconv.Atoi(matches[1])
-			if err == nil && page > maxPage {
-				maxPage = page
-			}
-		})
-		maxPage = (maxPage / 10) + 1
-		fastAjaxUrl := "https://vrbangers.com/wp-content/themes/vrbangers/fastAjax/index.php"
-		if securityToken != "" {
-			for i := 1; i <= maxPage; i++ {
-				var params = map[string]string{
-					"security": securityToken,
-					"action":   "ajaxSort",
-					"tax":      "All videos",
-					"taxType":  "video_category",
-					"sortBy":   "latest",
-					"page":     strconv.Itoa(i),
-					"pageSlug": "videos",
-					"perPage":  "120",
-				}
-				log.Println("visiting page " + strconv.Itoa(i))
-
-				ajaxCollector.Post(fastAjaxUrl, params)
-			}
-		}
-	})
-
-	ajaxCollector.OnResponse(func(r *colly.Response) {
-		var body string
-		json.Unmarshal(r.Body, &body)
-		r.Body = []byte("<html>" + body + "</html>")
-		r.Headers.Set("Content-Type", "text/html; charset=UTF-8")
-	})
-
-	ajaxCollector.OnHTML(`div.video-item-info--title a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.video-item-info--title a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
-		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
+	})
+
+	siteCollector.OnHTML(`.pagination a`, func(e *colly.HTMLElement) {
+		// Some index pages have links to german language scene pages:
+		// https://vrbangers.com/video/sensual-seduction/?lang=de
+		// This will strip out the query params... gross
+		url := strings.Split(e.Attr("href"), "?")[0]
+		pageURL := e.Request.AbsoluteURL(url)
+
+		siteCollector.Visit(pageURL)
 	})
 
 	siteCollector.Visit(URL)
