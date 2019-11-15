@@ -34,6 +34,30 @@
             </button>
           </b-field>
         </div>
+        <div class="column is-one-fifth">
+          <label class="label">Resolution</label>
+          <b-dropdown v-model="fileResolutions" multiple hoverable aria-role="list">
+              <button class="button is-primary" type="button" slot="trigger">
+                  <span>Selected ({{fileResolutions.length}})</span>
+                  <b-icon icon="menu-down"></b-icon>
+              </button>
+              <b-dropdown-item value="below4k" aria-role="listitem">
+                  <span>Below 4K</span>
+              </b-dropdown-item>
+              <b-dropdown-item value="4k" aria-role="listitem">
+                  <span>4K</span>
+              </b-dropdown-item>
+              <b-dropdown-item value="5k" aria-role="listitem">
+                  <span>5K</span>
+              </b-dropdown-item>
+              <b-dropdown-item value="6k" aria-role="listitem">
+                  <span>6K</span>
+              </b-dropdown-item>
+              <b-dropdown-item value="above6k" aria-role="listitem">
+                  <span>Above 6K</span>
+              </b-dropdown-item>
+          </b-dropdown>
+        </div>
       </div>
     </section>
   </div>
@@ -54,6 +78,15 @@
       subDays,
     },
     computed: {
+      fileResolutions: {
+        get() {
+          return this.$store.state.files.filters.resolutions;
+        },
+        set(values) {
+          this.$store.state.files.filters.resolutions = values;
+          this.$store.dispatch("files/load");
+        }
+      },
       fileState: {
         get() {
           return this.$store.state.files.filters.state;
