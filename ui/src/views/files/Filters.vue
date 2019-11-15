@@ -16,7 +16,7 @@
             </b-radio-button>
           </b-field>
         </div>
-        <div class="column">
+        <div class="column is-one-fifth">
           <label class="label">Filename</label>
           <b-field>
             <b-input v-model="fileName"></b-input>
@@ -25,7 +25,7 @@
             </button>
           </b-field>
         </div>
-        <div class="column">
+        <div class="column is-one-fifth">
           <label class="label">{{$t("Created between")}}</label>
           <b-field>
             <b-datepicker v-model="fileCreation" editable range>
