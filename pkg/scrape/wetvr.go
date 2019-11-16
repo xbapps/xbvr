@@ -49,9 +49,7 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		sc.SceneID = slugify.Slugify(sc.Site + "-" + sc.SiteID)
 
 		// Title
-		e.ForEach(`h1.t2019-stitle`, func(id int, e *colly.HTMLElement) {
-			sc.Title = e.Text
-		})
+		sc.Title = strings.TrimSpace(e.ChildText(`h1.t2019-stitle`))
 
 		// Date & Duration
 		e.ForEach(`div#t2019-stime span`, func(id int, e *colly.HTMLElement) {
@@ -68,11 +66,7 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		})
 
 		// Cover URLs
-		e.ForEach(`div#t2019-video deo-video`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("cover-image")))
-			}
-		})
+		sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.ChildAttr(`div#t2019-video deo-video`, "cover-image")))
 
 		// Gallery
 		e.ForEach(`div.t2019-thumbs img`, func(id int, e *colly.HTMLElement) {
@@ -82,9 +76,7 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		})
 
 		// Synopsis
-		e.ForEach(`div#t2019-description`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text)
-		})
+		sc.Synopsis = strings.TrimSpace(e.ChildText(`div#t2019-description`))
 
 		// Cast
 		e.ForEach(`div#t2019-models a`, func(id int, e *colly.HTMLElement) {
