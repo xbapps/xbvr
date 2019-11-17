@@ -56,7 +56,7 @@ func VRBangersSiteNew(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 			if len(parts) > 1 {
 				switch strings.TrimSpace(parts[0]) {
 				case "Release date":
-					tmpDate, _ := goment.New(strings.TrimSpace(parts[1]), "MMMM D, YYYY")
+					tmpDate, _ := goment.New(strings.TrimSpace(parts[1]), "MMM D, YYYY")
 					sc.Released = tmpDate.Format("YYYY-MM-DD")
 				case "Duration":
 					durationParts := strings.Split(strings.TrimSpace(parts[1]), " ")
