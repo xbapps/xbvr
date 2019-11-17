@@ -244,9 +244,9 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 
 	switch r.Sort.OrElse("") {
 	case "added_desc":
-		tx = tx.Order("added_date desc")
+		tx = tx.Order("created_at desc")
 	case "added_asc":
-		tx = tx.Order("added_date asc")
+		tx = tx.Order("created_at asc")
 	case "release_desc":
 		tx = tx.Order("release_date desc")
 	case "release_asc":
