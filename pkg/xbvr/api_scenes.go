@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/blevesearch/bleve"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/markphelps/optional"
@@ -211,7 +210,6 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 	for _, i := range r.Sites {
 		sites = append(sites, i.OrElse(""))
 	}
-	spew.Dump(sites)
 	if len(sites) > 0 {
 		tx = tx.Where("site IN (?)", sites)
 	}

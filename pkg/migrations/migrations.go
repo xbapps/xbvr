@@ -50,6 +50,15 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0004",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					NeedsUpdate bool
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
