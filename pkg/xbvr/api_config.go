@@ -58,6 +58,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Param(ws.PathParameter("folder-id", "Folder ID").DataType("int")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.POST("/scraper/force-site-update").To(i.forceSiteUpdate).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	return ws
 }
 
@@ -91,7 +94,7 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 	defer db.Close()
 
 	var sites []models.Site
-	db.Order("is_enabled desc").Find(&sites)
+	db.Order("name asc").Find(&sites)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
@@ -115,7 +118,7 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 	site.Save()
 
 	var sites []models.Site
-	db.Order("is_enabled desc").Find(&sites)
+	db.Order("name asc").Find(&sites)
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
@@ -210,4 +213,20 @@ func (i ConfigResource) removeFolder(req *restful.Request, resp *restful.Respons
 	log.WithField("task", "rescan").Info("Removed folder", vol.Path)
 
 	resp.WriteHeader(http.StatusOK)
+}
+
+func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Response) {
+	var r struct {
+		SiteName string `json:"site_name"`
+	}
+
+	if err := req.ReadEntity(&r); err != nil {
+		APIError(req, resp, http.StatusInternalServerError, err)
+		return
+	}
+
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	db.Model(&models.Scene{}).Where("site = ?", r.SiteName).Update("needs_update", true)
 }
