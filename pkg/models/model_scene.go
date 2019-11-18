@@ -62,6 +62,8 @@ type Scene struct {
 	AddedDate    time.Time       `json:"added_date"`
 	LastOpened   time.Time       `json:"last_opened"`
 
+	NeedsUpdate bool `json:"needs_update"`
+
 	Fulltext string  `gorm:"-" json:"fulltext"`
 	Score    float64 `gorm:"-" json:"_score"`
 }
@@ -189,6 +191,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var o Scene
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)
 
+	o.NeedsUpdate = false
 	o.SceneID = ext.SceneID
 	o.Title = ext.Title
 	o.SceneType = ext.SceneType
