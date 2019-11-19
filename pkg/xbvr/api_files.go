@@ -1,6 +1,7 @@
 package xbvr
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -95,7 +96,7 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 				resolutionClauses = append(resolutionClauses, "video_height between 3300 and 9999")
 			}
 		}
-		tx = tx.Where(strings.Join(resolutionClauses, " OR "))
+		tx = tx.Where("(" + strings.Join(resolutionClauses, " OR ") + ") AND video_height != 0")
 	}
 
 	// Bitrate
@@ -115,7 +116,7 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 				bitrateClauses = append(bitrateClauses, "video_bit_rate between 35000001 and 999999999")
 			}
 		}
-		tx = tx.Where(strings.Join(bitrateClauses, " OR "))
+		tx = tx.Where("(" + strings.Join(bitrateClauses, " OR ") + ") AND video_bit_rate != 0")
 	}
 
 	// Framerate
@@ -132,7 +133,7 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 				framerateClauses = append(framerateClauses, "(video_avg_frame_rate_val != 30.0 AND video_avg_frame_rate_val != 60.0)")
 			}
 		}
-		tx = tx.Where(strings.Join(framerateClauses, " OR "))
+		tx = tx.Where("(" + strings.Join(framerateClauses, " OR ") + ") AND video_avg_frame_rate_val != 0")
 	}
 
 	// Filename
@@ -244,26 +245,47 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	var file models.File
 	var scene models.Scene
+	var file models.File
 	db, _ := models.GetDB()
-	err = db.Where(&models.File{ID: uint(fileId)}).First(&file).Error
+	defer db.Close()
+
+	err = db.Preload("Volume").Where(&models.File{ID: uint(fileId)}).First(&file).Error
 	if err == nil {
-		err := os.Remove(filepath.Join(file.Path, file.Filename))
-		if err == nil {
-			db.Delete(&file)
-		} else {
-			log.Errorf("Error deleting file ", err)
+
+		deleted := false
+		switch file.Volume.Type {
+		case "local":
+			err := os.Remove(filepath.Join(file.Path, file.Filename))
+			if err == nil {
+				deleted = true
+			} else {
+				log.Errorf("Error deleting file ", err)
+			}
+		case "putio":
+			id, err := strconv.ParseInt(file.Path, 10, 64)
+			if err != nil {
+				return
+			}
+			client := file.Volume.GetPutIOClient()
+			err = client.Files.Delete(context.Background(), id)
+			if err == nil {
+				deleted = true
+			} else {
+				log.Errorf("Error deleting file ", err)
+			}
 		}
-		if file.SceneID != 0 {
-			scene.GetIfExistByPK(file.SceneID)
+
+		if deleted {
+			db.Delete(&file)
+			if file.SceneID != 0 {
+				scene.GetIfExistByPK(file.SceneID)
+				scene.UpdateStatus()
+			}
 		}
 	} else {
 		log.Errorf("Error deleting file ", err)
 	}
-
-	scene.UpdateStatus()
-	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }

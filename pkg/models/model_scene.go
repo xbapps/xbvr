@@ -133,7 +133,7 @@ func (o *Scene) GetFiles() ([]File, error) {
 	defer db.Close()
 
 	var files []File
-	db.Where(&File{SceneID: o.ID}).Find(&files)
+	db.Preload("Volume").Where(&File{SceneID: o.ID}).Find(&files)
 
 	return files, nil
 }
