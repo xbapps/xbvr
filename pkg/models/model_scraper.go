@@ -9,9 +9,10 @@ var scrapers []Scraper
 type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene) error
 
 type Scraper struct {
-	ID     string
-	Name   string
-	Scrape ScraperFunc
+	ID        string
+	Name      string
+	AvatarURL string
+	Scrape    ScraperFunc
 }
 
 type ScrapedActor struct {
@@ -57,10 +58,11 @@ func GetScrapers() []Scraper {
 	return scrapers
 }
 
-func RegisterScraper(id string, name string, f ScraperFunc) {
+func RegisterScraper(id string, name string, avatarURL string, f ScraperFunc) {
 	s := Scraper{}
 	s.ID = id
 	s.Name = name
+	s.AvatarURL = avatarURL
 	s.Scrape = f
 	scrapers = append(scrapers, s)
 }

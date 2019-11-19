@@ -27,8 +27,8 @@ var sceneCacheDir string
 
 var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
 
-func registerScraper(id string, name string, f models.ScraperFunc) {
-	models.RegisterScraper(id, name, f)
+func registerScraper(id string, name string, avatarURL string, f models.ScraperFunc) {
+	models.RegisterScraper(id, name, avatarURL, f)
 }
 
 func logScrapeStart(id string, name string) {

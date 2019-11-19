@@ -165,5 +165,5 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 }
 
 func init() {
-	registerScraper("realjamvr", "RealJam VR", RealJamVR)
+	registerScraper("realjamvr", "RealJam VR", "https://twivatar.glitch.me/realjamvr", RealJamVR)
 }

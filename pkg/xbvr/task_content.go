@@ -197,8 +197,9 @@ func Scrape(toScrape string) {
 func ScrapeJAVR(queryString string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
-
+		t0 := time.Now()
 		tlog := log.WithField("task", "scrape")
+		tlog.Infof("Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
 
 		// Get all known scenes
 		var scenes []models.Scene
@@ -218,15 +219,19 @@ func ScrapeJAVR(queryString string) {
 		scrape.ScrapeR18(knownScenes, &collectedScenes, queryString)
 
 		if len(collectedScenes) > 0 {
-			tlog.Infof("Scraped %v new scenes", len(collectedScenes))
-
 			db, _ := models.GetDB()
 			for i := range collectedScenes {
 				models.SceneCreateUpdateFromExternal(db, collectedScenes[i])
 			}
 			db.Close()
 
-			tlog.Infof("Saved %v new scenes", len(collectedScenes))
+			tlog.Infof("Updating tag counts")
+			CountTags()
+			SearchIndex()
+
+			tlog.Infof("Scraped %v new scenes in %s",
+				len(collectedScenes),
+				time.Now().Sub(t0).Round(time.Second))
 		} else {
 			tlog.Infof("No new scenes scraped")
 		}
