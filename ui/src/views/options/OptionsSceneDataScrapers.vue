@@ -10,6 +10,14 @@
            v-for="item in items" :key="item.id">
         <div :class="[runningScrapers.includes(item.id) ? 'card pulsate' : 'card']">
           <div class="card-content content">
+            <p class="image is-32x32 is-pulled-left avatar">
+              <vue-load-image>
+                <img slot="image" :src="getImageURL(item.avatar_url ? item.avatar_url : '/ui/images/blank.png')"/>
+                <img slot="preloader" src="/ui/images/blank.png"/>
+                <img slot="error" src="/ui/images/blank.png"/>
+              </vue-load-image>
+            </p>
+
             <h5 class="title">{{item.name}}</h5>
             <p>
               <small v-if="item.last_update !== '0001-01-01T00:00:00Z'">
@@ -43,14 +51,23 @@
 
 <script>
   import ky from "ky";
+  import VueLoadImage from "vue-load-image";
   import {formatDistanceToNow, parseISO} from "date-fns";
 
   export default {
     name: "OptionsSites",
+    components: {VueLoadImage},
     mounted() {
       this.$store.dispatch("optionsSites/load");
     },
     methods: {
+      getImageURL(u) {
+        if (u.startsWith("http")) {
+          return "/img/128x/" + u.replace("://", ":/");
+        } else {
+          return u;
+        }
+      },
       taskScrape(site) {
         ky.get(`/api/task/scrape?site=${site}`);
       },
@@ -100,6 +117,11 @@
 
   .card-content {
     padding-top: 1em;
+    padding-left: 1em;
+  }
+
+  .avatar {
+    margin-right: 1em;
   }
 
   p {

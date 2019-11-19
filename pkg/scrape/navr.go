@@ -155,5 +155,5 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 }
 
 func init() {
-	registerScraper("naughtyamericavr", "NaughtyAmericaVR", NaughtyAmericaVR)
+	registerScraper("naughtyamericavr", "NaughtyAmericaVR", "https://twivatar.glitch.me/naughtyamerica", NaughtyAmericaVR)
 }

@@ -260,6 +260,6 @@ func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("vrbangers", "VRBangers", VRBangers)
-	registerScraper("vrbtrans", "VRBTrans", VRBTrans)
+	registerScraper("vrbangers", "VRBangers", "https://twivatar.glitch.me/vrbangers", VRBangers)
+	registerScraper("vrbtrans", "VRBTrans", "https://twivatar.glitch.me/vrbtrans", VRBTrans)
 }

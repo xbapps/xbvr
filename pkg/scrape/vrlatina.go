@@ -127,5 +127,5 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("vrlatina", "VRLatina", VRLatina)
+	registerScraper("vrlatina", "VRLatina", "https://twivatar.glitch.me/vrlatinas", VRLatina)
 }

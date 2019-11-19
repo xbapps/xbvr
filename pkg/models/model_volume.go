@@ -10,7 +10,9 @@ type Volume struct {
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 
+	Type           string    `json:"type"`
 	Path           string    `json:"path"`
+	Metadata       string    `json:"metadata"`
 	LastScan       time.Time `json:"last_scan"`
 	IsEnabled      bool      `json:"-"`
 	IsAvailable    bool      `json:"is_available"`
