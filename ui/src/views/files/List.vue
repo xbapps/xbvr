@@ -33,9 +33,6 @@
                 <span v-if="props.row.duration !== 0">{{humanizeSeconds(props.row.duration)}}</span>
                 <span v-else>-</span>
               </b-table-column>
-              <b-table-column field="duration" :label="$t('Duration')" style="white-space: nowrap;" sortable>
-                {{humanizeSeconds(props.row.duration)}}
-              </b-table-column>
               <b-table-column field="video_avgfps_val" :label="$t('FPS')" style="white-space: nowrap;" sortable>
                 <span v-if="props.row.video_avgfps_val !== 0">{{props.row.video_avgfps_val}}</span>
                 <span v-else>-</span>
