@@ -5,7 +5,7 @@
       <div class="column is-one-fifth custom-menu">
         <b-menu>
           <b-menu-list :label="$t('Options')">
-            <b-menu-item :label="$t('Folders')" :active="active==='folders'"
+            <b-menu-item :label="$t('Storage')" :active="active==='folders'"
                          @click="setActive('folders')"/>
             <b-menu-item :label="$t('Scene data')" :expanded="true" @click="setActive('data-scrapers')">
               <b-menu-item :label="$t('Mainstream scrapers')" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
