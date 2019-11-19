@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -15,7 +16,8 @@ type Actor struct {
 	Name         string  `gorm:"unique_index" json:"name"`
 	Scenes       []Scene `gorm:"many2many:scene_cast;" json:"-"`
 	ActorID      string  `json:"_id"`
-	Bio			 string  `json:"bio"`
+	Aliases      *string `json:"aliases" sql:"type:text;"`
+	Bio          string  `json:"bio"`
 	Birthday     string  `json:"birthday"`
 	Ethnicity    string  `json:"ethnicity"`
 	EyeColor     string  `json:"eye_color"`
@@ -35,24 +37,55 @@ type Actor struct {
 
 func (i *Actor) Save() error {
 	db, _ := GetDB()
+	defer db.Close()
+
 	err := db.Save(i).Error
-	db.Close()
 	return err
+}
+
+func ResolveActorAliases() error {
+	db, _ := GetDB()
+	defer db.Close()
+
+	// Get all actors with aliases
+	var actors []Actor
+	db.Model(Actor{}).Where("actors.aliases IS NOT NULL").Find(&actors)
+
+	for _, actor := range actors {
+		var dupes []Actor
+		var aliases []string
+		_ = json.Unmarshal([]byte(*actor.Aliases), &aliases)
+		db.Model(Actor{}).Where("name IN (?)", aliases).Find(&dupes)
+		if len(dupes) > 0 {
+			for _, dupe := range dupes {
+				if actor.Name != dupe.Name && dupe.ActorID == "" {
+					var scenes []Scene
+					db.Model(&scenes).Preload("Cast").
+						Joins("left join scene_cast on scene_cast.scene_id=scenes.id").
+						Joins("left join actors on actors.id=scene_cast.actor_id").
+						Where("actors.name = ?", dupe.Name).Find(&scenes)
+					for _, scene := range scenes {
+						db.Model(&scene).Association("Cast").Replace(actor)
+						db.Delete(&dupe)
+					}
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func ActorCreateUpdateFromExternal(db *gorm.DB, ext ScrapedActor) error {
 	var o Actor
-	db.Where(&Actor{Name: ext.Name}).First(&o)
+	db.Where(&Actor{Name: ext.Name}).FirstOrCreate(&o)
 
-	// TODO(jrebey): Figure out how to resolve aliases. Models like
-	// https://www.hottiesvr.com/virtualreality/pornstar/id/640-Amy-Pink
-	// have a bunch of aliases and don't get stats in the database.
-	//
-	// One idea is to check if there is an actor in the DB for the actual
-	// actor. If not, we need to create it. Once the actual actor is in the
-	// db, we can update the scene_cast table to point any aliases to the
-	// actual actor. We can then delete the aliases from the db and update
-	// the scene counts for the actor.
+	if ext.ActorID != "" {
+		o.ActorID = ext.ActorID
+	}
+
+	if ext.Aliases != "" {
+		o.Aliases = &ext.Aliases
+	}
 
 	if ext.Bio != "" {
 		o.Bio = ext.Bio
@@ -80,6 +113,10 @@ func ActorCreateUpdateFromExternal(db *gorm.DB, ext ScrapedActor) error {
 
 	if ext.Height != "" {
 		o.Height = ext.Height
+	}
+
+	if ext.HomepageURL != "" {
+		o.HomepageURL = ext.HomepageURL
 	}
 
 	if ext.ImageURL != "" {

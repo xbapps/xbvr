@@ -15,24 +15,24 @@ type Scraper struct {
 }
 
 type ScrapedActor struct {
-	ActorID      string   `json:"_id"`
-	Aliases		 []string `json:"aliases"`
-	Bio			 string   `json:"bio"`
-	Birthday	 string   `json:"birthdate"`
-	Ethnicity	 string   `json:"ethnicity"`
-	EyeColor	 string   `json:"eye_color"`
-	Facebook     string   `json:"facebook"`
-	HairColor	 string   `json:"hair_color"`
-	Height		 string   `json:"height"`
-	HomepageURL  string   `json:"homepage_url"`
-	ImageURL	 string   `json:"image_url"`
-	Instagram    string   `json:"instagram"`
-	Measurements string   `json:"measurements"`
-	Name         string   `json:"name"`
-	Nationality  string   `json:"nationality"`
-	Reddit       string   `json:"reddit"`
-	Twitter		 string   `json:"twitter"`
-	Weight		 string   `json:"weight"`
+	ActorID      string `json:"_id"`
+	Aliases      string `json:"aliases"`
+	Bio          string `json:"bio"`
+	Birthday     string `json:"birthdate"`
+	Ethnicity    string `json:"ethnicity"`
+	EyeColor     string `json:"eye_color"`
+	Facebook     string `json:"facebook"`
+	HairColor    string `json:"hair_color"`
+	Height       string `json:"height"`
+	HomepageURL  string `json:"homepage_url"`
+	ImageURL     string `json:"image_url"`
+	Instagram    string `json:"instagram"`
+	Measurements string `json:"measurements"`
+	Name         string `json:"name"`
+	Nationality  string `json:"nationality"`
+	Reddit       string `json:"reddit"`
+	Twitter      string `json:"twitter"`
+	Weight       string `json:"weight"`
 }
 
 type ScrapedScene struct {

@@ -119,8 +119,8 @@ func Scrape(toScrape string) {
 		// Get all known scenes
 		var scenes []models.Scene
 		db, _ := models.GetDB()
+		defer db.Close()
 		db.Find(&scenes)
-		db.Close()
 
 		var knownScenes []string
 		for i := range scenes {
@@ -149,13 +149,19 @@ func Scrape(toScrape string) {
 			// Send a signal to clean up the progress bars just in case
 			log.WithField("task", "scraperProgress").Info("DONE")
 
-			tlog.Infof("Updating tag counts")
-			CountTags()
-			SearchIndex()
-
 			tlog.Infof("Scraped %v new scenes in %s",
 				sceneCount,
 				time.Now().Sub(t0).Round(time.Second))
+		}
+
+		// Get all known scenes
+		var actors []models.Actor
+		db.Find(&actors)
+		db.Close()
+
+		var knownActors []string
+		for i := range actors {
+			knownActors = append(knownActors, actors[i].HomepageURL)
 		}
 
 		t0 = time.Now()
@@ -168,7 +174,7 @@ func Scrape(toScrape string) {
 		var awg sync.WaitGroup
 		awg.Add(1)
 		tlog.Infof("Updating Actor database")
-		go scrape.Actors(&wg, collectedActors)
+		go scrape.Actors(&awg, knownActors, collectedActors)
 		awg.Wait()
 
 		close(collectedActors)
@@ -176,8 +182,13 @@ func Scrape(toScrape string) {
 		wg.Wait()
 
 		tlog.Infof("Scraped %v actors in %s",
-			sceneCount,
+			actorCount,
 			time.Now().Sub(t0).Round(time.Second))
+		models.ResolveActorAliases()
+
+		tlog.Infof("Updating tag counts")
+		CountTags()
+		SearchIndex()
 	}
 
 	models.RemoveLock("scrape")

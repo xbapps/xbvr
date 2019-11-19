@@ -257,7 +257,9 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var tmpActor Actor
 	for _, name := range ext.Cast {
 		tmpActor = Actor{}
-		db.Where(&Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&tmpActor)
+		n := strings.Replace(name, ".", "", -1)
+		// db.Raw("select actors.* from actors, json_each(actors.aliases) where actors.name = '?' OR json_each.value = '?'", n, n).FirstOrCreate(&tmpActor)
+		db.Where(&Actor{Name: n}).FirstOrCreate(&tmpActor)
 		db.Model(&o).Association("Cast").Append(tmpActor)
 	}
 

@@ -6,10 +6,11 @@ import (
 	"sync"
 
 	"github.com/gocolly/colly"
+	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func Actors(wg *sync.WaitGroup, out chan<- models.ScrapedActor) error {
+func Actors(wg *sync.WaitGroup, knownActors []string, out chan<- models.ScrapedActor) error {
 	defer wg.Done()
 
 	siteCollector := colly.NewCollector(
@@ -36,12 +37,21 @@ func Actors(wg *sync.WaitGroup, out chan<- models.ScrapedActor) error {
 		sa := models.ScrapedActor{}
 
 		sa.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+
+		tmp := strings.Split(sa.HomepageURL, "/")
+		sa.ActorID = strings.Split(tmp[len(tmp)-1], "-")[0]
 		sa.ImageURL = e.ChildAttr(`.item-img img`, "src")
 
 		sa.Name = strings.TrimSpace(e.ChildText(`.model-page h1`))
 
 		aliases := strings.Replace(e.ChildText(`.item-aliases`), "Aliases", "", 1)
-		sa.Aliases = trimSpaceFromSlice(strings.Split(aliases, ", "))
+		if len(strings.TrimSpace(aliases)) > 0 {
+			tmpAliases := trimSpaceFromSlice(strings.Split(aliases, ", "))
+			if len(tmpAliases) > 0 {
+				j, _ := json.Marshal(tmpAliases)
+				sa.Aliases = string(j)
+			}
+		}
 
 		sa.Bio = strings.TrimSpace(strings.Replace(e.ChildText(`.item-bio`), "Bio", "", 1))
 
@@ -111,15 +121,17 @@ func Actors(wg *sync.WaitGroup, out chan<- models.ScrapedActor) error {
 
 		sa.Twitter = e.ChildAttr(`a.twitter-timeline`, "href")
 
-		j, _ := json.MarshalIndent(sa, "", "  ")
-		log.Infof("\n%v", string(j))
 		out <- sa
 	})
 
 	siteCollector.OnHTML(`.model a`, func(e *colly.HTMLElement) {
-		log.Infof("Found model: %s", e.Text)
 		actorURL := e.Request.AbsoluteURL(e.Attr("href"))
-		actorCollector.Visit(actorURL)
+
+		// If scene exist in database, there's no need to scrape
+		if !funk.ContainsString(knownActors, actorURL) {
+			actorCollector.Visit(actorURL)
+		}
+
 	})
 
 	siteCollector.Visit("https://www.hottiesvr.com/virtualreality/alphabet")
