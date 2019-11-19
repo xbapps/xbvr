@@ -1,7 +1,7 @@
 <template>
   <div class="card is-shadowless">
     <div class="card-image">
-      <figure class="image" @click="showScenes(item)">
+      <figure class="image" @click="showScenes(item.name)">
         <vue-load-image>
           <img slot="image" :src="getImageURL(item.image_url)"/>
           <img slot="preloader" src="/ui/images/blank.png"/>
@@ -34,9 +34,15 @@
           return u;
         }
       },
-      showScenes(scene) {
-        this.$store.commit("overlay/showDetails", {scene: scene});
-      }
+      showScenes(actor) {
+        this.$store.state.sceneList.filters.cast = [actor];
+        this.$store.state.sceneList.filters.sites = [];
+        this.$store.state.sceneList.filters.tags = [];
+        this.$router.push({
+          name: 'scenes',
+          query: {q: this.$store.getters['sceneList/filterQueryParams']}
+        });
+      },
     }
   }
 </script>
