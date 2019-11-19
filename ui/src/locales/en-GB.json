@@ -29,8 +29,6 @@
   "Assign": "Assign",
   "Options": "Options",
   "Scene data": "Scene data",
-  "Mainstream scrapers": "Mainstream scrapers",
-  "JAVR scrapers": "JAVR scrapers",
   "Data import/export": "Data import/export",
   "Path": "Path",
   "Avail": "Avail",
@@ -86,5 +84,14 @@
   "Add cloud storage": "Add cloud storage",
   "Service": "Service",
   "Token": "Token",
-  "Add service": "Add service"
+  "Add service": "Add service",
+  "Scrapers": "Scrapers",
+  "Mainstream sites": "Mainstream sites",
+  "Run selected scrapers": "Run selected scrapers",
+  "Never scraped": "Never scraped",
+  "Scraping now...": "Scraping now...",
+  "Scrape this site": "Scrape this site",
+  "Force update scenes": "Force update scenes",
+  "JAVR scraper": "JAVR scraper",
+  "Go": "Go"
 }

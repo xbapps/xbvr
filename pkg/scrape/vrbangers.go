@@ -177,7 +177,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Title = strings.TrimSpace(e.ChildText(`div.video-info-title h1 span`))
 
 		// Date
-		tmpDate, _ := goment.New(e.ChildText(`p[itemprop=datePublished]`), "DD MMMM, YYYY")
+		tmpDate, _ := goment.New(e.ChildText(`p[itemprop=datePublished]`), "MMM DD, YYYY")
 		sc.Released = tmpDate.Format("YYYY-MM-DD")
 
 		// Duration
