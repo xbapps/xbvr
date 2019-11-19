@@ -125,5 +125,5 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("vrconk", "VRCONK", VRCONK)
+	registerScraper("vrconk", "VRCONK", "https://twivatar.glitch.me/vrconk", VRCONK)
 }

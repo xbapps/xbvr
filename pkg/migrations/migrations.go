@@ -59,6 +59,40 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0005",
+			Migrate: func(tx *gorm.DB) error {
+				type Volume struct {
+					Type     string
+					Metadata string
+				}
+				return tx.AutoMigrate(Volume{}).Error
+			},
+		},
+		{
+			ID: "0006",
+			Migrate: func(tx *gorm.DB) error {
+				var volumes []models.Volume
+				tx.Model(&volumes).Find(&volumes)
+
+				for i := range volumes {
+					if volumes[i].Type == "" {
+						volumes[i].Type = "local"
+						volumes[i].Save()
+					}
+				}
+				return nil
+			},
+		},
+		{
+			ID: "0007",
+			Migrate: func(tx *gorm.DB) error {
+				type Site struct {
+					AvatarURL string
+				}
+				return tx.AutoMigrate(Site{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

@@ -8,22 +8,32 @@
       <div class="column is-multiline is-one-third" v-for="item in items" :key="item.id">
         <div :class="[runningScrapers.includes(item.id) ? 'card running' : 'card']">
           <div class="card-content content">
+            <p class="image is-32x32 is-pulled-left avatar">
+              <vue-load-image>
+                <img
+                  slot="image"
+                  :src="getImageURL(item.avatar_url ? item.avatar_url : '/ui/images/blank.png')"
+                />
+                <img slot="preloader" src="/ui/images/blank.png" />
+                <img slot="error" src="/ui/images/blank.png" />
+              </vue-load-image>
+            </p>
+
             <h5 class="title">{{item.name}}</h5>
             <p :class="[runningScrapers.includes(item.id) ? 'invisible' : '']">
-              <small v-if="item.last_update !== '0001-01-01T00:00:00Z'">
-                Updated {{formatDistanceToNow(parseISO(item.last_update))}} ago
-              </small>
-              <small v-else>
-                Never scraped
-              </small>
+              <small
+                v-if="item.last_update !== '0001-01-01T00:00:00Z'"
+              >Updated {{formatDistanceToNow(parseISO(item.last_update))}} ago</small>
+              <small v-else>Never scraped</small>
             </p>
             <p :class="[runningScrapers.includes(item.id) ? '' : 'invisible']">
-              <small>
-                Scraping now...
-              </small>
+              <small>Scraping now...</small>
             </p>
-            <div class="switch">                 
-              <b-switch :value="item.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: item.id})"/>
+            <div class="switch">
+              <b-switch
+                :value="item.is_enabled"
+                @input="$store.dispatch('optionsSites/toggleSite', {id: item.id})"
+              />
             </div>
             <div class="menu">
               <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">
@@ -31,7 +41,10 @@
                   <b-icon icon="dots-vertical"></b-icon>
                 </template>
                 <b-dropdown-item aria-role="listitem" @click="taskScrape(item.id)">Scrape this site</b-dropdown-item>
-                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(item.name)">Force update scenes</b-dropdown-item>
+                <b-dropdown-item
+                  aria-role="listitem"
+                  @click="forceSiteUpdate(item.name)"
+                >Force update scenes</b-dropdown-item>
               </b-dropdown>
             </div>
           </div>
@@ -56,84 +69,98 @@
 </template>
 
 <script>
-import ky from "ky";
-import { formatDistanceToNow, parseISO } from "date-fns";
+  import ky from "ky";
+  import VueLoadImage from "vue-load-image";
+  import { formatDistanceToNow, parseISO } from "date-fns";
 
-export default {
-  name: "OptionsSites",
-  data() {
-    return {
-      javrQuery: ""
-    };
-  },
-  mounted() {
-    this.$store.dispatch("optionsSites/load");
-  },
-  methods: {
-    taskScrape(site) {
-      ky.get(`/api/task/scrape?site=${site}`);
+  export default {
+    name: "OptionsSites",
+    components: { VueLoadImage },
+    data() {
+      return {
+        javrQuery: ""
+      };
     },
-    forceSiteUpdate(site) {
-      ky.post(`/api/config/scraper/force-site-update`, {
-        json: { site_name: site }
-      });
-      this.$buefy.toast.open(
-        `Scenes from ${site} will be updated on next scrape`
-      );
-    },
-    scrapeJAVR() {
-      ky.post(`/api/task/scrape-javr`, { json: { q: this.javrQuery } });
-    },
-    parseISO,
-    formatDistanceToNow
-  },
-  computed: {
-    items() {
-      return this.$store.state.optionsSites.items;
-    },
-    runningScrapers() {
+    mounted() {
       this.$store.dispatch("optionsSites/load");
-      return this.$store.state.messages.runningScrapers;
+    },
+    methods: {
+      getImageURL(u) {
+        if (u.startsWith("http")) {
+          return "/img/128x/" + u.replace("://", ":/");
+        } else {
+          return u;
+        }
+      },
+      taskScrape(site) {
+        ky.get(`/api/task/scrape?site=${site}`);
+      },
+      forceSiteUpdate(site) {
+        ky.post(`/api/config/scraper/force-site-update`, {
+          json: { site_name: site }
+        });
+        this.$buefy.toast.open(
+          `Scenes from ${site} will be updated on next scrape`
+        );
+      },
+      scrapeJAVR() {
+        ky.post(`/api/task/scrape-javr`, { json: { q: this.javrQuery } });
+      },
+    parseISO,
+    formatDistanceToNow,
+    },
+    computed: {
+      items() {
+        return this.$store.state.optionsSites.items;
+      },
+      runningScrapers() {
+        this.$store.dispatch("optionsSites/load");
+        return this.$store.state.messages.runningScrapers;
+      }
     }
-  }
-};
+  };
 </script>
 
 <style scoped>
-.running {
-  opacity: 0.6;
-  pointer-events: none;
-}
+  .running {
+    opacity: 0.6;
+    pointer-events: none;
+  }
 
-.card {
-  height: 100%;
-}
+  .card {
+    height: 100%;
+  }
 
-.card-content {
-  padding-top: 1em;
-}
+  .card-content {
+    padding-top: 1em;
+    padding-left: 1em;
+  }
 
-p {
-  margin-bottom: 0.5em !important;
-}
+  .avatar {
+    margin-right: 1em;
+  }
 
-h5 {
-  margin-bottom: 0.25em !important;
-}
+  p {
+    margin-bottom: 0.5em !important;
+  }
 
-.switch {
-  position: absolute;
-  bottom: 0.25em;
-  right: 0em;
-}
+  h5 {
+    margin-bottom: 0.25em !important;
+  }
 
-.invisible {
-  display: none;
-}
+  .switch {
+    position: absolute;
+    bottom: 0.25em;
+    right: 0em;
+  }
 
-.menu {
-  position: absolute;
-  top: 0.75em;
-  right: 0.5em;
-}
+  .invisible {
+    display: none;
+  }
+
+  .menu {
+    position: absolute;
+    top: 0.75em;
+    right: 0.5em;
+  }
 </style>

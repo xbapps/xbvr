@@ -111,5 +111,5 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("sinsvr", "SinsVR", SinsVR)
+	registerScraper("sinsvr", "SinsVR", "https://twivatar.glitch.me/sins_vr", SinsVR)
 }
