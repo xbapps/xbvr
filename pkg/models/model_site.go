@@ -7,6 +7,7 @@ import (
 type Site struct {
 	ID         string    `gorm:"primary_key" json:"id"`
 	Name       string    `json:"name"`
+	AvatarURL  string    `json:"avatar_url"`
 	IsBuiltin  bool      `json:"is_builtin"`
 	IsEnabled  bool      `json:"is_enabled"`
 	LastUpdate time.Time `json:"last_update"`
@@ -35,6 +36,7 @@ func InitSites() {
 		var st Site
 		db.Where(&Site{ID: scrapers[i].ID}).FirstOrCreate(&st)
 		st.Name = scrapers[i].Name
+		st.AvatarURL = scrapers[i].AvatarURL
 		st.IsBuiltin = true
 		st.Save()
 	}
