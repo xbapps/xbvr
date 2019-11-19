@@ -65,11 +65,11 @@
 <script>
   import ky from "ky";
   import VueLoadImage from "vue-load-image";
-  import { formatDistanceToNow, parseISO } from "date-fns";
+  import {formatDistanceToNow, parseISO} from "date-fns";
 
   export default {
     name: "OptionsSites",
-    components: { VueLoadImage },
+    components: {VueLoadImage},
     data() {
       return {
         javrQuery: ""
@@ -91,7 +91,7 @@
       },
       forceSiteUpdate(site) {
         ky.post(`/api/config/scraper/force-site-update`, {
-          json: { site_name: site }
+          json: {"site_name": site}
         });
         this.$buefy.toast.open(
           `Scenes from ${site} will be updated on next scrape`
@@ -100,8 +100,8 @@
       scrapeJAVR() {
         ky.post(`/api/task/scrape-javr`, { json: { q: this.javrQuery } });
       },
-    parseISO,
-    formatDistanceToNow,
+      parseISO,
+      formatDistanceToNow,
     },
     computed: {
       items() {
@@ -112,7 +112,7 @@
         return this.$store.state.messages.runningScrapers;
       }
     }
-  };
+  }
 </script>
 
 <style scoped>
