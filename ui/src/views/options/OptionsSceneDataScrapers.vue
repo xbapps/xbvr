@@ -1,8 +1,12 @@
 <template>
   <div class="content">
-    <h3 class="title">Mainstream Scrapers</h3>
-    <div class="buttons">
-      <a class="button is-primary" v-on:click="taskScrape('_enabled')">Run Selected Scrapers</a>
+    <div class="columns">
+      <div class="column">
+        <h3 class="title">Mainstream Scrapers</h3>
+      </div>
+      <div class="column buttons" align="right">
+        <a class="button is-primary" v-on:click="taskScrape('_enabled')">Run Selected Scrapers</a>
+      </div>
     </div>
     <div class="columns is-multiline">
       <div class="column is-multiline is-one-third" v-for="item in items" :key="item.id">
@@ -10,10 +14,7 @@
           <div class="card-content content">
             <p class="image is-32x32 is-pulled-left avatar">
               <vue-load-image>
-                <img
-                  slot="image"
-                  :src="getImageURL(item.avatar_url ? item.avatar_url : '/ui/images/blank.png')"
-                />
+                <img slot="image" :src="getImageURL(item.avatar_url ? item.avatar_url : '/ui/images/blank.png')"/>
                 <img slot="preloader" src="/ui/images/blank.png" />
                 <img slot="error" src="/ui/images/blank.png" />
               </vue-load-image>
@@ -21,19 +22,15 @@
 
             <h5 class="title">{{item.name}}</h5>
             <p :class="[runningScrapers.includes(item.id) ? 'invisible' : '']">
-              <small
-                v-if="item.last_update !== '0001-01-01T00:00:00Z'"
-              >Updated {{formatDistanceToNow(parseISO(item.last_update))}} ago</small>
+              <small v-if="item.last_update !== '0001-01-01T00:00:00Z'">
+                Updated {{formatDistanceToNow(parseISO(item.last_update))}} ago</small>
               <small v-else>Never scraped</small>
             </p>
             <p :class="[runningScrapers.includes(item.id) ? '' : 'invisible']">
               <small>Scraping now...</small>
             </p>
             <div class="switch">
-              <b-switch
-                :value="item.is_enabled"
-                @input="$store.dispatch('optionsSites/toggleSite', {id: item.id})"
-              />
+              <b-switch :value="item.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: item.id})"/>
             </div>
             <div class="menu">
               <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">
@@ -41,10 +38,7 @@
                   <b-icon icon="dots-vertical"></b-icon>
                 </template>
                 <b-dropdown-item aria-role="listitem" @click="taskScrape(item.id)">Scrape this site</b-dropdown-item>
-                <b-dropdown-item
-                  aria-role="listitem"
-                  @click="forceSiteUpdate(item.name)"
-                >Force update scenes</b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(item.name)">Force update scenes</b-dropdown-item>
               </b-dropdown>
             </div>
           </div>
