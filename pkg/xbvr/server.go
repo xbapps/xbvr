@@ -20,6 +20,7 @@ import (
 	"github.com/rs/cors"
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
 	"willnorris.com/go/imageproxy"
 )
@@ -33,6 +34,8 @@ var (
 
 func StartServer(version, commit, branch, date string) {
 	currentVersion = version
+
+	migrations.Migrate()
 
 	// Remove old locks
 	models.RemoveLock("index")

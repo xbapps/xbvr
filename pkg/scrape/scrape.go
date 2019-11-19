@@ -3,6 +3,7 @@ package scrape
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,9 +11,11 @@ import (
 	"time"
 
 	"github.com/ProtonMail/go-appdir"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
+	"golang.org/x/net/html"
 )
 
 var log = &common.Log
@@ -74,6 +77,43 @@ func updateSiteLastUpdate(id string) {
 	}
 	site.LastUpdate = time.Now()
 	site.Save()
+}
+
+func traverseNodes(node *html.Node, fn func(*html.Node)) {
+	if node == nil {
+		return
+	}
+
+	fn(node)
+
+	for cur := node.FirstChild; cur != nil; cur = cur.NextSibling {
+		traverseNodes(cur, fn)
+	}
+}
+
+func findComments(sel *goquery.Selection) []string {
+	comments := []string{}
+	for _, node := range sel.Nodes {
+		traverseNodes(node, func(node *html.Node) {
+			if node.Type == html.CommentNode {
+				comments = append(comments, node.Data)
+			}
+		})
+	}
+	return comments
+}
+
+func getFilenameFromURL(u string) string {
+	p, _ := url.Parse(u)
+	return path.Base(p.Path)
+}
+
+func getTextFromHTMLWithSelector(data string, sel string) string {
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(data))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return strings.TrimSpace(doc.Find(sel).Text())
 }
 
 func init() {

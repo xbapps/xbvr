@@ -2,29 +2,42 @@
   <div class="content">
     <h3 class="title">Mainstream scrapers</h3>
     <div class="buttons">
-      <a class="button is-primary" v-on:click="taskScrape()">Run Selected Scrapers</a>
-      <a class="button is-primary" v-on:click="taskScrapeAll()">Run All Scrapers</a>
+      <a class="button is-primary" v-on:click="taskScrape('_enabled')">Run Selected Scrapers</a>
     </div>
-    <b-table :data="items" ref="table" default-sort="name">
-      <template slot-scope="props">
-        <b-table-column field="is_enabled" label="" width="20">
-          <b-switch :value="props.row.is_enabled"
-                    @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/>
-        </b-table-column>
-        <b-table-column field="name" label="Site" sortable>
-          {{props.row.name}}
-        </b-table-column>
-        <b-table-column field="last_update" label="Last update" sortable>
-              <span v-if="runningScrapers.includes(props.row.id)">
-                <b-progress type="is-primary"></b-progress>
-              </span>
-          <span v-else-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
-                {{formatDistanceToNow(parseISO(props.row.last_update))}} ago
-              </span>
-          <span v-else>never</span>
-        </b-table-column>
-      </template>
-    </b-table>
+
+    <div class="columns is-multiline">
+      <div class="column is-multiline is-one-third"
+           v-for="item in items" :key="item.id">
+        <div :class="[runningScrapers.includes(item.id) ? 'card pulsate' : 'card']">
+          <div class="card-content content">
+            <h5 class="title">{{item.name}}</h5>
+            <p>
+              <small v-if="item.last_update !== '0001-01-01T00:00:00Z'">
+                Updated {{formatDistanceToNow(parseISO(item.last_update))}} ago
+              </small>
+              <small v-else>Never scraped</small>
+            </p>
+
+            <div class="switch">
+              <b-switch :value="item.is_enabled"
+                        @input="$store.dispatch('optionsSites/toggleSite', {id: item.id})"/>
+            </div>
+
+            <div class="menu">
+              <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">
+                <template slot="trigger">
+                  <b-icon icon="dots-vertical"></b-icon>
+                </template>
+                <b-dropdown-item aria-role="listitem" @click="taskScrape(item.id)">Scrape this site</b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(item.name)">Force update scenes
+                </b-dropdown-item>
+              </b-dropdown>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -38,11 +51,14 @@
       this.$store.dispatch("optionsSites/load");
     },
     methods: {
-      taskScrape() {
-        ky.get(`/api/task/scrape`);
+      taskScrape(site) {
+        ky.get(`/api/task/scrape?site=${site}`);
       },
-      taskScrapeAll() {
-        ky.get(`/api/task/scrape/all`);
+      forceSiteUpdate(site) {
+        ky.post(`/api/config/scraper/force-site-update`, {
+          json: {"site_name": site}
+        });
+        this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`);
       },
       parseISO,
       formatDistanceToNow,
@@ -58,3 +74,51 @@
     }
   }
 </script>
+
+<style scoped>
+  .pulsate {
+    -webkit-animation: pulsate 0.5s linear;
+    -webkit-animation-iteration-count: infinite;
+    opacity: 0.5;
+  }
+
+  @-webkit-keyframes pulsate {
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1.0;
+    }
+    100% {
+      opacity: 0.5;
+    }
+  }
+
+  .card {
+    height: 100%;
+  }
+
+  .card-content {
+    padding-top: 1em;
+  }
+
+  p {
+    margin-bottom: 0.5em !important;
+  }
+
+  h5 {
+    margin-bottom: 0.25em !important;
+  }
+
+  .switch {
+    position: absolute;
+    bottom: 0.25em;
+    right: 0em;
+  }
+
+  .menu {
+    position: absolute;
+    top: 0.75em;
+    right: 0.5em;
+  }
+</style>

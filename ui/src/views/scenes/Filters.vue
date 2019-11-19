@@ -39,7 +39,7 @@
             <option value="added_asc">↑ {{$t("Date added")}}</option>
             <option value="rating_desc">↓ {{$t("Rating")}}</option>
             <option value="rating_asc">↑ {{$t("Rating")}}</option>
-            <option value="last_opened">↻ {{$t("Recently viewed")}}}</option>
+            <option value="last_opened">↻ {{$t("Recently viewed")}}</option>
             <option value="random">↯ {{$t("Random")}}</option>
           </select>
         </div>

@@ -3,26 +3,35 @@
     <div class="columns">
       <div class="column">
         <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
-
         <div v-if="items.length > 0 && !isLoading">
-          <b-table :data="items" ref="table">
+          <b-table :data="items" ref="table" backend-sorting :default-sort="[sortField, sortOrder]" @sort="onSort">
             <template slot-scope="props">
-              <b-table-column field="filename" :label="$t('File')">
+              <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename" :label="$t('File')"
+                              sortable>
                 {{props.row.filename}}
                 <br/><small>{{props.row.path}}</small>
               </b-table-column>
-              <b-table-column field="created_time" :label="$t('Created')" style="white-space: nowrap;">
+              <b-table-column field="created_time" :label="$t('Created')" style="white-space: nowrap;" sortable>
                 {{format(parseISO(props.row.created_time), "yyyy-MM-dd hh:mm:ss")}}
               </b-table-column>
-              <b-table-column field="size" :label="$t('Size')" style="white-space: nowrap;">
+              <b-table-column field="size" :label="$t('Size')" style="white-space: nowrap;" sortable>
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
-              <b-table-column field="video_height" :label="$t('Resolution')">
-                {{props.row.video_width}}x{{props.row.video_height}}
+              <b-table-column field="video_width" :label="$t('Width')" sortable>
+                {{props.row.video_width}}
+              </b-table-column>
+              <b-table-column field="video_height" :label="$t('Height')" sortable>
+                {{props.row.video_height}}
+              </b-table-column>
+              <b-table-column field="video_bitrate" :label="$t('Bitrate')" style="white-space: nowrap;" sortable>
+                {{prettyBytes(props.row.video_bitrate)}}
+              </b-table-column>
+              <b-table-column field="video_avgfps_val" :label="$t('FPS')" style="white-space: nowrap;" sortable>
+                {{props.row.video_avgfps_val}}
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
                 <b-button @click="play(props.row)">{{$t('Play')}}</b-button>&nbsp;
-                <b-button @click="match(props.row)">{{$t('Match to scene')}}</b-button>
+                <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">{{$t('Match')}}</b-button>
               </b-table-column>
             </template>
           </b-table>
@@ -37,7 +46,7 @@
                   </span>
                 </h1>
                 <h2 class="subtitle">
-                  {{$t('All of your files are linked to scenes')}}
+                  {{$t('No files matching your selection')}}
                 </h2>
               </div>
             </div>
@@ -60,6 +69,8 @@
         prettyBytes,
         format,
         parseISO,
+        sortField: 'filename',
+        sortOrder: 'asc',
       }
     },
     computed: {
@@ -68,12 +79,19 @@
       },
       items() {
         return this.$store.state.files.items;
-      },
+      }
     },
     mounted() {
+      this.$store.state.files.filters.sort = `filename_asc`;
       this.$store.dispatch("files/load");
     },
     methods: {
+      onSort(field, order) {
+        this.sortField = field;
+        this.sortOrder = order;
+        this.$store.state.files.filters.sort = `${field}_${order}`;
+        this.$store.dispatch("files/load");
+      },
       play(file) {
         this.$store.commit("overlay/showPlayer", {file: file});
       },

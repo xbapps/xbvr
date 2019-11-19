@@ -1,8 +1,11 @@
 package models
 
 import (
+	"math"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -17,16 +20,17 @@ type File struct {
 	Size        int64     `json:"size"`
 	CreatedTime time.Time `json:"created_time"`
 	UpdatedTime time.Time `json:"updated_time"`
-	SceneID     uint      `json:"-"`
+	SceneID     uint      `json:"scene_id"`
 	Scene       Scene     `json:"-"`
 
-	VideoWidth        int     `json:"video_width"`
-	VideoHeight       int     `json:"video_height"`
-	VideoBitRate      int     `json:"video_bitrate"`
-	VideoAvgFrameRate string  `json:"-"`
-	VideoCodecName    string  `json:"-"`
-	VideoDuration     float64 `json:"duration"`
-	VideoProjection   string  `json:"projection"`
+	VideoWidth           int     `json:"video_width"`
+	VideoHeight          int     `json:"video_height"`
+	VideoBitRate         int     `json:"video_bitrate"`
+	VideoAvgFrameRate    string  `json:"-"`
+	VideoAvgFrameRateVal float64 `json:"video_avgfps_val"`
+	VideoCodecName       string  `json:"-"`
+	VideoDuration        float64 `json:"duration"`
+	VideoProjection      string  `json:"projection"`
 }
 
 func (f *File) GetPath() string {
@@ -45,4 +49,19 @@ func (f *File) Exists() bool {
 		return false
 	}
 	return true
+}
+
+func (f *File) CalculateFramerate() error {
+	v1, err := strconv.ParseFloat(strings.Split(f.VideoAvgFrameRate, "/")[0], 64)
+	if err != nil {
+		return err
+	}
+
+	v2, err := strconv.ParseFloat(strings.Split(f.VideoAvgFrameRate, "/")[1], 64)
+	if err != nil {
+		return err
+	}
+
+	f.VideoAvgFrameRateVal = math.Ceil(v1 / v2)
+	return nil
 }
