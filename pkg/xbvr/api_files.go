@@ -95,7 +95,7 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 				resolutionClauses = append(resolutionClauses, "video_height between 3300 and 9999")
 			}
 		}
-		tx = tx.Where(strings.Join(resolutionClauses, " OR "))
+		tx = tx.Where("(" + strings.Join(resolutionClauses, " OR ") + ") AND video_height != 0")
 	}
 
 	// Bitrate
@@ -115,7 +115,7 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 				bitrateClauses = append(bitrateClauses, "video_bit_rate between 35000001 and 999999999")
 			}
 		}
-		tx = tx.Where(strings.Join(bitrateClauses, " OR "))
+		tx = tx.Where("(" + strings.Join(bitrateClauses, " OR ") + ") AND video_bit_rate != 0")
 	}
 
 	// Framerate
@@ -132,7 +132,7 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 				framerateClauses = append(framerateClauses, "(video_avg_frame_rate_val != 30.0 AND video_avg_frame_rate_val != 60.0)")
 			}
 		}
-		tx = tx.Where(strings.Join(framerateClauses, " OR "))
+		tx = tx.Where("(" + strings.Join(framerateClauses, " OR ") + ") AND video_avg_frame_rate_val != 0")
 	}
 
 	// Filename

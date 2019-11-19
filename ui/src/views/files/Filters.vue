@@ -31,13 +31,13 @@
             <b-datepicker v-model="fileCreation" editable range>
               <div class="buttons">
                 <b-button size="is-small" @click="setRange(subDays(new Date(), 7), new Date())">
-                  <span>{{$t("Last")}} 7 {{$t("Days")}}</span>
+                  <span>{{$t("Last 7 days")}}</span>
                 </b-button>
                 <b-button size="is-small" @click="setRange(subDays(new Date(), 14), new Date())">
-                  <span>{{$t("Last")}} 14 {{$t("Days")}}</span>
+                  <span>{{$t("Last 14 days")}}</span>
                 </b-button>
                 <b-button size="is-small" @click="setRange(subDays(new Date(), 30), new Date())">
-                  <span>{{$t("Last")}} 30 {{$t("Days")}}</span>
+                  <span>{{$t("Last 30 days")}}</span>
                 </b-button>
               </div>
             </b-datepicker>
@@ -49,12 +49,12 @@
         <div class="column">
           <label class="label">{{$t("Resolution")}}</label>
           <b-dropdown v-model="fileResolutions" multiple hoverable aria-role="list">
-              <button class="button is-primary" type="button" slot="trigger">
+              <button class="button" type="button" slot="trigger">
                   <span>{{$t("Selected")}} ({{fileResolutions.length}})</span>
                   <b-icon icon="menu-down"></b-icon>
               </button>
               <b-dropdown-item value="below4k" aria-role="listitem">
-                  <span>{{$t("Below")}} 4K</span>
+                  <span>{{$t("Below 4K")}}</span>
               </b-dropdown-item>
               <b-dropdown-item value="4k" aria-role="listitem">
                   <span>4K</span>
@@ -66,35 +66,35 @@
                   <span>6K</span>
               </b-dropdown-item>
               <b-dropdown-item value="above6k" aria-role="listitem">
-                  <span>{{$t("Above")}} 6K</span>
+                  <span>{{$t("Above 6K")}}</span>
               </b-dropdown-item>
           </b-dropdown>
         </div>
         <div class="column">
           <label class="label">{{$t("Bitrate")}}</label>
           <b-dropdown v-model="fileBitrates" multiple hoverable aria-role="list">
-              <button class="button is-primary" type="button" slot="trigger">
+              <button class="button" type="button" slot="trigger">
                   <span>{{$t("Selected")}} ({{fileBitrates.length}})</span>
                   <b-icon icon="menu-down"></b-icon>
               </button>
               <b-dropdown-item value="low" aria-role="listitem">
-                  <span>{{$t("Low")}} ({{$t("Below")}} 15 Mbps)</span>
+                  <span>{{$t("Low (below 15 Mbps)")}}</span>
               </b-dropdown-item>
               <b-dropdown-item value="medium" aria-role="listitem">
-                  <span>{{$t("Medium")}} (15 {{$t("to")}} 24 Mbps)</span>
+                  <span>{{$t("Medium (15 to 24 Mbps)")}}</span>
               </b-dropdown-item>
               <b-dropdown-item value="high" aria-role="listitem">
-                  <span>{{$t("High")}} (25 {{$t("to")}} 35 Mbps)</span>
+                  <span>{{$t("High (25 to 35 Mbps)")}}</span>
               </b-dropdown-item>
               <b-dropdown-item value="ultra" aria-role="listitem">
-                  <span>{{$t("Ultra")}} ({{$t("Above")}} 35 Mbps)</span>
+                  <span>{{$t("Ultra (above 35 Mbps)")}}</span>
               </b-dropdown-item>
           </b-dropdown>
         </div>
         <div class="column">
           <label class="label">{{$t("Framerate")}}</label>
           <b-dropdown v-model="fileFramerates" multiple hoverable aria-role="list">
-              <button class="button is-primary" type="button" slot="trigger">
+              <button class="button" type="button" slot="trigger">
                   <span>{{$t("Selected")}} ({{fileFramerates.length}})</span>
                   <b-icon icon="menu-down"></b-icon>
               </button>
