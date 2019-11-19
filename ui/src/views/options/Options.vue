@@ -5,14 +5,10 @@
       <div class="column is-one-fifth custom-menu">
         <b-menu>
           <b-menu-list :label="$t('Options')">
-            <b-menu-item :label="$t('Folders')" :active="active==='folders'"
+            <b-menu-item :label="$t('Storage')" :active="active==='folders'"
                          @click="setActive('folders')"/>
             <b-menu-item :label="$t('Scene data')" :expanded="true" @click="setActive('data-scrapers')">
-              <b-menu-item :label="$t('Mainstream scrapers')" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
-              <b-menu-item :label="$t('JAVR scrapers')" :active="active==='data-javr'"
-                           @click="setActive('data-javr')"/>
-              <b-menu-item :label="$t('Search index')" :active="active==='data-search-index'"
-                           @click="setActive('data-search-index')"/>
+              <b-menu-item :label="$t('Scrapers')" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
               <b-menu-item :label="$t('Data import/export')" :active="active==='data-import-export'"
                            @click="setActive('data-import-export')"/>
             </b-menu-item>
@@ -26,7 +22,6 @@
           <SceneDataScrapers v-show="active==='data-scrapers'"/>
           <SceneDataImportExport v-show="active==='data-import-export'"/>
           <SceneDataJAVR v-show="active==='data-javr'"/>
-          <SceneDataSearchIndex v-show="active==='data-search-index'"/>
         </div>
       </div>
 
@@ -37,12 +32,10 @@
 <script>
   import Folders from "./OptionsFolders.vue";
   import SceneDataScrapers from "./OptionsSceneDataScrapers.vue";
-  import SceneDataJAVR from "./OptionsSceneDataJAVR";
-  import SceneDataSearchIndex from "./OptionsSceneDataSearchIndex";
   import SceneDataImportExport from "./OptionsSceneDataImportExport";
 
   export default {
-    components: {Folders, SceneDataScrapers, SceneDataJAVR, SceneDataSearchIndex, SceneDataImportExport},
+    components: {Folders, SceneDataScrapers, SceneDataImportExport},
     data: function () {
       return {
         active: "folders",

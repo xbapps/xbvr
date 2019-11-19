@@ -1,12 +1,16 @@
 <template>
   <div class="content">
-    <h3 class="title">{{$t('Folders')}}</h3>
+    <h3 class="title">{{$t('Storage')}}</h3>
     <div v-if="items.length > 0">
       <b-table :data="items"
                ref="table" default-sort="is_available" default-sort-direction="desc">
         <template slot-scope="props">
           <b-table-column field="path" :label="$t('Path')" sortable>
             {{props.row.path}}
+          </b-table-column>
+          <b-table-column field="type" :label="$t('Type')" sortable>
+            <b-icon pack="mdi" icon="cloud-outline" size="is-small" v-if="props.row.type !== 'local'"/>
+            <b-icon pack="mdi" icon="folder-outline" size="is-small" v-else/>
           </b-table-column>
           <b-table-column field="is_available" :label="$t('Avail')" sortable>
             <b-icon pack="fas" icon="check" size="is-small" v-if="props.row.is_available"></b-icon>
@@ -21,9 +25,9 @@
             {{prettyBytes(props.row.total_size)}}
           </b-table-column>
           <b-table-column field="last_scan" :label="$t('Last scan')" sortable>
-                <span v-if="props.row.last_scan !== '0001-01-01T00:00:00Z'">
-                  {{formatDistanceToNow(parseISO(props.row.last_scan))}} ago
-                </span>
+            <span v-if="props.row.last_scan !== '0001-01-01T00:00:00Z'">
+              {{formatDistanceToNow(parseISO(props.row.last_scan))}} ago
+            </span>
             <span v-else>never</span>
           </b-table-column>
           <b-table-column field="actions">
@@ -33,6 +37,7 @@
           </b-table-column>
         </template>
         <template slot="footer">
+          <td></td>
           <td></td>
           <td></td>
           <td>{{total.files}}</td>
@@ -50,9 +55,9 @@
         <div class="hero-body">
           <div class="container has-text-centered">
             <h1 class="title">
-                  <span class="icon">
-                    <b-icon pack="mdi" icon="folder-outline" size="is-large"></b-icon>
-                  </span>
+              <span class="icon">
+                <b-icon pack="mdi" icon="folder-outline" size="is-large"></b-icon>
+              </span>
             </h1>
             <h2 class="subtitle">
               {{$t('Add folders with VR videos')}}
@@ -64,15 +69,37 @@
 
     <hr/>
 
-    <h3 class="title">{{$t('Add folder')}}</h3>
-    <div class="field">
-      <label class="label">{{$t('Path to folder with content')}}</label>
-      <div class="control">
-        <input class="input" type="text" v-model='newVolumePath'>
+    <div class="columns">
+      <div class="column">
+        <h3 class="title">{{$t('Add local folder')}}</h3>
+        <div class="field">
+          <label class="label">{{$t('Path to folder with content')}}</label>
+          <div class="control">
+            <input class="input" type="text" v-model='newVolumePath'>
+          </div>
+        </div>
+        <div class="control">
+          <button class="button is-link" v-on:click='addFolder'>{{$t('Add new folder')}}</button>
+        </div>
       </div>
-    </div>
-    <div class="control">
-      <button class="button is-link" v-on:click='addFolder'>{{$t('Add new folder')}}</button>
+      <div class="column">
+        <h3 class="title">{{$t('Add cloud storage')}}</h3>
+        <b-field grouped>
+          <b-field :label="$t('Service')">
+            <b-select placeholder="Select one" v-model="serviceSelected">
+              <option v-for="option in serviceOpts" :value="option.id" :key="option.id">
+                {{ option.name }}
+              </option>
+            </b-select>
+          </b-field>
+          <b-field :label="$t('Token')" expanded>
+            <b-input v-model='serviceToken'/>
+          </b-field>
+        </b-field>
+        <div class="control">
+          <button class="button is-link" v-on:click='addCloudStorage' :disabled="serviceSelected === null || serviceToken === ''">{{$t('Add service')}}</button>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -89,6 +116,9 @@
     data() {
       return {
         volumes: [],
+        serviceOpts: [{name: "Put.io", id: "putio"}],
+        serviceToken: "",
+        serviceSelected: null,
         newVolumePath: "",
         prettyBytes,
         parseISO,
@@ -103,16 +133,19 @@
         ky.get(`/api/task/rescan`);
       },
       addFolder: async function () {
-        await ky.post(`/api/config/folder`, {json: {path: this.newVolumePath}});
+        await ky.post(`/api/config/storage`, {json: {path: this.newVolumePath, type: "local"}});
+      },
+      addCloudStorage: async function () {
+        await ky.post(`/api/config/storage`, {json: {token: this.serviceToken, type: this.serviceSelected}});
       },
       removeFolder: function (folder) {
         this.$buefy.dialog.confirm({
           title: this.$t('Remove folder'),
-          message: `You're about to remove folder <strong>${folder.path}</strong> and its files from database.`,
+          message: `You're about to remove storage location <strong>${folder.path}</strong> and its files from local database - files will remain intact at the location.`,
           type: 'is-danger',
           hasIcon: true,
           onConfirm: function () {
-            ky.delete(`/api/config/folder/${folder.id}`);
+            ky.delete(`/api/config/storage/${folder.id}`);
           }
         });
       }

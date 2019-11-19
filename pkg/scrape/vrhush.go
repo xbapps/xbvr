@@ -160,5 +160,5 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("vrhush", "VRHush", VRHush)
+	registerScraper("vrhush", "VRHush", "https://twivatar.glitch.me/vrhush", VRHush)
 }

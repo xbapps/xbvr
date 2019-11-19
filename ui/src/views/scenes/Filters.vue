@@ -35,11 +35,13 @@
           <select v-model="sort">
             <option value="release_desc">↓ {{$t("Release date")}}</option>
             <option value="release_asc">↑ {{$t("Release date")}}</option>
-            <option value="added_desc">↓ {{$t("Date added")}}</option>
-            <option value="added_asc">↑ {{$t("Date added")}}</option>
+            <option value="added_desc">↓ {{$t("File added date")}}</option>
+            <option value="added_asc">↑ {{$t("File added date")}}</option>
             <option value="rating_desc">↓ {{$t("Rating")}}</option>
             <option value="rating_asc">↑ {{$t("Rating")}}</option>
-            <option value="last_opened">↻ {{$t("Recently viewed")}}}</option>
+            <option value="scene_added_desc">↓ {{$t("Scene added date")}}</option>
+            <option value="scene_updated_desc">↓ {{$t("Scene updated date")}}</option>
+            <option value="last_opened">↻ {{$t("Recently viewed")}}</option>
             <option value="random">↯ {{$t("Random")}}</option>
           </select>
         </div>

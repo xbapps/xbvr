@@ -31,7 +31,7 @@ require (
 	github.com/etcd-io/bbolt v1.3.3 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.0
-	github.com/getlantern/systray v0.0.0-20191111190243-1a6b33f30317
+	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
 	github.com/go-openapi/spec v0.19.4
 	github.com/go-test/deep v1.0.4
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -62,6 +62,7 @@ require (
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.8.1
+	github.com/putdotio/go-putio v0.0.0-20190822121956-19b9c636c877
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
 	github.com/robfig/cron/v3 v3.0.0
@@ -83,8 +84,10 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.3 // indirect
 	golang.org/x/net v0.0.0-20191112182307-2180aed22343
+	golang.org/x/oauth2 v0.0.0-20190319182350-c85d3e98c914
 	golang.org/x/sys v0.0.0-20191112214154-59a1497f0cea
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
+	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	mvdan.cc/xurls/v2 v2.1.0
