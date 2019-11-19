@@ -93,9 +93,7 @@
         ky.post(`/api/config/scraper/force-site-update`, {
           json: {"site_name": site}
         });
-        this.$buefy.toast.open(
-          `Scenes from ${site} will be updated on next scrape`
-        );
+        this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`);
       },
       scrapeJAVR() {
         ky.post(`/api/task/scrape-javr`, { json: { q: this.javrQuery } });
