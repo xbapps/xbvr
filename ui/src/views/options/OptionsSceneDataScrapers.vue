@@ -2,10 +2,10 @@
   <div class="content">
     <div class="columns">
       <div class="column">
-        <h3 class="title">Mainstream Scrapers</h3>
+        <h3 class="title">{{$t('Mainstream sites')}}</h3>
       </div>
       <div class="column buttons" align="right">
-        <a class="button is-primary" v-on:click="taskScrape('_enabled')">Run Selected Scrapers</a>
+        <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
     </div>
     <div class="columns is-multiline">
@@ -15,8 +15,8 @@
             <p class="image is-32x32 is-pulled-left avatar">
               <vue-load-image>
                 <img slot="image" :src="getImageURL(item.avatar_url ? item.avatar_url : '/ui/images/blank.png')"/>
-                <img slot="preloader" src="/ui/images/blank.png" />
-                <img slot="error" src="/ui/images/blank.png" />
+                <img slot="preloader" src="/ui/images/blank.png"/>
+                <img slot="error" src="/ui/images/blank.png"/>
               </vue-load-image>
             </p>
 
@@ -24,10 +24,10 @@
             <p :class="[runningScrapers.includes(item.id) ? 'invisible' : '']">
               <small v-if="item.last_update !== '0001-01-01T00:00:00Z'">
                 Updated {{formatDistanceToNow(parseISO(item.last_update))}} ago</small>
-              <small v-else>Never scraped</small>
+              <small v-else>{{$t('Never scraped')}}</small>
             </p>
             <p :class="[runningScrapers.includes(item.id) ? '' : 'invisible']">
-              <small>Scraping now...</small>
+              <small>{{$t('Scraping now...')}}</small>
             </p>
             <div class="switch">
               <b-switch :value="item.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: item.id})"/>
@@ -37,15 +37,19 @@
                 <template slot="trigger">
                   <b-icon icon="dots-vertical"></b-icon>
                 </template>
-                <b-dropdown-item aria-role="listitem" @click="taskScrape(item.id)">Scrape this site</b-dropdown-item>
-                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(item.name)">Force update scenes</b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="taskScrape(item.id)">
+                  {{$t('Scrape this site')}}
+                </b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(item.name)">
+                  {{$t('Force update scenes')}}
+                </b-dropdown-item>
               </b-dropdown>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <h3 class="title">JAVR Scraper</h3>
+    <h3 class="title">{{$t('JAVR scraper')}}</h3>
     <div class="columns is-multiline">
       <div class="column is-multiline is-one-third">
         <div class="card">
@@ -53,7 +57,7 @@
             <h5 class="title">R18</h5>
             <b-field grouped>
               <b-input v-model="javrQuery" placeholder="URL or ID (XXXX-001)" type="search"></b-input>
-              <b-button class="button is-primary" v-on:click="scrapeJAVR()">Go</b-button>
+              <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
             </b-field>
           </div>
         </div>
@@ -96,7 +100,7 @@
         this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`);
       },
       scrapeJAVR() {
-        ky.post(`/api/task/scrape-javr`, { json: { q: this.javrQuery } });
+        ky.post(`/api/task/scrape-javr`, {json: {q: this.javrQuery}});
       },
       parseISO,
       formatDistanceToNow,
