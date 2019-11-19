@@ -106,7 +106,13 @@ func StartServer(version, commit, branch, date string) {
 	// Imageproxy
 	p := imageproxy.NewProxy(nil, diskCache(filepath.Join(common.AppDir, "imageproxy")))
 	p.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
-	http.Handle("/img/", http.StripPrefix("/img", p))
+	http.Handle("/img/", http.StripPrefix("/img", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// workaround for wetvr.com CDN
+		if strings.Contains(r.URL.Path, "sugmh11809khorp.belugacdn.link") {
+			r.URL.Path = strings.Replace(r.URL.Path, "smart/content", "smart//content", 1)
+		}
+		p.ServeHTTP(w, r)
+	})))
 
 	// CORS
 	handler := cors.Default().Handler(http.DefaultServeMux)
@@ -167,8 +173,8 @@ func StartServer(version, commit, branch, date string) {
 	for _, addr := range addrs {
 		ip, _ := addr.(*net.IPNet)
 		if ip.IP.To4() != nil {
-		ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
-	}
+			ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Database file stored at %s", common.AppDir)

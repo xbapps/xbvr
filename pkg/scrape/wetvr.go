@@ -66,7 +66,13 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		})
 
 		// Cover URLs
-		sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.ChildAttr(`div#t2019-video deo-video`, "cover-image")))
+		coverSrc := e.ChildAttr(`div#t2019-video deo-video`, "cover-image")
+		if coverSrc == "" {
+			coverSrc = e.ChildAttr(`div#t2019-video img#no-player-image`, "src")
+		}
+		if coverSrc != "" {
+			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(coverSrc))
+		}
 
 		// Gallery
 		e.ForEach(`div.t2019-thumbs img`, func(id int, e *colly.HTMLElement) {
@@ -116,5 +122,5 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 }
 
 func init() {
-	registerScraper("wetvr", "WetVR", WetVR)
+	registerScraper("wetvr", "WetVR", "https://wetvr.com/images/sites/wetvr/icon-md-f17eedf082.png", WetVR)
 }
