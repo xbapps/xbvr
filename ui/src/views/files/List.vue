@@ -18,20 +18,34 @@
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
               <b-table-column field="video_width" :label="$t('Width')" sortable>
-                {{props.row.video_width}}
+                <span v-if="props.row.video_width !== 0">{{props.row.video_width}}</span>
+                <span v-else>-</span>
               </b-table-column>
               <b-table-column field="video_height" :label="$t('Height')" sortable>
-                {{props.row.video_height}}
+                <span v-if="props.row.video_height !== 0">{{props.row.video_height}}</span>
+                <span v-else>-</span>
               </b-table-column>
               <b-table-column field="video_bitrate" :label="$t('Bitrate')" style="white-space: nowrap;" sortable>
-                {{prettyBytes(props.row.video_bitrate)}}
+                <span v-if="props.row.video_bitrate !== 0">{{prettyBytes(props.row.video_bitrate)}}</span>
+                <span v-else>-</span>
+              </b-table-column>
+              <b-table-column field="duration" :label="$t('Duration')" style="white-space: nowrap;" sortable>
+                <span v-if="props.row.duration !== 0">{{humanizeSeconds(props.row.duration)}}</span>
+                <span v-else>-</span>
               </b-table-column>
               <b-table-column field="video_avgfps_val" :label="$t('FPS')" style="white-space: nowrap;" sortable>
-                {{props.row.video_avgfps_val}}
+                <span v-if="props.row.video_avgfps_val !== 0">{{props.row.video_avgfps_val}}</span>
+                <span v-else>-</span>
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
-                <b-button @click="play(props.row)">{{$t('Play')}}</b-button>&nbsp;
+                <b-button @click="play(props.row)">{{$t('Play')}}</b-button>
+                &nbsp;
                 <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">{{$t('Match')}}</b-button>
+                <b-button v-else disabled>{{$t('Match')}}</b-button>
+                &nbsp;
+                <button class="button is-danger is-outlined" @click='removeFile(props.row)'>
+                  <b-icon pack="fas" icon="trash"></b-icon>
+                </button>
               </b-table-column>
             </template>
           </b-table>
@@ -60,6 +74,7 @@
 <script>
   import prettyBytes from "pretty-bytes";
   import {format, parseISO} from "date-fns";
+  import ky from "ky";
 
   export default {
     name: "List",
@@ -97,7 +112,23 @@
       },
       match(file) {
         this.$store.commit("overlay/showMatch", {file: file});
-      }
+      },
+      humanizeSeconds(seconds) {
+        return new Date(seconds * 1000).toISOString().substr(11, 8);
+      },
+      removeFile(file) {
+        this.$buefy.dialog.confirm({
+          title: 'Remove file',
+          message: `You're about to remove file <strong>${file.filename}</strong> from <strong>disk</strong>.`,
+          type: 'is-danger',
+          hasIcon: true,
+          onConfirm: () => {
+            ky.delete(`/api/files/file/${file.id}`).json().then(data => {
+              this.$store.dispatch("files/load");
+            });
+          }
+        });
+      },
     },
   }
 </script>
