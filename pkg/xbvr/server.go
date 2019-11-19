@@ -55,12 +55,13 @@ func StartServer(version, commit, branch, date string) {
 	}))
 
 	restful.Add(ws)
+	restful.Add(ActorResource{}.WebService())
+	restful.Add(ConfigResource{}.WebService())
+	restful.Add(DeoVRResource{}.WebService())
+	restful.Add(DMSResource{}.WebService())
+	restful.Add(FilesResource{}.WebService())
 	restful.Add(SceneResource{}.WebService())
 	restful.Add(TaskResource{}.WebService())
-	restful.Add(DMSResource{}.WebService())
-	restful.Add(ConfigResource{}.WebService())
-	restful.Add(FilesResource{}.WebService())
-	restful.Add(DeoVRResource{}.WebService())
 
 	config := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),
@@ -167,8 +168,8 @@ func StartServer(version, commit, branch, date string) {
 	for _, addr := range addrs {
 		ip, _ := addr.(*net.IPNet)
 		if ip.IP.To4() != nil {
-		ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
-	}
+			ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Database file stored at %s", common.AppDir)
