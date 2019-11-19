@@ -18,19 +18,24 @@
                 {{prettyBytes(props.row.size)}}
               </b-table-column>
               <b-table-column field="video_width" :label="$t('Width')" sortable>
-                {{props.row.video_width}}
+                <span v-if="props.row.video_width !== 0">{{props.row.video_width}}</span>
+                <span v-else>-</span>
               </b-table-column>
               <b-table-column field="video_height" :label="$t('Height')" sortable>
-                {{props.row.video_height}}
+                <span v-if="props.row.video_height !== 0">{{props.row.video_height}}</span>
+                <span v-else>-</span>
               </b-table-column>
               <b-table-column field="video_bitrate" :label="$t('Bitrate')" style="white-space: nowrap;" sortable>
-                {{prettyBytes(props.row.video_bitrate)}}
+                <span v-if="props.row.video_bitrate !== 0">{{prettyBytes(props.row.video_bitrate)}}</span>
+                <span v-else>-</span>
               </b-table-column>
               <b-table-column field="duration" :label="$t('Duration')" style="white-space: nowrap;" sortable>
-                {{humanizeSeconds(props.row.duration)}}
+                <span v-if="props.row.duration !== 0">{{humanizeSeconds(props.row.duration)}}</span>
+                <span v-else>-</span>
               </b-table-column>
               <b-table-column field="video_avgfps_val" :label="$t('FPS')" style="white-space: nowrap;" sortable>
-                {{props.row.video_avgfps_val}}
+                <span v-if="props.row.video_avgfps_val !== 0">{{props.row.video_avgfps_val}}</span>
+                <span v-else>-</span>
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
                 <b-button @click="play(props.row)">{{$t('Play')}}</b-button>
