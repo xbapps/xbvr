@@ -133,5 +133,5 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("stasyqvr", "StasyQVR", "https://twivatar.glitch.me/stasyqvr", StasyQVR)
+	registerScraper("stasyqvr", "StasyQVR", "https://stasyqvr.com/s/images/apple-touch-icon.png", StasyQVR)
 }

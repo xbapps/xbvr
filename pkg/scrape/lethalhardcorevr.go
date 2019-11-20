@@ -153,6 +153,6 @@ func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 }
 
 func init() {
-	registerScraper("whorecraftvr", "WhorecraftVR", "https://twivatar.glitch.me/whorecraftvr", WhorecraftVR)
-	registerScraper("lethalhardcorevr", "LethalHardcoreVR", "https://twivatar.glitch.me/lethal_vr", LethalHardcoreVR)
+	registerScraper("whorecraftvr", "WhorecraftVR", "https://imgs1cdn.adultempire.com/bn/Whorecraft-VR-apple-touch-icon.png", WhorecraftVR)
+	registerScraper("lethalhardcorevr", "LethalHardcoreVR", "https://imgs1cdn.adultempire.com/bn/Lethal-Hardcore-apple-touch-icon.png", LethalHardcoreVR)
 }
