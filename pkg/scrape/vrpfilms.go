@@ -150,5 +150,5 @@ func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("vrpfilms", "VRP Films", "https://twivatar.glitch.me/vrpfilmsuk", VRPFilms)
+	registerScraper("vrpfilms", "VRP Films", "https://vrpfilms.com/wp-content/uploads/fbrfg/apple-touch-icon.png", VRPFilms)
 }

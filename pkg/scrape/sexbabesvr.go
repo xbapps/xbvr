@@ -139,5 +139,5 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 }
 
 func init() {
-	registerScraper("sexbabesvr", "SexBabesVR", "https://twivatar.glitch.me/sexbabes_vr", SexBabesVR)
+	registerScraper("sexbabesvr", "SexBabesVR", "https://sexbabesvr.com/s/images/favicons/apple-touch-icon.png", SexBabesVR)
 }

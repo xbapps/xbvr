@@ -229,5 +229,5 @@ func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 
 func init() {
 	registerScraper("virtualrealporn", "VirtualRealPorn", "https://twivatar.glitch.me/virtualrealporn", VirtualRealPorn)
-	registerScraper("virtualrealtrans", "VirtualRealTrans", "", VirtualRealTrans)
+	registerScraper("virtualrealtrans", "VirtualRealTrans", "https://twivatar.glitch.me/virtualrealporn", VirtualRealTrans)
 }
