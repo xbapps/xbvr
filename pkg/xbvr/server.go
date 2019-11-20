@@ -2,12 +2,15 @@ package xbvr
 
 import (
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
+	auth "github.com/abbot/go-http-auth"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/gammazero/nexus/v3/router"
@@ -18,6 +21,7 @@ import (
 	"github.com/koding/websocketproxy"
 	"github.com/peterbourgon/diskv"
 	"github.com/rs/cors"
+	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/migrations"
@@ -27,10 +31,34 @@ import (
 
 var (
 	DEBUG          = common.DEBUG
+	UIPASSWORD     = os.Getenv("UI_PASSWORD")
+	UIUSER         = os.Getenv("UI_USERNAME")
 	httpAddr       = common.HttpAddr
 	wsAddr         = common.WsAddr
 	currentVersion = ""
 )
+
+func uiSecret(user string, realm string) string {
+	if user == UIUSER {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(UIPASSWORD), bcrypt.DefaultCost)
+		if err == nil {
+			return string(hashedPassword)
+		}
+	}
+	return ""
+}
+
+func authHandle(pattern string, authEnableSlice []string, authSecret auth.SecretProvider, handler http.Handler) {
+	if !funk.ContainsString(authEnableSlice, "") {
+		authenticator := auth.NewBasicAuthenticator("default", authSecret)
+		http.HandleFunc(pattern, authenticator.Wrap(func(res http.ResponseWriter, req *auth.AuthenticatedRequest) {
+			http.StripPrefix(pattern, handler).ServeHTTP(res, &req.Request)
+		}))
+	} else {
+		http.Handle(pattern, http.StripPrefix(pattern, handler))
+	}
+
+}
 
 func StartServer(version, commit, branch, date string) {
 	currentVersion = version
@@ -97,10 +125,11 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(restfulspec.NewOpenAPIService(config))
 
 	// Static files
+	uiAuthEnableSlice := []string{UIUSER, UIPASSWORD}
 	if DEBUG == "" {
-		http.Handle("/ui/", http.StripPrefix("/ui", http.FileServer(assets.HTTP)))
+		authHandle("/ui/", uiAuthEnableSlice, uiSecret, http.FileServer(assets.HTTP))
 	} else {
-		http.Handle("/ui/", http.StripPrefix("/ui", http.FileServer(http.Dir("ui/dist"))))
+		authHandle("/ui/", uiAuthEnableSlice, uiSecret, http.FileServer(http.Dir("ui/dist")))
 	}
 
 	// Imageproxy
@@ -167,8 +196,8 @@ func StartServer(version, commit, branch, date string) {
 	for _, addr := range addrs {
 		ip, _ := addr.(*net.IPNet)
 		if ip.IP.To4() != nil {
-		ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
-	}
+			ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Database file stored at %s", common.AppDir)
