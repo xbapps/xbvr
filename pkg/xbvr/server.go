@@ -2,13 +2,14 @@ package xbvr
 
 import (
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 
 	auth "github.com/abbot/go-http-auth"
 	"github.com/emicklei/go-restful"
