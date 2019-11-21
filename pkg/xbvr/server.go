@@ -32,6 +32,8 @@ import (
 
 var (
 	DEBUG          = common.DEBUG
+	DEOPASSWORD    = os.Getenv("DEO_PASSWORD")
+	DEOUSER        = os.Getenv("DEO_USERNAME")
 	UIPASSWORD     = os.Getenv("UI_PASSWORD")
 	UIUSER         = os.Getenv("UI_USERNAME")
 	httpAddr       = common.HttpAddr
