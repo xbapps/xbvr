@@ -142,6 +142,8 @@
 
 <style scoped>
   .modal-card {
+    position: absolute;
+    top: 4em;
     width: 80%;
   }
 
