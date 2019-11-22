@@ -112,7 +112,9 @@
         this.$store.dispatch("files/load");
 
         let data = this.$store.getters['files/nextFile'](this.file);
-        this.nextFile();
+        if (data !== null) {
+          this.nextFile();
+        }
       },
       nextFile() {
         let data = this.$store.getters['files/nextFile'](this.file);
