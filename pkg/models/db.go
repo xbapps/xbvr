@@ -21,19 +21,4 @@ func GetDB() (*gorm.DB, error) {
 
 func init() {
 	common.InitPaths()
-
-	db, _ := GetDB()
-	defer db.Close()
-
-	db.AutoMigrate(&Scene{})
-	db.AutoMigrate(&SceneCuepoint{})
-	db.AutoMigrate(&Actor{})
-	db.AutoMigrate(&Tag{})
-
-	db.AutoMigrate(&File{})
-	db.AutoMigrate(&Volume{})
-	db.AutoMigrate(&History{})
-
-	db.AutoMigrate(&Site{})
-	db.AutoMigrate(&KV{})
 }

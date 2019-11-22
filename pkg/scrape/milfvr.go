@@ -115,5 +115,5 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("milfvr", "MilfVR", MilfVR)
+	registerScraper("milfvr", "MilfVR", "https://twivatar.glitch.me/milfvr", MilfVR)
 }

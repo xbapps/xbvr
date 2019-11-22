@@ -127,5 +127,5 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("vr3000", "VR3000", VR3000)
+	registerScraper("vr3000", "VR3000", "https://twivatar.glitch.me/vrballers", VR3000)
 }

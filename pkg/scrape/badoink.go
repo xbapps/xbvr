@@ -153,9 +153,9 @@ func KinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("badoinkvr", "BadoinkVR", BadoinkVR)
-	registerScraper("18vr", "18VR", B18VR)
-	registerScraper("vrcosplayx", "VRCosplayX", VRCosplayX)
-	registerScraper("babevr", "BabeVR", BabeVR)
-	registerScraper("kinkvr", "KinkVR", KinkVR)
+	registerScraper("badoinkvr", "BadoinkVR", "https://twivatar.glitch.me/badoinkofficial", BadoinkVR)
+	registerScraper("18vr", "18VR", "https://twivatar.glitch.me/18vrofficial", B18VR)
+	registerScraper("vrcosplayx", "VRCosplayX", "https://twivatar.glitch.me/vrcosplayx", VRCosplayX)
+	registerScraper("babevr", "BabeVR", "https://babevr.com/babevr_icons/apple-touch-icon.png", BabeVR)
+	registerScraper("kinkvr", "KinkVR", "https://kinkvr.com/kinkvr_icons/apple-touch-icon.png", KinkVR)
 }

@@ -96,5 +96,5 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("sinsvr", "SinsVR", SinsVR)
+	registerScraper("sinsvr", "SinsVR", "https://sinsvr.com/s/images/favicons/apple-touch-icon.png", SinsVR)
 }

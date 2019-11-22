@@ -119,5 +119,5 @@ func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 }
 
 func init() {
-	registerScraper("ddfnetworkvr", "DDFNetworkVR", DDFNetworkVR)
+	registerScraper("ddfnetworkvr", "DDFNetworkVR", "https://twivatar.glitch.me/ddfnetwork", DDFNetworkVR)
 }

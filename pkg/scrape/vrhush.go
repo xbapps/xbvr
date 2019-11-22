@@ -136,5 +136,5 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("vrhush", "VRHush", VRHush)
+	registerScraper("vrhush", "VRHush", "https://z5w6x5a4.ssl.hwcdn.net/sites/vrh/favicon/apple-touch-icon-180x180.png", VRHush)
 }

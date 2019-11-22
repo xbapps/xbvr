@@ -106,5 +106,5 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 }
 
 func init() {
-	registerScraper("realitylovers", "RealityLovers", RealityLovers)
+	registerScraper("realitylovers", "RealityLovers", "http://static.rlcontent.com/shared/VR/common/favicons/apple-icon-180x180.png", RealityLovers)
 }

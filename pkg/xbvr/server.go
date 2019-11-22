@@ -13,6 +13,7 @@ import (
 	"github.com/gammazero/nexus/v3/router"
 	"github.com/gammazero/nexus/v3/wamp"
 	"github.com/go-openapi/spec"
+	"github.com/gorilla/mux"
 	wwwlog "github.com/gowww/log"
 	"github.com/gregjones/httpcache/diskcache"
 	"github.com/koding/websocketproxy"
@@ -20,6 +21,7 @@ import (
 	"github.com/rs/cors"
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
 	"willnorris.com/go/imageproxy"
 )
@@ -33,6 +35,8 @@ var (
 
 func StartServer(version, commit, branch, date string) {
 	currentVersion = version
+
+	migrations.Migrate()
 
 	// Remove old locks
 	models.RemoveLock("index")
@@ -101,12 +105,16 @@ func StartServer(version, commit, branch, date string) {
 	}
 
 	// Imageproxy
+	r := mux.NewRouter()
 	p := imageproxy.NewProxy(nil, diskCache(filepath.Join(common.AppDir, "imageproxy")))
 	p.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
-	http.Handle("/img/", http.StripPrefix("/img", p))
+	r.PathPrefix("/img/").Handler(http.StripPrefix("/img", p))
+	r.SkipClean(true)
+
+	r.PathPrefix("/").Handler(http.DefaultServeMux)
 
 	// CORS
-	handler := cors.Default().Handler(http.DefaultServeMux)
+	handler := cors.Default().Handler(r)
 
 	// WAMP router
 	routerConfig := &router.Config{
@@ -164,8 +172,8 @@ func StartServer(version, commit, branch, date string) {
 	for _, addr := range addrs {
 		ip, _ := addr.(*net.IPNet)
 		if ip.IP.To4() != nil {
-		ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
-	}
+			ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Database file stored at %s", common.AppDir)

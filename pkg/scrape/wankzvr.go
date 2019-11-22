@@ -117,5 +117,5 @@ func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 }
 
 func init() {
-	registerScraper("wankzvr", "WankzVR", WankzVR)
+	registerScraper("wankzvr", "WankzVR", "https://twivatar.glitch.me/wankzvr", WankzVR)
 }

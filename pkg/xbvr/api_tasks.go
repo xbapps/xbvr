@@ -26,9 +26,6 @@ func (i TaskResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/clean-tags").To(i.cleanTags).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.GET("/scrape/all").To(i.scrapeAll).
-		Metadata(restfulspec.KeyOpenAPITags, tags))
-
 	ws.Route(ws.GET("/scrape").To(i.scrape).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -59,12 +56,12 @@ func (i TaskResource) index(req *restful.Request, resp *restful.Response) {
 	go SearchIndex()
 }
 
-func (i TaskResource) scrapeAll(req *restful.Request, resp *restful.Response) {
-	go Scrape(true)
-}
-
 func (i TaskResource) scrape(req *restful.Request, resp *restful.Response) {
-	go Scrape(false)
+	qSiteID := req.QueryParameter("site")
+	if qSiteID == "" {
+		qSiteID = "_enabled"
+	}
+	go Scrape(qSiteID)
 }
 
 func (i TaskResource) importBundle(req *restful.Request, resp *restful.Response) {

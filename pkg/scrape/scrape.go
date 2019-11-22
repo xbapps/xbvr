@@ -93,6 +93,10 @@ func getScrapeCacheDir() string {
 	return common.ScrapeCacheDir
 }
 
+func registerScraper(id string, name string, avatarURL string, f models.ScraperFunc) {
+	models.RegisterScraper(id, name, avatarURL, f)
+}
+
 func logScrapeStart(id string, name string) {
 	log.WithFields(logrus.Fields{
 		"task":      "scraperProgress",
@@ -111,10 +115,6 @@ func logScrapeFinished(id string, name string) {
 		"started":   false,
 		"completed": true,
 	}).Infof("Finished %v scraper", name)
-}
-
-func registerScraper(id string, name string, f models.ScraperFunc) {
-	models.RegisterScraper(id, name, f)
 }
 
 func unCache(URL string, cacheDir string) {

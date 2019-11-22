@@ -69,12 +69,12 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
 			base := strings.Split(strings.Replace(e.Attr("src"), "//", "", -1), "/")
 
-			base[8] = "vertical"
-			base[9] = "400x605c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
-
 			base[8] = "horizontal"
 			base[9] = "1252x708c.jpg"
+			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+
+			base[8] = "vertical"
+			base[9] = "400x605c.jpg"
 			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 		})
 
@@ -140,5 +140,5 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 }
 
 func init() {
-	registerScraper("naughtyamericavr", "NaughtyAmericaVR", NaughtyAmericaVR)
+	registerScraper("naughtyamericavr", "NaughtyAmerica VR", "https://twivatar.glitch.me/naughtyamerica", NaughtyAmericaVR)
 }
