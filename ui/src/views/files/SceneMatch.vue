@@ -14,11 +14,7 @@
               <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
             </div>
           </b-field>
-          <b-table
-            :data="data"
-            ref="table"
-            paginated
-            per-page="5">
+          <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5">
             <template slot-scope="props">
               <b-table-column field="cover_url" :label="$t('Image')" width="120">
                 <vue-load-image>
@@ -69,6 +65,7 @@
     data() {
       return {
         data: [],
+        currentPage: 1,
         queryString: "",
         format, parseISO
       }
@@ -95,6 +92,7 @@
         }).json();
 
         this.data = resp.scenes;
+        this.currentPage = 1;
       },
       getImageURL(u) {
         if (u.startsWith("http")) {
