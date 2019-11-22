@@ -49,8 +49,8 @@
         </div>
       </section>
     </div>
-    <a class="prev" @click="prevFile" v-if="$store.getters['files/prevFile'](file) !== null">&#10094;</a>
-    <a class="next" @click="nextFile" v-if="$store.getters['files/nextFile'](file) !== null">&#10095;</a>
+    <a class="prev" @click="prevFile">&#10094;</a>
+    <a class="next" @click="nextFile">&#10095;</a>
   </div>
 </template>
 
@@ -112,17 +112,15 @@
         this.$store.dispatch("files/load");
 
         let data = this.$store.getters['files/nextFile'](this.file);
-        if (data !== null) {
-          this.nextFile();
-        } else {
-          this.$store.commit("overlay/hideMatch");
-        }
+        this.nextFile();
       },
       nextFile() {
         let data = this.$store.getters['files/nextFile'](this.file);
         if (data !== null) {
           this.$store.commit("overlay/showMatch", {file: data});
           this.initView();
+        } else {
+
         }
       },
       prevFile() {
