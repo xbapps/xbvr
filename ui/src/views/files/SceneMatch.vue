@@ -119,8 +119,6 @@
         if (data !== null) {
           this.$store.commit("overlay/showMatch", {file: data});
           this.initView();
-        } else {
-
         }
       },
       prevFile() {
