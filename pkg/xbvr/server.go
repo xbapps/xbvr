@@ -22,7 +22,6 @@ import (
 	"github.com/koding/websocketproxy"
 	"github.com/peterbourgon/diskv"
 	"github.com/rs/cors"
-	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/migrations"
@@ -41,6 +40,14 @@ var (
 	currentVersion = ""
 )
 
+func uiAuthEnabled() bool {
+	if UIPASSWORD != "" && UIUSER != "" {
+		return true
+	} else {
+		return false
+	}
+}
+
 func uiSecret(user string, realm string) string {
 	if user == UIUSER {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(UIPASSWORD), bcrypt.DefaultCost)
@@ -51,8 +58,8 @@ func uiSecret(user string, realm string) string {
 	return ""
 }
 
-func authHandle(pattern string, authEnableSlice []string, authSecret auth.SecretProvider, handler http.Handler) {
-	if !funk.ContainsString(authEnableSlice, "") {
+func authHandle(pattern string, authEnabled bool, authSecret auth.SecretProvider, handler http.Handler) {
+	if authEnabled {
 		authenticator := auth.NewBasicAuthenticator("default", authSecret)
 		http.HandleFunc(pattern, authenticator.Wrap(func(res http.ResponseWriter, req *auth.AuthenticatedRequest) {
 			http.StripPrefix(pattern, handler).ServeHTTP(res, &req.Request)
@@ -128,11 +135,10 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(restfulspec.NewOpenAPIService(config))
 
 	// Static files
-	uiAuthEnableSlice := []string{UIUSER, UIPASSWORD}
 	if DEBUG == "" {
-		authHandle("/ui/", uiAuthEnableSlice, uiSecret, http.FileServer(assets.HTTP))
+		authHandle("/ui/", uiAuthEnabled(), uiSecret, http.FileServer(assets.HTTP))
 	} else {
-		authHandle("/ui/", uiAuthEnableSlice, uiSecret, http.FileServer(http.Dir("ui/dist")))
+		authHandle("/ui/", uiAuthEnabled(), uiSecret, http.FileServer(http.Dir("ui/dist")))
 	}
 
 	// Imageproxy
@@ -203,6 +209,8 @@ func StartServer(version, commit, branch, date string) {
 		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
+	log.Infof("Web UI Authentication enabled: %v", uiAuthEnabled())
+	log.Infof("DeoVR Authentication enabled: %v", deoAuthEnabled())
 	log.Infof("Database file stored at %s", common.AppDir)
 
 	if DEBUG == "" {
