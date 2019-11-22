@@ -20,7 +20,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
 	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
-	castCollector := createPersistentCacheCollector(scraperID, "virtualrealporn.com", "virtualrealtrans.com")
+	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
 	castCollector.AllowURLRevisit = true
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {

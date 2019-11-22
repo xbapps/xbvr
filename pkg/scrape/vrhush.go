@@ -20,7 +20,7 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	sceneCollector := createCollector("vrhush.com")
 	siteCollector := createCollector("vrhush.com")
-	castCollector := createPersistentCacheCollector(scraperID, "vrhush.com")
+	castCollector := createCollector("vrhush.com")
 	castCollector.AllowURLRevisit = true
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
