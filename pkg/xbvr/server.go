@@ -62,6 +62,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(ConfigResource{}.WebService())
 	restful.Add(FilesResource{}.WebService())
 	restful.Add(DeoVRResource{}.WebService())
+	restful.Add(SecurityResource{}.WebService())
 
 	config := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),

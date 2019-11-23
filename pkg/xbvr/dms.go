@@ -24,7 +24,9 @@ type dmsConfig struct {
 	IgnoreUnreadable    bool
 }
 
-func StartDMS() {
+var dmsServer *dms.Server
+
+func initDMS() {
 	var config = &dmsConfig{
 		Path:           "",
 		IfName:         "",
@@ -34,7 +36,7 @@ func StartDMS() {
 		NotifyInterval: 30 * time.Second,
 	}
 
-	dmsServer := &dms.Server{
+	dmsServer = &dms.Server{
 		Interfaces: func(ifName string) (ifs []net.Interface) {
 			var err error
 			if ifName == "" {
@@ -92,6 +94,10 @@ func StartDMS() {
 		IgnoreHidden:        config.IgnoreHidden,
 		IgnoreUnreadable:    config.IgnoreUnreadable,
 	}
+}
+
+func StartDMS() {
+	initDMS()
 	go func() {
 		log.Info("Starting DMS")
 		if err := dmsServer.Serve(); err != nil {
@@ -108,4 +114,12 @@ func StartDMS() {
 	// if err := cache.save(config.FFprobeCachePath); err != nil {
 	// 	log.Print(err)
 	// }
+}
+
+func StopDMS() {
+	log.Info("Stopping DMS")
+	err := dmsServer.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
