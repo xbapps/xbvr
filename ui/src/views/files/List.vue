@@ -40,7 +40,7 @@
               <b-table-column style="white-space: nowrap;">
                 <b-button @click="play(props.row)">{{$t('Play')}}</b-button>
                 &nbsp;
-                <b-button v-if="props.row.scene_id > 0" @click="showDetails(props.row.scene)">Scene</b-button>
+                <b-button v-if="props.row.scene_id > 0" @click="showDetails(props.row.scene)">{{$t('Scene')}}</b-button>
                 <b-button v-else @click="match(props.row)">{{$t('Match')}}</b-button>
                 &nbsp;
                 <button class="button is-danger is-outlined" @click='removeFile(props.row)'>
