@@ -40,8 +40,8 @@
               <b-table-column style="white-space: nowrap;">
                 <b-button @click="play(props.row)">{{$t('Play')}}</b-button>
                 &nbsp;
-                <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">{{$t('Match')}}</b-button>
-                <b-button v-else disabled>{{$t('Match')}}</b-button>
+                <b-button v-if="props.row.scene_id > 0" @click="showDetails(props.row.scene)">Scene</b-button>
+                <b-button v-else @click="match(props.row)">{{$t('Match')}}</b-button>
                 &nbsp;
                 <button class="button is-danger is-outlined" @click='removeFile(props.row)'>
                   <b-icon pack="fas" icon="trash"></b-icon>
@@ -109,6 +109,9 @@
       },
       play(file) {
         this.$store.commit("overlay/showPlayer", {file: file});
+      },
+      showDetails(scene) {
+        this.$store.commit("overlay/showDetails", {scene: scene});
       },
       match(file) {
         this.$store.commit("overlay/showMatch", {file: file});

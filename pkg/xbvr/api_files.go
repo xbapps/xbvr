@@ -66,7 +66,13 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 	}
 
 	var files []models.File
-	tx := db.Model(&files)
+	tx := db.Model(&files).
+		Preload("Scene").
+		Preload("Scene.Cast").
+		Preload("Scene.Tags").
+		Preload("Scene.Files").
+		Preload("Scene.History").
+		Preload("Scene.Cuepoints")
 
 	// State
 	switch r.State.OrElse("") {

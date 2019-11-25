@@ -23,7 +23,7 @@ type File struct {
 	UpdatedTime time.Time `json:"updated_time"`
 
 	SceneID uint  `json:"scene_id"`
-	Scene   Scene `json:"-"`
+	Scene   Scene `json:"scene"`
 
 	VideoWidth           int     `json:"video_width"`
 	VideoHeight          int     `json:"video_height"`
