@@ -97,7 +97,7 @@
       }
     },
     mounted() {
-      this.$store.state.files.filters.sort = `filename_asc`;
+      this.$store.state.files.filters.sort = `${this.sortField}_${this.sortOrder}`;
       this.$store.dispatch("files/load");
     },
     methods: {

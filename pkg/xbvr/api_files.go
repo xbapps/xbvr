@@ -1,6 +1,7 @@
 package xbvr
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -244,26 +245,47 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	var file models.File
 	var scene models.Scene
+	var file models.File
 	db, _ := models.GetDB()
-	err = db.Where(&models.File{ID: uint(fileId)}).First(&file).Error
+	defer db.Close()
+
+	err = db.Preload("Volume").Where(&models.File{ID: uint(fileId)}).First(&file).Error
 	if err == nil {
-		err := os.Remove(filepath.Join(file.Path, file.Filename))
-		if err == nil {
-			db.Delete(&file)
-		} else {
-			log.Errorf("Error deleting file ", err)
+
+		deleted := false
+		switch file.Volume.Type {
+		case "local":
+			err := os.Remove(filepath.Join(file.Path, file.Filename))
+			if err == nil {
+				deleted = true
+			} else {
+				log.Errorf("Error deleting file ", err)
+			}
+		case "putio":
+			id, err := strconv.ParseInt(file.Path, 10, 64)
+			if err != nil {
+				return
+			}
+			client := file.Volume.GetPutIOClient()
+			err = client.Files.Delete(context.Background(), id)
+			if err == nil {
+				deleted = true
+			} else {
+				log.Errorf("Error deleting file ", err)
+			}
 		}
-		if file.SceneID != 0 {
-			scene.GetIfExistByPK(file.SceneID)
+
+		if deleted {
+			db.Delete(&file)
+			if file.SceneID != 0 {
+				scene.GetIfExistByPK(file.SceneID)
+				scene.UpdateStatus()
+			}
 		}
 	} else {
 		log.Errorf("Error deleting file ", err)
 	}
-
-	scene.UpdateStatus()
-	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }

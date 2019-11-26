@@ -15,33 +15,18 @@ import (
 
 func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("vrpfilms", "VRP Films")
+	scraperID := "vrpfilms"
+	siteID := "VRP Films"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrpfilms.com", "www.vrpfilms.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrpfilms.com", "www.vrpfilms.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("vrpfilms.com", "www.vrpfilms.com")
+	siteCollector := createCollector("vrpfilms.com", "www.vrpfilms.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRP Films"
-		sc.Site = "VRP Films"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from download link. It's the closest thing they have to a scene id
@@ -143,12 +128,12 @@ func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	siteCollector.Visit("https://vrpfilms.com/vrp-movies")
 
 	if updateSite {
-		updateSiteLastUpdate("vrpfilms")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("vrpfilms", "VRP Films")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
 func init() {
-	registerScraper("vrpfilms", "VRP Films", "https://twivatar.glitch.me/vrpfilmsuk", VRPFilms)
+	registerScraper("vrpfilms", "VRP Films", "https://vrpfilms.com/wp-content/uploads/fbrfg/apple-touch-icon.png", VRPFilms)
 }

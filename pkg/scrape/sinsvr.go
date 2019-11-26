@@ -14,33 +14,18 @@ import (
 
 func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("sinsvr", "SinsVR")
+	scraperID := "sinsvr"
+	siteID := "SinsVR"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("sinsvr.com", "www.sinsvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("sinsvr.com", "www.sinsvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("sinsvr.com", "www.sinsvr.com")
+	siteCollector := createCollector("sinsvr.com", "www.sinsvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "SinsVR"
-		sc.Site = "SinsVR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -104,12 +89,12 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.Visit("https://sinsvr.com/virtualreality/list/sort/Recent")
 
 	if updateSite {
-		updateSiteLastUpdate("sinsvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("sinsvr", "SinsVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
 func init() {
-	registerScraper("sinsvr", "SinsVR", "https://twivatar.glitch.me/sins_vr", SinsVR)
+	registerScraper("sinsvr", "SinsVR", "https://sinsvr.com/s/images/favicons/apple-touch-icon.png", SinsVR)
 }
