@@ -35,7 +35,7 @@ func CleanTags() {
 }
 
 func runScrapers(knownScenes []string, toScrape string, updateSite bool, collectedScenes chan<- models.ScrapedScene) error {
-	os.RemoveAll(filepath.Join(common.CacheDir, "site_cache"))
+	defer scrape.DeleteScrapeCache()
 
 	scrapers := models.GetScrapers()
 

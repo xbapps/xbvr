@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ProtonMail/go-appdir"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/gocolly/colly"
 	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -19,13 +19,79 @@ import (
 )
 
 var log = &common.Log
-var appDir string
-var cacheDir string
-
-var siteCacheDir string
-var sceneCacheDir string
 
 var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
+
+func createPersistentCacheCollector(cacheID string, domains ...string) *colly.Collector {
+	c := createCollector(domains...)
+	c.CacheDir = getPersistentScrapeCacheDir(cacheID)
+	return c
+}
+
+func createCollector(domains ...string) *colly.Collector {
+	c := colly.NewCollector(
+		colly.AllowedDomains(domains...),
+		colly.CacheDir(getScrapeCacheDir()),
+		colly.UserAgent(userAgent),
+	)
+
+	c = createCallbacks(c)
+	return c
+}
+
+func cloneCollector(c *colly.Collector) *colly.Collector {
+	x := c.Clone()
+	x = createCallbacks(x)
+	return x
+}
+
+func createCallbacks(c *colly.Collector) *colly.Collector {
+	const maxRetries = 15
+
+	c.OnRequest(func(r *colly.Request) {
+		attempt := r.Ctx.GetAny("attempt")
+
+		if attempt == nil {
+			r.Ctx.Put("attempt", 1)
+		}
+
+		log.Infoln("visiting", r.URL.String())
+	})
+
+	c.OnError(func(r *colly.Response, err error) {
+		attempt := r.Ctx.GetAny("attempt").(int)
+
+		if r.StatusCode == 429 {
+			log.Errorln("Error:", r.StatusCode, err)
+
+			if attempt <= maxRetries {
+				unCache(r.Request.URL.String(), c.CacheDir)
+				log.Errorln("Waiting 2 seconds before next request...")
+				r.Ctx.Put("attempt", attempt+1)
+				time.Sleep(2 * time.Second)
+				r.Request.Retry()
+			}
+		}
+	})
+
+	return c
+}
+
+func DeletePersistentScrapeCache(cacheID string) error {
+	return os.RemoveAll(getPersistentScrapeCacheDir(cacheID))
+}
+
+func DeleteScrapeCache() error {
+	return os.RemoveAll(getScrapeCacheDir())
+}
+
+func getPersistentScrapeCacheDir(cacheID string) string {
+	return filepath.Join(common.PersistentScrapeCacheDir, cacheID)
+}
+
+func getScrapeCacheDir() string {
+	return common.ScrapeCacheDir
+}
 
 func registerScraper(id string, name string, avatarURL string, f models.ScraperFunc) {
 	models.RegisterScraper(id, name, avatarURL, f)
@@ -107,19 +173,4 @@ func getTextFromHTMLWithSelector(data string, sel string) string {
 		log.Fatal(err)
 	}
 	return strings.TrimSpace(doc.Find(sel).Text())
-}
-
-func init() {
-	appDir = appdir.New("xbvr").UserConfig()
-
-	cacheDir = filepath.Join(appDir, "cache")
-
-	siteCacheDir = filepath.Join(cacheDir, "site_cache")
-	sceneCacheDir = filepath.Join(cacheDir, "scene_cache")
-
-	_ = os.MkdirAll(appDir, os.ModePerm)
-	_ = os.MkdirAll(cacheDir, os.ModePerm)
-
-	_ = os.MkdirAll(siteCacheDir, os.ModePerm)
-	_ = os.MkdirAll(sceneCacheDir, os.ModePerm)
 }
