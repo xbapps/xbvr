@@ -55,13 +55,13 @@
       cardSizeClass() {
         switch (this.$store.state.actorList.filters.cardSize) {
           case "1":
-            return "is-one-fifth";
+            return "is-2";
           case "2":
             return "is-one-quarter";
           case "3":
             return "is-one-third";
           default:
-            return "is-one-fifth";
+            return "is-2";
         }
       },
       isLoading() {

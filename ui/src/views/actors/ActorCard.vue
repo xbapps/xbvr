@@ -48,17 +48,16 @@
 </script>
 
 <style scoped>
-  .is-one-fifth figure {
-    height: 177px;
+  figure {
+    height: 0px;
+    padding-top: 100%;
     overflow: hidden;
   }
-  .is-one-quarter figure {
-    height: 227px;
-    overflow: hidden;
-  }
-  .is-one-third figure {
-    height: 311px;
-    overflow: hidden;
+
+  figure img {
+    position: absolute;
+    top: 0;
+    left: 0;
   }
 
   .transparent {

@@ -13,25 +13,8 @@ import (
 func Actors(wg *sync.WaitGroup, knownActors []string, out chan<- models.ScrapedActor) error {
 	defer wg.Done()
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.hottiesvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	actorCollector := colly.NewCollector(
-		colly.AllowedDomains("www.hottiesvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	actorCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	siteCollector := createCollector("hottiesvr.com", "www.hottiesvr.com")
+	actorCollector := createCollector("hottiesvr.com", "www.hottiesvr.com")
 
 	actorCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sa := models.ScrapedActor{}
