@@ -3,7 +3,7 @@
     <div class="columns">
 
       <div class="column is-one-fifth custom-menu">
-        <b-menu>
+        <b-menu :accordion="false">
           <b-menu-list :label="$t('Options')">
             <b-menu-item :label="$t('Storage')" :active="active==='folders'"
                          @click="setActive('folders')"/>
