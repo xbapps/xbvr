@@ -18,14 +18,14 @@ const getters = {
   prevFile: (state) => (currentFile) => {
     let i = state.items.findIndex(item => item.id == currentFile.id);
     if (i === 0) {
-      return null;
+      return state.items[state.items.length - 1];
     }
     return state.items[i - 1];
   },
   nextFile: (state) => (currentFile) => {
     let i = state.items.findIndex(item => item.id == currentFile.id);
     if (i === state.items.length - 1) {
-      return null;
+      return state.items[0];
     }
     return state.items[i + 1];
   },
