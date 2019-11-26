@@ -36,7 +36,6 @@ func VRTeenrs(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 			// Scene ID - get from cover image URL
 			re := regexp.MustCompile(`(?m)vrporn(\d+)`)
-			log.Infof("Getting site id from: %s", coverURL)
 			sc.SiteID = re.FindStringSubmatch(coverURL)[1]
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 		}
