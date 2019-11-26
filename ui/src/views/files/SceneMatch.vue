@@ -2,55 +2,65 @@
   <div class="modal is-active">
     <div class="modal-background"></div>
     <div class="modal-card">
-      <header class="modal-card-head">
-        <p class="modal-card-title">{{$t("Match file to scene")}}</p>
-        <button class="delete" @click="close" aria-label="close"></button>
-      </header>
       <section class="modal-card-body">
         <div>
-          <h6 class="title is-6">{{ file.filename }}</h6>
-          <b-field :label="$t('Search')">
-            <div class="control">
-              <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
-            </div>
-          </b-field>
-          <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5">
-            <template slot-scope="props">
-              <b-table-column field="cover_url" :label="$t('Image')" width="120">
-                <vue-load-image>
-                  <img slot="image" :src="getImageURL(props.row.cover_url)"/>
-                  <img slot="preloader" src="/ui/images/blank.png"/>
-                  <img slot="error" src="/ui/images/blank.png"/>
-                </vue-load-image>
-              </b-table-column>
-              <b-table-column field="site" :label="$t('Site')" sortable>
-                {{ props.row.site }}
-              </b-table-column>
-              <b-table-column field="title" :label="$t('Title')" sortable>
-                <p v-if="props.row.title">{{ props.row.title }}</p>
-                <small>
-                  <b-tag rounded v-for="i in props.row.cast" :key="i.id">{{i.name}}</b-tag>
-                </small>
-              </b-table-column>
-              <b-table-column field="release_date" :label="$t('Release date')" sortable nowrap>
-                {{format(parseISO(props.row.release_date), "yyyy-MM-dd")}}
-              </b-table-column>
-              <b-table-column field="scene_id" :label="$t('ID')" sortable nowrap>
-                {{props.row.scene_id}}
-              </b-table-column>
-              <b-table-column field="_score" :label="$t('Score')" sortable>
-                <b-progress show-value :value="props.row._score * 100"></b-progress>
-              </b-table-column>
-              <b-table-column field="_assign">
-                <button class="button" @click="assign(props.row.scene_id)">{{$t("Assign")}}</button>
-              </b-table-column>
-            </template>
-          </b-table>
+          <div class="has-text-centered">
+            <span class="is-size-4 has-text-weight-bold">{{ file.filename }}</span>
+          </div>
+          <b-tabs v-model="activeTab" position="is-centered">
+            <b-tab-item label="Match">
+              <template slot="header">{{$t("Match")}}</template>
+              <b-field :label="$t('Search')">
+                <div class="control">
+                  <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
+                </div>
+              </b-field>
+              <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5">
+                <template slot-scope="props">
+                  <b-table-column field="cover_url" :label="$t('Image')" width="120">
+                    <vue-load-image>
+                      <img slot="image" :src="getImageURL(props.row.cover_url)"/>
+                      <img slot="preloader" src="/ui/images/blank.png"/>
+                      <img slot="error" src="/ui/images/blank.png"/>
+                    </vue-load-image>
+                  </b-table-column>
+                  <b-table-column field="site" :label="$t('Site')" sortable>
+                    {{ props.row.site }}
+                  </b-table-column>
+                  <b-table-column field="title" :label="$t('Title')" sortable>
+                    <p v-if="props.row.title">{{ props.row.title }}</p>
+                    <small>
+                      <b-tag rounded v-for="i in props.row.cast" :key="i.id">{{i.name}}</b-tag>
+                    </small>
+                  </b-table-column>
+                  <b-table-column field="release_date" :label="$t('Release date')" sortable nowrap>
+                    {{format(parseISO(props.row.release_date), "yyyy-MM-dd")}}
+                  </b-table-column>
+                  <b-table-column field="scene_id" :label="$t('ID')" sortable nowrap>
+                    {{props.row.scene_id}}
+                  </b-table-column>
+                  <b-table-column field="_score" :label="$t('Score')" sortable>
+                    <b-progress show-value :value="props.row._score * 100"></b-progress>
+                  </b-table-column>
+                  <b-table-column field="_assign">
+                    <button class="button" @click="assign(props.row.scene_id)">{{$t("Assign")}}</button>
+                  </b-table-column>
+                </template>
+              </b-table>
+            </b-tab-item>
+            <b-tab-item>
+              <template slot="header">{{$t("Play")}}</template>
+              <video ref="player"
+                width="640" height="640" class="video-js vjs-default-skin" controls playsinline>
+              </video>
+            </b-tab-item>
+          </b-tabs>
         </div>
       </section>
     </div>
+    <button class="modal-close is-large" aria-label="close" @click="close()"></button>
     <a class="prev" @click="prevFile">&#10094;</a>
-    <a class="next" @click="nextFile">&#10095;</a>
+    <a class="next" @click="nextFile">&#10095;</a>    
   </div>
 </template>
 
@@ -58,6 +68,9 @@
   import ky from "ky";
   import {format, parseISO} from "date-fns";
   import VueLoadImage from "vue-load-image";
+  import videojs from "video.js";
+  import vr from "videojs-vr";
+  import hotkeys from "videojs-hotkeys";
 
   export default {
     name: "SceneMatch",
@@ -65,7 +78,9 @@
     data() {
       return {
         data: [],
+        player: {},
         currentPage: 1,
+        activeTab: 0,
         queryString: "",
         format, parseISO
       }
@@ -73,15 +88,41 @@
     computed: {
       file() {
         return this.$store.state.overlay.match.file;
-      },
+      }
     },
     mounted() {
+      this.player = videojs(this.$refs.player);
+        let vr = this.player.vr({
+          projection: '360',
+          forceCardboard: false
+        });
+        this.player.hotkeys({
+          alwaysCaptureHotkeys: true,
+          volumeStep: 0.1,
+          seekStep: 5,
+          enableModifiersForNumbers: false,
+          customKeys: {
+            closeModal: {
+              key: function (event) {
+                return event.which === 27
+              },
+              handler: (player, options, event) => {
+                this.player.dispose();
+                this.$store.commit("overlay/hideMatch");
+              }
+            }
+          }
+        });
+        this.player.on("loadedmetadata", function () {
+          vr.camera.position.set(-1, 0, -1);
+        });
       this.initView();
     },
     methods: {
       initView() {
         this.data = [];
         this.queryString = this.file.filename.replace(/\./g, " ").replace(/\_/g, " ").replace(/\+/g, " ").replace(/\-/g, " ");
+        this.player.src({type: 'video/mp4', src: "/api/dms/file/" + this.file.id + "?dnt=1"});
         this.loadData();
       },
       loadData: async function loadData() {
@@ -131,6 +172,7 @@
         }
       },
       close() {
+        this.player.dispose();
         this.$store.commit("overlay/hideMatch");
       },
       toInt(value, radix, defaultValue) {
@@ -170,5 +212,9 @@
   .prev {
     left: 0;
     border-radius: 3px 0 0 3px;
+  }
+  
+  .video-js {
+    margin: 0 auto;
   }
 </style>

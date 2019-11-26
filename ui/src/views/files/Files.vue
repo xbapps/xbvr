@@ -10,7 +10,6 @@
         </div>
       </div>
     </div>
-    <Player v-if="showPlayerOverlay"/>
     <SceneMatch v-if="showMatchOverlay"/>
     <Details v-if="showDetailsOverlay"/>
   </div>
@@ -19,17 +18,13 @@
 <script>
   import Filters from "./Filters";
   import List from "./List";
-  import Player from "./Player";
   import SceneMatch from "./SceneMatch";
   import Details from "../scenes/Details";
 
   export default {
     name: "Files",
-    components: {Filters, List, Player, SceneMatch, Details},
+    components: {Filters, List, SceneMatch, Details},
     computed: {
-      showPlayerOverlay() {
-        return this.$store.state.overlay.player.show;
-      },
       showMatchOverlay() {
         return this.$store.state.overlay.match.show;
       },

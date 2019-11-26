@@ -38,10 +38,8 @@
                 <span v-else>-</span>
               </b-table-column>
               <b-table-column style="white-space: nowrap;">
-                <b-button @click="play(props.row)">{{$t('Play')}}</b-button>
-                &nbsp;
-                <b-button v-if="props.row.scene_id > 0" @click="showDetails(props.row.scene)">{{$t('Scene')}}</b-button>
-                <b-button v-else @click="match(props.row)">{{$t('Match')}}</b-button>
+                <b-button v-if="props.row.scene_id > 0" @click="showDetails(props.row.scene)" class="is-success" outlined>{{$t('Scene')}}</b-button>
+                <b-button v-else @click="match(props.row)">{{$t('Scene')}}</b-button>
                 &nbsp;
                 <button class="button is-danger is-outlined" @click='removeFile(props.row)'>
                   <b-icon pack="fas" icon="trash"></b-icon>
@@ -106,9 +104,6 @@
         this.sortOrder = order;
         this.$store.state.files.filters.sort = `${field}_${order}`;
         this.$store.dispatch("files/load");
-      },
-      play(file) {
-        this.$store.commit("overlay/showPlayer", {file: file});
       },
       showDetails(scene) {
         this.$store.commit("overlay/showDetails", {scene: scene});
