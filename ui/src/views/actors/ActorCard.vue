@@ -10,8 +10,29 @@
       </figure>
     </div>
 
+    <div>
+      <span v-if="item.twitter" class="is-pulled-left">
+        <a :href=item.twitter target="_blank">
+          <b-icon pack="fab" icon="twitter-square" type="is-primary"/>
+        </a>
+      </span>
+      <span v-if="item.instagram" class="is-pulled-left">
+        <a :href=item.instagram target="_blank">
+          <b-icon pack="fab" icon="instagram" type="is-primary"/>
+        </a>
+      </span>
+      <span v-if="item.reddit" class="is-pulled-left">
+        <a :href=item.reddit target="_blank">
+          <b-icon pack="fab" icon="reddit-square" type="is-primary"/>
+        </a>
+      </span>
+      <span v-if="item.facebook" class="is-pulled-left">
+        <a :href=item.facebook target="_blank">
+          <b-icon pack="fab" icon="facebook-square" type="is-primary"/>
+        </a>
+      </span>
+    </div>
     <div style="padding-top:4px;">
-
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
         <a :href="item.homepage_url" target="_blank">{{item.name}}</a>
       </span>
