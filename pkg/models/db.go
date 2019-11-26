@@ -9,6 +9,8 @@ import (
 	"github.com/xbapps/xbvr/pkg/common"
 )
 
+var log = &common.Log
+
 func GetDB() (*gorm.DB, error) {
 	db, err := gorm.Open("sqlite3", filepath.Join(common.AppDir, "main.db"))
 	if err != nil {

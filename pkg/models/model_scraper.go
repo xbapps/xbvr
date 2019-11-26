@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"sync"
 )
 
@@ -31,6 +32,16 @@ type ScrapedScene struct {
 	Synopsis    string   `json:"synopsis"`
 	Released    string   `json:"released"`
 	HomepageURL string   `json:"homepage_url"`
+}
+
+func (s *ScrapedScene) ToJSON() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s *ScrapedScene) Log() error {
+	j, err := json.MarshalIndent(s, "", "  ")
+	log.Debugf("\n%v", string(j))
+	return err
 }
 
 func GetScrapers() []Scraper {
