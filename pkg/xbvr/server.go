@@ -28,6 +28,7 @@ import (
 
 var (
 	DEBUG          = common.DEBUG
+	DLNA           = common.DLNA
 	httpAddr       = common.HttpAddr
 	wsAddr         = common.WsAddr
 	currentVersion = ""
@@ -163,7 +164,10 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("XBVR %v (build date %v) starting...", version, date)
 
 	// DMS
-	go StartDMS()
+	log.Info("DLNA Enabled: ", DLNA)
+	if DLNA {
+		go StartDMS()
+	}
 
 	// Cron
 	SetupCron()
