@@ -25,6 +25,7 @@ type dmsConfig struct {
 }
 
 var dmsServer *dms.Server
+var dmsStarted bool
 
 func initDMS() {
 	var config = &dmsConfig{
@@ -104,16 +105,7 @@ func StartDMS() {
 			log.Fatal(err)
 		}
 	}()
-	// sigs := make(chan os.Signal, 1)
-	// signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
-	// <-sigs
-	// err := dmsServer.Close()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// if err := cache.save(config.FFprobeCachePath); err != nil {
-	// 	log.Print(err)
-	// }
+	dmsStarted = true
 }
 
 func StopDMS() {
@@ -122,4 +114,9 @@ func StopDMS() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	dmsStarted = false
+}
+
+func IsDMSStarted() bool {
+	return dmsStarted
 }

@@ -6,7 +6,7 @@
         {{$t("You can enable/disable DLNA access")}}
       </p>
       <div class="switch">
-        <b-switch :value="dlnaSettings.dlnaEnabled" v-model="dlnaEnabled" @input="$store.dispatch('optionsSecurity/enableDLNA', dlnaEnabled)"/>
+        <b-switch :value="dlnaOptions.dlna_enabled" @input="$store.dispatch('optionsSecurity/enableDLNA', !dlnaOptions.dlna_enabled)"/>
       </div>
       <hr/>
     </div>
@@ -18,14 +18,12 @@
 
   export default {
     name: "OptionsSecurity",
-    data() {
-      return {
-        dlnaEnabled: true
-      };
+    mounted() {
+      this.$store.dispatch("optionsSecurity/load");
     },
     computed: {
-      dlnaSettings() {
-        return this.$store.state.optionsSecurity.dlnaOptions;
+      dlnaOptions: function () {
+        return this.$store.state.optionsSecurity.dlna_options;
       },
     },
   }
