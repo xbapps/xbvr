@@ -14,33 +14,18 @@ import (
 
 func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("virtualtaboo", "VirtualTaboo")
+	scraperID := "virtualtaboo"
+	siteID := "VirtualTaboo"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("virtualtaboo.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("virtualtaboo.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("virtualtaboo.com")
+	siteCollector := createCollector("virtualtaboo.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VirtualTaboo"
-		sc.Site = "VirtualTaboo"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -128,9 +113,9 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	siteCollector.Visit("https://virtualtaboo.com/videos")
 
 	if updateSite {
-		updateSiteLastUpdate("virtualtaboo")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("virtualtaboo", "VirtualTaboo")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
