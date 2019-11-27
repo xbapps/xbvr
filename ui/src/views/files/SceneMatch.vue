@@ -246,7 +246,7 @@
   }
 
   .filename {
-    padding-bottom: 0.2em;
+    padding-bottom: 0.6em;
   }
 
   .searchbox {
