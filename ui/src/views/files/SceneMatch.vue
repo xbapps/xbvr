@@ -4,57 +4,107 @@
     <div class="modal-card">
       <section class="modal-card-body">
         <div>
-          <div class="has-text-centered">
-            <span class="is-size-4 has-text-weight-bold">{{ file.filename }}</span>
-          </div>
-          <b-tabs v-model="activeTab" position="is-centered">
-            <b-tab-item label="Match">
-              <template slot="header">{{$t("Match")}}</template>
-              <b-field :label="$t('Search')">
-                <div class="control">
-                  <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
-                </div>
-              </b-field>
-              <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5">
-                <template slot-scope="props">
-                  <b-table-column field="cover_url" :label="$t('Image')" width="120">
-                    <vue-load-image>
-                      <img slot="image" :src="getImageURL(props.row.cover_url)"/>
-                      <img slot="preloader" src="/ui/images/blank.png"/>
-                      <img slot="error" src="/ui/images/blank.png"/>
-                    </vue-load-image>
-                  </b-table-column>
-                  <b-table-column field="site" :label="$t('Site')" sortable>
-                    {{ props.row.site }}
-                  </b-table-column>
-                  <b-table-column field="title" :label="$t('Title')" sortable>
-                    <p v-if="props.row.title">{{ props.row.title }}</p>
-                    <small>
-                      <b-tag rounded v-for="i in props.row.cast" :key="i.id">{{i.name}}</b-tag>
-                    </small>
-                  </b-table-column>
-                  <b-table-column field="release_date" :label="$t('Release date')" sortable nowrap>
-                    {{format(parseISO(props.row.release_date), "yyyy-MM-dd")}}
-                  </b-table-column>
-                  <b-table-column field="scene_id" :label="$t('ID')" sortable nowrap>
-                    {{props.row.scene_id}}
-                  </b-table-column>
-                  <b-table-column field="_score" :label="$t('Score')" sortable>
-                    <b-progress show-value :value="props.row._score * 100"></b-progress>
-                  </b-table-column>
-                  <b-table-column field="_assign">
-                    <button class="button" @click="assign(props.row.scene_id)">{{$t("Assign")}}</button>
-                  </b-table-column>
-                </template>
-              </b-table>
-            </b-tab-item>
-            <b-tab-item>
-              <template slot="header">{{$t("Play")}}</template>
+          <div class="columns is-vcentered">
+            <div class="column is-narrow">
               <video ref="player"
-                width="640" height="640" class="video-js vjs-default-skin" controls playsinline>
+                width="384" height="216" class="video-js vjs-default-skin" controls playsinline>
               </video>
-            </b-tab-item>
-          </b-tabs>
+            </div>
+            <div class="column">
+              <div class="is-size-4 has-text-weight-bold filename">{{file.filename}}</div>
+              <div>
+                <b-field grouped group-multiline>
+                  <div class="control">
+                    <b-taglist attached>
+                      <b-tag type="is-dark" rounded>Location</b-tag>
+                      <b-tag type="is-info" rounded>{{file.path}}</b-tag>
+                    </b-taglist>
+                  </div>
+                  <div class="control">
+                    <b-taglist attached>
+                      <b-tag type="is-dark" rounded>Size</b-tag>
+                      <b-tag type="is-info" rounded>{{prettyBytes(file.size)}}</b-tag>
+                    </b-taglist>
+                  </div>
+                  <div class="control">
+                    <b-taglist attached>
+                      <b-tag type="is-dark" rounded>Created</b-tag>
+                      <b-tag type="is-info" rounded>{{format(parseISO(file.created_time), "yyyy-MM-dd hh:mm:ss")}}</b-tag>
+                    </b-taglist>
+                  </div>
+                  <div class="control">
+                    <b-taglist attached>
+                      <b-tag type="is-dark" rounded>Duration</b-tag>
+                      <b-tag v-if="file.duration !== 0" type="is-info" rounded>{{humanizeSeconds(file.duration)}}</b-tag>
+                      <b-tag v-else type="is-info" rounded>-</b-tag>
+                    </b-taglist>
+                  </div>
+                  <div class="control">
+                    <b-taglist attached>
+                      <b-tag type="is-dark" rounded>Resolution</b-tag>
+                      <b-tag v-if="file.video_width !== 0 && file.video_height !== 0" type="is-info" rounded>
+                        {{file.video_width}} × {{file.video_height}}
+                      </b-tag>
+                      <b-tag v-else type="is-info" rounded>-</b-tag>
+                    </b-taglist>
+                  </div>
+                  <div class="control">
+                    <b-taglist attached>
+                      <b-tag type="is-dark" rounded>Bitrate</b-tag>
+                      <b-tag v-if="file.video_bitrate !== 0" type="is-info" rounded>{{prettyBytes(file.video_bitrate)}}</b-tag>
+                      <b-tag v-else type="is-info" rounded>-</b-tag>
+                    </b-taglist>
+                  </div>
+                  <div class="control">
+                    <b-taglist attached>
+                      <b-tag type="is-dark" rounded>Framerate</b-tag>
+                      <b-tag v-if="file.video_avgfps_val !== 0" type="is-info" rounded>{{file.video_avgfps_val}}</b-tag>
+                      <b-tag v-else type="is-info" rounded>-</b-tag>
+                    </b-taglist>
+                  </div>
+                </b-field>
+              </div>
+              <div class="searchbox">
+                <b-field :label="$t('Search')">
+                  <b-input v-model='queryString' v-debounce:200ms="loadData" autofocus></b-input>
+                </b-field>
+              </div>
+            </div>
+          </div>
+          <div>
+            <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5">
+              <template slot-scope="props">
+                <b-table-column field="cover_url" :label="$t('Image')" width="120">
+                  <vue-load-image>
+                    <img slot="image" :src="getImageURL(props.row.cover_url)"/>
+                    <img slot="preloader" src="/ui/images/blank.png"/>
+                    <img slot="error" src="/ui/images/blank.png"/>
+                  </vue-load-image>
+                </b-table-column>
+                <b-table-column field="site" :label="$t('Site')" sortable>
+                  {{props.row.site}}
+                </b-table-column>
+                <b-table-column field="title" :label="$t('Title')" sortable>
+                  <p v-if="props.row.title">{{props.row.title}}</p>
+                  <small>
+                    <b-tag rounded v-for="i in props.row.cast" :key="i.id">{{i.name}}</b-tag>
+                  </small>
+                </b-table-column>
+                <b-table-column field="release_date" :label="$t('Release date')" sortable nowrap>
+                  {{format(parseISO(props.row.release_date), "yyyy-MM-dd")}}
+                </b-table-column>
+                <b-table-column field="scene_id" :label="$t('ID')" sortable nowrap>
+                  {{props.row.scene_id}}
+                </b-table-column>
+                <b-table-column field="_score" :label="$t('Score')" sortable>
+                  <b-progress show-value :value="props.row._score * 100"></b-progress>
+                </b-table-column>
+                <b-table-column field="_assign">
+                  <button class="button" @click="assign(props.row.scene_id)">{{$t("Assign")}}</button>
+                </b-table-column>
+              </template>
+            </b-table>
+          </div>
         </div>
       </section>
     </div>
@@ -71,6 +121,7 @@
   import videojs from "video.js";
   import vr from "videojs-vr";
   import hotkeys from "videojs-hotkeys";
+  import prettyBytes from "pretty-bytes";
 
   export default {
     name: "SceneMatch",
@@ -78,9 +129,11 @@
     data() {
       return {
         data: [],
+        prettyBytes,
+        format,
+        parseISO,
         player: {},
         currentPage: 1,
-        activeTab: 0,
         queryString: "",
         format, parseISO
       }
@@ -178,6 +231,9 @@
       toInt(value, radix, defaultValue) {
         return parseInt(value, radix || 10) || defaultValue || 0;
       },
+      humanizeSeconds(seconds) {
+        return new Date(seconds * 1000).toISOString().substr(11, 8);
+      }
     }
   }
 </script>
@@ -186,6 +242,15 @@
   .modal-card {
     position: absolute;
     top: 4em;
+    width: 85%;
+  }
+
+  .filename {
+    padding-bottom: 0.2em;
+  }
+
+  .searchbox {
+    padding-top: 1em;
     width: 80%;
   }
 
