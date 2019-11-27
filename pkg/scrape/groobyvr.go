@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"strconv"
 	"strings"
 	"sync"
 
@@ -20,6 +21,7 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 	sceneCollector := createCollector(allowedDomains...)
 	siteCollector := createCollector(allowedDomains...)
+	vodCollector := createCollector(allowedDomains...)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -44,52 +46,29 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		tmpDate, _ := goment.New(dateString, "Do MMMM YYYY")
 		sc.Released = tmpDate.Format("YYYY-MM-DD")
 
-		// Gallery URLs
-		// This example is using colly.HTMLElement.ChildAttrs which returns
-		// the stripped text content of all the matching element's attributes.
-		//
-		// For example, given the following HTML:
-		//   <div class="gallery">
-		//     <img src="http://example.com/image01.png">
-		//     <img src="http://example.com/image02.png">
-		//     <img src="http://example.com/image03.png">
-		//
-		// e.ChildAttrs(".gallery img", "src") returns:
-		//   [ "http://example.com/image01.png",
-		//     "http://example.com/image02.png",
-		//     "http://example.com/image03.png" ]
-		//sc.Gallery = e.ChildAttrs(".gallery img", "src")
-
-		// Tags
-		// This example is using colly.HTMLElement.ForEach which iterates
-		// over the elements matched by the first argument and calls the
-		// callback function on every HTMLElement match.
-		//
-		// For example, given the following HTML:
-		//   <div class="tags">
-		//     <ul>
-		//       <li>tag1</li>
-		//       <li>tag2</li>
-		//       <li>tag3</li>
-		//     </ul>
-		//
-		// e.Text returns a tag on every iteration
-		//e.ForEach(`.tags ul li`, func(id int, e *colly.HTMLElement) {
-		//	sc.Tags = append(sc.Tags, e.Text)
-		//})
-
-		// Duration
-		//
-		// We only care about the minutes. You'll need to parse the string if it's
-		// in HH:MM:SS or MM:SS format.
-		//
-		// Assuming: <span class="runtime">32:00</span>
-		//tmpDuration, err := strconv.Atoi(strings.Split(e.ChildText(`span.runtime`), ":")[0])
-		//if err == nil {
-		//	sc.Duration = tmpDuration
-		//}
+		// not every scene has a vod link
+		ctx := colly.NewContext()
+		ctx.Put("scene", &sc)
+		vodURL := e.ChildAttr("a.downBtnbuy", "href")
+		if !strings.Contains(vodURL, "/tour") {
+			vodCollector.Request("GET", vodURL, nil, ctx, nil)
+		}
 
 		out <- sc
+	})
+
+	vodCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
+
+		sc.Gallery = e.ChildAttrs("div.gallery-group a", "href")
+
+		// not every vod page has a duration listed
+		tmpDuration := strings.Replace(e.ChildText(`ul li:contains(length)`), "Length: ", "", -1)
+		tmpDuration = strings.Split(tmpDuration, "m")[0]
+		duration, err := strconv.Atoi(tmpDuration)
+		if err == nil && duration > 0 {
+			sc.Duration = duration
+		}
 	})
 
 	siteCollector.OnHTML(`div.frontpage_sexyvideo h4 a`, func(e *colly.HTMLElement) {
