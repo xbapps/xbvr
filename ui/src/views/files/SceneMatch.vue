@@ -29,20 +29,24 @@
                   <div class="control">
                     <b-taglist attached>
                       <b-tag type="is-dark" rounded>Created</b-tag>
-                      <b-tag type="is-info" rounded>{{format(parseISO(file.created_time), "yyyy-MM-dd hh:mm:ss")}}</b-tag>
+                      <b-tag type="is-info" rounded>
+                        {{format(parseISO(file.created_time), "yyyy-MM-dd hh:mm:ss")}}
+                      </b-tag>
                     </b-taglist>
                   </div>
                   <div class="control">
                     <b-taglist attached>
                       <b-tag type="is-dark" rounded>Duration</b-tag>
-                      <b-tag v-if="file.duration !== 0" type="is-info" rounded>{{humanizeSeconds(file.duration)}}</b-tag>
+                      <b-tag v-if="file.duration !== 0" type="is-info" rounded>
+                        {{humanizeSeconds(file.duration)}}
+                      </b-tag>
                       <b-tag v-else type="is-info" rounded>-</b-tag>
                     </b-taglist>
                   </div>
                   <div class="control">
                     <b-taglist attached>
                       <b-tag type="is-dark" rounded>Resolution</b-tag>
-                      <b-tag v-if="file.video_width !== 0 && file.video_height !== 0" type="is-info" rounded>
+                      <b-tag v-if="file.video_width !== 0 || file.video_height !== 0" type="is-info" rounded>
                         {{file.video_width}} × {{file.video_height}}
                       </b-tag>
                       <b-tag v-else type="is-info" rounded>-</b-tag>
@@ -51,14 +55,18 @@
                   <div class="control">
                     <b-taglist attached>
                       <b-tag type="is-dark" rounded>Bitrate</b-tag>
-                      <b-tag v-if="file.video_bitrate !== 0" type="is-info" rounded>{{prettyBytes(file.video_bitrate)}}</b-tag>
+                      <b-tag v-if="file.video_bitrate !== 0" type="is-info" rounded>
+                        {{prettyBytes(file.video_bitrate)}}
+                      </b-tag>
                       <b-tag v-else type="is-info" rounded>-</b-tag>
                     </b-taglist>
                   </div>
                   <div class="control">
                     <b-taglist attached>
                       <b-tag type="is-dark" rounded>Framerate</b-tag>
-                      <b-tag v-if="file.video_avgfps_val !== 0" type="is-info" rounded>{{file.video_avgfps_val}}</b-tag>
+                      <b-tag v-if="file.video_avgfps_val !== 0" type="is-info" rounded>
+                        {{file.video_avgfps_val}}
+                      </b-tag>
                       <b-tag v-else type="is-info" rounded>-</b-tag>
                     </b-taglist>
                   </div>
