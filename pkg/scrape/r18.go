@@ -11,25 +11,9 @@ import (
 )
 
 func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString string) error {
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.r18.com"),
-		// colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.r18.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.r18.com")
+	siteCollector := createCollector("www.r18.com")
+	siteCollector.CacheDir = ""
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

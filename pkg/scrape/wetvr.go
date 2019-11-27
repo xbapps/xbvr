@@ -14,33 +14,18 @@ import (
 
 func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("wetvr", "WetVR")
+	scraperID := "wetvr"
+	siteID := "WetVR"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.wetvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.wetvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.wetvr.com")
+	siteCollector := createCollector("www.wetvr.com")
 
 	sceneCollector.OnHTML(`div#t2019`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "WetVR"
-		sc.Site = "WetVR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -115,9 +100,9 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 	siteCollector.Visit("https://www.wetvr.com/")
 
 	if updateSite {
-		updateSiteLastUpdate("wetvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("wetvr", "WetVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

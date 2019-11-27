@@ -17,15 +17,7 @@ func VRTeenrs(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	siteID := "VRTeenrs"
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrteenrs.com", "www.vrteenrs.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("vrteenrs.com", "www.vrteenrs.com")
 
 	sceneCollector.OnHTML(`.list_item`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -44,7 +36,6 @@ func VRTeenrs(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 			// Scene ID - get from cover image URL
 			re := regexp.MustCompile(`(?m)vrporn(\d+)`)
-			log.Infof("Getting site id from: %s", coverURL)
 			sc.SiteID = re.FindStringSubmatch(coverURL)[1]
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 		}

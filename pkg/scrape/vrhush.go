@@ -14,44 +14,20 @@ import (
 
 func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("vrhush", "VRHush")
+	scraperID := "vrhush"
+	siteID := "VRHush"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrhush.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrhush.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	castCollector := colly.NewCollector(
-		colly.AllowedDomains("vrhush.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-		colly.AllowURLRevisit(),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	castCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("vrhush.com")
+	siteCollector := createCollector("vrhush.com")
+	castCollector := createCollector("vrhush.com")
+	castCollector.AllowURLRevisit = true
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "VRHush"
-		sc.Site = "VRHush"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -153,9 +129,9 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.Visit("https://vrhush.com/scenes")
 
 	if updateSite {
-		updateSiteLastUpdate("vrhush")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("vrhush", "VRHush")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
