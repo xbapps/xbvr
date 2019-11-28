@@ -60,7 +60,7 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	vodCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 
-		sc.Gallery = e.ChildAttrs("div.gallery-group a", "href")
+		sc.Gallery = e.ChildAttrs("div.gallery-group img", "data-orig-file")
 
 		// not every vod page has a duration listed
 		tmpDuration := strings.Replace(e.ChildText(`ul li:contains(length)`), "Length: ", "", -1)
