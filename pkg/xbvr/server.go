@@ -28,6 +28,7 @@ import (
 
 var (
 	DEBUG          = common.DEBUG
+	DLNA           = common.DLNA
 	httpAddr       = common.HttpAddr
 	wsAddr         = common.WsAddr
 	currentVersion = ""
@@ -62,6 +63,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(ConfigResource{}.WebService())
 	restful.Add(FilesResource{}.WebService())
 	restful.Add(DeoVRResource{}.WebService())
+	restful.Add(SecurityResource{}.WebService())
 
 	config := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),
@@ -162,7 +164,10 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("XBVR %v (build date %v) starting...", version, date)
 
 	// DMS
-	go StartDMS()
+	log.Info("DLNA Enabled: ", DLNA)
+	if DLNA {
+		go StartDMS()
+	}
 
 	// Cron
 	SetupCron()

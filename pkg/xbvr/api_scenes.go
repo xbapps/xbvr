@@ -31,6 +31,7 @@ type RequestSceneList struct {
 	Sites        []optional.String `json:"sites"`
 	Tags         []optional.String `json:"tags"`
 	Cast         []optional.String `json:"cast"`
+	Cuepoint     []optional.String `json:"cuepoint"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
 }
@@ -234,6 +235,17 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 			Joins("left join scene_cast on scene_cast.scene_id=scenes.id").
 			Joins("left join actors on actors.id=scene_cast.actor_id").
 			Where("actors.name IN (?)", cast)
+	}
+
+	var cuepoint []string
+	for _, i := range r.Cuepoint {
+		cuepoint = append(cuepoint, i.OrElse(""))
+	}
+	if len(cuepoint) > 0 {
+		tx = tx.Joins("left join scene_cuepoints on scene_cuepoints.scene_id=scenes.id")
+		for _, i := range cuepoint {
+			tx = tx.Where("scene_cuepoints.name LIKE ?", "%"+i+"%")
+		}
 	}
 
 	if r.Released.Present() {
