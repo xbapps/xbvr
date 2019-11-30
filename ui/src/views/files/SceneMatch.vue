@@ -203,6 +203,7 @@
           replace(/oculusgo/g, " ").
           replace(/oculus-go/g, " ").
           replace(/oculus/g, " ").
+          replace(/\Wpov\W/g, " ").
           replace(/\Wlr\W/g, " ").
           replace(/\Wsbs\W/g, " ").
           replace(/\Wsd\W/g, " ").
@@ -234,6 +235,7 @@
           replace(/2160/g, " ").
           replace(/2650/g, " ").
           replace(/2700/g, " ").
+          replace(/3840/g, " ").
           replace(/\sp\s/g, " ").
           replace(/vp9/g, " ").
           replace(/h264/g, " ").
@@ -242,6 +244,8 @@
           replace(/hevc/g, " ").
           replace(/30fps/g, " ").
           replace(/60fps/g, " ").
+          replace(/\Wrlo\W/g, " ").
+          replace(/\Wvr\Wbg\W/g, " ").
           replace(/mp4/g, " ").
           replace(/\s+/g, " ");
         this.player.src({type: 'video/mp4', src: "/api/dms/file/" + this.file.id + "?dnt=1"});
