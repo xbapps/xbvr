@@ -95,6 +95,11 @@
         <b-taginput v-model="tags" autocomplete :data="filteredTags" @typing="getFilteredTags"></b-taginput>
       </div>
 
+      <label class="label">Cuepoint</label>
+      <div class="field">
+        <b-taginput v-model="cuepoint" allow-new></b-taginput>
+      </div>
+
     </div>
   </div>
 </template>
@@ -216,6 +221,15 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.tags = value;
+          this.reload();
+        }
+      },
+      cuepoint: {
+        get() {
+          return this.$store.state.sceneList.filters.cuepoint;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.cuepoint = value;
           this.reload();
         }
       },
