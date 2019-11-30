@@ -4,10 +4,12 @@
       <div class="column">
         <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
         <div v-if="items.length > 0 && !isLoading">
-          <b-table :data="items" ref="table" backend-sorting :default-sort="[sortField, sortOrder]" @sort="onSort">
+          <b-table :data="items" ref="table" 
+            paginated="true" :per-page="perPage" :current-page.sync="currentPage"
+            backend-sorting :default-sort="[sortField, sortOrder]" @sort="onSort">
             <template slot-scope="props">
-              <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename" :label="$t('File')"
-                              sortable>
+              <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename"
+                :label="$t('File')" sortable>
                 {{props.row.filename}}
                 <br/><small>{{props.row.path}}</small>
               </b-table-column>
@@ -82,12 +84,15 @@
         prettyBytes,
         format,
         parseISO,
+        currentPage: 1,
+        perPage: 40,
         sortField: 'filename',
         sortOrder: 'asc',
       }
     },
     computed: {
       isLoading() {
+        this.currentPage = 1;
         return this.$store.state.files.isLoading;
       },
       items() {

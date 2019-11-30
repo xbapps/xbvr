@@ -182,7 +182,68 @@
     methods: {
       initView() {
         this.data = [];
-        this.queryString = this.file.filename.replace(/\./g, " ").replace(/\_/g, " ").replace(/\+/g, " ").replace(/\-/g, " ");
+        this.queryString = this.file.filename.toLowerCase();
+        this.queryString = this.queryString.
+          replace(/\(/g, " ").
+          replace(/\)/g, " ").
+          replace(/\./g, " ").
+          replace(/\_/g, " ").
+          replace(/\+/g, " ").
+          replace(/\-/g, " ").
+          replace(/gearvr/g, " ").
+          replace(/gear/g, " ").
+          replace(/samsung/g, " ").
+          replace(/mobile/g, " ").
+          replace(/psvr/g, " ").
+          replace(/smartphonevr/g, " ").
+          replace(/smartphone/g, " ").
+          replace(/vrdesktop/g, " ").
+          replace(/oculusrift/g, " ").
+          replace(/oculus-rift/g, " ").
+          replace(/oculusgo/g, " ").
+          replace(/oculus-go/g, " ").
+          replace(/oculus/g, " ").
+          replace(/\Wlr\W/g, " ").
+          replace(/\Wsbs\W/g, " ").
+          replace(/\Wsd\W/g, " ").
+          replace(/\Whd\W/g, " ").
+          replace(/\Wuhd\W/g, " ").
+          replace(/\Wlow\W/g, " ").
+          replace(/\Wmed\W/g, " ").
+          replace(/\Whigh\W/g, " ").
+          replace(/\Wlq\W/g, " ").
+          replace(/\Whq\W/g, " ").
+          replace(/\Wcbr\W/g, " ").
+          replace(/\Wvbr\W/g, " ").
+          replace(/\W\d\dmb\W/g, "").
+          replace(/3dv/g, " ").
+          replace(/3dh/g, " ").
+          replace(/3d/g, " ").
+          replace(/180x180/g, " ").
+          replace(/180/g, " ").
+          replace(/360/g, " ").
+          replace(/4k/g, " ").
+          replace(/5k/g, " ").
+          replace(/6k/g, " ").
+          replace(/3840x1920/g, " ").
+          replace(/5400x2700/g, " ").
+          replace(/1080/g, " ").
+          replace(/1440/g, " ").
+          replace(/1600/g, " ").
+          replace(/1920/g, " ").
+          replace(/2160/g, " ").
+          replace(/2650/g, " ").
+          replace(/2700/g, " ").
+          replace(/\sp\s/g, " ").
+          replace(/vp9/g, " ").
+          replace(/h264/g, " ").
+          replace(/\Wavc\W/g, " ").
+          replace(/h265/g, " ").
+          replace(/hevc/g, " ").
+          replace(/30fps/g, " ").
+          replace(/60fps/g, " ").
+          replace(/mp4/g, " ").
+          replace(/\s+/g, " ");
         this.player.src({type: 'video/mp4', src: "/api/dms/file/" + this.file.id + "?dnt=1"});
         this.loadData();
       },
