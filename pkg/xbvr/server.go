@@ -17,6 +17,7 @@ import (
 	"github.com/gammazero/nexus/v3/router"
 	"github.com/gammazero/nexus/v3/wamp"
 	"github.com/go-openapi/spec"
+	"github.com/gorilla/mux"
 	wwwlog "github.com/gowww/log"
 	"github.com/gregjones/httpcache/diskcache"
 	"github.com/koding/websocketproxy"
@@ -35,6 +36,7 @@ var (
 	DEOUSER        = os.Getenv("DEO_USERNAME")
 	UIPASSWORD     = os.Getenv("UI_PASSWORD")
 	UIUSER         = os.Getenv("UI_USERNAME")
+	DLNA           = common.DLNA
 	httpAddr       = common.HttpAddr
 	wsAddr         = common.WsAddr
 	currentVersion = ""
@@ -99,6 +101,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(ConfigResource{}.WebService())
 	restful.Add(FilesResource{}.WebService())
 	restful.Add(DeoVRResource{}.WebService())
+	restful.Add(SecurityResource{}.WebService())
 
 	config := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),
@@ -142,12 +145,16 @@ func StartServer(version, commit, branch, date string) {
 	}
 
 	// Imageproxy
+	r := mux.NewRouter()
 	p := imageproxy.NewProxy(nil, diskCache(filepath.Join(common.AppDir, "imageproxy")))
 	p.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
-	http.Handle("/img/", http.StripPrefix("/img", p))
+	r.PathPrefix("/img/").Handler(http.StripPrefix("/img", p))
+	r.SkipClean(true)
+
+	r.PathPrefix("/").Handler(http.DefaultServeMux)
 
 	// CORS
-	handler := cors.Default().Handler(http.DefaultServeMux)
+	handler := cors.Default().Handler(r)
 
 	// WAMP router
 	routerConfig := &router.Config{
@@ -195,7 +202,10 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("XBVR %v (build date %v) starting...", version, date)
 
 	// DMS
-	go StartDMS()
+	log.Info("DLNA Enabled: ", DLNA)
+	if DLNA {
+		go StartDMS()
+	}
 
 	// Cron
 	SetupCron()

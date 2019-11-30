@@ -15,33 +15,18 @@ import (
 
 func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("sexbabesvr", "SexBabesVR")
+	scraperID := "sexbabesvr"
+	siteID := "SexBabesVR"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("sexbabesvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("sexbabesvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("sexbabesvr.com")
+	siteCollector := createCollector("sexbabesvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "SexBabesVR"
-		sc.Site = "SexBabesVR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -132,9 +117,9 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	siteCollector.Visit("https://sexbabesvr.com/virtualreality/list")
 
 	if updateSite {
-		updateSiteLastUpdate("sexbabesvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("sexbabesvr", "SexBabesVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 

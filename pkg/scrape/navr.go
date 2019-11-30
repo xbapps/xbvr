@@ -15,33 +15,18 @@ import (
 
 func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("naughtyamericavr", "NaughtyAmerica VR")
+	scraperID := "naughtyamericavr"
+	siteID := "NaughtyAmerica VR"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.naughtyamerica.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.naughtyamerica.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.naughtyamerica.com")
+	siteCollector := createCollector("www.naughtyamerica.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "NaughtyAmerica"
-		sc.Site = "NaughtyAmerica VR"
+		sc.Site = siteID
 		sc.Title = ""
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
@@ -84,12 +69,12 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
 			base := strings.Split(strings.Replace(e.Attr("src"), "//", "", -1), "/")
 
-			base[8] = "vertical"
-			base[9] = "400x605c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
-
 			base[8] = "horizontal"
 			base[9] = "1252x708c.jpg"
+			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+
+			base[8] = "vertical"
+			base[9] = "400x605c.jpg"
 			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 		})
 
@@ -148,12 +133,12 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 	siteCollector.Visit("https://www.naughtyamerica.com/vr-porn")
 
 	if updateSite {
-		updateSiteLastUpdate("naughtyamericavr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("naughtyamericavr", "NaughtyAmerica VR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
 func init() {
-	registerScraper("naughtyamericavr", "NaughtyAmericaVR", "https://twivatar.glitch.me/naughtyamerica", NaughtyAmericaVR)
+	registerScraper("naughtyamericavr", "NaughtyAmerica VR", "https://twivatar.glitch.me/naughtyamerica", NaughtyAmericaVR)
 }

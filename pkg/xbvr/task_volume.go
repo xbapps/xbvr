@@ -148,9 +148,11 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				tlog.Errorf("Error running ffprobe", pth, err)
 			} else {
 				vs := ffdata.GetFirstVideoStream()
-				bitRate, _ := strconv.Atoi(vs.BitRate)
+				if vs.BitRate != "" {
+					bitRate, _ := strconv.Atoi(vs.BitRate)
+					fl.VideoBitRate = bitRate
+				}
 				fl.VideoAvgFrameRate = vs.AvgFrameRate
-				fl.VideoBitRate = bitRate
 				fl.VideoCodecName = vs.CodecName
 				fl.VideoWidth = vs.Width
 				fl.VideoHeight = vs.Height

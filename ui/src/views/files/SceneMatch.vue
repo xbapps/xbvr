@@ -14,11 +14,7 @@
               <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
             </div>
           </b-field>
-          <b-table
-            :data="data"
-            ref="table"
-            paginated
-            per-page="5">
+          <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5">
             <template slot-scope="props">
               <b-table-column field="cover_url" :label="$t('Image')" width="120">
                 <vue-load-image>
@@ -53,8 +49,8 @@
         </div>
       </section>
     </div>
-    <a class="prev" @click="prevFile" v-if="$store.getters['files/prevFile'](file) !== null">&#10094;</a>
-    <a class="next" @click="nextFile" v-if="$store.getters['files/nextFile'](file) !== null">&#10095;</a>
+    <a class="prev" @click="prevFile">&#10094;</a>
+    <a class="next" @click="nextFile">&#10095;</a>
   </div>
 </template>
 
@@ -69,6 +65,7 @@
     data() {
       return {
         data: [],
+        currentPage: 1,
         queryString: "",
         format, parseISO
       }
@@ -95,6 +92,7 @@
         }).json();
 
         this.data = resp.scenes;
+        this.currentPage = 1;
       },
       getImageURL(u) {
         if (u.startsWith("http")) {
@@ -116,8 +114,6 @@
         let data = this.$store.getters['files/nextFile'](this.file);
         if (data !== null) {
           this.nextFile();
-        } else {
-          this.$store.commit("overlay/hideMatch");
         }
       },
       nextFile() {
@@ -146,6 +142,8 @@
 
 <style scoped>
   .modal-card {
+    position: absolute;
+    top: 4em;
     width: 80%;
   }
 

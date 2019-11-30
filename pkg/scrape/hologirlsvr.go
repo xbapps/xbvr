@@ -13,33 +13,18 @@ import (
 
 func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("hologirlsvr", "HoloGirlsVR")
+	scraperID := "hologirlsvr"
+	siteID := "HoloGirlsVR"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.hologirlsvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.hologirlsvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.hologirlsvr.com")
+	siteCollector := createCollector("www.hologirlsvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "HoloFilm Productions"
-		sc.Site = "HoloGirlsVR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -105,9 +90,9 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	siteCollector.Visit("https://www.hologirlsvr.com/Scenes")
 
 	if updateSite {
-		updateSiteLastUpdate("hologirlsvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("hologirlsvr", "HoloGirlsVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
