@@ -161,18 +161,7 @@
           alwaysCaptureHotkeys: true,
           volumeStep: 0.1,
           seekStep: 5,
-          enableModifiersForNumbers: false,
-          customKeys: {
-            closeModal: {
-              key: function (event) {
-                return event.which === 27
-              },
-              handler: (player, options, event) => {
-                this.player.dispose();
-                this.$store.commit("overlay/hideMatch");
-              }
-            }
-          }
+          enableModifiersForNumbers: false
         });
         this.player.on("loadedmetadata", function () {
           vr.camera.position.set(-1, 0, -1);
