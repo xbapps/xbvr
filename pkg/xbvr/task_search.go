@@ -16,10 +16,14 @@ type Index struct {
 	bleve bleve.Index
 }
 
+type SceneIndexed struct {
+	Fulltext string `json:"fulltext"`
+}
+
 func NewIndex(name string) *Index {
 	i := new(Index)
 
-	path := filepath.Join(common.IndexDir, name)
+	path := filepath.Join(common.IndexDirV2, name)
 
 	mapping := bleve.NewIndexMapping()
 	idx, err := bleve.NewUsing(path, mapping, scorch.Name, scorch.Name, nil)
@@ -31,19 +35,12 @@ func NewIndex(name string) *Index {
 	return i
 }
 
-func (i *Index) GetScene(id string) (models.Scene, error) {
-	if _, err := i.bleve.Document(id); err != nil {
-		return models.Scene{}, err
+func (i *Index) Exist(id string) bool {
+	d, err := i.bleve.Document(id)
+	if err != nil || d == nil {
+		return false
 	}
-
-	data, err := i.bleve.GetInternal(i.formatInternalKey(id))
-	if err != nil {
-		return models.Scene{}, err
-	}
-
-	s := models.Scene{}
-	err = s.FromJSON(data)
-	return s, err
+	return true
 }
 
 func (i *Index) PutScene(scene models.Scene) error {
@@ -54,27 +51,14 @@ func (i *Index) PutScene(scene models.Scene) error {
 		castConcat = castConcat + " " + strings.Replace(c.Name, " ", "", -1)
 	}
 
-	scene.Fulltext = fmt.Sprintf("%v %v %v %v %v", scene.Title, scene.Site, scene.Synopsis, cast, castConcat)
-
-	databytes, err := scene.ToJSON()
-	if err != nil {
-		return err
+	si := SceneIndexed{
+		Fulltext: fmt.Sprintf("%v %v %v %v %v %v", scene.SceneID, scene.Title, scene.Site, scene.Synopsis, cast, castConcat),
 	}
-
-	if err = i.bleve.Index(scene.SceneID, scene); err != nil {
-		return err
-	}
-
-	if err = i.bleve.SetInternal(i.formatInternalKey(scene.SceneID), databytes); err != nil {
-		i.bleve.Delete(scene.SceneID)
+	if err := i.bleve.Index(scene.SceneID, si); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (i *Index) formatInternalKey(id string) []byte {
-	return []byte(fmt.Sprintf("raw:document:%s", id))
 }
 
 func SearchIndex() {
@@ -95,6 +79,8 @@ func SearchIndex() {
 		tx := db.Model(models.Scene{}).Preload("Cast").Preload("Tags")
 		tx.Count(&total)
 
+		tlog.Infof("Building search index...")
+
 		for {
 			tx.Offset(offset).Limit(100).Find(&scenes)
 			if len(scenes) == 0 {
@@ -102,16 +88,15 @@ func SearchIndex() {
 			}
 
 			for i := range scenes {
-				if _, err := idx.GetScene(scenes[i].SceneID); err != nil {
+				if !idx.Exist(scenes[i].SceneID) {
 					err := idx.PutScene(scenes[i])
 					if err != nil {
 						log.Error(err)
 					}
 				}
 				current = current + 1
-
-				tlog.Infof("Indexing scene %v of %v", current, total)
 			}
+			tlog.Infof("Indexed %v/%v scenes", current, total)
 
 			offset = offset + 100
 		}

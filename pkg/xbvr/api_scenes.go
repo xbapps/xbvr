@@ -3,12 +3,11 @@ package xbvr
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/blevesearch/bleve"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
-	"github.com/thoas/go-funk"
+	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -22,7 +21,22 @@ type RequestSceneCuepoint struct {
 	Name      string  `json:"name"`
 }
 
-type RequestSceneRating struct {
+type RequestSceneList struct {
+	Limit        optional.Int      `json:"limit"`
+	Offset       optional.Int      `json:"offset"`
+	IsAvailable  optional.Bool     `json:"isAvailable"`
+	IsAccessible optional.Bool     `json:"isAccessible"`
+	IsWatched    optional.Bool     `json:"isWatched"`
+	Lists        []optional.String `json:"lists"`
+	Sites        []optional.String `json:"sites"`
+	Tags         []optional.String `json:"tags"`
+	Cast         []optional.String `json:"cast"`
+	Cuepoint     []optional.String `json:"cuepoint"`
+	Released     optional.String   `json:"releaseMonth"`
+	Sort         optional.String   `json:"sort"`
+}
+
+type RequestSetSceneRating struct {
 	Rating float64 `json:"rating"`
 }
 
@@ -49,8 +63,16 @@ func (i SceneResource) WebService() *restful.WebService {
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.GET("/list").To(i.getScenes).
+	ws.Route(ws.GET("/filters").To(i.getFilters).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseGetFilters{}))
+
+	ws.Route(ws.POST("/list").To(i.getScenes).
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseGetScenes{}))
+
+	ws.Route(ws.GET("/search").To(i.searchSceneIndex).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
@@ -66,55 +88,10 @@ func (i SceneResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
-	ws.Route(ws.GET("/search").To(i.searchSceneIndex).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(ResponseGetScenes{}))
-
-	ws.Route(ws.GET("/filters/all").To(i.getFiltersAll).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(ResponseGetFilters{}))
-
-	ws.Route(ws.GET("/filters/state").To(i.getFiltersForState).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(ResponseGetFilters{}))
-
 	return ws
 }
 
-func (i SceneResource) getFiltersAll(req *restful.Request, resp *restful.Response) {
-	db, _ := models.GetDB()
-	defer db.Close()
-
-	var tags []models.Tag
-	db.Model(&models.Tag{}).Order("name").Find(&tags)
-
-	var outTags []string
-	for i := range tags {
-		outTags = append(outTags, tags[i].Name)
-	}
-
-	var actors []models.Actor
-	db.Model(&models.Actor{}).Order("name").Find(&actors)
-
-	var outCast []string
-	for i := range actors {
-		outCast = append(outCast, actors[i].Name)
-	}
-
-	var scenes []models.Scene
-	db.Model(&models.Scene{}).Order("site").Group("site").Find(&scenes)
-
-	var outSites []string
-	for i := range scenes {
-		if scenes[i].Site != "" {
-			outSites = append(outSites, scenes[i].Site)
-		}
-	}
-
-	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetFilters{Tags: outTags, Cast: outCast, Sites: outSites})
-}
-
-func (i SceneResource) getFiltersForState(req *restful.Request, resp *restful.Response) {
+func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -185,19 +162,17 @@ func (i SceneResource) getFiltersForState(req *restful.Request, resp *restful.Re
 }
 
 func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
-	var limit = 100
-	var offset = 0
+	var r RequestSceneList
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
 	var total = 0
 
-	q_limit, err := strconv.Atoi(req.QueryParameter("limit"))
-	if err == nil {
-		limit = q_limit
-	}
-
-	q_offset, err := strconv.Atoi(req.QueryParameter("offset"))
-	if err == nil {
-		offset = q_offset
-	}
+	limit := r.Limit.OrElse(100)
+	offset := r.Offset.OrElse(0)
 
 	db, _ := models.GetDB()
 	defer db.Close()
@@ -211,67 +186,73 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		Preload("History").
 		Preload("Cuepoints")
 
-	if req.QueryParameter("is_available") != "" {
-		q_is_available, err := strconv.ParseBool(req.QueryParameter("is_available"))
-		if err == nil {
-			tx = tx.Where("is_available = ?", q_is_available)
-		}
+	if r.IsAvailable.Present() {
+		tx = tx.Where("is_available = ?", r.IsAvailable.OrElse(true))
 	}
 
-	if req.QueryParameter("is_accessible") != "" {
-		q_is_accessible, err := strconv.ParseBool(req.QueryParameter("is_accessible"))
-		if err == nil {
-			tx = tx.Where("is_accessible = ?", q_is_accessible)
-		}
+	if r.IsAccessible.Present() {
+		tx = tx.Where("is_accessible = ?", r.IsAccessible.OrElse(true))
 	}
 
-	q_is_watched := req.QueryParameter("is_watched")
-	switch q_is_watched {
-	case "1":
-		tx = tx.Where("is_watched = ?", true)
-	case "0":
-		tx = tx.Where("is_watched = ?", false)
-	default:
+	if r.IsWatched.Present() {
+		tx = tx.Where("is_watched = ?", r.IsWatched.OrElse(true))
 	}
 
-	q_lists := req.QueryParameter("lists")
-	if q_lists != "" {
-		if funk.ContainsString(strings.Split(q_lists, ","), "watchlist") {
+	for _, i := range r.Lists {
+		if i.OrElse("") == "watchlist" {
 			tx = tx.Where("watchlist = ?", true)
 		}
-		if funk.ContainsString(strings.Split(q_lists, ","), "favourite") {
+		if i.OrElse("") == "favourite" {
 			tx = tx.Where("favourite = ?", true)
 		}
 	}
 
-	q_sites := req.QueryParameter("sites")
-	if q_sites != "" {
-		tx = tx.Where("site IN (?)", strings.Split(q_sites, ","))
+	var sites []string
+	for _, i := range r.Sites {
+		sites = append(sites, i.OrElse(""))
+	}
+	if len(sites) > 0 {
+		tx = tx.Where("site IN (?)", sites)
 	}
 
-	q_tags := req.QueryParameter("tags")
-	if q_tags != "" {
+	var tags []string
+	for _, i := range r.Tags {
+		tags = append(tags, i.OrElse(""))
+	}
+	if len(tags) > 0 {
 		tx = tx.
 			Joins("left join scene_tags on scene_tags.scene_id=scenes.id").
 			Joins("left join tags on tags.id=scene_tags.tag_id").
-			Where("tags.name IN (?)", strings.Split(q_tags, ","))
+			Where("tags.name IN (?)", tags)
 	}
 
-	q_cast := req.QueryParameter("cast")
-	if q_cast != "" {
+	var cast []string
+	for _, i := range r.Cast {
+		cast = append(cast, i.OrElse(""))
+	}
+	if len(cast) > 0 {
 		tx = tx.
 			Joins("left join scene_cast on scene_cast.scene_id=scenes.id").
 			Joins("left join actors on actors.id=scene_cast.actor_id").
-			Where("actors.name IN (?)", strings.Split(q_cast, ","))
+			Where("actors.name IN (?)", cast)
 	}
 
-	q_released := req.QueryParameter("released")
-	if q_released != "" {
-		tx = tx.Where("release_date_text LIKE ?", q_released+"%")
+	var cuepoint []string
+	for _, i := range r.Cuepoint {
+		cuepoint = append(cuepoint, i.OrElse(""))
+	}
+	if len(cuepoint) > 0 {
+		tx = tx.Joins("left join scene_cuepoints on scene_cuepoints.scene_id=scenes.id")
+		for _, i := range cuepoint {
+			tx = tx.Where("scene_cuepoints.name LIKE ?", "%"+i+"%")
+		}
 	}
 
-	q_sort := req.QueryParameter("sort")
-	switch q_sort {
+	if r.Released.Present() {
+		tx = tx.Where("release_date_text LIKE ?", r.Released.OrElse("")+"%")
+	}
+
+	switch r.Sort.OrElse("") {
 	case "added_desc":
 		tx = tx.Order("added_date desc")
 	case "added_asc":
@@ -292,6 +273,10 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 		tx = tx.
 			Where("last_opened > ?", "0001-01-01 00:00:00+00:00").
 			Order("last_opened desc")
+	case "scene_added_desc":
+		tx = tx.Order("created_at desc")
+	case "scene_updated_desc":
+		tx = tx.Order("updated_at desc")
 	case "random":
 		tx = tx.Order("random()")
 	default:
@@ -346,37 +331,8 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 	scene.Save()
 }
 
-func (i SceneResource) searchSceneDB(req *restful.Request, resp *restful.Response) {
-	q := "%" + req.QueryParameter("q") + "%"
-
-	db, _ := models.GetDB()
-	defer db.Close()
-
-	var scenes []models.Scene
-	db.Raw(`select scenes.*
-			from scenes
-					 left join scene_tags on scene_tags.scene_id = scenes.id
-					 left join tags on tags.id = scene_tags.tag_id
-					 left join scene_cast on scene_cast.scene_id = scenes.id
-					 left join actors on actors.id = scene_cast.actor_id
-			where tags.name like ?
-			   or actors.name like ?
-			   or scenes.title like ?
-			   or scenes.synopsis like ?
-			   or scenes.scene_id like ?
-			   or scenes.filenames_arr like ?
-               or scenes.site like ?
-			group by scenes.scene_id;`, q, q, q, q, q, q, q).Scan(&scenes)
-
-	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetScenes{Results: len(scenes), Scenes: scenes})
-}
-
 func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Response) {
 	q := req.QueryParameter("q")
-	q = strings.Replace(q, ".", " ", -1)
-	q = strings.Replace(q, "_", " ", -1)
-	q = strings.Replace(q, "+", " ", -1)
-	q = strings.Replace(q, "-", " ", -1)
 
 	db, _ := models.GetDB()
 	defer db.Close()
@@ -452,7 +408,7 @@ func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
 		return
 	}
 
-	var r RequestSceneRating
+	var r RequestSetSceneRating
 	err = req.ReadEntity(&r)
 	if err != nil {
 		log.Error(err)

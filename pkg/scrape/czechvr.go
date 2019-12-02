@@ -14,28 +14,13 @@ import (
 
 func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("czechvr", "CzechVR")
+	scraperID := "czechvr"
+	siteID := "CzechVR"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.czechvrnetwork.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-		colly.MaxDepth(5),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.czechvrnetwork.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.czechvrnetwork.com")
+	siteCollector := createCollector("www.czechvrnetwork.com")
+	siteCollector.MaxDepth = 5
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -149,12 +134,12 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos?next=1")
 
 	if updateSite {
-		updateSiteLastUpdate("czechvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("czechvr", "CzechVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
 func init() {
-	registerScraper("czechvr", "Czech VR (all sites)", CzechVR)
+	registerScraper("czechvr", "Czech VR (all sites)", "https://twivatar.glitch.me/czechvr", CzechVR)
 }

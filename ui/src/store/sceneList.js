@@ -1,4 +1,28 @@
 import ky from "ky";
+import Vue from "vue";
+
+function defaultValue(v, d) {
+  if (v === undefined) {
+    return d;
+  }
+  return v;
+}
+
+const defaultFilterState = {
+  dlState: "available",
+  cardSize: "1",
+
+  lists: [],
+  isAvailable: true,
+  isAccessible: true,
+  isWatched: null,
+  releaseMonth: "",
+  cast: [],
+  sites: [],
+  tags: [],
+  cuepoint: [],
+  sort: "release_desc",
+};
 
 const state = {
   items: [],
@@ -11,19 +35,30 @@ const state = {
     sites: [],
     tags: [],
   },
-  filters: {
-    dlState: "available",
-    lists: [],
-    isAvailable: "1",
-    isAccessible: "1",
-    isWatched: "",
-    cardSize: "1",
-    releaseMonth: "",
-    cast: [],
-    sites: [],
-    tags: [],
-    sort: "release_desc",
-  }
+  filters: defaultFilterState
+};
+
+const getters = {
+  filterQueryParams: (state) => {
+    const st = Object.assign({}, state.filters);
+    delete st.cardSize;
+
+    return Buffer.from(JSON.stringify(st)).toString("base64");
+  },
+  prevScene: (state) => (currentScene) => {
+    let i = state.items.findIndex(item => item.scene_id == currentScene.scene_id);
+    if (i === 0) {
+      return null;
+    }
+    return state.items[i - 1];
+  },
+  nextScene: (state) => (currentScene) => {
+    let i = state.items.findIndex(item => item.scene_id == currentScene.scene_id);
+    if (i === state.items.length - 1) {
+      return null;
+    }
+    return state.items[i + 1];
+  },
 };
 
 const mutations = {
@@ -47,42 +82,43 @@ const mutations = {
       }
     });
   },
+  updateScene(state, payload) {
+    state.items = state.items.map(obj => {
+      if (obj.scene_id === payload.scene_id) {
+        obj = payload;
+      }
+      return obj;
+    })
+  },
+  stateFromQuery(state, payload) {
+    try {
+      const obj = JSON.parse(Buffer.from(payload.q, "base64").toString("utf-8"));
+      for (let [k, v] of Object.entries(obj)) {
+        Vue.set(state.filters, k, v)
+      }
+    } catch (err) {
+    }
+  }
 };
 
 const actions = {
   async filters({state}) {
-    state.filterOpts = await ky
-      .get(`/api/scene/filters/state`, {
-        searchParams: {
-          is_available: state.filters.isAvailable,
-          is_accessible: state.filters.isAccessible,
-        }
-      }).json();
+    state.filterOpts = await ky.get(`/api/scene/filters`).json();
 
     // Reverse list of release months for display purposes
     state.filterOpts.release_month = state.filterOpts.release_month.reverse()
   },
-  async load({state}, params) {
+  async load({state, getters}, params) {
     let iOffset = params.offset || 0;
 
     state.isLoading = true;
 
+    let q = Object.assign({}, state.filters);
+    q.offset = iOffset;
+    q.limit = state.limit;
+
     let data = await ky
-      .get(`/api/scene/list`, {
-        searchParams: {
-          offset: iOffset,
-          limit: state.limit,
-          lists: state.filters.lists.join(","),
-          is_available: state.filters.isAvailable,
-          is_accessible: state.filters.isAccessible,
-          is_watched: state.filters.isWatched,
-          tags: state.filters.tags.join(","),
-          cast: state.filters.cast.join(","),
-          sites: state.filters.sites.join(","),
-          released: state.filters.releaseMonth,
-          sort: state.filters.sort,
-        }
-      })
+      .post(`/api/scene/list`, {json: q})
       .json();
 
     state.isLoading = false;
@@ -100,6 +136,7 @@ const actions = {
 export default {
   namespaced: true,
   state,
+  getters,
   mutations,
   actions,
 }

@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/gammazero/nexus/v3/router"
 	"github.com/gammazero/nexus/v3/wamp"
 	"github.com/go-openapi/spec"
+	"github.com/gorilla/mux"
 	wwwlog "github.com/gowww/log"
 	"github.com/gregjones/httpcache/diskcache"
 	"github.com/koding/websocketproxy"
@@ -21,12 +21,14 @@ import (
 	"github.com/rs/cors"
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
 	"willnorris.com/go/imageproxy"
 )
 
 var (
 	DEBUG          = common.DEBUG
+	DLNA           = common.DLNA
 	httpAddr       = common.HttpAddr
 	wsAddr         = common.WsAddr
 	currentVersion = ""
@@ -34,6 +36,8 @@ var (
 
 func StartServer(version, commit, branch, date string) {
 	currentVersion = version
+
+	migrations.Migrate()
 
 	// Remove old locks
 	models.RemoveLock("index")
@@ -59,6 +63,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(ConfigResource{}.WebService())
 	restful.Add(FilesResource{}.WebService())
 	restful.Add(DeoVRResource{}.WebService())
+	restful.Add(SecurityResource{}.WebService())
 
 	config := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),
@@ -102,12 +107,16 @@ func StartServer(version, commit, branch, date string) {
 	}
 
 	// Imageproxy
+	r := mux.NewRouter()
 	p := imageproxy.NewProxy(nil, diskCache(filepath.Join(common.AppDir, "imageproxy")))
 	p.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
-	http.Handle("/img/", http.StripPrefix("/img", p))
+	r.PathPrefix("/img/").Handler(http.StripPrefix("/img", p))
+	r.SkipClean(true)
+
+	r.PathPrefix("/").Handler(http.DefaultServeMux)
 
 	// CORS
-	handler := cors.Default().Handler(http.DefaultServeMux)
+	handler := cors.Default().Handler(r)
 
 	// WAMP router
 	routerConfig := &router.Config{
@@ -154,18 +163,22 @@ func StartServer(version, commit, branch, date string) {
 
 	log.Infof("XBVR %v (build date %v) starting...", version, date)
 
-	if os.Getenv("XBVR_THREADING") != "" {
-		log.Infof("Scraper threading mode enabled")
+	// DMS
+	log.Info("DLNA Enabled: ", DLNA)
+	if DLNA {
+		go StartDMS()
 	}
 
-	// DMS
-	go StartDMS()
+	// Cron
+	SetupCron()
 
 	addrs, _ := net.InterfaceAddrs()
 	ips := []string{}
 	for _, addr := range addrs {
 		ip, _ := addr.(*net.IPNet)
-		ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+		if ip.IP.To4() != nil {
+			ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Database file stored at %s", common.AppDir)

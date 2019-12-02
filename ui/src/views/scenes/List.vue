@@ -9,7 +9,7 @@
       <div class="column">
         <div class="is-pulled-right">
           <b-field>
-            <span class="list-header-label">Card size</span>
+            <span class="list-header-label">{{$t('Card size')}}</span>
             <b-radio-button v-model="cardSize" native-value="1" size="is-small">
               S
             </b-radio-button>
@@ -32,7 +32,7 @@
     </div>
 
     <div class="column is-full" v-if="items.length < total">
-      <a class="button is-fullwidth" v-on:click="loadMore()">Load more</a>
+      <a class="button is-fullwidth" v-on:click="loadMore()">{{$t('Load more')}}</a>
     </div>
   </div>
 </template>
@@ -43,9 +43,6 @@
   export default {
     name: "List",
     components: {SceneCard},
-    mounted() {
-      this.$store.dispatch("sceneList/load", {offset: 0});
-    },
     computed: {
       cardSize: {
         get() {

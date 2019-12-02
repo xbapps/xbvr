@@ -1,6 +1,7 @@
 package xbvr
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"time"
@@ -158,38 +159,51 @@ func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
 	defer db.Close()
 
 	f := models.File{}
-	err = db.First(&f, id).Error
+	err = db.Preload("Volume").First(&f, id).Error
 
-	// Track current session
-	if f.SceneID != 0 && doNotTrack == "" {
-		if lastSessionSceneID != f.SceneID {
-			if lastSessionID != 0 {
+	switch f.Volume.Type {
+	case "local":
+		// Track current session
+		if f.SceneID != 0 && doNotTrack == "" {
+			if lastSessionSceneID != f.SceneID {
+				if lastSessionID != 0 {
+					watchSessionFlush()
+				}
+
+				lastSessionSceneID = f.SceneID
+				lastSessionStart = time.Now()
+				newWatchSession()
+			}
+		}
+
+		if err == gorm.ErrRecordNotFound {
+			resp.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		ctx := req.Request.Context()
+		http.ServeFile(resp.ResponseWriter, req.Request, f.GetPath())
+		select {
+		case <-ctx.Done():
+			lastSessionEnd = time.Now()
+			if doNotTrack == "" {
 				watchSessionFlush()
 			}
-
-			lastSessionSceneID = f.SceneID
-			lastSessionStart = time.Now()
-			newWatchSession()
+			return
+		default:
 		}
-	}
-
-	if err == gorm.ErrRecordNotFound {
-		resp.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	ctx := req.Request.Context()
-	http.ServeFile(resp.ResponseWriter, req.Request, f.GetPath())
-	select {
-	case <-ctx.Done():
-		lastSessionEnd = time.Now()
-		if doNotTrack == "" {
-			watchSessionFlush()
+	case "putio":
+		id, err := strconv.ParseInt(f.Path, 10, 64)
+		if err != nil {
+			return
 		}
-		return
-	default:
+		client := f.Volume.GetPutIOClient()
+		url, err := client.Files.URL(context.Background(), id, false)
+		if err != nil {
+			return
+		}
+		http.Redirect(resp.ResponseWriter, req.Request, url, 302)
 	}
-
 }
 
 func newWatchSession() {
@@ -228,7 +242,8 @@ func watchSessionFlush() {
 }
 
 func checkForDeadSession() {
-	if time.Since(lastSessionEnd).Seconds() > 60 {
+	if time.Since(lastSessionEnd).Seconds() > 60 && lastSessionSceneID != 0 && lastSessionID != 0 {
+		watchSessionFlush()
 		lastSessionID = 0
 		lastSessionSceneID = 0
 	}

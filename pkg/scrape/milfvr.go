@@ -15,33 +15,18 @@ import (
 
 func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("milfvr", "MilfVR")
+	scraperID := "milfvr"
+	siteID := "MilfVR"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.milfvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.milfvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.milfvr.com")
+	siteCollector := createCollector("www.milfvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Wankz"
-		sc.Site = "MilfVR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -123,12 +108,12 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.Visit("https://www.milfvr.com/videos")
 
 	if updateSite {
-		updateSiteLastUpdate("milfvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("milfvr", "MilfVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
 func init() {
-	registerScraper("milfvr", "MilfVR", MilfVR)
+	registerScraper("milfvr", "MilfVR", "https://twivatar.glitch.me/milfvr", MilfVR)
 }

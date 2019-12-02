@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
@@ -16,78 +15,18 @@ import (
 
 func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("realjamvr", "RealJam VR")
-	const maxRetries = 15
+	scraperID := "realjamvr"
+	siteID := "RealJam VR"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("realjamvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("realjamvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		attempt := r.Ctx.GetAny("attempt")
-
-		if attempt == nil {
-			r.Ctx.Put("attempt", 1)
-		}
-
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		attempt := r.Ctx.GetAny("attempt")
-
-		if attempt == nil {
-			r.Ctx.Put("attempt", 1)
-		}
-
-		log.Println("visiting", r.URL.String())
-	})
-
-	siteCollector.OnError(func(r *colly.Response, err error) {
-		attempt := r.Ctx.GetAny("attempt").(int)
-
-		if r.StatusCode == 429 {
-			log.Println("Error:", r.StatusCode, err)
-
-			if attempt <= maxRetries {
-				unCache(r.Request.URL.String(), siteCollector.CacheDir)
-				log.Println("Waiting 2 seconds before next request...")
-				r.Ctx.Put("attempt", attempt+1)
-				time.Sleep(2 * time.Second)
-				r.Request.Retry()
-			}
-		}
-	})
-
-	sceneCollector.OnError(func(r *colly.Response, err error) {
-		attempt := r.Ctx.GetAny("attempt").(int)
-
-		if r.StatusCode == 429 {
-			log.Println("Error:", r.StatusCode, err)
-
-			if attempt <= maxRetries {
-				unCache(r.Request.URL.String(), sceneCollector.CacheDir)
-				log.Println("Waiting 2 seconds before next request...")
-				r.Ctx.Put("attempt", attempt+1)
-				time.Sleep(2 * time.Second)
-				r.Request.Retry()
-			}
-		}
-	})
+	sceneCollector := createCollector("realjamvr.com")
+	siteCollector := createCollector("realjamvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Real Jam Network"
-		sc.Site = "RealJam VR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -158,12 +97,12 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	siteCollector.Visit("https://realjamvr.com/virtualreality/list")
 
 	if updateSite {
-		updateSiteLastUpdate("realjamvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("realjamvr", "RealJam VR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
 func init() {
-	registerScraper("realjamvr", "RealJam VR", RealJamVR)
+	registerScraper("realjamvr", "RealJam VR", "https://twivatar.glitch.me/realjamvr", RealJamVR)
 }

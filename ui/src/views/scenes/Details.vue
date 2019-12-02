@@ -4,6 +4,11 @@
       @keyup.esc="close"
       @keydown.arrowLeft="playerStepBack"
       @keydown.arrowRight="playerStepForward"
+      @keydown.o="prevScene"
+      @keydown.p="nextScene"
+      @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
+      @keydown.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+      @keydown.g="toggleGallery"
     />
 
     <div class="modal-background"></div>
@@ -13,11 +18,9 @@
         <div class="columns">
 
           <div class="column">
-            <vue-gallery :images="galleryImages" :index="index" @close="index = null"
-                         :options="galleryOpts"></vue-gallery>
             <video ref="player"
                    width="640" height="640" class="video-js vjs-default-skin"
-                   controls playsinline :data-setup="videojsData">
+                   controls playsinline>
               <source :src="sourceUrl" type="video/mp4">
             </video>
           </div>
@@ -49,8 +52,10 @@
 
             <div class="block-tags block">
               <b-taglist>
-                <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])' class="tag is-warning is-small">{{c.name}}</a>
-                <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])' class="tag is-info is-small">{{tag.name}} ({{tag.count}}</a>
+                <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])'
+                   class="tag is-warning is-small">{{c.name}} ({{c.count}})</a>
+                <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])'
+                   class="tag is-info is-small">{{tag.name}} ({{tag.count}})</a>
               </b-taglist>
             </div>
 
@@ -59,6 +64,8 @@
 
                 <b-tab-item label="Gallery">
                   <div class="block-tab-content block">
+                    <vue-gallery :images="galleryImages" :index="index" @close="index = null"
+                                 :options="galleryOpts"></vue-gallery>
                     <div class="block is-pulled-left" v-for="(i, idx) in images" :key="idx">
                       <vue-load-image>
                         <img slot="image" :src="getImageURL(i.url, '120x')" @click="index = idx"/>
@@ -143,6 +150,10 @@
     </div>
     <button class="modal-close is-large" aria-label="close"
             @click="close()"></button>
+    <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"
+       title="Keyboard shortcut: O">&#10094;</a>
+    <a class="next" @click="nextScene" v-if="$store.getters['sceneList/nextScene'](item) !== null"
+       title="Keyboard shortcut: P">&#10095;</a>
   </div>
 </template>
 
@@ -179,26 +190,37 @@
       item() {
         return this.$store.state.overlay.details.scene;
       },
-      videojsData() {
-        return JSON.stringify({
-          poster: this.getImageURL(this.item.cover_url, "")
-        });
+      // Properties for VideoJS player
+      sourceUrl() {
+        if (this.$store.state.overlay.details.scene.is_available) {
+          return "/api/dms/file/" + this.$store.state.overlay.details.scene.file[0].id + "?dnt=1";
+        }
+        return "";
       },
+      // Properties for gallery
       images() {
         return JSON.parse(this.item.images);
       },
+      galleryImages() {
+        return this.images.map((e) => {
+          return "/img/" + e.url.replace("://", ":/");
+        })
+      },
+      // Tab: cuepoints
       sortedCuepoints() {
         if (this.item.cuepoints !== null) {
           return this.item.cuepoints.sort((a, b) => (a.time_start > b.time_start) ? 1 : -1);
         }
         return [];
       },
+      // Tab: files
       fileCount() {
         if (this.item.file !== null) {
           return this.item.file.length;
         }
         return 0;
       },
+      // Tab: history
       historySessionsCount() {
         if (this.item.history !== null) {
           return this.item.history.length;
@@ -215,60 +237,68 @@
         }
         return 0;
       },
-      galleryImages() {
-        return this.images.map((e) => {
-          return "/img/" + e.url.replace("://", ":/");
-        })
-      },
-      sourceUrl() {
-        if (this.$store.state.overlay.details.scene.is_available) {
-          return "/api/dms/file/" + this.$store.state.overlay.details.scene.file[0].id + "?dnt=1";
-        }
-        return "";
-      }
     },
     mounted() {
-      this.player = videojs(this.$refs.player);
-      let vr = this.player.vr({
-        projection: '360',
-        forceCardboard: false
-      });
-
-      this.player.hotkeys({
-        alwaysCaptureHotkeys: true,
-        volumeStep: 0.1,
-        seekStep: 5,
-        enableModifiersForNumbers: false,
-        customKeys: {
-          closeModal: {
-            key: function (event) {
-              return event.which === 27
-            },
-            handler: (player, options, event) => {
-              this.player.dispose();
-              this.$store.commit("overlay/hideDetails");
-            }
-          }
-        }
-      });
-
-      this.player.on("loadedmetadata", function () {
-        vr.camera.position.set(-1, 0, -1);
-      });
+      this.setupPlayer();
     },
     methods: {
+      setupPlayer() {
+        this.player = videojs(this.$refs.player);
+
+        this.player.hotkeys({
+          alwaysCaptureHotkeys: true,
+          volumeStep: 0.1,
+          seekStep: 5,
+          enableModifiersForNumbers: false,
+          customKeys: {
+            closeModal: {
+              key: function (event) {
+                return event.which === 27
+              },
+              handler: (player, options, event) => {
+                this.player.dispose();
+                this.$store.commit("overlay/hideDetails");
+              }
+            }
+          }
+        });
+
+        this.updatePlayer();
+      },
+      updatePlayer() {
+        this.index = null;
+        this.player.reset();
+
+        let vr = this.player.vr({
+          projection: '360',
+          forceCardboard: false
+        });
+
+        this.player.on("loadedmetadata", function () {
+          vr.camera.position.set(-1, 0, -1);
+        });
+
+        this.player.src({src: this.sourceUrl, type: "video/mp4"});
+        this.player.poster(this.getImageURL(this.item.cover_url, ""));
+      },
       showCastScenes(actor) {
         this.$store.state.sceneList.filters.cast = actor;
         this.$store.state.sceneList.filters.sites = [];
         this.$store.state.sceneList.filters.tags = [];
-        this.$store.dispatch("sceneList/load", {offset: 0});
+        this.$router.push({
+          name: 'scenes',
+          query: {q: this.$store.getters['sceneList/filterQueryParams']}
+        });
         this.close();
       },
       showTagScenes(tag) {
         this.$store.state.sceneList.filters.cast = [];
         this.$store.state.sceneList.filters.sites = [];
         this.$store.state.sceneList.filters.tags = tag;
-        this.$store.dispatch("sceneList/load", {offset: 0});
+        this.$router.push({
+          name: 'scenes',
+          query: {q: this.$store.getters['sceneList/filterQueryParams']}
+        });
         this.close();
       },
       playFile(file) {
@@ -281,7 +311,7 @@
           message: `You're about to remove file <strong>${file.filename}</strong> from <strong>disk</strong>.`,
           type: 'is-danger',
           hasIcon: true,
-          onConfirm: function () {
+          onConfirm: () => {
             ky.delete(`/api/files/file/${file.id}`).json().then(data => {
               this.$store.commit("overlay/showDetails", {scene: data});
             });
@@ -328,6 +358,24 @@
       },
       setRating(val) {
         ky.post(`/api/scene/rate/${this.item.id}`, {json: {rating: val}});
+
+        let updatedScene = Object.assign({}, this.item);
+        updatedScene.star_rating = val;
+        this.$store.commit('sceneList/updateScene', updatedScene);
+      },
+      nextScene() {
+        let data = this.$store.getters['sceneList/nextScene'](this.item);
+        if (data !== null) {
+          this.$store.commit("overlay/showDetails", {scene: data});
+          this.updatePlayer();
+        }
+      },
+      prevScene() {
+        let data = this.$store.getters['sceneList/prevScene'](this.item);
+        if (data !== null) {
+          this.$store.commit("overlay/showDetails", {scene: data});
+          this.updatePlayer();
+        }
       },
       playerStepBack() {
         let wasPlaying = !this.player.paused();
@@ -356,6 +404,13 @@
         this.player.currentTime(seekTime);
         if (wasPlaying) {
           this.player.play();
+        }
+      },
+      toggleGallery() {
+        if (this.index === null) {
+          this.index = 1;
+        } else {
+          this.index = null;
         }
       },
       format,
@@ -397,5 +452,30 @@
   }
 
   .block-opts {
+  }
+
+  .prev, .next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    width: auto;
+    padding: 16px;
+    margin-top: -50px;
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+    border-radius: 0 3px 3px 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .next {
+    right: 0;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .prev {
+    left: 0;
+    border-radius: 3px 0 0 3px;
   }
 </style>

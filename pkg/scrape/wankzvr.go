@@ -14,33 +14,18 @@ import (
 
 func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	logScrapeStart("wankzvr", "WankzVR")
+	scraperID := "wankzvr"
+	siteID := "WankzVR"
+	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("www.wankzvr.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("www.wankzvr.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("www.wankzvr.com")
+	siteCollector := createCollector("www.wankzvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Wankz"
-		sc.Site = "WankzVR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -125,12 +110,12 @@ func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	siteCollector.Visit("https://www.wankzvr.com/videos")
 
 	if updateSite {
-		updateSiteLastUpdate("wankzvr")
+		updateSiteLastUpdate(scraperID)
 	}
-	logScrapeFinished("wankzvr", "WankzVR")
+	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
 func init() {
-	registerScraper("wankzvr", "WankzVR", WankzVR)
+	registerScraper("wankzvr", "WankzVR", "https://twivatar.glitch.me/wankzvr", WankzVR)
 }

@@ -22,9 +22,14 @@ func (t *Tag) Save() error {
 }
 
 func ConvertTag(t string) string {
-	t = strings.ToLower(t)
+	t = strings.TrimSpace(strings.ToLower(t))
 
-	if funk.Contains([]string{"180", "60fps", "60 fps", "5k", "5k+", "big dick", "big cocks", "axaxqxrrysrwqua", "girl-boy", "virtual reality", "vr porn"}, t) {
+	if funk.Contains([]string{"180", "60fps", "60 fps", "5k", "5k+", "big dick", "big cocks",
+		"axaxqxrrysrwqua", "girl-boy", "virtual reality", "sex", "new",
+		"virtual reality porn", "vr porn", "180 vr porn", "xxxsex vr",
+		"xxx vr porn", "VRconk", "sex onbed", "pornstars", "vr", "vrp",
+		"bg", "coming soon", "vr 1080p porn",
+	}, t) {
 		return ""
 	}
 
@@ -48,7 +53,7 @@ func ConvertTag(t string) string {
 		return "athletic body"
 	}
 
-	if funk.Contains([]string{"threesome bgg", "bgg", "girl-girl-boy"}, t) {
+	if funk.Contains([]string{"threesome bgg", "bgg", "girl-girl-boy", "ffm threesome"}, t) {
 		return "threesome ffm"
 	}
 
@@ -56,11 +61,11 @@ func ConvertTag(t string) string {
 		return "threesome fmm"
 	}
 
-	if funk.Contains([]string{"big boobs"}, t) {
+	if funk.Contains([]string{"big boobs", "big tits porn"}, t) {
 		return "big tits"
 	}
 
-	if funk.Contains([]string{"blow job"}, t) {
+	if funk.Contains([]string{"blow job", "blowjobs"}, t) {
 		return "blowjob"
 	}
 
@@ -112,7 +117,7 @@ func ConvertTag(t string) string {
 		return "girlfriend"
 	}
 
-	if funk.Contains([]string{"hand job"}, t) {
+	if funk.Contains([]string{"hand job", "hand jobs", "handjobs"}, t) {
 		return "handjob"
 	}
 
@@ -120,7 +125,7 @@ func ConvertTag(t string) string {
 		return "latina"
 	}
 
-	if funk.Contains([]string{"lesbian love", "lesbians"}, t) {
+	if funk.Contains([]string{"lesbian love", "lesbians", "girlgirl", "girl-on-girl"}, t) {
 		return "lesbian"
 	}
 
@@ -148,7 +153,7 @@ func ConvertTag(t string) string {
 		return "squirting"
 	}
 
-	if funk.Contains([]string{"teens"}, t) {
+	if funk.Contains([]string{"teens", "18"}, t) {
 		return "teen"
 	}
 
@@ -196,11 +201,11 @@ func ConvertTag(t string) string {
 		return "no tattoos"
 	}
 
-	if funk.Contains([]string{"tattoo", "tatoos"}, t) {
+	if funk.Contains([]string{"tattoo", "tatoos", "tattoo(s)"}, t) {
 		return "tattoos"
 	}
 
-	if funk.Contains([]string{"piercing", "pirced pussy"}, t) {
+	if funk.Contains([]string{"piercing", "pirced pussy", "pierced navel"}, t) {
 		return "piercings"
 	}
 
@@ -266,6 +271,22 @@ func ConvertTag(t string) string {
 
 	if funk.Contains([]string{"double penetration"}, t) {
 		return "dp"
+	}
+
+	if funk.Contains([]string{"pov fucking", "pov vr"}, t) {
+		return "pov"
+	}
+
+	if funk.Contains([]string{"xxx parody", "xxx parody vr porn"}, t) {
+		return "parody"
+	}
+
+	if funk.Contains([]string{"fingering"}, t) {
+		return "masturbation"
+	}
+
+	if funk.Contains([]string{"solo models"}, t) {
+		return "solo"
 	}
 
 	return t

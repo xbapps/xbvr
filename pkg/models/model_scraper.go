@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"sync"
 )
 
@@ -9,9 +10,10 @@ var scrapers []Scraper
 type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene) error
 
 type Scraper struct {
-	ID     string
-	Name   string
-	Scrape ScraperFunc
+	ID        string
+	Name      string
+	AvatarURL string
+	Scrape    ScraperFunc
 }
 
 type ScrapedScene struct {
@@ -32,14 +34,25 @@ type ScrapedScene struct {
 	HomepageURL string   `json:"homepage_url"`
 }
 
+func (s *ScrapedScene) ToJSON() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s *ScrapedScene) Log() error {
+	j, err := json.MarshalIndent(s, "", "  ")
+	log.Debugf("\n%v", string(j))
+	return err
+}
+
 func GetScrapers() []Scraper {
 	return scrapers
 }
 
-func RegisterScraper(id string, name string, f ScraperFunc) {
+func RegisterScraper(id string, name string, avatarURL string, f ScraperFunc) {
 	s := Scraper{}
 	s.ID = id
 	s.Name = name
+	s.AvatarURL = avatarURL
 	s.Scrape = f
 	scrapers = append(scrapers, s)
 }

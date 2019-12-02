@@ -16,25 +16,10 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	siteCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
-		colly.CacheDir(siteCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	sceneCollector := colly.NewCollector(
-		colly.AllowedDomains("vrbangers.com", "vrbtrans.com"),
-		colly.CacheDir(sceneCacheDir),
-		colly.UserAgent(userAgent),
-	)
-
-	siteCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
-
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		log.Println("visiting", r.URL.String())
-	})
+	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com")
+	siteCollector := createCollector("vrbangers.com", "vrbtrans.com")
+	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com")
+	ajaxCollector.CacheDir = ""
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -44,44 +29,43 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
-		e.ForEach(`link[rel=shortlink]`, func(id int, e *colly.HTMLElement) {
-			tmp := strings.Split(e.Attr("href"), "?p=")
-			sc.SiteID = tmp[1]
-			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
-		})
+		sc.SiteID = strings.Split(e.ChildAttr(`link[rel=shortlink]`, "href"), "?p=")[1]
+		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Title
-		e.ForEach(`div.video-info-title h1 span`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				sc.Title = e.Text
-			}
-		})
+		sc.Title = strings.TrimSpace(e.ChildText(`h1.video-content__title`))
 
-		// Date
-		e.ForEach(`p[itemprop=datePublished]`, func(id int, e *colly.HTMLElement) {
-			tmpDate, _ := goment.New(e.Text, "DD MMMM, YYYY")
-			sc.Released = tmpDate.Format("YYYY-MM-DD")
-		})
-
-		// Duration
-		e.ForEach(`p.minutes`, func(id int, e *colly.HTMLElement) {
-			minutes := strings.Split(e.Text, ":")[0]
-			tmpDuration, err := strconv.Atoi(strings.TrimSpace(minutes))
-			if err == nil {
-				sc.Duration = tmpDuration
+		// Date & Duration
+		e.ForEach(`div.section__item-title-download-space`, func(id int, e *colly.HTMLElement) {
+			parts := strings.Split(e.Text, ":")
+			if len(parts) > 1 {
+				switch strings.TrimSpace(parts[0]) {
+				case "Release date":
+					tmpDate, _ := goment.New(strings.TrimSpace(parts[1]), "MMM D, YYYY")
+					sc.Released = tmpDate.Format("YYYY-MM-DD")
+				case "Duration":
+					durationParts := strings.Split(strings.TrimSpace(parts[1]), " ")
+					tmpDuration, err := strconv.Atoi(durationParts[0])
+					if err == nil {
+						sc.Duration = tmpDuration
+					}
+				}
 			}
+
 		})
 
 		// Filenames
 		e.ForEach(`dl8-video source`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				basePath := strings.Split(strings.Replace(e.Attr("src"), "//", "", -1), "/")
-				baseName := strings.Replace(basePath[1], "vrb_", "", -1)
+				baseName := basePath[1]
+				baseName = strings.Replace(baseName, "vrb_", "VRBANGERS_", -1)
+				baseName = strings.Replace(baseName, "vrbtrans_", "VRBTRANS_", -1)
 
 				filenames := []string{"6K_180x180_3dh", "5K_180x180_3dh", "4K_180x180_3dh", "HD_180x180_3dh", "HQ_180x180_3dh", "PSVRHQ_180x180_3dh", "UHD_180x180_3dh", "PSVRHQ_180_sbs", "PSVR_mono", "HQ_mono360", "HD_mono360", "PSVRHQ_ou", "UHD_3dv", "HD_3dv", "HQ_3dv"}
 
 				for i := range filenames {
-					filenames[i] = "VRBANGERS_" + baseName + "_" + filenames[i] + ".mp4"
+					filenames[i] = baseName + "_" + filenames[i] + ".mp4"
 				}
 
 				sc.Filenames = filenames
@@ -89,49 +73,47 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		})
 
 		// Cover URLs
-		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("poster")))
-		})
-
-		e.ForEach(`img.girls_image`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("src")))
-		})
+		sc.Covers = e.ChildAttrs(`dl8-video`, "poster")
 
 		// Gallery
-		e.ForEach(`div#single-video-gallery-free a,div.old-gallery a`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
-		})
+		sc.Gallery = e.ChildAttrs(`div.gallery-top a.fancybox.image`, "href")
 
 		// Synopsis
-		e.ForEach(`div.mainContent`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text)
-		})
+		sc.Synopsis = strings.TrimSpace(e.ChildText(`div.video-content__description div.less-text`))
 
 		// Tags
-		e.ForEach(`div.video-tags a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.video-item-info-tags a`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, e.Text)
 		})
 
 		// Cast
-		e.ForEach(`div.video-info-title h1 span a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.video-item-info--starring-download a`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(strings.Replace(e.Text, ",", "", -1)))
 		})
 
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`div.wp-pagenavi a.page`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		siteCollector.Visit(pageURL)
-	})
+	siteCollector.OnHTML(`div.video-item-info--title a`, func(e *colly.HTMLElement) {
+		// Some index pages have links to german language scene pages:
+		// https://vrbangers.com/video/sensual-seduction/?lang=de
+		// This will strip out the query params... gross
+		url := strings.Split(e.Attr("href"), "?")[0]
+		sceneURL := e.Request.AbsoluteURL(url)
 
-	siteCollector.OnHTML(`div.video-page-block a.model-foto`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-
-		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
+	})
+
+	siteCollector.OnHTML(`.pagination a`, func(e *colly.HTMLElement) {
+		// Some index pages have links to german language scene pages:
+		// https://vrbangers.com/video/sensual-seduction/?lang=de
+		// This will strip out the query params... gross
+		url := strings.Split(e.Attr("href"), "?")[0]
+		pageURL := e.Request.AbsoluteURL(url)
+
+		siteCollector.Visit(pageURL)
 	})
 
 	siteCollector.Visit(URL)
@@ -151,6 +133,6 @@ func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("vrbangers", "VRBangers", VRBangers)
-	registerScraper("vrbtrans", "VRBTrans", VRBTrans)
+	registerScraper("vrbangers", "VRBangers", "https://twivatar.glitch.me/vrbangers", VRBangers)
+	registerScraper("vrbtrans", "VRBTrans", "https://twivatar.glitch.me/vrbtrans", VRBTrans)
 }
