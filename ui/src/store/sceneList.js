@@ -47,7 +47,7 @@ const getters = {
   },
   prevScene: (state) => (currentScene) => {
     let i = state.items.findIndex(item => item.scene_id == currentScene.scene_id);
-    if (i === 0) {
+    if (i < 1) {
       return null;
     }
     return state.items[i - 1];
