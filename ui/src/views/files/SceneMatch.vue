@@ -171,8 +171,8 @@
     methods: {
       initView() {
         this.data = [];
-        this.queryString = this.file.filename.toLowerCase();
-        this.queryString = this.queryString.
+        let cleanQuery = this.file.filename.toLowerCase();
+        cleanQuery = cleanQuery.
           replace(/\(/g, " ").
           replace(/\)/g, " ").
           replace(/\./g, " ").
@@ -237,6 +237,7 @@
           replace(/\Wvr\Wbg\W/g, " ").
           replace(/mp4/g, " ").
           replace(/\s+/g, " ");
+        this.queryString = cleanQuery;
         this.player.src({type: 'video/mp4', src: "/api/dms/file/" + this.file.id + "?dnt=1"});
         this.loadData();
       },

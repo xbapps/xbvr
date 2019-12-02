@@ -5,7 +5,8 @@
         <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
         <div v-if="items.length > 0 && !isLoading">
           <b-table :data="items" ref="table" 
-            paginated="true" :per-page="perPage" :current-page.sync="currentPage" pagination-position="both"
+            paginated="true" :per-page="perPage" :current-page.sync="currentPage"
+            pagination-position="bottom"
             backend-sorting :default-sort="[sortField, sortOrder]" @sort="onSort">
             <template slot-scope="props">
               <b-table-column style="word-break:break-all;" class="is-one-fifth" field="filename"
@@ -41,10 +42,10 @@
               </b-table-column>
               <b-table-column :label="$t('Actions')" style="white-space: nowrap;">
                 <b-button v-if="props.row.scene_id > 0" @click="showDetails(props.row.scene)" type="is-success" outlined>
-                  <b-icon icon="link-variant-plus" size="is-small"></b-icon>&nbsp;{{$t('Scene')}}
+                  <b-icon icon="link-variant-plus" size="is-small"></b-icon> {{$t('Scene')}}
                 </b-button>
                 <b-button v-else @click="match(props.row)" type="is-danger" outlined>
-                  <b-icon icon="link-variant-plus" size="is-small"></b-icon>&nbsp;{{$t('Scene')}}
+                  <b-icon icon="link-variant-plus" size="is-small"></b-icon> {{$t('Scene')}}
                 </b-button>
                 &nbsp;
                 <b-button type="is-link" @click='removeFile(props.row)' outlined>
