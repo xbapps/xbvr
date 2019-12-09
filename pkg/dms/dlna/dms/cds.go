@@ -586,7 +586,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 				var data []XbaseFile
 				resty.R().SetHeader("Content-Type", "application/json").
 					SetBody(`{"state": "unmatched"}`).
-					SetResult(&data).Post("http://127.0.0.1:9999/api/file/list")
+					SetResult(&data).Post("http://127.0.0.1:9999/api/files/list")
 
 				for i := range data {
 					if _, err := os.Stat(filepath.Join(data[i].Path, data[i].Filename)); err == nil {
