@@ -7,6 +7,7 @@ import (
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
+	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -40,6 +41,10 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 
 		// Site ID
 		sc.Site = siteID
+
+		// Release Date
+		tmpDate, _ := goment.New(e.Request.Ctx.Get("date"), "MM/DD/YYYY")
+		sc.Released = tmpDate.Format("YYYY-MM-DD")
 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "/")
@@ -109,12 +114,19 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`div.poster-grid-item a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`div.scene-list-item`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
+
+		ctx := colly.NewContext()
+		e.ForEach(`p.scene-update-stats a~span`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
+				ctx.Put("date", strings.TrimSpace(e.Text))
+			}
+		})
 
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
+			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 		}
 	})
 
@@ -128,11 +140,11 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 }
 
 func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "lethalhardcorevr", "LethalHardcoreVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html")
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "lethalhardcorevr", "LethalHardcoreVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95595")
 }
 
 func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "whorecraftvr", "WhorecraftVR", "https://whorecraftvr.com/whorecraft-xxx-vr-3d-campaigns.html")
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "whorecraftvr", "WhorecraftVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95347")
 }
 
 func init() {
