@@ -77,7 +77,7 @@ Make sure you have following installed:
 - Node.js 10.x
 - Yarn 1.17.x
 - fileb0x (run `go get github.com/UnnoTed/fileb0x` outside project directory)
-- modd (run `go get github.com/cortesi/modd/cmd/modd` outside project directory)
+- modd (run `env GO111MODULE=on go get github.com/cortesi/modd/cmd/modd` outside project directory)
 
 Once all of the above is installed, running `modd` from project directory launches file-watchers providing livereload for both Go and JavaScript.
 
