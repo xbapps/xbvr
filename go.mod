@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/ProtonMail/go-appdir v1.0.0
 	github.com/PuerkitoBio/goquery v1.5.0
+	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/envpprof v1.0.0 // indirect
 	github.com/anacrolix/ffprobe v0.0.0-20190307025918-9b483c5f7751
 	github.com/anacrolix/missinggo v1.1.0 // indirect
@@ -84,6 +85,7 @@ require (
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.3 // indirect
+	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
 	golang.org/x/net v0.0.0-20191112182307-2180aed22343
 	golang.org/x/oauth2 v0.0.0-20190319182350-c85d3e98c914
 	golang.org/x/sys v0.0.0-20191112214154-59a1497f0cea
