@@ -5,9 +5,13 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/crypto/bcrypt"
+
+	auth "github.com/abbot/go-http-auth"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/gammazero/nexus/v3/router"
@@ -28,11 +32,45 @@ import (
 
 var (
 	DEBUG          = common.DEBUG
+	DEOPASSWORD    = os.Getenv("DEO_PASSWORD")
+	DEOUSER        = os.Getenv("DEO_USERNAME")
+	UIPASSWORD     = os.Getenv("UI_PASSWORD")
+	UIUSER         = os.Getenv("UI_USERNAME")
 	DLNA           = common.DLNA
 	httpAddr       = common.HttpAddr
 	wsAddr         = common.WsAddr
 	currentVersion = ""
 )
+
+func uiAuthEnabled() bool {
+	if UIPASSWORD != "" && UIUSER != "" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func uiSecret(user string, realm string) string {
+	if user == UIUSER {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(UIPASSWORD), bcrypt.DefaultCost)
+		if err == nil {
+			return string(hashedPassword)
+		}
+	}
+	return ""
+}
+
+func authHandle(pattern string, authEnabled bool, authSecret auth.SecretProvider, handler http.Handler) {
+	if authEnabled {
+		authenticator := auth.NewBasicAuthenticator("default", authSecret)
+		http.HandleFunc(pattern, authenticator.Wrap(func(res http.ResponseWriter, req *auth.AuthenticatedRequest) {
+			http.StripPrefix(pattern, handler).ServeHTTP(res, &req.Request)
+		}))
+	} else {
+		http.Handle(pattern, http.StripPrefix(pattern, handler))
+	}
+
+}
 
 func StartServer(version, commit, branch, date string) {
 	currentVersion = version
@@ -101,9 +139,9 @@ func StartServer(version, commit, branch, date string) {
 
 	// Static files
 	if DEBUG == "" {
-		http.Handle("/ui/", http.StripPrefix("/ui", http.FileServer(assets.HTTP)))
+		authHandle("/ui/", uiAuthEnabled(), uiSecret, http.FileServer(assets.HTTP))
 	} else {
-		http.Handle("/ui/", http.StripPrefix("/ui", http.FileServer(http.Dir("ui/dist"))))
+		authHandle("/ui/", uiAuthEnabled(), uiSecret, http.FileServer(http.Dir("ui/dist")))
 	}
 
 	// Imageproxy
@@ -181,6 +219,8 @@ func StartServer(version, commit, branch, date string) {
 		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
+	log.Infof("Web UI Authentication enabled: %v", uiAuthEnabled())
+	log.Infof("DeoVR Authentication enabled: %v", deoAuthEnabled())
 	log.Infof("Database file stored at %s", common.AppDir)
 
 	if DEBUG == "" {
