@@ -82,17 +82,34 @@
 
       <label class="label">Cast</label>
       <div class="field">
-        <b-taginput v-model="cast" autocomplete :data="filteredCast" @typing="getFilteredCast"></b-taginput>
+        <b-taginput v-model="cast" autocomplete :data="filteredCast" @typing="getFilteredCast">
+          <template slot-scope="props">{{props.option}}</template>
+          <template slot="empty">No matching cast</template>
+        </b-taginput>
       </div>
 
       <label class="label">Site</label>
       <div class="field">
-        <b-taginput v-model="sites" autocomplete :data="filteredSites" @typing="getFilteredSites"></b-taginput>
+        <b-taginput v-model="sites" autocomplete :data="filteredSites" @typing="getFilteredSites">
+          <template slot-scope="props">{{props.option}}</template>
+          <template slot="empty">No matching sites</template>
+        </b-taginput>
       </div>
 
       <label class="label">Tags</label>
       <div class="field">
-        <b-taginput v-model="tags" autocomplete :data="filteredTags" @typing="getFilteredTags"></b-taginput>
+        <b-taginput v-model="tags" autocomplete :data="filteredTags" @typing="getFilteredTags">
+          <template slot-scope="props">{{props.option}}</template>
+          <template slot="empty">No matching tags</template>
+        </b-taginput>
+      </div>
+
+      <label class="label">Cuepoint</label>
+      <div class="field">
+        <b-taginput v-model="cuepoint" allow-new>
+          <template slot-scope="props">{{props.option}}</template>
+          <template slot="empty">No matching cuepoints</template>
+        </b-taginput>
       </div>
 
     </div>
@@ -216,6 +233,15 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.tags = value;
+          this.reload();
+        }
+      },
+      cuepoint: {
+        get() {
+          return this.$store.state.sceneList.filters.cuepoint;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.cuepoint = value;
           this.reload();
         }
       },

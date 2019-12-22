@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"strings"
 
@@ -15,7 +16,7 @@ import (
 
 type DeoLibrary struct {
 	Scenes     []DeoListScenes `json:"scenes"`
-	Authorized int             `json:"authorized"`
+	Authorized string          `json:"authorized"`
 }
 
 type DeoListScenes struct {
@@ -69,6 +70,56 @@ type DeoSceneVideoSource struct {
 	URL        string `json:"url"`
 }
 
+func deoAuthEnabled() bool {
+	if DEOPASSWORD != "" && DEOUSER != "" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	// Save a copy of this request for debugging.
+	requestDump, err := httputil.DumpRequest(req.Request, true)
+	if err != nil {
+		log.Error(err)
+	}
+	log.Infoln("HTTP Request from DeoVR:\n\n" + string(requestDump))
+
+	if deoAuthEnabled() {
+		var authorized bool
+
+		u, err := req.BodyParameter("login")
+		if err != nil {
+			authorized = false
+		}
+
+		p, err := req.BodyParameter("password")
+		if err != nil {
+			authorized = false
+		}
+
+		if u == DEOUSER && p == DEOPASSWORD {
+			authorized = true
+		}
+
+		if !authorized {
+			unauthLib := DeoLibrary{
+				Authorized: "-1",
+				Scenes: []DeoListScenes{
+					{
+						Name: "Login Required",
+						List: nil,
+					},
+				},
+			}
+			resp.WriteHeaderAndEntity(http.StatusOK, unauthLib)
+			return
+		}
+	}
+	chain.ProcessFilter(req, resp)
+}
+
 type DeoVRResource struct{}
 
 func (i DeoVRResource) WebService() *restful.WebService {
@@ -77,14 +128,20 @@ func (i DeoVRResource) WebService() *restful.WebService {
 	ws := new(restful.WebService)
 
 	ws.Path("/deovr/").
-		Consumes(restful.MIME_JSON).
+		Consumes(restful.MIME_JSON, "application/x-www-form-urlencoded").
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.GET("").To(i.getDeoLibrary).
+	ws.Route(ws.GET("").Filter(restfulAuthFilter).To(i.getDeoLibrary).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(DeoLibrary{}))
+	ws.Route(ws.POST("").Filter(restfulAuthFilter).To(i.getDeoLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
 
-	ws.Route(ws.GET("/{scene-id}").To(i.getDeoScene).
+	ws.Route(ws.GET("/{scene-id}").Filter(restfulAuthFilter).To(i.getDeoScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(DeoScene{}))
+	ws.Route(ws.POST("/{scene-id}").Filter(restfulAuthFilter).To(i.getDeoScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoScene{}))
 
@@ -198,7 +255,7 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 		Find(&watchlist)
 
 	lib := DeoLibrary{
-		Authorized: 1,
+		Authorized: "1",
 		Scenes: []DeoListScenes{
 			{
 				Name: "Recent releases",
