@@ -182,9 +182,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 		Title:        file.Filename,
 		IsFavorite:   false,
 		ThumbnailURL: baseURL + "/ui/images/blank.png",
-		StereoMode:   "sbs",
 		Is3D:         true,
-		ScreenType:   "dome",
 		Encodings:    sources,
 		VideoLength:  int(file.VideoDuration),
 	}
