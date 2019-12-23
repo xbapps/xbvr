@@ -1,6 +1,8 @@
 package migrations
 
 import (
+	"time"
+
 	"github.com/jinzhu/gorm"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -91,6 +93,22 @@ func Migrate() {
 					AvatarURL string
 				}
 				return tx.AutoMigrate(Site{}).Error
+			},
+		},
+		{
+			ID: "0008",
+			Migrate: func(tx *gorm.DB) error {
+				type Playlist struct {
+					ID        uint `gorm:"primary_key"`
+					CreatedAt time.Time
+					UpdatedAt time.Time
+
+					Name         string
+					IsDeoEnabled bool
+					IsSmart      bool
+					SearchParams string `sql:"type:text;"`
+				}
+				return tx.AutoMigrate(Playlist{}).Error
 			},
 		},
 	})

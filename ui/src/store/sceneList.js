@@ -26,6 +26,7 @@ const defaultFilterState = {
 
 const state = {
   items: [],
+  playlists: [],
   isLoading: false,
   offset: 0,
   total: 0,
@@ -90,6 +91,15 @@ const mutations = {
       return obj;
     })
   },
+  stateFromJSON(state, payload) {
+    try {
+      const obj = JSON.parse(payload);
+      for (let [k, v] of Object.entries(obj)) {
+        Vue.set(state.filters, k, v)
+      }
+    } catch (err) {
+    }
+  },
   stateFromQuery(state, payload) {
     try {
       const obj = JSON.parse(Buffer.from(payload.q, "base64").toString("utf-8"));
@@ -103,6 +113,7 @@ const mutations = {
 
 const actions = {
   async filters({state}) {
+    state.playlists = await ky.get(`/api/playlist`).json();
     state.filterOpts = await ky.get(`/api/scene/filters`).json();
 
     // Reverse list of release months for display purposes

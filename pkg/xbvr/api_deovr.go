@@ -1,6 +1,7 @@
 package xbvr
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -231,45 +233,60 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	var recent []models.Scene
-	db.Model(&recent).
-		Where("is_available = ?", true).
-		Where("is_accessible = ?", true).
-		Order("release_date desc").
-		Find(&recent)
+	var sceneLists []DeoListScenes
 
-	var favourite []models.Scene
-	db.Model(&favourite).
-		Where("is_available = ?", true).
-		Where("is_accessible = ?", true).
-		Where("favourite = ?", true).
-		Order("release_date desc").
-		Find(&favourite)
+	_, scenes := queryScenes(RequestSceneList{
+		IsAvailable:  optional.NewBool(true),
+		IsAccessible: optional.NewBool(true),
+		Sort:         optional.NewString("release_date_desc"),
+	}, false)
+	sceneLists = append(sceneLists, DeoListScenes{
+		Name: "Recent releases",
+		List: scenesToDeoList(req, scenes),
+	})
 
-	var watchlist []models.Scene
-	db.Model(&watchlist).
-		Where("is_available = ?", true).
-		Where("is_accessible = ?", true).
-		Where("watchlist = ?", true).
-		Order("release_date desc").
-		Find(&watchlist)
+	_, scenes = queryScenes(RequestSceneList{
+		IsAvailable:  optional.NewBool(true),
+		IsAccessible: optional.NewBool(true),
+		Lists:        []optional.String{optional.NewString("favourite")},
+		Sort:         optional.NewString("release_date_desc"),
+	}, false)
+	sceneLists = append(sceneLists, DeoListScenes{
+		Name: "Favourites",
+		List: scenesToDeoList(req, scenes),
+	})
+
+	_, scenes = queryScenes(RequestSceneList{
+		IsAvailable:  optional.NewBool(true),
+		IsAccessible: optional.NewBool(true),
+		Lists:        []optional.String{optional.NewString("watchlist")},
+		Sort:         optional.NewString("release_date_desc"),
+	}, false)
+	sceneLists = append(sceneLists, DeoListScenes{
+		Name: "Watchlist",
+		List: scenesToDeoList(req, scenes),
+	})
+
+	var savedPlaylists []models.Playlist
+	db.Where("is_deo_enabled = ?", true).Find(&savedPlaylists)
+
+	for i := range savedPlaylists {
+		var r RequestSceneList
+		if err := json.Unmarshal([]byte(savedPlaylists[i].SearchParams), &r); err == nil {
+			r.IsAccessible = optional.NewBool(true)
+			r.IsAvailable = optional.NewBool(true)
+
+			_, scenes = queryScenes(r, false)
+			sceneLists = append(sceneLists, DeoListScenes{
+				Name: savedPlaylists[i].Name,
+				List: scenesToDeoList(req, scenes),
+			})
+		}
+	}
 
 	lib := DeoLibrary{
 		Authorized: "1",
-		Scenes: []DeoListScenes{
-			{
-				Name: "Recent releases",
-				List: scenesToDeoList(req, recent),
-			},
-			{
-				Name: "Favourites",
-				List: scenesToDeoList(req, favourite),
-			},
-			{
-				Name: "Watchlist",
-				List: scenesToDeoList(req, watchlist),
-			},
-		},
+		Scenes: sceneLists,
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, lib)
