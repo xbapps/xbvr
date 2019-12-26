@@ -25,7 +25,7 @@ type ScrapedActor struct {
 	EyeColor     string `json:"eye_color"`
 	Facebook     string `json:"facebook"`
 	HairColor    string `json:"hair_color"`
-	Height       string `json:"height"`
+	Height       int    `json:"height"`
 	HomepageURL  string `json:"homepage_url"`
 	ImageURL     string `json:"image_url"`
 	Instagram    string `json:"instagram"`
@@ -34,7 +34,7 @@ type ScrapedActor struct {
 	Nationality  string `json:"nationality"`
 	Reddit       string `json:"reddit"`
 	Twitter      string `json:"twitter"`
-	Weight       string `json:"weight"`
+	Weight       int    `json:"weight"`
 }
 
 type ScrapedScene struct {

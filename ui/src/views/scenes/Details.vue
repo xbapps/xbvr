@@ -77,8 +77,8 @@
                               <strong>Ethnicity:</strong> {{c.ethnicity}}<br>
                               <strong>Eye Color:</strong> {{c.eye_color}}<br>
                               <strong>Hair Color:</strong> {{c.hair_color}}<br>
-                              <strong>Height:</strong> {{c.height}}<br>
-                              <strong>Weight:</strong> {{c.weight}}<br>
+                              <strong>Height:</strong> {{c.height}}cm ({{cmToFtInches(c.height)}})<br>
+                              <strong>Weight:</strong> {{c.weight}}kg ({{kgToPounds(c.weight)}})<br>
                               <strong>Measurements:</strong> {{c.measurements}}<br>
                             </div>
                           </p>
@@ -275,6 +275,15 @@
       this.setupPlayer();
     },
     methods: {
+      cmToFtInches(n) {
+        var inches = (n*0.393700787).toFixed(0);
+        var feet = Math.floor(inches / 12);
+        inches %= 12;
+        return feet + "ft " + inches + "in"
+      },
+      kgToPounds(n) {
+        return Math.round(n*2.2046) + "lbs"
+      },
       setupPlayer() {
         this.player = videojs(this.$refs.player);
 

@@ -8,9 +8,9 @@ import (
 )
 
 type Actor struct {
-	ID        uint       `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time  `json:"-"`
-	UpdatedAt time.Time  `json:"-"`
+	ID        uint      `gorm:"primary_key" json:"id"`
+	CreatedAt time.Time `json:"-"`
+	UpdatedAt time.Time `json:"-"`
 
 	Name         string  `gorm:"unique_index" json:"name"`
 	Scenes       []Scene `gorm:"many2many:scene_cast;" json:"-"`
@@ -22,7 +22,7 @@ type Actor struct {
 	EyeColor     string  `json:"eye_color"`
 	Facebook     string  `json:"facebook"`
 	HairColor    string  `json:"hair_color"`
-	Height       string  `json:"height"`
+	Height       int     `json:"height"`
 	HomepageURL  string  `json:"homepage_url"`
 	ImageURL     string  `json:"image_url"`
 	Instagram    string  `json:"instagram"`
@@ -30,7 +30,7 @@ type Actor struct {
 	Nationality  string  `json:"nationality"`
 	Reddit       string  `json:"reddit"`
 	Twitter      string  `json:"twitter"`
-	Weight       string  `json:"weight"`
+	Weight       int     `json:"weight"`
 	Count        int     `json:"count"`
 }
 
@@ -110,7 +110,7 @@ func ActorCreateUpdateFromExternal(db *gorm.DB, ext ScrapedActor) error {
 		o.HairColor = ext.HairColor
 	}
 
-	if ext.Height != "" {
+	if ext.Height != 0 {
 		o.Height = ext.Height
 	}
 
@@ -142,7 +142,7 @@ func ActorCreateUpdateFromExternal(db *gorm.DB, ext ScrapedActor) error {
 		o.Twitter = ext.Twitter
 	}
 
-	if ext.Weight != "" {
+	if ext.Weight != 0 {
 		o.Weight = ext.Weight
 	}
 

@@ -2,6 +2,8 @@ package scrape
 
 import (
 	"encoding/json"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -56,7 +58,7 @@ func Actors(wg *sync.WaitGroup, knownActors []string, out chan<- models.ScrapedA
 
 			if stats["Date of Birth"] != "" {
 				// January 01, 1990
-				// TODO(jrebey): check if we need to parse this
+				// This needs to be parsed in UI. Age is only relevant to scene date.
 				sa.Birthday = stats["Date of Birth"]
 			}
 			if stats["Hair Color"] != "" {
@@ -70,18 +72,26 @@ func Actors(wg *sync.WaitGroup, knownActors []string, out chan<- models.ScrapedA
 			}
 			if stats["Height"] != "" {
 				// 168 cm - 5 feet and 6 inches
-				// TODO(jrebey): check if we need to parse this
-				sa.Height = stats["Height"]
+				// Store in cm (we can easily convert in UI)
+				r := regexp.MustCompile(`(\d+)\s?cm`)
+				m := r.FindStringSubmatch(stats["Height"])
+				if len(m) > 0 {
+					sa.Height, _ = strconv.Atoi(m[1])
+				}
 			}
 			if stats["Weight"] != "" {
 				// 52 kg - 114 lbs
-				// TODO(jrebey): check if we need to parse this
-				sa.Weight = stats["Weight"]
+				// Store in kg (we can easily convert in UI)
+				r := regexp.MustCompile(`(\d+)\s?kg`)
+				m := r.FindStringSubmatch(stats["Weight"])
+				if len(m) > 0 {
+					sa.Weight, _ = strconv.Atoi(m[1])
+				}
 			}
 			if stats["Measurements"] != "" {
 				// 34A-25-35
 				// JP 86-55-85 (US 34-22-33)
-				// TODO(jrebey): check if we need to parse this
+				// Parsing is a bit difficult as it's stored in multiple formats.
 				sa.Measurements = stats["Measurements"]
 			}
 			if stats["Country of Origin"] != "" {
@@ -110,7 +120,7 @@ func Actors(wg *sync.WaitGroup, knownActors []string, out chan<- models.ScrapedA
 	siteCollector.OnHTML(`.model a`, func(e *colly.HTMLElement) {
 		actorURL := e.Request.AbsoluteURL(e.Attr("href"))
 
-		// If scene exist in database, there's no need to scrape
+		// I'm not sure if we should be skipping, but it sure makes it faster.
 		if !funk.ContainsString(knownActors, actorURL) {
 			actorCollector.Visit(actorURL)
 		}
