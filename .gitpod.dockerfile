@@ -11,7 +11,7 @@ RUN export PATH=$(echo "$PATH" | sed -e 's|:/workspace/go/bin||' -e 's|:/home/gi
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
 RUN GO111MODULE=on go get -u -v \
-  github.com/UnnoTed/fileb0x && \
+  github.com/UnnoTed/fileb0x \
   github.com/cortesi/modd/cmd/modd && \
   sudo rm -rf $GOPATH/src && \
   sudo rm -rf $GOPATH/pkg

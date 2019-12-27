@@ -18,8 +18,8 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 	siteID := "WetVR"
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("www.wetvr.com")
-	siteCollector := createCollector("www.wetvr.com")
+	sceneCollector := createCollector("wetvr.com")
+	siteCollector := createCollector("wetvr.com")
 
 	sceneCollector.OnHTML(`div#t2019`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -97,7 +97,7 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		}
 	})
 
-	siteCollector.Visit("https://www.wetvr.com/")
+	siteCollector.Visit("https://wetvr.com/")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
