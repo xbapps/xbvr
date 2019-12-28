@@ -215,7 +215,7 @@ func StartServer(version, commit, branch, date string) {
 	for _, addr := range addrs {
 		ip, _ := addr.(*net.IPNet)
 		if ip.IP.To4() != nil {
-			ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+			ips = append(ips, fmt.Sprintf("http://%v:9889/", ip.IP))
 		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))

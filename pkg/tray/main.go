@@ -55,7 +55,7 @@ func onReady() {
 	for {
 		select {
 		case <-mOpenUI.ClickedCh:
-			go open.Run("http://localhost:9999")
+			go open.Run("http://localhost:9889")
 		case <-mOpenConfig.ClickedCh:
 			go open.Run(appdir.New("xbvr").UserConfig())
 		case <-mQuit.ClickedCh:

@@ -8,8 +8,8 @@ import (
 var (
 	DEBUG    = os.Getenv("DEBUG")
 	DLNA     = envToBool("ENABLE_DLNA", true)
-	HttpAddr = "0.0.0.0:9999"
-	WsAddr   = "0.0.0.0:9998"
+	HttpAddr = "0.0.0.0:9889"
+	WsAddr   = "0.0.0.0:9888"
 )
 
 func envToBool(envVar string, defaultVal bool) bool {
