@@ -126,8 +126,14 @@
     },
     methods: {
       setPlaylist(val) {
-        const obj = this.playlists.find(item => item.id == val);
-        this.$store.commit('sceneList/stateFromJSON', obj.search_params);
+        const obj = this.playlists.find(item => item.id === val);
+        this.$router.push({
+          name: 'scenes',
+          query: {
+            q: this.$store.getters['sceneList/getQueryParamsFromObject'](obj.search_params)
+          }
+        });
+
         this.$store.dispatch("sceneList/load", {offset: 0});
       },
       async savePlaylist() {

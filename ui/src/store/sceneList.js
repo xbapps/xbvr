@@ -46,6 +46,12 @@ const getters = {
 
     return Buffer.from(JSON.stringify(st)).toString("base64");
   },
+  getQueryParamsFromObject: (state) => (payload) => {
+    const st = Object.assign({}, JSON.parse(payload));
+    delete st.cardSize;
+
+    return Buffer.from(JSON.stringify(st)).toString("base64");
+  },
   prevScene: (state) => (currentScene) => {
     let i = state.items.findIndex(item => item.scene_id == currentScene.scene_id);
     if (i === 0) {
