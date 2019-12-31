@@ -298,6 +298,7 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 
 	var unmatched []models.File
 	db.Model(&unmatched).
+		Preload("Volume").
 		Where("files.scene_id = 0").
 		Order("created_time desc").
 		Find(&unmatched)
@@ -371,6 +372,11 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 
 	var list []DeoListItem
 	for i := range files {
+		if files[i].Volume.Type == "local" {
+			if !files[i].Volume.IsAvailable {
+				continue
+			}
+		}
 		item := DeoListItem{
 			Title:        files[i].Filename,
 			VideoLength:  int(files[i].VideoDuration),
