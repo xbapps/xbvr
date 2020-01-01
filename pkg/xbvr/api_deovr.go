@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -81,13 +81,6 @@ func deoAuthEnabled() bool {
 }
 
 func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	// Save a copy of this request for debugging.
-	requestDump, err := httputil.DumpRequest(req.Request, true)
-	if err != nil {
-		log.Error(err)
-	}
-	log.Infoln("HTTP Request from DeoVR:\n\n" + string(requestDump))
-
 	if deoAuthEnabled() {
 		var authorized bool
 
@@ -147,7 +140,56 @@ func (i DeoVRResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoScene{}))
 
+	ws.Route(ws.GET("/file/{file-id}").Filter(restfulAuthFilter).To(i.getDeoFile).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(DeoScene{}))
+	ws.Route(ws.POST("file/{file-id}").Filter(restfulAuthFilter).To(i.getDeoFile).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(DeoScene{}))
+
 	return ws
+}
+
+func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	fileId, err := strconv.Atoi(req.PathParameter("file-id"))
+	if err != nil {
+		return
+	}
+
+	baseURL := "http://" + req.Request.Host
+
+	var file models.File
+	db.Where(&models.File{ID: uint(fileId)}).First(&file)
+
+	var sources []DeoSceneEncoding
+	sources = append(sources, DeoSceneEncoding{
+		Name: fmt.Sprintf("File 1/1 - %v", humanize.Bytes(uint64(file.Size))),
+		VideoSources: []DeoSceneVideoSource{
+			{
+				Resolution: file.VideoHeight,
+				Height:     file.VideoHeight,
+				Width:      file.VideoWidth,
+				Size:       file.Size,
+				URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, file.ID),
+			},
+		},
+	})
+
+	deoScene := DeoScene{
+		ID:           999900000 + file.ID,
+		Description:  file.Filename,
+		Title:        file.Filename,
+		IsFavorite:   false,
+		ThumbnailURL: baseURL + "/ui/images/blank.png",
+		Is3D:         true,
+		Encodings:    sources,
+		VideoLength:  int(file.VideoDuration),
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, deoScene)
 }
 
 func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response) {
@@ -284,12 +326,23 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 		}
 	}
 
-	lib := DeoLibrary{
-		Authorized: "1",
-		Scenes: sceneLists,
-	}
+	// Add unmatched files at the end
+	var unmatched []models.File
+	db.Model(&unmatched).
+		Preload("Volume").
+		Where("files.scene_id = 0").
+		Order("created_time desc").
+		Find(&unmatched)
 
-	resp.WriteHeaderAndEntity(http.StatusOK, lib)
+	sceneLists = append(sceneLists, DeoListScenes{
+		Name: "Unmatched",
+		List: filesToDeoList(req, unmatched),
+	})
+
+	resp.WriteHeaderAndEntity(http.StatusOK, DeoLibrary{
+		Authorized: "1",
+		Scenes:     sceneLists,
+	})
 }
 
 func getBaseURL() string {
@@ -325,6 +378,27 @@ func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem 
 			VideoLength:  scenes[i].Duration * 60,
 			ThumbnailURL: baseURL + "/img/700x/" + strings.Replace(scenes[i].CoverURL, "://", ":/", -1),
 			VideoURL:     baseURL + "/deovr/" + scenes[i].SceneID,
+		}
+		list = append(list, item)
+	}
+	return list
+}
+
+func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
+	baseURL := "http://" + req.Request.Host
+
+	var list []DeoListItem
+	for i := range files {
+		if files[i].Volume.Type == "local" {
+			if !files[i].Volume.IsAvailable {
+				continue
+			}
+		}
+		item := DeoListItem{
+			Title:        files[i].Filename,
+			VideoLength:  int(files[i].VideoDuration),
+			ThumbnailURL: baseURL + "/ui/images/blank.png",
+			VideoURL:     baseURL + "/deovr/file/" + fmt.Sprint(files[i].ID),
 		}
 		list = append(list, item)
 	}
