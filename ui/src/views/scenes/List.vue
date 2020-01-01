@@ -7,6 +7,22 @@
         <strong>{{total}} results</strong>
       </div>
       <div class="column">
+        <b-field>
+          <b-radio-button v-model="dlState" native-value="any" size="is-small">
+            {{$t("Any")}}
+          </b-radio-button>
+          <b-radio-button v-model="dlState" native-value="available" size="is-small">
+            {{$t("Available right now")}}
+          </b-radio-button>
+          <b-radio-button v-model="dlState" native-value="downloaded" size="is-small">
+            {{$t("Downloaded")}}
+          </b-radio-button>
+          <b-radio-button v-model="dlState" native-value="missing" size="is-small">
+            {{$t("Not downloaded")}}
+          </b-radio-button>
+        </b-field>
+      </div>
+      <div class="column">
         <div class="is-pulled-right">
           <b-field>
             <span class="list-header-label">{{$t('Card size')}}</span>
@@ -24,18 +40,6 @@
       </div>
     </div>
 
-    <div class="columns is-full">
-      <div class="column">
-        <b-select size="is-small" @input="setPlaylist">
-          <option v-for="(obj, idx) in playlists" :value="obj.id" :key="obj.id">
-            {{ obj.name }}
-          </option>
-        </b-select>
-
-        <b-button size="is-small" @click="isPlaylistModalActive=true">Save as smart playlist</b-button>
-      </div>
-    </div>
-
     <div class="columns is-multiline">
       <div :class="['column', 'is-multiline', cardSizeClass]"
            v-for="item in items" :key="item.id">
@@ -47,48 +51,14 @@
       <a class="button is-fullwidth" v-on:click="loadMore()">{{$t('Load more')}}</a>
     </div>
 
-    <b-modal :active.sync="isPlaylistModalActive"
-             has-modal-card
-             trap-focus
-             aria-role="dialog"
-             aria-modal>
-      <div class="modal-card" style="width: auto">
-        <header class="modal-card-head">
-          <p class="modal-card-title">Create new smart playlist</p>
-        </header>
-        <section class="modal-card-body">
-          <b-field label="Playlist name">
-            <b-input
-              type="name"
-              v-model="playlistName"
-              placeholder="Give playlist a name"
-              required>
-            </b-input>
-          </b-field>
-          <b-checkbox v-model="playlistDeoEnabled">Use as DeoVR list</b-checkbox>
-        </section>
-        <footer class="modal-card-foot">
-          <button class="button is-primary" :disabled="playlistName===''" @click="savePlaylist">Save</button>
-        </footer>
-      </div>
-    </b-modal>
-
   </div>
 </template>
 
 <script>
   import SceneCard from "./SceneCard";
-  import ky from "ky";
 
   export default {
     name: "List",
-    data() {
-      return {
-        playlistName: "",
-        playlistDeoEnabled: false,
-        isPlaylistModalActive: false,
-      }
-    },
     components: {SceneCard},
     computed: {
       cardSize: {
@@ -111,8 +81,34 @@
             return "is-one-fifth";
         }
       },
-      playlists() {
-        return this.$store.state.sceneList.playlists;
+      dlState: {
+        get() {
+          return this.$store.state.sceneList.filters.dlState;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.dlState = value;
+
+          switch (this.$store.state.sceneList.filters.dlState) {
+            case "any":
+              this.$store.state.sceneList.filters.isAvailable = null;
+              this.$store.state.sceneList.filters.isAccessible = null;
+              break;
+            case "available":
+              this.$store.state.sceneList.filters.isAvailable = true;
+              this.$store.state.sceneList.filters.isAccessible = true;
+              break;
+            case "downloaded":
+              this.$store.state.sceneList.filters.isAvailable = true;
+              this.$store.state.sceneList.filters.isAccessible = null;
+              break;
+            case "missing":
+              this.$store.state.sceneList.filters.isAvailable = false;
+              this.$store.state.sceneList.filters.isAccessible = null;
+              break;
+          }
+
+          this.reloadList();
+        }
       },
       isLoading() {
         return this.$store.state.sceneList.isLoading;
@@ -125,28 +121,13 @@
       }
     },
     methods: {
-      setPlaylist(val) {
-        const obj = this.playlists.find(item => item.id === val);
+      reloadList() {
         this.$router.push({
           name: 'scenes',
           query: {
-            q: this.$store.getters['sceneList/getQueryParamsFromObject'](obj.search_params)
+            q: this.$store.getters['sceneList/filterQueryParams']
           }
         });
-
-        this.$store.dispatch("sceneList/load", {offset: 0});
-      },
-      async savePlaylist() {
-        await ky.post(`/api/playlist`, {
-          json: {
-            name: this.playlistName,
-            is_deo_enabled: this.playlistDeoEnabled,
-            is_smart: true,
-            search_params: JSON.stringify(this.$store.state.sceneList.filters),
-          }
-        });
-        this.isPlaylistModalActive = false;
-        this.$store.dispatch("sceneList/filters");
       },
       async loadMore() {
         this.$store.dispatch("sceneList/load", {offset: this.$store.state.sceneList.offset});
