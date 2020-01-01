@@ -104,11 +104,29 @@ func Migrate() {
 					UpdatedAt time.Time
 
 					Name         string
+					Ordering     int
+					IsSystem     bool
 					IsDeoEnabled bool
 					IsSmart      bool
 					SearchParams string `sql:"type:text;"`
 				}
 				return tx.AutoMigrate(Playlist{}).Error
+			},
+		},
+		{
+			// 	TODO: remove before merging PR
+			ID: "0008-dev-add-ordering",
+			Migrate: func(tx *gorm.DB) error {
+				var playlists []models.Playlist
+				tx.Model(&playlists).Find(&playlists)
+
+				for i := range playlists {
+					if playlists[i].Ordering < 1 {
+						playlists[i].Ordering = int(playlists[i].ID)
+						playlists[i].Save()
+					}
+				}
+				return nil
 			},
 		},
 	})

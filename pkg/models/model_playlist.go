@@ -11,6 +11,8 @@ type Playlist struct {
 	UpdatedAt time.Time `json:"-"`
 
 	Name         string `json:"name"`
+	Ordering     int    `json:"ordering"`
+	IsSystem     bool   `json:"is_system"`
 	IsDeoEnabled bool   `json:"is_deo_enabled"`
 	IsSmart      bool   `json:"is_smart"`
 	SearchParams string `json:"search_params" sql:"type:text;"`
