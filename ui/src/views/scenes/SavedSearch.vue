@@ -1,9 +1,16 @@
 <template>
   <div>
     <b-select size="is-small" @input="setPlaylist">
-      <option v-for="(obj, idx) in playlists" :value="obj.id" :key="obj.id">
-        {{ obj.name }}
-      </option>
+      <optgroup label="Web">
+        <option v-for="(obj, idx) in playlistsWeb" :value="obj.id" :key="obj.id">
+          {{ obj.name }}
+        </option>
+      </optgroup>
+      <optgroup label="VR Players">
+        <option v-for="(obj, idx) in playlistsDeo" :value="obj.id" :key="obj.id">
+          {{ obj.name }}
+        </option>
+      </optgroup>
     </b-select>
 
     <b-button size="is-small" @click="isPlaylistModalActive=true">Save as smart playlist</b-button>
@@ -79,6 +86,16 @@
     computed: {
       playlists() {
         return this.$store.state.sceneList.playlists;
+      },
+      playlistsWeb() {
+        return this.$store.state.sceneList.playlists.filter((obj) => {
+          return obj.is_deo_enabled === false
+        });
+      },
+      playlistsDeo() {
+        return this.$store.state.sceneList.playlists.filter((obj) => {
+          return obj.is_deo_enabled === true
+        });
       },
     },
   }

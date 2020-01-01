@@ -52,7 +52,7 @@ func (i PlaylistResource) listPlaylists(req *restful.Request, resp *restful.Resp
 	defer db.Close()
 
 	var playlists []models.Playlist
-	db.Find(&playlists)
+	db.Order("ordering asc").Find(&playlists)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, playlists)
 }
