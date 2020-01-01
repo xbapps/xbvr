@@ -277,40 +277,8 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 
 	var sceneLists []DeoListScenes
 
-	_, scenes := queryScenes(RequestSceneList{
-		IsAvailable:  optional.NewBool(true),
-		IsAccessible: optional.NewBool(true),
-		Sort:         optional.NewString("release_date_desc"),
-	}, false)
-	sceneLists = append(sceneLists, DeoListScenes{
-		Name: "Recent releases",
-		List: scenesToDeoList(req, scenes),
-	})
-
-	_, scenes = queryScenes(RequestSceneList{
-		IsAvailable:  optional.NewBool(true),
-		IsAccessible: optional.NewBool(true),
-		Lists:        []optional.String{optional.NewString("favourite")},
-		Sort:         optional.NewString("release_date_desc"),
-	}, false)
-	sceneLists = append(sceneLists, DeoListScenes{
-		Name: "Favourites",
-		List: scenesToDeoList(req, scenes),
-	})
-
-	_, scenes = queryScenes(RequestSceneList{
-		IsAvailable:  optional.NewBool(true),
-		IsAccessible: optional.NewBool(true),
-		Lists:        []optional.String{optional.NewString("watchlist")},
-		Sort:         optional.NewString("release_date_desc"),
-	}, false)
-	sceneLists = append(sceneLists, DeoListScenes{
-		Name: "Watchlist",
-		List: scenesToDeoList(req, scenes),
-	})
-
 	var savedPlaylists []models.Playlist
-	db.Where("is_deo_enabled = ?", true).Find(&savedPlaylists)
+	db.Where("is_deo_enabled = ?", true).Order("ordering asc").Find(&savedPlaylists)
 
 	for i := range savedPlaylists {
 		var r RequestSceneList
@@ -318,7 +286,7 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 			r.IsAccessible = optional.NewBool(true)
 			r.IsAvailable = optional.NewBool(true)
 
-			_, scenes = queryScenes(r, false)
+			_, scenes := queryScenes(r, false)
 			sceneLists = append(sceneLists, DeoListScenes{
 				Name: savedPlaylists[i].Name,
 				List: scenesToDeoList(req, scenes),
