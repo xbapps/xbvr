@@ -209,7 +209,7 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	}
 
 	var f models.File
-	err = db.Where(&models.File{ID: r.FileID}).First(&f).Error
+	err = db.Preload("Volume").Where(&models.File{ID: r.FileID}).First(&f).Error
 	if err == nil {
 		f.SceneID = scene.ID
 		f.Save()
@@ -231,6 +231,7 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 
 	// Finally, update scene available/accessible status
 	scene.IsAvailable = true
+	scene.AddedDate = f.CreatedTime
 	if f.Exists() {
 		scene.IsAccessible = true
 	}
