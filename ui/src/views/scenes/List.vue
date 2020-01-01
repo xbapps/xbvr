@@ -9,16 +9,16 @@
       <div class="column">
         <b-field>
           <b-radio-button v-model="dlState" native-value="any" size="is-small">
-            {{$t("Any")}}
+            {{$t("Any")}} ({{counts.any}})
           </b-radio-button>
           <b-radio-button v-model="dlState" native-value="available" size="is-small">
-            {{$t("Available right now")}}
+            {{$t("Available right now")}} ({{counts.available}})
           </b-radio-button>
           <b-radio-button v-model="dlState" native-value="downloaded" size="is-small">
-            {{$t("Downloaded")}}
+            {{$t("Downloaded")}} ({{counts.downloaded}})
           </b-radio-button>
           <b-radio-button v-model="dlState" native-value="missing" size="is-small">
-            {{$t("Not downloaded")}}
+            {{$t("Not downloaded")}} ({{counts.not_downloaded}})
           </b-radio-button>
         </b-field>
       </div>
@@ -118,7 +118,10 @@
       },
       total() {
         return this.$store.state.sceneList.total;
-      }
+      },
+      counts() {
+        return this.$store.state.sceneList.counts;
+      },
     },
     methods: {
       reloadList() {

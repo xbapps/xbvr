@@ -31,6 +31,12 @@ const state = {
   offset: 0,
   total: 0,
   limit: 80,
+  counts: {
+    any: 0,
+    available: 0,
+    downloaded: 0,
+    not_downloaded: 0,
+  },
   filterOpts: {
     cast: [],
     sites: [],
@@ -147,6 +153,11 @@ const actions = {
     state.items = state.items.concat(data.scenes);
     state.offset = iOffset + state.limit;
     state.total = data.results;
+
+    state.counts.any = data.count_any;
+    state.counts.available = data.count_available;
+    state.counts.downloaded = data.count_downloaded;
+    state.counts.not_downloaded = data.count_not_downloaded;
   },
 };
 

@@ -281,15 +281,15 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	db.Where("is_deo_enabled = ?", true).Order("ordering asc").Find(&savedPlaylists)
 
 	for i := range savedPlaylists {
-		var r RequestSceneList
+		var r models.RequestSceneList
 		if err := json.Unmarshal([]byte(savedPlaylists[i].SearchParams), &r); err == nil {
 			r.IsAccessible = optional.NewBool(true)
 			r.IsAvailable = optional.NewBool(true)
 
-			_, scenes := queryScenes(r, false)
+			q := models.QueryScenes(r, false)
 			sceneLists = append(sceneLists, DeoListScenes{
 				Name: savedPlaylists[i].Name,
-				List: scenesToDeoList(req, scenes),
+				List: scenesToDeoList(req, q.Scenes),
 			})
 		}
 	}

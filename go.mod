@@ -64,7 +64,7 @@ require (
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.8.1
-	github.com/putdotio/go-putio/putio v0.0.0-20191210165645-9be1143756a8 // indirect
+	github.com/putdotio/go-putio/putio v0.0.0-20191210165645-9be1143756a8
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
 	github.com/robfig/cron/v3 v3.0.0
