@@ -1,8 +1,10 @@
 <template>
   <div>
+    <div class="is-divider" data-content="Saved lists" style="margin-top:0.8em;"></div>
+
     <SavedSearch/>
 
-    <hr/>
+    <div class="is-divider" data-content="Sorting / Status / Release"></div>
 
     <b-field :label="$t('Sort by')" label-position="on-border" :addons="true" class="field-extra">
       <div class="control is-expanded">
@@ -62,7 +64,7 @@
       </div>
     </b-field>
 
-    <hr/>
+    <div class="is-divider" data-content="Filters"></div>
 
     <div v-if="Object.keys(filters).length !== 0">
       <b-field label="Cast" label-position="on-border" class="field-extra">
@@ -222,7 +224,12 @@
   }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+  @import "~bulma-extensions/bulma-divider/dist/css/bulma-divider.min.css";
+
+  .is-divider {
+    margin: 1.5rem 0;
+  }
   .field-extra {
     margin-bottom: 1.1em !important;
   }
