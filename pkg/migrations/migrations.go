@@ -93,6 +93,25 @@ func Migrate() {
 				return tx.AutoMigrate(Site{}).Error
 			},
 		},
+		// 0.3.0-beta.12
+		{
+			// VRCONK has changed scene numbering schema, so it needs to be flushed
+			ID: "0007-flush-vrconk",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				db.Where("site = ?", "VRCONK").Find(&scenes)
+
+				for _, obj := range scenes {
+					files, _ := obj.GetFiles()
+					for _, file := range files {
+						file.SceneID = 0
+						file.Save()
+					}
+				}
+
+				return db.Where("site = ?", "VRCONK").Delete(&models.Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
