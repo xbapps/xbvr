@@ -10,6 +10,7 @@ import (
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
+	"mvdan.cc/xurls/v2"
 )
 
 func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
@@ -18,8 +19,8 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteID := "VRCONK"
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("www.vrconk.com")
-	siteCollector := createCollector("www.vrconk.com")
+	sceneCollector := createCollector("vrconk.com")
+	siteCollector := createCollector("vrconk.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -31,11 +32,14 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "/")
 		s := strings.Split(tmp[len(tmp)-1], "-")
-		sc.SiteID = strings.TrimSuffix(s[len(s)-1], ".html")
+		sc.SiteID = tmp[len(tmp)-1]
+		sc.SiteID = s[0]
+
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
-		sc.Title = strings.TrimSpace(e.ChildAttr(`meta[property="og:title"]`, "content"))
-		sc.Covers = append(sc.Covers, e.ChildAttr(`meta[property="og:image"]`, "content"))
+		rxRelaxed := xurls.Relaxed()
+		sc.Title = strings.TrimSpace(e.ChildText(`div.item-tr-inner-col h1`))
+		sc.Covers = append(sc.Covers, rxRelaxed.FindString(e.ChildAttr(`div.splash-screen`, "style")))
 
 		e.ForEach(`.gallery-block img`, func(id int, e *colly.HTMLElement) {
 			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("src")))
@@ -55,7 +59,6 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 				tmpDate, _ := goment.New(e.ChildText(`.sub-label`))
 				sc.Released = tmpDate.Format("YYYY-MM-DD")
 			}
-
 		})
 
 		// Tags and Cast
@@ -91,14 +94,14 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.OnHTML(`.pagination a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`nav.pagination a`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		if !strings.Contains(pageURL, "/signup") {
+		if !strings.Contains(pageURL, "/user/join") {
 			siteCollector.Visit(pageURL)
 		}
 	})
 
-	siteCollector.Visit("https://www.vrconk.com/")
+	siteCollector.Visit("https://vrconk.com/virtualreality/list")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
