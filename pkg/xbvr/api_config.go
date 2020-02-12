@@ -65,6 +65,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/scraper/force-site-update").To(i.forceSiteUpdate).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.POST("/scraper/delete-scenes").To(i.deleteScenes).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	return ws
 }
 
@@ -263,4 +266,31 @@ func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Resp
 	defer db.Close()
 
 	db.Model(&models.Scene{}).Where("site = ?", r.SiteName).Update("needs_update", true)
+}
+
+func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Response) {
+	var r struct {
+		SiteName string `json:"site_name"`
+	}
+
+	if err := req.ReadEntity(&r); err != nil {
+		APIError(req, resp, http.StatusInternalServerError, err)
+		return
+	}
+
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var scenes []models.Scene
+	db.Where("site = ?", r.SiteName).Find(&scenes)
+
+	for _, obj := range scenes {
+		files, _ := obj.GetFiles()
+		for _, file := range files {
+			file.SceneID = 0
+			file.Save()
+		}
+	}
+
+	db.Where("site = ?", r.SiteName).Delete(&models.Scene{})
 }
