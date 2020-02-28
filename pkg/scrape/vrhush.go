@@ -96,8 +96,9 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 
 		var name string
+		reDoubleWhitespace := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
 		e.ForEach(`h1#model-name`, func(id int, e *colly.HTMLElement) {
-			name = strings.TrimSpace(e.Text)
+			name = strings.TrimSpace(reDoubleWhitespace.ReplaceAllString(e.Text, " "))
 		})
 
 		var gender string
