@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"regexp"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
