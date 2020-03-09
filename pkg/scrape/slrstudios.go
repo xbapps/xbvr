@@ -1,17 +1,17 @@
 package scrape
 
 import (
+	"html"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
-	"regexp"
-	"html"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
-	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string) error {
@@ -44,9 +44,9 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		// Skipping some very generic and useless tags
-		skiptags := map[string]bool {
+		skiptags := map[string]bool{
 			"vr porn": true,
-			"3D": true, // Everything gets tagged 3D on SLR, even mono 360
+			"3D":      true, // Everything gets tagged 3D on SLR, even mono 360
 			// Note actors and studioName are added too before tags section runs
 		}
 
@@ -99,10 +99,10 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 						hrs := h
 						if m, err := strconv.Atoi(tmpParts[2]); err == nil {
 							mins := m
-							duration = (hrs*60)+mins
+							duration = (hrs * 60) + mins
 						}
 					}
-				}else{
+				} else {
 					if m, err := strconv.Atoi(tmpParts[2]); err == nil {
 						duration = m
 					}
@@ -117,12 +117,12 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			var videotype string
 			keywords := gjson.Get(JsonMetadata, "video.keywords")
 			keywords.ForEach(func(key, tag gjson.Result) bool {
-				if !skiptags[strings.TrimSpace( tag.String() )] {
+				if !skiptags[strings.TrimSpace(tag.String())] {
 					sc.Tags = append(sc.Tags, html.UnescapeString(tag.String()))
 				}
 
 				// To determine filenames
-				if (tag.String() == "180°" || tag.String() == "360°"){
+				if tag.String() == "180°" || tag.String() == "360°" {
 					videotype = tag.String()
 				}
 
@@ -134,17 +134,17 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			// Format: SLR_StudioName_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
 			resolutions := []string{"_6400p_", "_2880p_", "_2700p_", "_1440p_", "_1080p_", "_original_"}
 			baseName := "SLR_" + studioName + "_" + sc.Title
-			if (videotype == "360°") {	// Sadly can't determine if TB or MONO so have to add both
+			if videotype == "360°" { // Sadly can't determine if TB or MONO so have to add both
 				filenames := make([]string, 0, 2*len(resolutions))
 				for i := range resolutions {
-					filenames = append(filenames, baseName + resolutions[i] + sc.SiteID + "_MONO_360.mp4")
-					filenames = append(filenames, baseName + resolutions[i] + sc.SiteID + "_TB_360.mp4")
+					filenames = append(filenames, baseName+resolutions[i]+sc.SiteID+"_MONO_360.mp4")
+					filenames = append(filenames, baseName+resolutions[i]+sc.SiteID+"_TB_360.mp4")
 					sc.Filenames = filenames
 				}
-			}else{	// Assuming everything else is 180 and LR, yet to find a TB_180
+			} else { // Assuming everything else is 180 and LR, yet to find a TB_180
 				filenames := make([]string, 0, len(resolutions))
 				for i := range resolutions {
-					filenames = append(filenames, baseName + resolutions[i] + sc.SiteID + "_LR_180.mp4")
+					filenames = append(filenames, baseName+resolutions[i]+sc.SiteID+"_LR_180.mp4")
 				}
 				sc.Filenames = filenames
 			}
@@ -169,7 +169,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.Visit("https://www.sexlikereal.com/studios/"+scraperID+"?sort=most_recent")
+	siteCollector.Visit("https://www.sexlikereal.com/studios/" + scraperID + "?sort=most_recent")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -228,7 +228,7 @@ func OnlyTease(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 // Publishes on SLR as perVRt, includes brands: Juggs, Babygirl, Sappho
 // https://twitter.com/terribledotporn & https://twitter.com/perVRtPORN
 func perVRt(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "pervrt", "perVRt", "Terrible"")
+	return SexLikeReal(wg, updateSite, knownScenes, out, "pervrt", "perVRt", "Terrible")
 }
 
 // LeninaCrowne - Wife of https://twitter.com/DickTerrible from the perVRt/Terrible Studio.
