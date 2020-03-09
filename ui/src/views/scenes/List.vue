@@ -7,6 +7,22 @@
         <strong>{{total}} results</strong>
       </div>
       <div class="column">
+        <b-field>
+          <b-radio-button v-model="dlState" native-value="any" size="is-small">
+            {{$t("Any")}} ({{counts.any}})
+          </b-radio-button>
+          <b-radio-button v-model="dlState" native-value="available" size="is-small">
+            {{$t("Available right now")}} ({{counts.available}})
+          </b-radio-button>
+          <b-radio-button v-model="dlState" native-value="downloaded" size="is-small">
+            {{$t("Downloaded")}} ({{counts.downloaded}})
+          </b-radio-button>
+          <b-radio-button v-model="dlState" native-value="missing" size="is-small">
+            {{$t("Not downloaded")}} ({{counts.not_downloaded}})
+          </b-radio-button>
+        </b-field>
+      </div>
+      <div class="column">
         <div class="is-pulled-right">
           <b-field>
             <span class="list-header-label">{{$t('Card size')}}</span>
@@ -34,6 +50,7 @@
     <div class="column is-full" v-if="items.length < total">
       <a class="button is-fullwidth" v-on:click="loadMore()">{{$t('Load more')}}</a>
     </div>
+
   </div>
 </template>
 
@@ -64,6 +81,35 @@
             return "is-one-fifth";
         }
       },
+      dlState: {
+        get() {
+          return this.$store.state.sceneList.filters.dlState;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.dlState = value;
+
+          switch (this.$store.state.sceneList.filters.dlState) {
+            case "any":
+              this.$store.state.sceneList.filters.isAvailable = null;
+              this.$store.state.sceneList.filters.isAccessible = null;
+              break;
+            case "available":
+              this.$store.state.sceneList.filters.isAvailable = true;
+              this.$store.state.sceneList.filters.isAccessible = true;
+              break;
+            case "downloaded":
+              this.$store.state.sceneList.filters.isAvailable = true;
+              this.$store.state.sceneList.filters.isAccessible = null;
+              break;
+            case "missing":
+              this.$store.state.sceneList.filters.isAvailable = false;
+              this.$store.state.sceneList.filters.isAccessible = null;
+              break;
+          }
+
+          this.reloadList();
+        }
+      },
       isLoading() {
         return this.$store.state.sceneList.isLoading;
       },
@@ -72,9 +118,20 @@
       },
       total() {
         return this.$store.state.sceneList.total;
-      }
+      },
+      counts() {
+        return this.$store.state.sceneList.counts;
+      },
     },
     methods: {
+      reloadList() {
+        this.$router.push({
+          name: 'scenes',
+          query: {
+            q: this.$store.getters['sceneList/filterQueryParams']
+          }
+        });
+      },
       async loadMore() {
         this.$store.dispatch("sceneList/load", {offset: this.$store.state.sceneList.offset});
       }

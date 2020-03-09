@@ -7,6 +7,7 @@ import (
 
 	"github.com/araddon/dateparse"
 	"github.com/jinzhu/gorm"
+	"github.com/markphelps/optional"
 )
 
 // SceneCuepoint data model
@@ -262,4 +263,168 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	}
 
 	return nil
+}
+
+type RequestSceneList struct {
+	Limit        optional.Int      `json:"limit"`
+	Offset       optional.Int      `json:"offset"`
+	IsAvailable  optional.Bool     `json:"isAvailable"`
+	IsAccessible optional.Bool     `json:"isAccessible"`
+	IsWatched    optional.Bool     `json:"isWatched"`
+	Lists        []optional.String `json:"lists"`
+	Sites        []optional.String `json:"sites"`
+	Tags         []optional.String `json:"tags"`
+	Cast         []optional.String `json:"cast"`
+	Cuepoint     []optional.String `json:"cuepoint"`
+	Released     optional.String   `json:"releaseMonth"`
+	Sort         optional.String   `json:"sort"`
+}
+
+type ResponseSceneList struct {
+	Results            int     `json:"results"`
+	Scenes             []Scene `json:"scenes"`
+	CountAny           int     `json:"count_any"`
+	CountAvailable     int     `json:"count_available"`
+	CountDownloaded    int     `json:"count_downloaded"`
+	CountNotDownloaded int     `json:"count_not_downloaded"`
+}
+
+func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
+	limit := r.Limit.OrElse(100)
+	offset := r.Offset.OrElse(0)
+
+	db, _ := GetDB()
+	defer db.Close()
+
+	var scenes []Scene
+	tx := db.Model(&scenes)
+
+	var out ResponseSceneList
+
+	if enablePreload {
+		tx = tx.
+			Preload("Cast").
+			Preload("Tags").
+			Preload("Files").
+			Preload("History").
+			Preload("Cuepoints")
+	}
+
+	if r.IsWatched.Present() {
+		tx = tx.Where("is_watched = ?", r.IsWatched.OrElse(true))
+	}
+
+	for _, i := range r.Lists {
+		if i.OrElse("") == "watchlist" {
+			tx = tx.Where("watchlist = ?", true)
+		}
+		if i.OrElse("") == "favourite" {
+			tx = tx.Where("favourite = ?", true)
+		}
+	}
+
+	var sites []string
+	for _, i := range r.Sites {
+		sites = append(sites, i.OrElse(""))
+	}
+	if len(sites) > 0 {
+		tx = tx.Where("site IN (?)", sites)
+	}
+
+	var tags []string
+	for _, i := range r.Tags {
+		tags = append(tags, i.OrElse(""))
+	}
+	if len(tags) > 0 {
+		tx = tx.
+			Joins("left join scene_tags on scene_tags.scene_id=scenes.id").
+			Joins("left join tags on tags.id=scene_tags.tag_id").
+			Where("tags.name IN (?)", tags)
+	}
+
+	var cast []string
+	for _, i := range r.Cast {
+		cast = append(cast, i.OrElse(""))
+	}
+	if len(cast) > 0 {
+		tx = tx.
+			Joins("left join scene_cast on scene_cast.scene_id=scenes.id").
+			Joins("left join actors on actors.id=scene_cast.actor_id").
+			Where("actors.name IN (?)", cast)
+	}
+
+	var cuepoint []string
+	for _, i := range r.Cuepoint {
+		cuepoint = append(cuepoint, i.OrElse(""))
+	}
+	if len(cuepoint) > 0 {
+		tx = tx.Joins("left join scene_cuepoints on scene_cuepoints.scene_id=scenes.id")
+		for _, i := range cuepoint {
+			tx = tx.Where("scene_cuepoints.name LIKE ?", "%"+i+"%")
+		}
+	}
+
+	if r.Released.Present() {
+		tx = tx.Where("release_date_text LIKE ?", r.Released.OrElse("")+"%")
+	}
+
+	switch r.Sort.OrElse("") {
+	case "added_desc":
+		tx = tx.Order("added_date desc")
+	case "added_asc":
+		tx = tx.Order("added_date asc")
+	case "release_desc":
+		tx = tx.Order("release_date desc")
+	case "release_asc":
+		tx = tx.Order("release_date asc")
+	case "rating_desc":
+		tx = tx.
+			Where("star_rating > ?", 0).
+			Order("star_rating desc")
+	case "rating_asc":
+		tx = tx.
+			Where("star_rating > ?", 0).
+			Order("star_rating asc")
+	case "last_opened":
+		tx = tx.
+			Where("last_opened > ?", "0001-01-01 00:00:00+00:00").
+			Order("last_opened desc")
+	case "scene_added_desc":
+		tx = tx.Order("created_at desc")
+	case "scene_updated_desc":
+		tx = tx.Order("updated_at desc")
+	case "random":
+		tx = tx.Order("random()")
+	default:
+		tx = tx.Order("release_date desc")
+	}
+
+	// Count other variations
+	tx.Group("scenes.scene_id").Count(&out.CountAny)
+	tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_accessible = ?", true).Count(&out.CountAvailable)
+	tx.Group("scenes.scene_id").Where("is_available = ?", true).Count(&out.CountDownloaded)
+	tx.Group("scenes.scene_id").Where("is_available = ?", false).Count(&out.CountNotDownloaded)
+
+	// Apply avail/accessible after counting
+	if r.IsAvailable.Present() {
+		tx = tx.Where("is_available = ?", r.IsAvailable.OrElse(true))
+	}
+
+	if r.IsAccessible.Present() {
+		tx = tx.Where("is_accessible = ?", r.IsAccessible.OrElse(true))
+	}
+
+	// Count totals for selection
+	tx.
+		Group("scenes.scene_id").
+		Count(&out.Results)
+
+	// Get scenes
+	tx.
+		Group("scenes.scene_id").
+		Limit(limit).
+		Offset(offset).
+		Find(&out.Scenes)
+
+	return out
 }
