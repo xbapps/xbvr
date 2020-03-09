@@ -33,12 +33,12 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.0
 	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
-	github.com/go-openapi/spec v0.19.4
+	github.com/go-openapi/spec v0.19.5
 	github.com/go-test/deep v1.0.4
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
-	github.com/gorilla/mux v1.6.2
+	github.com/gorilla/mux v1.7.3
 	github.com/gowww/log v0.0.0-20170712202755-af3772f4bb12
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/jinzhu/gorm v1.9.11
@@ -47,7 +47,7 @@ require (
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/marcsauter/single v0.0.0-20181104081128-f8bf46f26ec0
+	github.com/marcsauter/single v0.0.0-20191217065835-82e78df7afac
 	github.com/markphelps/optional v0.7.0
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
@@ -64,7 +64,7 @@ require (
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.8.1
-	github.com/putdotio/go-putio v0.0.0-20190822121956-19b9c636c877
+	github.com/putdotio/go-putio/putio v0.0.0-20191210165645-9be1143756a8
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
 	github.com/robfig/cron/v3 v3.0.0
@@ -79,8 +79,8 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
-	github.com/thoas/go-funk v0.4.0
-	github.com/tidwall/gjson v1.3.4
+	github.com/thoas/go-funk v0.5.0
+	github.com/tidwall/gjson v1.3.5
 	github.com/vansante/go-ffprobe v1.1.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
