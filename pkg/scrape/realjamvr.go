@@ -45,9 +45,15 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		// Released
 		sc.Released = strings.TrimSuffix(strings.TrimSpace(e.ChildText(`.date`)), ",")
 
-		// Title, Cover URL
-		sc.Title = strings.TrimSpace(e.ChildAttr(`deo-video`, "title"))
-		sc.Covers = append(sc.Covers, strings.TrimSpace(e.ChildAttr(`deo-video`, "cover-image")))
+		// Title
+		sc.Title = strings.TrimSpace(e.ChildText(`h1`))
+		
+		// Cover URL
+		re := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
+		coverURL := re.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.splash-screen`, "style")))[1]
+		if len(coverURL) > 0 {
+			sc.Covers = append(sc.Covers, coverURL)
+		}
 
 		// Gallery
 		e.ForEach(`.scene-previews-container a`, func(id int, e *colly.HTMLElement) {

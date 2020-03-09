@@ -70,11 +70,11 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 			base := strings.Split(strings.Replace(e.Attr("src"), "//", "", -1), "/")
 
 			base[8] = "horizontal"
-			base[9] = "1252x708c.jpg"
+			base[9] = "1182x777c.jpg"
 			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 
 			base[8] = "vertical"
-			base[9] = "400x605c.jpg"
+			base[9] = "1182x1788c.jpg"
 			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 		})
 
