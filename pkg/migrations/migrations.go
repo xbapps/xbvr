@@ -159,22 +159,6 @@ func Migrate() {
 			},
 		},
 		{
-			// 	TODO: remove before merging PR
-			ID: "0008-dev-add-ordering",
-			Migrate: func(tx *gorm.DB) error {
-				var playlists []models.Playlist
-				tx.Model(&playlists).Find(&playlists)
-
-				for i := range playlists {
-					if playlists[i].Ordering < 1 {
-						playlists[i].Ordering = int(playlists[i].ID)
-						playlists[i].Save()
-					}
-				}
-				return nil
-			},
-		},
-		{
 			ID: "0009-create-default-lists",
 			Migrate: func(tx *gorm.DB) error {
 				list := RequestSceneList{
@@ -241,6 +225,15 @@ func Migrate() {
 				listDeoWatch.Save()
 
 				return nil
+			},
+		},
+		{
+			ID: "0010-preview-flag",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
 	})

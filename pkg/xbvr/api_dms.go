@@ -2,13 +2,16 @@ package xbvr
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -49,6 +52,10 @@ func (i DMSResource) WebService() *restful.WebService {
 
 	ws.Route(ws.GET("/file/{file-id}").To(i.getFile).
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/preview/{scene-id}").To(i.getPreview).
+		Param(ws.PathParameter("scene-id", "Scene ID")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
@@ -144,6 +151,11 @@ func (i DMSResource) base(req *restful.Request, resp *restful.Response) {
 	db.Where("is_available = ?", true).Find(&vol)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, DMSDataResponse{Sites: outSites, Tags: outTags, Actors: outCast, Volumes: vol, ReleaseGroup: outRelease})
+}
+
+func (i DMSResource) getPreview(req *restful.Request, resp *restful.Response) {
+	sceneID := req.PathParameter("scene-id")
+	http.ServeFile(resp.ResponseWriter, req.Request, filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", sceneID)))
 }
 
 func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
