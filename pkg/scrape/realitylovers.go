@@ -33,7 +33,7 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Cover
-		sc.Covers = append(sc.Covers, e.Request.Ctx.Get("cover"))
+		sc.Covers = append(sc.Covers, strings.Replace(e.Request.Ctx.Get("cover"), "-Small", "-Large", 1))
 
 		// Title
 		sc.Title = e.Request.Ctx.Get("title")
@@ -48,7 +48,7 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 		// Gallery
 		e.ForEach(`img.videoClip__Details--galleryItem`, func(id int, e *colly.HTMLElement) {
-			imageURL := strings.Fields(e.Attr("data-big"))[0]
+			imageURL := strings.Replace(strings.Fields(e.Attr("data-big"))[0], "_small", "_large", 1)
 			sc.Gallery = append(sc.Gallery, strings.Replace(imageURL, "https:", "http:", 1))
 		})
 

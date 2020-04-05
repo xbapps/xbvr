@@ -2,9 +2,9 @@ package scrape
 
 import (
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
-	"regexp"
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"

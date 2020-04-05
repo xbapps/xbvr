@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"html"
 	"strconv"
 	"strings"
 	"sync"
@@ -109,7 +110,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 				out, _ := vm.Get("out")
 				outs, _ := out.ToString()
 
-				sc.Cast = strings.Split(outs, ",")
+				sc.Cast = strings.Split(html.UnescapeString(outs), ",")
 			}
 		})
 
