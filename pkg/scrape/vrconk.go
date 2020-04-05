@@ -41,8 +41,8 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.Title = strings.TrimSpace(e.ChildText(`div.item-tr-inner-col h1`))
 		sc.Covers = append(sc.Covers, rxRelaxed.FindString(e.ChildAttr(`div.splash-screen`, "style")))
 
-		e.ForEach(`.gallery-block img`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("src")))
+		e.ForEach(`.gallery-block figure > a`, func(id int, e *colly.HTMLElement) {
+			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
 		})
 
 		e.ForEach(`.stats-list li`, func(id int, e *colly.HTMLElement) {

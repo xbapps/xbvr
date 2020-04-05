@@ -50,7 +50,7 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Gallery
-		e.ForEach(`figure[itemprop=associatedMedia] a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`figure[itemprop=associatedMedia] > a`, func(id int, e *colly.HTMLElement) {
 			base := e.Request.AbsoluteURL(e.Attr("href"))
 			base = strings.Split(base, "?")[0]
 			sc.Gallery = append(sc.Gallery, base)

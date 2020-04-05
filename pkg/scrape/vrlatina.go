@@ -49,14 +49,40 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 		// Cast
 		e.ForEach(`div.video-info-left h3 a`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			if strings.TrimSpace(e.Text) != "" {
+				sc.Cast = append(sc.Cast, strings.TrimSpace(strings.ReplaceAll(e.Text, "!", "")))
+			}
 		})
 
 		// Tags
+		// Note: rare multi-girl scenes only feature one cast name, other girls are added as tags only
+		edgecases := map[string]bool{
+			"Alicia Feliz":     true,
+			"Karina Rojo":      true,
+			"Samantha Sanchez": true,
+			"Diana Dimon":      true,
+		}
+
 		e.ForEach(`div.video-tag-section a`, func(id int, e *colly.HTMLElement) {
 			tag := strings.TrimSpace(e.Text)
-			if !funk.ContainsString(sc.Cast, tag) {
-				sc.Tags = append(sc.Tags, tag)
+
+			// Check tag for edgecases and add missing names to sc.Cast
+			if edgecases[tag] {
+				if !funk.Contains(sc.Cast, tag) {
+					sc.Cast = append(sc.Cast, tag)
+				}
+			}
+
+			// Note: need case-insensitive compare here, castname-tags can be lower case (nikol sparta)
+			tagIsActor := false
+			for _, actor := range sc.Cast {
+				if strings.EqualFold(actor, tag) {
+					tagIsActor = true
+				}
+			}
+
+			if !tagIsActor {
+				sc.Tags = append(sc.Tags, strings.ToLower(tag))
 			}
 		})
 

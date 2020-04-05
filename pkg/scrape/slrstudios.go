@@ -33,13 +33,20 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.SiteID = tmp[len(tmp)-1]
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
+		// Cover
+		re := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
+		coverURL := re.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.splash-screen`, "style")))[1]
+		if len(coverURL) > 0 {
+			sc.Covers = append(sc.Covers, coverURL)
+		}
+
 		// Gallery
 		e.ForEach(`div#tabs-photos figure a`, func(id int, e *colly.HTMLElement) {
 			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
 		})
 
 		// Synopsis
-		e.ForEach(`div#tabs-about div[itemprop="text"]`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div#tabs-about div:last-child div:nth-child(2)`, func(id int, e *colly.HTMLElement) {
 			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
@@ -47,8 +54,24 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		skiptags := map[string]bool{
 			"vr porn": true,
 			"3D":      true, // Everything gets tagged 3D on SLR, even mono 360
-			// Note actors and studioName are added too before tags section runs
 		}
+
+		// Tags
+		// Note: known issue with SLR, they use a lot of combined tags like "cheerleader / college / school"
+		// ...a lot of these are shared with RealJamVR which uses the same tags though.
+		// Could split by / but would run into issues with "f/f/m" and "shorts / skirts"
+		var videotype string
+		e.ForEach(`ul.c-meta--scene-tags li a`, func(id int, e *colly.HTMLElement) {
+			if !skiptags[e.Attr("title")] {
+				sc.Tags = append(sc.Tags, e.Attr("title"))
+			}
+
+			// To determine filenames
+			if e.Attr("title") == "180°" || e.Attr("title") == "360°" {
+				videotype = e.Attr("title")
+			}
+
+		})
 
 		// Extract from JSON meta data
 		// NOTE: SLR only provides certain information like duration as json metadata inside a script element
@@ -56,34 +79,19 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
 			JsonMetadata := strings.TrimSpace(e.Text)
 
-			// skip Studio name as tag (also used for determining filenames)
-			var studioName string
-			author := gjson.Get(JsonMetadata, "video.author.name")
-			if author.Exists() {
-				studioName = author.String()
-				skiptags[strings.TrimSpace(author.String())] = true
-			}
-
-			// Cover
-			// NOTE: SLR sadly doesn't provide large covers yet, only thumbnail-sized
-			if gjson.Get(JsonMetadata, "video.thumbnailUrl").Exists() {
-				sc.Covers = append(sc.Covers, gjson.Get(JsonMetadata, "video.thumbnailUrl").String())
-			}
-
 			// Title
-			if gjson.Get(JsonMetadata, "video.name").Exists() {
-				sc.Title = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "video.name").String()))
+			if gjson.Get(JsonMetadata, "name").Exists() {
+				sc.Title = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "name").String()))
 			}
 
 			// Date
-			if gjson.Get(JsonMetadata, "video.datePublished").Exists() {
-				sc.Released = gjson.Get(JsonMetadata, "video.datePublished").String()
+			if gjson.Get(JsonMetadata, "datePublished").Exists() {
+				sc.Released = gjson.Get(JsonMetadata, "datePublished").String()
 			}
 
 			// Cast
-			actornames := gjson.Get(JsonMetadata, "video.actor.#.name")
+			actornames := gjson.Get(JsonMetadata, "actor.#.name")
 			for _, name := range actornames.Array() {
-				skiptags[strings.TrimSpace(name.String())] = true // skip cast names as regular tag
 				sc.Cast = append(sc.Cast, strings.TrimSpace(html.UnescapeString(name.String())))
 			}
 
@@ -92,8 +100,8 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			// ...but this is ready for the format of T01H55M30S should SLR fix that
 			reGetDuration := regexp.MustCompile(`^T(\d{0,2})H?(\d{2})M(\d{2})S$`)
 			duration := 0
-			if gjson.Get(JsonMetadata, "video.datePublished").Exists() {
-				tmpParts := reGetDuration.FindStringSubmatch(gjson.Get(JsonMetadata, "video.duration").String())
+			if gjson.Get(JsonMetadata, "duration").Exists() {
+				tmpParts := reGetDuration.FindStringSubmatch(gjson.Get(JsonMetadata, "duration").String())
 				if len(tmpParts[1]) > 0 {
 					if h, err := strconv.Atoi(tmpParts[1]); err == nil {
 						hrs := h
@@ -110,30 +118,11 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				sc.Duration = duration
 			}
 
-			// Tags
-			// Note: known issue with SLR, they use a lot of combined tags like "cheerleader / college / school"
-			// ...a lot of these are shared with RealJamVR which uses the same tags though.
-			// Could split by / but would run into issues with "f/f/m" and "shorts / skirts"
-			var videotype string
-			keywords := gjson.Get(JsonMetadata, "video.keywords")
-			keywords.ForEach(func(key, tag gjson.Result) bool {
-				if !skiptags[strings.TrimSpace(tag.String())] {
-					sc.Tags = append(sc.Tags, html.UnescapeString(tag.String()))
-				}
-
-				// To determine filenames
-				if tag.String() == "180°" || tag.String() == "360°" {
-					videotype = tag.String()
-				}
-
-				return true
-			})
-
 			// Filenames
 			// Only shown for logged in users so need to generate them
-			// Format: SLR_StudioName_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
+			// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
 			resolutions := []string{"_6400p_", "_2880p_", "_2700p_", "_1440p_", "_1080p_", "_original_"}
-			baseName := "SLR_" + studioName + "_" + sc.Title
+			baseName := "SLR_" + siteID + "_" + sc.Title
 			if videotype == "360°" { // Sadly can't determine if TB or MONO so have to add both
 				filenames := make([]string, 0, 2*len(resolutions))
 				for i := range resolutions {
@@ -213,7 +202,7 @@ func JimmyDraws(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	return SexLikeReal(wg, updateSite, knownScenes, out, "jimmydraws", "JimmyDraws", "Jimmy Draws")
 }
 
-// POVcentralVR - Has a site with mixed 2D/VR content, doesn't seem very scrapable: http://povcentral.com/home.html
+// POVcentralVR - Has a site with mixed 2D/VR content, doesn't seem very scrapeable: http://povcentral.com/home.html
 // Does have a blog for VR scenes but no useful covers: http://blog.povcentralmembers.com/category/3d/
 func POVcentralVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "povcentralvr", "POVcentralVR", "POV Central")
@@ -236,6 +225,11 @@ func LeninaCrowne(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	return SexLikeReal(wg, updateSite, knownScenes, out, "leninacrowne", "LeninaCrowne", "Terrible")
 }
 
+// StripzVR.com doesn't have pagination or a model/scene index that's scrapeable
+func StripzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "stripzvr", "StripzVR", "N1ck Inc.")
+}
+
 func init() {
 	registerScraper("slr-originals", "SLR Originals", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", SLROriginals)
 	registerScraper("istripper", "iStripper (SLR)", "https://www.istripper.com/favicons/istripper/apple-icon-120x120.png", iStripper)
@@ -248,4 +242,5 @@ func init() {
 	registerScraper("onlytease", "OnlyTease (SLR)", "https://www.onlytease.com/assets/img/favicons/ot/apple-touch-icon.png", OnlyTease)
 	registerScraper("pervrt", "perVRt/Terrible (SLR)", "https://mcdn.vrporn.com/files/20181218151630/pervrt-logo.jpg", perVRt)
 	registerScraper("leninacrowne", "LeninaCrowne (SLR)", "https://mcdn.vrporn.com/files/20190711135807/terrible_logo-e1562878668857_400x400_acf_cropped.jpg", LeninaCrowne)
+	registerScraper("stripzvr", "StripzVR (SLR)", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", StripzVR)
 }
