@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
