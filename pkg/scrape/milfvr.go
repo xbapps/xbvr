@@ -105,7 +105,7 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://www.milfvr.com/videos")
+	siteCollector.Visit("https://www.milfvr.com/videos?o=d")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
