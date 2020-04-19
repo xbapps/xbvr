@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -34,23 +35,21 @@ func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Title
-		e.ForEach(`header h1`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`h1.detail__title`, func(id int, e *colly.HTMLElement) {
 			sc.Title = e.Text
 		})
 
 		// Date
-		e.ForEach(`div.date`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.detail__date_time span.detail__date`, func(id int, e *colly.HTMLElement) {
 			tmpDate, _ := goment.New(e.Text, "DD MMMM, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
 		})
 
 		// Duration
-		e.ForEach(`div.duration`, func(id int, e *colly.HTMLElement) {
-			if id == 1 {
-				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Text, "minutes", "", -1)))
-				if err == nil {
-					sc.Duration = tmpDuration
-				}
+		e.ForEach(`div.detail__date_time span.time`, func(id int, e *colly.HTMLElement) {
+			tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Text, "minutes", "", -1)))
+			if err == nil {
+				sc.Duration = tmpDuration
 			}
 		})
 
@@ -61,31 +60,24 @@ func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		sc.Filenames = append(sc.Filenames, "wankzvr-"+base+"180_180x180_3dh_LR.mp4")
 
 		// Cover URLs
-		e.ForEach(`div.swiper-slide img`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`head meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("src")))
-			}
-		})
-
-		// Gallery
-		e.ForEach(`div.swiper-slide img.lazyload`, func(id int, e *colly.HTMLElement) {
-			if id > 0 {
-				sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("data-src")))
+				sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("content")))
 			}
 		})
 
 		// Synopsis
-		e.ForEach(`p.description`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(strings.Replace(e.Text, " Read more", "", -1))
+		e.ForEach(`div.detail__txt`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
 		// Tags
-		e.ForEach(`div.tags a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.tag-list__body a`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, e.Text)
 		})
 
 		// Cast
-		e.ForEach(`header h4 a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.detail__header-lg div.detail__models a`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
@@ -97,17 +89,18 @@ func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.contentContainer article a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`ul.cards-list a.video`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 		sceneURL = strings.Replace(sceneURL, "/preview", "", -1)
 
 		// If scene exist in database, there's no need to scrape
+		log.Infoln("found ", sceneURL)
 		if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/join") {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
 
-	siteCollector.Visit("https://www.wankzvr.com/videos")
+	siteCollector.Visit("https://www.wankzvr.com/videos?o=d")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

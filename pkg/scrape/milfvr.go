@@ -101,11 +101,12 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/join") {
+			log.Infoln("going", sceneURL)
 			sceneCollector.Visit(sceneURL)
 		}
 	})
 
-	siteCollector.Visit("https://www.milfvr.com/videos")
+	siteCollector.Visit("https://www.milfvr.com/videos?o=d")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
