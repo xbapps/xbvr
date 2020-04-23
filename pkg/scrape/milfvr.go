@@ -53,7 +53,7 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		// Gallery
 		for _, x := range []string{"1", "2", "3", "4", "5", "6"} {
-			tmpGallery := "https://cdns-i.milfvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/700_" + x + ".jpg"
+			tmpGallery := "https://cdns-i.milfvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/1280_" + x + ".jpg"
 			sc.Gallery = append(sc.Gallery, tmpGallery)
 		}
 
@@ -105,7 +105,7 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://www.milfvr.com/videos")
+	siteCollector.Visit("https://www.milfvr.com/videos?o=d")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

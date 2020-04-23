@@ -73,7 +73,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		})
 
 		// Cover URLs
-		sc.Covers = e.ChildAttrs(`dl8-video`, "poster")
+		sc.Covers = append(sc.Covers, e.ChildAttrs(`dl8-video`, "poster")[0], e.ChildAttrs(`section.banner picture img`, "src")[0])
 
 		// Gallery
 		sc.Gallery = e.ChildAttrs(`div.gallery-top a.fancybox.image`, "href")

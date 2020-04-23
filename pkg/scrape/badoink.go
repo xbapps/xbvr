@@ -40,9 +40,9 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		// Cover URLs
-		e.ForEach(`div#videoPreviewContainer picture source`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div#videoPreviewContainer picture img`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				sc.Covers = append(sc.Covers, strings.Split(e.Request.AbsoluteURL(e.Attr("srcset")), "?")[0])
+				sc.Covers = append(sc.Covers, strings.Split(e.Attr("src"), "?")[0])
 			}
 		})
 
@@ -60,6 +60,9 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		e.ForEach(`a.video-tag`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
+		if scraperID == "vrcosplayx" {
+			sc.Tags = append(sc.Tags, "Cosplay", "Parody")
+		}
 
 		// Cast
 		e.ForEach(`a.video-actor-link`, func(id int, e *colly.HTMLElement) {

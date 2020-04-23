@@ -33,7 +33,7 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.0
 	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
-	github.com/go-openapi/spec v0.19.6
+	github.com/go-openapi/spec v0.19.7
 	github.com/go-test/deep v1.0.5
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
@@ -86,10 +86,10 @@ require (
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.3 // indirect
-	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d
-	golang.org/x/net v0.0.0-20200222125558-5a598a2470a0
+	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
+	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae
+	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
