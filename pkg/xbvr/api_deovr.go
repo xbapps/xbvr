@@ -49,7 +49,7 @@ type DeoScene struct {
 	StereoMode     string              `json:"stereoMode"`
 	VideoLength    int                 `json:"videoLength"`
 	VideoThumbnail string              `json:"videoThumbnail"`
-	VideoPreview   string              `json:"videoPreview"`
+	VideoPreview   string              `json:"videoPreview,omitempty"`
 	Encodings      []DeoSceneEncoding  `json:"encodings"`
 	Timestamps     []DeoSceneTimestamp `json:"timeStamps"`
 }
@@ -266,6 +266,10 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Encodings:    sources,
 		VideoLength:  int(videoLength),
 		Timestamps:   cuepoints,
+	}
+
+	if scene.HasVideoPreview {
+		deoScene.VideoPreview = fmt.Sprintf("%v/api/dms/preview/%v", baseURL, scene.SceneID)
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, deoScene)

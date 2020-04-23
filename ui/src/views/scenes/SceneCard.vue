@@ -1,13 +1,16 @@
 <template>
   <div class="card is-shadowless">
     <div class="card-image">
-      <figure class="image" @click="showDetails(item)">
-        <vue-load-image>
-          <img slot="image" :src="getImageURL(item.cover_url)" v-bind:class="{'transparent': !item.is_available}"/>
-          <img slot="preloader" src="/ui/images/blank.png"/>
-          <img slot="error" src="/ui/images/blank.png"/>
-        </vue-load-image>
-      </figure>
+      <div @click="showDetails(item)" @mouseover="preview = true" @mouseleave="preview = false">
+        <figure class="image" v-if="!preview && item.has_preview || !item.has_preview">
+          <vue-load-image>
+            <img slot="image" :src="getImageURL(item.cover_url)" v-bind:class="{'transparent': !item.is_available}"/>
+            <img slot="preloader" src="/ui/images/blank.png"/>
+            <img slot="error" src="/ui/images/blank.png"/>
+          </vue-load-image>
+        </figure>
+        <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
+      </div>
     </div>
 
     <div style="padding-top:4px;">
@@ -40,7 +43,10 @@
     props: {item: Object},
     components: {VueLoadImage, WatchlistButton, FavouriteButton},
     data() {
-      return {format, parseISO}
+      return {
+        preview: false,
+        format, parseISO
+      }
     },
     methods: {
       getImageURL(u) {

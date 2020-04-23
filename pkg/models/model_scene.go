@@ -2,12 +2,16 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/araddon/dateparse"
 	"github.com/jinzhu/gorm"
 	"github.com/markphelps/optional"
+	"github.com/xbapps/xbvr/pkg/common"
 )
 
 // SceneCuepoint data model
@@ -62,6 +66,9 @@ type Scene struct {
 	History      []History       `json:"history"`
 	AddedDate    time.Time       `json:"added_date"`
 	LastOpened   time.Time       `json:"last_opened"`
+
+	HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
+	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
 
 	NeedsUpdate bool `json:"needs_update"`
 
@@ -139,6 +146,13 @@ func (o *Scene) GetFiles() ([]File, error) {
 	return files, nil
 }
 
+func (o *Scene) PreviewExists() bool {
+	if _, err := os.Stat(filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", o.SceneID))); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
 func (o *Scene) UpdateStatus() {
 	// Check if file with scene association exists
 	files, err := o.GetFiles()
@@ -181,6 +195,11 @@ func (o *Scene) UpdateStatus() {
 			o.IsAvailable = false
 			changed = true
 		}
+	}
+
+	if o.HasVideoPreview && !o.PreviewExists() {
+		o.HasVideoPreview = false
+		changed = true
 	}
 
 	if changed {

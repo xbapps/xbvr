@@ -15,6 +15,8 @@ var IndexDirV1 string
 var IndexDirV2 string
 var PersistentScrapeCacheDir string
 var ScrapeCacheDir string
+var VideoPreviewDir string
+var VideoThumbnailDir string
 
 func InitPaths() {
 	AppDir = appdir.New("xbvr").UserConfig()
@@ -27,6 +29,9 @@ func InitPaths() {
 
 	PersistentScrapeCacheDir = filepath.Join(CacheDir, "scrape_p_cache")
 	ScrapeCacheDir = filepath.Join(CacheDir, "scrape_cache")
+
+	VideoPreviewDir = filepath.Join(AppDir, "video_preview")
+	VideoThumbnailDir = filepath.Join(AppDir, "video_thumbnail")
 
 	// Remove search index v1
 	if _, err := os.Stat(IndexDirV1); !os.IsNotExist(err) {
