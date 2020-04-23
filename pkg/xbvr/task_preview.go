@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/darwayne/go-timecode/timecode"
 	"github.com/vansante/go-ffprobe"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
-	"trimmer.io/go-timecode/timecode"
 )
 
 func GeneratePreviews() {
