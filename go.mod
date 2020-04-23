@@ -22,7 +22,7 @@ require (
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
-	github.com/davecgh/go-spew v1.1.1
+	github.com/darwayne/go-timecode v1.1.0 // indirect
 	github.com/djherbis/times v1.2.0
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/dustin/go-humanize v0.0.0-20180421182945-02af3965c54e
@@ -94,6 +94,5 @@ require (
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	mvdan.cc/xurls/v2 v2.2.0
-	trimmer.io/go-timecode v0.0.0-20171217161720-3133bedccffe
 	willnorris.com/go/imageproxy v0.10.0
 )
