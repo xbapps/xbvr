@@ -35,6 +35,9 @@ func (i TaskResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/bundle/import").To(i.importBundle).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/preview/generate").To(i.previewGenerate).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.GET("/bundle/export").To(i.exportBundle).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -71,6 +74,10 @@ func (i TaskResource) importBundle(req *restful.Request, resp *restful.Response)
 
 func (i TaskResource) exportBundle(req *restful.Request, resp *restful.Response) {
 	go ExportBundle()
+}
+
+func (i TaskResource) previewGenerate(req *restful.Request, resp *restful.Response) {
+	go GeneratePreviews()
 }
 
 func (i TaskResource) scrapeJAVR(req *restful.Request, resp *restful.Response) {

@@ -243,6 +243,15 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0010-preview-flag",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
