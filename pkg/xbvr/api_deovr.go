@@ -286,9 +286,11 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 
 	for i := range savedPlaylists {
 		var r models.RequestSceneList
+
 		if err := json.Unmarshal([]byte(savedPlaylists[i].SearchParams), &r); err == nil {
 			r.IsAccessible = optional.NewBool(true)
 			r.IsAvailable = optional.NewBool(true)
+			r.Limit = optional.NewInt(10000)
 
 			q := models.QueryScenes(r, false)
 			sceneLists = append(sceneLists, DeoListScenes{
