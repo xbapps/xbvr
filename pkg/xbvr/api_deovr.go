@@ -41,10 +41,13 @@ type DeoSceneTimestamp struct {
 type DeoScene struct {
 	ID             uint                `json:"id"`
 	Title          string              `json:"title"`
+	Authorized     uint                `json:"authorized"`
 	Description    string              `json:"description"`
+	Paysite        DeoScenePaysite     `json:"paysite"`
 	IsFavorite     bool                `json:"isFavorite"`
 	Is3D           bool                `json:"is3d"`
 	ThumbnailURL   string              `json:"thumbnailUrl"`
+	RatingAvg      float64             `json:"rating_avg"`
 	ScreenType     string              `json:"screenType"`
 	StereoMode     string              `json:"stereoMode"`
 	VideoLength    int                 `json:"videoLength"`
@@ -52,11 +55,26 @@ type DeoScene struct {
 	VideoPreview   string              `json:"videoPreview,omitempty"`
 	Encodings      []DeoSceneEncoding  `json:"encodings"`
 	Timestamps     []DeoSceneTimestamp `json:"timeStamps"`
+	Actors         []DeoSceneActor     `json:"actors"`
+	Categories     []DeoSceneCategory  `json:"categories"`
+	FullVideoReady bool                `json:"fullVideoReady"`
+	FullAccess     bool                `json:"fullAccess"`
 }
 
 type DeoSceneActor struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
+}
+
+type DeoSceneCategory struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+type DeoScenePaysite struct {
+	ID         uint   `json:"id"`
+	Name       string `json:"name"`
+	Is3rdParty bool   `json:"is3rdParty"`
 }
 
 type DeoSceneEncoding struct {
@@ -180,6 +198,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 
 	deoScene := DeoScene{
 		ID:           999900000 + file.ID,
+		Authorized:   1,
 		Description:  file.Filename,
 		Title:        file.Filename,
 		IsFavorite:   false,
@@ -213,6 +232,14 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		actors = append(actors, DeoSceneActor{
 			ID:   scene.Cast[i].ID,
 			Name: scene.Cast[i].Name,
+		})
+	}
+
+	var categories []DeoSceneCategory
+	for i := range scene.Tags {
+		categories = append(categories, DeoSceneCategory{
+			ID:   scene.Tags[i].ID,
+			Name: scene.Tags[i].Name,
 		})
 	}
 
@@ -255,17 +282,24 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	}
 
 	deoScene := DeoScene{
-		ID:           scene.ID,
-		Title:        scene.Title,
-		Description:  scene.Synopsis,
-		IsFavorite:   scene.Favourite,
-		ThumbnailURL: baseURL + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1),
-		StereoMode:   stereoMode,
-		Is3D:         true,
-		ScreenType:   screenType,
-		Encodings:    sources,
-		VideoLength:  int(videoLength),
-		Timestamps:   cuepoints,
+		ID:             scene.ID,
+		Authorized:     1,
+		Title:          scene.Title,
+		Description:    scene.Synopsis,
+		Actors:         actors,
+		Categories:     categories,
+		Paysite:        DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
+		IsFavorite:     scene.Favourite,
+		RatingAvg:      scene.StarRating,
+		FullVideoReady: true,
+		FullAccess:     true,
+		ThumbnailURL:   baseURL + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1),
+		StereoMode:     stereoMode,
+		Is3D:           true,
+		ScreenType:     screenType,
+		Encodings:      sources,
+		VideoLength:    int(videoLength),
+		Timestamps:     cuepoints,
 	}
 
 	if scene.HasVideoPreview {
