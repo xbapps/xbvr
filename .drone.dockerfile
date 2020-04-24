@@ -1,4 +1,4 @@
-FROM ubuntu:19.04 as temp
+FROM ubuntu:20.04 as temp
 RUN apt update && apt install -y wget ca-certificates
 
 ARG DRONE_TAG
