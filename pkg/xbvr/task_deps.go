@@ -39,6 +39,14 @@ func CheckDependencies() {
 	ffprobe.SetFFProbeBinPath(ffprobePath)
 }
 
+func GetBinPath(tool string) string {
+	path := filepath.Join(common.BinDir, tool)
+	if runtime.GOOS == "windows" {
+		path = path + ".exe"
+	}
+	return path
+}
+
 func downloadFfbinaries(tool string) error {
 	var platformId = ""
 	if runtime.GOOS == "windows" {

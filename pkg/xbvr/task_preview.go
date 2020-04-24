@@ -73,7 +73,7 @@ func renderPreview(sceneID string, inputFile string) error {
 			"-an", snippetFile,
 		}
 
-		err := exec.Command("ffmpeg", cmd...).Run()
+		err := exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
 		if err != nil {
 			return err
 		}
@@ -100,7 +100,7 @@ func renderPreview(sceneID string, inputFile string) error {
 		"-c", "copy",
 		destFile,
 	}
-	err = exec.Command("ffmpeg", cmd...).Run()
+	err = exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
 	if err != nil {
 		return err
 	}
