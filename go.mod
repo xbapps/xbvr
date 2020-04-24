@@ -22,7 +22,7 @@ require (
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
-	github.com/darwayne/go-timecode v1.1.0 // indirect
+	github.com/darwayne/go-timecode v1.1.0
 	github.com/djherbis/times v1.2.0
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/dustin/go-humanize v0.0.0-20180421182945-02af3965c54e
