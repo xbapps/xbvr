@@ -15,13 +15,11 @@ type KV struct {
 func (o *KV) Save() {
 	db, _ := GetDB()
 	db.Save(o)
-	db.Close()
 }
 
 func (o *KV) Delete() {
 	db, _ := GetDB()
 	db.Delete(o)
-	db.Close()
 }
 
 // Lock functions
@@ -39,7 +37,6 @@ func CreateLock(lock string) {
 
 func CheckLock(lock string) bool {
 	db, _ := GetDB()
-	defer db.Close()
 
 	var obj KV
 	err := db.Where(&KV{Key: "lock-" + lock}).First(&obj).Error
@@ -51,7 +48,6 @@ func CheckLock(lock string) bool {
 
 func RemoveLock(lock string) {
 	db, _ := GetDB()
-	defer db.Close()
 
 	db.Where("key = ?", "lock-"+lock).Delete(&KV{})
 

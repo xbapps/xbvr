@@ -17,7 +17,6 @@ import (
 
 func GeneratePreviews() {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var scenes []models.Scene
 	db.Model(&models.Scene{}).Where("is_available = ?", true).Where("has_video_preview = ?", false).Order("release_date desc").Find(&scenes)
@@ -69,7 +68,7 @@ func renderPreview(sceneID string, inputFile string) error {
 			"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
 			"-i", inputFile,
 			"-vf", "crop=in_w/2:in_h:in_w/2:in_h,scale=400:400",
-			"-t", fmt.Sprintf("%v",snippetLength),
+			"-t", fmt.Sprintf("%v", snippetLength),
 			"-an", snippetFile,
 		}
 

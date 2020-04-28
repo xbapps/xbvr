@@ -56,7 +56,6 @@ func (i FilesResource) WebService() *restful.WebService {
 
 func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var r RequestFileList
 	err := req.ReadEntity(&r)
@@ -191,7 +190,6 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 
 func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var r RequestMatchFile
 	err := req.ReadEntity(&r)
@@ -249,7 +247,6 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 	var scene models.Scene
 	var file models.File
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	err = db.Preload("Volume").Where(&models.File{ID: uint(fileId)}).First(&file).Error
 	if err == nil {

@@ -17,7 +17,6 @@ type Tag struct {
 func (t *Tag) Save() error {
 	db, _ := GetDB()
 	err := db.Save(t).Error
-	db.Close()
 	return err
 }
 

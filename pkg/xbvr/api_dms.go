@@ -65,7 +65,6 @@ func (i DMSResource) sceneById(req *restful.Request, resp *restful.Response) {
 	sceneId := req.QueryParameter("id")
 
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var scene models.Scene
 	db.Preload("Cast").
@@ -83,7 +82,6 @@ func (i DMSResource) fileById(req *restful.Request, resp *restful.Response) {
 	}
 
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
@@ -93,7 +91,6 @@ func (i DMSResource) fileById(req *restful.Request, resp *restful.Response) {
 
 func (i DMSResource) base(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	// Get all accessible scenes
 	var scenes []models.Scene
@@ -168,7 +165,6 @@ func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
 
 	// Check if scene exist
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	f := models.File{}
 	err = db.Preload("Volume").First(&f, id).Error

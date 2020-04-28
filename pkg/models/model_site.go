@@ -16,20 +16,17 @@ type Site struct {
 func (i *Site) Save() error {
 	db, _ := GetDB()
 	err := db.Save(i).Error
-	db.Close()
 	return err
 }
 
 func (i *Site) GetIfExist(id string) error {
 	db, _ := GetDB()
-	defer db.Close()
 
 	return db.Where(&Site{ID: id}).First(i).Error
 }
 
 func InitSites() {
 	db, _ := GetDB()
-	defer db.Close()
 
 	scrapers := GetScrapers()
 	for i := range scrapers {

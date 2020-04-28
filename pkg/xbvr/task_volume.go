@@ -29,7 +29,6 @@ func RescanVolumes() {
 		models.CheckVolumes()
 
 		db, _ := models.GetDB()
-		defer db.Close()
 
 		tlog := log.WithFields(logrus.Fields{"task": "rescan"})
 

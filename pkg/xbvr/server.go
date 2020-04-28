@@ -73,6 +73,9 @@ func authHandle(pattern string, authEnabled bool, authSecret auth.SecretProvider
 }
 
 func StartServer(version, commit, branch, date string) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
 	currentVersion = version
 
 	migrations.Migrate()

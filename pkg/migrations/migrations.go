@@ -259,5 +259,4 @@ func Migrate() {
 	}
 	common.Log.Printf("Migration did run successfully")
 
-	db.Close()
 }

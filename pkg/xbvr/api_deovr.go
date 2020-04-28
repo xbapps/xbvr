@@ -170,7 +170,6 @@ func (i DeoVRResource) WebService() *restful.WebService {
 
 func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	fileId, err := strconv.Atoi(req.PathParameter("file-id"))
 	if err != nil {
@@ -213,7 +212,6 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 
 func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var scene models.Scene
 	db.Preload("Cast").
@@ -311,7 +309,6 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 
 func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var sceneLists []DeoListScenes
 

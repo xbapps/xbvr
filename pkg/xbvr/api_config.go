@@ -98,7 +98,6 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 
 func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var sites []models.Site
 	db.Order("name asc").Find(&sites)
@@ -108,7 +107,6 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 
 func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	id := req.PathParameter("site")
 	if id == "" {
@@ -131,7 +129,6 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 
 func (i ConfigResource) listStorage(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var vol []models.Volume
 	db.Raw(`select id, path, last_scan,is_available, is_enabled, type,
@@ -154,7 +151,6 @@ func (i ConfigResource) addStorage(req *restful.Request, resp *restful.Response)
 	}
 
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	switch r.Type {
 	case "local":
@@ -225,7 +221,6 @@ func (i ConfigResource) removeStorage(req *restful.Request, resp *restful.Respon
 	}
 
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	vol := models.Volume{}
 	err = db.First(&vol, id).Error
@@ -263,7 +258,6 @@ func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Resp
 	}
 
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	db.Model(&models.Scene{}).Where("site = ?", r.SiteName).Update("needs_update", true)
 }
@@ -279,7 +273,6 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 	}
 
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	var scenes []models.Scene
 	db.Where("site = ?", r.SiteName).Find(&scenes)

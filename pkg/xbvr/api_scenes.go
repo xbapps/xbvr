@@ -77,7 +77,6 @@ func (i SceneResource) WebService() *restful.WebService {
 
 func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
-	defer db.Close()
 
 	// Get all accessible scenes
 	var scenes []models.Scene
@@ -169,9 +168,6 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 		return
 	}
 
-	db, _ := models.GetDB()
-	defer db.Close()
-
 	var scene models.Scene
 	err = scene.GetIfExist(r.SceneID)
 	if err != nil {
@@ -192,9 +188,6 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 
 func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Response) {
 	q := req.QueryParameter("q")
-
-	db, _ := models.GetDB()
-	defer db.Close()
 
 	idx := NewIndex("scenes")
 	defer idx.bleve.Close()
@@ -243,7 +236,6 @@ func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Resp
 	}
 
 	var scene models.Scene
-	db, _ := models.GetDB()
 	err = scene.GetIfExistByPK(uint(sceneId))
 	if err == nil {
 		t := models.SceneCuepoint{
@@ -255,7 +247,6 @@ func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Resp
 
 		scene.GetIfExistByPK(uint(sceneId))
 	}
-	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
@@ -275,13 +266,11 @@ func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
 	}
 
 	var scene models.Scene
-	db, _ := models.GetDB()
 	err = scene.GetIfExistByPK(uint(sceneId))
 	if err == nil {
 		scene.StarRating = r.Rating
 		scene.Save()
 	}
-	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }

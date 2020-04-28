@@ -28,7 +28,6 @@ type SceneCuepoint struct {
 func (o *SceneCuepoint) Save() error {
 	db, _ := GetDB()
 	err := db.Save(o).Error
-	db.Close()
 	return err
 }
 
@@ -85,7 +84,6 @@ type Image struct {
 func (i *Scene) Save() error {
 	db, _ := GetDB()
 	err := db.Save(i).Error
-	db.Close()
 	return err
 }
 
@@ -99,7 +97,6 @@ func (i *Scene) FromJSON(data []byte) error {
 
 func (o *Scene) GetIfExist(id string) error {
 	db, _ := GetDB()
-	defer db.Close()
 
 	return db.
 		Preload("Tags").
@@ -112,7 +109,6 @@ func (o *Scene) GetIfExist(id string) error {
 
 func (o *Scene) GetIfExistByPK(id uint) error {
 	db, _ := GetDB()
-	defer db.Close()
 
 	return db.
 		Preload("Tags").
@@ -125,7 +121,6 @@ func (o *Scene) GetIfExistByPK(id uint) error {
 
 func (o *Scene) GetIfExistURL(u string) error {
 	db, _ := GetDB()
-	defer db.Close()
 
 	return db.
 		Preload("Tags").
@@ -138,7 +133,6 @@ func (o *Scene) GetIfExistURL(u string) error {
 
 func (o *Scene) GetFiles() ([]File, error) {
 	db, _ := GetDB()
-	defer db.Close()
 
 	var files []File
 	db.Preload("Volume").Where(&File{SceneID: o.ID}).Find(&files)
@@ -313,7 +307,6 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	offset := r.Offset.OrElse(0)
 
 	db, _ := GetDB()
-	defer db.Close()
 
 	var scenes []Scene
 	tx := db.Model(&scenes)
