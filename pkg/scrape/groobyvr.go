@@ -12,12 +12,12 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
 	defer wg.Done()
 	scraperID := "groobyvr"
 	siteID := "GroobyVR"
 	allowedDomains := []string{"groobyvr.com", "www.groobyvr.com"}
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector(allowedDomains...)
 	siteCollector := createCollector(allowedDomains...)
@@ -86,10 +86,7 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 	siteCollector.Visit("https://groobyvr.com/tour/categories/movies/1/latest/")
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 

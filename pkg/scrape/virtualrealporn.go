@@ -14,9 +14,9 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus, scraperID string, siteID string, URL string) error {
 	defer wg.Done()
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
 	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
@@ -220,18 +220,15 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 	siteCollector.Visit(URL)
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 
-func VirtualRealPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealporn", "VirtualRealPorn", "https://virtualrealporn.com/")
+func VirtualRealPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return VirtualRealPornSite(wg, updateSite, knownScenes, out, status, "virtualrealporn", "VirtualRealPorn", "https://virtualrealporn.com/")
 }
-func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealtrans", "VirtualRealTrans", "https://virtualrealtrans.com/")
+func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return VirtualRealPornSite(wg, updateSite, knownScenes, out, status, "virtualrealtrans", "VirtualRealTrans", "https://virtualrealtrans.com/")
 }
 
 func init() {

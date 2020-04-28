@@ -12,11 +12,11 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
 	defer wg.Done()
 	scraperID := "czechvr"
 	siteID := "CzechVR"
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("www.czechvrnetwork.com")
 	siteCollector := createCollector("www.czechvrnetwork.com")
@@ -133,10 +133,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 
 	siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos?next=1")
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 

@@ -14,9 +14,9 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string) error {
+func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus, scraperID string, siteID string, company string) error {
 	defer wg.Done()
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("www.sexlikereal.com")
 	siteCollector := createCollector("www.sexlikereal.com")
@@ -162,79 +162,76 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 	siteCollector.Visit("https://www.sexlikereal.com/studios/" + scraperID + "?sort=most_recent")
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 
 // SLR Originals - SexLikeReal own productions
-func SLROriginals(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "slr-originals", "SLR Originals", "SexLikeReal")
+func SLROriginals(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "slr-originals", "SLR Originals", "SexLikeReal")
 }
 
 // iStripper - Has a site for 2D desktop app, but doesn't even mention they do VR scenes: https://www.istripper.com/
-func iStripper(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "istripper", "iStripper", "TotemCore Ltd")
+func iStripper(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "istripper", "iStripper", "TotemCore Ltd")
 }
 
 // EmilyBloom - does have vertical covers on her site but no scene info to scrape: https://theemilybloom.com/virtual-reality/
-func EmilyBloom(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "emilybloom", "EmilyBloom", "Emily Bloom")
+func EmilyBloom(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "emilybloom", "EmilyBloom", "Emily Bloom")
 }
 
 // VRSexperts - does have large covers on their blog but they appear very delayed: http://www.vrsexperts.com/
-func VRSexperts(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "vrsexperts", "VRSexperts", "VRSexperts")
+func VRSexperts(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "vrsexperts", "VRSexperts", "VRSexperts")
 }
 
 // VReXtasy - Can't find a site/twitter at all
-func VReXtasy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "vrextasy", "VReXtasy", "VReXtasy")
+func VReXtasy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "vrextasy", "VReXtasy", "VReXtasy")
 }
 
 // VRSolos - https://twitter.com/VRsolos/
-func VRSolos(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "vrsolos", "VRSolos", "VRSolos")
+func VRSolos(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "vrsolos", "VRSolos", "VRSolos")
 }
 
 // Jimmy Draws - https://twitter.com/ukpornmaker
-func JimmyDraws(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "jimmydraws", "JimmyDraws", "Jimmy Draws")
+func JimmyDraws(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "jimmydraws", "JimmyDraws", "Jimmy Draws")
 }
 
 // POVcentralVR - Has a site with mixed 2D/VR content, doesn't seem very scrapeable: http://povcentral.com/home.html
 // Does have a blog for VR scenes but no useful covers: http://blog.povcentralmembers.com/category/3d/
-func POVcentralVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "povcentralvr", "POVcentralVR", "POV Central")
+func POVcentralVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "povcentralvr", "POVcentralVR", "POV Central")
 }
 
 // OnlyTease - Has a site for their 2D scenes, only started doing VR since Oct 2019: https://www.onlytease.com/
-func OnlyTease(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "onlytease", "OnlyTease", "OT Publishing Ltd")
+func OnlyTease(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "onlytease", "OnlyTease", "OT Publishing Ltd")
 }
 
 // perVRt/Terrible - Likely to change to Terrible brand, is working on their own website here: http://terrible.porn/
 // Publishes on SLR as perVRt, includes brands: Juggs, Babygirl, Sappho
 // https://twitter.com/terribledotporn & https://twitter.com/perVRtPORN
-func perVRt(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "pervrt", "perVRt", "Terrible")
+func perVRt(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "pervrt", "perVRt", "Terrible")
 }
 
 // LeninaCrowne - Wife of https://twitter.com/DickTerrible from the perVRt/Terrible Studio.
-func LeninaCrowne(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "leninacrowne", "LeninaCrowne", "Terrible")
+func LeninaCrowne(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "leninacrowne", "LeninaCrowne", "Terrible")
 }
 
 // StripzVR.com doesn't have pagination or a model/scene index that's scrapeable
-func StripzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "stripzvr", "StripzVR", "N1ck Inc.")
+func StripzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "stripzvr", "StripzVR", "N1ck Inc.")
 }
 
 // RealHotVR.com doesn't have complete scene index, pagination stops after two pages
-func RealHotVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "realhotvr", "RealHotVR", "RealHotVR")
+func RealHotVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, status, "realhotvr", "RealHotVR", "RealHotVR")
 }
 
 func init() {

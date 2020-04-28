@@ -14,11 +14,11 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
 	defer wg.Done()
 	scraperID := "vr3000"
 	siteID := "VR3000"
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	siteCollector := createCollector("vr3000.com", "www.vr3000.com")
 
@@ -120,10 +120,7 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	siteCollector.Visit("https://www.vr3000.com")
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 

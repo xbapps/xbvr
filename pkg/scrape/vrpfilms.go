@@ -13,11 +13,11 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
 	defer wg.Done()
 	scraperID := "vrpfilms"
 	siteID := "VRP Films"
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("vrpfilms.com", "www.vrpfilms.com")
 	siteCollector := createCollector("vrpfilms.com", "www.vrpfilms.com")
@@ -127,10 +127,7 @@ func VRPFilms(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 	siteCollector.Visit("https://vrpfilms.com/vrp-movies")
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 

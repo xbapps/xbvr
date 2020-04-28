@@ -12,9 +12,9 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus, scraperID string, siteID string, URL string) error {
 	defer wg.Done()
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com")
 	siteCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com")
@@ -128,31 +128,28 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 	siteCollector.Visit(URL)
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 
-func BadoinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "badoinkvr", "BadoinkVR", "https://badoinkvr.com/vrpornvideos")
+func BadoinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, status, "badoinkvr", "BadoinkVR", "https://badoinkvr.com/vrpornvideos")
 }
 
-func B18VR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "18vr", "18VR", "https://18vr.com/vrpornvideos")
+func B18VR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, status, "18vr", "18VR", "https://18vr.com/vrpornvideos")
 }
 
-func VRCosplayX(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "vrcosplayx", "VRCosplayX", "https://vrcosplayx.com/cosplaypornvideos")
+func VRCosplayX(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, status, "vrcosplayx", "VRCosplayX", "https://vrcosplayx.com/cosplaypornvideos")
 }
 
-func BabeVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "babevr", "BabeVR", "https://babevr.com/vrpornvideos")
+func BabeVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, status, "babevr", "BabeVR", "https://babevr.com/vrpornvideos")
 }
 
-func KinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "kinkvr", "KinkVR", "https://kinkvr.com/bdsm-vr-videos")
+func KinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, status, "kinkvr", "KinkVR", "https://kinkvr.com/bdsm-vr-videos")
 }
 
 func init() {

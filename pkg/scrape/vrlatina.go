@@ -13,11 +13,11 @@ import (
 	"mvdan.cc/xurls/v2"
 )
 
-func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
 	defer wg.Done()
 	scraperID := "vrlatina"
 	siteID := "VRLatina"
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("vrlatina.com")
 	siteCollector := createCollector("vrlatina.com")
@@ -130,10 +130,7 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 	siteCollector.Visit("https://vrlatina.com/videos/?typ=newest")
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 

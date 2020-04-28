@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -17,6 +18,9 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 	"golang.org/x/net/html"
 )
+
+const StatusStarted = 1
+const StatusFinished = 0
 
 var log = &common.Log
 
@@ -95,6 +99,23 @@ func getScrapeCacheDir() string {
 
 func registerScraper(id string, name string, avatarURL string, f models.ScraperFunc) {
 	models.RegisterScraper(id, name, avatarURL, f)
+}
+
+func ScraperStatusWriter(wg *sync.WaitGroup, scraperStatus <-chan models.ScraperStatus) {
+	defer wg.Done()
+
+	for status := range scraperStatus {
+		if status.Status == StatusStarted {
+			logScrapeStart(status.ScraperID, status.SiteID)
+		} else if status.Status == StatusFinished {
+			if status.UpdateSite {
+				updateSiteLastUpdate(status.ScraperID)
+			}
+			logScrapeFinished(status.ScraperID, status.SiteID)
+		} else {
+			log.Fatalln("Invalid ScraperStatus!")
+		}
+	}
 }
 
 func logScrapeStart(id string, name string) {

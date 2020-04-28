@@ -34,7 +34,7 @@ func CleanTags() {
 	CountTags()
 }
 
-func runScrapers(knownScenes []string, toScrape string, updateSite bool, collectedScenes chan<- models.ScrapedScene) error {
+func runScrapers(knownScenes []string, toScrape string, updateSite bool, collectedScenes chan<- models.ScrapedScene, scrapersStatus chan<- models.ScraperStatus) error {
 	defer scrape.DeleteScrapeCache()
 
 	scrapers := models.GetScrapers()
@@ -57,7 +57,7 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 			for _, scraper := range scrapers {
 				if site.ID == scraper.ID {
 					wg.Add(1)
-					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes)
+					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, scrapersStatus)
 				}
 			}
 		}
@@ -113,20 +113,26 @@ func Scrape(toScrape string) {
 		}
 
 		collectedScenes := make(chan models.ScrapedScene, 250)
+		scrapersStatus := make(chan models.ScraperStatus, 250)
 		var sceneCount uint64
 
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go sceneDBWriter(&wg, &sceneCount, collectedScenes)
+		wg.Add(1)
+		go scrape.ScraperStatusWriter(&wg, scrapersStatus)
 
 		// Start scraping
-		if e := runScrapers(knownScenes, toScrape, true, collectedScenes); e != nil {
+		if e := runScrapers(knownScenes, toScrape, true, collectedScenes, scrapersStatus); e != nil {
 			tlog.Info(e)
 		} else {
 			// Notify DB Writer threads that there are no more scenes
 			close(collectedScenes)
 
-			// Wait for DB Writer threads to complete
+			// Notify ScraperStatus Writer that there are no more scrapers
+			close(scrapersStatus)
+
+			// Wait for DB Writer and ScraperStatus Writer threads to complete
 			wg.Wait()
 
 			// Send a signal to clean up the progress bars just in case
@@ -201,11 +207,12 @@ func ExportBundle() {
 
 		var knownScenes []string
 		collectedScenes := make(chan models.ScrapedScene, 100)
+		scraperStatus := make(chan models.ScraperStatus, 100)
 
 		var scrapedScenes []models.ScrapedScene
 		go sceneSliceAppender(&scrapedScenes, collectedScenes)
 
-		runScrapers(knownScenes, "_enabled", false, collectedScenes)
+		runScrapers(knownScenes, "_enabled", false, collectedScenes, scraperStatus)
 
 		out := ContentBundle{
 			Timestamp:     time.Now().UTC(),

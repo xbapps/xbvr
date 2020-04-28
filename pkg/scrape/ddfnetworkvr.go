@@ -12,11 +12,11 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
 	defer wg.Done()
 	scraperID := "ddfnetworkvr"
 	siteID := "DDFNetworkVR"
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("ddfnetworkvr.com")
 	siteCollector := createCollector("ddfnetworkvr.com")
@@ -111,10 +111,7 @@ func DDFNetworkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 
 	siteCollector.Visit("https://ddfnetworkvr.com/")
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 

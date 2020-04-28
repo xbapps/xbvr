@@ -12,11 +12,11 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
 	defer wg.Done()
 	scraperID := "wankzvr"
 	siteID := "WankzVR"
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("www.wankzvr.com")
 	siteCollector := createCollector("www.wankzvr.com")
@@ -106,10 +106,7 @@ func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 
 	siteCollector.Visit("https://www.wankzvr.com/videos?o=d")
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 

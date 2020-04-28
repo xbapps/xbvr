@@ -12,11 +12,11 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
 	defer wg.Done()
 	scraperID := "sinsvr"
 	siteID := "SinsVR"
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("sinsvr.com", "www.sinsvr.com")
 	siteCollector := createCollector("sinsvr.com", "www.sinsvr.com")
@@ -88,10 +88,7 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	siteCollector.Visit("https://sinsvr.com/virtualreality/list/sort/Recent")
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 

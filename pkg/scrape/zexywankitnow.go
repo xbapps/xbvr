@@ -13,9 +13,9 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus, scraperID string, siteID string, URL string) error {
 	defer wg.Done()
-	logScrapeStart(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusStarted, updateSite}
 
 	sceneCollector := createCollector("wankitnowvr.com", "zexyvr.com")
 	siteCollector := createCollector("wankitnowvr.com", "zexyvr.com")
@@ -170,19 +170,16 @@ func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 
 	siteCollector.Visit(URL)
 
-	if updateSite {
-		updateSiteLastUpdate(scraperID)
-	}
-	logScrapeFinished(scraperID, siteID)
+	status <- models.ScraperStatus{scraperID, siteID, StatusFinished, updateSite}
 	return nil
 }
 
-func WankitNowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return TwoWebMediaSite(wg, updateSite, knownScenes, out, "wankitnowvr", "WankitNowVR", "https://wankitnowvr.com/videos/")
+func WankitNowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return TwoWebMediaSite(wg, updateSite, knownScenes, out, status, "wankitnowvr", "WankitNowVR", "https://wankitnowvr.com/videos/")
 }
 
-func ZexyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return TwoWebMediaSite(wg, updateSite, knownScenes, out, "zexyvr", "ZexyVR", "https://zexyvr.com/videos/")
+func ZexyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, status chan<- models.ScraperStatus) error {
+	return TwoWebMediaSite(wg, updateSite, knownScenes, out, status, "zexyvr", "ZexyVR", "https://zexyvr.com/videos/")
 }
 
 func init() {

@@ -7,13 +7,20 @@ import (
 
 var scrapers []Scraper
 
-type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene) error
+type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene, chan<- ScraperStatus) error
 
 type Scraper struct {
 	ID        string
 	Name      string
 	AvatarURL string
 	Scrape    ScraperFunc
+}
+
+type ScraperStatus struct {
+	ScraperID  string
+	SiteID     string
+	Status     int
+	UpdateSite bool
 }
 
 type ScrapedScene struct {
