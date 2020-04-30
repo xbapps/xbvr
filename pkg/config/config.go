@@ -34,8 +34,8 @@ type Object struct {
 		} `json:"preview"`
 	} `json:"library"`
 	Cron struct {
-		ScrapeContent string `default:"" json:"scrapeContent"`
-		RescanLibrary string `default:"" json:"rescanLibrary"`
+		ScrapeContentInterval int `default:"12" json:"scrapeContentInt"`
+		RescanLibraryInterval int `default:"2" json:"rescanLibraryInt"`
 	} `json:"cron"`
 }
 
