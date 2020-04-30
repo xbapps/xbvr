@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/xbapps/xbvr/pkg/config"
 	"golang.org/x/crypto/bcrypt"
 
 	auth "github.com/abbot/go-http-auth"
@@ -75,6 +76,8 @@ func authHandle(pattern string, authEnabled bool, authSecret auth.SecretProvider
 func StartServer(version, commit, branch, date string) {
 	currentVersion = version
 
+	config.LoadConfig()
+
 	migrations.Migrate()
 
 	// Remove old locks
@@ -104,7 +107,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(SecurityResource{}.WebService())
 	restful.Add(PlaylistResource{}.WebService())
 
-	config := restfulspec.Config{
+	restConfig := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),
 		APIPath:     "/api.json",
 		PostBuildSwaggerObjectHandler: func(swo *spec.Swagger) {
@@ -136,7 +139,7 @@ func StartServer(version, commit, branch, date string) {
 			}
 		},
 	}
-	restful.Add(restfulspec.NewOpenAPIService(config))
+	restful.Add(restfulspec.NewOpenAPIService(restConfig))
 
 	// Static files
 	if DEBUG == "" {
