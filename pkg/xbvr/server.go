@@ -37,7 +37,6 @@ var (
 	DEOUSER        = os.Getenv("DEO_USERNAME")
 	UIPASSWORD     = os.Getenv("UI_PASSWORD")
 	UIUSER         = os.Getenv("UI_USERNAME")
-	DLNA           = common.DLNA
 	httpAddr       = common.HttpAddr
 	wsAddr         = common.WsAddr
 	currentVersion = ""
@@ -206,8 +205,7 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("XBVR %v (build date %v) starting...", version, date)
 
 	// DMS
-	log.Info("DLNA Enabled: ", DLNA)
-	if DLNA {
+	if config.Config.Interface.DLNA.Enabled {
 		go StartDMS()
 	}
 

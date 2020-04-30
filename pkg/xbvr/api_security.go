@@ -5,6 +5,7 @@ import (
 
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/xbapps/xbvr/pkg/config"
 )
 
 type RequestEnableDLNA struct {
@@ -52,6 +53,9 @@ func (i SecurityResource) enableDLNA(req *restful.Request, resp *restful.Respons
 	} else {
 		StopDMS()
 	}
+
+	config.Config.Interface.DLNA.Enabled = r.Enabled
+	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }

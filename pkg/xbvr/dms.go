@@ -100,7 +100,7 @@ func initDMS() {
 func StartDMS() {
 	initDMS()
 	go func() {
-		log.Info("Starting DMS")
+		log.Info("Starting DLNA")
 		if err := dmsServer.Serve(); err != nil {
 			log.Fatal(err)
 		}
@@ -109,7 +109,7 @@ func StartDMS() {
 }
 
 func StopDMS() {
-	log.Info("Stopping DMS")
+	log.Info("Stopping DLNA")
 	err := dmsServer.Close()
 	if err != nil {
 		log.Fatal(err)
