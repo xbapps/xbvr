@@ -14,10 +14,10 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
-	"github.com/vansante/go-ffprobe"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/cheggaaa/pb.v1"
+	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 var allowedExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov"}
@@ -143,11 +143,16 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			fl.UpdatedTime = fTimes.ModTime()
 			fl.VolumeID = vol.ID
 
-			ffdata, err := ffprobe.GetProbeData(pth, time.Second*3)
+			ffprobeReader, err := os.Open(pth)
+			if err != nil {
+				tlog.Errorf("Can't open %v for ffprobe", pth)
+			}
+
+			ffdata, err := ffprobe.ProbeReader(context.Background(), ffprobeReader)
 			if err != nil {
 				tlog.Errorf("Error running ffprobe", pth, err)
 			} else {
-				vs := ffdata.GetFirstVideoStream()
+				vs := ffdata.FirstVideoStream()
 				if vs.BitRate != "" {
 					bitRate, _ := strconv.Atoi(vs.BitRate)
 					fl.VideoBitRate = bitRate

@@ -10,9 +10,9 @@ import (
 	"github.com/mholt/archiver"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
-	"github.com/vansante/go-ffprobe"
 	"github.com/xbapps/xbvr/pkg/common"
 	"gopkg.in/resty.v1"
+	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func CheckDependencies() {
@@ -36,6 +36,7 @@ func CheckDependencies() {
 		downloadFfbinaries("ffmpeg")
 	}
 
+	// Set path for go-ffprobe
 	ffprobe.SetFFProbeBinPath(ffprobePath)
 }
 
