@@ -84,8 +84,8 @@
         prettyBytes,
         format,
         parseISO,
-        sortField: 'filename',
-        sortOrder: 'asc',
+        sortField: 'created_time',
+        sortOrder: 'desc',
       }
     },
     computed: {
