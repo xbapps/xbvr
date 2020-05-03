@@ -12,9 +12,11 @@ import (
 	"github.com/djherbis/times"
 	"github.com/gammazero/nexus/v3/client"
 	"github.com/jinzhu/gorm"
+	"github.com/markphelps/optional"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/metrics"
 	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/cheggaaa/pb.v1"
 	"gopkg.in/vansante/go-ffprobe.v2"
@@ -50,7 +52,6 @@ func RescanVolumes() {
 		}
 
 		// Match Scene to File
-
 		var files []models.File
 		var scenes []models.Scene
 
@@ -76,7 +77,6 @@ func RescanVolumes() {
 		}
 
 		// Update scene statuses
-
 		tlog.Infof("Update status of Scenes")
 		db.Model(&models.Scene{}).Find(&scenes)
 
@@ -96,6 +96,36 @@ func RescanVolumes() {
 			publisher.Close()
 		}
 
+		// Grab metrics
+		var localFilesCount int64
+		db.Model(models.File{}).
+			Joins("left join volumes on files.volume_id = volumes.id").
+			Where("volumes.type = ?", "local").
+			Count(&localFilesCount)
+		metrics.WritePoint("local_files_count", float64(localFilesCount))
+
+		var localFiles []models.File
+		var localFilesSize int64 = 0
+		db.Model(models.File{}).
+			Joins("left join volumes on files.volume_id = volumes.id").
+			Where("volumes.type = ?", "local").
+			Scan(&localFiles)
+		for _, v := range localFiles {
+			localFilesSize = localFilesSize + v.Size
+		}
+		metrics.WritePoint("local_files_size", float64(localFilesSize))
+
+		r := models.RequestSceneList{}
+		metrics.WritePoint("scenes_scraped", float64(models.QueryScenes(r, false).Results))
+
+		r = models.RequestSceneList{IsAvailable: optional.NewBool(true)}
+		metrics.WritePoint("scenes_downloaded", float64(models.QueryScenes(r, false).Results))
+
+		r = models.RequestSceneList{IsWatched: optional.NewBool(true)}
+		metrics.WritePoint("scenes_watched_overall", float64(models.QueryScenes(r, false).Results))
+
+		r = models.RequestSceneList{IsWatched: optional.NewBool(false), IsAvailable: optional.NewBool(true)}
+		metrics.WritePoint("scenes_downloaded_unwatched", float64(models.QueryScenes(r, false).Results))
 	}
 
 	models.RemoveLock("rescan")
