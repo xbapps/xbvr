@@ -17,6 +17,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/dms/transcode"
 	"github.com/xbapps/xbvr/pkg/dms/upnp"
 	"github.com/xbapps/xbvr/pkg/dms/upnpav"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 const (
@@ -551,10 +553,16 @@ func (s *Server) filePath(_path string) string {
 }
 
 func (me *Server) serveIcon(w http.ResponseWriter, r *http.Request) {
-	sceneId := r.URL.Query().Get("scene")
-	data := XbaseGetScene(sceneId)
+	sceneId, err := strconv.Atoi(r.URL.Query().Get("scene"))
+	if err != nil {
+		return
+	}
 
-	resp, err := http.Get("http://127.0.0.1:9999/img/700x/" + strings.Replace(data.CoverURL, "://", ":/", -1))
+	var scene models.Scene
+	scene.GetIfExistByPK(uint(sceneId))
+
+	baseURL := "http://" + r.Host
+	resp, err := http.Get(baseURL + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1))
 	if err != nil {
 		return
 	}
@@ -695,19 +703,29 @@ func (server *Server) initMux(mux *http.ServeMux) {
 	mux.HandleFunc(contentDirectoryEventSubURL, server.contentDirectoryEventSubHandler)
 	mux.HandleFunc(iconPath, server.serveIcon)
 	mux.HandleFunc(resPath, func(w http.ResponseWriter, r *http.Request) {
-		sceneId := r.URL.Query().Get("scene")
-		fileId := r.URL.Query().Get("file")
+		sceneId, err := strconv.Atoi(r.URL.Query().Get("scene"))
+		if err != nil {
+			sceneId = 0
+		}
+		fileId, err := strconv.Atoi(r.URL.Query().Get("file"))
+		if err != nil {
+			fileId = 0
+		}
 
 		filePath := ""
 
-		if sceneId != "" {
-			data := XbaseGetScene(sceneId)
-			filePath = filepath.Join(data.File[0].Path, data.File[0].Filename)
+		if sceneId != 0 {
+			var scene models.Scene
+			scene.GetIfExistByPK(uint(sceneId))
+
+			filePath = filepath.Join(scene.Files[0].Path, scene.Files[0].Filename)
 		}
 
-		if fileId != "" {
-			data := XbaseGetFile(fileId)
-			filePath = filepath.Join(data.Path, data.Filename)
+		if fileId != 0 {
+			var file models.File
+			file.GetIfExistByPK(uint(fileId))
+
+			filePath = filepath.Join(file.Path, file.Filename)
 		}
 
 		if filePath != "" {

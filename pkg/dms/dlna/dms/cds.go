@@ -16,10 +16,11 @@ import (
 	"time"
 
 	"github.com/anacrolix/ffprobe"
+	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/dms/dlna"
 	"github.com/xbapps/xbvr/pkg/dms/upnp"
 	"github.com/xbapps/xbvr/pkg/dms/upnpav"
-	"gopkg.in/resty.v1"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 type jsonInfo struct {
@@ -191,7 +192,7 @@ func (me *contentDirectoryService) cdsObjectToUpnpavObject(cdsObject object, fil
 	return
 }
 
-func (me *contentDirectoryService) xbaseFileToContainer(file XbaseFile, parent string, host string) interface{} {
+func (me *contentDirectoryService) xbaseFileToContainer(file models.File, parent string, host string) interface{} {
 	obj := upnpav.Object{
 		ID:         fmt.Sprintf("file-%v", file.ID),
 		Restricted: 1,
@@ -218,7 +219,7 @@ func (me *contentDirectoryService) xbaseFileToContainer(file XbaseFile, parent s
 		ProtocolInfo: fmt.Sprintf("http-get:*:%s:%s", mimeType, dlna.ContentFeatures{
 			SupportRange: true,
 		}.String()),
-		Bitrate: file.VideoBitrate,
+		Bitrate: uint(file.VideoBitRate),
 		// Duration:   resDuration,
 		Size: uint64(file.Size),
 		// Resolution: resolution,
@@ -227,13 +228,13 @@ func (me *contentDirectoryService) xbaseFileToContainer(file XbaseFile, parent s
 	return item
 }
 
-func (me *contentDirectoryService) sceneToContainer(scene XbaseScene, parent string, host string) interface{} {
+func (me *contentDirectoryService) sceneToContainer(scene models.Scene, parent string, host string) interface{} {
 	c := make([]string, 0)
 	for i := range scene.Cast {
 		c = append(c, scene.Cast[i].Name)
 	}
 
-	if len(scene.File) == 0 {
+	if len(scene.Files) == 0 {
 		return nil
 	}
 
@@ -263,7 +264,7 @@ func (me *contentDirectoryService) sceneToContainer(scene XbaseScene, parent str
 		Res:    make([]upnpav.Resource, 0, 2),
 	}
 
-	file := scene.File[0]
+	file := scene.Files[0]
 	mimeType := "video/mp4"
 
 	item.Res = append(item.Res, upnpav.Resource{
@@ -278,7 +279,7 @@ func (me *contentDirectoryService) sceneToContainer(scene XbaseScene, parent str
 		ProtocolInfo: fmt.Sprintf("http-get:*:%s:%s", mimeType, dlna.ContentFeatures{
 			SupportRange: true,
 		}.String()),
-		Bitrate: file.VideoBitrate,
+		Bitrate: uint(file.VideoBitRate),
 		// Duration:   resDuration,
 		Size: uint64(file.Size),
 		// Resolution: resolution,
@@ -435,10 +436,10 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// All videos
 			if obj.Path == "all" {
-				var data XbaseScenes
-				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"isAccessible":true}`).
-					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
+				var r models.RequestSceneList
+				r.IsAccessible = optional.NewBool(true)
+				r.Limit = optional.NewInt(10000)
+				data := models.QueryScenes(r, true)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "all", host))
@@ -447,7 +448,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// Sites
 			if obj.Path == "sites" {
-				data := XbaseGet()
+				data := models.GetDMSData()
 
 				for i := range data.Sites {
 					objs = append(objs, upnpav.Container{Object: upnpav.Object{
@@ -463,10 +464,11 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if strings.HasPrefix(obj.Path, "sites/") {
 				id := strings.Split(obj.Path, "/")
 
-				var data XbaseScenes
-				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"isAccessible":true, "sites":["` + id[1] + `"]}`).
-					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
+				var r models.RequestSceneList
+				r.IsAccessible = optional.NewBool(true)
+				r.Limit = optional.NewInt(10000)
+				r.Sites = []optional.String{optional.NewString(id[1])}
+				data := models.QueryScenes(r, true)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "sites/"+id[1], host))
@@ -475,7 +477,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// Tags
 			if obj.Path == "tags" {
-				data := XbaseGet()
+				data := models.GetDMSData()
 
 				for i := range data.Tags {
 					objs = append(objs, upnpav.Container{Object: upnpav.Object{
@@ -491,10 +493,11 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if strings.HasPrefix(obj.Path, "tags/") {
 				id := strings.Split(obj.Path, "/")
 
-				var data XbaseScenes
-				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"isAccessible":true, "tags":["` + id[1] + `"]}`).
-					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
+				var r models.RequestSceneList
+				r.IsAccessible = optional.NewBool(true)
+				r.Limit = optional.NewInt(10000)
+				r.Tags = []optional.String{optional.NewString(id[1])}
+				data := models.QueryScenes(r, true)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "tags/"+id[1], host))
@@ -503,7 +506,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// Actors
 			if obj.Path == "actors" {
-				data := XbaseGet()
+				data := models.GetDMSData()
 
 				for i := range data.Actors {
 					objs = append(objs, upnpav.Container{Object: upnpav.Object{
@@ -519,10 +522,11 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if strings.HasPrefix(obj.Path, "actors/") {
 				id := strings.Split(obj.Path, "/")
 
-				var data XbaseScenes
-				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"isAccessible":true, "cast":["` + id[1] + `"]}`).
-					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
+				var r models.RequestSceneList
+				r.IsAccessible = optional.NewBool(true)
+				r.Limit = optional.NewInt(10000)
+				r.Cast = []optional.String{optional.NewString(id[1])}
+				data := models.QueryScenes(r, true)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "actors/"+id[1], host))
@@ -531,7 +535,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// Release date
 			if obj.Path == "released" {
-				data := XbaseGet()
+				data := models.GetDMSData()
 
 				for i := range data.ReleaseGroup {
 					objs = append(objs, upnpav.Container{Object: upnpav.Object{
@@ -547,10 +551,11 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if strings.HasPrefix(obj.Path, "released/") {
 				id := strings.Split(obj.Path, "/")
 
-				var data XbaseScenes
-				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"isAccessible":true, "releaseMonth":"` + id[1] + `"}`).
-					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
+				var r models.RequestSceneList
+				r.IsAccessible = optional.NewBool(true)
+				r.Limit = optional.NewInt(10000)
+				r.Released = optional.NewString(id[1])
+				data := models.QueryScenes(r, true)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "released/"+id[1], host))
@@ -559,10 +564,11 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// Watchlist
 			if obj.Path == "watchlist" {
-				var data XbaseScenes
-				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"isAccessible":true, "lists":["watchlist"]}`).
-					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
+				var r models.RequestSceneList
+				r.IsAccessible = optional.NewBool(true)
+				r.Limit = optional.NewInt(10000)
+				r.Lists = []optional.String{optional.NewString("watchlist")}
+				data := models.QueryScenes(r, true)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "watchlist", host))
@@ -571,10 +577,11 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// Favourites
 			if obj.Path == "favourites" {
-				var data XbaseScenes
-				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"isAccessible":true, "lists":["favourite"]}`).
-					SetResult(&data).Post("http://127.0.0.1:9999/api/scene/list")
+				var r models.RequestSceneList
+				r.IsAccessible = optional.NewBool(true)
+				r.Limit = optional.NewInt(10000)
+				r.Lists = []optional.String{optional.NewString("favourite")}
+				data := models.QueryScenes(r, true)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "favourites", host))
@@ -583,14 +590,14 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			// Unmatched
 			if obj.Path == "not-matched" {
-				var data []XbaseFile
-				resty.R().SetHeader("Content-Type", "application/json").
-					SetBody(`{"state": "unmatched"}`).
-					SetResult(&data).Post("http://127.0.0.1:9999/api/files/list")
+				var files []models.File
+				db, _ := models.GetDB()
+				db.Model(&files).Where("files.scene_id = 0").Find(&files)
+				db.Close()
 
-				for i := range data {
-					if _, err := os.Stat(filepath.Join(data[i].Path, data[i].Filename)); err == nil {
-						objs = append(objs, me.xbaseFileToContainer(data[i], "unmatched", host))
+				for i := range files {
+					if _, err := os.Stat(filepath.Join(files[i].Path, files[i].Filename)); err == nil {
+						objs = append(objs, me.xbaseFileToContainer(files[i], "unmatched", host))
 					}
 				}
 			}
