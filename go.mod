@@ -28,6 +28,7 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.0
 	github.com/getlantern/systray v0.0.0-20200324212034-d3ab4fd25d99
+	github.com/go-graphite/go-whisper v0.0.0-20200420141052-f2ba40d1bfdc
 	github.com/go-openapi/spec v0.19.7
 	github.com/go-test/deep v1.0.6
 	github.com/gobwas/glob v0.2.3 // indirect
