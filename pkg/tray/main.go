@@ -10,6 +10,7 @@ import (
 	"github.com/marcsauter/single"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/xbapps/xbvr/pkg/assets"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/xbvr"
 )
 
@@ -55,7 +56,7 @@ func onReady() {
 	for {
 		select {
 		case <-mOpenUI.ClickedCh:
-			go open.Run("http://localhost:9999")
+			go open.Run(fmt.Sprintf("http://localhost:%v", config.Config.Server.Port))
 		case <-mOpenConfig.ClickedCh:
 			go open.Run(appdir.New("xbvr").UserConfig())
 		case <-mQuit.ClickedCh:
