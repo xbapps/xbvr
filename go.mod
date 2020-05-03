@@ -27,7 +27,7 @@ require (
 	github.com/emicklei/go-restful-openapi v1.3.0
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.0
-	github.com/getlantern/systray v0.0.0-20200324212034-d3ab4fd25d99
+	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
 	github.com/go-graphite/go-whisper v0.0.0-20200420141052-f2ba40d1bfdc
 	github.com/go-openapi/spec v0.19.7
 	github.com/go-test/deep v1.0.6
