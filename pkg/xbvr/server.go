@@ -37,7 +37,6 @@ var (
 	DEOUSER        = os.Getenv("DEO_USERNAME")
 	UIPASSWORD     = os.Getenv("UI_PASSWORD")
 	UIUSER         = os.Getenv("UI_USERNAME")
-	httpAddr       = common.HttpAddr
 	wsAddr         = common.WsAddr
 	currentVersion = ""
 )
@@ -217,7 +216,7 @@ func StartServer(version, commit, branch, date string) {
 	for _, addr := range addrs {
 		ip, _ := addr.(*net.IPNet)
 		if ip.IP.To4() != nil {
-			ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+			ips = append(ips, fmt.Sprintf("http://%v:%v/", ip.IP, config.Config.Server.Port))
 		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
@@ -225,6 +224,7 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("DeoVR Authentication enabled: %v", deoAuthEnabled())
 	log.Infof("Database file stored at %s", common.AppDir)
 
+	httpAddr := fmt.Sprintf("%v:%v", config.Config.Server.BindAddress, config.Config.Server.Port)
 	if DEBUG == "" {
 		log.Fatal(http.ListenAndServe(httpAddr, handler))
 	} else {
