@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/go-graphite/go-whisper"
+	"github.com/lomik/go-whisper"
 	"github.com/xbapps/xbvr/pkg/common"
 )
 
