@@ -78,7 +78,12 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.memVid div.coverPrev a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div#starIndexData div.featModelCell > a`, func(e *colly.HTMLElement) {
+		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+		siteCollector.Visit(pageURL)
+	})
+
+	siteCollector.OnHTML(`div.modelpage-vidpad a.vidIcons`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
@@ -87,7 +92,7 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.Visit("https://www.hologirlsvr.com/Scenes")
+	siteCollector.Visit("https://www.hologirlsvr.com/Models")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
