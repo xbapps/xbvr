@@ -12,7 +12,10 @@ import (
 var log = &common.Log
 
 func GetDB() (*gorm.DB, error) {
-	db, err := gorm.Open("sqlite3", filepath.Join(common.AppDir, "main.db"))
+	if common.DEBUG != "" {
+		common.Log.Debug("Getting DB handle from ", common.GetCallerFunctionName())
+	}
+	
 	if err != nil {
 		common.Log.Fatal("failed to connect database", err)
 	}
