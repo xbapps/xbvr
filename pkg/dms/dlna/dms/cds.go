@@ -289,7 +289,7 @@ func (me *contentDirectoryService) sceneToContainer(scene models.Scene, parent s
 		URL:          iconURI,
 		ProtocolInfo: "http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED",
 	})
-
+	
 	return item
 }
 
@@ -438,8 +438,7 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if obj.Path == "all" {
 				var r models.RequestSceneList
 				r.IsAccessible = optional.NewBool(true)
-				r.Limit = optional.NewInt(10000)
-				data := models.QueryScenes(r, true)
+				data := models.QueryScenesFull(r)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "all", host))
@@ -466,9 +465,8 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				var r models.RequestSceneList
 				r.IsAccessible = optional.NewBool(true)
-				r.Limit = optional.NewInt(10000)
 				r.Sites = []optional.String{optional.NewString(id[1])}
-				data := models.QueryScenes(r, true)
+				data := models.QueryScenesFull(r)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "sites/"+id[1], host))
@@ -495,9 +493,8 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				var r models.RequestSceneList
 				r.IsAccessible = optional.NewBool(true)
-				r.Limit = optional.NewInt(10000)
 				r.Tags = []optional.String{optional.NewString(id[1])}
-				data := models.QueryScenes(r, true)
+				data := models.QueryScenesFull(r)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "tags/"+id[1], host))
@@ -524,9 +521,8 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				var r models.RequestSceneList
 				r.IsAccessible = optional.NewBool(true)
-				r.Limit = optional.NewInt(10000)
 				r.Cast = []optional.String{optional.NewString(id[1])}
-				data := models.QueryScenes(r, true)
+				data := models.QueryScenesFull(r)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "actors/"+id[1], host))
@@ -553,9 +549,8 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				var r models.RequestSceneList
 				r.IsAccessible = optional.NewBool(true)
-				r.Limit = optional.NewInt(10000)
 				r.Released = optional.NewString(id[1])
-				data := models.QueryScenes(r, true)
+				data := models.QueryScenesFull(r)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "released/"+id[1], host))
@@ -566,9 +561,8 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if obj.Path == "watchlist" {
 				var r models.RequestSceneList
 				r.IsAccessible = optional.NewBool(true)
-				r.Limit = optional.NewInt(10000)
 				r.Lists = []optional.String{optional.NewString("watchlist")}
-				data := models.QueryScenes(r, true)
+				data := models.QueryScenesFull(r)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "watchlist", host))
@@ -579,9 +573,8 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 			if obj.Path == "favourites" {
 				var r models.RequestSceneList
 				r.IsAccessible = optional.NewBool(true)
-				r.Limit = optional.NewInt(10000)
 				r.Lists = []optional.String{optional.NewString("favourite")}
-				data := models.QueryScenes(r, true)
+				data := models.QueryScenesFull(r)
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "favourites", host))

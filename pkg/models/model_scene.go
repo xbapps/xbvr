@@ -308,6 +308,24 @@ type ResponseSceneList struct {
 	CountNotDownloaded int     `json:"count_not_downloaded"`
 }
 
+func QueryScenesFull(r RequestSceneList) ResponseSceneList {
+	var scenes []Scene
+	r.Limit = optional.NewInt(100)
+	r.Offset = optional.NewInt(0)
+
+	q := QueryScenes(r, true)
+	scenes = q.Scenes
+
+	for len(scenes) < q.Results {
+		r.Offset = optional.NewInt(len(scenes))
+		q := QueryScenes(r, true)
+		scenes = append(scenes, q.Scenes...)
+	}
+
+	q.Scenes = scenes
+	return q
+}
+
 func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	limit := r.Limit.OrElse(100)
 	offset := r.Offset.OrElse(0)
