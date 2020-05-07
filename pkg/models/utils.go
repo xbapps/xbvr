@@ -20,7 +20,7 @@ func GetDMSData() DMSData {
 		Preload("Tags").
 		Preload("Files")
 
-	tx = tx.Where("is_accessible = ?", 1)
+	tx = tx.Where("is_accessible = ?", 1).Where("is_available = ?", 1)
 
 	// Available sites
 	tx.Group("site").Find(&scenes)

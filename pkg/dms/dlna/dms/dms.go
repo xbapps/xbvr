@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/anacrolix/ffprobe"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/dms/dlna"
 	"github.com/xbapps/xbvr/pkg/dms/soap"
 	"github.com/xbapps/xbvr/pkg/dms/ssdp"
@@ -553,16 +554,16 @@ func (s *Server) filePath(_path string) string {
 }
 
 func (me *Server) serveIcon(w http.ResponseWriter, r *http.Request) {
-	sceneId, err := strconv.Atoi(r.URL.Query().Get("scene"))
-	if err != nil {
+	sceneId := r.URL.Query().Get("scene")
+	if sceneId == "" {
 		return
 	}
 
 	var scene models.Scene
-	scene.GetIfExistByPK(uint(sceneId))
+	scene.GetIfExist(sceneId)
 
-	baseURL := "http://" + r.Host
-	resp, err := http.Get(baseURL + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1))
+	baseURL := "http://127.0.0.1:" + strconv.Itoa(config.Config.Server.Port) + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
+	resp, err := http.Get(baseURL)
 	if err != nil {
 		return
 	}
@@ -703,10 +704,7 @@ func (server *Server) initMux(mux *http.ServeMux) {
 	mux.HandleFunc(contentDirectoryEventSubURL, server.contentDirectoryEventSubHandler)
 	mux.HandleFunc(iconPath, server.serveIcon)
 	mux.HandleFunc(resPath, func(w http.ResponseWriter, r *http.Request) {
-		sceneId, err := strconv.Atoi(r.URL.Query().Get("scene"))
-		if err != nil {
-			sceneId = 0
-		}
+		sceneId := r.URL.Query().Get("scene")
 		fileId, err := strconv.Atoi(r.URL.Query().Get("file"))
 		if err != nil {
 			fileId = 0
@@ -714,9 +712,9 @@ func (server *Server) initMux(mux *http.ServeMux) {
 
 		filePath := ""
 
-		if sceneId != 0 {
+		if sceneId != "" {
 			var scene models.Scene
-			scene.GetIfExistByPK(uint(sceneId))
+			scene.GetIfExist(sceneId)
 
 			filePath = filepath.Join(scene.Files[0].Path, scene.Files[0].Filename)
 		}
