@@ -92,7 +92,7 @@ func RescanVolumes() {
 		// Inform UI about state change
 		publisher, err := client.ConnectNet(context.Background(), "ws://"+common.WsAddr+"/ws", client.Config{Realm: "default"})
 		if err == nil {
-			publisher.Publish("state.change.optionsFolders", nil, nil, nil)
+			publisher.Publish("state.change.optionsStorage", nil, nil, nil)
 			publisher.Close()
 		}
 

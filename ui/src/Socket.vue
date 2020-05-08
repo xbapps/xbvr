@@ -75,8 +75,8 @@
         }
       });
 
-      ws.subscribe("state.change.optionsFolders", (arr, obj) => {
-        this.$store.dispatch("optionsFolders/load");
+      ws.subscribe("state.change.optionsStorage", (arr, obj) => {
+        this.$store.dispatch("optionsStorage/load");
       });
     }
   }

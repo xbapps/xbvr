@@ -17,14 +17,17 @@ type Object struct {
 		Username string `default:"" json:"username"`
 		Password string `default:"" json:"password"`
 	} `json:"security"`
-	Interface struct {
+	Interfaces struct {
 		DLNA struct {
-			Enabled bool `default:"true" json:"enabled"`
+			Enabled      bool     `default:"true" json:"enabled"`
+			ServiceName  string   `default:"XBVR" json:"serviceName"`
+			ServiceImage string   `default:"default" json:"serviceImage"`
+			AllowedIP    []string `default:"[]" json:"allowedIp"`
 		} `json:"dlna"`
 		DeoVR struct {
 			Enabled bool `default:"true" json:"enabled"`
 		} `json:"deovr"`
-	} `json:"interface"`
+	} `json:"interfaces"`
 	Library struct {
 		Preview struct {
 			Enabled       bool    `default:"true" json:"enabled"`
@@ -40,6 +43,7 @@ type Object struct {
 }
 
 var Config Object
+var RecentIPAddresses []string
 
 func LoadConfig() {
 	db, _ := models.GetDB()
@@ -65,4 +69,5 @@ func SaveConfig() {
 
 func init() {
 	defaults.Set(&Config)
+	RecentIPAddresses = []string{}
 }

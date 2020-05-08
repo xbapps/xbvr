@@ -5,24 +5,30 @@
       <div class="column is-one-fifth custom-menu">
         <b-menu :accordion="false">
           <b-menu-list :label="$t('Options')">
-            <b-menu-item :label="$t('Storage')" :active="active==='folders'"
-                         @click="setActive('folders')"/>
-            <b-menu-item :label="$t('Scene data')" :expanded="true" @click="setActive('data-scrapers')">
-              <b-menu-item :label="$t('Scrapers')" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
-              <b-menu-item :label="$t('Data import/export')" :active="active==='data-import-export'"
-                           @click="setActive('data-import-export')"/>
-            </b-menu-item>
-            <b-menu-item :label="$t('Security')" :active="active==='security'" @click="setActive('security')"/>
+            <b-menu-item :label="$t('Storage')" :active="active==='storage'" @click="setActive('storage')"/>
+<!--            <b-menu-item :label="$t('Previews')" :active="active==='previews'" @click="setActive('previews')"/>-->
+<!--            <b-menu-item :label="$t('Scheduled tasks')" :active="active==='tasks'" @click="setActive ('tasks')"/>-->
+<!--            <b-menu-item :label="$t('Caches')" :active="active==='cache'" @click="setActive('cache')"></b-menu-item>-->
+          </b-menu-list>
+          <b-menu-list :label="$t('Scene data')">
+            <b-menu-item :label="$t('Scrapers')" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
+            <b-menu-item :label="$t('Data import/export')" :active="active==='data-import-export'"
+                         @click="setActive('data-import-export')"/>
+          </b-menu-list>
+          <b-menu-list :label="$t('Interfaces')">
+<!--            <b-menu-item :label="$t('Web')" :active="active==='interface_web'" @click="setActive('ui_web')"/>-->
+            <b-menu-item :label="$t('DLNA')" :active="active==='interface_dlna'" @click="setActive('interface_dlna')"/>
+<!--            <b-menu-item :label="$t('DeoVR')" :active="active==='interface_deovr'" @click="setActive('ui_deovr')"/>-->
           </b-menu-list>
         </b-menu>
       </div>
 
       <div class="column">
         <div style="padding-top:2em">
-          <Folders v-show="active==='folders'"/>
+          <Storage v-show="active==='storage'"/>
           <SceneDataScrapers v-show="active==='data-scrapers'"/>
           <SceneDataImportExport v-show="active==='data-import-export'"/>
-          <Security v-show="active==='security'"/>
+          <InterfaceDLNA v-show="active==='interface_dlna'"/>
         </div>
       </div>
 
@@ -31,16 +37,16 @@
 </template>
 
 <script>
-  import Folders from "./OptionsFolders.vue";
-  import SceneDataScrapers from "./OptionsSceneDataScrapers.vue";
-  import SceneDataImportExport from "./OptionsSceneDataImportExport";
-  import Security from "./OptionsSecurity.vue";
+  import Storage from "./sections/Storage.vue";
+  import SceneDataScrapers from "./sections/OptionsSceneDataScrapers.vue";
+  import SceneDataImportExport from "./sections/OptionsSceneDataImportExport";
+  import InterfaceDLNA from "./sections/InterfaceDLNA.vue";
 
   export default {
-    components: {Folders, SceneDataScrapers, SceneDataImportExport, Security},
+    components: {Storage, SceneDataScrapers, SceneDataImportExport, InterfaceDLNA},
     data: function () {
       return {
-        active: "folders",
+        active: "storage",
       }
     },
     methods: {
