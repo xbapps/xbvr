@@ -848,6 +848,13 @@
   dependencies:
     regenerator-runtime "^0.13.2"
 
+"@babel/runtime@^7.5.5":
+  version "7.9.6"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.9.6.tgz#a9102eb5cadedf3f31d08a9ecf294af7827ea29f"
+  integrity sha512-64AF1xY3OAkFHqOb9s4jpgk1Mm5vDZ4L3acHvAml+53nO1XbXLuDodsVpO4OIUsmemlUHMxNdYMNJmsvOwLrvQ==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/runtime@^7.8.4":
   version "7.8.7"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.8.7.tgz#8fefce9802db54881ba59f90bb28719b4996324d"
@@ -3381,10 +3388,10 @@ dashdash@^1.12.0:
   dependencies:
     assert-plus "^1.0.0"
 
-date-fns@2.12.0:
-  version "2.12.0"
-  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-2.12.0.tgz#01754c8a2f3368fc1119cf4625c3dad8c1845ee6"
-  integrity sha512-qJgn99xxKnFgB1qL4jpxU7Q2t0LOn1p8KMIveef3UZD7kqjT3tpFNNdXJelEHhE+rUgffriXriw/sOSU+cS1Hw==
+date-fns@2.13.0:
+  version "2.13.0"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-2.13.0.tgz#d7b8a0a2d392e8d88a8024d0a46b980bbfdbd708"
+  integrity sha512-xm0c61mevGF7f0XpCGtDTGpzEFC/1fpLXHbmFpxZZQJuvByIK2ozm6cSYuU+nxFYOPh2EuCfzUwlTEFwKG+h5w==
 
 date-now@^0.1.4:
   version "0.1.4"
@@ -4847,7 +4854,7 @@ global@4.3.2, global@~4.3.0:
     min-document "^2.19.0"
     process "~0.5.1"
 
-global@^4.3.0, global@^4.3.1, global@^4.3.2:
+global@^4.3.0, global@^4.3.1, global@^4.3.2, global@^4.4.0:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/global/-/global-4.4.0.tgz#3e7b105179006a323ed71aafca3e9c57a5cc6406"
   integrity sha512-wv/LAoHdRE3BeTGz53FAamhGlPLhlssK45usmGFThIi4XqnBmjKQ16u+RNbP7WvigRZDxUsM0J3gcQ5yicaL0w==
@@ -10310,12 +10317,13 @@ videojs-hotkeys@0.2.25:
   resolved "https://registry.yarnpkg.com/videojs-hotkeys/-/videojs-hotkeys-0.2.25.tgz#b34b5816db1af747e41a90a3be268d51449b4cb0"
   integrity sha512-XgMjWiqGlmAjuHtpP529A2voVh++z46FSD0XeSy+65yeuTZOd+w2CJmfrL4jPpGm+MME5l9lOLfVpoEeDaBa1Q==
 
-videojs-vr@1.5.0:
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/videojs-vr/-/videojs-vr-1.5.0.tgz#507953228c626847a732ce651a6efede9f643dc1"
-  integrity sha512-S3/pnk0xP7tGuRX/qe9x4DDppyGGrOGho1IEaBuSyOBnxb1n75Qq+OT4Y7vf9YQp416/wfO6chml1tA5MhMhnw==
+videojs-vr@1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/videojs-vr/-/videojs-vr-1.7.1.tgz#6cbf3e8973eca8571e5391afd09fed72edfaedda"
+  integrity sha512-o9mpGdf529jZjCnYhGEmkyMjmHcMLAVobx94RxX7Z1uhdVDoT7O1Ct88X+RdjlwYn4qUmrEk8NQFYOb6I2wQ1A==
   dependencies:
-    global "^4.3.2"
+    "@babel/runtime" "^7.5.5"
+    global "^4.4.0"
     three "0.93.0"
     video.js "^6 || ^7"
     webvr-polyfill "0.10.6"
@@ -10468,10 +10476,10 @@ vue-i18n@^8.17.0:
   resolved "https://registry.yarnpkg.com/vue-i18n/-/vue-i18n-8.17.3.tgz#f366082d5784c3c35e8ffda733cb3f3990a3900d"
   integrity sha512-sWjGOL7dXo6rYcPQmlY8FN/beLxq2aCnTZMSxfW0yW78rRGpqWrqXJURH56kvMYCnyNCepBjGWEEW0rbFiig5Q==
 
-vue-load-image@0.1.9:
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/vue-load-image/-/vue-load-image-0.1.9.tgz#bdfb679a467a9f92863068a99a60e83a760c2709"
-  integrity sha512-8042IpvpdUfB3XwzNLSmttzGk/+XYXXNfhjWfeJGddVhPPYmqTUGwWruldTShWtipt+vVjCSrj7CKKtTlGCotA==
+vue-load-image@0.1.10:
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/vue-load-image/-/vue-load-image-0.1.10.tgz#4603adb7562154cd6eaf7d63fd96b20b89685369"
+  integrity sha512-D4hz2lsAwmCjjKcUr3q+2Yx2RDnwbifWic1uRwLApn/7x2gTmUs5aXA7uInoZ0vO9XENpEqKJMkWtiY9omI02g==
 
 vue-loader@^15.9.1:
   version "15.9.1"

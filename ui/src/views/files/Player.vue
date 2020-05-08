@@ -15,7 +15,7 @@
 
 <script>
   import videojs from "video.js";
-  import vr from "videojs-vr";
+  import vr from "videojs-vr/dist/videojs-vr.min.js";
   import hotkeys from "videojs-hotkeys";
 
   export default {
@@ -36,7 +36,7 @@
     mounted() {
       this.player = videojs(this.$refs.player);
       let vr = this.player.vr({
-        projection: '360',
+        projection: '180',
         forceCardboard: false
       });
 
