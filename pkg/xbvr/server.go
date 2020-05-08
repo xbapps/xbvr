@@ -102,7 +102,6 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(ConfigResource{}.WebService())
 	restful.Add(FilesResource{}.WebService())
 	restful.Add(DeoVRResource{}.WebService())
-	restful.Add(SecurityResource{}.WebService())
 	restful.Add(PlaylistResource{}.WebService())
 
 	restConfig := restfulspec.Config{
@@ -204,7 +203,7 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("XBVR %v (build date %v) starting...", version, date)
 
 	// DMS
-	if config.Config.Interface.DLNA.Enabled {
+	if config.Config.Interfaces.DLNA.Enabled {
 		go StartDMS()
 	}
 

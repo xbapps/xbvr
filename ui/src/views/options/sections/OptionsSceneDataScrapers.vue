@@ -97,7 +97,7 @@
         ky.get(`/api/task/scrape?site=${site}`);
       },
       forceSiteUpdate(site) {
-        ky.post(`/api/config/scraper/force-site-update`, {
+        ky.post(`/api/options/scraper/force-site-update`, {
           json: {"site_name": site}
         });
         this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`);
@@ -109,7 +109,7 @@
           type: 'is-danger',
           hasIcon: true,
           onConfirm: function () {
-            ky.post(`/api/config/scraper/delete-scenes`, {
+            ky.post(`/api/options/scraper/delete-scenes`, {
               json: {"site_name": site}
             });
           }

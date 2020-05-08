@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/blang/semver"
 	"github.com/emicklei/go-restful"
@@ -15,6 +17,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio/putio"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/assets"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"golang.org/x/oauth2"
 	"gopkg.in/resty.v1"
@@ -32,26 +36,53 @@ type VersionCheckResponse struct {
 	UpdateNotify   bool   `json:"update_notify"`
 }
 
+type RequestSaveOptionsDLNA struct {
+	Enabled      bool     `json:"enabled"`
+	ServiceName  string   `json:"name"`
+	ServiceImage string   `json:"image"`
+	AllowedIP    []string `json:"allowedIp"`
+}
+
+type GetStateResponse struct {
+	CurrentState struct {
+		DLNARunning  bool     `json:"dlnaRunning"`
+		DLNAImages   []string `json:"dlnaImages"`
+		DLNARecentIP []string `json:"dlnaRecentIp"`
+	} `json:"currentState"`
+	Config config.Object `json:"config"`
+}
+
 type ConfigResource struct{}
 
 func (i ConfigResource) WebService() *restful.WebService {
-	tags := []string{"Config"}
+	tags := []string{"Options"}
 
 	ws := new(restful.WebService)
 
-	ws.Path("/api/config").
+	ws.Path("/api/options").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
 	ws.Route(ws.GET("/version-check").To(i.versionCheck).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/state").To(i.getState).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Sites" section endpoints
 	ws.Route(ws.GET("/sites").To(i.listSites).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.PUT("/sites/{site}").To(i.toggleSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.POST("/scraper/force-site-update").To(i.forceSiteUpdate).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.POST("/scraper/delete-scenes").To(i.deleteScenes).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Storage" section endpoints
 	ws.Route(ws.GET("/storage").To(i.listStorage).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -62,10 +93,8 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Param(ws.PathParameter("storage-id", "Storage ID").DataType("int")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.POST("/scraper/force-site-update").To(i.forceSiteUpdate).
-		Metadata(restfulspec.KeyOpenAPITags, tags))
-
-	ws.Route(ws.POST("/scraper/delete-scenes").To(i.deleteScenes).
+	// "DLNA" section endpoints
+	ws.Route(ws.PUT("/interface/dlna").To(i.saveOptionsDLNA).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
@@ -210,7 +239,7 @@ func (i ConfigResource) addStorage(req *restful.Request, resp *restful.Response)
 	// Inform UI about state change
 	publisher, err := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
 	if err == nil {
-		publisher.Publish("state.change.optionsFolders", nil, nil, nil)
+		publisher.Publish("state.change.optionsStorage", nil, nil, nil)
 		publisher.Close()
 	}
 
@@ -241,7 +270,7 @@ func (i ConfigResource) removeStorage(req *restful.Request, resp *restful.Respon
 	// Inform UI about state change
 	publisher, err := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
 	if err == nil {
-		publisher.Publish("state.change.optionsFolders", nil, nil, nil)
+		publisher.Publish("state.change.optionsStorage", nil, nil, nil)
 		publisher.Close()
 	}
 
@@ -293,4 +322,44 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 	}
 
 	db.Where("site = ?", r.SiteName).Delete(&models.Scene{})
+}
+
+func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
+	var out GetStateResponse
+	out.Config = config.Config
+	out.CurrentState.DLNARunning = IsDMSStarted()
+	out.CurrentState.DLNARecentIP = config.RecentIPAddresses
+
+	dlnaImages, _ := assets.WalkDirs("dlna", false)
+	for _, v := range dlnaImages {
+		out.CurrentState.DLNAImages = append(out.CurrentState.DLNAImages, strings.Replace(strings.Split(v, "/")[1], ".png", "", -1))
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, out)
+}
+
+func (i ConfigResource) saveOptionsDLNA(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsDLNA
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Interfaces.DLNA.Enabled = r.Enabled
+	config.Config.Interfaces.DLNA.ServiceName = r.ServiceName
+	config.Config.Interfaces.DLNA.ServiceImage = r.ServiceImage
+	config.Config.Interfaces.DLNA.AllowedIP = r.AllowedIP
+	config.SaveConfig()
+
+	if IsDMSStarted() {
+		StopDMS()
+		time.Sleep(1 * time.Second)
+	}
+
+	if r.Enabled {
+		StartDMS()
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }

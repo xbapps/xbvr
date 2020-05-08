@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -12,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,10 +22,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/dms/upnpav"
 	"github.com/xbapps/xbvr/pkg/models"
 )
-
-type jsonInfo struct {
-	DisplayName string `json:"display"`
-}
 
 type browse struct {
 	ObjectID       string
@@ -61,10 +57,7 @@ func (cds *contentDirectoryService) updateIDString() string {
 // Turns the given entry and DMS host into a UPnP object. A nil object is
 // returned if the entry is not of interest.
 func (me *contentDirectoryService) cdsObjectToUpnpavObject(cdsObject object, fileInfo os.FileInfo, host, userAgent string) (ret interface{}, err error) {
-	log.Println("cdsObjectToUpnpavObject", cdsObject.ID())
-
 	entryFilePath := cdsObject.FilePath()
-
 	ignored, err := me.IgnorePath(entryFilePath)
 	if err != nil {
 		return
@@ -83,23 +76,6 @@ func (me *contentDirectoryService) cdsObjectToUpnpavObject(cdsObject object, fil
 		ret = upnpav.Container{Object: obj}
 		return
 	}
-
-	// Check if JSON file is available
-	jsonPath := cdsObject.FilePath() + ".json"
-	if _, errt := os.Stat(jsonPath); errt == nil {
-		b, errt := ioutil.ReadFile(jsonPath)
-		if errt != nil {
-			return
-		}
-
-		dat := &jsonInfo{}
-		if errt := json.Unmarshal(b, &dat); errt != nil {
-			return
-		}
-
-		obj.Title = dat.DisplayName + "_180_180x180_3dh_LR.mp4"
-	}
-
 	if !fileInfo.Mode().IsRegular() {
 		// log.Printf("%s ignored: non-regular file", cdsObject.FilePath())
 		return
@@ -289,7 +265,7 @@ func (me *contentDirectoryService) sceneToContainer(scene models.Scene, parent s
 		URL:          iconURI,
 		ProtocolInfo: "http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED",
 	})
-	
+
 	return item
 }
 
@@ -370,6 +346,22 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 			if obj.IsRoot() {
 				objs = append(objs, upnpav.Container{Object: upnpav.Object{
+					ID:         "saved-searches",
+					Restricted: 1,
+					ParentID:   "0",
+					Class:      "object.container.storageFolder",
+					Title:      "saved-searches",
+				}})
+
+				objs = append(objs, upnpav.Container{Object: upnpav.Object{
+					ID:         "all",
+					Restricted: 1,
+					ParentID:   "0",
+					Class:      "object.container.storageFolder",
+					Title:      "all",
+				}})
+
+				objs = append(objs, upnpav.Container{Object: upnpav.Object{
 					ID:         "actors",
 					Restricted: 1,
 					ParentID:   "0",
@@ -402,30 +394,6 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 				}})
 
 				objs = append(objs, upnpav.Container{Object: upnpav.Object{
-					ID:         "watchlist",
-					Restricted: 1,
-					ParentID:   "0",
-					Class:      "object.container.storageFolder",
-					Title:      "watchlist",
-				}})
-
-				objs = append(objs, upnpav.Container{Object: upnpav.Object{
-					ID:         "favourites",
-					Restricted: 1,
-					ParentID:   "0",
-					Class:      "object.container.storageFolder",
-					Title:      "favourites",
-				}})
-
-				objs = append(objs, upnpav.Container{Object: upnpav.Object{
-					ID:         "all",
-					Restricted: 1,
-					ParentID:   "0",
-					Class:      "object.container.storageFolder",
-					Title:      "all",
-				}})
-
-				objs = append(objs, upnpav.Container{Object: upnpav.Object{
 					ID:         "not-matched",
 					Restricted: 1,
 					ParentID:   "0",
@@ -442,6 +410,44 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "all", host))
+				}
+			}
+
+			// Saved searches
+			if obj.Path == "saved-searches" {
+				var savedPlaylists []models.Playlist
+				db, _ := models.GetDB()
+				db.Where("is_deo_enabled = ?", true).Order("ordering asc").Find(&savedPlaylists)
+				db.Close()
+
+				for _, playlist := range savedPlaylists {
+					objs = append(objs, upnpav.Container{Object: upnpav.Object{
+						ID:         "saved-searches/" + strconv.Itoa(int(playlist.ID)),
+						Restricted: 1,
+						ParentID:   "saved-searches",
+						Class:      "object.container.storageFolder",
+						Title:      playlist.Name,
+					}})
+				}
+			}
+
+			if strings.HasPrefix(obj.Path, "saved-searches/") {
+				id := strings.Split(obj.Path, "/")
+
+				var savedPlaylist models.Playlist
+				db, _ := models.GetDB()
+				db.Where("id = ?", id[1]).First(&savedPlaylist)
+				db.Close()
+
+				var r models.RequestSceneList
+				if err := json.Unmarshal([]byte(savedPlaylist.SearchParams), &r); err == nil {
+					r.IsAccessible = optional.NewBool(true)
+					r.IsAvailable = optional.NewBool(true)
+					data := models.QueryScenesFull(r)
+
+					for i := range data.Scenes {
+						objs = append(objs, me.sceneToContainer(data.Scenes[i], "sites/"+id[1], host))
+					}
 				}
 			}
 
@@ -554,30 +560,6 @@ func (me *contentDirectoryService) Handle(action string, argsXML []byte, r *http
 
 				for i := range data.Scenes {
 					objs = append(objs, me.sceneToContainer(data.Scenes[i], "released/"+id[1], host))
-				}
-			}
-
-			// Watchlist
-			if obj.Path == "watchlist" {
-				var r models.RequestSceneList
-				r.IsAccessible = optional.NewBool(true)
-				r.Lists = []optional.String{optional.NewString("watchlist")}
-				data := models.QueryScenesFull(r)
-
-				for i := range data.Scenes {
-					objs = append(objs, me.sceneToContainer(data.Scenes[i], "watchlist", host))
-				}
-			}
-
-			// Favourites
-			if obj.Path == "favourites" {
-				var r models.RequestSceneList
-				r.IsAccessible = optional.NewBool(true)
-				r.Lists = []optional.String{optional.NewString("favourite")}
-				data := models.QueryScenesFull(r)
-
-				for i := range data.Scenes {
-					objs = append(objs, me.sceneToContainer(data.Scenes[i], "favourites", host))
 				}
 			}
 
@@ -713,7 +695,6 @@ func (o *object) readDir() (fis []os.FileInfo, err error) {
 			continue
 		}
 		fis = append(fis, fi)
-		// spew.Dump(fi)
 	}
 	return
 }

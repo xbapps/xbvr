@@ -58,7 +58,7 @@
       },
     },
     mounted() {
-      ky.get(`/api/config/version-check`).json().then(data => {
+      ky.get(`/api/options/version-check`).json().then(data => {
         this.currentVersion = data.current_version;
         this.latestVersion = data.latest_version;
 

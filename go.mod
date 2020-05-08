@@ -28,7 +28,6 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.0
 	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
-	github.com/go-graphite/go-whisper v0.0.0-20200420141052-f2ba40d1bfdc
 	github.com/go-openapi/spec v0.19.7
 	github.com/go-test/deep v1.0.6
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -52,6 +51,7 @@ require (
 	github.com/mozillazg/go-slugify v0.2.0
 	github.com/mozillazg/go-unidecode v0.1.0 // indirect
 	github.com/muesli/smartcrop v0.3.0 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/nleeper/goment v0.0.0-20191101041843-559ff168fc12
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible

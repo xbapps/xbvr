@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/anacrolix/ffprobe"
+	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/dms/dlna"
 	"github.com/xbapps/xbvr/pkg/dms/soap"
@@ -424,7 +425,7 @@ func init() {
 }
 
 func getDefaultFriendlyName() string {
-	return "XBVR"
+	return config.Config.Interfaces.DLNA.ServiceName
 }
 
 func xmlMarshalOrPanic(value interface{}) []byte {
@@ -514,6 +515,24 @@ func (me *Server) soapActionResponse(sa upnp.SoapAction, actionRequestXML []byte
 
 // Handle a service control HTTP request.
 func (me *Server) serviceControlHandler(w http.ResponseWriter, r *http.Request) {
+	clientIp, _, _ := net.SplitHostPort(r.RemoteAddr)
+	// Add IP to recents
+	isKnownIp := funk.ContainsString(config.RecentIPAddresses, net.ParseIP(clientIp).String())
+	if !isKnownIp {
+		config.RecentIPAddresses = append(config.RecentIPAddresses, net.ParseIP(clientIp).String())
+	}
+
+	// Check if IP is allowed
+	found := true
+	if len(config.Config.Interfaces.DLNA.AllowedIP) > 0 {
+		found = funk.ContainsString(config.Config.Interfaces.DLNA.AllowedIP, net.ParseIP(clientIp).String())
+		if !found {
+			log.Printf("not allowed client %s, %+v", clientIp, config.Config.Interfaces.DLNA.AllowedIP)
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+	}
+
 	soapActionString := r.Header.Get("SOAPACTION")
 	soapAction, err := upnp.ParseActionHTTPHeader(soapActionString)
 	if err != nil {
@@ -834,7 +853,7 @@ func (srv *Server) Serve() (err error) {
 			Device: upnp.Device{
 				DeviceType:   rootDeviceType,
 				FriendlyName: srv.FriendlyName,
-				Manufacturer: "XBVR",
+				Manufacturer: srv.FriendlyName,
 				ModelName:    rootDeviceModelName,
 				UDN:          srv.rootDeviceUUID,
 				ServiceList: func() (ss []upnp.Service) {

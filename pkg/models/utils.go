@@ -42,7 +42,7 @@ func GetDMSData() DMSData {
 	// Available tags
 	tx.Joins("left join scene_tags on scene_tags.scene_id=scenes.id").
 		Joins("left join tags on tags.id=scene_tags.tag_id").
-		Group("tags.name").Select("tags.name as release_date_text").Find(&scenes)
+		Group("tags.name").Order("tags.name asc").Select("tags.name as release_date_text").Find(&scenes)
 
 	var outTags []string
 	for i := range scenes {
@@ -54,7 +54,7 @@ func GetDMSData() DMSData {
 	// Available actors
 	tx.Joins("left join scene_cast on scene_cast.scene_id=scenes.id").
 		Joins("left join actors on actors.id=scene_cast.actor_id").
-		Group("actors.name").Select("actors.name as release_date_text").Find(&scenes)
+		Group("actors.name").Order("actors.name asc").Select("actors.name as release_date_text").Find(&scenes)
 
 	var outCast []string
 	for i := range scenes {
