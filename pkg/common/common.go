@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	DEBUG    = os.Getenv("DEBUG")
-	WsAddr   = "0.0.0.0:9998"
+	DEBUG         = os.Getenv("DEBUG")
+	SQLITE_PARAMS = os.Getenv("SQLITE_PARAMS")
+	WsAddr        = "0.0.0.0:9998"
 )
 
 func envToBool(envVar string, defaultVal bool) bool {
