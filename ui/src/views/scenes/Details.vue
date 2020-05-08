@@ -160,6 +160,7 @@
 <script>
   import ky from "ky";
   import videojs from "video.js";
+  import vr from "videojs-vr/dist/videojs-vr.min.js";
   import {format, formatDistance, parseISO} from "date-fns";
   import prettyBytes from "pretty-bytes";
   import VueLoadImage from "vue-load-image";
@@ -270,7 +271,7 @@
         this.player.reset();
 
         let vr = this.player.vr({
-          projection: '360',
+          projection: '180',
           forceCardboard: false
         });
 
