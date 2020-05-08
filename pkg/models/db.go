@@ -16,6 +16,7 @@ func GetDB() (*gorm.DB, error) {
 		log.Debug("Getting DB handle from ", common.GetCallerFunctionName())
 	}
 
+	db, err := gorm.Open("sqlite3", "file:"+filepath.Join(common.AppDir, "main.db")+"?"+common.SQLITE_PARAMS)
 	if err != nil {
 		log.Fatal("failed to connect database", err)
 	}
