@@ -12,6 +12,7 @@ import (
 
 	"github.com/darwayne/go-timecode/timecode"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
@@ -41,9 +42,9 @@ func GeneratePreviews() {
 }
 
 func renderPreview(sceneID string, inputFile string) error {
-	startTime := 10
-	snippetLength := 0.4
-	snippetAmount := 20
+	startTime := config.Config.Library.Preview.StartTime
+	snippetLength := config.Config.Library.Preview.SnippetLength
+	snippetAmount := config.Config.Library.Preview.SnippetAmount
 
 	tmpPath := filepath.Join(common.VideoPreviewDir, "tmp")
 	os.MkdirAll(tmpPath, os.ModePerm)
