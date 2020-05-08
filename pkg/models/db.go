@@ -13,11 +13,11 @@ var log = &common.Log
 
 func GetDB() (*gorm.DB, error) {
 	if common.DEBUG != "" {
-		common.Log.Debug("Getting DB handle from ", common.GetCallerFunctionName())
+		log.Debug("Getting DB handle from ", common.GetCallerFunctionName())
 	}
-	
+
 	if err != nil {
-		common.Log.Fatal("failed to connect database", err)
+		log.Fatal("failed to connect database", err)
 	}
 	return db, nil
 }

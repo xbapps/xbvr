@@ -40,7 +40,7 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+	github.com/lomik/go-whisper v0.0.0-20170919072952-744ab80ef70d
 	github.com/marcsauter/single v0.0.0-20191217065835-82e78df7afac
 	github.com/markphelps/optional v0.7.0
 	github.com/mattn/go-colorable v0.1.1 // indirect
@@ -60,10 +60,9 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/robertkrimen/otto v0.0.0-20191219234010-c382bd3c16ff
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/lomik/go-whisper v0.0.0-20170919072952-744ab80ef70d
 	github.com/rs/cors v1.7.0
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
-	github.com/sirupsen/logrus v1.5.0
+	github.com/sirupsen/logrus v1.6.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
@@ -72,9 +71,9 @@ require (
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
-	golang.org/x/net v0.0.0-20200501053045-e0ff5e5a1de5
+	golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200501052902-10377860bb8e
+	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0

@@ -48,6 +48,9 @@ func (hook *WampHook) Fire(entry *logrus.Entry) error {
 func init() {
 	Log.Out = os.Stdout
 	Log.SetLevel(logrus.InfoLevel)
+	if DEBUG != "" {
+		Log.SetLevel(logrus.DebugLevel)
+	}
 
 	if runtime.GOOS == "windows" {
 		Log.Formatter = &prefixed.TextFormatter{
