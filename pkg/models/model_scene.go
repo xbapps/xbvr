@@ -295,6 +295,7 @@ type RequestSceneList struct {
 	Tags         []optional.String `json:"tags"`
 	Cast         []optional.String `json:"cast"`
 	Cuepoint     []optional.String `json:"cuepoint"`
+	Volume       optional.Int      `json:"volume"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
 }
@@ -349,6 +350,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 
 	if r.IsWatched.Present() {
 		tx = tx.Where("is_watched = ?", r.IsWatched.OrElse(true))
+	}
+
+	if r.Volume.Present() && r.Volume.OrElse(0) != 0 {
+		tx = tx.
+			Joins("left join files on files.scene_id=scenes.id").
+			Where("files.volume_id = ?", r.Volume.OrElse(0))
 	}
 
 	for _, i := range r.Lists {
