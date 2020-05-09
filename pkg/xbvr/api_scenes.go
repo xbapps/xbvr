@@ -30,10 +30,11 @@ type ResponseGetScenes struct {
 }
 
 type ResponseGetFilters struct {
-	Cast          []string `json:"cast"`
-	Tags          []string `json:"tags"`
-	Sites         []string `json:"sites"`
-	ReleaseMonths []string `json:"release_month"`
+	Cast          []string        `json:"cast"`
+	Tags          []string        `json:"tags"`
+	Sites         []string        `json:"sites"`
+	ReleaseMonths []string        `json:"release_month"`
+	Volumes       []models.Volume `json:"volumes"`
 }
 
 type SceneResource struct{}
@@ -142,7 +143,17 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 		outRelease = append(outRelease, scenes[i].ReleaseDateText)
 	}
 
-	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetFilters{Tags: outTags, Cast: outCast, Sites: outSites, ReleaseMonths: outRelease})
+	// Volumes
+	var outVolumes []models.Volume
+	db.Model(&models.Volume{}).Find(&outVolumes)
+
+	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetFilters{
+		Tags:          outTags,
+		Cast:          outCast,
+		Sites:         outSites,
+		ReleaseMonths: outRelease,
+		Volumes:       outVolumes,
+	})
 }
 
 func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {

@@ -64,6 +64,22 @@
       </div>
     </b-field>
 
+    <b-field label="Folder" label-position="on-border" :addons="true" class="field-extra">
+      <div class="control is-expanded">
+        <div class="select is-fullwidth">
+          <select v-model="volume">
+            <option :value="0"></option>
+            <option v-for="t in filters.volumes" :key="t.id" :value="t.id">{{t.path}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="control">
+        <button type="submit" class="button is-light" @click="clearVolume">
+          <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+        </button>
+      </div>
+    </b-field>
+
     <div class="is-divider" data-content="Filters"></div>
 
     <div v-if="Object.keys(filters).length !== 0">
@@ -143,6 +159,10 @@
         this.$store.state.sceneList.filters.releaseMonth = "";
         this.reloadList();
       },
+      clearVolume() {
+        this.$store.state.sceneList.filters.volume = 0;
+        this.reloadList();
+      },
     },
     computed: {
       filters() {
@@ -163,6 +183,15 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.releaseMonth = value;
+          this.reloadList();
+        }
+      },
+      volume: {
+        get() {
+          return this.$store.state.sceneList.filters.volume;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.volume = value;
           this.reloadList();
         }
       },
