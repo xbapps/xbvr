@@ -18,6 +18,7 @@ import (
 	"github.com/putdotio/go-putio/putio"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/assets"
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"golang.org/x/oauth2"
@@ -45,9 +46,16 @@ type RequestSaveOptionsDLNA struct {
 
 type GetStateResponse struct {
 	CurrentState struct {
-		DLNARunning  bool     `json:"dlnaRunning"`
-		DLNAImages   []string `json:"dlnaImages"`
-		DLNARecentIP []string `json:"dlnaRecentIp"`
+		DLNA struct {
+			Running  bool     `json:"running"`
+			Images   []string `json:"images"`
+			RecentIP []string `json:"recentIp"`
+		} `json:"dlna"`
+		CacheSize struct {
+			Images      int64 `json:"images"`
+			Previews    int64 `json:"previews"`
+			SearchIndex int64 `json:"searchIndex"`
+		} `json:"cacheSize"`
 	} `json:"currentState"`
 	Config config.Object `json:"config"`
 }
@@ -95,6 +103,11 @@ func (i ConfigResource) WebService() *restful.WebService {
 
 	// "DLNA" section endpoints
 	ws.Route(ws.PUT("/interface/dlna").To(i.saveOptionsDLNA).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Cache" section endpoints
+	ws.Route(ws.DELETE("/cache/reset/{cache}").To(i.resetCache).
+		Param(ws.PathParameter("cache", "Cache to reset").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
@@ -327,15 +340,46 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 	var out GetStateResponse
 	out.Config = config.Config
-	out.CurrentState.DLNARunning = IsDMSStarted()
-	out.CurrentState.DLNARecentIP = config.RecentIPAddresses
 
+	// DLNA
+	out.CurrentState.DLNA.Running = IsDMSStarted()
+	out.CurrentState.DLNA.RecentIP = config.RecentIPAddresses
 	dlnaImages, _ := assets.WalkDirs("dlna", false)
 	for _, v := range dlnaImages {
-		out.CurrentState.DLNAImages = append(out.CurrentState.DLNAImages, strings.Replace(strings.Split(v, "/")[1], ".png", "", -1))
+		out.CurrentState.DLNA.Images = append(out.CurrentState.DLNA.Images, strings.Replace(strings.Split(v, "/")[1], ".png", "", -1))
 	}
 
+	// Caches
+	out.CurrentState.CacheSize.Images, _ = common.DirSize(common.ImgDir)
+	out.CurrentState.CacheSize.Previews, _ = common.DirSize(common.VideoPreviewDir)
+	out.CurrentState.CacheSize.SearchIndex, _ = common.DirSize(common.IndexDirV2)
+
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
+}
+
+func (i ConfigResource) resetCache(req *restful.Request, resp *restful.Response) {
+	cache := req.PathParameter("cache")
+
+	if cache == "images" {
+		os.RemoveAll(common.ImgDir)
+		os.MkdirAll(common.ImgDir, os.ModePerm)
+	}
+
+	if cache == "searchIndex" {
+		os.RemoveAll(common.IndexDirV2)
+		os.MkdirAll(common.IndexDirV2, os.ModePerm)
+	}
+
+	if cache == "previews" {
+		db, _ := models.GetDB()
+		db.Model(&models.Scene{}).Where("has_video_preview = ?", true).Update("has_video_preview", false)
+		db.Close()
+
+		os.RemoveAll(common.VideoPreviewDir)
+		os.MkdirAll(common.VideoPreviewDir, os.ModePerm)
+	}
+
+	resp.WriteHeader(http.StatusOK)
 }
 
 func (i ConfigResource) saveOptionsDLNA(req *restful.Request, resp *restful.Response) {

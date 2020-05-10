@@ -8,7 +8,7 @@
             <b-menu-item :label="$t('Storage')" :active="active==='storage'" @click="setActive('storage')"/>
 <!--            <b-menu-item :label="$t('Previews')" :active="active==='previews'" @click="setActive('previews')"/>-->
 <!--            <b-menu-item :label="$t('Scheduled tasks')" :active="active==='tasks'" @click="setActive ('tasks')"/>-->
-<!--            <b-menu-item :label="$t('Caches')" :active="active==='cache'" @click="setActive('cache')"></b-menu-item>-->
+            <b-menu-item :label="$t('Cache')" :active="active==='cache'" @click="setActive('cache')"></b-menu-item>
           </b-menu-list>
           <b-menu-list :label="$t('Scene data')">
             <b-menu-item :label="$t('Scrapers')" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
@@ -29,6 +29,7 @@
           <SceneDataScrapers v-show="active==='data-scrapers'"/>
           <SceneDataImportExport v-show="active==='data-import-export'"/>
           <InterfaceDLNA v-show="active==='interface_dlna'"/>
+          <Cache v-show="active==='cache'"/>
         </div>
       </div>
 
@@ -41,9 +42,10 @@
   import SceneDataScrapers from "./sections/OptionsSceneDataScrapers.vue";
   import SceneDataImportExport from "./sections/OptionsSceneDataImportExport";
   import InterfaceDLNA from "./sections/InterfaceDLNA.vue";
+  import Cache from "./sections/Cache.vue";
 
   export default {
-    components: {Storage, SceneDataScrapers, SceneDataImportExport, InterfaceDLNA},
+    components: {Storage, SceneDataScrapers, SceneDataImportExport, InterfaceDLNA, Cache},
     data: function () {
       return {
         active: "storage",
