@@ -20,9 +20,9 @@ const actions = {
     ky.get(`/api/options/state`)
       .json()
       .then(data => {
-        state.dlna.enabled = data.currentState.dlnaRunning;
-        state.dlna.availableImages = data.currentState.dlnaImages;
-        state.dlna.recentIp = data.currentState.dlnaRecentIp;
+        state.dlna.enabled = data.currentState.dlna.running;
+        state.dlna.availableImages = data.currentState.dlna.images;
+        state.dlna.recentIp = data.currentState.dlna.recentIp;
         state.dlna.name = data.config.interfaces.dlna.serviceName;
         state.dlna.image = data.config.interfaces.dlna.serviceImage;
         state.dlna.allowedIp = data.config.interfaces.dlna.allowedIp;
