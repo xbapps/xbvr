@@ -1,15 +1,17 @@
 <template>
   <div class="card is-shadowless">
     <div class="card-image">
-      <div @click="showDetails(item)" @mouseover="preview = true" @mouseleave="preview = false">
-        <figure class="image" v-if="!preview && item.has_preview || !item.has_preview">
-          <vue-load-image>
-            <img slot="image" :src="getImageURL(item.cover_url)" v-bind:class="{'transparent': !item.is_available}"/>
-            <img slot="preloader" src="/ui/images/blank.png"/>
-            <img slot="error" src="/ui/images/blank.png"/>
-          </vue-load-image>
-        </figure>
-        <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
+      <div class="bbox">
+        <div @click="showDetails(item)" @mouseover="preview = true" @mouseleave="preview = false">
+          <figure class="image" v-if="!preview && item.has_preview || !item.has_preview">
+            <vue-load-image>
+              <img slot="image" :src="getImageURL(item.cover_url)" v-bind:class="{'transparent': !item.is_available}"/>
+              <img slot="preloader" src="/ui/images/blank.png"/>
+              <img slot="error" src="/ui/images/blank.png"/>
+            </vue-load-image>
+          </figure>
+          <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
+        </div>
       </div>
     </div>
 
@@ -45,7 +47,8 @@
     data() {
       return {
         preview: false,
-        format, parseISO
+        format,
+        parseISO
       }
     },
     methods: {
@@ -70,5 +73,22 @@
 
   .button {
     margin-right: 3px;
+  }
+
+  .bbox {
+    flex: 1 0 calc(25%);
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+    line-height: 0;
+  }
+
+  .bbox:after {
+    content: '';
+    display: block;
+    padding-bottom: 100%;
   }
 </style>

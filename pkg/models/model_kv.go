@@ -1,9 +1,6 @@
 package models
 
 import (
-	"context"
-
-	"github.com/gammazero/nexus/v3/client"
 	"github.com/xbapps/xbvr/pkg/common"
 )
 
@@ -30,11 +27,7 @@ func CreateLock(lock string) {
 	obj := KV{Key: "lock-" + lock, Value: "1"}
 	obj.Save()
 
-	publisher, err := client.ConnectNet(context.Background(), "ws://"+common.WsAddr+"/ws", client.Config{Realm: "default"})
-	if err == nil {
-		publisher.Publish("lock.change", nil, nil, map[string]interface{}{"name": lock, "locked": true})
-		publisher.Close()
-	}
+	common.PublishWS("lock.change", map[string]interface{}{"name": lock, "locked": true})
 }
 
 func CheckLock(lock string) bool {
@@ -55,9 +48,5 @@ func RemoveLock(lock string) {
 
 	db.Where("key = ?", "lock-"+lock).Delete(&KV{})
 
-	publisher, err := client.ConnectNet(context.Background(), "ws://"+common.WsAddr+"/ws", client.Config{Realm: "default"})
-	if err == nil {
-		publisher.Publish("lock.change", nil, nil, map[string]interface{}{"name": lock, "locked": false})
-		publisher.Close()
-	}
+	common.PublishWS("lock.change", map[string]interface{}{"name": lock, "locked": false})
 }

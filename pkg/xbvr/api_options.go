@@ -2,6 +2,8 @@ package xbvr
 
 import (
 	"context"
+	"crypto/sha1"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,7 +14,6 @@ import (
 	"github.com/blang/semver"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
-	"github.com/gammazero/nexus/v3/client"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio/putio"
@@ -42,6 +43,14 @@ type RequestSaveOptionsDLNA struct {
 	ServiceName  string   `json:"name"`
 	ServiceImage string   `json:"image"`
 	AllowedIP    []string `json:"allowedIp"`
+}
+
+type RequestSaveOptionsPreviews struct {
+	Enabled       bool    `json:"enabled"`
+	StartTime     int     `json:"startTime"`
+	SnippetLength float64 `json:"snippetLength"`
+	SnippetAmount int     `json:"snippetAmount"`
+	Resolution    int     `json:"resolution"`
 }
 
 type GetStateResponse struct {
@@ -108,6 +117,13 @@ func (i ConfigResource) WebService() *restful.WebService {
 	// "Cache" section endpoints
 	ws.Route(ws.DELETE("/cache/reset/{cache}").To(i.resetCache).
 		Param(ws.PathParameter("cache", "Cache to reset").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Previews" section endpoints
+	ws.Route(ws.PUT("/previews").To(i.saveOptionsPreviews).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.POST("/previews/test").To(i.generateTestPreview).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
@@ -250,11 +266,7 @@ func (i ConfigResource) addStorage(req *restful.Request, resp *restful.Response)
 	}
 
 	// Inform UI about state change
-	publisher, err := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
-	if err == nil {
-		publisher.Publish("state.change.optionsStorage", nil, nil, nil)
-		publisher.Close()
-	}
+	common.PublishWS("state.change.optionsStorage", nil)
 
 	resp.WriteHeader(http.StatusOK)
 }
@@ -281,11 +293,7 @@ func (i ConfigResource) removeStorage(req *restful.Request, resp *restful.Respon
 	db.Delete(&vol)
 
 	// Inform UI about state change
-	publisher, err := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
-	if err == nil {
-		publisher.Publish("state.change.optionsStorage", nil, nil, nil)
-		publisher.Close()
-	}
+	common.PublishWS("state.change.optionsStorage", nil)
 
 	RescanVolumes()
 
@@ -406,4 +414,71 @@ func (i ConfigResource) saveOptionsDLNA(req *restful.Request, resp *restful.Resp
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+
+func (i ConfigResource) saveOptionsPreviews(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsPreviews
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Library.Preview.Resolution = r.Resolution
+	config.Config.Library.Preview.SnippetAmount = r.SnippetAmount
+	config.Config.Library.Preview.StartTime = r.StartTime
+	config.Config.Library.Preview.SnippetLength = r.SnippetLength
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+
+func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsPreviews
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Get first available scene for test preview
+	var scene models.Scene
+	db, _ := models.GetDB()
+	db.Model(&models.Scene{}).Where("is_available = ?", true).Order("release_date desc").First(&scene)
+	db.Close()
+
+	files, err := scene.GetFiles()
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Generate hash for given parameters
+	hash := sha1.New()
+	hash.Write([]byte(fmt.Sprintf("test-%v-%v-%v-%v-%v", scene.SceneID, r.StartTime, r.SnippetLength, r.SnippetAmount, r.Resolution)))
+
+	previewFn := fmt.Sprintf("test%x", hash.Sum(nil))
+	destFile := filepath.Join(common.VideoPreviewDir, previewFn+".mp4")
+
+	if _, err := os.Stat(destFile); os.IsNotExist(err) {
+		// Preview file does not exist, generate it
+		go func() {
+			renderPreview(
+				files[0].GetPath(),
+				destFile,
+				r.StartTime,
+				r.SnippetLength,
+				r.SnippetAmount,
+				r.Resolution,
+			)
+
+			common.PublishWS("options.previews.previewReady", map[string]interface{}{"previewFn": previewFn})
+		}()
+
+		resp.WriteHeader(http.StatusOK)
+		return
+	}
+
+	common.PublishWS("options.previews.previewReady", map[string]interface{}{"previewFn": previewFn})
+	resp.WriteHeader(http.StatusOK)
 }

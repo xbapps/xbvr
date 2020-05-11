@@ -18,34 +18,44 @@ import (
 )
 
 func GeneratePreviews() {
-	db, _ := models.GetDB()
-	defer db.Close()
+	if !models.CheckLock("previews") {
+		models.CreateLock("previews")
 
-	var scenes []models.Scene
-	db.Model(&models.Scene{}).Where("is_available = ?", true).Where("has_video_preview = ?", false).Order("release_date desc").Find(&scenes)
+		db, _ := models.GetDB()
+		defer db.Close()
 
-	for _, scene := range scenes {
-		files, _ := scene.GetFiles()
-		if len(files) > 0 {
-			if files[0].Exists() {
-				log.Infof("Rendering %v", scene.SceneID)
-				err := renderPreview(scene.SceneID, files[0].GetPath())
-				if err == nil {
-					scene.HasVideoPreview = true
-					scene.Save()
-				} else {
-					log.Warn(err)
+		var scenes []models.Scene
+		db.Model(&models.Scene{}).Where("is_available = ?", true).Where("has_video_preview = ?", false).Order("release_date desc").Find(&scenes)
+
+		for _, scene := range scenes {
+			files, _ := scene.GetFiles()
+			if len(files) > 0 {
+				if files[0].Exists() {
+					log.Infof("Rendering %v", scene.SceneID)
+					destFile := filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4")
+					err := renderPreview(
+						files[0].GetPath(),
+						destFile,
+						config.Config.Library.Preview.StartTime,
+						config.Config.Library.Preview.SnippetLength,
+						config.Config.Library.Preview.SnippetAmount,
+						config.Config.Library.Preview.Resolution,
+					)
+					if err == nil {
+						scene.HasVideoPreview = true
+						scene.Save()
+					} else {
+						log.Warn(err)
+					}
 				}
 			}
 		}
 	}
+
+	models.RemoveLock("previews")
 }
 
-func renderPreview(sceneID string, inputFile string) error {
-	startTime := config.Config.Library.Preview.StartTime
-	snippetLength := config.Config.Library.Preview.SnippetLength
-	snippetAmount := config.Config.Library.Preview.SnippetAmount
-
+func renderPreview(inputFile string, destFile string, startTime int, snippetLength float64, snippetAmount int, resolution int) error {
 	tmpPath := filepath.Join(common.VideoPreviewDir, "tmp")
 	os.MkdirAll(tmpPath, os.ModePerm)
 	defer os.RemoveAll(tmpPath)
@@ -75,8 +85,8 @@ func renderPreview(sceneID string, inputFile string) error {
 			"-y",
 			"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
 			"-i", inputFile,
-			"-vf", "crop=in_w/2:in_h:in_w/2:in_h,scale=400:400",
-			"-t", fmt.Sprintf("%v",snippetLength),
+			"-vf", fmt.Sprintf("crop=in_w/2:in_h:in_w/2:in_h,scale=%v:%v", resolution, resolution),
+			"-t", fmt.Sprintf("%v", snippetLength),
 			"-an", snippetFile,
 		}
 
@@ -98,7 +108,6 @@ func renderPreview(sceneID string, inputFile string) error {
 	f.Close()
 
 	// Save result
-	destFile := filepath.Join(common.VideoPreviewDir, sceneID+".mp4")
 	cmd := []string{
 		"-y",
 		"-f", "concat",

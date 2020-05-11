@@ -82,6 +82,7 @@ func StartServer(version, commit, branch, date string) {
 	models.RemoveLock("index")
 	models.RemoveLock("scrape")
 	models.RemoveLock("update-scenes")
+	models.RemoveLock("previews")
 
 	go CheckDependencies()
 	models.CheckVolumes()

@@ -1,7 +1,7 @@
 <template>
   <div>
     <Navbar/>
-    <div class="pad">
+    <div class="navbar-pad">
       <router-view/>
     </div>
     <Socket/>
@@ -17,8 +17,11 @@
   }
 </script>
 
-<style scoped>
-  .pad {
+<style>
+  .b-radio.radio {
+    margin-right: 0 !important;
+  }
+  .navbar-pad {
     margin-top: 1em;
   }
 </style>
