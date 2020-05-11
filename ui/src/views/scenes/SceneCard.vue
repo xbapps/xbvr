@@ -89,7 +89,7 @@
   .overlay {
     flex: 1 0 calc(25%);
     display: flex;
-    align-items: start;
+    align-items: center;
     justify-content: center;
     overflow: hidden;
     padding: 0;
@@ -102,8 +102,8 @@
   }
 
   .align-bottom-left {
-    align-items: end;
-    justify-content: end;
+    align-items: flex-end;
+    justify-content: flex-end;
   }
 
   .bbox:after {
