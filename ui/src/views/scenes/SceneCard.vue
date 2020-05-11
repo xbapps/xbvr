@@ -1,16 +1,24 @@
 <template>
   <div class="card is-shadowless">
     <div class="card-image">
-      <div class="bbox">
-        <div @click="showDetails(item)" @mouseover="preview = true" @mouseleave="preview = false">
-          <figure class="image" v-if="!preview && item.has_preview || !item.has_preview">
-            <vue-load-image>
-              <img slot="image" :src="getImageURL(item.cover_url)" v-bind:class="{'transparent': !item.is_available}"/>
-              <img slot="preloader" src="/ui/images/blank.png"/>
-              <img slot="error" src="/ui/images/blank.png"/>
-            </vue-load-image>
-          </figure>
-          <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
+      <div class="bbox"
+           v-bind:style="{backgroundImage: `url(${getImageURL(item.cover_url)})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', opacity:item.is_available ? 1.0 : 0.4}"
+           @click="showDetails(item)"
+           @mouseover="preview = true"
+           @mouseleave="preview = false">
+        <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
+        <div v-else>
+          <div class="overlay align-bottom-left">
+            <div style="padding: 5px">
+              <b-tag v-if="item.is_watched">
+                <b-icon pack="mdi" icon="eye" size="is-small"/>
+              </b-tag>
+              <b-tag type="is-warning" v-if="item.star_rating > 0">
+                <b-icon pack="mdi" icon="star" size="is-small"/>
+                {{item.star_rating}}
+              </b-tag>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -19,10 +27,6 @@
 
       <watchlist-button :item="item"/>
       <favourite-button :item="item"/>
-
-      <a class="button is-outlined is-small" v-if="item.is_watched">
-        <b-icon pack="far" icon="eye" size="is-small"/>
-      </a>
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
         <a :href="item.scene_url" target="_blank">{{item.site}}</a><br/>
@@ -36,14 +40,14 @@
 
 <script>
   import {format, parseISO} from "date-fns";
-  import VueLoadImage from "vue-load-image";
   import WatchlistButton from "../../components/WatchlistButton";
   import FavouriteButton from "../../components/FavouriteButton";
+  import StarRating from 'vue-star-rating';
 
   export default {
     name: "SceneCard",
     props: {item: Object},
-    components: {VueLoadImage, WatchlistButton, FavouriteButton},
+    components: {WatchlistButton, FavouriteButton, StarRating},
     data() {
       return {
         preview: false,
@@ -67,10 +71,6 @@
 </script>
 
 <style scoped>
-  .transparent {
-    opacity: 0.35;
-  }
-
   .button {
     margin-right: 3px;
   }
@@ -84,6 +84,26 @@
     overflow: hidden;
     padding: 0;
     line-height: 0;
+  }
+
+  .overlay {
+    flex: 1 0 calc(25%);
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+    line-height: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .align-bottom-left {
+    align-items: end;
+    justify-content: end;
   }
 
   .bbox:after {
