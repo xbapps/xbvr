@@ -1,14 +1,13 @@
 package xbvr
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
-	"github.com/gammazero/nexus/v3/client"
 	"github.com/jinzhu/gorm"
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -122,11 +121,7 @@ func (i PlaylistResource) removePlaylist(req *restful.Request, resp *restful.Res
 	db.Delete(&playlist)
 
 	// Inform UI about state change
-	publisher, err := client.ConnectNet(context.Background(), "ws://"+wsAddr+"/ws", client.Config{Realm: "default"})
-	if err == nil {
-		publisher.Publish("state.change.optionsPlaylists", nil, nil, nil)
-		publisher.Close()
-	}
+	common.PublishWS("state.change.optionsStorage", nil)
 
 	resp.WriteHeader(http.StatusOK)
 }

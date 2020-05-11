@@ -6,7 +6,7 @@
         <b-menu :accordion="false">
           <b-menu-list :label="$t('Options')">
             <b-menu-item :label="$t('Storage')" :active="active==='storage'" @click="setActive('storage')"/>
-<!--            <b-menu-item :label="$t('Previews')" :active="active==='previews'" @click="setActive('previews')"/>-->
+            <b-menu-item :label="$t('Previews')" :active="active==='previews'" @click="setActive('previews')"/>
 <!--            <b-menu-item :label="$t('Scheduled tasks')" :active="active==='tasks'" @click="setActive ('tasks')"/>-->
             <b-menu-item :label="$t('Cache')" :active="active==='cache'" @click="setActive('cache')"></b-menu-item>
           </b-menu-list>
@@ -30,6 +30,7 @@
           <SceneDataImportExport v-show="active==='data-import-export'"/>
           <InterfaceDLNA v-show="active==='interface_dlna'"/>
           <Cache v-show="active==='cache'"/>
+          <Previews v-show="active==='previews'"/>
         </div>
       </div>
 
@@ -43,9 +44,10 @@
   import SceneDataImportExport from "./sections/OptionsSceneDataImportExport";
   import InterfaceDLNA from "./sections/InterfaceDLNA.vue";
   import Cache from "./sections/Cache.vue";
+  import Previews from "./sections/Previews.vue";
 
   export default {
-    components: {Storage, SceneDataScrapers, SceneDataImportExport, InterfaceDLNA, Cache},
+    components: {Storage, SceneDataScrapers, SceneDataImportExport, InterfaceDLNA, Cache, Previews},
     data: function () {
       return {
         active: "storage",

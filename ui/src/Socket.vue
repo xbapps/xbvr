@@ -78,6 +78,10 @@
       ws.subscribe("state.change.optionsStorage", (arr, obj) => {
         this.$store.dispatch("optionsStorage/load");
       });
+
+      ws.subscribe("options.previews.previewReady", (arr, obj) => {
+        this.$store.commit("optionsPreviews/showPreview", {previewFn: arr.argsDict.previewFn});
+      });
     }
   }
 </script>

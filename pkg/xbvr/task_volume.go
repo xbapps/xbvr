@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/djherbis/times"
-	"github.com/gammazero/nexus/v3/client"
 	"github.com/jinzhu/gorm"
 	"github.com/markphelps/optional"
 	"github.com/sirupsen/logrus"
@@ -90,11 +89,7 @@ func RescanVolumes() {
 		tlog.Infof("Scanning complete")
 
 		// Inform UI about state change
-		publisher, err := client.ConnectNet(context.Background(), "ws://"+common.WsAddr+"/ws", client.Config{Realm: "default"})
-		if err == nil {
-			publisher.Publish("state.change.optionsStorage", nil, nil, nil)
-			publisher.Close()
-		}
+		common.PublishWS("state.change.optionsStorage", nil)
 
 		// Grab metrics
 		var localFilesCount int64
