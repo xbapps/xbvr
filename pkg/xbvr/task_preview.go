@@ -76,6 +76,8 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 		return err
 	}
 
+	vfArgs := fmt.Sprintf("crop=in_w/2:in_h:in_w/2:in_h,scale=%v:%v", resolution, resolution)
+
 	// Prepare snippets
 	interval := dur/float64(snippetAmount) - float64(startTime)
 	for i := 1; i <= snippetAmount; i++ {
@@ -85,7 +87,7 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 			"-y",
 			"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
 			"-i", inputFile,
-			"-vf", fmt.Sprintf("crop=in_w/2:in_h:in_w/2:in_h,scale=%v:%v", resolution, resolution),
+			"-vf", vfArgs,
 			"-t", fmt.Sprintf("%v", snippetLength),
 			"-an", snippetFile,
 		}
@@ -94,6 +96,23 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 		if err != nil {
 			return err
 		}
+	}
+
+	// Ensure ending is always in preview
+	start := time.Duration(dur-float64(150)) * time.Second
+	snippetFile := filepath.Join(tmpPath, fmt.Sprintf("%v.mp4", snippetAmount+1))
+	cmd := []string{
+		"-y",
+		"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
+		"-i", inputFile,
+		"-vf", vfArgs,
+		"-t", fmt.Sprintf("%v", snippetLength),
+		"-an", snippetFile,
+	}
+
+	err = exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
+	if err != nil {
+		return err
 	}
 
 	// Prepare concat file
@@ -108,7 +127,7 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 	f.Close()
 
 	// Save result
-	cmd := []string{
+	cmd = []string{
 		"-y",
 		"-f", "concat",
 		"-safe", "0",
