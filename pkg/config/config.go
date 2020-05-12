@@ -35,6 +35,7 @@ type Object struct {
 			SnippetLength float64 `default:"0.4" json:"snippetLength"`
 			SnippetAmount int     `default:"20" json:"snippetAmount"`
 			Resolution    int     `default:"400" json:"resolution"`
+			ExtraSnippet  bool    `default:"false" json:"extraSnippet"`
 		} `json:"preview"`
 	} `json:"library"`
 	Cron struct {

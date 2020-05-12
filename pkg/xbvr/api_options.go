@@ -51,6 +51,7 @@ type RequestSaveOptionsPreviews struct {
 	SnippetLength float64 `json:"snippetLength"`
 	SnippetAmount int     `json:"snippetAmount"`
 	Resolution    int     `json:"resolution"`
+	ExtraSnippet  bool    `json:"extraSnippet"`
 }
 
 type GetStateResponse struct {
@@ -428,6 +429,7 @@ func (i ConfigResource) saveOptionsPreviews(req *restful.Request, resp *restful.
 	config.Config.Library.Preview.SnippetAmount = r.SnippetAmount
 	config.Config.Library.Preview.StartTime = r.StartTime
 	config.Config.Library.Preview.SnippetLength = r.SnippetLength
+	config.Config.Library.Preview.ExtraSnippet = r.ExtraSnippet
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -455,7 +457,7 @@ func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.
 
 	// Generate hash for given parameters
 	hash := sha1.New()
-	hash.Write([]byte(fmt.Sprintf("test-%v-%v-%v-%v-%v", scene.SceneID, r.StartTime, r.SnippetLength, r.SnippetAmount, r.Resolution)))
+	hash.Write([]byte(fmt.Sprintf("test-%v-%v-%v-%v-%v-%v", scene.SceneID, r.StartTime, r.SnippetLength, r.SnippetAmount, r.Resolution, r.ExtraSnippet)))
 
 	previewFn := fmt.Sprintf("test%x", hash.Sum(nil))
 	destFile := filepath.Join(common.VideoPreviewDir, previewFn+".mp4")
@@ -470,6 +472,7 @@ func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.
 				r.SnippetLength,
 				r.SnippetAmount,
 				r.Resolution,
+				r.ExtraSnippet,
 			)
 
 			common.PublishWS("options.previews.previewReady", map[string]interface{}{"previewFn": previewFn})
