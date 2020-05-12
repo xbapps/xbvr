@@ -37,6 +37,9 @@
                 </div>
               </div>
             </b-field>
+            <b-field>
+              <b-checkbox v-model="extraSnippet">Grab extra snippet from the end of video</b-checkbox>
+            </b-field>
             <b-field label="Preview resolution">
               <div class="columns">
                 <div class="column is-two-thirds">
@@ -94,6 +97,7 @@
         snippetLength: 0.2,
         snippetAmount: 2,
         resolution: 300,
+        extraSnippet: false,
       }
     },
     async mounted() {
@@ -120,6 +124,7 @@
             this.snippetLength = data.config.library.preview.snippetLength;
             this.snippetAmount = data.config.library.preview.snippetAmount;
             this.resolution = data.config.library.preview.resolution;
+            this.extraSnippet = data.config.library.preview.extraSnippet;
             this.isLoading = false;
           });
       },
@@ -131,6 +136,7 @@
             snippetLength: this.snippetLength,
             snippetAmount: this.snippetAmount,
             resolution: this.resolution,
+            extraSnippet: this.extraSnippet,
           }
         })
           .json()
@@ -146,6 +152,7 @@
             snippetLength: this.snippetLength,
             snippetAmount: this.snippetAmount,
             resolution: this.resolution,
+            extraSnippet: this.extraSnippet,
           }
         });
       },

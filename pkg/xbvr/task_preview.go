@@ -40,6 +40,7 @@ func GeneratePreviews() {
 						config.Config.Library.Preview.SnippetLength,
 						config.Config.Library.Preview.SnippetAmount,
 						config.Config.Library.Preview.Resolution,
+						config.Config.Library.Preview.ExtraSnippet,
 					)
 					if err == nil {
 						scene.HasVideoPreview = true
@@ -55,7 +56,7 @@ func GeneratePreviews() {
 	models.RemoveLock("previews")
 }
 
-func renderPreview(inputFile string, destFile string, startTime int, snippetLength float64, snippetAmount int, resolution int) error {
+func renderPreview(inputFile string, destFile string, startTime int, snippetLength float64, snippetAmount int, resolution int, extraSnippet bool) error {
 	tmpPath := filepath.Join(common.VideoPreviewDir, "tmp")
 	os.MkdirAll(tmpPath, os.ModePerm)
 	defer os.RemoveAll(tmpPath)
@@ -99,20 +100,24 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 	}
 
 	// Ensure ending is always in preview
-	start := time.Duration(dur-float64(150)) * time.Second
-	snippetFile := filepath.Join(tmpPath, fmt.Sprintf("%v.mp4", snippetAmount+1))
-	cmd := []string{
-		"-y",
-		"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
-		"-i", inputFile,
-		"-vf", vfArgs,
-		"-t", fmt.Sprintf("%v", snippetLength),
-		"-an", snippetFile,
-	}
+	if extraSnippet {
+		snippetAmount = snippetAmount + 1
 
-	err = exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
-	if err != nil {
-		return err
+		start := time.Duration(dur-float64(150)) * time.Second
+		snippetFile := filepath.Join(tmpPath, fmt.Sprintf("%v.mp4", snippetAmount))
+		cmd := []string{
+			"-y",
+			"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
+			"-i", inputFile,
+			"-vf", vfArgs,
+			"-t", fmt.Sprintf("%v", snippetLength),
+			"-an", snippetFile,
+		}
+
+		err = exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Prepare concat file
@@ -127,7 +132,7 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 	f.Close()
 
 	// Save result
-	cmd = []string{
+	cmd := []string{
 		"-y",
 		"-f", "concat",
 		"-safe", "0",
