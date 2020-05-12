@@ -1,11 +1,11 @@
 package models
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/xbapps/xbvr/pkg/common"
 )
 
@@ -16,7 +16,8 @@ func GetDB() (*gorm.DB, error) {
 		log.Debug("Getting DB handle from ", common.GetCallerFunctionName())
 	}
 
-	db, err := gorm.Open("sqlite3", "file:"+filepath.Join(common.AppDir, "main.db")+"?"+common.SQLITE_PARAMS)
+	mysqlParams := fmt.Sprintf("%v:%v@(%v)/%v?charset=utf8&parseTime=True&loc=Local", common.MYSQL_USER, common.MYSQL_PASSWORD, common.MYSQL_HOST, common.MYSQL_DB)
+	db, err := gorm.Open("mysql", mysqlParams)
 	if err != nil {
 		log.Fatal("failed to connect database", err)
 	}
