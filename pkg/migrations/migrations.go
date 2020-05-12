@@ -2,6 +2,9 @@ package migrations
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -250,6 +253,21 @@ func Migrate() {
 					HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
 				}
 				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
+			ID: "0011-upgrade-ffmpeg",
+			Migrate: func(tx *gorm.DB) error {
+				ffmpegPath := filepath.Join(common.BinDir, "ffmpeg")
+				ffprobePath := filepath.Join(common.BinDir, "ffprobe")
+				if runtime.GOOS == "windows" {
+					ffmpegPath = ffmpegPath + ".exe"
+					ffprobePath = ffprobePath + ".exe"
+				}
+
+				os.Remove(ffmpegPath)
+				os.Remove(ffprobePath)
+				return nil
 			},
 		},
 	})
