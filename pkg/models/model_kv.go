@@ -1,9 +1,5 @@
 package models
 
-import (
-	"github.com/xbapps/xbvr/pkg/common"
-)
-
 type KV struct {
 	Key   string `json:"key" gorm:"primary_key" gorm:"unique_index"`
 	Value string `json:"value" sql:"type:text;"`
