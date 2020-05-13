@@ -78,7 +78,7 @@ func downloadFfbinaries(tool string) error {
 		return errors.Errorf("Unknown architecture: %v/%v", runtime.GOOS, runtime.GOARCH)
 	}
 
-	resp, err := resty.R().Get("https://ffbinaries.com/api/v1/version/4.1")
+	resp, err := resty.R().Get("https://ffbinaries.com/api/v1/version/4.2.1")
 	if err != nil {
 		return err
 	}

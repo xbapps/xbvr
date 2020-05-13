@@ -40,6 +40,7 @@ func GeneratePreviews() {
 						config.Config.Library.Preview.SnippetLength,
 						config.Config.Library.Preview.SnippetAmount,
 						config.Config.Library.Preview.Resolution,
+						config.Config.Library.Preview.ExtraSnippet,
 					)
 					if err == nil {
 						scene.HasVideoPreview = true
@@ -55,7 +56,7 @@ func GeneratePreviews() {
 	models.RemoveLock("previews")
 }
 
-func renderPreview(inputFile string, destFile string, startTime int, snippetLength float64, snippetAmount int, resolution int) error {
+func renderPreview(inputFile string, destFile string, startTime int, snippetLength float64, snippetAmount int, resolution int, extraSnippet bool) error {
 	tmpPath := filepath.Join(common.VideoPreviewDir, "tmp")
 	os.MkdirAll(tmpPath, os.ModePerm)
 	defer os.RemoveAll(tmpPath)
@@ -76,6 +77,8 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 		return err
 	}
 
+	vfArgs := fmt.Sprintf("crop=in_w/2:in_h:in_w/2:in_h,scale=%v:%v", resolution, resolution)
+
 	// Prepare snippets
 	interval := dur/float64(snippetAmount) - float64(startTime)
 	for i := 1; i <= snippetAmount; i++ {
@@ -85,12 +88,33 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 			"-y",
 			"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
 			"-i", inputFile,
-			"-vf", fmt.Sprintf("crop=in_w/2:in_h:in_w/2:in_h,scale=%v:%v", resolution, resolution),
+			"-vf", vfArgs,
 			"-t", fmt.Sprintf("%v", snippetLength),
 			"-an", snippetFile,
 		}
 
 		err := exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
+		if err != nil {
+			return err
+		}
+	}
+
+	// Ensure ending is always in preview
+	if extraSnippet {
+		snippetAmount = snippetAmount + 1
+
+		start := time.Duration(dur-float64(150)) * time.Second
+		snippetFile := filepath.Join(tmpPath, fmt.Sprintf("%v.mp4", snippetAmount))
+		cmd := []string{
+			"-y",
+			"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
+			"-i", inputFile,
+			"-vf", vfArgs,
+			"-t", fmt.Sprintf("%v", snippetLength),
+			"-an", snippetFile,
+		}
+
+		err = exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
 		if err != nil {
 			return err
 		}
