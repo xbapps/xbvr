@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -21,12 +20,6 @@ import (
 var log = &common.Log
 
 var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
-
-func createPersistentCacheCollector(cacheID string, domains ...string) *colly.Collector {
-	c := createCollector(domains...)
-	c.CacheDir = getPersistentScrapeCacheDir(cacheID)
-	return c
-}
 
 func createCollector(domains ...string) *colly.Collector {
 	c := colly.NewCollector(
@@ -77,16 +70,8 @@ func createCallbacks(c *colly.Collector) *colly.Collector {
 	return c
 }
 
-func DeletePersistentScrapeCache(cacheID string) error {
-	return os.RemoveAll(getPersistentScrapeCacheDir(cacheID))
-}
-
 func DeleteScrapeCache() error {
 	return os.RemoveAll(getScrapeCacheDir())
-}
-
-func getPersistentScrapeCacheDir(cacheID string) string {
-	return filepath.Join(common.PersistentScrapeCacheDir, cacheID)
 }
 
 func getScrapeCacheDir() string {

@@ -17,16 +17,20 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/anacrolix/ffprobe"
+	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/dms/dlna"
 	"github.com/xbapps/xbvr/pkg/dms/soap"
 	"github.com/xbapps/xbvr/pkg/dms/ssdp"
 	"github.com/xbapps/xbvr/pkg/dms/transcode"
 	"github.com/xbapps/xbvr/pkg/dms/upnp"
 	"github.com/xbapps/xbvr/pkg/dms/upnpav"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 const (
@@ -421,7 +425,7 @@ func init() {
 }
 
 func getDefaultFriendlyName() string {
-	return "XBVR"
+	return config.Config.Interfaces.DLNA.ServiceName
 }
 
 func xmlMarshalOrPanic(value interface{}) []byte {
@@ -511,6 +515,24 @@ func (me *Server) soapActionResponse(sa upnp.SoapAction, actionRequestXML []byte
 
 // Handle a service control HTTP request.
 func (me *Server) serviceControlHandler(w http.ResponseWriter, r *http.Request) {
+	clientIp, _, _ := net.SplitHostPort(r.RemoteAddr)
+	// Add IP to recents
+	isKnownIp := funk.ContainsString(config.RecentIPAddresses, net.ParseIP(clientIp).String())
+	if !isKnownIp {
+		config.RecentIPAddresses = append(config.RecentIPAddresses, net.ParseIP(clientIp).String())
+	}
+
+	// Check if IP is allowed
+	found := true
+	if len(config.Config.Interfaces.DLNA.AllowedIP) > 0 {
+		found = funk.ContainsString(config.Config.Interfaces.DLNA.AllowedIP, net.ParseIP(clientIp).String())
+		if !found {
+			log.Printf("not allowed client %s, %+v", clientIp, config.Config.Interfaces.DLNA.AllowedIP)
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+	}
+
 	soapActionString := r.Header.Get("SOAPACTION")
 	soapAction, err := upnp.ParseActionHTTPHeader(soapActionString)
 	if err != nil {
@@ -552,9 +574,15 @@ func (s *Server) filePath(_path string) string {
 
 func (me *Server) serveIcon(w http.ResponseWriter, r *http.Request) {
 	sceneId := r.URL.Query().Get("scene")
-	data := XbaseGetScene(sceneId)
+	if sceneId == "" {
+		return
+	}
 
-	resp, err := http.Get("http://127.0.0.1:9999/img/700x/" + strings.Replace(data.CoverURL, "://", ":/", -1))
+	var scene models.Scene
+	scene.GetIfExist(sceneId)
+
+	baseURL := "http://127.0.0.1:" + strconv.Itoa(config.Config.Server.Port) + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
+	resp, err := http.Get(baseURL)
 	if err != nil {
 		return
 	}
@@ -696,18 +724,25 @@ func (server *Server) initMux(mux *http.ServeMux) {
 	mux.HandleFunc(iconPath, server.serveIcon)
 	mux.HandleFunc(resPath, func(w http.ResponseWriter, r *http.Request) {
 		sceneId := r.URL.Query().Get("scene")
-		fileId := r.URL.Query().Get("file")
+		fileId, err := strconv.Atoi(r.URL.Query().Get("file"))
+		if err != nil {
+			fileId = 0
+		}
 
 		filePath := ""
 
 		if sceneId != "" {
-			data := XbaseGetScene(sceneId)
-			filePath = filepath.Join(data.File[0].Path, data.File[0].Filename)
+			var scene models.Scene
+			scene.GetIfExist(sceneId)
+
+			filePath = filepath.Join(scene.Files[0].Path, scene.Files[0].Filename)
 		}
 
-		if fileId != "" {
-			data := XbaseGetFile(fileId)
-			filePath = filepath.Join(data.Path, data.Filename)
+		if fileId != 0 {
+			var file models.File
+			file.GetIfExistByPK(uint(fileId))
+
+			filePath = filepath.Join(file.Path, file.Filename)
 		}
 
 		if filePath != "" {
@@ -818,7 +853,7 @@ func (srv *Server) Serve() (err error) {
 			Device: upnp.Device{
 				DeviceType:   rootDeviceType,
 				FriendlyName: srv.FriendlyName,
-				Manufacturer: "XBVR",
+				Manufacturer: srv.FriendlyName,
 				ModelName:    rootDeviceModelName,
 				UDN:          srv.rootDeviceUUID,
 				ServiceList: func() (ss []upnp.Service) {

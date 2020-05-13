@@ -1,13 +1,42 @@
 package migrations
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"runtime"
+
 	"time"
 
 	"github.com/jinzhu/gorm"
+	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/gormigrate.v1"
 )
+
+type RequestSceneList struct {
+	Limit        optional.Int      `json:"limit"`
+	Offset       optional.Int      `json:"offset"`
+	IsAvailable  optional.Bool     `json:"isAvailable"`
+	IsAccessible optional.Bool     `json:"isAccessible"`
+	IsWatched    optional.Bool     `json:"isWatched"`
+	Lists        []optional.String `json:"lists"`
+	Sites        []optional.String `json:"sites"`
+	Tags         []optional.String `json:"tags"`
+	Cast         []optional.String `json:"cast"`
+	Cuepoint     []optional.String `json:"cuepoint"`
+	Released     optional.String   `json:"releaseMonth"`
+	Sort         optional.String   `json:"sort"`
+}
+
+func (i *RequestSceneList) ToJSON() string {
+	b, err := json.Marshal(i)
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
 
 func Migrate() {
 	db, _ := models.GetDB()
@@ -95,17 +124,162 @@ func Migrate() {
 				return tx.AutoMigrate(Site{}).Error
 			},
 		},
+		// 0.3.0-beta.12
 		{
-			ID: "0010",
+			// VRCONK has changed scene numbering schema, so it needs to be flushed
+			ID: "0007-flush-vrconk",
 			Migrate: func(tx *gorm.DB) error {
-				type Scene struct{}
-				type Actor struct {
-					ID        uint
+				var scenes []models.Scene
+				db.Where("site = ?", "VRCONK").Find(&scenes)
+
+				for _, obj := range scenes {
+					files, _ := obj.GetFiles()
+					for _, file := range files {
+						file.SceneID = 0
+						file.Save()
+					}
+				}
+
+				return db.Where("site = ?", "VRCONK").Delete(&models.Scene{}).Error
+			},
+		},
+		// version next
+		{
+			ID: "0008",
+			Migrate: func(tx *gorm.DB) error {
+				type Playlist struct {
+					ID        uint `gorm:"primary_key"`
+
 					CreatedAt time.Time
 					UpdatedAt time.Time
 
 					Name         string
-					Scenes       []Scene
+
+					Ordering     int
+					IsSystem     bool
+					IsDeoEnabled bool
+					IsSmart      bool
+					SearchParams string `sql:"type:text;"`
+				}
+				return tx.AutoMigrate(Playlist{}).Error
+			},
+		},
+		{
+			// 	TODO: remove before merging PR
+			ID: "0008-dev-add-ordering",
+			Migrate: func(tx *gorm.DB) error {
+				var playlists []models.Playlist
+				tx.Model(&playlists).Find(&playlists)
+
+				for i := range playlists {
+					if playlists[i].Ordering < 1 {
+						playlists[i].Ordering = int(playlists[i].ID)
+						playlists[i].Save()
+					}
+				}
+				return nil
+			},
+		},
+		{
+			ID: "0009-create-default-lists",
+			Migrate: func(tx *gorm.DB) error {
+				list := RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Sort:         optional.NewString("release_date_desc"),
+				}
+
+				listDefault := models.Playlist{
+					Name:         "Default",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: false,
+					Ordering:     -100,
+					SearchParams: list.ToJSON(),
+				}
+				listDefault.Save()
+
+				list = RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Sort:         optional.NewString("release_date_desc"),
+				}
+				listDeoRecent := models.Playlist{
+					Name:         "Recent",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: true,
+					Ordering:     -49,
+					SearchParams: list.ToJSON(),
+				}
+				listDeoRecent.Save()
+
+				list = RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Lists:        []optional.String{optional.NewString("favourite")},
+					Sort:         optional.NewString("release_date_desc"),
+				}
+				listDeoFav := models.Playlist{
+					Name:         "Favourite",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: true,
+					Ordering:     -48,
+					SearchParams: list.ToJSON(),
+				}
+				listDeoFav.Save()
+
+				list = RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Lists:        []optional.String{optional.NewString("watchlist")},
+					Sort:         optional.NewString("release_date_desc"),
+				}
+				listDeoWatch := models.Playlist{
+					Name:         "Watchlist",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: true,
+					Ordering:     -47,
+					SearchParams: list.ToJSON(),
+				}
+				listDeoWatch.Save()
+
+				return nil
+			},
+		},
+		{
+			ID: "0010-preview-flag",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
+			ID: "0011-upgrade-ffmpeg",
+			Migrate: func(tx *gorm.DB) error {
+				ffmpegPath := filepath.Join(common.BinDir, "ffmpeg")
+				ffprobePath := filepath.Join(common.BinDir, "ffprobe")
+				if runtime.GOOS == "windows" {
+					ffmpegPath = ffmpegPath + ".exe"
+					ffprobePath = ffprobePath + ".exe"
+				}
+
+				os.Remove(ffmpegPath)
+				os.Remove(ffprobePath)
+				return nil
+			},
+		},
+    {
+			ID: "0012-model-scraper",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct{}
+				type Actor struct {
+					ID        uint
+          Scenes       []Scene
 					ActorID      string
 					Aliases      *string `sql:"type:text;"`
 					Bio          string
@@ -126,8 +300,8 @@ func Migrate() {
 					Count        int
 				}
 				return tx.AutoMigrate(Actor{}).Error
-			},
-		},
+      }
+    },
 	})
 
 	if err := m.Migrate(); err != nil {

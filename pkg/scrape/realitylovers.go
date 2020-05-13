@@ -33,7 +33,7 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Cover
-		sc.Covers = append(sc.Covers, e.Request.Ctx.Get("cover"))
+		sc.Covers = append(sc.Covers, strings.Replace(e.Request.Ctx.Get("cover"), "-Small", "-Large", 1))
 
 		// Title
 		sc.Title = e.Request.Ctx.Get("title")
@@ -48,7 +48,7 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 		// Gallery
 		e.ForEach(`img.videoClip__Details--galleryItem`, func(id int, e *colly.HTMLElement) {
-			imageURL := strings.Fields(e.Attr("data-big"))[0]
+			imageURL := strings.Replace(strings.Fields(e.Attr("data-big"))[0], "_small", "_large", 1)
 			sc.Gallery = append(sc.Gallery, strings.Replace(imageURL, "https:", "http:", 1))
 		})
 
@@ -80,7 +80,7 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		SetHeader("origin", "https://realitylovers.com").
 		SetHeader("authority", "realitylovers.com").
 		SetBody(`{"searchQuery":"","categoryId":null,"perspective":null,"actorId":null,"offset":"5000","isInitialLoad":true,"sortBy":"NEWEST","videoView":"MEDIUM","device":"DESKTOP"}`).
-		Post("https://realitylovers.com/videos/search")
+		Post("https://realitylovers.com/videos/search?hl=1")
 	if err == nil || r.StatusCode() == 200 {
 		result := gjson.Get(r.String(), "contents")
 		result.ForEach(func(key, value gjson.Result) bool {
@@ -92,7 +92,7 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 				ctx.Put("id", value.Get("id").String())
 				ctx.Put("released", value.Get("released").String())
 				ctx.Put("title", value.Get("title").String())
-				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+				sceneCollector.Request("GET", sceneURL + "?hl=1", nil, ctx, nil)
 			}
 			return true
 		})

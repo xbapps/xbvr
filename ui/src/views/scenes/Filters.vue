@@ -1,35 +1,12 @@
 <template>
   <div>
-    <div class="field">
-      <label class="label">{{$t("State")}}</label>
-      <div class="control is-expanded">
-        <div class="select is-fullwidth">
-          <select v-model="dlState">
-            <option value="any">{{$t("Any")}}</option>
-            <option value="available">{{$t("Available right now")}}</option>
-            <option value="downloaded">{{$t("Downloaded")}}</option>
-            <option value="missing">{{$t("Not downloaded")}}</option>
-          </select>
-        </div>
-      </div>
-    </div>
+    <div class="is-divider" data-content="Saved lists" style="margin-top:0.8em;"></div>
 
-    <div class="field">
-      <label class="label">List</label>
-      <b-field>
-        <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
-          <b-icon pack="mdi" icon="calendar-check" size="is-small"/>
-          <span>{{$t("Watchlist")}}</span>
-        </b-checkbox-button>
-        <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
-          <b-icon pack="mdi" icon="heart" size="is-small"/>
-          <span>{{$t("Favourite")}}</span>
-        </b-checkbox-button>
-      </b-field>
-    </div>
+    <SavedSearch/>
 
-    <label class="label">{{$t("Sort by")}}</label>
-    <div class="field has-addons">
+    <div class="is-divider" data-content="Sorting / Status / Release"></div>
+
+    <b-field :label="$t('Sort by')" label-position="on-border" :addons="true" class="field-extra">
       <div class="control is-expanded">
         <div class="select is-fullwidth">
           <select v-model="sort">
@@ -46,10 +23,20 @@
           </select>
         </div>
       </div>
-    </div>
+    </b-field>
 
-    <label class="label">Watch status</label>
-    <div class="field has-addons">
+    <b-field :grouped="true" class="field-extra">
+      <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
+        <b-icon pack="mdi" icon="calendar-check" size="is-small"/>
+        <span>{{$t("Watchlist")}}</span>
+      </b-checkbox-button>
+      <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
+        <b-icon pack="mdi" icon="heart" size="is-small"/>
+        <span>{{$t("Favourite")}}</span>
+      </b-checkbox-button>
+    </b-field>
+
+    <b-field label="Watched" label-position="on-border" :addons="true" class="field-extra">
       <div class="control is-expanded">
         <div class="select is-fullwidth">
           <select v-model="isWatched">
@@ -59,66 +46,81 @@
           </select>
         </div>
       </div>
-    </div>
+    </b-field>
 
-    <div v-if="Object.keys(filters).length !== 0">
-      <label class="label">Release date</label>
-      <div class="field has-addons">
-        <div class="control is-expanded">
-          <div class="select is-fullwidth">
-            <select v-model="releaseMonth">
-              <option></option>
-              <option v-for="t in filters.release_month" :key="t">{{t}}</option>
-            </select>
-          </div>
-        </div>
-        <div class="control">
-          <button type="submit" class="button is-light" @click="clearReleaseMonth">
-            <b-icon pack="fas" icon="times" size="is-small"></b-icon>
-          </button>
+    <b-field label="Release month" label-position="on-border" :addons="true" class="field-extra">
+      <div class="control is-expanded">
+        <div class="select is-fullwidth">
+          <select v-model="releaseMonth">
+            <option></option>
+            <option v-for="t in filters.release_month" :key="t">{{t}}</option>
+          </select>
         </div>
       </div>
+      <div class="control">
+        <button type="submit" class="button is-light" @click="clearReleaseMonth">
+          <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+        </button>
+      </div>
+    </b-field>
 
+    <b-field label="Folder" label-position="on-border" :addons="true" class="field-extra">
+      <div class="control is-expanded">
+        <div class="select is-fullwidth">
+          <select v-model="volume">
+            <option :value="0"></option>
+            <option v-for="t in filters.volumes" :key="t.id" :value="t.id">{{t.path}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="control">
+        <button type="submit" class="button is-light" @click="clearVolume">
+          <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+        </button>
+      </div>
+    </b-field>
 
-      <label class="label">Cast</label>
-      <div class="field">
+    <div class="is-divider" data-content="Filters"></div>
+
+    <div v-if="Object.keys(filters).length !== 0">
+      <b-field label="Cast" label-position="on-border" class="field-extra">
         <b-taginput v-model="cast" autocomplete :data="filteredCast" @typing="getFilteredCast">
           <template slot-scope="props">{{props.option}}</template>
           <template slot="empty">No matching cast</template>
         </b-taginput>
-      </div>
+      </b-field>
 
-      <label class="label">Site</label>
-      <div class="field">
+      <b-field label="Site" label-position="on-border" class="field-extra">
         <b-taginput v-model="sites" autocomplete :data="filteredSites" @typing="getFilteredSites">
           <template slot-scope="props">{{props.option}}</template>
           <template slot="empty">No matching sites</template>
         </b-taginput>
-      </div>
+      </b-field>
 
-      <label class="label">Tags</label>
-      <div class="field">
+      <b-field label="Tags" label-position="on-border" class="field-extra">
         <b-taginput v-model="tags" autocomplete :data="filteredTags" @typing="getFilteredTags">
           <template slot-scope="props">{{props.option}}</template>
           <template slot="empty">No matching tags</template>
         </b-taginput>
-      </div>
+      </b-field>
 
-      <label class="label">Cuepoint</label>
-      <div class="field">
+      <b-field label="Cuepoint" label-position="on-border" class="field-extra">
         <b-taginput v-model="cuepoint" allow-new>
           <template slot-scope="props">{{props.option}}</template>
           <template slot="empty">No matching cuepoints</template>
         </b-taginput>
-      </div>
+      </b-field>
 
     </div>
   </div>
 </template>
 
 <script>
+  import SavedSearch from "./SavedSearch";
+
   export default {
     name: "Filters",
+    components: {SavedSearch},
     mounted() {
       this.$store.dispatch("sceneList/filters");
     },
@@ -130,7 +132,7 @@
       }
     },
     methods: {
-      reload() {
+      reloadList() {
         this.$router.push({
           name: 'scenes',
           query: {
@@ -155,7 +157,11 @@
       },
       clearReleaseMonth() {
         this.$store.state.sceneList.filters.releaseMonth = "";
-        this.reload();
+        this.reloadList();
+      },
+      clearVolume() {
+        this.$store.state.sceneList.filters.volume = 0;
+        this.reloadList();
       },
     },
     computed: {
@@ -168,36 +174,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.lists = value;
-          this.reload();
-        }
-      },
-      dlState: {
-        get() {
-          return this.$store.state.sceneList.filters.dlState;
-        },
-        set(value) {
-          this.$store.state.sceneList.filters.dlState = value;
-
-          switch (this.$store.state.sceneList.filters.dlState) {
-            case "any":
-              this.$store.state.sceneList.filters.isAvailable = null;
-              this.$store.state.sceneList.filters.isAccessible = null;
-              break;
-            case "available":
-              this.$store.state.sceneList.filters.isAvailable = true;
-              this.$store.state.sceneList.filters.isAccessible = true;
-              break;
-            case "downloaded":
-              this.$store.state.sceneList.filters.isAvailable = true;
-              this.$store.state.sceneList.filters.isAccessible = null;
-              break;
-            case "missing":
-              this.$store.state.sceneList.filters.isAvailable = false;
-              this.$store.state.sceneList.filters.isAccessible = null;
-              break;
-          }
-
-          this.reload();
+          this.reloadList();
         }
       },
       releaseMonth: {
@@ -206,7 +183,16 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.releaseMonth = value;
-          this.reload();
+          this.reloadList();
+        }
+      },
+      volume: {
+        get() {
+          return this.$store.state.sceneList.filters.volume;
+        },
+        set(value) {
+          this.$store.state.sceneList.filters.volume = value;
+          this.reloadList();
         }
       },
       cast: {
@@ -215,7 +201,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.cast = value;
-          this.reload();
+          this.reloadList();
         }
       },
       sites: {
@@ -224,7 +210,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.sites = value;
-          this.reload();
+          this.reloadList();
         }
       },
       tags: {
@@ -233,7 +219,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.tags = value;
-          this.reload();
+          this.reloadList();
         }
       },
       cuepoint: {
@@ -242,7 +228,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.cuepoint = value;
-          this.reload();
+          this.reloadList();
         }
       },
       sort: {
@@ -251,7 +237,7 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.sort = value;
-          this.reload();
+          this.reloadList();
         }
       },
       isWatched: {
@@ -260,9 +246,20 @@
         },
         set(value) {
           this.$store.state.sceneList.filters.isWatched = value;
-          this.reload();
+          this.reloadList();
         }
       },
     }
   }
 </script>
+
+<style lang="scss" scoped>
+  @import "~bulma-extensions/bulma-divider/dist/css/bulma-divider.min.css";
+
+  .is-divider {
+    margin: 1.5rem 0;
+  }
+  .field-extra {
+    margin-bottom: 1.1em !important;
+  }
+</style>

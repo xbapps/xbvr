@@ -91,7 +91,11 @@
           }
         }).json();
 
-        this.data = resp.scenes;
+        if (resp.scenes !== null) {
+          this.data = resp.scenes;
+        } else {
+          this.data = [];
+        }
         this.currentPage = 1;
       },
       getImageURL(u) {

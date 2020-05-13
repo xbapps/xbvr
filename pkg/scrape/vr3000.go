@@ -30,7 +30,8 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		if e.ChildText(`.welldescription`) != "" {
 			coverURL := e.ChildAttr(`.col-lg-12 img`, "src")
-			sc.Covers = append(sc.Covers, coverURL)
+			altCover := strings.Replace(coverURL, "panel", "dvd", 1)
+			sc.Covers = append(sc.Covers, coverURL, altCover)
 
 			sc.Title = strings.TrimSpace(e.ChildText(`div.welldescription h4`))
 

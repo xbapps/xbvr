@@ -4,12 +4,15 @@ const state = {
   items: [],
 };
 
+const mutations = {
+};
+
 const actions = {
   async load({state}, params) {
-    state.items = await ky.get(`/api/config/sites`).json();
+    state.items = await ky.get(`/api/options/sites`).json();
   },
   async toggleSite({state}, params) {
-    state.items = await ky.put(`/api/config/sites/${params.id}`, {json: {}}).json();
+    state.items = await ky.put(`/api/options/sites/${params.id}`, {json: {}}).json();
   }
 };
 
@@ -17,5 +20,6 @@ const actions = {
 export default {
   namespaced: true,
   state,
+  mutations,
   actions,
 }

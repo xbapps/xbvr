@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -41,14 +42,21 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			sc.Title = strings.TrimSpace(e.Text)
 		})
 
+		// Regex for original resolution of both covers and gallery
+		reGetOriginal := regexp.MustCompile(`^(https?:\/\/k3y8c8f9\.ssl\.hwcdn\.net\/vrh\/)(?:largethumbs|hugethumbs|rollover_large)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
+
 		// Cover URLs
+		// note 'largethumbs' could be changed to 'hugethumbs' for HQ original but those are easily 5Mb+
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("poster")))
+			tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("poster")))
+			sc.Covers = append(sc.Covers, tmpParts[1]+"largethumbs"+tmpParts[2]+tmpParts[3])
 		})
 
 		// Gallery
+		// note 'rollover_large' could be changed to 'rollover_huge' for HQ original but those are easily 5Mb+
 		e.ForEach(`div.owl-carousel img.img-responsive`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("src")))
+			tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("src")))
+			sc.Gallery = append(sc.Gallery, tmpParts[1]+"rollover_large"+tmpParts[2]+tmpParts[3])
 		})
 
 		// Synopsis
@@ -96,8 +104,9 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 
 		var name string
+		reDoubleWhitespace := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
 		e.ForEach(`h1#model-name`, func(id int, e *colly.HTMLElement) {
-			name = strings.TrimSpace(e.Text)
+			name = strings.TrimSpace(reDoubleWhitespace.ReplaceAllString(e.Text, " "))
 		})
 
 		var gender string

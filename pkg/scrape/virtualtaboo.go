@@ -78,7 +78,7 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		e.ForEach(`div.right-info div.info`, func(id int, e *colly.HTMLElement) {
 			tmpData := funk.ReverseStrings(strings.Split(e.Text, "\n"))
 
-			tmpDate, _ := goment.New(strings.TrimSpace(tmpData[1]), "MMMM DD, YYYY")
+			tmpDate, _ := goment.New(strings.TrimSpace(tmpData[1]), "DD MMMM, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
 
 			sc.Duration, _ = strconv.Atoi(strings.TrimSpace(strings.Replace(tmpData[3], "min", "", -1)))

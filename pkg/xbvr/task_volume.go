@@ -10,14 +10,15 @@ import (
 	"time"
 
 	"github.com/djherbis/times"
-	"github.com/gammazero/nexus/v3/client"
 	"github.com/jinzhu/gorm"
+	"github.com/markphelps/optional"
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
-	"github.com/vansante/go-ffprobe"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/metrics"
 	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/cheggaaa/pb.v1"
+	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 var allowedExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov"}
@@ -50,7 +51,6 @@ func RescanVolumes() {
 		}
 
 		// Match Scene to File
-
 		var files []models.File
 		var scenes []models.Scene
 
@@ -76,7 +76,6 @@ func RescanVolumes() {
 		}
 
 		// Update scene statuses
-
 		tlog.Infof("Update status of Scenes")
 		db.Model(&models.Scene{}).Find(&scenes)
 
@@ -90,12 +89,38 @@ func RescanVolumes() {
 		tlog.Infof("Scanning complete")
 
 		// Inform UI about state change
-		publisher, err := client.ConnectNet(context.Background(), "ws://"+common.WsAddr+"/ws", client.Config{Realm: "default"})
-		if err == nil {
-			publisher.Publish("state.change.optionsFolders", nil, nil, nil)
-			publisher.Close()
-		}
+		common.PublishWS("state.change.optionsStorage", nil)
 
+		// Grab metrics
+		var localFilesCount int64
+		db.Model(models.File{}).
+			Joins("left join volumes on files.volume_id = volumes.id").
+			Where("volumes.type = ?", "local").
+			Count(&localFilesCount)
+		metrics.WritePoint("local_files_count", float64(localFilesCount))
+
+		var localFiles []models.File
+		var localFilesSize int64 = 0
+		db.Model(models.File{}).
+			Joins("left join volumes on files.volume_id = volumes.id").
+			Where("volumes.type = ?", "local").
+			Scan(&localFiles)
+		for _, v := range localFiles {
+			localFilesSize = localFilesSize + v.Size
+		}
+		metrics.WritePoint("local_files_size", float64(localFilesSize))
+
+		r := models.RequestSceneList{}
+		metrics.WritePoint("scenes_scraped", float64(models.QueryScenes(r, false).Results))
+
+		r = models.RequestSceneList{IsAvailable: optional.NewBool(true)}
+		metrics.WritePoint("scenes_downloaded", float64(models.QueryScenes(r, false).Results))
+
+		r = models.RequestSceneList{IsWatched: optional.NewBool(true)}
+		metrics.WritePoint("scenes_watched_overall", float64(models.QueryScenes(r, false).Results))
+
+		r = models.RequestSceneList{IsWatched: optional.NewBool(false), IsAvailable: optional.NewBool(true)}
+		metrics.WritePoint("scenes_downloaded_unwatched", float64(models.QueryScenes(r, false).Results))
 	}
 
 	models.RemoveLock("rescan")
@@ -143,11 +168,16 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			fl.UpdatedTime = fTimes.ModTime()
 			fl.VolumeID = vol.ID
 
-			ffdata, err := ffprobe.GetProbeData(pth, time.Second*3)
+			ffprobeReader, err := os.Open(pth)
+			if err != nil {
+				tlog.Errorf("Can't open %v for ffprobe", pth)
+			}
+
+			ffdata, err := ffprobe.ProbeReader(context.Background(), ffprobeReader)
 			if err != nil {
 				tlog.Errorf("Error running ffprobe", pth, err)
 			} else {
-				vs := ffdata.GetFirstVideoStream()
+				vs := ffdata.FirstVideoStream()
 				if vs.BitRate != "" {
 					bitRate, _ := strconv.Atoi(vs.BitRate)
 					fl.VideoBitRate = bitRate

@@ -2,11 +2,16 @@ package xbvr
 
 import (
 	"bytes"
+	"image"
+	"image/png"
+	"io"
 	"net"
 	"path/filepath"
 	"time"
 
+	"github.com/nfnt/resize"
 	"github.com/xbapps/xbvr/pkg/assets"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/dms/dlna/dms"
 )
 
@@ -28,7 +33,7 @@ var dmsServer *dms.Server
 var dmsStarted bool
 
 func initDMS() {
-	var config = &dmsConfig{
+	var dmsConfig = &dmsConfig{
 		Path:           "",
 		IfName:         "",
 		Http:           ":1338",
@@ -61,46 +66,70 @@ func initDMS() {
 			}
 			ifs = tmp
 			return
-		}(config.IfName),
+		}(dmsConfig.IfName),
 		HTTPConn: func() net.Listener {
-			conn, err := net.Listen("tcp", config.Http)
+			conn, err := net.Listen("tcp", dmsConfig.Http)
 			if err != nil {
 				log.Fatal(err)
 			}
 			return conn
 		}(),
-		FriendlyName:   config.FriendlyName,
-		RootObjectPath: filepath.Clean(config.Path),
-		LogHeaders:     config.LogHeaders,
-		NoTranscode:    config.NoTranscode,
-		NoProbe:        config.NoProbe,
+		FriendlyName:   dmsConfig.FriendlyName,
+		RootObjectPath: filepath.Clean(dmsConfig.Path),
+		LogHeaders:     dmsConfig.LogHeaders,
+		NoTranscode:    dmsConfig.NoTranscode,
+		NoProbe:        dmsConfig.NoProbe,
 		Icons: []dms.Icon{
 			{
-				Width:      32,
-				Height:     32,
+				Width:      48,
+				Height:     48,
 				Depth:      8,
 				Mimetype:   "image/png",
-				ReadSeeker: bytes.NewReader(assets.FileIconsXbvr32Png),
+				ReadSeeker: readIcon(config.Config.Interfaces.DLNA.ServiceImage, 48),
 			},
 			{
 				Width:      128,
 				Height:     128,
 				Depth:      8,
 				Mimetype:   "image/png",
-				ReadSeeker: bytes.NewReader(assets.FileIconsXbvr128Png),
+				ReadSeeker: readIcon(config.Config.Interfaces.DLNA.ServiceImage, 128),
 			},
 		},
-		StallEventSubscribe: config.StallEventSubscribe,
-		NotifyInterval:      config.NotifyInterval,
-		IgnoreHidden:        config.IgnoreHidden,
-		IgnoreUnreadable:    config.IgnoreUnreadable,
+		StallEventSubscribe: dmsConfig.StallEventSubscribe,
+		NotifyInterval:      dmsConfig.NotifyInterval,
+		IgnoreHidden:        dmsConfig.IgnoreHidden,
+		IgnoreUnreadable:    dmsConfig.IgnoreUnreadable,
 	}
+}
+
+func getIconReader(fn string) (io.Reader, error) {
+	b, err := assets.ReadFile("dlna/" + fn + ".png")
+	return bytes.NewReader(b), err
+}
+
+func readIcon(path string, size uint) *bytes.Reader {
+	r, err := getIconReader(path)
+	if err != nil {
+		panic(err)
+	}
+	imageData, _, err := image.Decode(r)
+	if err != nil {
+		panic(err)
+	}
+	return resizeImage(imageData, size)
+}
+
+func resizeImage(imageData image.Image, size uint) *bytes.Reader {
+	img := resize.Resize(size, size, imageData, resize.Lanczos3)
+	var buff bytes.Buffer
+	png.Encode(&buff, img)
+	return bytes.NewReader(buff.Bytes())
 }
 
 func StartDMS() {
 	initDMS()
 	go func() {
-		log.Info("Starting DMS")
+		log.Info("Starting DLNA")
 		if err := dmsServer.Serve(); err != nil {
 			log.Fatal(err)
 		}
@@ -109,7 +138,7 @@ func StartDMS() {
 }
 
 func StopDMS() {
-	log.Info("Stopping DMS")
+	log.Info("Stopping DLNA")
 	err := dmsServer.Close()
 	if err != nil {
 		log.Fatal(err)

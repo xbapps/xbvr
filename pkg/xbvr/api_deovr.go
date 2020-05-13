@@ -1,6 +1,7 @@
 package xbvr
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -39,22 +41,40 @@ type DeoSceneTimestamp struct {
 type DeoScene struct {
 	ID             uint                `json:"id"`
 	Title          string              `json:"title"`
+	Authorized     uint                `json:"authorized"`
 	Description    string              `json:"description"`
+	Paysite        DeoScenePaysite     `json:"paysite"`
 	IsFavorite     bool                `json:"isFavorite"`
 	Is3D           bool                `json:"is3d"`
 	ThumbnailURL   string              `json:"thumbnailUrl"`
+	RatingAvg      float64             `json:"rating_avg"`
 	ScreenType     string              `json:"screenType"`
 	StereoMode     string              `json:"stereoMode"`
 	VideoLength    int                 `json:"videoLength"`
 	VideoThumbnail string              `json:"videoThumbnail"`
-	VideoPreview   string              `json:"videoPreview"`
+	VideoPreview   string              `json:"videoPreview,omitempty"`
 	Encodings      []DeoSceneEncoding  `json:"encodings"`
 	Timestamps     []DeoSceneTimestamp `json:"timeStamps"`
+	Actors         []DeoSceneActor     `json:"actors"`
+	Categories     []DeoSceneCategory  `json:"categories"`
+	FullVideoReady bool                `json:"fullVideoReady"`
+	FullAccess     bool                `json:"fullAccess"`
 }
 
 type DeoSceneActor struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
+}
+
+type DeoSceneCategory struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+type DeoScenePaysite struct {
+	ID         uint   `json:"id"`
+	Name       string `json:"name"`
+	Is3rdParty bool   `json:"is3rdParty"`
 }
 
 type DeoSceneEncoding struct {
@@ -178,6 +198,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 
 	deoScene := DeoScene{
 		ID:           999900000 + file.ID,
+		Authorized:   1,
 		Description:  file.Filename,
 		Title:        file.Filename,
 		IsFavorite:   false,
@@ -211,6 +232,14 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		actors = append(actors, DeoSceneActor{
 			ID:   scene.Cast[i].ID,
 			Name: scene.Cast[i].Name,
+		})
+	}
+
+	var categories []DeoSceneCategory
+	for i := range scene.Tags {
+		categories = append(categories, DeoSceneCategory{
+			ID:   scene.Tags[i].ID,
+			Name: scene.Tags[i].Name,
 		})
 	}
 
@@ -253,17 +282,28 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	}
 
 	deoScene := DeoScene{
-		ID:           scene.ID,
-		Title:        scene.Title,
-		Description:  scene.Synopsis,
-		IsFavorite:   scene.Favourite,
-		ThumbnailURL: baseURL + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1),
-		StereoMode:   stereoMode,
-		Is3D:         true,
-		ScreenType:   screenType,
-		Encodings:    sources,
-		VideoLength:  int(videoLength),
-		Timestamps:   cuepoints,
+		ID:             scene.ID,
+		Authorized:     1,
+		Title:          scene.Title,
+		Description:    scene.Synopsis,
+		Actors:         actors,
+		Categories:     categories,
+		Paysite:        DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
+		IsFavorite:     scene.Favourite,
+		RatingAvg:      scene.StarRating,
+		FullVideoReady: true,
+		FullAccess:     true,
+		ThumbnailURL:   baseURL + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1),
+		StereoMode:     stereoMode,
+		Is3D:           true,
+		ScreenType:     screenType,
+		Encodings:      sources,
+		VideoLength:    int(videoLength),
+		Timestamps:     cuepoints,
+	}
+
+	if scene.HasVideoPreview {
+		deoScene.VideoPreview = fmt.Sprintf("%v/api/dms/preview/%v", baseURL, scene.SceneID)
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, deoScene)
@@ -273,29 +313,28 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	var recent []models.Scene
-	db.Model(&recent).
-		Where("is_available = ?", true).
-		Where("is_accessible = ?", true).
-		Order("release_date desc").
-		Find(&recent)
+	var sceneLists []DeoListScenes
 
-	var favourite []models.Scene
-	db.Model(&favourite).
-		Where("is_available = ?", true).
-		Where("is_accessible = ?", true).
-		Where("favourite = ?", true).
-		Order("release_date desc").
-		Find(&favourite)
+	var savedPlaylists []models.Playlist
+	db.Where("is_deo_enabled = ?", true).Order("ordering asc").Find(&savedPlaylists)
 
-	var watchlist []models.Scene
-	db.Model(&watchlist).
-		Where("is_available = ?", true).
-		Where("is_accessible = ?", true).
-		Where("watchlist = ?", true).
-		Order("release_date desc").
-		Find(&watchlist)
+	for i := range savedPlaylists {
+		var r models.RequestSceneList
 
+		if err := json.Unmarshal([]byte(savedPlaylists[i].SearchParams), &r); err == nil {
+			r.IsAccessible = optional.NewBool(true)
+			r.IsAvailable = optional.NewBool(true)
+			r.Limit = optional.NewInt(10000)
+
+			q := models.QueryScenes(r, false)
+			sceneLists = append(sceneLists, DeoListScenes{
+				Name: savedPlaylists[i].Name,
+				List: scenesToDeoList(req, q.Scenes),
+			})
+		}
+	}
+
+	// Add unmatched files at the end
 	var unmatched []models.File
 	db.Model(&unmatched).
 		Preload("Volume").
@@ -303,29 +342,15 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 		Order("created_time desc").
 		Find(&unmatched)
 
-	lib := DeoLibrary{
-		Authorized: "1",
-		Scenes: []DeoListScenes{
-			{
-				Name: "Recent releases",
-				List: scenesToDeoList(req, recent),
-			},
-			{
-				Name: "Favourites",
-				List: scenesToDeoList(req, favourite),
-			},
-			{
-				Name: "Watchlist",
-				List: scenesToDeoList(req, watchlist),
-			},
-			{
-				Name: "Unmatched",
-				List: filesToDeoList(req, unmatched),
-			},
-		},
-	}
+	sceneLists = append(sceneLists, DeoListScenes{
+		Name: "Unmatched",
+		List: filesToDeoList(req, unmatched),
+	})
 
-	resp.WriteHeaderAndEntity(http.StatusOK, lib)
+	resp.WriteHeaderAndEntity(http.StatusOK, DeoLibrary{
+		Authorized: "1",
+		Scenes:     sceneLists,
+	})
 }
 
 func getBaseURL() string {

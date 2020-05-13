@@ -46,6 +46,13 @@ func (f *File) Save() error {
 	return err
 }
 
+func (f *File) GetIfExistByPK(id uint) error {
+	db, _ := GetDB()
+	defer db.Close()
+
+	return db.Where(&File{ID: id}).First(f).Error
+}
+
 func (f *File) Exists() bool {
 	switch f.Volume.Type {
 	case "local":

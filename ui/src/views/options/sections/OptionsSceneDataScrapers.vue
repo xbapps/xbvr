@@ -43,6 +43,9 @@
                 <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(item.name)">
                   {{$t('Force update scenes')}}
                 </b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="deleteScenes(item.name)">
+                  {{$t('Delete scraped scenes')}}
+                </b-dropdown-item>
               </b-dropdown>
             </div>
           </div>
@@ -94,10 +97,23 @@
         ky.get(`/api/task/scrape?site=${site}`);
       },
       forceSiteUpdate(site) {
-        ky.post(`/api/config/scraper/force-site-update`, {
+        ky.post(`/api/options/scraper/force-site-update`, {
           json: {"site_name": site}
         });
         this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`);
+      },
+      deleteScenes(site) {
+        this.$buefy.dialog.confirm({
+          title: this.$t('Delete scraped scenes'),
+          message: `You're about to delete scraped scenes for <strong>${site}</strong>. Previously matched files will return to unmatched state.`,
+          type: 'is-danger',
+          hasIcon: true,
+          onConfirm: function () {
+            ky.post(`/api/options/scraper/delete-scenes`, {
+              json: {"site_name": site}
+            });
+          }
+        });
       },
       scrapeJAVR() {
         ky.post(`/api/task/scrape-javr`, {json: {q: this.javrQuery}});

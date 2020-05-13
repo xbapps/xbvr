@@ -112,7 +112,7 @@
   import {formatDistanceToNow, parseISO} from "date-fns";
 
   export default {
-    name: "OptionsFolders",
+    name: "Storage",
     data() {
       return {
         volumes: [],
@@ -126,17 +126,17 @@
       }
     },
     mounted() {
-      this.$store.dispatch("optionsFolders/load");
+      this.$store.dispatch("optionsStorage/load");
     },
     methods: {
       taskRescan: function () {
         ky.get(`/api/task/rescan`);
       },
       addFolder: async function () {
-        await ky.post(`/api/config/storage`, {json: {path: this.newVolumePath, type: "local"}});
+        await ky.post(`/api/options/storage`, {json: {path: this.newVolumePath, type: "local"}});
       },
       addCloudStorage: async function () {
-        await ky.post(`/api/config/storage`, {json: {token: this.serviceToken, type: this.serviceSelected}});
+        await ky.post(`/api/options/storage`, {json: {token: this.serviceToken, type: this.serviceSelected}});
       },
       removeFolder: function (folder) {
         this.$buefy.dialog.confirm({
@@ -145,7 +145,7 @@
           type: 'is-danger',
           hasIcon: true,
           onConfirm: function () {
-            ky.delete(`/api/config/storage/${folder.id}`);
+            ky.delete(`/api/options/storage/${folder.id}`);
           }
         });
       }
@@ -153,7 +153,7 @@
     computed: {
       total() {
         let files = 0, unmatched = 0, size = 0;
-        this.$store.state.optionsFolders.items.map(v => {
+        this.$store.state.optionsStorage.items.map(v => {
           files = files + v.file_count;
           unmatched = unmatched + v.unmatched_count;
           size = size + v.total_size;
@@ -161,7 +161,7 @@
         return {files, unmatched, size}
       },
       items() {
-        return this.$store.state.optionsFolders.items;
+        return this.$store.state.optionsStorage.items;
       },
     }
   }

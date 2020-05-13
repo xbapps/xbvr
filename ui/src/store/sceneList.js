@@ -21,19 +21,28 @@ const defaultFilterState = {
   sites: [],
   tags: [],
   cuepoint: [],
+  volume: 0,
   sort: "release_desc",
 };
 
 const state = {
   items: [],
+  playlists: [],
   isLoading: false,
   offset: 0,
   total: 0,
   limit: 80,
+  counts: {
+    any: 0,
+    available: 0,
+    downloaded: 0,
+    not_downloaded: 0,
+  },
   filterOpts: {
     cast: [],
     sites: [],
     tags: [],
+    volumes: [],
   },
   filters: defaultFilterState
 };
@@ -41,6 +50,12 @@ const state = {
 const getters = {
   filterQueryParams: (state) => {
     const st = Object.assign({}, state.filters);
+    delete st.cardSize;
+
+    return Buffer.from(JSON.stringify(st)).toString("base64");
+  },
+  getQueryParamsFromObject: (state) => (payload) => {
+    const st = Object.assign({}, JSON.parse(payload));
     delete st.cardSize;
 
     return Buffer.from(JSON.stringify(st)).toString("base64");
@@ -90,6 +105,15 @@ const mutations = {
       return obj;
     })
   },
+  stateFromJSON(state, payload) {
+    try {
+      const obj = JSON.parse(payload);
+      for (let [k, v] of Object.entries(obj)) {
+        Vue.set(state.filters, k, v)
+      }
+    } catch (err) {
+    }
+  },
   stateFromQuery(state, payload) {
     try {
       const obj = JSON.parse(Buffer.from(payload.q, "base64").toString("utf-8"));
@@ -103,6 +127,7 @@ const mutations = {
 
 const actions = {
   async filters({state}) {
+    state.playlists = await ky.get(`/api/playlist`).json();
     state.filterOpts = await ky.get(`/api/scene/filters`).json();
 
     // Reverse list of release months for display purposes
@@ -130,6 +155,11 @@ const actions = {
     state.items = state.items.concat(data.scenes);
     state.offset = iOffset + state.limit;
     state.total = data.results;
+
+    state.counts.any = data.count_any;
+    state.counts.available = data.count_available;
+    state.counts.downloaded = data.count_downloaded;
+    state.counts.not_downloaded = data.count_not_downloaded;
   },
 };
 

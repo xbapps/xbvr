@@ -10,9 +10,9 @@ import (
 	"github.com/mholt/archiver"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
-	"github.com/vansante/go-ffprobe"
 	"github.com/xbapps/xbvr/pkg/common"
 	"gopkg.in/resty.v1"
+	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func CheckDependencies() {
@@ -36,7 +36,16 @@ func CheckDependencies() {
 		downloadFfbinaries("ffmpeg")
 	}
 
+	// Set path for go-ffprobe
 	ffprobe.SetFFProbeBinPath(ffprobePath)
+}
+
+func GetBinPath(tool string) string {
+	path := filepath.Join(common.BinDir, tool)
+	if runtime.GOOS == "windows" {
+		path = path + ".exe"
+	}
+	return path
 }
 
 func downloadFfbinaries(tool string) error {
@@ -69,7 +78,7 @@ func downloadFfbinaries(tool string) error {
 		return errors.Errorf("Unknown architecture: %v/%v", runtime.GOOS, runtime.GOARCH)
 	}
 
-	resp, err := resty.R().Get("https://ffbinaries.com/api/v1/version/4.1")
+	resp, err := resty.R().Get("https://ffbinaries.com/api/v1/version/4.2.1")
 	if err != nil {
 		return err
 	}

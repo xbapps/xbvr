@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/xbapps/xbvr/pkg/config"
 	"golang.org/x/crypto/bcrypt"
 
 	auth "github.com/abbot/go-http-auth"
@@ -36,8 +37,6 @@ var (
 	DEOUSER        = os.Getenv("DEO_USERNAME")
 	UIPASSWORD     = os.Getenv("UI_PASSWORD")
 	UIUSER         = os.Getenv("UI_USERNAME")
-	DLNA           = common.DLNA
-	httpAddr       = common.HttpAddr
 	wsAddr         = common.WsAddr
 	currentVersion = ""
 )
@@ -75,12 +74,15 @@ func authHandle(pattern string, authEnabled bool, authSecret auth.SecretProvider
 func StartServer(version, commit, branch, date string) {
 	currentVersion = version
 
+	config.LoadConfig()
+
 	migrations.Migrate()
 
 	// Remove old locks
 	models.RemoveLock("index")
 	models.RemoveLock("scrape")
 	models.RemoveLock("update-scenes")
+	models.RemoveLock("previews")
 
 	go CheckDependencies()
 	models.CheckVolumes()
@@ -103,8 +105,9 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(SceneResource{}.WebService())
 	restful.Add(TaskResource{}.WebService())
 	restful.Add(SecurityResource{}.WebService())
+	restful.Add(PlaylistResource{}.WebService())
 
-	config := restfulspec.Config{
+	restConfig := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),
 		APIPath:     "/api.json",
 		PostBuildSwaggerObjectHandler: func(swo *spec.Swagger) {
@@ -136,7 +139,7 @@ func StartServer(version, commit, branch, date string) {
 			}
 		},
 	}
-	restful.Add(restfulspec.NewOpenAPIService(config))
+	restful.Add(restfulspec.NewOpenAPIService(restConfig))
 
 	// Static files
 	if DEBUG == "" {
@@ -203,8 +206,7 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("XBVR %v (build date %v) starting...", version, date)
 
 	// DMS
-	log.Info("DLNA Enabled: ", DLNA)
-	if DLNA {
+	if config.Config.Interfaces.DLNA.Enabled {
 		go StartDMS()
 	}
 
@@ -216,7 +218,7 @@ func StartServer(version, commit, branch, date string) {
 	for _, addr := range addrs {
 		ip, _ := addr.(*net.IPNet)
 		if ip.IP.To4() != nil {
-			ips = append(ips, fmt.Sprintf("http://%v:9999/", ip.IP))
+			ips = append(ips, fmt.Sprintf("http://%v:%v/", ip.IP, config.Config.Server.Port))
 		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
@@ -224,6 +226,7 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("DeoVR Authentication enabled: %v", deoAuthEnabled())
 	log.Infof("Database file stored at %s", common.AppDir)
 
+	httpAddr := fmt.Sprintf("%v:%v", config.Config.Server.BindAddress, config.Config.Server.Port)
 	if DEBUG == "" {
 		log.Fatal(http.ListenAndServe(httpAddr, handler))
 	} else {

@@ -18,11 +18,32 @@
         <div class="columns">
 
           <div class="column">
-            <video ref="player"
-                   width="640" height="640" class="video-js vjs-default-skin"
-                   controls playsinline>
-              <source :src="sourceUrl" type="video/mp4">
-            </video>
+            <b-tabs v-model="activeMedia" position="is-centered" :animated="false">
+
+              <b-tab-item label="Gallery">
+                <b-carousel v-model="carouselSlide" :autoplay="false" :indicator-inside="false">
+                  <b-carousel-item v-for="(carousel, i) in images" :key="i">
+                    <div class="image is-1by1 is-full"
+                         v-bind:style="{backgroundImage: `url(${getImageURL(carousel.url, '700,fit')})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat'}"></div>
+                  </b-carousel-item>
+                  <template slot="indicators" slot-scope="props">
+                      <span class="al image">
+                        <vue-load-image>
+                          <img slot="image" :src="getIndicatorURL(props.i)" style="height:40px;"/>
+                          <img slot="preloader" src="/ui/images/blank.png" style="height:40px;"/>
+                          <img slot="error" src="/ui/images/blank.png" style="height:40px;"/>
+                        </vue-load-image>
+                      </span>
+                  </template>
+                </b-carousel>
+              </b-tab-item>
+
+              <b-tab-item label="Player">
+                <video ref="player" class="video-js vjs-default-skin" controls playsinline preload="none"/>
+              </b-tab-item>
+
+            </b-tabs>
+
           </div>
 
           <div class="column">
@@ -93,18 +114,26 @@
             </div>
 
             <div class="block-opts block">
-              <b-tabs v-model="activeTab">
+              <b-tabs v-model="activeTab" :animated="false">
 
-                <b-tab-item label="Gallery">
+                <b-tab-item :label="`Files (${fileCount})`">
                   <div class="block-tab-content block">
-                    <vue-gallery :images="galleryImages" :index="index" @close="index = null"
-                                 :options="galleryOpts"></vue-gallery>
-                    <div class="block is-pulled-left" v-for="(i, idx) in images" :key="idx">
-                      <vue-load-image>
-                        <img slot="image" :src="getImageURL(i.url, '120x')" @click="index = idx"/>
-                        <img slot="preloader" src="/ui/images/blank.png"/>
-                        <img slot="error" src="/ui/images/blank.png"/>
-                      </vue-load-image>
+                    <div class="content media is-small" v-for="f in item.file">
+                      <div class="media-left">
+                        <button rounded class="button is-success is-small" @click='playFile(f)'>
+                          <b-icon pack="fas" icon="play" size="is-small"></b-icon>
+                        </button>
+                      </div>
+                      <div class="media-content" style="overflow-wrap: break-word;">
+                        <strong>{{f.filename}}</strong><br/>
+                        <small>{{prettyBytes(f.size)}}, {{f.video_width}}x{{f.video_height}},
+                          {{format(parseISO(f.created_time), "yyyy-MM-dd")}}</small>
+                      </div>
+                      <div class="media-right">
+                        <button class="button is-danger is-small is-outlined" @click='removeFile(f)'>
+                          <b-icon pack="fas" icon="trash" size="is-small"></b-icon>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </b-tab-item>
@@ -137,28 +166,6 @@
                   </div>
                 </b-tab-item>
 
-                <b-tab-item :label="`Files (${fileCount})`">
-                  <div class="block-tab-content block">
-                    <div class="content media is-small" v-for="f in item.file">
-                      <div class="media-left">
-                        <button rounded class="button is-success is-small" @click='playFile(f)'>
-                          <b-icon pack="fas" icon="play" size="is-small"></b-icon>
-                        </button>
-                      </div>
-                      <div class="media-content" style="overflow-wrap: break-word;">
-                        <strong>{{f.filename}}</strong><br/>
-                        <small>{{prettyBytes(f.size)}}, {{f.video_width}}x{{f.video_height}},
-                          {{format(parseISO(f.created_time), "yyyy-MM-dd")}}</small>
-                      </div>
-                      <div class="media-right">
-                        <button class="button is-danger is-small is-outlined" @click='removeFile(f)'>
-                          <b-icon pack="fas" icon="trash" size="is-small"></b-icon>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </b-tab-item>
-
                 <b-tab-item label="Watch history">
                   <div class="block-tab-content block">
                     <div>
@@ -181,8 +188,7 @@
         </div>
       </section>
     </div>
-    <button class="modal-close is-large" aria-label="close"
-            @click="close()"></button>
+    <button class="modal-close is-large" aria-label="close" @click="close()"></button>
     <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"
        title="Keyboard shortcut: O">&#10094;</a>
     <a class="next" @click="nextScene" v-if="$store.getters['sceneList/nextScene'](item) !== null"
@@ -193,10 +199,10 @@
 <script>
   import ky from "ky";
   import videojs from "video.js";
+  import vr from "videojs-vr/dist/videojs-vr.min.js";
   import {format, formatDistance, parseISO} from "date-fns";
   import prettyBytes from "pretty-bytes";
   import VueLoadImage from "vue-load-image";
-  import VueGallery from 'vue-gallery';
   import GlobalEvents from 'vue-global-events';
   import StarRating from 'vue-star-rating';
   import FavouriteButton from "../../components/FavouriteButton";
@@ -204,40 +210,27 @@
 
   export default {
     name: "Details",
-    components: {VueLoadImage, VueGallery, GlobalEvents, StarRating, WatchlistButton, FavouriteButton},
+    components: {VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton},
     data() {
       return {
         index: 1,
         activeTab: 0,
+        activeMedia: 0,
         player: {},
         tagAct: "",
         tagPosition: "",
         cuepointPositionTags: ["", "standing", "sitting", "laying", "kneeling"],
         cuepointActTags: ["", "handjob", "blowjob", "doggy", "cowgirl", "revcowgirl", "missionary", "titfuck", "anal", "cumshot", "69", "facesit"],
-        galleryOpts: {
-          // container: this.$refs.container,
-        }
+        carouselSlide: 0,
       }
     },
     computed: {
       item() {
         return this.$store.state.overlay.details.scene;
       },
-      // Properties for VideoJS player
-      sourceUrl() {
-        if (this.$store.state.overlay.details.scene.is_available) {
-          return "/api/dms/file/" + this.$store.state.overlay.details.scene.file[0].id + "?dnt=1";
-        }
-        return "";
-      },
       // Properties for gallery
       images() {
         return JSON.parse(this.item.images);
-      },
-      galleryImages() {
-        return this.images.map((e) => {
-          return "/img/" + e.url.replace("://", ":/");
-        })
       },
       // Tab: cuepoints
       sortedCuepoints() {
@@ -285,7 +278,11 @@
         return Math.round(n*2.2046) + "lbs"
       },
       setupPlayer() {
-        this.player = videojs(this.$refs.player);
+        this.player = videojs(this.$refs.player, {
+          aspectRatio: '1:1',
+          fluid: true,
+          loop: true
+        });
 
         this.player.hotkeys({
           alwaysCaptureHotkeys: true,
@@ -304,23 +301,20 @@
             }
           }
         });
-
-        this.updatePlayer();
       },
-      updatePlayer() {
-        this.index = null;
+      updatePlayer(src, projection) {
         this.player.reset();
 
         let vr = this.player.vr({
-          projection: '360',
+          projection: projection,
           forceCardboard: false
         });
 
         this.player.on("loadedmetadata", function () {
-          vr.camera.position.set(-1, 0, -1);
+          // vr.camera.position.set(-1, 0, 2);
         });
 
-        this.player.src({src: this.sourceUrl, type: "video/mp4"});
+        this.player.src({src: src, type: "video/mp4"});
         this.player.poster(this.getImageURL(this.item.cover_url, ""));
       },
       showCastScenes(actor) {
@@ -343,8 +337,14 @@
         });
         this.close();
       },
+      playPreview() {
+        this.activeMedia = 1;
+        this.updatePlayer("/api/dms/preview/" + this.item.scene_id, "NONE");
+        this.player.play();
+      },
       playFile(file) {
-        this.player.src({type: "video/mp4", src: "/api/dms/file/" + file.id + "?dnt=1"});
+        this.activeMedia = 1;
+        this.updatePlayer("/api/dms/file/" + file.id + "?dnt=1", "180");
         this.player.play();
       },
       removeFile(file) {
@@ -361,11 +361,14 @@
         });
       },
       getImageURL(u, size) {
-        if (u.startsWith("http")) {
+        if (u.startsWith("http") || u.startsWith("https")) {
           return "/img/" + size + "/" + u.replace("://", ":/");
         } else {
           return u;
         }
+      },
+      getIndicatorURL(idx) {
+        return this.getImageURL(this.images[idx].url, "x40")
       },
       playCuepoint(cuepoint) {
         this.player.currentTime(cuepoint.time_start);
@@ -409,14 +412,14 @@
         let data = this.$store.getters['sceneList/nextScene'](this.item);
         if (data !== null) {
           this.$store.commit("overlay/showDetails", {scene: data});
-          this.updatePlayer();
+          this.updatePlayer('180');
         }
       },
       prevScene() {
         let data = this.$store.getters['sceneList/prevScene'](this.item);
         if (data !== null) {
           this.$store.commit("overlay/showDetails", {scene: data});
-          this.updatePlayer();
+          this.updatePlayer('180');
         }
       },
       playerStepBack() {
@@ -449,11 +452,7 @@
         }
       },
       toggleGallery() {
-        if (this.index === null) {
-          this.index = 1;
-        } else {
-          this.index = null;
-        }
+        this.activeMedia = 0;
       },
       format,
       parseISO,
@@ -464,6 +463,20 @@
 </script>
 
 <style lang="less" scoped>
+  .bbox {
+    flex: 1 0 calc(25%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+    line-height: 0;
+  }
+
+  .is-1by1 {
+    padding-top: calc(100% - 40px - 1em) !important;
+  }
+
   .video-js {
     margin: 0 auto;
   }
@@ -533,5 +546,9 @@
     border-color: grey;
     border-radius: 50%;
     overflow: hidden;
+  }
+
+  span.is-active img {
+    border: 2px;
   }
 </style>

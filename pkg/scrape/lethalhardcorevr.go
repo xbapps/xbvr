@@ -85,10 +85,9 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		})
 
 		// Cast
-		r := strings.NewReplacer("(", "",
-			")", "")
+		r := strings.NewReplacer("(", "", ")", "")
 		e.ForEach(`div.item-page-details .overlay small`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
+			if id <= 1 {
 				sc.Cast = append(sc.Cast, strings.TrimSpace(r.Replace(e.Text)))
 			}
 		})
@@ -97,7 +96,7 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		e.ForEach(`meta[name=Keywords]`, func(id int, e *colly.HTMLElement) {
 			k := strings.Split(e.Attr("content"), ",")
 			for i, tag := range k {
-				if i == len(k)-1 {
+				if i >= len(k)-2 {
 					for _, actor := range sc.Cast {
 						if funk.Contains(tag, actor) {
 							tag = strings.Replace(tag, actor, "", -1)
