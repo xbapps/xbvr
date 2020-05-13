@@ -2,6 +2,7 @@ package xbvr
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -59,8 +60,14 @@ func RescanVolumes() {
 
 		for i := range files {
 			fn := files[i].Filename
-
-			err := db.Raw("select scenes.* from scenes, json_each(scenes.filenames_arr) where lower(json_each.value) = ? group by scenes.scene_id", strings.ToLower(path.Base(fn))).Scan(&scenes).Error
+			var query string
+			switch common.DB_TYPE {
+			case "mariadb", "mysql":
+				query = fmt.Sprintf("select scenes.* from scenes where JSON_CONTAINS(LOWER(scenes.filenames_arr), '\"%v\"') group by scenes.scene_id", strings.ReplaceAll(strings.ToLower(path.Base(fn)), "'", "''"))
+			case "sqlite3":
+				query = fmt.Sprintf("select scenes.* from scenes, json_each(scenes.filenames_arr) where lower(json_each.value) = '%v' group by scenes.scene_id", strings.ReplaceAll(strings.ToLower(path.Base(fn)), "'", "''"))
+			}
+			err := db.Raw(query).Scan(&scenes).Error
 			if err != nil {
 				log.Error(err, "when matching "+path.Base(fn))
 			}

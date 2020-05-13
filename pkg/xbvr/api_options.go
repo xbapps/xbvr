@@ -13,7 +13,7 @@ import (
 
 	"github.com/blang/semver"
 	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio/putio"

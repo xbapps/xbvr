@@ -41,7 +41,7 @@ func (f *File) GetPath() string {
 
 func (f *File) Save() error {
 	db, _ := GetDB()
-	err := db.Save(f).Error
+	err := db.Save(&f).Error
 	db.Close()
 	return err
 }

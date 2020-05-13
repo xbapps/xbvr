@@ -20,7 +20,7 @@ type Playlist struct {
 
 func (o *Playlist) Save() error {
 	db, _ := GetDB()
-	err := db.Save(o).Error
+	err := db.Save(&o).Error
 	db.Close()
 	return err
 }

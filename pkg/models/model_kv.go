@@ -7,12 +7,12 @@ type KV struct {
 
 func (o *KV) Save() {
 	db, _ := GetDB()
-	db.Save(o)
+	db.Save(&o)
 	db.Close()
 }
 
 func (o *KV) Delete() {
 	db, _ := GetDB()
-	db.Delete(o)
+	db.Delete(&o)
 	db.Close()
 }

@@ -6,6 +6,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/xbapps/xbvr/pkg/common"
 )
 
@@ -16,10 +18,25 @@ func GetDB() (*gorm.DB, error) {
 		log.Debug("Getting DB handle from ", common.GetCallerFunctionName())
 	}
 
-	mysqlParams := fmt.Sprintf("%v:%v@(%v)/%v?charset=utf8&parseTime=True&loc=Local", common.MYSQL_USER, common.MYSQL_PASSWORD, common.MYSQL_HOST, common.MYSQL_DB)
-	db, err := gorm.Open("mysql", mysqlParams)
+	var dialect, params string
+	switch common.DB_TYPE {
+	case "mysql", "mariadb":
+		dialect = "mysql"
+		params = fmt.Sprintf("%v:%v@(%v)/%v?charset=utf8mb4&parseTime=True&loc=Local", common.DB_USER, common.DB_PASSWORD, common.DB_HOST, common.DB_NAME)
+	case "sqlite3":
+		dialect = "sqlite3"
+		params = "file:" + filepath.Join(common.AppDir, "main.db") + "?" + common.SQLITE_PARAMS
+	default:
+		log.Fatal("Unknown database type: ", common.DB_TYPE)
+	}
+	db, err := gorm.Open(dialect, params)
+
+	if common.SQL_DEBUG {
+		db.LogMode(true)
+	}
+
 	if err != nil {
-		log.Fatal("failed to connect database", err)
+		log.Fatal("Failed to connect database: ", err)
 	}
 	return db, nil
 }
@@ -49,7 +66,8 @@ func RemoveLock(lock string) {
 	db, _ := GetDB()
 	defer db.Close()
 
-	db.Where("key = ?", "lock-"+lock).Delete(&KV{})
+	var obj KV
+	db.Where(&KV{Key: "lock-" + lock}).Delete(&obj)
 
 	common.PublishWS("lock.change", map[string]interface{}{"name": lock, "locked": false})
 }

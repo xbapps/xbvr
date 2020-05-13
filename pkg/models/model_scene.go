@@ -27,7 +27,7 @@ type SceneCuepoint struct {
 
 func (o *SceneCuepoint) Save() error {
 	db, _ := GetDB()
-	err := db.Save(o).Error
+	err := db.Save(&o).Error
 	db.Close()
 	return err
 }
@@ -84,7 +84,7 @@ type Image struct {
 
 func (i *Scene) Save() error {
 	db, _ := GetDB()
-	err := db.Save(i).Error
+	err := db.Save(&i).Error
 	db.Close()
 	return err
 }
@@ -260,7 +260,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		o.Images = string(imgTxt)
 	}
 
-	db.Save(o)
+	db.Save(&o)
 
 	// Clean & Associate Tags
 	var tmpTag Tag

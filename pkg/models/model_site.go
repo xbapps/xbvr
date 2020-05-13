@@ -15,7 +15,7 @@ type Site struct {
 
 func (i *Site) Save() error {
 	db, _ := GetDB()
-	err := db.Save(i).Error
+	err := db.Save(&i).Error
 	db.Close()
 	return err
 }

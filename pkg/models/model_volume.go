@@ -41,7 +41,7 @@ func (o *Volume) IsMounted() bool {
 
 func (o *Volume) Save() error {
 	db, _ := GetDB()
-	err := db.Save(o).Error
+	err := db.Save(&o).Error
 	db.Close()
 	return err
 }

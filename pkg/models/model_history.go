@@ -24,12 +24,12 @@ func (o *History) GetIfExist(id uint) error {
 
 func (o *History) Save() {
 	db, _ := GetDB()
-	db.Save(o)
+	db.Save(&o)
 	db.Close()
 }
 
 func (o *History) Delete() {
 	db, _ := GetDB()
-	db.Delete(o)
+	db.Delete(&o)
 	db.Close()
 }

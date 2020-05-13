@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/xbapps/xbvr/pkg/common"
+
 	"github.com/blevesearch/bleve"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
@@ -136,8 +138,14 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	}
 
 	// Available release dates (YYYY-MM)
-	tx.Select("strftime('%Y-%m', release_date) as release_date_text").
-		Group("strftime('%Y-%m', release_date)").Find(&scenes)
+	switch common.DB_TYPE {
+	case "mariadb", "mysql":
+		tx.Select("DATE_FORMAT(release_date, '%Y-%m') as release_date_text").
+			Group("DATE_FORMAT(release_date, '%Y-%m')").Find(&scenes)
+	case "sqlite3":
+		tx.Select("strftime('%Y-%m', release_date) as release_date_text").
+			Group("strftime('%Y-%m', release_date)").Find(&scenes)
+	}
 	var outRelease []string
 	for i := range scenes {
 		outRelease = append(outRelease, scenes[i].ReleaseDateText)
