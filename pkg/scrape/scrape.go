@@ -102,6 +102,13 @@ func logScrapeFinished(id string, name string) {
 	}).Infof("Finished %v scraper", name)
 }
 
+func trimSpaceFromSlice(s []string) []string {
+	for i := range s {
+      s[i] = strings.TrimSpace(s[i])
+	}
+	return s
+}
+
 func unCache(URL string, cacheDir string) {
 	sum := sha1.Sum([]byte(URL))
 	hash := hex.EncodeToString(sum[:])

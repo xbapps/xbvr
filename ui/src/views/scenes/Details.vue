@@ -73,8 +73,41 @@
 
             <div class="block-tags block">
               <b-taglist>
-                <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])'
-                   class="tag is-warning is-small">{{c.name}} ({{c.count}})</a>
+                <b-dropdown hoverable v-for="(c, idx) in item.cast" :key="'cast' + idx" aria-role="menu">
+                  <a class="tag is-warning is-small" slot="trigger" @click='showCastScenes([c.name])'>{{c.name}} ({{c.count}})</a>
+
+                  <b-dropdown-item
+                        aria-role="menu-item"
+                        :focusable="false"
+                        custom
+                        paddingless>
+                    <article class="media" style="width:300px; height:180px">
+                      <figure class="media-left" style="padding:10px">
+                        <p class="image is-96x96 model-headshot">
+                          <img :src="c.image_url">
+                        </p>
+                      </figure>
+                      <div class="media-content">
+                        <div class="content">
+                          <p>
+                            <strong>{{c.name}}</strong>
+                            <br>
+                            <div class="model-stats">
+                              <strong>Nationality:</strong> {{c.nationality}}<br>
+                              <strong>Birthday:</strong> {{c.birthday}}<br>
+                              <strong>Ethnicity:</strong> {{c.ethnicity}}<br>
+                              <strong>Eye Color:</strong> {{c.eye_color}}<br>
+                              <strong>Hair Color:</strong> {{c.hair_color}}<br>
+                              <strong>Height:</strong> {{c.height}}cm ({{cmToFtInches(c.height)}})<br>
+                              <strong>Weight:</strong> {{c.weight}}kg ({{kgToPounds(c.weight)}})<br>
+                              <strong>Measurements:</strong> {{c.measurements}}<br>
+                            </div>
+                          </p>
+                        </div>
+                      </div>
+                    </article>
+                  </b-dropdown-item>
+                </b-dropdown>
                 <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])'
                    class="tag is-info is-small">{{tag.name}} ({{tag.count}})</a>
               </b-taglist>
@@ -235,6 +268,15 @@
       this.setupPlayer();
     },
     methods: {
+      cmToFtInches(n) {
+        var inches = (n*0.393700787).toFixed(0);
+        var feet = Math.floor(inches / 12);
+        inches %= 12;
+        return feet + "ft " + inches + "in"
+      },
+      kgToPounds(n) {
+        return Math.round(n*2.2046) + "lbs"
+      },
       setupPlayer() {
         this.player = videojs(this.$refs.player, {
           aspectRatio: '1:1',
@@ -456,7 +498,6 @@
 
   .block-tags {
     max-height: 200px;
-    overflow: scroll;
     scrollbar-width: none;
   }
 
@@ -490,6 +531,21 @@
   .prev {
     left: 0;
     border-radius: 3px 0 0 3px;
+  }
+
+  .model-stats {
+    font-size: smaller;
+  }
+
+  .model-headshot {
+    width: 80px;
+    height: 80px;
+    display: block;
+    position: relative;
+    border-style: double;
+    border-color: grey;
+    border-radius: 50%;
+    overflow: hidden;
   }
 
   span.is-active img {

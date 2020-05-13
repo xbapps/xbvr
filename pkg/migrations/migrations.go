@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -148,10 +149,12 @@ func Migrate() {
 			Migrate: func(tx *gorm.DB) error {
 				type Playlist struct {
 					ID        uint `gorm:"primary_key"`
+
 					CreatedAt time.Time
 					UpdatedAt time.Time
 
 					Name         string
+
 					Ordering     int
 					IsSystem     bool
 					IsDeoEnabled bool
@@ -270,6 +273,35 @@ func Migrate() {
 				return nil
 			},
 		},
+    {
+			ID: "0012-model-scraper",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct{}
+				type Actor struct {
+					ID        uint
+          Scenes       []Scene
+					ActorID      string
+					Aliases      *string `sql:"type:text;"`
+					Bio          string
+					Birthday     string
+					Ethnicity    string
+					EyeColor     string
+					Facebook     string
+					HairColor    string
+					Height       int
+					HomepageURL  string
+					ImageURL     string
+					Instagram    string
+					Measurements string
+					Nationality  string
+					Reddit       string
+					Twitter      string
+					Weight       int
+					Count        int
+				}
+				return tx.AutoMigrate(Actor{}).Error
+      }
+    },
 	})
 
 	if err := m.Migrate(); err != nil {
