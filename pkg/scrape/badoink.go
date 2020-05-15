@@ -77,7 +77,8 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		// Duration
 		e.ForEach(`p.video-duration`, func(id int, e *colly.HTMLElement) {
-			tmpDuration, err := strconv.Atoi(strings.Split(e.Attr("content"), ":")[1])
+			content := strings.Replace(strings.Split(e.Attr("content"), "M")[0], "PT", "", -1)
+			tmpDuration, err := strconv.Atoi(content)
 			if err == nil {
 				sc.Duration = tmpDuration
 			}
