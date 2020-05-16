@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/avast/retry-go"
 )
 
 // Playlist data model
@@ -20,7 +22,22 @@ type Playlist struct {
 
 func (o *Playlist) Save() error {
 	db, _ := GetDB()
-	err := db.Save(o).Error
-	db.Close()
-	return err
+	defer db.Close()
+
+	var err error
+	err = retry.Do(
+		func() error {
+			err := db.Save(&o).Error
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	)
+
+	if err != nil {
+		log.Fatal("Failed to save ", err)
+	}
+
+	return nil
 }

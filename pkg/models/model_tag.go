@@ -3,6 +3,7 @@ package models
 import (
 	"strings"
 
+	"github.com/avast/retry-go"
 	"github.com/thoas/go-funk"
 )
 
@@ -16,9 +17,24 @@ type Tag struct {
 
 func (t *Tag) Save() error {
 	db, _ := GetDB()
-	err := db.Save(t).Error
-	db.Close()
-	return err
+	defer db.Close()
+
+	var err error
+	err = retry.Do(
+		func() error {
+			err := db.Save(&t).Error
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	)
+
+	if err != nil {
+		log.Fatal("Failed to save ", err)
+	}
+
+	return nil
 }
 
 func ConvertTag(t string) string {
