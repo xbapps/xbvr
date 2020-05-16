@@ -95,8 +95,10 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 					"1920x960-60fps-psvr_med_h264_180_sbs",
 					"1920x960-60fps-smartphone_hq",
 					"2160x1080-60fps-smartphone_hq",
+					"2880x1440-60fps-gearvr_hq_h264-180x180_3dh",
 					"2880x1440-60fps-gearvr_lq_h264-180x180_3dh",
 					"2880x1440-60fps-gearvr_med_h264-180x180_3dh",
+					"2880x1440-60fps-oculusrift_hq_h264",
 					"2880x1440-60fps-psvr_hq_h264_180_sbs",
 					"3840x1920-60fps-gearvr_hq_h264-180x180_3dh",
 					"3840x1920-60fps-gearvr_med_h264-180x180_3dh",
@@ -104,6 +106,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 					"3840x1920-60fps-oculusrift_med_h264",
 					"5400x2700-60fps-gearvr_hq_h265-180x180_3dh",
 					"5400x2700-60fps-oculusrift_hq_h265",
+					"7680x3840-60fps-oculusrift_uhq_h265",
 				}
 
 				for i := range filenames {
