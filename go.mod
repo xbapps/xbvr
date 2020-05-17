@@ -13,6 +13,7 @@ require (
 	github.com/antchfx/xmlquery v1.0.0 // indirect
 	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
+	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/blevesearch/bleve v1.0.7
 	github.com/creasty/defaults v1.3.0
