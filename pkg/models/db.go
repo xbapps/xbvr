@@ -12,7 +12,6 @@ import (
 
 var log = &common.Log
 
-
 func SaveWithRetry(db *gorm.DB, i interface{}) error {
 	var err error
 	err = retry.Do(
