@@ -60,16 +60,9 @@ func RescanVolumes() {
 
 		for i := range files {
 			fn := files[i].Filename
-			var query string
-			switch common.DB_TYPE {
-			case "mariadb", "mysql":
-				query = fmt.Sprintf("select scenes.* from scenes where JSON_CONTAINS(LOWER(scenes.filenames_arr), '\"%v\"') group by scenes.scene_id", strings.ReplaceAll(strings.ToLower(path.Base(fn)), "'", "''"))
-			case "sqlite3":
-				query = fmt.Sprintf("select scenes.* from scenes, json_each(scenes.filenames_arr) where lower(json_each.value) = '%v' group by scenes.scene_id", strings.ReplaceAll(strings.ToLower(path.Base(fn)), "'", "''"))
-			}
-			err := db.Raw(query).Scan(&scenes).Error
+			err := db.Where("filenames_arr LIKE ?", fmt.Sprintf("%%\"%v\"%%", path.Base(fn))).Find(&scenes).Error
 			if err != nil {
-				log.Error(err, "when matching "+path.Base(fn))
+				log.Error(err, " when matching "+path.Base(fn))
 			}
 
 			if len(scenes) >= 1 {

@@ -1,20 +1,17 @@
 package common
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
 var (
-	DEBUG         = os.Getenv("DEBUG")
-	SQL_DEBUG     = envToBool("SQL_DEBUG", false)
-	DB_TYPE       = getEnv("DB_TYPE", "sqlite3")
-	DB_HOST       = os.Getenv("DB_HOST")
-	DB_NAME       = os.Getenv("DB_NAME")
-	DB_USER       = os.Getenv("DB_USER")
-	DB_PASSWORD   = os.Getenv("DB_PASSWORD")
-	SQLITE_PARAMS = os.Getenv("SQLITE_PARAMS")
-	WsAddr        = "0.0.0.0:9998"
+	DEBUG        = os.Getenv("DEBUG")
+	SQL_DEBUG    = envToBool("SQL_DEBUG", false)
+	DATABASE_URL = getEnv("DATABASE_URL", fmt.Sprintf("sqlite:%v", filepath.Join(AppDir, "main.db")))
+	WsAddr       = "0.0.0.0:9998"
 )
 
 func envToBool(envVar string, defaultVal bool) bool {

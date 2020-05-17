@@ -1,7 +1,5 @@
 package models
 
-import "github.com/xbapps/xbvr/pkg/common"
-
 type DMSData struct {
 	Sites        []string `json:"sites"`
 	Actors       []string `json:"actors"`
@@ -34,8 +32,8 @@ func GetDMSData() DMSData {
 	}
 
 	// Available release dates (YYYY-MM)
-	switch common.DB_TYPE {
-	case "mariadb", "mysql":
+	switch db.Dialect().GetName() {
+	case "mysql":
 		tx.Select("DATE_FORMAT(release_date, '%Y-%m') as release_date_text").
 			Group("DATE_FORMAT(release_date, '%Y-%m')").Find(&scenes)
 	case "sqlite3":

@@ -1,17 +1,35 @@
 package models
 
 import (
-	"path/filepath"
-
 	"github.com/avast/retry-go"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xo/dburl"
 )
 
 var log = &common.Log
+var dbConn *dburl.URL
+var supportedDB = []string{"mysql", "sqlite3"}
+
+func parseDBConnString() {
+	var err error
+	dbConn, err = dburl.Parse(common.DATABASE_URL)
+	if err != nil {
+		log.Fatal("Error parsing database connection ", common.DATABASE_URL, err)
+	}
+	_, ok := gorm.GetDialect(dbConn.Driver)
+	if !ok || !funk.Contains(supportedDB, dbConn.Driver) {
+		log.Fatal("Unsupported database: ", dbConn.Short())
+	}
+}
+
+func GetDBConn() *dburl.URL {
+	return dbConn
+}
 
 func GetDB() (*gorm.DB, error) {
 	if common.DEBUG != "" {
@@ -23,7 +41,8 @@ func GetDB() (*gorm.DB, error) {
 
 	err = retry.Do(
 		func() error {
-			db, err = gorm.Open("sqlite3", "file:"+filepath.Join(common.AppDir, "main.db")+"?"+common.SQLITE_PARAMS)
+			db, err = gorm.Open(dbConn.Driver, dbConn.DSN)
+			db.LogMode(common.SQL_DEBUG)
 			if err != nil {
 				return err
 			}
@@ -70,5 +89,6 @@ func RemoveLock(lock string) {
 }
 
 func init() {
+	parseDBConnString()
 	common.InitPaths()
 }
