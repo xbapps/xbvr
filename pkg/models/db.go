@@ -12,6 +12,25 @@ import (
 
 var log = &common.Log
 
+func SaveWithRetry(db *gorm.DB, i interface{}) error {
+	var err error
+	err = retry.Do(
+		func() error {
+			err = db.Save(i).Error
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	)
+
+	if err != nil {
+		log.Fatal("Failed to save ", err)
+	}
+
+	return nil
+}
+
 func GetDB() (*gorm.DB, error) {
 	if common.DEBUG != "" {
 		log.Debug("Getting DB handle from ", common.GetCallerFunctionName())
