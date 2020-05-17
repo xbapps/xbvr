@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/avast/retry-go"
 )
 
 type History struct {
@@ -24,8 +26,22 @@ func (o *History) GetIfExist(id uint) error {
 
 func (o *History) Save() {
 	db, _ := GetDB()
-	db.Save(o)
-	db.Close()
+	defer db.Close()
+
+	var err error
+	err = retry.Do(
+		func() error {
+			err := db.Save(&o).Error
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	)
+
+	if err != nil {
+		log.Fatal("Failed to save ", err)
+	}
 }
 
 func (o *History) Delete() {
