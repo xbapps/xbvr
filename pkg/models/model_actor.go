@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/avast/retry-go"
 )
 
 type Actor struct {
@@ -16,7 +18,22 @@ type Actor struct {
 
 func (i *Actor) Save() error {
 	db, _ := GetDB()
-	err := db.Save(&i).Error
-	db.Close()
-	return err
+	defer db.Close()
+
+	var err error
+	err = retry.Do(
+		func() error {
+			err := db.Save(&i).Error
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	)
+
+	if err != nil {
+		log.Fatal("Failed to save ", err)
+	}
+
+	return nil
 }
