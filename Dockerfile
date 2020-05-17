@@ -1,7 +1,7 @@
-FROM node as build-env
+FROM node:10.16.3-jessie as build-env
 
 ### Install Go ###
-ENV GO_VERSION=1.14.2 \
+ENV GO_VERSION=1.12.10 \
     GOPATH=$HOME/go-packages \
     GOROOT=$HOME/go
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
@@ -38,6 +38,5 @@ COPY --from=build-env /app/xbvr /
 
 EXPOSE 9998-9999
 VOLUME /root/.config/
-
 
 ENTRYPOINT ["/xbvr"]
