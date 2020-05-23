@@ -21,7 +21,7 @@ import (
 	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
-var allowedExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov"}
+var allowedExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
 
 func RescanVolumes() {
 	if !models.CheckLock("rescan") {
