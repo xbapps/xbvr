@@ -7,6 +7,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
+	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -47,6 +48,8 @@ func (i PlaylistResource) WebService() *restful.WebService {
 }
 
 func (i PlaylistResource) listPlaylists(req *restful.Request, resp *restful.Response) {
+	analytics.Pageview(req.Request)
+
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -57,6 +60,8 @@ func (i PlaylistResource) listPlaylists(req *restful.Request, resp *restful.Resp
 }
 
 func (i PlaylistResource) createPlaylist(req *restful.Request, resp *restful.Response) {
+	analytics.Pageview(req.Request)
+
 	var r NewPlaylistRequest
 	err := req.ReadEntity(&r)
 	if err != nil {
@@ -74,6 +79,8 @@ func (i PlaylistResource) createPlaylist(req *restful.Request, resp *restful.Res
 }
 
 func (i PlaylistResource) updatePlaylist(req *restful.Request, resp *restful.Response) {
+	analytics.Pageview(req.Request)
+
 	id, err := strconv.Atoi(req.PathParameter("playlist-id"))
 	if err != nil {
 		resp.WriteHeader(http.StatusBadRequest)
@@ -100,6 +107,8 @@ func (i PlaylistResource) updatePlaylist(req *restful.Request, resp *restful.Res
 }
 
 func (i PlaylistResource) removePlaylist(req *restful.Request, resp *restful.Response) {
+	analytics.Pageview(req.Request)
+
 	id, err := strconv.Atoi(req.PathParameter("playlist-id"))
 	if err != nil {
 		resp.WriteHeader(http.StatusBadRequest)
