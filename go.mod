@@ -82,7 +82,6 @@ require (
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	gopkg.in/vansante/go-ffprobe.v2 v2.0.0
 	mvdan.cc/xurls/v2 v2.2.0
 	willnorris.com/go/imageproxy v0.10.0
 )
