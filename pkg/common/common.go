@@ -6,9 +6,11 @@ import (
 )
 
 var (
-	DEBUG         = os.Getenv("DEBUG")
-	SQLITE_PARAMS = os.Getenv("SQLITE_PARAMS")
-	WsAddr        = "0.0.0.0:9998"
+	DEBUG             = os.Getenv("DEBUG")
+	DISABLE_ANALYTICS = os.Getenv("DISABLE_ANALYTICS")
+	SQLITE_PARAMS     = os.Getenv("SQLITE_PARAMS")
+	WsAddr            = "0.0.0.0:9998"
+	CurrentVersion    = ""
 )
 
 func envToBool(envVar string, defaultVal bool) bool {

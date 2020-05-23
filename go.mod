@@ -29,7 +29,7 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.0
 	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
-	github.com/go-openapi/spec v0.19.7
+	github.com/go-openapi/spec v0.19.8
 	github.com/go-test/deep v1.0.6
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
@@ -57,12 +57,14 @@ require (
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
+	github.com/posthog/posthog-go v0.0.0-20200520144211-c8193fa3cda7
 	github.com/putdotio/go-putio/putio v0.0.0-20200123120452-16d982cac2b8
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/robertkrimen/otto v0.0.0-20191219234010-c382bd3c16ff
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/cors v1.7.0
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
+	github.com/satori/go.uuid v0.0.0-20180103174451-36e9d2ebbde5
 	github.com/sirupsen/logrus v1.6.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
@@ -71,10 +73,11 @@ require (
 	github.com/tidwall/gjson v1.6.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
-	golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
+	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/net v0.0.0-20200519113804-d87ec0cfa476
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3
+	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
