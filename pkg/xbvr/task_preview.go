@@ -1,7 +1,6 @@
 package xbvr
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,8 +12,8 @@ import (
 	"github.com/darwayne/go-timecode/timecode"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
+	"github.com/xbapps/xbvr/pkg/ffprobe"
 	"github.com/xbapps/xbvr/pkg/models"
-	"gopkg.in/vansante/go-ffprobe.v2"
 )
 
 func GeneratePreviews() {
@@ -62,16 +61,11 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 	defer os.RemoveAll(tmpPath)
 
 	// Get video duration
-	ffprobeReader, err := os.Open(inputFile)
+	ffdata, err := ffprobe.GetProbeData(inputFile, time.Second*3)
 	if err != nil {
 		return err
 	}
-
-	ffdata, err := ffprobe.ProbeReader(context.Background(), ffprobeReader)
-	if err != nil {
-		return err
-	}
-	vs := ffdata.FirstVideoStream()
+	vs := ffdata.GetFirstVideoStream()
 	dur, err := strconv.ParseFloat(vs.Duration, 64)
 	if err != nil {
 		return err

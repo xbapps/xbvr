@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/config"
 	"golang.org/x/crypto/bcrypt"
 
@@ -38,7 +39,6 @@ var (
 	UIPASSWORD     = os.Getenv("UI_PASSWORD")
 	UIUSER         = os.Getenv("UI_USERNAME")
 	wsAddr         = common.WsAddr
-	currentVersion = ""
 )
 
 func uiAuthEnabled() bool {
@@ -72,11 +72,14 @@ func authHandle(pattern string, authEnabled bool, authSecret auth.SecretProvider
 }
 
 func StartServer(version, commit, branch, date string) {
-	currentVersion = version
+	common.CurrentVersion = version
 
 	config.LoadConfig()
 
+	// First setup
 	migrations.Migrate()
+	analytics.GenerateID()
+	analytics.Event("app-start", nil)
 
 	// Remove old locks
 	models.RemoveLock("index")
@@ -117,7 +120,7 @@ func StartServer(version, commit, branch, date string) {
 			swo.Info = &spec.Info{
 				InfoProps: spec.InfoProps{
 					Title:   "XBVR API",
-					Version: currentVersion,
+					Version: common.CurrentVersion,
 				},
 				VendorExtensible: e,
 			}

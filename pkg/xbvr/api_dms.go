@@ -11,6 +11,8 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
+	"github.com/posthog/posthog-go"
+	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -119,6 +121,8 @@ func newWatchSession() {
 		scene.LastOpened = time.Now()
 		scene.Save()
 	}
+
+	analytics.Event("watchsession-new", posthog.NewProperties().Set("scene-id", scene.SceneID))
 
 	lastSessionID = obj.ID
 }
