@@ -225,7 +225,7 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Web UI Authentication enabled: %v", uiAuthEnabled())
 	log.Infof("DeoVR Authentication enabled: %v", deoAuthEnabled())
-	log.Infof("Database file stored at %s", common.AppDir)
+	log.Infof("Using database: %s", models.GetDBConn().Short())
 
 	httpAddr := fmt.Sprintf("%v:%v", config.Config.Server.BindAddress, config.Config.Server.Port)
 	if DEBUG == "" {

@@ -29,6 +29,6 @@ func (o *KV) Save() {
 
 func (o *KV) Delete() {
 	db, _ := GetDB()
-	db.Delete(o)
+	db.Delete(&o)
 	db.Close()
 }
