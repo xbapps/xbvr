@@ -32,8 +32,14 @@ func GetDMSData() DMSData {
 	}
 
 	// Available release dates (YYYY-MM)
-	tx.Select("strftime('%Y-%m', release_date) as release_date_text").
-		Group("strftime('%Y-%m', release_date)").Find(&scenes)
+	switch db.Dialect().GetName() {
+	case "mysql":
+		tx.Select("DATE_FORMAT(release_date, '%Y-%m') as release_date_text").
+			Group("DATE_FORMAT(release_date, '%Y-%m')").Find(&scenes)
+	case "sqlite3":
+		tx.Select("strftime('%Y-%m', release_date) as release_date_text").
+			Group("strftime('%Y-%m', release_date)").Find(&scenes)
+	}
 	var outRelease []string
 	for i := range scenes {
 		outRelease = append(outRelease, scenes[i].ReleaseDateText)

@@ -2,6 +2,7 @@ package xbvr
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -59,10 +60,9 @@ func RescanVolumes() {
 
 		for i := range files {
 			fn := files[i].Filename
-
-			err := db.Raw("select scenes.* from scenes, json_each(scenes.filenames_arr) where lower(json_each.value) = ? group by scenes.scene_id", strings.ToLower(path.Base(fn))).Scan(&scenes).Error
+			err := db.Where("filenames_arr LIKE ?", fmt.Sprintf("%%\"%v\"%%", path.Base(fn))).Find(&scenes).Error
 			if err != nil {
-				log.Error(err, "when matching "+path.Base(fn))
+				log.Error(err, " when matching "+path.Base(fn))
 			}
 
 			if len(scenes) >= 1 {

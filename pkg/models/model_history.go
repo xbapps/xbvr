@@ -46,6 +46,6 @@ func (o *History) Save() {
 
 func (o *History) Delete() {
 	db, _ := GetDB()
-	db.Delete(o)
+	db.Delete(&o)
 	db.Close()
 }
