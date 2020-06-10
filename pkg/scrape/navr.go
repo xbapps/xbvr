@@ -43,44 +43,70 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		})
 
 		// Duration
-		e.ForEach(`div.duration-ratings div.duration`, func(id int, e *colly.HTMLElement) {
-			tmpDuration, err := strconv.Atoi(strings.Replace(strings.Replace(e.Text, "Duration: ", "", -1), " min", "", -1))
+		e.ForEach(`div.date-tags div.duration`, func(id int, e *colly.HTMLElement) {
+			tmpDuration, err := strconv.Atoi(strings.Replace(strings.TrimSpace(e.Text), " Min", "", -1))
 			if err == nil {
 				sc.Duration = tmpDuration
 			}
 		})
 
-		// Filenames
-		e.ForEach(`a.play-trailer img.start-card`, func(id int, e *colly.HTMLElement) {
-			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
-			base := strings.Split(strings.Replace(e.Attr("data-src"), "//", "", -1), "/")
-			baseName := base[5] + base[6]
+		// Filenames & Covers
+		// There's a different video element for scenes after 20.05.30
+		var since, _ = goment.New("2020-05-30", "YYYY-MM-DD")
+		var current, _ = goment.New(sc.Released, "YYYY-MM-DD")
 
-			filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_180x180_3dh.mp4"}
+		if current.IsSameOrAfter(since) {
+			// New video element
+			e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
+				// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
+				base := strings.Split(strings.Replace(e.Attr("poster"), "//", "", -1), "/")
+				baseName := base[5] + base[6]
 
-			for i := range filenames {
-				filenames[i] = baseName + filenames[i]
-			}
+				filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_180x180_3dh.mp4"}
 
-			sc.Filenames = filenames
-		})
+				for i := range filenames {
+					filenames[i] = baseName + filenames[i]
+				}
 
-		// Cover URLs
-		e.ForEach(`a.play-trailer img.start-card`, func(id int, e *colly.HTMLElement) {
-			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
-			base := strings.Split(strings.Replace(e.Attr("data-src"), "//", "", -1), "/")
+				sc.Filenames = filenames
 
-			base[8] = "horizontal"
-			base[9] = "1182x777c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+				base[8] = "horizontal"
+				base[9] = "1182x777c.jpg"
+				sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 
-			base[8] = "vertical"
-			base[9] = "1182x1788c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
-		})
+				base[8] = "vertical"
+				base[9] = "1182x1788c.jpg"
+				sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+			})
+
+		} else {
+			// Old video element
+			e.ForEach(`a.play-trailer img.start-card`, func(id int, e *colly.HTMLElement) {
+				// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
+				base := strings.Split(strings.Replace(e.Attr("src"), "//", "", -1), "/")
+				baseName := base[5] + base[6]
+
+				filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_180x180_3dh.mp4"}
+
+				for i := range filenames {
+					filenames[i] = baseName + filenames[i]
+				}
+
+				sc.Filenames = filenames
+
+				base[8] = "horizontal"
+				base[9] = "1182x777c.jpg"
+				sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+
+				base[8] = "vertical"
+				base[9] = "1182x1788c.jpg"
+				sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+			})
+
+		}
 
 		// Gallery
-		e.ForEach(`div.contain-scene-images.desktop-only a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.contain-scene-images.desktop-only a.thumbnail`, func(id int, e *colly.HTMLElement) {
 			if id > 0 {
 				sc.Gallery = append(sc.Gallery, strings.Replace(e.Request.AbsoluteURL(e.Attr("href")), "dynamic", "", -1))
 			}
