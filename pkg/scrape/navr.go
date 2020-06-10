@@ -44,7 +44,8 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 
 		// Duration
 		e.ForEach(`div.date-tags div.duration`, func(id int, e *colly.HTMLElement) {
-			tmpDuration, err := strconv.Atoi(strings.Replace(strings.TrimSpace(e.Text), " Min", "", -1))
+			r := strings.NewReplacer("|", "", "min", "")
+			tmpDuration, err := strconv.Atoi(strings.TrimSpace(r.Replace(e.Text)))
 			if err == nil {
 				sc.Duration = tmpDuration
 			}
