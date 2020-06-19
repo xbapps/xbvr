@@ -15,7 +15,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/blevesearch/bleve v1.0.7
+	github.com/blevesearch/bleve v1.0.9
 	github.com/creasty/defaults v1.3.0
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
@@ -36,7 +36,7 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/gowww/log v0.0.0-20170712202755-af3772f4bb12
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/jinzhu/gorm v1.9.12
+	github.com/jinzhu/gorm v1.9.14
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
@@ -57,7 +57,7 @@ require (
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/posthog/posthog-go v0.0.0-20200520144211-c8193fa3cda7
+	github.com/posthog/posthog-go v0.0.0-20200525173953-e46dc8e6b89b
 	github.com/putdotio/go-putio/putio v0.0.0-20200123120452-16d982cac2b8
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/robertkrimen/otto v0.0.0-20191219234010-c382bd3c16ff
@@ -75,10 +75,10 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xo/dburl v0.0.0-20200124232849-e9ec94f52bc3
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
-	golang.org/x/net v0.0.0-20200519113804-d87ec0cfa476
+	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299
+	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
