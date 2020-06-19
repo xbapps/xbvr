@@ -2,6 +2,14 @@
 
 package ffprobe
 
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"os/exec"
+	"syscall"
+)
+
 // GetProbeDataContext is the main command used for probing the given media file using ffprobe.
 // It takes a context to allow killing the ffprobe process if it takes too long or in case of shutdown.
 func GetProbeDataContext(ctx context.Context, filePath string) (data *ProbeData, err error) {
