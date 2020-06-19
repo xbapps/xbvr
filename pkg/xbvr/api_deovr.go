@@ -13,7 +13,6 @@ import (
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/markphelps/optional"
-	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -311,8 +310,6 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 }
 
 func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	db, _ := models.GetDB()
 	defer db.Close()
 

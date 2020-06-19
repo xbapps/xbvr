@@ -164,8 +164,6 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 }
 
 func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	var r models.RequestSceneList
 	err := req.ReadEntity(&r)
 	if err != nil {
@@ -178,8 +176,6 @@ func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {
 }
 
 func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	var r RequestToggleList
 	err := req.ReadEntity(&r)
 	if err != nil {
@@ -213,8 +209,6 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 }
 
 func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	q := req.QueryParameter("q")
 
 	db, _ := models.GetDB()
@@ -253,8 +247,6 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 }
 
 func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
 	if err != nil {
 		log.Error(err)
@@ -287,8 +279,6 @@ func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Resp
 }
 
 func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
 	if err != nil {
 		log.Error(err)

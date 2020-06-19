@@ -69,13 +69,11 @@ func (i TaskResource) scrape(req *restful.Request, resp *restful.Response) {
 }
 
 func (i TaskResource) importBundle(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
 	url := req.QueryParameter("url")
 	go ImportBundle(url)
 }
 
 func (i TaskResource) exportBundle(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
 	go ExportBundle()
 }
 
@@ -84,8 +82,6 @@ func (i TaskResource) previewGenerate(req *restful.Request, resp *restful.Respon
 }
 
 func (i TaskResource) scrapeJAVR(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	var r RequestScrapeJAVR
 	err := req.ReadEntity(&r)
 	if err != nil {
