@@ -56,8 +56,6 @@ func (i FilesResource) WebService() *restful.WebService {
 }
 
 func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -193,8 +191,6 @@ func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
 }
 
 func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -246,8 +242,6 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 }
 
 func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	fileId, err := strconv.Atoi(req.PathParameter("file-id"))
 	if err != nil {
 		return

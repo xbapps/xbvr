@@ -18,7 +18,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio/putio"
 	"github.com/tidwall/gjson"
-	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -132,8 +131,6 @@ func (i ConfigResource) WebService() *restful.WebService {
 }
 
 func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	out := VersionCheckResponse{LatestVersion: common.CurrentVersion, CurrentVersion: common.CurrentVersion, UpdateNotify: false}
 
 	if common.CurrentVersion != "CURRENT" {
@@ -159,8 +156,6 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 }
 
 func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -171,8 +166,6 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 }
 
 func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -196,8 +189,6 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 }
 
 func (i ConfigResource) listStorage(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -212,8 +203,6 @@ func (i ConfigResource) listStorage(req *restful.Request, resp *restful.Response
 }
 
 func (i ConfigResource) addStorage(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	tlog := log.WithField("task", "rescan")
 
 	var r NewVolumeRequest
@@ -284,8 +273,6 @@ func (i ConfigResource) addStorage(req *restful.Request, resp *restful.Response)
 }
 
 func (i ConfigResource) removeStorage(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	id, err := strconv.Atoi(req.PathParameter("storage-id"))
 	if err != nil {
 		resp.WriteHeader(http.StatusBadRequest)
@@ -317,8 +304,6 @@ func (i ConfigResource) removeStorage(req *restful.Request, resp *restful.Respon
 }
 
 func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	var r struct {
 		SiteName string `json:"site_name"`
 	}
@@ -335,8 +320,6 @@ func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Resp
 }
 
 func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	var r struct {
 		SiteName string `json:"site_name"`
 	}
@@ -384,8 +367,6 @@ func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 }
 
 func (i ConfigResource) resetCache(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	cache := req.PathParameter("cache")
 
 	if cache == "images" {
@@ -411,8 +392,6 @@ func (i ConfigResource) resetCache(req *restful.Request, resp *restful.Response)
 }
 
 func (i ConfigResource) saveOptionsDLNA(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	var r RequestSaveOptionsDLNA
 	err := req.ReadEntity(&r)
 	if err != nil {
@@ -439,8 +418,6 @@ func (i ConfigResource) saveOptionsDLNA(req *restful.Request, resp *restful.Resp
 }
 
 func (i ConfigResource) saveOptionsPreviews(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	var r RequestSaveOptionsPreviews
 	err := req.ReadEntity(&r)
 	if err != nil {
@@ -459,8 +436,6 @@ func (i ConfigResource) saveOptionsPreviews(req *restful.Request, resp *restful.
 }
 
 func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.Response) {
-	analytics.Pageview(req.Request)
-
 	var r RequestSaveOptionsPreviews
 	err := req.ReadEntity(&r)
 	if err != nil {
