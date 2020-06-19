@@ -5,7 +5,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
@@ -35,8 +34,24 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Title
-		e.ForEach(`div.videoDetails h4`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`h1.detail__title`, func(id int, e *colly.HTMLElement) {
 			sc.Title = e.Text
+		})
+
+		// Date
+		e.ForEach(`div.detail__date_time span.detail__date`, func(id int, e *colly.HTMLElement) {
+			tmpDate, _ := goment.New(e.Text, "DD MMMM, YYYY")
+			sc.Released = tmpDate.Format("YYYY-MM-DD")
+		})
+
+		// Duration
+		e.ForEach(`div.detail__date_time span.time`, func(id int, e *colly.HTMLElement) {
+			if id == 1 {
+				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Text, "minutes", "", -1)))
+				if err == nil {
+					sc.Duration = tmpDuration
+				}
+			}
 		})
 
 		// Filenames
@@ -58,45 +73,29 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 
 		// Synopsis
-		e.ForEach(`div.videoDetails p`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				sc.Synopsis = strings.TrimSpace(e.Text)
-			}
+		e.ForEach(`div.detail__txt`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.TrimSpace(e.Text + e.ChildText("span.more__body"))
 		})
 
-		// Cast / Duration / Uploaded / Tags
-		e.ForEach(`div.videoDetails ul.videoInfo li`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				e.DOM.Find(`a`).Each(func(id int, e *goquery.Selection) {
-					sc.Cast = append(sc.Cast, e.Text())
-				})
-			}
-			if id == 1 {
-				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(strings.Replace(e.Text, "min", "", -1), "Time:", "", -1)))
-				if err == nil {
-					sc.Duration = tmpDuration
-				}
-			}
-			if id == 2 {
-				tmpDate, _ := goment.New(strings.Replace(e.Text, "Uploaded:", "", -1), "DD MMM, YYYY")
-				sc.Released = tmpDate.Format("YYYY-MM-DD")
-			}
-			if id == 3 {
-				e.DOM.Find(`a`).Each(func(id int, e *goquery.Selection) {
-					sc.Tags = append(sc.Tags, e.Text())
-				})
-			}
+		// Tags
+		e.ForEach(`div.tag-list__body a.tag`, func(id int, e *colly.HTMLElement) {
+			sc.Tags = append(sc.Tags, e.Text)
+		})
+
+		// Cast
+		e.ForEach(`div.detail__models a`, func(id int, e *colly.HTMLElement) {
+			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`div.pager a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`ul.pagenav__list a.pagenav__item`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.milfVideos div.videoCover a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`ul.cards-list a.card__video`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
