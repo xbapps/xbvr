@@ -3,7 +3,6 @@ package xbvr
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
-	"github.com/xbapps/xbvr/pkg/analytics"
 )
 
 type RequestScrapeJAVR struct {

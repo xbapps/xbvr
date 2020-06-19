@@ -13,7 +13,6 @@ import (
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/markphelps/optional"
-	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 

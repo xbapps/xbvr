@@ -7,7 +7,6 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
-	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
