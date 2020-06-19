@@ -1,17 +1,15 @@
 package common
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 )
 
 var (
 	DEBUG             = os.Getenv("DEBUG")
-  DISABLE_ANALYTICS = os.Getenv("DISABLE_ANALYTICS")
+	DISABLE_ANALYTICS = os.Getenv("DISABLE_ANALYTICS")
 	SQL_DEBUG         = envToBool("SQL_DEBUG", false)
-	DATABASE_URL      = getEnv("DATABASE_URL", fmt.Sprintf("sqlite:%v", filepath.Join(AppDir, "main.db")))
+	DATABASE_URL      = ""
 	WsAddr            = "0.0.0.0:9998"
 	CurrentVersion    = ""
 )
