@@ -90,7 +90,7 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`ul.pagenav__list a.pagenav__item`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`ul.pagenav__list a.pagenav__link`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 		siteCollector.Visit(pageURL)
 	})
