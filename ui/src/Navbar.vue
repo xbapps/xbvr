@@ -15,6 +15,9 @@
       <b-navbar-item tag="router-link" :to="{ path: './options' }">
         {{$t('Options')}}
       </b-navbar-item>
+      <b-navbar-item @click="$store.commit('overlay/showQuickFind')">
+        {{$t('Quick find')}}
+      </b-navbar-item>
     </template>
     <template slot="end">
       <b-navbar-item>

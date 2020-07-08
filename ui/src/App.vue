@@ -1,19 +1,25 @@
 <template>
   <div>
+    <GlobalEvents
+      @keypress.prevent.questionMark="$store.commit('overlay/showQuickFind')"
+    />
     <Navbar/>
     <div class="navbar-pad">
       <router-view/>
     </div>
     <Socket/>
+    <QuickFind/>
   </div>
 </template>
 
 <script>
-  import Navbar from "@/Navbar.vue";
-  import Socket from "@/Socket.vue";
+  import Navbar from "./Navbar.vue";
+  import Socket from "./Socket.vue";
+  import QuickFind from "./QuickFind";
+  import GlobalEvents from 'vue-global-events';
 
   export default {
-    components: {Navbar, Socket},
+    components: {Navbar, Socket, QuickFind, GlobalEvents},
   }
 </script>
 

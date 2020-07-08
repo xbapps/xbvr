@@ -11,6 +11,7 @@ const state = {
     show: false,
     file: null,
   },
+  showQuickFind: false
 };
 
 const mutations = {
@@ -38,6 +39,12 @@ const mutations = {
     state.match.file = null;
     state.match.show = false;
   },
+  showQuickFind(state, payload) {
+    state.showQuickFind = true;
+  },
+  hideQuickFind(state, payload) {
+    state.showQuickFind = false;
+  }
 };
 
 export default {
