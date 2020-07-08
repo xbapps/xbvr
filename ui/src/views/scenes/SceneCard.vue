@@ -13,6 +13,10 @@
               <b-tag v-if="item.is_watched">
                 <b-icon pack="mdi" icon="eye" size="is-small"/>
               </b-tag>
+              <b-tag type="is-info" v-if="item.file.length > 1">
+                <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
+                {{item.file.length}}
+              </b-tag>
               <b-tag type="is-warning" v-if="item.star_rating > 0">
                 <b-icon pack="mdi" icon="star" size="is-small"/>
                 {{item.star_rating}}
@@ -110,5 +114,9 @@
     content: '';
     display: block;
     padding-bottom: 100%;
+  }
+
+  .tag {
+    margin-left: 0.2em;
   }
 </style>
