@@ -19,6 +19,7 @@ Vue.config.productionTip = false;
 Vue.config.keyCodes = {
   arrowLeft: 37,
   arrowRight: 39,
+  questionMark: 63,
 };
 Vue.use(Buefy);
 Vue.use(vueDebounce);
