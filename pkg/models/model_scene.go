@@ -72,16 +72,17 @@ type Scene struct {
 	CoverURL        string    `json:"cover_url"`
 	SceneURL        string    `json:"scene_url"`
 
-	StarRating   float64         `json:"star_rating"`
-	Favourite    bool            `json:"favourite" gorm:"default:false"`
-	Watchlist    bool            `json:"watchlist" gorm:"default:false"`
-	IsAvailable  bool            `json:"is_available" gorm:"default:false"`
-	IsAccessible bool            `json:"is_accessible" gorm:"default:false"`
-	IsWatched    bool            `json:"is_watched" gorm:"default:false"`
-	Cuepoints    []SceneCuepoint `json:"cuepoints"`
-	History      []History       `json:"history"`
-	AddedDate    time.Time       `json:"added_date"`
-	LastOpened   time.Time       `json:"last_opened"`
+	StarRating    float64         `json:"star_rating"`
+	Favourite     bool            `json:"favourite" gorm:"default:false"`
+	Watchlist     bool            `json:"watchlist" gorm:"default:false"`
+	IsAvailable   bool            `json:"is_available" gorm:"default:false"`
+	IsAccessible  bool            `json:"is_accessible" gorm:"default:false"`
+	IsWatched     bool            `json:"is_watched" gorm:"default:false"`
+	Cuepoints     []SceneCuepoint `json:"cuepoints"`
+	History       []History       `json:"history"`
+	AddedDate     time.Time       `json:"added_date"`
+	LastOpened    time.Time       `json:"last_opened"`
+	TotalFileSize int64           `json:"total_file_size"`
 
 	HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
 	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
@@ -200,9 +201,11 @@ func (o *Scene) UpdateStatus() {
 		}
 
 		var newestFileDate time.Time
+		var totalFileSize int64
 		for j := range files {
+			totalFileSize = totalFileSize + files[j].Size
 			if files[j].Exists() {
-				if files[j].CreatedTime.Before(newestFileDate) || newestFileDate.IsZero() {
+				if files[j].CreatedTime.After(newestFileDate) || newestFileDate.IsZero() {
 					newestFileDate = files[j].CreatedTime
 				}
 				if !o.IsAccessible {
@@ -215,6 +218,11 @@ func (o *Scene) UpdateStatus() {
 					changed = true
 				}
 			}
+		}
+
+		if totalFileSize != o.TotalFileSize {
+			o.TotalFileSize = totalFileSize
+			changed = true
 		}
 
 		if !newestFileDate.Equal(o.AddedDate) && !newestFileDate.IsZero() {
@@ -452,6 +460,10 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("release_date desc")
 	case "release_asc":
 		tx = tx.Order("release_date asc")
+	case "total_file_size_desc":
+		tx = tx.Order("total_file_size desc")
+	case "total_file_size_asc":
+		tx = tx.Order("total_file_size asc")
 	case "rating_desc":
 		tx = tx.
 			Where("star_rating > ?", 0).
