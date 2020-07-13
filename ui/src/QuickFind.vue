@@ -113,10 +113,6 @@
 </script>
 
 <style scoped>
-  .modal-background {
-    background-color: rgba(0, 0, 0, 0) !important;
-  }
-
   .modal {
     justify-content: normal;
     padding-top: 9em;

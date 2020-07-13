@@ -30,4 +30,7 @@
   .navbar-pad {
     margin-top: 1em;
   }
+  .modal-background {
+    background-color: rgba(0, 0, 0, .40) !important;
+  }
 </style>
