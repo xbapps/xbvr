@@ -253,6 +253,15 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0012-preview-flag",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					TotalFileSize int64 `json:"total_file_size" gorm:"default:0"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
