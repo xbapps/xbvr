@@ -388,7 +388,7 @@ func getBaseURL() string {
 func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem {
 	baseURL := "http://" + req.Request.Host
 
-	var list []DeoListItem
+	list := make([]DeoListItem, 0)
 	for i := range scenes {
 		item := DeoListItem{
 			Title:        scenes[i].Title,
@@ -404,7 +404,7 @@ func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem 
 func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 	baseURL := "http://" + req.Request.Host
 
-	var list []DeoListItem
+	list := make([]DeoListItem, 0)
 	for i := range files {
 		if files[i].Volume.Type == "local" {
 			if !files[i].Volume.IsAvailable {
