@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blang/semver"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
@@ -145,9 +144,7 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 		out.LatestVersion = gjson.Get(r.String(), "latestVersion").String()
 
 		// Decide if UI notification is needed
-		sLatest := semver.MustParse(out.LatestVersion)
-		sCurrent := semver.MustParse(common.CurrentVersion)
-		if sLatest.GT(sCurrent) {
+		if out.LatestVersion != common.CurrentVersion {
 			out.UpdateNotify = true
 		}
 	}
