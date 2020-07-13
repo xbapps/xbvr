@@ -1,5 +1,6 @@
 <template>
-  <b-modal :active.sync="active"
+  <b-modal :active.sync="isActive"
+           :destroy-on-hide="false"
            has-modal-card
            trap-focus
            aria-role="dialog"
@@ -7,6 +8,7 @@
            can-cancel>
     <b-field style="width:600px">
       <b-autocomplete
+        ref="autocompleteInput"
         :data="data"
         placeholder="Find scene..."
         field="query"
@@ -60,9 +62,15 @@
     },
     components: {VueLoadImage, GlobalEvents},
     computed: {
-      active: {
+      isActive: {
         get() {
-          return this.$store.state.overlay.showQuickFind;
+          const out = this.$store.state.overlay.showQuickFind;
+          if (out === true) {
+            this.$nextTick(() => {
+              this.$refs.autocompleteInput.$refs.input.focus();
+            });
+          }
+          return out;
         },
         set(values) {
           this.$store.state.overlay.showQuickFind = values;
@@ -83,11 +91,17 @@
           this.data = []
           return
         }
+
+        this.isFetching = true;
+
         let resp = await ky.get(`/api/scene/search`, {
           searchParams: {
             q: query,
           }
         }).json();
+
+        this.isFetching = false;
+
         if (resp.results > 0) {
           this.data = resp.scenes;
         } else {
