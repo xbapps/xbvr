@@ -93,8 +93,12 @@
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
                         <strong>{{f.filename}}</strong><br/>
-                        <small>{{prettyBytes(f.size)}}, {{f.video_width}}x{{f.video_height}},
-                          {{format(parseISO(f.created_time), "yyyy-MM-dd")}}</small>
+                        <small>
+                          <span class="pathDetails">{{f.path}}</span>
+                          <br/>
+                          {{prettyBytes(f.size)}}, {{f.video_width}}x{{f.video_height}},
+                          {{format(parseISO(f.created_time), "yyyy-MM-dd")}}
+                        </small>
                       </div>
                       <div class="media-right">
                         <button class="button is-danger is-small is-outlined" @click='removeFile(f)'>
@@ -494,5 +498,9 @@
 
   span.is-active img {
     border: 2px;
+  }
+
+  .pathDetails {
+    color: #b0b0b0;
   }
 </style>
