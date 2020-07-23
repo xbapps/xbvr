@@ -39,7 +39,7 @@ func initDMS() {
 		Http:           ":1338",
 		FriendlyName:   "",
 		LogHeaders:     false,
-		NotifyInterval: 30 * time.Second,
+		NotifyInterval: 5 * time.Second,
 	}
 
 	dmsServer = &dms.Server{
