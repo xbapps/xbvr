@@ -238,7 +238,7 @@ func RealHotVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 }
 
 // VREdging.com doesn't have complete scene index, pagination stops after two pages
-func RealHotVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VREdging(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "vredging", "VREdging", "VREdging")
 }
 
