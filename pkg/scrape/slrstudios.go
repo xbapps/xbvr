@@ -237,6 +237,11 @@ func RealHotVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	return SexLikeReal(wg, updateSite, knownScenes, out, "realhotvr", "RealHotVR", "RealHotVR")
 }
 
+// VREdging.com doesn't have complete scene index, pagination stops after two pages
+func RealHotVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "vredging", "VREdging", "VREdging")
+}
+
 func init() {
 	registerScraper("slr-originals", "SLR Originals", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", SLROriginals)
 	registerScraper("istripper", "iStripper (SLR)", "https://www.istripper.com/favicons/istripper/apple-icon-120x120.png", iStripper)
@@ -251,4 +256,5 @@ func init() {
 	registerScraper("leninacrowne", "LeninaCrowne (SLR)", "https://mcdn.vrporn.com/files/20190711135807/terrible_logo-e1562878668857_400x400_acf_cropped.jpg", LeninaCrowne)
 	registerScraper("stripzvr", "StripzVR (SLR)", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", StripzVR)
 	registerScraper("realhotvr", "RealHotVR (SLR)", "https://g8iek4luc8.ent-cdn.com/templates/realhotvr/images/favicon.jpg", RealHotVR)
+	registerScraper("vredging", "VREdging (SLR)", "https://mcdn.vrporn.com/files/20200630081500/VRedging_LOGO_v1-400x400.jpg", VREdging)
 }
