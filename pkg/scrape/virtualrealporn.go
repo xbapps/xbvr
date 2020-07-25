@@ -252,5 +252,5 @@ func init() {
 	registerScraper("virtualrealporn", "VirtualRealPorn", "https://twivatar.glitch.me/virtualrealporn", VirtualRealPorn)
 	registerScraper("virtualrealtrans", "VirtualRealTrans", "https://twivatar.glitch.me/virtualrealporn", VirtualRealTrans)
 	registerScraper("virtualrealpassion", "VirtualRealPassion", "https://twivatar.glitch.me/virtualrealporn", VirtualRealPassion)
-	registerScraper("virtualrealamateur", "virtualrealamateur", "https://twivatar.glitch.me/virtualrealporn", VirtualRealAmateur)
+	registerScraper("virtualrealamateur", "VirtualRealAmateur", "https://twivatar.glitch.me/virtualrealporn", VirtualRealAmateur)
 }
