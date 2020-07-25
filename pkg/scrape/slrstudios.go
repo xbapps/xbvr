@@ -306,11 +306,35 @@ func VRFirstTimer(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 func VirtualPee(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "virtualpee", "VirtualPee", "VirtualPee")
 }
+// LittleCapriceVR.com doesn't have complete scene index, pagination stops after two pages
+func LittleCapriceVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "littlecapricedreamsvr", "LittleCapriceVR", "LittleCapriceVR")
+}
+// GranniesVR.com doesn't have complete scene index, pagination stops after two pages
+func GranniesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "grannies-vr", "GranniesVR", "GranniesVR")
+}
+// JVRPorn.com doesn't have complete scene index, pagination stops after two pages
+func JVRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "jvrporn", "JVRPorn", "JVRPorn")
+}
+// StockingsVR.com doesn't have complete scene index, pagination stops after two pages
+func StockingsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "stockingsvr", "StockingsVR", "StockingsVR")
+}
+// VirtualPee.com doesn't have complete scene index, pagination stops after two pages
+func xVirtual(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "xvirtual", "xVirtual", "xVirtual")
+}
+// TonightsGirlfriend.com doesn't have complete scene index, pagination stops after two pages
+func TonightsGirlfriend(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "tonightsgirlfriend", "TonightsGirlfriend", "TonightsGirlfriend")
+}
 
 func init() {
 	registerScraper("slr-originals", "SLR Originals", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", SLROriginals)
 	registerScraper("istripper", "iStripper (SLR)", "https://www.istripper.com/favicons/istripper/apple-icon-120x120.png", iStripper)
-	registerScraper("emilybloom", "EmilyBloom (SLR)", "https://theemilybloom.com/wp-content/uploads/2017/05/FlowerHeaderLogo.png", EmilyBloom)
+	registerScraper("emilybloom", "EmilyBloom (SLR)", "https://mcdn.vrporn.com/files/20190620132025/emilybloom-logo.jpg", EmilyBloom)
 	registerScraper("vrsexperts", "VRSexperts (SLR)", "https://mcdn.vrporn.com/files/20190812141431/vrsexpertslogo2.jpg", VRSexperts)
 	registerScraper("vrextasy", "VReXtasy (SLR)", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", VReXtasy)
 	registerScraper("vrsolos", "VRSolos (SLR)", "https://mcdn.vrporn.com/files/20191226092954/VRSolos_Logo.jpg", VRSolos)
@@ -336,7 +360,12 @@ func init() {
 	registerScraper("only3xvr", "Only3xVR (SLR)", "https://mcdn.vrporn.com/files/20190821140339/only3xvr-profile-pic.jpg", Only3xVR)
 	registerScraper("justvr", "JustVR (SLR)", "https://mcdn.vrporn.com/files/20181023121629/logo.jpg", JustVR)
 	registerScraper("lustreality", "LustReality (SLR)", "https://mcdn.vrporn.com/files/20200316102952/lustreality_logo2.png", LustReality)
-	registerScraper("tsvirtuallovers", "TSVirtualLovers (SLR)", "https://mcdn.vrporn.com/files/20171014150647/TSvirtuallovers_400x400-1.jpg", TSVirtualLovers)
 	registerScraper("vrfirsttimer", "VRFirstTimer (SLR)", "https://mcdn.vrporn.com/files/20200511115233/VRFirstTimers_Logo.jpg", VRFirstTimer)
 	registerScraper("virtualpee", "VirtualPee (SLR)", "https://mcdn.vrporn.com/files/20180317104121/virtualpeeop-square-banner.jpg", VirtualPee)
+	registerScraper("littlecapricedreamsvr", "LittleCapriceVR (SLR)", "https://mcdn.vrporn.com/files/20200202091529/littlecapricevr-logo-vr-porn-studio-vrporn.com-virtual-reality-1.jpg", LittleCapriceVR)
+	registerScraper("grannies-vr", "GranniesVR (SLR)", "https://mcdn.vrporn.com/files/20180222024100/itsmorti-logo-vr-porn-studio-vrporn.com-virtual-reality.jpg", GranniesVR)
+	registerScraper("jvrporn", "JVRPorn (SLR)", "https://mcdn.vrporn.com/files/20170710084815/jvrporn-vr-porn-studio-vrporn.com-virtual-reality.png", JVRPorn)
+	registerScraper("stockingsvr", "StockingsVR (SLR)", "https://mcdn.vrporn.com/files/20171107092330/stockingsvr_logo_vr_porn_studio_vrporn.com_virtual_reality1-1.png", StockingsVR)
+	registerScraper("xvirtual", "xVirtual (SLR)", "https://mcdn.vrporn.com/files/20181116133947/xvirtuallogo.jpg", xVurtual)
+	registerScraper("tonightsgirlfriend", "TonightsGirlfriend (SLR)", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
 }
