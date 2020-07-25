@@ -13,18 +13,18 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func TSVirtualLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	scraperID := "realitylovers"
-	siteID := "RealityLovers"
+	scraperID := "tsvirtuallovers"
+	siteID := "TSVirtualLovers"
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("realitylovers.com")
+	sceneCollector := createCollector("tsvirtuallovers.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
-		sc.Studio = "RealityLovers"
+		sc.Studio = "TSVirtualLovers"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
@@ -76,15 +76,15 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		SetHeader("User-Agent", userAgent).
 		SetHeader("content-type", "application/json;charset=UTF-8").
 		SetHeader("accept", "application/json, text/plain, */*").
-		SetHeader("referer", "https://realitylovers.com/videos").
-		SetHeader("origin", "https://realitylovers.com").
-		SetHeader("authority", "realitylovers.com").
+		SetHeader("referer", "https://tsvirtuallovers.com/videos").
+		SetHeader("origin", "https://tsvirtuallovers.com").
+		SetHeader("authority", "tsvirtuallovers.com").
 		SetBody(`{"searchQuery":"","categoryId":null,"perspective":null,"actorId":null,"offset":"5000","isInitialLoad":true,"sortBy":"NEWEST","videoView":"MEDIUM","device":"DESKTOP"}`).
-		Post("https://realitylovers.com/videos/search?hl=1")
+		Post("https://tsvirtuallovers.com/videos/search?hl=1")
 	if err == nil || r.StatusCode() == 200 {
 		result := gjson.Get(r.String(), "contents")
 		result.ForEach(func(key, value gjson.Result) bool {
-			sceneURL := "https://realitylovers.com/" + value.Get("videoUri").String()
+			sceneURL := "https://tsvirtuallovers.com/" + value.Get("videoUri").String()
 			if !funk.ContainsString(knownScenes, sceneURL) {
 				ctx := colly.NewContext()
 				cover := strings.Fields(value.Get("mainImageSrcset").String())[0]
@@ -106,5 +106,5 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 }
 
 func init() {
-	registerScraper("realitylovers", "RealityLovers", "http://static.rlcontent.com/shared/VR/common/favicons/apple-icon-180x180.png", RealityLovers)
+	registerScraper("tsvirtuallovers", "TSVirtualLovers", "https://mcdn.vrporn.com/files/20171014150647/TSvirtuallovers_400x400-1.jpg", TSVirtualLovers)
 }
