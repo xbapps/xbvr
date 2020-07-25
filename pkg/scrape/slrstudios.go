@@ -237,6 +237,11 @@ func RealHotVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	return SexLikeReal(wg, updateSite, knownScenes, out, "realhotvr", "RealHotVR", "RealHotVR")
 }
 
+// VirtualXPorn does have own site but it's messy, no capitalization, missing tags, description, etc
+func VirtualXPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "virtualxporn", "VirtualXPorn", "VirtualXPorn")
+}
+
 // VREdging.com doesn't have complete scene index, pagination stops after two pages
 func VREdging(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "vredging", "VREdging", "VREdging")
@@ -270,16 +275,40 @@ func Net69VR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	return SexLikeReal(wg, updateSite, knownScenes, out, "net69vr", "Net69VR", "Net69VR")
 }
 // MMM100VR.com doesn't have complete scene index, pagination stops after two pages
-func MMM100VR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "mmm100vr", "MMM100VR", "MMM100VR")
+func MMM100(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "mmm100", "MMM100", "MMM100")
 }
 // VRpussyVision.com doesn't have complete scene index, pagination stops after two pages
 func VRpussyVision(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "vrpussyvision", "VRpussyVision", "VRpussyVision")
 }
-// Altporn4U.com doesn't have complete scene index, pagination stops after two pages
-func Altporn4U(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "altporn4u", "Altporn4U", "Altporn4U")
+// Altporn4uVR.com doesn't have complete scene index, pagination stops after two pages
+func Altporn4uVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "altporn4uvr", "Altporn4uVR", "Altporn4uVR")
+}
+// Only3xVR.com doesn't have complete scene index, pagination stops after two pages
+func Only3xVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "only3xvr", "Only3xVR", "Only3xVR")
+}
+// JustVR.com doesn't have complete scene index, pagination stops after two pages
+func JustVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "justvr", "JustVR", "JustVR")
+}
+// LustReality.com doesn't have complete scene index, pagination stops after two pages
+func LustReality(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "lustreality", "LustReality", "LustReality")
+}
+// TSVirtualLovers.com doesn't have complete scene index, pagination stops after two pages
+func TSVirtualLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "tsvirtuallovers", "TSVirtualLovers", "TSVirtualLovers")
+}
+// VRFirstTimer.com doesn't have complete scene index, pagination stops after two pages
+func VRFirstTimer(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "vrfirsttimer", "VRFirstTimer", "VRFirstTimer")
+}
+// VirtualPee.com doesn't have complete scene index, pagination stops after two pages
+func VirtualPee(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "virtualpee", "VirtualPee", "VirtualPee")
 }
 
 func init() {
@@ -296,6 +325,7 @@ func init() {
 	registerScraper("leninacrowne", "LeninaCrowne (SLR)", "https://mcdn.vrporn.com/files/20190711135807/terrible_logo-e1562878668857_400x400_acf_cropped.jpg", LeninaCrowne)
 	registerScraper("stripzvr", "StripzVR (SLR)", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", StripzVR)
 	registerScraper("realhotvr", "RealHotVR (SLR)", "https://g8iek4luc8.ent-cdn.com/templates/realhotvr/images/favicon.jpg", RealHotVR)
+	registerScraper("virtualxporn", "VirtualXPorn (SLR)", "https://www.virtualxporn.com/tour/custom_assets/favicons/android-chrome-192x192.png", VirtualXPorn)
 	registerScraper("vredging", "VREdging (SLR)", "https://mcdn.vrporn.com/files/20200630081500/VRedging_LOGO_v1-400x400.jpg", VREdging)
 	registerScraper("bravomodels", "BravoModels (SLR)", "https://mcdn.vrporn.com/files/20181015142403/ohNFa81Q_400x400.png", BravoModels)
 	registerScraper("sweetlonglips", "Sweetlonglips (SLR)", "https://mcdn.vrporn.com/files/20200117105304/SLLVRlogo.png", Sweetlonglips)
@@ -304,7 +334,13 @@ func init() {
 	registerScraper("evileyevr", "EvilEyeVR (SLR)", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg", EvilEyeVR)
 	registerScraper("holivr", "HoliVR (SLR)", "https://mcdn.vrporn.com/files/20170519145416/Holi_400x400.jpg", HoliVR)
 	registerScraper("net69vr", "Net69VR (SLR)", "https://mcdn.vrporn.com/files/20171113233505/net69vr-vr-porn-studio-vrporn.com-virtual-reality.png", Net69VR)
-	registerScraper("mmm100vr", "MMM100VR (SLR)", "https://mcdn.vrporn.com/files/20180515091925/mmm100vr-studio-banner.png", MMM100VR)
+	registerScraper("mmm100", "MMM100 (SLR)", "https://mcdn.vrporn.com/files/20180515091925/mmm100vr-studio-banner.png", MMM100)
 	registerScraper("VRpussyVision", "VRpussyVision (SLR)", "https://mcdn.vrporn.com/files/20180313160830/vrpussyvision-square-banner.png", VRpussyVision)
-	registerScraper("altporn4u", "Altporn4U (SLR)", "https://www.altporn4u.com/favicon.ico", Altporn4U)
+	registerScraper("altporn4uvr", "Altporn4uVR (SLR)", "https://www.altporn4u.com/favicon.ico", Altporn4uVR)
+	registerScraper("only3xvr", "Only3xVR (SLR)", "https://mcdn.vrporn.com/files/20190821140339/only3xvr-profile-pic.jpg", Only3xVR)
+	registerScraper("justvr", "JustVR (SLR)", "https://mcdn.vrporn.com/files/20181023121629/logo.jpg", JustVR)
+	registerScraper("lustreality", "LustReality (SLR)", "https://mcdn.vrporn.com/files/20200316102952/lustreality_logo2.png", LustReality)
+	registerScraper("tsvirtuallovers", "TSVirtualLovers (SLR)", "https://mcdn.vrporn.com/files/20171014150647/TSvirtuallovers_400x400-1.jpg", TSVirtualLovers)
+	registerScraper("vrfirsttimer", "VRFirstTimer (SLR)", "https://mcdn.vrporn.com/files/20200511115233/VRFirstTimers_Logo.jpg", VRFirstTimer)
+	registerScraper("virtualpee", "VirtualPee (SLR)", "https://mcdn.vrporn.com/files/20180317104121/virtualpeeop-square-banner.jpg", VirtualPee)
 }
