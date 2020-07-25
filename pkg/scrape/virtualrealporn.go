@@ -249,8 +249,8 @@ func VirtualRealAmateur(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 }
 
 func init() {
-	registerScraper("virtualrealporn", "VirtualRealPorn", "https://twivatar.glitch.me/virtualrealporn", VirtualRealPorn)
-	registerScraper("virtualrealtrans", "VirtualRealTrans", "https://twivatar.glitch.me/virtualrealporn", VirtualRealTrans)
-	registerScraper("virtualrealpassion", "VirtualRealPassion", "https://twivatar.glitch.me/virtualrealporn", VirtualRealPassion)
-	registerScraper("virtualrealamateur", "VirtualRealAmateur", "https://twivatar.glitch.me/virtualrealporn", VirtualRealAmateur)
+	registerScraper("virtualrealporn", "VirtualRealPorn", "https://mcdn.vrporn.com/files/20170705184927/virtualrealporn-icon-vr-porn-studio-vrporn.com-virtual-reality.png", VirtualRealPorn)
+	registerScraper("virtualrealtrans", "VirtualRealTrans", "https://mcdn.vrporn.com/files/20171027095544/Virtualrealtrans-studio-square-banner-vr-porn-studio-vrporn.com-virtual-reality.png", VirtualRealTrans)
+	registerScraper("virtualrealpassion", "VirtualRealPassion", "https://mcdn.vrporn.com/files/20170806171518/virtualrealpassion-icon-vr-porn-studio-vrporn.com-virtual-reality.png", VirtualRealPassion)
+	registerScraper("virtualrealamateur", "VirtualRealAmateur", "https://mcdn.vrporn.com/files/20170718094205/virtualrealameteur-vr-porn-studio-vrporn.com-virtual-reality.png", VirtualRealAmateur)
 }
