@@ -103,6 +103,22 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	siteCollector.Visit("https://vrconk.com/virtualreality/list")
 
+	// Edge-cases: Some early scenes are unlisted in both scenes and model index
+	// #1-10 + 15 by FantAsia, #11-14, 19, 23 by Miss K. #22, 25 by Emi.
+	// Unlisted but not added here: #86 by CumCoders (7 scenes on SLR) & some recent ones are WankzVR scenes from covid partnership.
+	unlistedscenes := [19]string{"1-sex-with-slavic-chick", "2-only-for-your-eyes", "3-looking-for-your-cock",
+		"4-finger-warm-up", "5-fun-with-sex-toy", "6-may-i-suck-it", "7-my-pleasure-in-your-hands", "8-take-me-baby",
+		"9-breakfast-on-the-table", "10-united-boobs-of-desire", "15-i-change-my-lingerie-three-times-for-you",
+		"11-take-care-of-the-bunny", "12-pussy-wide-open", "13-want-to-know-whats-for-dinner", "14-your-eastern-maid",
+		"19-fun-with-real-vr-amateur", "22-juicy-holes", "23-rabbit-fuck", "25-amateur-chick-in-the-kitchen"}
+
+	for _, scene := range unlistedscenes {
+		sceneURL := "https://vrconk.com/virtualreality/scene/id/" + scene
+		if !funk.ContainsString(knownScenes, sceneURL) {
+			sceneCollector.Visit(sceneURL)
+		}
+	}
+
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
 	}
