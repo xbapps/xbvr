@@ -9,6 +9,7 @@
       <section class="modal-card-body">
         <div>
           <h6 class="title is-6">{{ file.filename }}</h6>
+          <small>{{ file.path }}</small>
           <b-field :label="$t('Search')">
             <div class="control">
               <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
@@ -145,6 +146,14 @@
 </script>
 
 <style scoped>
+  h6.title.is-6 {
+    margin-bottom: 0;
+  }
+  h6 + small {
+    opacity: 0.6;
+    margin-bottom: 1.5rem; /* Moves the margin from the heading to the subtext */
+    display: inline-block;
+  }
   .modal-card {
     position: absolute;
     top: 4em;
