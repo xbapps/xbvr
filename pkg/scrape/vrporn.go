@@ -134,6 +134,12 @@ func RandysRoadStop(wg *sync.WaitGroup, updateSite bool, knownScenes []string, o
 	return VRPorn(wg, updateSite, knownScenes, out, "randysroadstop", "Randys Road Stop", "NaughtyAmerica")
 }
 
+// RealTeensVR - Has its own site but contains no scene info: https://realteensvr.com
+func RealTeensVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRPorn(wg, updateSite, knownScenes, out, "realteensvr", "Real Teens VR", "NaughtyAmerica")
+}
+
 func init() {
 	registerScraper("randysroadstop", "Randys Road Stop", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png", RandysRoadStop)
+	registerScraper("realteensvr", "Real Teens VR", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png", RealTeensVR)
 }
