@@ -119,7 +119,6 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	}
 
-
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
 	}
