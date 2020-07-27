@@ -76,7 +76,9 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 		galleryCollector.Request("GET", galleryPage, nil, ctx, nil)
 
-		out <- sc
+		if galleryPage == "" {
+			out <- sc
+		}
 	})
 
 	galleryCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
