@@ -46,11 +46,8 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		// Synopsis
-		e.ForEach(`div#tabs-about div.u-mb--four`, func(id int, e *colly.HTMLElement) {
-			if !strings.Contains(e.Text, "Released:") {
-				sc.Synopsis = strings.TrimSpace(e.Text)
-			}
-		})
+		sc.Synopsis = strings.TrimSpace(
+			e.DOM.Find(`div#tabs-about div.u-mb--four`).First().Text())
 
 		// Skipping some very generic and useless tags
 		skiptags := map[string]bool{
