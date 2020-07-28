@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,6 +22,9 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 	sceneCollector := createCollector("wetvr.com")
 	siteCollector := createCollector("wetvr.com")
 
+	// RegEx Patterns
+	durationRegEx := regexp.MustCompile(`(?i)DURATION:\W(\d+)`)
+
 	sceneCollector.OnHTML(`div#t2019`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
@@ -28,27 +32,21 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		// Scene ID - get from URL
-		tmp := strings.Split(sc.HomepageURL, "/")
-		sc.SiteID = tmp[len(tmp)-1]
+		// Scene ID - get from previous page
+		sc.SiteID = e.Request.Ctx.GetAny("scene-id").(string)
 		sc.SceneID = slugify.Slugify(sc.Site + "-" + sc.SiteID)
 
 		// Title
 		sc.Title = strings.TrimSpace(e.ChildText(`h1.t2019-stitle`))
 
-		// Date & Duration
-		e.ForEach(`div#t2019-stime span`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				tmpDate, _ := goment.New(e.Text, "MMMM DD, YYYY")
-				sc.Released = tmpDate.Format("YYYY-MM-DD")
-			}
-			if id == 1 {
-				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Text, "minutes", "", -1)))
-				if err == nil {
-					sc.Duration = tmpDuration
-				}
-			}
-		})
+		// Date
+		scenedate := e.Request.Ctx.GetAny("scene-date").(string)
+		tmpDate, _ := goment.New(scenedate, "MMMM DD, YYYY")
+		sc.Released = tmpDate.Format("YYYY-MM-DD")
+
+		// Duration
+		tmpDuration := durationRegEx.FindStringSubmatch(e.ChildText(`div#t2019-stime`))[1]
+		sc.Duration, _ = strconv.Atoi(tmpDuration)
 
 		// Cover URLs
 		coverSrc := e.ChildAttr(`div#t2019-video deo-video`, "cover-image")
@@ -88,12 +86,18 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.card > a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`div.card`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a", "href"))
 
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/join") {
-			sceneCollector.Visit(sceneURL)
+
+			// SceneID and release date are only available here on div.card
+			ctx := colly.NewContext()
+			ctx.Put("scene-id", e.Attr("data-video-id"))
+			ctx.Put("scene-date", e.Attr("data-date"))
+
+			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 		}
 	})
 
