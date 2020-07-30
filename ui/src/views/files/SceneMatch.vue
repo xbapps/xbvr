@@ -9,7 +9,12 @@
       <section class="modal-card-body">
         <div>
           <h6 class="title is-6">{{ file.filename }}</h6>
-          <small>{{ file.path }}</small>
+          <small>
+            <span class="pathDetails">{{ file.path }}</span>
+            <br />
+            {{prettyBytes(file.size)}}, {{file.video_width}}x{{file.video_height}},
+            {{format(parseISO(file.created_time), "yyyy-MM-dd")}}
+          </small>
           <b-field :label="$t('Search')">
             <div class="control">
               <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
@@ -58,6 +63,7 @@
 <script>
   import ky from "ky";
   import {format, parseISO} from "date-fns";
+  import prettyBytes from "pretty-bytes";
   import VueLoadImage from "vue-load-image";
 
   export default {
@@ -141,6 +147,7 @@
       toInt(value, radix, defaultValue) {
         return parseInt(value, radix || 10) || defaultValue || 0;
       },
+      prettyBytes,
     }
   }
 </script>
@@ -150,9 +157,12 @@
     margin-bottom: 0;
   }
   h6 + small {
-    opacity: 0.6;
-    margin-bottom: 1.5rem; /* Moves the margin from the heading to the subtext */
+    margin-bottom: 1.5rem;
     display: inline-block;
+    font-size: small;
+  }
+  h6 + small > .pathDetails {
+    color: #B0B0B0;
   }
   .modal-card {
     position: absolute;
