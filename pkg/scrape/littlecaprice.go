@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"math/rand"
 	"regexp"
 	"strconv"
 	"strings"
@@ -24,7 +23,13 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	siteCollector := createCollector("www.littlecaprice-dreams.com")
 	galleryCollector := cloneCollector(sceneCollector)
 
-	sceneCollector.OnHTML(`.entry-content`, func(e *colly.HTMLElement) {
+	// RegEx Patterns
+	sceneRegEx := regexp.MustCompile(`^.+?'(.+?)'$`)
+	coverRegEx := regexp.MustCompile(`\.vid_bg {\nbackground: url\('(.+?)'`)
+	durationRegEx := regexp.MustCompile(`(\d+):(\d+)`)
+	descriptionRegEx := regexp.MustCompile(`(?i)^e(?:nglish)?:`)
+
+	sceneCollector.OnHTML(`article.project`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "Little Caprice Media"
@@ -32,20 +37,22 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - Generate randomly
-		sc.SiteID = strconv.Itoa(rand.Int())
+		sc.SiteID = strings.Split(e.Attr("id"), "-")[1]
 		sc.SceneID = slugify.Slugify(sc.Site + "-" + sc.SiteID)
 
 		// Title
 		sc.Title = strings.TrimSpace(e.ChildText(`.vid_title`))
 
 		// Cover
-		styleRe := regexp.MustCompile(`\.vid_bg {\nbackground: url\('(.+?)'`)
-		image := styleRe.FindStringSubmatch(e.DOM.Find(`style`).Text())[1]
-		sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(image))
+		cover := e.Request.Ctx.GetAny("cover").(string)
+		if len(cover) == 0 {
+			cover = coverRegEx.FindStringSubmatch(e.DOM.Find(`style`).Text())[1]
+		}
+		cover = strings.Replace(cover, "media.", "", -1)
+		sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(cover))
 
 		// Duration
-		re := regexp.MustCompile(`(\d+):(\d+)`)
-		minutes := re.FindStringSubmatch(e.ChildText(`.vid_length`))[1]
+		minutes := durationRegEx.FindStringSubmatch(e.ChildText(`.vid_length`))[1]
 		sc.Duration,_ = strconv.Atoi(minutes)
 
 		// Released
@@ -53,7 +60,9 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Released = dt.Format("2006-01-02")
 
 		// Synopsis
-		sc.Synopsis = strings.TrimSpace(e.ChildText(`vid_desc`))
+		sc.Synopsis = strings.TrimSpace(
+			descriptionRegEx.ReplaceAllString( // Some scene descriptions include a redundant prefix. We remove it.
+				e.ChildText(`.vid_desc`), ""))
 
 		// Cast
 		e.ForEach(`.vid_infos .vid_info_content a`, func(id int, e *colly.HTMLElement) {
@@ -67,26 +76,32 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 		galleryCollector.Request("GET", galleryPage, nil, ctx, nil)
 
-		out <- sc
+		if galleryPage == "" {
+			out <- sc
+		}
 	})
 
 	galleryCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := e.Request.Ctx.GetAny("scene").(models.ScrapedScene)
 
 		e.ForEach(`.et_pb_gallery_items.et_post_gallery .et_pb_gallery_item a`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Attr("href"))
+			image := strings.Replace(e.Attr("href"), "media.", "www.", -1)
+			sc.Gallery = append(sc.Gallery, image)
 		})
 
 		out <- sc
 	})
 
 	siteCollector.OnHTML(`.ct_video`, func(e *colly.HTMLElement) {
-		re := regexp.MustCompile(`^.+?'(.+?)'$`)
-		sceneURL := re.FindStringSubmatch(e.Attr(`onclick`))[1]
+		sceneURL := sceneRegEx.FindStringSubmatch(e.Attr(`onclick`))[1]
 
 		// If scene exists in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
+			ctx := colly.NewContext()
+			ctx.Put("cover", e.ChildAttr("img.ct_video_cover", "data-src"))
+
+			//sceneCollector.Visit(sceneURL)
+			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 		}
 	})
 
@@ -100,5 +115,5 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 }
 
 func init() {
-	registerScraper("littlecaprice", "Little Caprice Dreams", "https://media.littlecaprice-dreams.com/wp-content/uploads/2019/03/cropped-lcd-heart-32x32.png", LittleCaprice)
+	registerScraper("littlecaprice", "Little Caprice Dreams", "https://littlecaprice-dreams.com/wp-content/uploads/2019/03/cropped-lcd-heart-180x180.png", LittleCaprice)
 }
