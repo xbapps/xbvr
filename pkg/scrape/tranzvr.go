@@ -62,13 +62,13 @@ func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 
 		// Cover URLs
 		for _, x := range []string{"cover", "hero"} {
-			tmpCover := "https://cdns-i.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/" + x + "/large.jpg"
+			tmpCover := "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/550/" + x + ".webp"
 			sc.Covers = append(sc.Covers, tmpCover)
 		}
 
 		// Gallery
-		for _, x := range []string{"1", "2", "3", "4", "5", "6"} {
-			tmpGallery := "https://cdns-i.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/1024_" + x + ".jpg"
+		for _, x := range []string{"1"} {
+			tmpGallery := "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/1024_" + x + ".jpg"
 			sc.Gallery = append(sc.Gallery, tmpGallery)
 		}
 
