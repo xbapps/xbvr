@@ -139,7 +139,13 @@ func RealTeensVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	return VRPorn(wg, updateSite, knownScenes, out, "realteensvr", "Real Teens VR", "NaughtyAmerica")
 }
 
+// TonightsGirlfriend - ????? : https://tonightsgirlfriend.com
+func TonightsGirlfriend(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRPorn(wg, updateSite, knownScenes, out, "tonightsgirlfriend", "Tonight's Girlfriend", "NaughtyAmerica")
+}
+
 func init() {
 	registerScraper("randysroadstop", "Randys Road Stop", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png", RandysRoadStop)
 	registerScraper("realteensvr", "Real Teens VR", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png", RealTeensVR)
+	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
 }
