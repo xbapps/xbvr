@@ -306,10 +306,6 @@ func VRFirstTimer(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 func VirtualPee(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "virtualpee", "VirtualPee", "VirtualPee")
 }
-// LittleCapriceVR.com doesn't have complete scene index, pagination stops after two pages
-func LittleCapriceVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "littlecapricedreamsvr", "LittleCapriceVR", "LittleCapriceVR")
-}
 // GranniesVR.com doesn't have complete scene index, pagination stops after two pages
 func GranniesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "grannies-vr", "GranniesVR", "GranniesVR")
@@ -358,7 +354,6 @@ func init() {
 	registerScraper("lustreality", "LustReality (SLR)", "https://mcdn.vrporn.com/files/20200316102952/lustreality_logo2.png", LustReality)
 	registerScraper("vrfirsttimer", "VRFirstTimer (SLR)", "https://mcdn.vrporn.com/files/20200511115233/VRFirstTimers_Logo.jpg", VRFirstTimer)
 	registerScraper("virtualpee", "VirtualPee (SLR)", "https://mcdn.vrporn.com/files/20180317104121/virtualpeeop-square-banner.jpg", VirtualPee)
-	registerScraper("littlecapricedreamsvr", "LittleCapriceVR (SLR)", "https://mcdn.vrporn.com/files/20200202091529/littlecapricevr-logo-vr-porn-studio-vrporn.com-virtual-reality-1.jpg", LittleCapriceVR)
 	registerScraper("grannies-vr", "GranniesVR (SLR)", "https://mcdn.vrporn.com/files/20180222024100/itsmorti-logo-vr-porn-studio-vrporn.com-virtual-reality.jpg", GranniesVR)
 	registerScraper("jvrporn", "JVRPorn (SLR)", "https://mcdn.vrporn.com/files/20170710084815/jvrporn-vr-porn-studio-vrporn.com-virtual-reality.png", JVRPorn)
 	registerScraper("stockingsvr", "StockingsVR (SLR)", "https://mcdn.vrporn.com/files/20171107092330/stockingsvr_logo_vr_porn_studio_vrporn.com_virtual_reality1-1.png", StockingsVR)
