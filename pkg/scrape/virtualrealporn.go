@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"html"
 	"strconv"
 	"strings"
 	"sync"
@@ -85,7 +86,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 			out3, _ := vm.Get("desc")
 			desc, _ := out3.ToString()
-			sc.Synopsis = desc
+			sc.Synopsis = html.UnescapeString(desc)
 
 			out4, _ := vm.Get("cast")
 			cast, _ := out4.Export()
