@@ -74,7 +74,7 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		// Synopsis
 		e.ForEach(`div.detail__txt`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text + e.ChildText("span.more__body"))
+			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
 		// Tags

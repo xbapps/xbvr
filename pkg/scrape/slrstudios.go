@@ -262,10 +262,6 @@ func Pornbcn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 func LezVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "lezvr", "LezVR", "LezVR")
 }
-// EvilEyeVR.com doesn't have complete scene index, pagination stops after two pages
-func EvilEyeVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "evileyevr", "EvilEyeVR", "EvilEyeVR")
-}
 // HoliVR.com doesn't have complete scene index, pagination stops after two pages
 func HoliVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "holivr", "HoliVR", "HoliVR")
@@ -343,7 +339,6 @@ func init() {
 	registerScraper("sweetlonglips", "Sweetlonglips (SLR)", "https://mcdn.vrporn.com/files/20200117105304/SLLVRlogo.png", Sweetlonglips)
 	registerScraper("pornbcn", "Pornbcn (SLR)", "https://mcdn.vrporn.com/files/20190923110340/CHANNEL-LOGO-2.jpg", Pornbcn)
 	registerScraper("lezvr", "LezVR (SLR)", "https://mcdn.vrporn.com/files/20170813184453/lezvr-icon-vr-porn-studio-vrporn.com-virtual-reality.png", LezVR)
-	registerScraper("evileyevr", "EvilEyeVR (SLR)", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg", EvilEyeVR)
 	registerScraper("holivr", "HoliVR (SLR)", "https://mcdn.vrporn.com/files/20170519145416/Holi_400x400.jpg", HoliVR)
 	registerScraper("net69vr", "Net69VR (SLR)", "https://mcdn.vrporn.com/files/20171113233505/net69vr-vr-porn-studio-vrporn.com-virtual-reality.png", Net69VR)
 	registerScraper("mmm100", "MMM100 (SLR)", "https://mcdn.vrporn.com/files/20180515091925/mmm100vr-studio-banner.png", MMM100)

@@ -144,8 +144,14 @@ func TonightsGirlfriend(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 	return VRPorn(wg, updateSite, knownScenes, out, "tonightsgirlfriend", "Tonight's Girlfriend", "NaughtyAmerica")
 }
 
+// EvilEyeVR.com doesn't have complete scene index, pagination stops after two pages
+func EvilEyeVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRPorn(wg, updateSite, knownScenes, out, "evileyevr", "EvilEyeVR", "EvilEyeVR")
+}
+
 func init() {
 	registerScraper("randysroadstop", "Randys Road Stop", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png", RandysRoadStop)
 	registerScraper("realteensvr", "Real Teens VR", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png", RealTeensVR)
 	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
+	registerScraper("evileyevr", "EvilEye VR", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg", EvilEyeVR)
 }
