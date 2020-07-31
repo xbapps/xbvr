@@ -130,9 +130,9 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 		"-y",
 		"-f", "concat",
 		"-safe", "0",
-		"-i", concatFile,
+		"-i", filepath.ToSlash(concatFile),
 		"-c", "copy",
-		destFile,
+		filepath.ToSlash(destFile),
 	}
 	err = exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
 	if err != nil {
