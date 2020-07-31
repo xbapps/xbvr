@@ -186,6 +186,8 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		if gender == "Female" || gender == "Transgender" {
 			sc.Cast = append(sc.Cast, name)
+		} else if sc.SiteID == "VirtualRealGay" && gender == "Male" {
+			sc.Cast = append(sc.Cast, name)
 		}
 	})
 
