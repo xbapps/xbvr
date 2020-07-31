@@ -73,7 +73,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 			script := "sin = " + e.Text
 			script = script + ";\nduration = sin['duration']; datePublished = sin['datePublished']; desc = sin['description'];"
-			script = script + "cast = []; sin['actors'].map(function(o){cast.push(o.url)});"
+			script = script + "cast = sin['actors'].map(o => o.url);"
 
 			vm.Run(script)
 
