@@ -71,7 +71,13 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 		return err
 	}
 
-	vfArgs := fmt.Sprintf("crop=in_w/2:in_h:in_w/2:in_h,scale=%v:%v", resolution, resolution)
+	crop := "iw/2:ih:iw/2:ih" // LR videos
+	if strings.Contains(inputFile, "TB") {
+		crop = "iw/2:ih/2:iw/4:ih/2" // TB videos
+	} else if !strings.Contains(inputFile, "LR") {
+		crop = "iw/2:ih:iw/4:ih" // mono videos
+	}
+	vfArgs := fmt.Sprintf("crop=%v,scale=%v:%v", crop, resolution, resolution)
 
 	// Prepare snippets
 	interval := dur/float64(snippetAmount) - float64(startTime)
