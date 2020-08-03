@@ -21,6 +21,10 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	sceneCollector := createCollector("www.sexlikereal.com")
 	siteCollector := createCollector("www.sexlikereal.com")
 
+	// RegEx Patterns
+	coverRegEx := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
+	durationRegEx := regexp.MustCompile(`^T(\d{0,2})H?(\d{2})M(\d{2})S$`)
+
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
@@ -34,8 +38,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Cover
-		re := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
-		coverURL := re.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.splash-screen`, "style")))[1]
+		coverURL := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.splash-screen`, "style")))[1]
 		if len(coverURL) > 0 {
 			sc.Covers = append(sc.Covers, coverURL)
 		}
@@ -46,11 +49,8 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		// Synopsis
-		e.ForEach(`div#tabs-about div.u-mb--four`, func(id int, e *colly.HTMLElement) {
-			if !strings.Contains(e.Text, "Released:") {
-				sc.Synopsis = strings.TrimSpace(e.Text)
-			}
-		})
+		sc.Synopsis = strings.TrimSpace(
+			e.DOM.Find(`div#tabs-about div.u-mb--four`).First().Text())
 
 		// Skipping some very generic and useless tags
 		skiptags := map[string]bool{
@@ -100,10 +100,9 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			// Duration
 			// NOTE: SLR fails to include hours (1h55m30s shows up as T55M30S)
 			// ...but this is ready for the format of T01H55M30S should SLR fix that
-			reGetDuration := regexp.MustCompile(`^T(\d{0,2})H?(\d{2})M(\d{2})S$`)
 			duration := 0
 			if gjson.Get(JsonMetadata, "duration").Exists() {
-				tmpParts := reGetDuration.FindStringSubmatch(gjson.Get(JsonMetadata, "duration").String())
+				tmpParts := durationRegEx.FindStringSubmatch(gjson.Get(JsonMetadata, "duration").String())
 				if len(tmpParts[1]) > 0 {
 					if h, err := strconv.Atoi(tmpParts[1]); err == nil {
 						hrs := h
