@@ -19,9 +19,9 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
-	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
-	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com")
+	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com")
+	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com")
+	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com")
 	castCollector.AllowURLRevisit = true
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -45,6 +45,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, "▷ ", "", -1))
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealPorn.com", "", -1))
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealTrans.com", "", -1))
+			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealGay.com", "", -1))
 		})
 
 		// Cover URLs
@@ -63,6 +64,9 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		e.ForEach(`a[href*="/tag/"] span`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
+		if scraperID == "virtualrealgay" {
+			sc.Tags = append(sc.Tags, "Gay")
+		}
 
 		// Duration / Release date / Synopsis
 		e.ForEach(`script[type='application/ld+json'][class!='yoast-schema-graph']`, func(id int, e *colly.HTMLElement) {
@@ -70,7 +74,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 			script := "sin = " + e.Text
 			script = script + ";\nduration = sin['duration']; datePublished = sin['datePublished']; desc = sin['description'];"
-			script = script + "cast = []; sin['actors'].map(function(o){cast.push(o.url)});"
+			script = script + "cast = sin['actors'].map(o => o.url);"
 
 			vm.Run(script)
 
@@ -110,6 +114,9 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 					siteIDAcronym := "VRP"
 					if siteID == "VirtualRealTrans" {
 						siteIDAcronym = "VRT"
+					}
+					if siteID == "VirtualRealGay" {
+						siteIDAcronym = "VRG"
 					}
 
 					var outFilenames []string
@@ -180,6 +187,8 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		if gender == "Female" || gender == "Transgender" {
 			sc.Cast = append(sc.Cast, name)
+		} else if sc.SiteID == "VirtualRealGay" && gender == "Male" {
+			sc.Cast = append(sc.Cast, name)
 		}
 	})
 
@@ -234,8 +243,12 @@ func VirtualRealPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealtrans", "VirtualRealTrans", "https://virtualrealtrans.com/")
 }
+func VirtualRealGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealgay", "VirtualRealGay", "https://virtualrealgay.com/")
+}
 
 func init() {
 	registerScraper("virtualrealporn", "VirtualRealPorn", "https://twivatar.glitch.me/virtualrealporn", VirtualRealPorn)
 	registerScraper("virtualrealtrans", "VirtualRealTrans", "https://twivatar.glitch.me/virtualrealporn", VirtualRealTrans)
+	registerScraper("virtualrealgay", "VirtualRealGay", "https://twivatar.glitch.me/virtualrealgay", VirtualRealGay)
 }
