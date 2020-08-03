@@ -5,7 +5,9 @@
       <div class="column is-one-fifth">
         <Filters/>
 
-        <a id="toTop">Top</a>
+        <a id="toTop">
+          <b-icon pack="mdi" icon="navigation" />
+        </a>
       </div>
 
       <List/>
