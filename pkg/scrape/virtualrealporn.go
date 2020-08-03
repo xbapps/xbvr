@@ -19,9 +19,9 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com")
-	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com")
-	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com")
+	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com")
+	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com")
+	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com")
 	castCollector.AllowURLRevisit = true
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -118,6 +118,9 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 					if siteID == "VirtualRealGay" {
 						siteIDAcronym = "VRG"
 					}
+					if siteID == "VirtualRealPassion" {
+						siteIDAcronym = "VRPA"
+					}
 
 					var outFilenames []string
 
@@ -187,7 +190,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		if gender == "Female" || gender == "Transgender" {
 			sc.Cast = append(sc.Cast, name)
-		} else if sc.SiteID == "VirtualRealGay" && gender == "Male" {
+		} else if sc.SiteID == "VirtualRealGay" || sc.SiteID == "VirtualRealPassion" {
 			sc.Cast = append(sc.Cast, name)
 		}
 	})
@@ -246,9 +249,13 @@ func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 func VirtualRealGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealgay", "VirtualRealGay", "https://virtualrealgay.com/")
 }
+func VirtualRealPassion(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealpassion", "VirtualRealPassion", "https://virtualrealpassion.com/")
+}
 
 func init() {
 	registerScraper("virtualrealporn", "VirtualRealPorn", "https://twivatar.glitch.me/virtualrealporn", VirtualRealPorn)
 	registerScraper("virtualrealtrans", "VirtualRealTrans", "https://twivatar.glitch.me/virtualrealporn", VirtualRealTrans)
 	registerScraper("virtualrealgay", "VirtualRealGay", "https://twivatar.glitch.me/virtualrealgay", VirtualRealGay)
+	registerScraper("virtualrealpassion", "VirtualRealPassion", "https://twivatar.glitch.me/vrpassion", VirtualRealPassion)
 }
