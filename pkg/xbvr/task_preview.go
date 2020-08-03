@@ -72,11 +72,11 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 	}
 
 	crop := "iw/2:ih:iw/2:ih" // LR videos
-	if strings.Contains(inputFile, "TB") {
+	if vs.Height == vs.Width {
 		crop = "iw/2:ih/2:iw/4:ih/2" // TB videos
-	} else if !strings.Contains(inputFile, "LR") {
-		crop = "iw/2:ih:iw/4:ih" // mono videos
 	}
+	// Mono 360 crop args: (no way of accurately determining)
+	// "iw/2:ih:iw/4:ih"
 	vfArgs := fmt.Sprintf("crop=%v,scale=%v:%v", crop, resolution, resolution)
 
 	// Prepare snippets
