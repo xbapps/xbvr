@@ -80,11 +80,12 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 
 	db, _ := models.GetDB()
 	defer db.Close()
+	modelAliases := models.GetModelAliases()
 	for scene := range scenes {
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saving %v", scene.SceneID)
 		}
-		models.SceneCreateUpdateFromExternal(db, scene)
+		models.SceneCreateUpdateFromExternal(db, scene, modelAliases)
 		atomic.AddUint64(i, 1)
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saved %v", scene.SceneID)
@@ -171,8 +172,9 @@ func ScrapeJAVR(queryString string) {
 
 		if len(collectedScenes) > 0 {
 			db, _ := models.GetDB()
+			modelAliases := models.GetModelAliases()
 			for i := range collectedScenes {
-				models.SceneCreateUpdateFromExternal(db, collectedScenes[i])
+				models.SceneCreateUpdateFromExternal(db, collectedScenes[i], modelAliases)
 			}
 			db.Close()
 
@@ -237,9 +239,10 @@ func ImportBundle(url string) {
 
 		if err == nil && resp.StatusCode() == 200 {
 			db, _ := models.GetDB()
+			modelAliases := models.GetModelAliases()
 			for i := range bundleData.Scenes {
 				tlog.Infof("Importing %v of %v scenes", i+1, len(bundleData.Scenes))
-				models.SceneCreateUpdateFromExternal(db, bundleData.Scenes[i])
+				models.SceneCreateUpdateFromExternal(db, bundleData.Scenes[i], modelAliases)
 			}
 			db.Close()
 

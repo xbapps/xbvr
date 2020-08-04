@@ -44,6 +44,7 @@ func (i *Actor) Save() error {
 func ConvertName(searchString string, aliases [][]string) string {
 	for _,v := range aliases {
 		if stringInSlice(searchString, v) {
+			log.Infof("Model alias found for: %v (%v)", searchString, v[0])
 			return v[0]
 		}
 	}
@@ -62,6 +63,8 @@ func GetModelAliases() [][]string {
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	json.Unmarshal(byteValue, &aliases)
+
+	log.Infoln("Found model aliases")
 
 	return aliases
 }
