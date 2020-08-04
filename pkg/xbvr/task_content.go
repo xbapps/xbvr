@@ -31,6 +31,7 @@ type ScraperStatus struct {
 
 func CleanTags() {
 	RenameTags()
+	RenameCast()
 	CountTags()
 }
 
@@ -80,11 +81,12 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 
 	db, _ := models.GetDB()
 	defer db.Close()
+	modelAliases := models.GetModelAliases()
 	for scene := range scenes {
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saving %v", scene.SceneID)
 		}
-		models.SceneCreateUpdateFromExternal(db, scene)
+		models.SceneCreateUpdateFromExternal(db, scene, modelAliases)
 		atomic.AddUint64(i, 1)
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saved %v", scene.SceneID)
@@ -171,8 +173,9 @@ func ScrapeJAVR(queryString string) {
 
 		if len(collectedScenes) > 0 {
 			db, _ := models.GetDB()
+			modelAliases := models.GetModelAliases()
 			for i := range collectedScenes {
-				models.SceneCreateUpdateFromExternal(db, collectedScenes[i])
+				models.SceneCreateUpdateFromExternal(db, collectedScenes[i], modelAliases)
 			}
 			db.Close()
 
@@ -237,9 +240,10 @@ func ImportBundle(url string) {
 
 		if err == nil && resp.StatusCode() == 200 {
 			db, _ := models.GetDB()
+			modelAliases := models.GetModelAliases()
 			for i := range bundleData.Scenes {
 				tlog.Infof("Importing %v of %v scenes", i+1, len(bundleData.Scenes))
-				models.SceneCreateUpdateFromExternal(db, bundleData.Scenes[i])
+				models.SceneCreateUpdateFromExternal(db, bundleData.Scenes[i], modelAliases)
 			}
 			db.Close()
 
@@ -315,4 +319,38 @@ func CountTags() {
 	}
 
 	// db.Where("count = ?", 0).Delete(&Tag{})
+}
+
+func RenameCast() {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var scenes []models.Scene
+	db.Find(&scenes)
+
+	modelAliases := models.GetModelAliases()
+
+	for i := range scenes {
+		currentCast := make([]models.Actor, 0)
+		db.Model(&scenes[i]).Related(&currentCast, "Cast")
+
+		newCast := make([]models.Actor, 0)
+		for j := range currentCast {
+			nc := models.Actor{}
+			n := models.ConvertName(currentCast[j].Name, modelAliases)
+			db.Where(&models.Actor{Name: n}).FirstOrCreate(&nc)
+			newCast = append(newCast, nc)
+		}
+
+		diffs := deep.Equal(currentCast, newCast)
+		if len(diffs) > 0 {
+			for j := range currentCast {
+				db.Model(&scenes[i]).Association("Cast").Delete(&currentCast[j])
+			}
+
+			for j := range newCast {
+				db.Model(&scenes[i]).Association("Cast").Append(&newCast[j])
+			}
+		}
+	}
 }
