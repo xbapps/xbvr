@@ -315,6 +315,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	// Clean & Associate Actors
 	var tmpActor Actor
 	for _, name := range ext.Cast {
+		name = ConvertName(name)
 		tmpActor = Actor{}
 		db.Where(&Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&tmpActor)
 		db.Model(&o).Association("Cast").Append(tmpActor)
