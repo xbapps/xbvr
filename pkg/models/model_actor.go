@@ -1,6 +1,9 @@
 package models
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/avast/retry-go"
@@ -36,4 +39,38 @@ func (i *Actor) Save() error {
 	}
 
 	return nil
+}
+
+func ConvertName(t string) string {
+	jsonFile, err := os.Open("./pkg/models/model_aliases.json")
+	if err != nil {
+		log.Errorln(err)
+		return t
+	}
+	defer jsonFile.Close()
+
+	var aliases [][]string
+	byteValue,_ := ioutil.ReadAll(jsonFile)
+
+	json.Unmarshal(byteValue, &aliases)
+
+	return getPrimaryName(t, aliases)
+}
+
+func getPrimaryName(searchString string, aliases [][]string) string {
+	for _,v := range aliases {
+		if stringInSlice(searchString, v) {
+			return v[0]
+		}
+	}
+	return searchString
+}
+
+func stringInSlice(s string, list []string) bool {
+	for _, v := range list {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }
