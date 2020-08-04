@@ -82,7 +82,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		}
 
 		// Gallery
-		sc.Gallery = e.ChildAttrs(`div.gallery-top a.fancybox.image`, "href")
+		sc.Gallery = e.ChildAttrs(`div.free-gallery a.fancybox.image`, "href")
 
 		// Synopsis
 		sc.Synopsis = strings.TrimSpace(e.ChildText(`div.video-content__description div.less-text`))
