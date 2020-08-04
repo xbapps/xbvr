@@ -2,7 +2,7 @@ pkg = "assets"
 dest = "./pkg/assets/"
 fmt = false
 
-clean = false
+clean = true
 output = "ab0x.go"
 unexporTed = false
 spread = true
