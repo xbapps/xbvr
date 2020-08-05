@@ -46,6 +46,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealPorn.com", "", -1))
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealTrans.com", "", -1))
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealGay.com", "", -1))
+			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealPassion.com", "", -1))
 		})
 
 		// Cover URLs
