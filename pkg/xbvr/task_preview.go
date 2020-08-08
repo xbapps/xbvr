@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -66,10 +65,7 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 		return err
 	}
 	vs := ffdata.GetFirstVideoStream()
-	dur, err := strconv.ParseFloat(vs.Duration, 64)
-	if err != nil {
-		return err
-	}
+	dur := ffdata.Format.DurationSeconds
 
 	crop := "iw/2:ih:iw/2:ih" // LR videos
 	if vs.Height == vs.Width {
