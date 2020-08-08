@@ -20,6 +20,10 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	sceneCollector := createCollector("vrporn.com")
 	siteCollector := createCollector("vrporn.com")
 
+	// RegEx Patterns
+	sceneIDRegEx := regexp.MustCompile(`^post-(\d+)`)
+	dateRegEx := regexp.MustCompile(`(?i)^VideoPosted on (?:Premium )?(.+)$`)
+
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
@@ -28,8 +32,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from page HTML
-		idRe := regexp.MustCompile(`^post-(\d+)`)
-		id := idRe.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`article.post`, "class")))[1]
+		id := sceneIDRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`article.post`, "class")))[1]
 		sc.SiteID = id
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
@@ -50,7 +53,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		})
 
 		// Synopsis
-		e.ForEach(`.entry-content.post-video-description p`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.entry-content.post-video-description`, func(id int, e *colly.HTMLElement) {
 			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
@@ -75,8 +78,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		})
 
 		// Release Date
-		re := regexp.MustCompile(`(?i)^VideoPosted on (?:Premium )?(.+)$`)
-		date := re.FindStringSubmatch(e.ChildText(`div.content-box.posted-by-box.posted-by-box-sub span.footer-titles`))[1]
+		date := dateRegEx.FindStringSubmatch(e.ChildText(`div.content-box.posted-by-box.posted-by-box-sub span.footer-titles`))[1]
 		if len(date) > 0 {
 			dt, _ := time.Parse("January 02, 2006", date)
 			sc.Released = dt.Format("2006-01-02")
@@ -139,19 +141,19 @@ func RealTeensVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	return VRPorn(wg, updateSite, knownScenes, out, "realteensvr", "Real Teens VR", "NaughtyAmerica")
 }
 
-// TonightsGirlfriend - ????? : https://tonightsgirlfriend.com
+// TonightsGirlfriend - Has its own site but no tags or previews: https://tonightsgirlfriend.com
 func TonightsGirlfriend(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VRPorn(wg, updateSite, knownScenes, out, "tonightsgirlfriend", "Tonight's Girlfriend", "NaughtyAmerica")
 }
 
-// EvilEyeVR.com doesn't have complete scene index, pagination stops after two pages
+// EvilEyeVR.com - doesn't have a working site
 func EvilEyeVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VRPorn(wg, updateSite, knownScenes, out, "evileyevr", "EvilEyeVR", "EvilEyeVR")
 }
 
 func init() {
-	registerScraper("randysroadstop", "Randys Road Stop", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png", RandysRoadStop)
-	registerScraper("realteensvr", "Real Teens VR", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png", RealTeensVR)
-	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
-	registerScraper("evileyevr", "EvilEye VR", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg", EvilEyeVR)
+	registerScraper("randysroadstop", "Randys Road Stop (VRPorn)", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png", RandysRoadStop)
+	registerScraper("realteensvr", "Real Teens VR (VRPorn)", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png", RealTeensVR)
+	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend (VR Porn)", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
+	registerScraper("evileyevr", "EvilEye VR (VRPorn)", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg", EvilEyeVR)
 }

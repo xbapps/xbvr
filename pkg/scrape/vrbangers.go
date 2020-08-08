@@ -16,9 +16,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com")
-	siteCollector := createCollector("vrbangers.com", "vrbtrans.com")
-	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com")
+	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com")
+	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com")
+	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com")
 	ajaxCollector.CacheDir = ""
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -61,6 +61,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 				baseName := basePath[1]
 				baseName = strings.Replace(baseName, "vrb_", "VRBANGERS_", -1)
 				baseName = strings.Replace(baseName, "vrbtrans_", "VRBTRANS_", -1)
+				baseName = strings.Replace(baseName, "vrbgay_", "VRBGAY_", -1)
 
 				filenames := []string{"6K_180x180_3dh", "5K_180x180_3dh", "4K_180x180_3dh", "HD_180x180_3dh", "HQ_180x180_3dh", "PSVRHQ_180x180_3dh", "UHD_180x180_3dh", "PSVRHQ_180_sbs", "PSVR_mono", "HQ_mono360", "HD_mono360", "PSVRHQ_ou", "UHD_3dv", "HD_3dv", "HQ_3dv"}
 
@@ -82,7 +83,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		}
 
 		// Gallery
-		sc.Gallery = e.ChildAttrs(`div.free-gallery a.fancybox.image`, "href")
+		sc.Gallery = e.ChildAttrs(`div.free-gallery a.fancybox`, "href")
 
 		// Synopsis
 		sc.Synopsis = strings.TrimSpace(e.ChildText(`div.video-content__description div.less-text`))
@@ -91,6 +92,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		e.ForEach(`div.video-item-info-tags a`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, e.Text)
 		})
+		if scraperID == "vrbgay" {
+			sc.Tags = append(sc.Tags, "Gay")
+		}
 
 		// Cast
 		e.ForEach(`div.video-item-info--starring-download a`, func(id int, e *colly.HTMLElement) {
@@ -137,8 +141,12 @@ func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbtrans", "VRBTrans", "https://vrbtrans.com/videos/")
 }
+func VRBGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbgay", "VRBGay", "https://vrbgay.com/videos/")
+}
 
 func init() {
 	registerScraper("vrbangers", "VRBangers", "https://twivatar.glitch.me/vrbangers", VRBangers)
 	registerScraper("vrbtrans", "VRBTrans", "https://twivatar.glitch.me/vrbtrans", VRBTrans)
+	registerScraper("vrbgay", "VRBGay", "https://twivatar.glitch.me/vrbgay", VRBGay)
 }

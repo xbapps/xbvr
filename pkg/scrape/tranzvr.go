@@ -12,6 +12,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
+<<<<<<< HEAD:pkg/scrape/tranzvr.go
 func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
 	scraperID := "watranzvr"
@@ -20,6 +21,14 @@ func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 
 	sceneCollector := createCollector("www.tranzvr.com")
 	siteCollector := createCollector("www.tranzvr.com")
+=======
+func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+	defer wg.Done()
+	logScrapeStart(scraperID, siteID)
+
+	sceneCollector := createCollector("www.wankzvr.com", "www.milfvr.com")
+	siteCollector := createCollector("www.wankzvr.com", "www.milfvr.com")
+>>>>>>> master:pkg/scrape/wankz.go
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -57,18 +66,40 @@ func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		// Filenames
 		base := e.Request.URL.Path
 		base = strings.Replace(base, "/", "", -1)
+<<<<<<< HEAD:pkg/scrape/tranzvr.go
 		base = strings.Replace(base, sc.SiteID, "", -1)
 		sc.Filenames = append(sc.Filenames, "tranzvr-"+base+"180_180x180_3dh_LR.mp4")
 
 		// Cover URLs
 		for _, x := range []string{"cover", "hero"} {
 			tmpCover := "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/550/" + x + ".webp"
+=======
+		sc.Filenames = append(sc.Filenames, base+"180_180x180_3dh_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"gearvr-180_180x180_3dh_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"smartphone-180_180x180_3dh_LR.mp4")
+
+		// Cover URLs
+		for _, x := range []string{"cover", "hero"} {
+			if scraperID == "milfvr" && x == "cover" {
+				continue // MilfVR does not have a "cover" image unlike WankzVR
+			}
+			tmpCover := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/" + x + "/large.jpg"
+>>>>>>> master:pkg/scrape/wankz.go
 			sc.Covers = append(sc.Covers, tmpCover)
 		}
 
 		// Gallery
+<<<<<<< HEAD:pkg/scrape/tranzvr.go
 		for _, x := range []string{"1"} {
 			tmpGallery := "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/1024_" + x + ".jpg"
+=======
+		size := "1024"
+		if scraperID == "milfvr" {
+			size = "1280"
+		}
+		for _, x := range []string{"1", "2", "3", "4", "5", "6"} {
+			tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
+>>>>>>> master:pkg/scrape/wankz.go
 			sc.Gallery = append(sc.Gallery, tmpGallery)
 		}
 
@@ -81,6 +112,9 @@ func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		e.ForEach(`div.tag-list__body a.tag`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, e.Text)
 		})
+		if scraperID == "milfvr" {
+			sc.Tags = append(sc.Tags, "milf")
+		}
 
 		// Cast
 		e.ForEach(`div.detail__models a`, func(id int, e *colly.HTMLElement) {
@@ -104,7 +138,11 @@ func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		}
 	})
 
+<<<<<<< HEAD:pkg/scrape/tranzvr.go
 	siteCollector.Visit("https://www.tranzvr.com/videos?o=d")
+=======
+	siteCollector.Visit(URL + "videos?o=d")
+>>>>>>> master:pkg/scrape/wankz.go
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -113,6 +151,19 @@ func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	return nil
 }
 
+func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return WankzVRSite(wg, updateSite, knownScenes, out, "wankzvr", "WankzVR", "https://www.wankzvr.com/")
+}
+
+func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return WankzVRSite(wg, updateSite, knownScenes, out, "milfvr", "MilfVR", "https://www.milfvr.com/")
+}
+
 func init() {
+<<<<<<< HEAD:pkg/scrape/tranzvr.go
 	registerScraper("tranzvr", "TranzVR", "https://twivatar.glitch.me/tranzvr", TranzVR)
+=======
+	registerScraper("wankzvr", "WankzVR", "https://twivatar.glitch.me/wankzvr", WankzVR)
+	registerScraper("milfvr", "MilfVR", "https://twivatar.glitch.me/milfvr", MilfVR)
+>>>>>>> master:pkg/scrape/wankz.go
 }

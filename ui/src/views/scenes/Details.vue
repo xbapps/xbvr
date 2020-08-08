@@ -165,6 +165,14 @@
                   </div>
                 </b-tab-item>
 
+                <b-tab-item label="Description">
+                  <div class="block-tab-content block">
+                    <b-message>
+                      {{ item.synopsis }}
+                    </b-message>
+                  </div>
+                </b-tab-item>
+
               </b-tabs>
             </div>
 
