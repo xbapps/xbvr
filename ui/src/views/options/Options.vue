@@ -5,9 +5,10 @@
       <div class="column is-one-fifth custom-menu">
         <b-menu :accordion="false">
           <b-menu-list :label="$t('Options')">
+            <b-menu-item :label="$t('Preferences')" :active="active==='preferences'" @click="setActive('preferences')" />
             <b-menu-item :label="$t('Storage')" :active="active==='storage'" @click="setActive('storage')"/>
             <b-menu-item :label="$t('Previews')" :active="active==='previews'" @click="setActive('previews')"/>
-<!--            <b-menu-item :label="$t('Scheduled tasks')" :active="active==='tasks'" @click="setActive ('tasks')"/>-->
+            <!--            <b-menu-item :label="$t('Scheduled tasks')" :active="active==='tasks'" @click="setActive ('tasks')"/>-->
             <b-menu-item :label="$t('Cache')" :active="active==='cache'" @click="setActive('cache')"></b-menu-item>
           </b-menu-list>
           <b-menu-list :label="$t('Scene data')">
@@ -16,15 +17,16 @@
                          @click="setActive('data-import-export')"/>
           </b-menu-list>
           <b-menu-list :label="$t('Interfaces')">
-<!--            <b-menu-item :label="$t('Web')" :active="active==='interface_web'" @click="setActive('ui_web')"/>-->
+            <!--            <b-menu-item :label="$t('Web')" :active="active==='interface_web'" @click="setActive('ui_web')"/>-->
             <b-menu-item :label="$t('DLNA')" :active="active==='interface_dlna'" @click="setActive('interface_dlna')"/>
-<!--            <b-menu-item :label="$t('DeoVR')" :active="active==='interface_deovr'" @click="setActive('ui_deovr')"/>-->
+            <!--            <b-menu-item :label="$t('DeoVR')" :active="active==='interface_deovr'" @click="setActive('ui_deovr')"/>-->
           </b-menu-list>
         </b-menu>
       </div>
 
       <div class="column">
         <div style="padding-top:2em">
+          <Preferences v-show="active==='preferences'" />
           <Storage v-show="active==='storage'"/>
           <SceneDataScrapers v-show="active==='data-scrapers'"/>
           <SceneDataImportExport v-show="active==='data-import-export'"/>
@@ -39,6 +41,7 @@
 </template>
 
 <script>
+  import Preferences from "./sections/Preferences"
   import Storage from "./sections/Storage.vue";
   import SceneDataScrapers from "./sections/OptionsSceneDataScrapers.vue";
   import SceneDataImportExport from "./sections/OptionsSceneDataImportExport";
@@ -47,10 +50,10 @@
   import Previews from "./sections/Previews.vue";
 
   export default {
-    components: {Storage, SceneDataScrapers, SceneDataImportExport, InterfaceDLNA, Cache, Previews},
+    components: {Preferences, Storage, SceneDataScrapers, SceneDataImportExport, InterfaceDLNA, Cache, Previews},
     data: function () {
       return {
-        active: "storage",
+        active: "preferences",
       }
     },
     methods: {

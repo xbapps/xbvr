@@ -5,6 +5,7 @@ import sceneList from "./sceneList";
 import messages from "./messages";
 import overlay from "./overlay";
 import files from "./files";
+import preferences from "./preferences";
 import optionsStorage from "./optionsStorage";
 import optionsDLNA from "./optionsDLNA";
 import optionsSites from "./optionsSites";
@@ -19,6 +20,7 @@ export default new Vuex.Store({
     messages,
     overlay,
     files,
+    preferences,
     optionsStorage,
     optionsDLNA,
     optionsSites,
