@@ -149,5 +149,5 @@ func TonightsGirlfriend(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 func init() {
 	registerScraper("randysroadstop", "Randys Road Stop (VRPorn)", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png", RandysRoadStop)
 	registerScraper("realteensvr", "Real Teens VR (VRPorn)", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png", RealTeensVR)
-	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
+	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend (VRPorn)", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
 }
