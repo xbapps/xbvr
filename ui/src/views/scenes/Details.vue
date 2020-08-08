@@ -80,19 +80,6 @@
               </b-taglist>
             </div>
 
-            <div class="block-desc block">
-              <b-collapse :open="true" :aria-id="'scene-description-' + item.id">
-                <button
-                  class="button is-primary" slot="trigger"
-                  :aria-id="'scene-description-' + item.id">
-                  Toggle Description
-                </button>
-                <b-message>
-                  {{ item.synopsis }}
-                </b-message>
-              </b-collapse>
-            </div>
-
             <div class="block-opts block">
               <b-tabs v-model="activeTab" :animated="false">
 
