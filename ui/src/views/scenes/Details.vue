@@ -198,7 +198,9 @@
     computed: {
       item() {
         const item = this.$store.state.overlay.details.scene;
-        item.tags.sort((a,b) => a.name < b.name ? -1 : 1);
+        if (this.$store.state.preferences.prefs.tagSort === 'Alphabetically') {
+          item.tags.sort((a, b) => a.name < b.name ? -1 : 1);
+        }
         return item;
       },
       // Properties for gallery
