@@ -81,7 +81,7 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 
 	db, _ := models.GetDB()
 	defer db.Close()
-	modelAliases := models.GetModelAliases()
+	modelAliases,_ := models.GetModelAliases()
 	for scene := range scenes {
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saving %v", scene.SceneID)
@@ -173,7 +173,7 @@ func ScrapeJAVR(queryString string) {
 
 		if len(collectedScenes) > 0 {
 			db, _ := models.GetDB()
-			modelAliases := models.GetModelAliases()
+			modelAliases,_ := models.GetModelAliases()
 			for i := range collectedScenes {
 				models.SceneCreateUpdateFromExternal(db, collectedScenes[i], modelAliases)
 			}
@@ -240,7 +240,7 @@ func ImportBundle(url string) {
 
 		if err == nil && resp.StatusCode() == 200 {
 			db, _ := models.GetDB()
-			modelAliases := models.GetModelAliases()
+			modelAliases,_ := models.GetModelAliases()
 			for i := range bundleData.Scenes {
 				tlog.Infof("Importing %v of %v scenes", i+1, len(bundleData.Scenes))
 				models.SceneCreateUpdateFromExternal(db, bundleData.Scenes[i], modelAliases)
@@ -328,7 +328,7 @@ func RenameCast() {
 	var scenes []models.Scene
 	db.Find(&scenes)
 
-	modelAliases := models.GetModelAliases()
+	modelAliases,_ := models.GetModelAliases()
 
 	for i := range scenes {
 		currentCast := make([]models.Actor, 0)
@@ -337,7 +337,7 @@ func RenameCast() {
 		newCast := make([]models.Actor, 0)
 		for j := range currentCast {
 			nc := models.Actor{}
-			n := models.ConvertName(currentCast[j].Name, modelAliases)
+			n := modelAliases.ConvertName(currentCast[j].Name)
 			db.Where(&models.Actor{Name: n}).FirstOrCreate(&nc)
 			newCast = append(newCast, nc)
 		}

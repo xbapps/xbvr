@@ -246,7 +246,7 @@ func (o *Scene) UpdateStatus() {
 	}
 }
 
-func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene, modelAliases [][]string) error {
+func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene, modelAliases ModelAliases) error {
 	var o Scene
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)
 
@@ -315,9 +315,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene, modelAliases [
 	// Clean & Associate Actors
 	var tmpActor Actor
 	for _, name := range ext.Cast {
-		if modelAliases != nil {
-			name = ConvertName(name, modelAliases)
-		}
+		name = modelAliases.ConvertName(name)
 		tmpActor = Actor{}
 		db.Where(&Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&tmpActor)
 		db.Model(&o).Association("Cast").Append(tmpActor)

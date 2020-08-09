@@ -41,39 +41,19 @@ func (i *Actor) Save() error {
 	return nil
 }
 
-func ConvertName(searchString string, aliases [][]string) string {
-	for _,v := range aliases {
-		if stringInSlice(searchString, v) {
-			log.Infof("Model alias found for: %v (%v)", searchString, v[0])
-			return v[0]
-		}
-	}
-	return searchString
-}
-
-func GetModelAliases() [][]string {
+func GetModelAliases() (aliases ModelAliases, err error) {
 	jsonFile, err := os.Open("./pkg/models/model_aliases.json")
 	if err != nil {
 		log.Errorln(err)
-		return nil
+		return nil, err
 	}
 	defer jsonFile.Close()
 
-	var aliases [][]string
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	json.Unmarshal(byteValue, &aliases)
-
-	log.Infoln("Found model aliases")
-
-	return aliases
-}
-
-func stringInSlice(s string, list []string) bool {
-	for _, v := range list {
-		if s == v {
-			return true
-		}
+	err = json.Unmarshal(byteValue, &aliases)
+	if err != nil {
+		log.Debugln("There was an error getting model aliases:", err)
+		return aliases, err
 	}
-	return false
+	return aliases, nil
 }
