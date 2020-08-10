@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"fmt"
 	"html"
 	"strconv"
 	"strings"
@@ -43,9 +44,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		e.ForEach(`title`, func(id int, e *colly.HTMLElement) {
 			sc.Title = e.Text
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, "▷ ", "", -1))
-			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealPorn.com", "", -1))
-			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealTrans.com", "", -1))
-			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, " - VirtualRealGay.com", "", -1))
+			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, fmt.Sprintf(" - %v.com", sc.Site), "", -1))
 		})
 
 		// Cover URLs

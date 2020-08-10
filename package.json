@@ -2,12 +2,14 @@
   "name": "xbvr",
   "private": true,
   "scripts": {
+    "dev": "concurrently 'npm:dev:ui' 'npm:dev:go'",
     "serve": "cd ui && vue-cli-service serve",
     "build": "cd ui && vue-cli-service build",
     "lint": "cd ui && vue-cli-service lint",
     "i18n:report": "vue-cli-service i18n:report --src './src/**/*.?(js|vue)' --locales './src/locales/**/*.json'",
     "i18n:extract": "yarn vue-i18n-extract report -v './ui/src/**/*.?(js|vue)' -l './ui/src/locales/*.?(js|json)'",
-    "watch": "cd ui && vue-cli-service build --watch --silent"
+    "dev:ui": "cd ui && vue-cli-service build --watch --silent",
+    "dev:go": "air"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.13.1",
@@ -37,6 +39,7 @@
     "@vue/cli-plugin-eslint": "4.4.6",
     "@vue/cli-service": "4.4.6",
     "babel-eslint": "10.1.0",
+    "concurrently": "5.2.0",
     "eslint": "7.4.0",
     "eslint-plugin-vue": "6.2.2",
     "less": "3.11.3",

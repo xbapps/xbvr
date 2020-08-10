@@ -25,6 +25,11 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	dateRegEx := regexp.MustCompile(`(?i)^VideoPosted on (?:Premium )?(.+)$`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+		if !dateRegEx.MatchString(e.ChildText(`div.content-box.posted-by-box.posted-by-box-sub span.footer-titles`)) {
+			// VRPorn hosts VR games, apparently
+			return
+		}
+
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = company
@@ -133,7 +138,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 // RandysRoadStop - Has its own site but does not include info such as tags: https://randysroadstop.com
 func RandysRoadStop(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRPorn(wg, updateSite, knownScenes, out, "randysroadstop", "Randys Road Stop", "NaughtyAmerica")
+	return VRPorn(wg, updateSite, knownScenes, out, "randysroadstop", "Randy's Road Stop", "NaughtyAmerica")
 }
 
 // RealTeensVR - Has its own site but contains no scene info: https://realteensvr.com
@@ -143,11 +148,17 @@ func RealTeensVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 // TonightsGirlfriend - Has its own site but no tags or previews. : https://tonightsgirlfriend.com
 func TonightsGirlfriend(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRPorn(wg, updateSite, knownScenes, out, "tonightsgirlfriend", "Tonight's Girlfriend", "NaughtyAmerica")
+	return VRPorn(wg, updateSite, knownScenes, out, "tonightsgirlfriendvr", "Tonight's Girlfriend VR", "NaughtyAmerica")
+}
+
+// VRClubz - Has its own site but contains less scenes than VRPorn?: https://vrclubz.com
+func VRClubz(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRPorn(wg, updateSite, knownScenes, out, "vrclubz", "VRClubz", "VixenVR")
 }
 
 func init() {
 	registerScraper("randysroadstop", "Randys Road Stop (VRPorn)", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png", RandysRoadStop)
 	registerScraper("realteensvr", "Real Teens VR (VRPorn)", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png", RealTeensVR)
-	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend (VRPorn)", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
+	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend VR (VRPorn)", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
+	registerScraper("vrclubz", "VRClubz (VRPorn)", "https://mcdn.vrporn.com/files/20200421094123/vrclubz_logo_NEW-400x400_webwhite.png", VRClubz)
 }
