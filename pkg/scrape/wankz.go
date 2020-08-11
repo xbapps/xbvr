@@ -81,7 +81,7 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 		for _, x := range []string{"1", "2", "3", "4", "5", "6"} {
 		if scraperID == "tranzvr" {
-			continue
+			continue //TranzVR does no longer has preview images
 		}
 		tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
 		sc.Gallery = append(sc.Gallery, tmpGallery)
