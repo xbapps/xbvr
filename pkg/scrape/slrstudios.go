@@ -246,6 +246,11 @@ func VRedging(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	return SexLikeReal(wg, updateSite, knownScenes, out, "vredging", "VRedging", "VRedging")
 }
 
+// BravoModelsMedia
+func BravoModelsMedia(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "bravomodelsmedia", "BravoModelsMedia", "Bravo Models")
+}
+
 // VirtualXPorn does have own site but it's messy, no capitalization, missing tags, description, etc
 func VirtualXPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "virtualxporn", "VirtualXPorn", "VirtualXPorn")
@@ -267,5 +272,6 @@ func init() {
 	registerScraper("realhotvr", "RealHotVR (SLR)", "https://g8iek4luc8.ent-cdn.com/templates/realhotvr/images/favicon.jpg", RealHotVR)
 	registerScraper("evileyevr", "EvilEyeVR (SLR)", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg", EvilEyeVR)
 	registerScraper("vredging", "VRedging (SLR)", "https://mcdn.vrporn.com/files/20200630081500/VRedging_LOGO_v1-400x400.jpg", VRedging)
+	registerScraper("bravomodelsmedia", "BravoModelsMedia (SLR)", "https://mcdn.vrporn.com/files/20181015142403/ohNFa81Q_400x400.png", BravoModelsMedia)
 	registerScraper("virtualxporn", "VirtualXPorn (SLR)", "https://www.virtualxporn.com/tour/custom_assets/favicons/android-chrome-192x192.png", VirtualXPorn)
 }
