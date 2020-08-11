@@ -301,6 +301,11 @@ func PVRStudio(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	return SexLikeReal(wg, updateSite, knownScenes, out, "pvrstudio", "PVRStudio", "PVRStudio")
 }
 
+// HerFirstVR
+func HerFirstVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "herfirstvr", "HerFirstVR", "HerFirstVR")
+}
+
 // VirtualXPorn does have own site but it's messy, no capitalization, missing tags, description, etc
 func VirtualXPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "virtualxporn", "VirtualXPorn", "VirtualXPorn")
@@ -333,5 +338,6 @@ func init() {
 	registerScraper("screwboxvr", "ScrewBoxVR (SLR)", "https://pbs.twimg.com/profile_images/1137432770936918016/ycL3ag5c_200x200.png", ScrewBoxVR)
 	registerScraper("mmm100", "MMM100 (SLR)", "https://mmm100.com/MMM100.png", MMM100)
 	registerScraper("pvrstudio", "PVRStudio (SLR)", "https://pvr.fun/uploads/2019/10/08/084230gbctdepe7kovu4hs.jpg", PVRStudio)
+	registerScraper("herfirstvr", "HerFirstVR (SLR)", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", HerFirstVR)
 	registerScraper("virtualxporn", "VirtualXPorn (SLR)", "https://www.virtualxporn.com/tour/custom_assets/favicons/android-chrome-192x192.png", VirtualXPorn)
 }
