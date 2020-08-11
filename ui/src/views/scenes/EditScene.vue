@@ -1,6 +1,7 @@
 <template>
   <div class="modal is-active">
     <GlobalEvents
+      :filter="e => !['INPUT', 'TEXTAREA'].includes(e.target.tagName)"
       @keyup.esc="close"
       @keyup.s="save" />
 
@@ -14,43 +15,43 @@
 
       <section class="modal-card-body">
         <b-field :label="$t('Title')">
-          <b-input type="text" v-model="title" />
+          <b-input type="text" v-model="scene.title" />
         </b-field>
 
         <b-field :label="$t('Description')">
-          <b-input type="textarea" v-model="synopsis" />
+          <b-input type="textarea" v-model="scene.synopsis" />
         </b-field>
 
         <b-field grouped group-multiline>
           <b-field :label="$t('Studio')">
-            <b-input type="text" v-model="studio" />
+            <b-input type="text" v-model="scene.studio" />
           </b-field>
 
           <b-field :label="$t('Site')">
-            <b-input type="text" v-model="site" />
+            <b-input type="text" v-model="scene.site" />
           </b-field>
 
           <b-field :label="$t('Scene URL')">
-            <b-input type="text" v-model="scene_url" />
+            <b-input type="text" v-model="scene.scene_url" />
           </b-field>
 
           <b-field :label="$t('Release Date')">
             <div class="control">
-              <input type="date" class="input" v-model="release_date_text" />
+              <input type="date" class="input" v-model="scene.release_date_text" />
             </div>
           </b-field>
         </b-field>
 
         <b-field :label="$t('Cast')">
-          <b-taginput type="is-warning" icon="label" v-model="castArray" />
+          <b-taginput type="is-warning" icon="label" v-model="scene.castArray" />
         </b-field>
 
         <b-field :label="$t('Tags')">
-          <b-taginput type="is-info" icon="label" v-model="tagsArray" />
+          <b-taginput type="is-info" icon="label" v-model="scene.tagsArray" />
         </b-field>
 
         <b-field>
-          <b-button type="is-primary">{{ $t('Save Scene Details') }}</b-button>
+          <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
         </b-field>
       </section>
     </div>
@@ -58,6 +59,7 @@
 </template>
 
 <script>
+  import ky from "ky";
   import GlobalEvents from 'vue-global-events';
 
   export default {
@@ -74,23 +76,40 @@
       cast: object[]
       tags: object[]
        */
-      const scene = this.$store.state.overlay.edit.scene;
+      const scene = Object.assign({}, this.$store.state.overlay.edit.scene);
       scene.castArray = scene.cast.map(c => c.name);
       scene.tagsArray = scene.tags.map(t => t.name);
-      return scene;
-    },
-    computed: {
-      item() {
-        return this.$store.state.overlay.edit.scene;
-      },
+      return {scene};
     },
     methods: {
       close() {
         this.$store.commit("overlay/hideEditDetails");
       },
       save() {
+        ky.post(`/api/scene/edit/${this.scene.id}`, {json: {...this.scene}});
 
-      }
+        this.scene.cast = this.scene.castArray.map(a => {
+          const find = this.scene.cast.find(o => o.name === a);
+          if (find) return find;
+          return {
+            name: a,
+            count: 0,
+          }
+        });
+
+        this.scene.tags = this.scene.tagsArray.map(t => {
+          const find = this.scene.tags.find(o => o.name === t);
+          if (find) return find;
+          return {
+            name: t,
+            count: 0,
+          }
+        })
+
+        this.$store.commit('sceneList/updateScene', this.scene);
+
+        this.close();
+      },
     }
   }
 </script>

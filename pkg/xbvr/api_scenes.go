@@ -1,8 +1,10 @@
 package xbvr
 
 import (
+	"github.com/go-test/deep"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/blevesearch/bleve"
 	"github.com/emicklei/go-restful"
@@ -22,6 +24,17 @@ type RequestSceneCuepoint struct {
 
 type RequestSetSceneRating struct {
 	Rating float64 `json:"rating"`
+}
+
+type RequestEditSceneDetails struct {
+	Title        string    `json:"title"`
+	Synopsis     string    `json:"synopsis"`
+	Studio       string    `json:"studio"`
+	Site         string    `json:"site"`
+	SceneURL     string    `json:"scene_url"`
+	ReleaseDate  string    `json:"release_date_text"`
+	Cast         []string  `json:"castArray"`
+	Tags         []string  `json:"tagsArray"`
 }
 
 type ResponseGetScenes struct {
@@ -66,6 +79,10 @@ func (i SceneResource) WebService() *restful.WebService {
 		Writes(models.Scene{}))
 
 	ws.Route(ws.POST("/rate/{scene-id}").To(i.rateScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
+	ws.Route(ws.POST("/edit/{scene-id}").To(i.editScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
 
@@ -301,4 +318,78 @@ func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
 	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+
+func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
+	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var r RequestEditSceneDetails
+	err = req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var scene models.Scene
+	db, _ := models.GetDB()
+	defer db.Close()
+	err = scene.GetIfExistByPK(uint(sceneId))
+	if err == nil {
+		scene.Title = r.Title
+		scene.Synopsis = r.Synopsis
+		scene.Studio = r.Studio
+		scene.Site = r.Site
+		scene.SceneURL = r.SceneURL
+		scene.ReleaseDateText = r.ReleaseDate
+		scene.ReleaseDate, _ = time.Parse("2006-01-02", r.ReleaseDate)
+
+		var diffs []string
+
+		newTags := make([]models.Tag, 0)
+		for _, v := range r.Tags {
+			nt := models.Tag{}
+			tagClean := models.ConvertTag(v)
+			if tagClean != "" {
+				db.Where(&models.Tag{Name: tagClean}).FirstOrCreate(&nt)
+				newTags = append(newTags, nt)
+			}
+		}
+
+		diffs = deep.Equal(scene.Tags, newTags)
+		if len(diffs) > 0 {
+			for _, v := range scene.Tags {
+				db.Model(&scene).Association("Tags").Delete(&v)
+			}
+
+			for _, v := range newTags {
+				db.Model(&scene).Association("Tags").Append(&v)
+			}
+		}
+
+		newCast := make([]models.Actor, 0)
+		for _, v := range r.Cast {
+			nc := models.Actor{}
+			db.Where(&models.Actor{Name: v}).FirstOrCreate(&nc)
+			newCast = append(newCast, nc)
+		}
+
+		diffs = deep.Equal(scene.Cast, newCast)
+		if len(diffs) > 0 {
+			for _, v := range scene.Cast {
+				db.Model(&scene).Association("Cast").Delete(&v)
+			}
+
+			for _, v := range newCast {
+				db.Model(&scene).Association("Cast").Append(&v)
+			}
+		}
+
+		scene.Save()
+
+		resp.WriteHeaderAndEntity(http.StatusOK, scene)
+	}
 }
