@@ -69,7 +69,7 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			}
 			tmpCover := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/" + x + "/large.jpg"
 			if scraperID == "tranzvr" {
-			tmpCover = "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/550/" + x + ".webp"
+				tmpCover = "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/550/" + x + ".webp"
 			}
 			sc.Covers = append(sc.Covers, tmpCover)
 		}
@@ -80,11 +80,11 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			size = "1280"
 		}
 		for _, x := range []string{"1", "2", "3", "4", "5", "6"} {
-		if scraperID == "tranzvr" {
-			continue //TranzVR does no longer has preview images
-		}
-		tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
-		sc.Gallery = append(sc.Gallery, tmpGallery)
+			if scraperID == "tranzvr" {
+				break //TranzVR does no longer has preview images
+			}
+			tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
+			sc.Gallery = append(sc.Gallery, tmpGallery)
 		}
 
 		// Synopsis
