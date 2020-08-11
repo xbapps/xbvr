@@ -60,24 +60,31 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.Filenames = append(sc.Filenames, base+"smartphone-180_180x180_3dh_LR.mp4")
 
 		// Cover URLs
-		tmpCover := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/hero/large.jpg"
-		if scraperID == "tranzvr" {
-			tmpCover = "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/550/cover.webp"
+		for _, x := range []string{"cover", "hero"} {
+			if scraperID == "milfvr" && x == "cover" {
+				continue // MilfVR does not have a "cover" image unlike WankzVR
+			}
+			if scraperID == "tranzvr" && x == "hero" {
+				continue // TranzVR does not have a "hero" image unlike WankzVR
+			}
+			tmpCover := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/" + x + "/large.jpg"
+			if scraperID == "tranzvr" {
+			tmpCover := "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/550/" + x + ".webp"
+			}
+			sc.Covers = append(sc.Covers, tmpCover)
 		}
-		sc.Covers = append(sc.Covers, tmpCover)
 
 		// Gallery
 		size := "1024"
-
 		if scraperID == "milfvr" {
 			size = "1280"
 		}
 		for _, x := range []string{"1", "2", "3", "4", "5", "6"} {
-		tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
-		if scraperID == "tranzvr" {
-			tmpGallery = "https://cdn.wallpapersafari.com/34/94/nOvu5X.jpg"
-		}
-		sc.Gallery = append(sc.Gallery, tmpGallery)
+			if scraperID == "tranzvr" 
+				continue // TranzVR does not have any preview images unlike WankzVR
+			}
+			tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
+			sc.Gallery = append(sc.Gallery, tmpGallery)
 		}
 
 		// Synopsis
