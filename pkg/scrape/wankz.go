@@ -61,8 +61,11 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		// Cover URLs
 		for _, x := range []string{"cover", "hero"} {
-			if (scraperID == "milfvr" && x == "cover") || (scraperID == "tranzvr" && x == "hero") {
-				continue // MilfVR does not have a "cover" image & TranzVR doesn't have a "hero" image
+			if scraperID == "milfvr" && x == "cover" {
+				continue // MilfVR does not have a "cover" image unlike WankzVR
+			}
+			if scraperID == "tranzvr" && x == "hero" {
+				continue // TranzVR does not have a "hero" image
 			}
 			tmpCover := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/" + x + "/large.jpg"
 			if scraperID == "tranzvr" {
