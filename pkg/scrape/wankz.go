@@ -73,10 +73,10 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			size = "1280"
 		}
 		for _, x := range []string{"1", "2", "3", "4", "5", "6"} {
-		tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
 		if scraperID == "tranzvr" {
-			tmpGallery = "https://cdn.wallpapersafari.com/34/94/nOvu5X.jpg"
+			continue
 		}
+		tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
 		sc.Gallery = append(sc.Gallery, tmpGallery)
 		}
 
