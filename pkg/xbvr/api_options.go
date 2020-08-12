@@ -37,6 +37,10 @@ type VersionCheckResponse struct {
 	UpdateNotify   bool   `json:"update_notify"`
 }
 
+type RequestSaveOptionsWeb struct {
+	TagSort      string   `json:"tagSort"`
+}
+
 type RequestSaveOptionsDLNA struct {
 	Enabled      bool     `json:"enabled"`
 	ServiceName  string   `json:"name"`
@@ -55,6 +59,9 @@ type RequestSaveOptionsPreviews struct {
 
 type GetStateResponse struct {
 	CurrentState struct {
+		Web struct {
+			TagSort  string   `json:"tagSort"`
+		} `json:"web"`
 		DLNA struct {
 			Running  bool     `json:"running"`
 			Images   []string `json:"images"`
@@ -112,6 +119,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 
 	// "DLNA" section endpoints
 	ws.Route(ws.PUT("/interface/dlna").To(i.saveOptionsDLNA).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Web UI" section endpoints
+	ws.Route(ws.PUT("/interface/web").To(i.saveOptionsWeb).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Cache" section endpoints
@@ -183,6 +194,20 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 	var sites []models.Site
 	db.Order("name asc").Find(&sites)
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
+}
+
+func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsWeb
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Web.TagSort = r.TagSort
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }
 
 func (i ConfigResource) listStorage(req *restful.Request, resp *restful.Response) {
@@ -346,6 +371,9 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 	var out GetStateResponse
 	out.Config = config.Config
+
+	// Preferences
+	out.CurrentState.Web.TagSort = config.Config.Web.TagSort
 
 	// DLNA
 	out.CurrentState.DLNA.Running = IsDMSStarted()
