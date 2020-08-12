@@ -52,7 +52,15 @@
         </div>
       </div>
     </div>
-    <h3 class="title">{{$t('Graveyard scrapers')}}</h3>
+
+    <div class="columns is-multiline is-gapless">
+      <div class="column is-full">
+        <h3 class="title">{{$t('Graveyard scrapers')}}</h3>
+      </div>
+      <div class="column">
+        <small>These are studios that no longer produce scenes and do not to be scraped more than once.</small>
+      </div>
+    </div>
     <div class="columns is-multiline">
       <div class="column is-multiline is-one-third" v-for="item in onceOnlyItems" :key="item.id">
         <div :class="[runningScrapers.includes(item.id) ? 'card running' : 'card']">
