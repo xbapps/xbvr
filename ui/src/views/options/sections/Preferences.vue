@@ -8,9 +8,14 @@
         <div class="column">
           <section>
             <b-field label="Tag Sort">
-              <b-switch v-model="tagSort" true-value="Alphabetically" false-value="By Tag Count">
-                {{ tagSort }}
-              </b-switch>
+              <div class="block">
+                <b-radio v-model="tagSort" name="tagSort" native-value="By Tag Count">
+                  By Tag Count
+                </b-radio>
+                <b-radio v-model="tagSort" name="tagSort" native-value="Alphabetically">
+                  Alphabetically
+                </b-radio>
+              </div>
             </b-field>
 
             <b-field>
