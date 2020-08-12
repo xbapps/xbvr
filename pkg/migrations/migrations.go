@@ -280,6 +280,24 @@ func Migrate() {
 				return db.Where("site = ?", "WetVR").Delete(&models.Scene{}).Error
 			},
 		},
+		{
+			// Migrate EvilEyeVR to VRPorn scraper. Will cause new scene IDs
+			ID: "0014-evileye-to-vrporn",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				db.Where("site = ?", "EvilEyeVR").Find(&scenes)
+
+				for _, obj := range scenes {
+					files, _ := obj.GetFiles()
+					for _, file := range files {
+						file.SceneID = 0
+						file.Save()
+					}
+				}
+
+				return db.Where("site = ?", "EvilEyeVR").Delete(&models.Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
