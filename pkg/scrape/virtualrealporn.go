@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"fmt"
+	"encoding/json"
 	"html"
 	"strconv"
 	"strings"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
-	"github.com/robertkrimen/otto"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -69,34 +69,20 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		// Duration / Release date / Synopsis
 		e.ForEach(`script[type='application/ld+json'][class!='yoast-schema-graph']`, func(id int, e *colly.HTMLElement) {
-			vm := otto.New()
+			var jsonResult map[string]interface{}
+			json.Unmarshal([]byte(e.Text), &jsonResult)
 
-			script := "sin = " + e.Text
-			script = script + ";\nduration = sin['duration']; datePublished = sin['datePublished']; desc = sin['description'];"
-			script = script + "cast = sin['actors'].map(o => o.url);"
-
-			vm.Run(script)
-
-			out1, _ := vm.Get("duration")
-			duration, _ := out1.ToString()
+			duration := jsonResult["duration"].(string)
 			sc.Duration, _ = strconv.Atoi(strings.Split(duration, ":")[0])
 
-			out2, _ := vm.Get("datePublished")
-			relDate, _ := out2.ToString()
-			sc.Released = relDate
+			sc.Released = jsonResult["datePublished"].(string)
 
-			out3, _ := vm.Get("desc")
-			desc, _ := out3.ToString()
-			sc.Synopsis = html.UnescapeString(desc)
+			sc.Synopsis = html.UnescapeString(jsonResult["description"].(string))
 
-			out4, _ := vm.Get("cast")
-			cast, _ := out4.Export()
-			castx, ok := cast.([]string)
-
-			if ok {
-				for i := range castx {
-					tmpCast = append(tmpCast, castx[i])
-				}
+			cast := jsonResult["actors"].([]interface{})
+			for _,v := range cast {
+				m := v.(map[string]interface{})
+				tmpCast = append(tmpCast, m["url"].(string))
 			}
 		})
 
