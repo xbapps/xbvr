@@ -58,14 +58,13 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
 			base := strings.Split(strings.Replace(e.Attr("poster"), "//", "", -1), "/")
 			baseName := base[5] + base[6]
+			defaultBaseName := "nam" + base[6]
 
 			filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_180x180_3dh.mp4"}
 
 			for i := range filenames {
-				filenames[i] = baseName + filenames[i]
+				sc.Filenames = append(sc.Filenames, baseName + filenames[i], defaultBaseName + filenames[i])
 			}
-
-			sc.Filenames = filenames
 
 			base[8] = "horizontal"
 			base[9] = "1182x777c.jpg"
@@ -80,14 +79,13 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
 			base := strings.Split(strings.Replace(e.Attr("src"), "//", "", -1), "/")
 			baseName := base[5] + base[6]
+			defaultBaseName := "nam" + base[6]
 
 			filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_180x180_3dh.mp4"}
 
 			for i := range filenames {
-				filenames[i] = baseName + filenames[i]
+				sc.Filenames = append(sc.Filenames, baseName + filenames[i], defaultBaseName + filenames[i])
 			}
-
-			sc.Filenames = filenames
 
 			base[8] = "horizontal"
 			base[9] = "1182x777c.jpg"
