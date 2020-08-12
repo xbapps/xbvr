@@ -16,8 +16,8 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("www.wankzvr.com", "www.milfvr.com")
-	siteCollector := createCollector("www.wankzvr.com", "www.milfvr.com")
+	sceneCollector := createCollector("www.wankzvr.com", "www.milfvr.com", "www.tranzvr.com")
+	siteCollector := createCollector("www.wankzvr.com", "www.milfvr.com", "www.tranzvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -64,7 +64,13 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			if scraperID == "milfvr" && x == "cover" {
 				continue // MilfVR does not have a "cover" image unlike WankzVR
 			}
+			if scraperID == "tranzvr" && x == "hero" {
+				continue // TranzVR does not have a "hero" image
+			}
 			tmpCover := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/" + x + "/large.jpg"
+			if scraperID == "tranzvr" {
+				tmpCover = "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/550/" + x + ".webp"
+			}
 			sc.Covers = append(sc.Covers, tmpCover)
 		}
 
@@ -74,6 +80,9 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			size = "1280"
 		}
 		for _, x := range []string{"1", "2", "3", "4", "5", "6"} {
+			if scraperID == "tranzvr" {
+				break //TranzVR does no longer has preview images
+			}
 			tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
 			sc.Gallery = append(sc.Gallery, tmpGallery)
 		}
@@ -130,7 +139,12 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	return WankzVRSite(wg, updateSite, knownScenes, out, "milfvr", "MilfVR", "https://www.milfvr.com/")
 }
 
+func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return WankzVRSite(wg, updateSite, knownScenes, out, "tranzvr", "TranzVR", "https://www.tranzvr.com/")
+}
+
 func init() {
 	registerScraper("wankzvr", "WankzVR", "https://twivatar.glitch.me/wankzvr", WankzVR)
 	registerScraper("milfvr", "MilfVR", "https://twivatar.glitch.me/milfvr", MilfVR)
+	registerScraper("tranzvr", "TranzVR", "https://twivatar.glitch.me/tranzvr", TranzVR)
 }
