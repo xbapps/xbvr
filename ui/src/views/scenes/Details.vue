@@ -206,7 +206,7 @@
     computed: {
       item() {
         const item = this.$store.state.overlay.details.scene;
-        if (this.$store.state.preferences.prefs.tagSort === 'Alphabetically') {
+        if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
           item.tags.sort((a, b) => a.name < b.name ? -1 : 1);
         }
         return item;
