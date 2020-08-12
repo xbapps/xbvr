@@ -256,7 +256,7 @@ func init() {
 	registerScraper("jimmydraws", "JimmyDraws (SLR)", "https://mcdn.vrporn.com/files/20190821145930/iLPJW6J7_400x400.png", JimmyDraws)
 	registerScraper("povcentralvr", "POVcentralVR (SLR)", "https://mcdn.vrporn.com/files/20191125091909/POVCentralLogo.jpg", POVcentralVR)
 	registerScraper("onlytease", "OnlyTease (SLR)", "https://www.onlytease.com/assets/img/favicons/ot/apple-touch-icon.png", OnlyTease)
-	registerScraper("pervrt", "perVRt/Terrible (SLR)", "https://mcdn.vrporn.com/files/20181218151630/pervrt-logo.jpg", perVRt)
+	registerScraper("pervrt", "perVRt (SLR)", "https://mcdn.vrporn.com/files/20181218151630/pervrt-logo.jpg", perVRt)
 	registerScraper("leninacrowne", "LeninaCrowne (SLR)", "https://mcdn.vrporn.com/files/20190711135807/terrible_logo-e1562878668857_400x400_acf_cropped.jpg", LeninaCrowne)
 	registerScraper("stripzvr", "StripzVR (SLR)", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", StripzVR)
 	registerScraper("realhotvr", "RealHotVR (SLR)", "https://g8iek4luc8.ent-cdn.com/templates/realhotvr/images/favicon.jpg", RealHotVR)
