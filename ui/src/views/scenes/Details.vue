@@ -205,7 +205,11 @@
     },
     computed: {
       item() {
-        return this.$store.state.overlay.details.scene;
+        const item = this.$store.state.overlay.details.scene;
+        if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
+          item.tags.sort((a, b) => a.name < b.name ? -1 : 1);
+        }
+        return item;
       },
       // Properties for gallery
       images() {
