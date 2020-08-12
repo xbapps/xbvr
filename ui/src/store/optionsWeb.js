@@ -2,7 +2,7 @@ import ky from "ky";
 
 const state = {
   loading: false,
-  prefs: {
+  web: {
     tagSort: 'By Tag Count',
   },
 };
@@ -15,16 +15,16 @@ const actions = {
     ky.get(`/api/options/state`)
       .json()
       .then(data => {
-        state.prefs.tagSort = data.currentState.preferences.tagSort;
+        state.web.tagSort = data.currentState.web.tagSort;
         state.loading = false;
       });
   },
   async save({state}) {
     state.loading = true;
-    ky.put(`/api/options/preferences`, {json: {...state.prefs}})
+    ky.put(`/api/options/interface/web`, {json: {...state.web}})
       .json()
       .then(data => {
-        state.prefs.tagSort = data.tagSort;
+        state.web.tagSort = data.tagSort;
         state.loading = false;
       });
   }

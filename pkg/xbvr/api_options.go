@@ -37,7 +37,7 @@ type VersionCheckResponse struct {
 	UpdateNotify   bool   `json:"update_notify"`
 }
 
-type RequestSaveOptionsPreferences struct {
+type RequestSaveOptionsWeb struct {
 	TagSort      string   `json:"tagSort"`
 }
 
@@ -59,9 +59,9 @@ type RequestSaveOptionsPreviews struct {
 
 type GetStateResponse struct {
 	CurrentState struct {
-		Preferences struct {
+		Web struct {
 			TagSort  string   `json:"tagSort"`
-		} `json:"preferences"`
+		} `json:"web"`
 		DLNA struct {
 			Running  bool     `json:"running"`
 			Images   []string `json:"images"`
@@ -106,10 +106,6 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/scraper/delete-scenes").To(i.deleteScenes).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	// "Preferences" section endpoints
-	ws.Route(ws.PUT("/preferences").To(i.savePreferences).
-		Metadata(restfulspec.KeyOpenAPITags, tags))
-
 	// "Storage" section endpoints
 	ws.Route(ws.GET("/storage").To(i.listStorage).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
@@ -123,6 +119,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 
 	// "DLNA" section endpoints
 	ws.Route(ws.PUT("/interface/dlna").To(i.saveOptionsDLNA).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Web UI" section endpoints
+	ws.Route(ws.PUT("/interface/web").To(i.saveOptionsWeb).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Cache" section endpoints
@@ -196,15 +196,15 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
-func (i ConfigResource) savePreferences(req *restful.Request, resp *restful.Response) {
-	var r RequestSaveOptionsPreferences
+func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsWeb
 	err := req.ReadEntity(&r)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	config.Config.Preferences.TagSort = r.TagSort
+	config.Config.Web.TagSort = r.TagSort
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -373,7 +373,7 @@ func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 	out.Config = config.Config
 
 	// Preferences
-	out.CurrentState.Preferences.TagSort = config.Config.Preferences.TagSort
+	out.CurrentState.Web.TagSort = config.Config.Web.TagSort
 
 	// DLNA
 	out.CurrentState.DLNA.Running = IsDMSStarted()

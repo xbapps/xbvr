@@ -2,24 +2,24 @@
   <div class="container">
     <b-loading :is-full-page="false" :active.sync="isLoading" />
     <div class="content">
-      <h3>{{ $t('Preferences') }}</h3>
+      <h3>{{ $t('Web UI') }}</h3>
       <hr />
       <div class="columns">
         <div class="column">
           <section>
             <b-field label="Tag Sort">
               <div class="block">
-                <b-radio v-model="tagSort" name="tagSort" native-value="By Tag Count">
+                <b-radio v-model="tagSort" name="tagSort" native-value="by-tag-count">
                   By Tag Count
                 </b-radio>
-                <b-radio v-model="tagSort" name="tagSort" native-value="Alphabetically">
+                <b-radio v-model="tagSort" name="tagSort" native-value="alphabetically">
                   Alphabetically
                 </b-radio>
               </div>
             </b-field>
 
             <b-field>
-              <b-button type="is-primary" @click="save">Save Preferences</b-button>
+              <b-button type="is-primary" @click="save">Save</b-button>
             </b-field>
           </section>
         </div>
@@ -30,26 +30,26 @@
 
 <script>
   export default {
-    name: 'Preferences',
+    name: 'InterfaceWeb',
     mounted() {
-      this.$store.dispatch("preferences/load");
+      this.$store.dispatch("optionsWeb/load");
     },
     methods: {
       save() {
-        this.$store.dispatch("preferences/save");
+        this.$store.dispatch("optionsWeb/save");
       },
     },
     computed: {
       tagSort: {
         get() {
-          return this.$store.state.preferences.prefs.tagSort;
+          return this.$store.state.optionsWeb.web.tagSort;
         },
         set(value) {
-          this.$store.state.preferences.prefs.tagSort = value;
+          this.$store.state.optionsWeb.web.tagSort = value;
         }
       },
       isLoading: function() {
-        return this.$store.state.preferences.loading;
+        return this.$store.state.optionsWeb.loading;
       }
     }
   }

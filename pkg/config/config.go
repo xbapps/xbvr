@@ -17,9 +17,9 @@ type Object struct {
 		Username string `default:"" json:"username"`
 		Password string `default:"" json:"password"`
 	} `json:"security"`
-	Preferences struct {
-		TagSort  string `default:"false" json:"tagSort"`
-	} `json:"preferences"`
+	Web struct {
+		TagSort  string `default:"by-tag-count" json:"tagSort"`
+	} `json:"web"`
 	Interfaces struct {
 		DLNA struct {
 			Enabled      bool     `default:"true" json:"enabled"`
