@@ -299,7 +299,7 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0014",
+			ID: "0014-defunct-studios",
 			Migrate: func(tx *gorm.DB) error {
 				type Site struct {
 					OnceOnly bool

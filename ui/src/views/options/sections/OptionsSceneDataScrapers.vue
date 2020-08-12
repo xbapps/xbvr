@@ -55,7 +55,7 @@
 
     <div class="columns is-multiline is-gapless">
       <div class="column is-full">
-        <h3 class="title">{{$t('Graveyard scrapers')}}</h3>
+        <h3 class="title">{{$t('Defunct scrapers')}}</h3>
       </div>
       <div class="column">
         <small>These are studios that no longer produce scenes and do not to be scraped more than once.</small>
