@@ -28,6 +28,7 @@ require (
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.0
+	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7 // indirect
 	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
 	github.com/go-openapi/spec v0.19.8
 	github.com/go-test/deep v1.0.7
