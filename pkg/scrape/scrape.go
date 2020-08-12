@@ -78,8 +78,8 @@ func getScrapeCacheDir() string {
 	return common.ScrapeCacheDir
 }
 
-func registerScraper(id string, name string, avatarURL string, f models.ScraperFunc) {
-	models.RegisterScraper(id, name, avatarURL, f)
+func registerScraper(id string, name string, avatarURL string, f models.ScraperFunc, onceOnly ...bool) {
+	models.RegisterScraper(id, name, avatarURL, f, onceOnly...)
 }
 
 func logScrapeStart(id string, name string) {

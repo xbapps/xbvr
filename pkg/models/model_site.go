@@ -12,6 +12,7 @@ type Site struct {
 	AvatarURL  string    `json:"avatar_url"`
 	IsBuiltin  bool      `json:"is_builtin"`
 	IsEnabled  bool      `json:"is_enabled"`
+	OnceOnly   bool      `json:"once_only"`
 	LastUpdate time.Time `json:"last_update"`
 }
 
@@ -55,6 +56,10 @@ func InitSites() {
 		st.Name = scrapers[i].Name
 		st.AvatarURL = scrapers[i].AvatarURL
 		st.IsBuiltin = true
+		st.OnceOnly = scrapers[i].OnceOnly
+		if st.OnceOnly {
+			st.IsEnabled = false
+		}
 		st.Save()
 	}
 }

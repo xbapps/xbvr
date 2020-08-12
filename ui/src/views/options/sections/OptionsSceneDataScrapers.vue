@@ -9,7 +9,7 @@
       </div>
     </div>
     <div class="columns is-multiline">
-      <div class="column is-multiline is-one-third" v-for="item in items" :key="item.id">
+      <div class="column is-multiline is-one-third" v-for="item in regularItems" :key="item.id">
         <div :class="[runningScrapers.includes(item.id) ? 'card running' : 'card']">
           <div class="card-content content">
             <p class="image is-32x32 is-pulled-left avatar">
@@ -45,6 +45,49 @@
                 </b-dropdown-item>
                 <b-dropdown-item aria-role="listitem" @click="deleteScenes(item.name)">
                   {{$t('Delete scraped scenes')}}
+                </b-dropdown-item>
+              </b-dropdown>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <h3 class="title">{{$t('Graveyard scrapers')}}</h3>
+    <div class="columns is-multiline">
+      <div class="column is-multiline is-one-third" v-for="item in onceOnlyItems" :key="item.id">
+        <div :class="[runningScrapers.includes(item.id) ? 'card running' : 'card']">
+          <div class="card-content content">
+            <p class="image is-32x32 is-pulled-left avatar">
+              <vue-load-image>
+                <img slot="image" :src="getImageURL(item.avatar_url ? item.avatar_url : '/ui/images/blank.png')" />
+                <img slot="preloader" src="/ui/images/blank.png" />
+                <img slot="error" src="/ui/images/blank.png" />
+              </vue-load-image>
+            </p>
+
+            <h5 class="title">{{ item.name }}</h5>
+            <p :class="[runningScrapers.includes(item.id) ? 'invisible' : '']">
+              <small v-if="item.last_update !== '0001-01-01T00:00:00Z'">
+                Updated {{formatDistanceToNow(parseISO(item.last_update))}} ago
+              </small>
+              <small v-else>{{$t('Never scraped')}}</small>
+            </p>
+            <p :class="[runningScrapers.includes(item.id) ? '' : 'invisible']">
+              <small>{{$t('Scraping now...')}}</small>
+            </p>
+            <div class="menu">
+              <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">
+                <template slot="trigger">
+                  <b-icon icon="dots-vertical" />
+                </template>
+                <b-dropdown-item aria-role="listItem" @click="taskScrape(item.id)">
+                  {{ $t('Scrape this site') }}
+                </b-dropdown-item>
+                <b-dropdown-item aria-role="listItem" @click="forceSiteUpdate(item.name)">
+                  {{ $t('Force update scenes') }}
+                </b-dropdown-item>
+                <b-dropdown-item aria-role="listItem" @click="deleteScenes(item.name)">
+                  {{ $t('Delete scraped scenes') }}
                 </b-dropdown-item>
               </b-dropdown>
             </div>
@@ -124,6 +167,12 @@
     computed: {
       items() {
         return this.$store.state.optionsSites.items;
+      },
+      regularItems() {
+        return this.items.filter(s => !s.once_only);
+      },
+      onceOnlyItems() {
+        return this.items.filter(s => s.once_only);
       },
       runningScrapers() {
         this.$store.dispatch("optionsSites/load");

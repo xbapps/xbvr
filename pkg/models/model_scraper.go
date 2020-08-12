@@ -14,6 +14,7 @@ type Scraper struct {
 	Name      string
 	AvatarURL string
 	Scrape    ScraperFunc
+	OnceOnly  bool
 }
 
 type ScrapedScene struct {
@@ -48,11 +49,12 @@ func GetScrapers() []Scraper {
 	return scrapers
 }
 
-func RegisterScraper(id string, name string, avatarURL string, f ScraperFunc) {
+func RegisterScraper(id string, name string, avatarURL string, f ScraperFunc, onceOnly ...bool) {
 	s := Scraper{}
 	s.ID = id
 	s.Name = name
 	s.AvatarURL = avatarURL
 	s.Scrape = f
+	s.OnceOnly = len(onceOnly) > 0 && onceOnly[0]
 	scrapers = append(scrapers, s)
 }

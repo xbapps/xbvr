@@ -298,6 +298,15 @@ func Migrate() {
 				return db.Where("site = ?", "EvilEyeVR").Delete(&models.Scene{}).Error
 			},
 		},
+		{
+			ID: "0014",
+			Migrate: func(tx *gorm.DB) error {
+				type Site struct {
+					OnceOnly bool
+				}
+				return tx.AutoMigrate(Site{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
