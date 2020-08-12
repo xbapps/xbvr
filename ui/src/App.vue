@@ -24,9 +24,6 @@
 </script>
 
 <style>
-  .b-radio.radio {
-    margin-right: 0 !important;
-  }
   .navbar-pad {
     margin-top: 1em;
   }
