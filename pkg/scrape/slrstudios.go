@@ -333,6 +333,5 @@ func init() {
 	registerScraper("mmm100", "MMM100 (SLR)", "https://mmm100.com/MMM100.png", MMM100, true)
 	registerScraper("pvrstudio", "PVRStudio (SLR)", "https://pvr.fun/uploads/2019/10/08/084230gbctdepe7kovu4hs.jpg", PVRStudio, true)
 	registerScraper("herfirstvr", "HerFirstVR (SLR)", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", HerFirstVR)
-	registerScraper("evileyevr", "EvilEyeVR (SLR)", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg", EvilEyeVR, true)
 	registerScraper("virtualxporn", "VirtualXPorn (SLR)", "https://www.virtualxporn.com/tour/custom_assets/favicons/android-chrome-192x192.png", VirtualXPorn)
 }

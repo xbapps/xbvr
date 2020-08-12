@@ -166,5 +166,5 @@ func init() {
 	registerScraper("realteensvr", "Real Teens VR (VRPorn)", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png", RealTeensVR, true)
 	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend VR (VRPorn)", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TonightsGirlfriend)
 	registerScraper("vrclubz", "VRClubz (VRPorn)", "https://mcdn.vrporn.com/files/20200421094123/vrclubz_logo_NEW-400x400_webwhite.png", VRClubz)
-	registerScraper("evileyevr", "EvilEyeVR (VRPorn)", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg", EvilEyeVR)
+	registerScraper("evileyevr", "EvilEyeVR (VRPorn)", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg", EvilEyeVR, true)
 }
