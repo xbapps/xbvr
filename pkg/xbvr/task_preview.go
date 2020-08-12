@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -66,12 +65,15 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 		return err
 	}
 	vs := ffdata.GetFirstVideoStream()
-	dur, err := strconv.ParseFloat(vs.Duration, 64)
-	if err != nil {
-		return err
-	}
+	dur := ffdata.Format.DurationSeconds
 
-	vfArgs := fmt.Sprintf("crop=in_w/2:in_h:in_w/2:in_h,scale=%v:%v", resolution, resolution)
+	crop := "iw/2:ih:iw/2:ih" // LR videos
+	if vs.Height == vs.Width {
+		crop = "iw/2:ih/2:iw/4:ih/2" // TB videos
+	}
+	// Mono 360 crop args: (no way of accurately determining)
+	// "iw/2:ih:iw/4:ih"
+	vfArgs := fmt.Sprintf("crop=%v,scale=%v:%v", crop, resolution, resolution)
 
 	// Prepare snippets
 	interval := dur/float64(snippetAmount) - float64(startTime)
@@ -130,9 +132,9 @@ func renderPreview(inputFile string, destFile string, startTime int, snippetLeng
 		"-y",
 		"-f", "concat",
 		"-safe", "0",
-		"-i", concatFile,
+		"-i", filepath.ToSlash(concatFile),
 		"-c", "copy",
-		destFile,
+		filepath.ToSlash(destFile),
 	}
 	err = exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
 	if err != nil {
