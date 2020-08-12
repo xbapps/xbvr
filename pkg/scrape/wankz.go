@@ -12,14 +12,12 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
 	defer wg.Done()
-	scraperID := "milfvr"
-	siteID := "MilfVR"
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("www.milfvr.com")
-	siteCollector := createCollector("www.milfvr.com")
+	sceneCollector := createCollector("www.wankzvr.com", "www.milfvr.com", "www.tranzvr.com")
+	siteCollector := createCollector("www.wankzvr.com", "www.milfvr.com", "www.tranzvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -57,30 +55,50 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		// Filenames
 		base := e.Request.URL.Path
 		base = strings.Replace(base, "/", "", -1)
-		base = strings.Replace(base, sc.SiteID, "", -1)
-		sc.Filenames = append(sc.Filenames, "milfvr-"+base+"180_180x180_3dh_LR.mp4")
-		sc.Filenames = append(sc.Filenames, "milfvr-"+base+"gearvr-180_180x180_3dh_LR.mp4")
-		sc.Filenames = append(sc.Filenames, "milfvr-"+base+"smartphone-180_180x180_3dh_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"180_180x180_3dh_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"gearvr-180_180x180_3dh_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"smartphone-180_180x180_3dh_LR.mp4")
 
 		// Cover URLs
-		tmpCover := "https://cdns-i.milfvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/hero/large.jpg"
-		sc.Covers = append(sc.Covers, tmpCover)
+		for _, x := range []string{"cover", "hero"} {
+			if scraperID == "milfvr" && x == "cover" {
+				continue // MilfVR does not have a "cover" image unlike WankzVR
+			}
+			if scraperID == "tranzvr" && x == "hero" {
+				continue // TranzVR does not have a "hero" image
+			}
+			tmpCover := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/" + x + "/large.jpg"
+			if scraperID == "tranzvr" {
+				tmpCover = "https://images.tranzvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/550/" + x + ".webp"
+			}
+			sc.Covers = append(sc.Covers, tmpCover)
+		}
 
 		// Gallery
+		size := "1024"
+		if scraperID == "milfvr" {
+			size = "1280"
+		}
 		for _, x := range []string{"1", "2", "3", "4", "5", "6"} {
-			tmpGallery := "https://cdns-i.milfvr.com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/1280_" + x + ".jpg"
+			if scraperID == "tranzvr" {
+				break //TranzVR does no longer has preview images
+			}
+			tmpGallery := "https://cdns-i." + scraperID + ".com/" + sc.SiteID[0:1] + "/" + sc.SiteID[0:4] + "/" + sc.SiteID + "/thumbs/" + size + "_" + x + ".jpg"
 			sc.Gallery = append(sc.Gallery, tmpGallery)
 		}
 
 		// Synopsis
 		e.ForEach(`div.detail__txt`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text + e.ChildText("span.more__body"))
+			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
 		// Tags
 		e.ForEach(`div.tag-list__body a.tag`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, e.Text)
 		})
+		if scraperID == "milfvr" {
+			sc.Tags = append(sc.Tags, "milf")
+		}
 
 		// Cast
 		e.ForEach(`div.detail__models a`, func(id int, e *colly.HTMLElement) {
@@ -104,7 +122,7 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://www.milfvr.com/videos?o=d")
+	siteCollector.Visit(URL + "videos?o=d")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -113,6 +131,20 @@ func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	return nil
 }
 
+func WankzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return WankzVRSite(wg, updateSite, knownScenes, out, "wankzvr", "WankzVR", "https://www.wankzvr.com/")
+}
+
+func MilfVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return WankzVRSite(wg, updateSite, knownScenes, out, "milfvr", "MilfVR", "https://www.milfvr.com/")
+}
+
+func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return WankzVRSite(wg, updateSite, knownScenes, out, "tranzvr", "TranzVR", "https://www.tranzvr.com/")
+}
+
 func init() {
+	registerScraper("wankzvr", "WankzVR", "https://twivatar.glitch.me/wankzvr", WankzVR)
 	registerScraper("milfvr", "MilfVR", "https://twivatar.glitch.me/milfvr", MilfVR)
+	registerScraper("tranzvr", "TranzVR", "https://twivatar.glitch.me/tranzvr", TranzVR)
 }
