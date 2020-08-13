@@ -168,9 +168,9 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	return nil
 }
 
-func addSLRScraper(id string, name string, company string, avatarURL string, addSuffix ...bool) {
+func addSLRScraper(id string, name string, company string, avatarURL string) {
 	suffixedName := name
-	if len(addSuffix) == 0 || addSuffix[0] {
+	if company != "SexLikeReal" {
 		suffixedName += " (SLR)"
 	}
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
@@ -179,7 +179,7 @@ func addSLRScraper(id string, name string, company string, avatarURL string, add
 }
 
 func init() {
-	addSLRScraper("slr-originals", "SLR Originals", "SexLikeReal", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", false)
+	addSLRScraper("slr-originals", "SLR Originals", "SexLikeReal", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
 
 	addSLRScraper("ad4x", "AD4X", "AD4X", "https://ad4x.com/ypp_theme_ad4x/images/logo.png")
 	addSLRScraper("amateurvr3d", "AmateurVR3D", "AmateurVR3D", "http://amateurvr3d.com/assets/images/Nx50xlogo.png.pagespeed.ic.mr8RC-ybPl.webp")
