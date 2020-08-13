@@ -250,7 +250,6 @@
       },
     },
     mounted() {
-      this.$store.dispatch("optionsWeb/load");
       this.setupPlayer();
     },
     methods: {
