@@ -3,7 +3,7 @@ import ky from "ky";
 const state = {
   loading: false,
   web: {
-    tagSort: 'By Tag Count',
+    tagSort: '',
   },
 };
 
@@ -11,6 +11,8 @@ const mutations = {};
 
 const actions = {
   async load({state}) {
+    // Doesn't need to be loaded more than once
+    if (state.web.tagSort !== '') return;
     state.loading = true;
     ky.get(`/api/options/state`)
       .json()
