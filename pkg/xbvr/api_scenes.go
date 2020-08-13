@@ -339,13 +339,31 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 	defer db.Close()
 	err = scene.GetIfExistByPK(uint(sceneId))
 	if err == nil {
-		scene.Title = r.Title
-		scene.Synopsis = r.Synopsis
-		scene.Studio = r.Studio
-		scene.Site = r.Site
-		scene.SceneURL = r.SceneURL
-		scene.ReleaseDateText = r.ReleaseDate
-		scene.ReleaseDate, _ = time.Parse("2006-01-02", r.ReleaseDate)
+		if scene.Title != r.Title {
+			scene.Title = r.Title
+			models.AddAction(scene.SceneID, "edit", "title", r.Title)
+		}
+		if scene.Synopsis != r.Synopsis {
+			scene.Synopsis = r.Synopsis
+			models.AddAction(scene.SceneID, "edit", "synopsis", r.Synopsis)
+		}
+		if scene.Studio != r.Studio {
+			scene.Studio = r.Studio
+			models.AddAction(scene.SceneID, "edit", "studio", r.Studio)
+		}
+		if scene.Site != r.Site {
+			scene.Site = r.Site
+			models.AddAction(scene.SceneID, "edit", "site", r.Site)
+		}
+		if scene.SceneURL != r.SceneURL {
+			scene.SceneURL = r.SceneURL
+			models.AddAction(scene.SceneID, "edit", "scene_url", r.SceneURL)
+		}
+		if scene.ReleaseDateText != r.ReleaseDate {
+			scene.ReleaseDateText = r.ReleaseDate
+			scene.ReleaseDate, _ = time.Parse("2006-01-02", r.ReleaseDate)
+			models.AddAction(scene.SceneID, "edit", "release_date_text", r.ReleaseDate)
+		}
 
 		var diffs []string
 

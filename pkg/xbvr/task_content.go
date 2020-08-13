@@ -92,6 +92,22 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 	}
 }
 
+func ReapplyEdits() {
+	var actions []models.Action
+	db, _ := models.GetDB()
+	defer db.Close()
+	db.Where(&models.Action{ActionType: "edit"}).Find(&actions)
+
+	for _, a := range actions {
+		d := db.Where(&models.Scene{SceneID: a.SceneID})
+		d.Update(a.ChangedColumn, a.NewValue)
+		if a.ChangedColumn == "release_date_text" {
+			dt, _ := time.Parse("2006-01-02", a.NewValue)
+			d.Update("release_date", dt)
+		}
+	}
+}
+
 func Scrape(toScrape string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
@@ -135,6 +151,9 @@ func Scrape(toScrape string) {
 			tlog.Infof("Updating tag counts")
 			CountTags()
 			SearchIndex()
+
+			tlog.Infof("Reapplying edits")
+			ReapplyEdits()
 
 			tlog.Infof("Scraped %v new scenes in %s",
 				sceneCount,
