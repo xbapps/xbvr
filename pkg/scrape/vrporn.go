@@ -148,7 +148,7 @@ func RealTeensVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 // TonightsGirlfriend - Has its own site but no tags or previews. : https://tonightsgirlfriend.com
 func TonightsGirlfriend(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRPorn(wg, updateSite, knownScenes, out, "tonightsgirlfriendvr", "Tonight's Girlfriend VR", "NaughtyAmerica")
+	return VRPorn(wg, updateSite, knownScenes, out, "tonightsgirlfriend", "Tonight's Girlfriend VR", "NaughtyAmerica")
 }
 
 // VRClubz - Has its own site but contains less scenes than VRPorn?: https://vrclubz.com
