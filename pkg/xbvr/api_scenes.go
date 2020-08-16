@@ -427,12 +427,12 @@ func getTagDifferences(arr1, arr2 []models.Tag) []string {
 	output := make([]string, 0)
 	for _, v := range arr1 {
 		if !tagsContains(arr2, v) {
-			output = append(output, fmt.Sprintf("-%v", v))
+			output = append(output, fmt.Sprintf("-%v", v.Name))
 		}
 	}
 	for _, v := range arr2 {
 		if !tagsContains(arr1, v) {
-			output = append(output, fmt.Sprintf("+%v", v))
+			output = append(output, fmt.Sprintf("+%v", v.Name))
 		}
 	}
 	return output
@@ -442,12 +442,12 @@ func getCastDifferences(arr1, arr2 []models.Actor) []string {
 	output := make([]string, 0)
 	for _, v := range arr1 {
 		if !castContains(arr2, v) {
-			output = append(output, fmt.Sprintf("-%v", v))
+			output = append(output, fmt.Sprintf("-%v", v.Name))
 		}
 	}
 	for _, v := range arr2 {
 		if !castContains(arr1, v) {
-			output = append(output, fmt.Sprintf("+%v", v))
+			output = append(output, fmt.Sprintf("+%v", v.Name))
 		}
 	}
 	return output

@@ -100,7 +100,8 @@ func ReapplyEdits() {
 	db.Where(&models.Action{ActionType: "edit"}).Find(&actions)
 
 	for _, a := range actions {
-		d := db.Where(&models.Scene{SceneID: a.SceneID})
+		var scene models.Scene
+		scene.GetIfExist(a.SceneID)
 		if a.ChangedColumn == "tags" || a.ChangedColumn == "cast" {
 			prefix := string(a.NewValue[0])
 			name := a.NewValue[1:]
@@ -111,9 +112,9 @@ func ReapplyEdits() {
 					var tag models.Tag
 					db.Where(&models.Tag{Name: tagClean}).FirstOrCreate(&tag)
 					if prefix == "-" {
-						d.Association("Tags").Delete(&tag)
+						db.Model(&scene).Association("Tags").Delete(&tag)
 					} else {
-						d.Association("Tags").Append(&tag)
+						db.Model(&scene).Association("Tags").Append(&tag)
 					}
 				}
 			}
@@ -122,18 +123,18 @@ func ReapplyEdits() {
 				var actor models.Actor
 				db.Where(&models.Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&actor)
 				if prefix == "-" {
-					d.Association("Cast").Delete(&actor)
+					db.Model(&scene).Association("Cast").Delete(&actor)
 				} else {
-					d.Association("Cast").Append(&actor)
+					db.Model(&scene).Association("Cast").Append(&actor)
 				}
 			}
 			continue
 		}
 		// Reapply other edits
-		d.Update(a.ChangedColumn, a.NewValue)
+		db.Model(&scene).Update(a.ChangedColumn, a.NewValue)
 		if a.ChangedColumn == "release_date_text" {
 			dt, _ := time.Parse("2006-01-02", a.NewValue)
-			d.Update("release_date", dt)
+			db.Model(&scene).Update("release_date", dt)
 		}
 	}
 }
