@@ -188,6 +188,11 @@ func VRSexperts(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	return SexLikeReal(wg, updateSite, knownScenes, out, "vrsexperts", "VRSexperts", "VRSexperts")
 }
 
+// LustReality - Has it's own site however it includes mostly VRSexperts scenes and the majority list no cast
+func LustReality(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "lustreality", "LustReality", "LustReality")
+}
+
 // VReXtasy - Can't find a site/twitter at all
 func VReXtasy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "vrextasy", "VReXtasy", "VReXtasy")
@@ -311,6 +316,7 @@ func init() {
 	registerScraper("istripper", "iStripper (SLR)", "https://www.istripper.com/favicons/istripper/apple-icon-120x120.png", iStripper)
 	registerScraper("emilybloom", "EmilyBloom (SLR)", "https://theemilybloom.com/wp-content/uploads/2017/05/FlowerHeaderLogo.png", EmilyBloom)
 	registerScraper("vrsexperts", "VRSexperts (SLR)", "https://mcdn.vrporn.com/files/20190812141431/vrsexpertslogo2.jpg", VRSexperts)
+	registerScraper("lustreality", "LustReality (SLR)", "https://mcdn.vrporn.com/files/20200316102952/lustreality_logo2.png", LustReality)
 	registerScraper("vrextasy", "VReXtasy (SLR)", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", VReXtasy)
 	registerScraper("vrsolos", "VRSolos (SLR)", "https://mcdn.vrporn.com/files/20191226092954/VRSolos_Logo.jpg", VRSolos)
 	registerScraper("jimmydraws", "JimmyDraws (SLR)", "https://mcdn.vrporn.com/files/20190821145930/iLPJW6J7_400x400.png", JimmyDraws)
