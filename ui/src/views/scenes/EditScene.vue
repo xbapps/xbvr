@@ -66,10 +66,18 @@
                       @typing="getFilteredTags" />
         </b-field>
 
+        <b-field grouped>
+          <b-button class="control" type="is-primary" outlined @click="editFilenames">Edit filenames</b-button>
+          <b-button class="control" type="is-primary" outlined @click="editCovers">Edit covers</b-button>
+          <b-button class="control" type="is-primary" outlined @click="editGallery">Edit gallery</b-button>
+        </b-field>
+
         <b-field>
           <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
         </b-field>
       </section>
+
+      <ListEditor v-if="showListEditor" />
     </div>
   </div>
 </template>
@@ -77,10 +85,11 @@
 <script>
   import ky from "ky";
   import GlobalEvents from 'vue-global-events';
+  import ListEditor from "../../components/ListEditor";
 
   export default {
     name: "EditScene",
-    components: {GlobalEvents},
+    components: {ListEditor, GlobalEvents},
     data() {
       /*
       title: string,
@@ -91,10 +100,16 @@
       scene_url: string,
       cast: object[]
       tags: object[]
+      images: object[]
+      filenames_arr: string[]
        */
       const scene = Object.assign({}, this.$store.state.overlay.edit.scene);
       scene.castArray = scene.cast.map(c => c.name);
       scene.tagsArray = scene.tags.map(t => t.name);
+      const images = JSON.parse(scene.images);
+      scene.covers = images.filter(i => i.type === 'cover').map(i => i.url);
+      scene.gallery = images.filter(i => i.type === 'gallery').map(i => i.url);
+      scene.files = JSON.parse(scene.filenames_arr);
       return {
         scene,
         filteredCast: [],
@@ -114,6 +129,25 @@
         this.$store.commit("overlay/hideEditDetails");
       },
       save() {
+        const images = [];
+        this.scene.covers.forEach(url => {
+          images.push({
+            url,
+            type: "cover",
+            orientation: "",
+          });
+        });
+        this.scene.gallery.forEach(url => {
+          images.push({
+            url,
+            type: "gallery",
+            orientation: "",
+          })
+        });
+        this.scene.images = JSON.stringify(images);
+        this.scene.cover_url = this.scene.covers[0];
+        this.scene.filenames_arr = JSON.stringify(this.scene.files);
+
         ky.post(`/api/scene/edit/${this.scene.id}`, {json: {...this.scene}});
 
         this.scene.cast = this.scene.castArray.map(a => {
@@ -138,10 +172,31 @@
 
         this.close();
       },
+      editFilenames() {
+        this.$store.commit('overlay/showListEditor', {
+          list: this.scene.files,
+          label: "Edit Scene Filenames",
+        });
+      },
+      editCovers() {
+        this.$store.commit('overlay/showListEditor', {
+          list: this.scene.covers,
+          label: "Edit Scene Covers",
+        });
+      },
+      editGallery() {
+        this.$store.commit('overlay/showListEditor', {
+          list: this.scene.gallery,
+          label: "Edit Scene Gallery",
+        });
+      },
     },
     computed: {
       filters() {
         return this.$store.state.sceneList.filterOpts;
+      },
+      showListEditor() {
+        return this.$store.state.overlay.listEditor.show;
       }
     }
   }

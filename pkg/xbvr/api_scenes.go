@@ -36,6 +36,9 @@ type RequestEditSceneDetails struct {
 	ReleaseDate  string    `json:"release_date_text"`
 	Cast         []string  `json:"castArray"`
 	Tags         []string  `json:"tagsArray"`
+	FilenamesArr string    `json:"filenames_arr"`
+	Images       string    `json:"images"`
+	CoverURL     string    `json:"cover_url"`
 }
 
 type ResponseGetScenes struct {
@@ -364,6 +367,18 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 			scene.ReleaseDateText = r.ReleaseDate
 			scene.ReleaseDate, _ = time.Parse("2006-01-02", r.ReleaseDate)
 			models.AddAction(scene.SceneID, "edit", "release_date_text", r.ReleaseDate)
+		}
+		if scene.FilenamesArr != r.FilenamesArr {
+			scene.FilenamesArr = r.FilenamesArr
+			models.AddAction(scene.SceneID, "edit", "filenames_arr", r.FilenamesArr)
+		}
+		if scene.Images != r.Images {
+			scene.Images = r.Images
+			models.AddAction(scene.SceneID, "edit", "images", r.Images)
+		}
+		if scene.CoverURL != r.CoverURL {
+			scene.CoverURL = r.CoverURL
+			models.AddAction(scene.SceneID, "edit", "cover_url", r.CoverURL)
 		}
 
 		var diffs []string
