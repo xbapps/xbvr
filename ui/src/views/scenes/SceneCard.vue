@@ -31,7 +31,7 @@
 
       <watchlist-button :item="item"/>
       <favourite-button :item="item"/>
-      <edit-button :item="item" />
+      <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
         <a :href="item.scene_url" target="_blank">{{item.site}}</a><br/>
