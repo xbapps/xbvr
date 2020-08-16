@@ -7,11 +7,6 @@ const state = {
     show: false,
     scene: null,
   },
-  listEditor: {
-    show: false,
-    list: null,
-    label: null,
-  },
   player: {
     show: false,
     file: null,
@@ -39,16 +34,6 @@ const mutations = {
   hideEditDetails(state) {
     state.edit.scene = null;
     state.edit.show = false;
-  },
-  showListEditor(state, payload) {
-    state.listEditor.list = payload.list;
-    state.listEditor.label = payload.label;
-    state.listEditor.show = true;
-  },
-  hideListEditor(state) {
-    state.listEditor.list = null;
-    state.listEditor.label = null;
-    state.listEditor.show = false;
   },
   showPlayer(state, payload) {
     state.player.file = payload.file;

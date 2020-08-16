@@ -14,70 +14,78 @@
       </header>
 
       <section class="modal-card-body">
-        <b-field :label="$t('Title')">
-          <b-input type="text" v-model="scene.title" />
-        </b-field>
+        <b-tabs position="is-centered">
+          <b-tab-item :label="$t('Information')" icon="information">
+            <b-field :label="$t('Title')">
+              <b-input type="text" v-model="scene.title" />
+            </b-field>
 
-        <b-field :label="$t('Description')">
-          <b-input type="textarea" v-model="scene.synopsis" />
-        </b-field>
+            <b-field :label="$t('Description')">
+              <b-input type="textarea" v-model="scene.synopsis" />
+            </b-field>
 
-        <b-field grouped group-multiline>
-          <b-field :label="$t('Studio')">
-            <b-input type="text" v-model="scene.studio" />
-          </b-field>
+            <b-field grouped group-multiline>
+              <b-field :label="$t('Studio')">
+                <b-input type="text" v-model="scene.studio" />
+              </b-field>
 
-          <b-field :label="$t('Site')">
-            <b-input type="text" v-model="scene.site" />
-          </b-field>
+              <b-field :label="$t('Site')">
+                <b-input type="text" v-model="scene.site" />
+              </b-field>
 
-          <b-field :label="$t('Scene URL')">
-            <b-input type="text" v-model="scene.scene_url" />
-          </b-field>
+              <b-field :label="$t('Scene URL')">
+                <b-input type="text" v-model="scene.scene_url" />
+              </b-field>
 
-          <b-field :label="$t('Release Date')">
-            <div class="control">
-              <input type="date" class="input" v-model="scene.release_date_text" />
-            </div>
-          </b-field>
-        </b-field>
+              <b-field :label="$t('Release Date')">
+                <div class="control">
+                  <input type="date" class="input" v-model="scene.release_date_text" />
+                </div>
+              </b-field>
+            </b-field>
 
-        <b-field :label="$t('Cast')">
-          <b-taginput type="is-warning"
-                      icon="label"
-                      placeholder="Add an actor"
-                      v-model="scene.castArray"
-                      autocomplete
-                      :allow-new="true"
-                      :allow-duplicates="false"
-                      :data="filteredCast"
-                      @typing="getFilteredCast" />
-        </b-field>
+            <b-field :label="$t('Cast')">
+              <b-taginput type="is-warning"
+                          icon="label"
+                          placeholder="Add an actor"
+                          v-model="scene.castArray"
+                          autocomplete
+                          :allow-new="true"
+                          :allow-duplicates="false"
+                          :data="filteredCast"
+                          @typing="getFilteredCast" />
+            </b-field>
 
-        <b-field :label="$t('Tags')">
-          <b-taginput type="is-info"
-                      icon="label"
-                      placeholder="Add a tag"
-                      v-model="scene.tagsArray"
-                      autocomplete
-                      :allow-new="true"
-                      :allow-duplicates="false"
-                      :data="filteredTags"
-                      @typing="getFilteredTags" />
-        </b-field>
+            <b-field :label="$t('Tags')">
+              <b-taginput type="is-info"
+                          icon="label"
+                          placeholder="Add a tag"
+                          v-model="scene.tagsArray"
+                          autocomplete
+                          :allow-new="true"
+                          :allow-duplicates="false"
+                          :data="filteredTags"
+                          @typing="getFilteredTags" />
+            </b-field>
+          </b-tab-item>
 
-        <b-field grouped>
-          <b-button class="control" type="is-primary" outlined @click="editFilenames">Edit filenames</b-button>
-          <b-button class="control" type="is-primary" outlined @click="editCovers">Edit covers</b-button>
-          <b-button class="control" type="is-primary" outlined @click="editGallery">Edit gallery</b-button>
-        </b-field>
+          <b-tab-item :label="$t('Filenames')" icon="file-multiple">
+            <ListEditor :list="this.scene.files" />
+          </b-tab-item>
+
+          <b-tab-item :label="$t('Covers')" icon="image-area">
+            <ListEditor :list="this.scene.covers" />
+          </b-tab-item>
+
+          <b-tab-item :label="$t('Gallery')" icon="image-multiple">
+            <ListEditor :list="this.scene.gallery" />
+          </b-tab-item>
+        </b-tabs>
 
         <b-field>
           <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
         </b-field>
       </section>
-
-      <ListEditor v-if="showListEditor" />
     </div>
   </div>
 </template>
@@ -172,32 +180,11 @@
 
         this.close();
       },
-      editFilenames() {
-        this.$store.commit('overlay/showListEditor', {
-          list: this.scene.files,
-          label: "Edit Scene Filenames",
-        });
-      },
-      editCovers() {
-        this.$store.commit('overlay/showListEditor', {
-          list: this.scene.covers,
-          label: "Edit Scene Covers",
-        });
-      },
-      editGallery() {
-        this.$store.commit('overlay/showListEditor', {
-          list: this.scene.gallery,
-          label: "Edit Scene Gallery",
-        });
-      },
     },
     computed: {
       filters() {
         return this.$store.state.sceneList.filterOpts;
       },
-      showListEditor() {
-        return this.$store.state.overlay.listEditor.show;
-      }
     }
   }
 </script>
