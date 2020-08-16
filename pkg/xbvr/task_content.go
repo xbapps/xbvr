@@ -31,6 +31,10 @@ type ScraperStatus struct {
 
 func CleanTags() {
 	RenameTags()
+	CountTags()
+}
+
+func CleanCast() {
 	RenameCast()
 	CountTags()
 }

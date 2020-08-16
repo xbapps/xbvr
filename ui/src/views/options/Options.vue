@@ -12,6 +12,7 @@
           </b-menu-list>
           <b-menu-list :label="$t('Scene data')">
             <b-menu-item :label="$t('Scrapers')" :active="active==='data-scrapers'" @click="setActive('data-scrapers')"/>
+            <b-menu-item :label="$t('Cast/Tags')" :active="active==='cast-tags'" @click="setActive('cast-tags')" />
             <b-menu-item :label="$t('Data import/export')" :active="active==='data-import-export'"
                          @click="setActive('data-import-export')"/>
           </b-menu-list>
@@ -27,6 +28,7 @@
         <div style="padding-top:2em">
           <Storage v-show="active==='storage'"/>
           <SceneDataScrapers v-show="active==='data-scrapers'"/>
+          <OptionsSceneDataCastTags v-show="active==='cast-tags'" />
           <SceneDataImportExport v-show="active==='data-import-export'"/>
           <InterfaceDLNA v-show="active==='interface_dlna'"/>
           <Cache v-show="active==='cache'"/>
@@ -41,13 +43,14 @@
 <script>
   import Storage from "./sections/Storage.vue";
   import SceneDataScrapers from "./sections/OptionsSceneDataScrapers.vue";
+  import OptionsSceneDataCastTags from "./sections/OptionsSceneDataCastTags";
   import SceneDataImportExport from "./sections/OptionsSceneDataImportExport";
   import InterfaceDLNA from "./sections/InterfaceDLNA.vue";
   import Cache from "./sections/Cache.vue";
   import Previews from "./sections/Previews.vue";
 
   export default {
-    components: {Storage, SceneDataScrapers, SceneDataImportExport, InterfaceDLNA, Cache, Previews},
+    components: {Storage, SceneDataScrapers, OptionsSceneDataCastTags, SceneDataImportExport, InterfaceDLNA, Cache, Previews},
     data: function () {
       return {
         active: "storage",
