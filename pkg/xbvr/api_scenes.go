@@ -1,6 +1,7 @@
 package xbvr
 
 import (
+	"fmt"
 	"github.com/go-test/deep"
 	"net/http"
 	"strconv"
@@ -379,6 +380,11 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 
 		diffs = deep.Equal(scene.Tags, newTags)
 		if len(diffs) > 0 {
+			exactDifferences := getTagDifferences(scene.Tags, newTags)
+			for _, v := range exactDifferences {
+				models.AddAction(scene.SceneID, "edit", "tags", v)
+			}
+
 			for _, v := range scene.Tags {
 				db.Model(&scene).Association("Tags").Delete(&v)
 			}
@@ -397,6 +403,11 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 
 		diffs = deep.Equal(scene.Cast, newCast)
 		if len(diffs) > 0 {
+			exactDifferences := getCastDifferences(scene.Cast, newCast)
+			for _, v := range exactDifferences {
+				models.AddAction(scene.SceneID, "edit", "cast", v)
+			}
+
 			for _, v := range scene.Cast {
 				db.Model(&scene).Association("Cast").Delete(&v)
 			}
@@ -410,4 +421,54 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 
 		resp.WriteHeaderAndEntity(http.StatusOK, scene)
 	}
+}
+
+func getTagDifferences(arr1, arr2 []models.Tag) []string {
+	output := make([]string, 0)
+	for _, v := range arr1 {
+		if !tagsContains(arr2, v) {
+			output = append(output, fmt.Sprintf("-%v", v))
+		}
+	}
+	for _, v := range arr2 {
+		if !tagsContains(arr1, v) {
+			output = append(output, fmt.Sprintf("+%v", v))
+		}
+	}
+	return output
+}
+
+func getCastDifferences(arr1, arr2 []models.Actor) []string {
+	output := make([]string, 0)
+	for _, v := range arr1 {
+		if !castContains(arr2, v) {
+			output = append(output, fmt.Sprintf("-%v", v))
+		}
+	}
+	for _, v := range arr2 {
+		if !castContains(arr1, v) {
+			output = append(output, fmt.Sprintf("+%v", v))
+		}
+	}
+	return output
+}
+
+func tagsContains(arr []models.Tag, val interface{}) bool {
+	for _, v := range arr {
+		diffs := deep.Equal(v, val)
+		if len(diffs) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func castContains(arr []models.Actor, val interface{}) bool {
+	for _, v := range arr {
+		diffs := deep.Equal(v, val)
+		if len(diffs) == 0 {
+			return true
+		}
+	}
+	return false
 }

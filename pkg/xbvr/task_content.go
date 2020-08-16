@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -100,6 +101,35 @@ func ReapplyEdits() {
 
 	for _, a := range actions {
 		d := db.Where(&models.Scene{SceneID: a.SceneID})
+		if a.ChangedColumn == "tags" || a.ChangedColumn == "cast" {
+			prefix := string(a.NewValue[0])
+			name := a.NewValue[1:]
+			// Reapply Tag edits
+			if a.ChangedColumn == "tags" {
+				tagClean := models.ConvertTag(name)
+				if tagClean != "" {
+					var tag models.Tag
+					db.Where(&models.Tag{Name: tagClean}).FirstOrCreate(&tag)
+					if prefix == "-" {
+						d.Association("Tags").Delete(&tag)
+					} else {
+						d.Association("Tags").Append(&tag)
+					}
+				}
+			}
+			// Reapply Cast edits
+			if a.ChangedColumn == "cast" {
+				var actor models.Actor
+				db.Where(&models.Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&actor)
+				if prefix == "-" {
+					d.Association("Cast").Delete(&actor)
+				} else {
+					d.Association("Cast").Append(&actor)
+				}
+			}
+			continue
+		}
+		// Reapply other edits
 		d.Update(a.ChangedColumn, a.NewValue)
 		if a.ChangedColumn == "release_date_text" {
 			dt, _ := time.Parse("2006-01-02", a.NewValue)
