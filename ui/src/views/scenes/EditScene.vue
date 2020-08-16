@@ -43,11 +43,27 @@
         </b-field>
 
         <b-field :label="$t('Cast')">
-          <b-taginput type="is-warning" icon="label" v-model="scene.castArray" />
+          <b-taginput type="is-warning"
+                      icon="label"
+                      placeholder="Add an actor"
+                      v-model="scene.castArray"
+                      autocomplete
+                      :allow-new="true"
+                      :allow-duplicates="false"
+                      :data="filteredCast"
+                      @typing="getFilteredCast" />
         </b-field>
 
         <b-field :label="$t('Tags')">
-          <b-taginput type="is-info" icon="label" v-model="scene.tagsArray" />
+          <b-taginput type="is-info"
+                      icon="label"
+                      placeholder="Add a tag"
+                      v-model="scene.tagsArray"
+                      autocomplete
+                      :allow-new="true"
+                      :allow-duplicates="false"
+                      :data="filteredTags"
+                      @typing="getFilteredTags" />
         </b-field>
 
         <b-field>
@@ -79,9 +95,21 @@
       const scene = Object.assign({}, this.$store.state.overlay.edit.scene);
       scene.castArray = scene.cast.map(c => c.name);
       scene.tagsArray = scene.tags.map(t => t.name);
-      return {scene};
+      return {
+        scene,
+        filteredCast: [],
+        filteredTags: [],
+      };
     },
     methods: {
+      getFilteredCast(text) {
+        this.filteredCast = this.filters.cast.filter(option =>
+          option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0);
+      },
+      getFilteredTags(text) {
+        this.filteredTags = this.filters.tags.filter(option =>
+          option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0);
+      },
       close() {
         this.$store.commit("overlay/hideEditDetails");
       },
@@ -110,6 +138,11 @@
 
         this.close();
       },
+    },
+    computed: {
+      filters() {
+        return this.$store.state.sceneList.filterOpts;
+      }
     }
   }
 </script>
