@@ -18,6 +18,12 @@
               </div>
             </b-field>
 
+            <b-field label="Scene Edit in List">
+              <b-switch v-model="sceneEdit">
+                Enabled
+              </b-switch>
+            </b-field>
+
             <b-field>
               <b-button type="is-primary" @click="save">Save</b-button>
             </b-field>
@@ -46,6 +52,14 @@
         },
         set(value) {
           this.$store.state.optionsWeb.web.tagSort = value;
+        }
+      },
+      sceneEdit: {
+        get() {
+          return this.$store.state.optionsWeb.web.sceneEdit;
+        },
+        set(value) {
+          this.$store.state.optionsWeb.web.sceneEdit = value;
         }
       },
       isLoading: function() {
