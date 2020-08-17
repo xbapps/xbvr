@@ -19,6 +19,7 @@
     name: "ListEditor",
     props: {
       list: Array,
+      blurFn: Function,
     },
     methods: {
       addRow() {
@@ -29,6 +30,7 @@
       },
       blur(i) {
         this.list[i] = document.querySelector(`.list-editor-input-${i} input`).value;
+        this.blurFn.call(null);
       },
     }
   }

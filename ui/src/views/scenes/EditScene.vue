@@ -17,29 +17,29 @@
         <b-tabs position="is-centered">
           <b-tab-item :label="$t('Information')" icon="information">
             <b-field :label="$t('Title')">
-              <b-input type="text" v-model="scene.title" />
+              <b-input type="text" v-model="scene.title" @blur="blur('title')" />
             </b-field>
 
             <b-field :label="$t('Description')">
-              <b-input type="textarea" v-model="scene.synopsis" />
+              <b-input type="textarea" v-model="scene.synopsis" @blur="blur('synopsis')" />
             </b-field>
 
             <b-field grouped group-multiline>
               <b-field :label="$t('Studio')">
-                <b-input type="text" v-model="scene.studio" />
+                <b-input type="text" v-model="scene.studio" @blur="blur('studio')" />
               </b-field>
 
               <b-field :label="$t('Site')">
-                <b-input type="text" v-model="scene.site" />
+                <b-input type="text" v-model="scene.site" @blur="blur('site')" />
               </b-field>
 
               <b-field :label="$t('Scene URL')">
-                <b-input type="text" v-model="scene.scene_url" />
+                <b-input type="text" v-model="scene.scene_url" @blur="blur('scene_url')" />
               </b-field>
 
               <b-field :label="$t('Release Date')">
                 <div class="control">
-                  <input type="date" class="input" v-model="scene.release_date_text" />
+                  <input type="date" class="input" v-model="scene.release_date_text" @blur="blur('release_date_text')" />
                 </div>
               </b-field>
             </b-field>
@@ -53,7 +53,8 @@
                           :allow-new="true"
                           :allow-duplicates="false"
                           :data="filteredCast"
-                          @typing="getFilteredCast" />
+                          @typing="getFilteredCast"
+                          @blur="blur('castArray')" />
             </b-field>
 
             <b-field :label="$t('Tags')">
@@ -65,20 +66,21 @@
                           :allow-new="true"
                           :allow-duplicates="false"
                           :data="filteredTags"
-                          @typing="getFilteredTags" />
+                          @typing="getFilteredTags"
+                          @blur="blur('tagsArray')" />
             </b-field>
           </b-tab-item>
 
           <b-tab-item :label="$t('Filenames')" icon="file-multiple">
-            <ListEditor :list="this.scene.files" />
+            <ListEditor :list="this.scene.files" :blurFn="() => blur('files')" />
           </b-tab-item>
 
           <b-tab-item :label="$t('Covers')" icon="image-area">
-            <ListEditor :list="this.scene.covers" />
+            <ListEditor :list="this.scene.covers" :blurFn="() => blur('covers')" />
           </b-tab-item>
 
           <b-tab-item :label="$t('Gallery')" icon="image-multiple">
-            <ListEditor :list="this.scene.gallery" />
+            <ListEditor :list="this.scene.gallery" :blurFn="() => blur('gallery')" />
           </b-tab-item>
         </b-tabs>
 
@@ -120,8 +122,11 @@
       scene.files = JSON.parse(scene.filenames_arr);
       return {
         scene,
+        // A shallow copy won't work, need a deep copy
+        source: JSON.parse(JSON.stringify(scene)),
         filteredCast: [],
         filteredTags: [],
+        changesMade: false,
       };
     },
     methods: {
@@ -134,6 +139,17 @@
           option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0);
       },
       close() {
+        if (this.changesMade) {
+          this.$buefy.dialog.confirm({
+            title: "Close without saving",
+            message: "Are you sure you want to close before saving your changes?",
+            confirmText: "Close",
+            type: "is-warning",
+            hasIcon: true,
+            onConfirm: () => this.$store.commit("overlay/hideEditDetails"),
+          });
+          return;
+        }
         this.$store.commit("overlay/hideEditDetails");
       },
       save() {
@@ -179,6 +195,23 @@
         this.$store.commit('sceneList/updateScene', this.scene);
 
         this.close();
+      },
+      blur(field) {
+        if (this.changesMade) return; // Changes have already been made. No point to check any further
+        if (['castArray', 'tagsArray', 'files', 'covers', 'gallery'].includes(field)) {
+          if (this.scene[field].length !== this.source[field].length) {
+            this.changesMade = true;
+          } else {
+            for (let i = 0; i < this.scene[field].length; i++) {
+              if (this.scene[field][i] !== this.source[field][i]) {
+                this.changesMade = true;
+                break;
+              }
+            }
+          }
+        } else if (this.scene[field] !== this.source[field]) {
+          this.changesMade = true;
+        }
       },
     },
     computed: {
