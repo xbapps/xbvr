@@ -4,6 +4,7 @@ const state = {
   loading: false,
   web: {
     tagSort: '',
+    sceneEdit: false,
   },
 };
 
@@ -18,6 +19,7 @@ const actions = {
       .json()
       .then(data => {
         state.web.tagSort = data.currentState.web.tagSort;
+        state.web.sceneEdit = data.currentState.web.sceneEdit;
         state.loading = false;
       });
   },
@@ -27,6 +29,7 @@ const actions = {
       .json()
       .then(data => {
         state.web.tagSort = data.tagSort;
+        state.web.sceneEdit = data.sceneEdit;
         state.loading = false;
       });
   }
