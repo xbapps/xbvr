@@ -18,7 +18,8 @@ type Object struct {
 		Password string `default:"" json:"password"`
 	} `json:"security"`
 	Web struct {
-		TagSort  string `default:"by-tag-count" json:"tagSort"`
+		TagSort   string `default:"by-tag-count" json:"tagSort"`
+		SceneEdit bool   `default:"false" json:"sceneEdit"`
 	} `json:"web"`
 	Interfaces struct {
 		DLNA struct {
