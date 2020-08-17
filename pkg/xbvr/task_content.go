@@ -97,7 +97,7 @@ func ReapplyEdits() {
 	var actions []models.Action
 	db, _ := models.GetDB()
 	defer db.Close()
-	db.Where(&models.Action{ActionType: "edit"}).Find(&actions)
+	db.Find(&actions)
 
 	for _, a := range actions {
 		var scene models.Scene
