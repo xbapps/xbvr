@@ -167,8 +167,21 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	var sites []models.Site
-	db.Order("name asc").Find(&sites)
+	type Site struct {
+		ID         string    `json:"id"`
+		Name       string    `json:"name"`
+		Studio     string    `json:"studio"`
+		AvatarURL  string    `json:"avatar_url"`
+		IsEnabled  bool      `json:"is_enabled"`
+		LastUpdate time.Time `json:"last_update"`
+	}
+
+	var sites []Site
+	db.Table("sites").
+		Select("DISTINCT sites.id, sites.name, sites.avatar_url, sites.is_enabled, sites.last_update, scenes.studio").
+		Joins("INNER JOIN scenes ON sites.name=scenes.site").
+		Order("sites.name ASC").
+		Scan(&sites)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
