@@ -3,10 +3,6 @@ const state = {
     show: false,
     scene: null,
   },
-  edit: {
-    show: false,
-    scene: null,
-  },
   player: {
     show: false,
     file: null,
@@ -26,14 +22,6 @@ const mutations = {
   hideDetails(state, payload) {
     state.details.scene = null;
     state.details.show = false;
-  },
-  editDetails(state, payload) {
-    state.edit.scene = payload.scene;
-    state.edit.show = true;
-  },
-  hideEditDetails(state) {
-    state.edit.scene = null;
-    state.edit.show = false;
   },
   showPlayer(state, payload) {
     state.player.file = payload.file;

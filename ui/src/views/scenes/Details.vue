@@ -1,7 +1,6 @@
 <template>
   <div class="modal is-active">
     <GlobalEvents
-      :filter="e => !['INPUT', 'TEXTAREA'].includes(e.target.tagName)"
       @keyup.esc="close"
       @keydown.arrowLeft="playerStepBack"
       @keydown.arrowRight="playerStepForward"
@@ -9,7 +8,6 @@
       @keydown.p="nextScene"
       @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
       @keydown.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
-      @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
       @keydown.g="toggleGallery"
     />
 
@@ -66,8 +64,7 @@
                   <div class="column">
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
-                      <favourite-button :item="item"/>&nbsp;
-                      <edit-button :item="item" />
+                      <favourite-button :item="item"/>
                     </div>
                   </div>
                 </div>
@@ -189,11 +186,10 @@
   import StarRating from 'vue-star-rating';
   import FavouriteButton from "../../components/FavouriteButton";
   import WatchlistButton from "../../components/WatchlistButton";
-  import EditButton from "../../components/EditButton";
 
   export default {
     name: "Details",
-    components: {VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton},
+    components: {VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton},
     data() {
       return {
         index: 1,
@@ -250,9 +246,6 @@
         }
         return 0;
       },
-      showEdit() {
-        return this.$store.state.overlay.edit.show;
-      }
     },
     mounted() {
       this.setupPlayer();

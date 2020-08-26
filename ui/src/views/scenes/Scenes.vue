@@ -12,7 +12,6 @@
 
       <List/>
       <Details v-if="showOverlay"/>
-      <EditScene v-if="showEdit" />
 
     </div>
   </div>
@@ -22,11 +21,10 @@
   import Filters from "./Filters";
   import List from "./List";
   import Details from "./Details";
-  import EditScene from "./EditScene";
 
   export default {
     name: "Scenes",
-    components: {Filters, List, Details, EditScene},
+    components: {Filters, List, Details},
     mounted() {
       const toTop = document.getElementById('toTop');
       addEventListener('scroll', function() {
@@ -64,9 +62,6 @@
     computed: {
       showOverlay() {
         return this.$store.state.overlay.details.show;
-      },
-      showEdit() {
-        return this.$store.state.overlay.edit.show;
       }
     }
   }

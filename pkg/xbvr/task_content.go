@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -93,52 +92,6 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 	}
 }
 
-func ReapplyEdits() {
-	var actions []models.Action
-	db, _ := models.GetDB()
-	defer db.Close()
-	db.Find(&actions)
-
-	for _, a := range actions {
-		var scene models.Scene
-		scene.GetIfExist(a.SceneID)
-		if a.ChangedColumn == "tags" || a.ChangedColumn == "cast" {
-			prefix := string(a.NewValue[0])
-			name := a.NewValue[1:]
-			// Reapply Tag edits
-			if a.ChangedColumn == "tags" {
-				tagClean := models.ConvertTag(name)
-				if tagClean != "" {
-					var tag models.Tag
-					db.Where(&models.Tag{Name: tagClean}).FirstOrCreate(&tag)
-					if prefix == "-" {
-						db.Model(&scene).Association("Tags").Delete(&tag)
-					} else {
-						db.Model(&scene).Association("Tags").Append(&tag)
-					}
-				}
-			}
-			// Reapply Cast edits
-			if a.ChangedColumn == "cast" {
-				var actor models.Actor
-				db.Where(&models.Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&actor)
-				if prefix == "-" {
-					db.Model(&scene).Association("Cast").Delete(&actor)
-				} else {
-					db.Model(&scene).Association("Cast").Append(&actor)
-				}
-			}
-			continue
-		}
-		// Reapply other edits
-		db.Model(&scene).Update(a.ChangedColumn, a.NewValue)
-		if a.ChangedColumn == "release_date_text" {
-			dt, _ := time.Parse("2006-01-02", a.NewValue)
-			db.Model(&scene).Update("release_date", dt)
-		}
-	}
-}
-
 func Scrape(toScrape string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
@@ -182,9 +135,6 @@ func Scrape(toScrape string) {
 			tlog.Infof("Updating tag counts")
 			CountTags()
 			SearchIndex()
-
-			tlog.Infof("Reapplying edits")
-			ReapplyEdits()
 
 			tlog.Infof("Scraped %v new scenes in %s",
 				sceneCount,

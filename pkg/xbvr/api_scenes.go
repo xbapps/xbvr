@@ -1,11 +1,8 @@
 package xbvr
 
 import (
-	"fmt"
-	"github.com/go-test/deep"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/blevesearch/bleve"
 	"github.com/emicklei/go-restful"
@@ -25,20 +22,6 @@ type RequestSceneCuepoint struct {
 
 type RequestSetSceneRating struct {
 	Rating float64 `json:"rating"`
-}
-
-type RequestEditSceneDetails struct {
-	Title        string    `json:"title"`
-	Synopsis     string    `json:"synopsis"`
-	Studio       string    `json:"studio"`
-	Site         string    `json:"site"`
-	SceneURL     string    `json:"scene_url"`
-	ReleaseDate  string    `json:"release_date_text"`
-	Cast         []string  `json:"castArray"`
-	Tags         []string  `json:"tagsArray"`
-	FilenamesArr string    `json:"filenames_arr"`
-	Images       string    `json:"images"`
-	CoverURL     string    `json:"cover_url"`
 }
 
 type ResponseGetScenes struct {
@@ -83,10 +66,6 @@ func (i SceneResource) WebService() *restful.WebService {
 		Writes(models.Scene{}))
 
 	ws.Route(ws.POST("/rate/{scene-id}").To(i.rateScene).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(models.Scene{}))
-
-	ws.Route(ws.POST("/edit/{scene-id}").To(i.editScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
 
@@ -322,168 +301,4 @@ func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
 	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
-}
-
-func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
-	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	var r RequestEditSceneDetails
-	err = req.ReadEntity(&r)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	var scene models.Scene
-	db, _ := models.GetDB()
-	defer db.Close()
-	err = scene.GetIfExistByPK(uint(sceneId))
-	if err == nil {
-		if scene.Title != r.Title {
-			scene.Title = r.Title
-			models.AddAction(scene.SceneID, "edit", "title", r.Title)
-		}
-		if scene.Synopsis != r.Synopsis {
-			scene.Synopsis = r.Synopsis
-			models.AddAction(scene.SceneID, "edit", "synopsis", r.Synopsis)
-		}
-		if scene.Studio != r.Studio {
-			scene.Studio = r.Studio
-			models.AddAction(scene.SceneID, "edit", "studio", r.Studio)
-		}
-		if scene.Site != r.Site {
-			scene.Site = r.Site
-			models.AddAction(scene.SceneID, "edit", "site", r.Site)
-		}
-		if scene.SceneURL != r.SceneURL {
-			scene.SceneURL = r.SceneURL
-			models.AddAction(scene.SceneID, "edit", "scene_url", r.SceneURL)
-		}
-		if scene.ReleaseDateText != r.ReleaseDate {
-			scene.ReleaseDateText = r.ReleaseDate
-			scene.ReleaseDate, _ = time.Parse("2006-01-02", r.ReleaseDate)
-			models.AddAction(scene.SceneID, "edit", "release_date_text", r.ReleaseDate)
-		}
-		if scene.FilenamesArr != r.FilenamesArr {
-			scene.FilenamesArr = r.FilenamesArr
-			models.AddAction(scene.SceneID, "edit", "filenames_arr", r.FilenamesArr)
-		}
-		if scene.Images != r.Images {
-			scene.Images = r.Images
-			models.AddAction(scene.SceneID, "edit", "images", r.Images)
-		}
-		if scene.CoverURL != r.CoverURL {
-			scene.CoverURL = r.CoverURL
-			models.AddAction(scene.SceneID, "edit", "cover_url", r.CoverURL)
-		}
-
-		var diffs []string
-
-		newTags := make([]models.Tag, 0)
-		for _, v := range r.Tags {
-			nt := models.Tag{}
-			tagClean := models.ConvertTag(v)
-			if tagClean != "" {
-				db.Where(&models.Tag{Name: tagClean}).FirstOrCreate(&nt)
-				newTags = append(newTags, nt)
-			}
-		}
-
-		diffs = deep.Equal(scene.Tags, newTags)
-		if len(diffs) > 0 {
-			exactDifferences := getTagDifferences(scene.Tags, newTags)
-			for _, v := range exactDifferences {
-				models.AddAction(scene.SceneID, "edit", "tags", v)
-			}
-
-			for _, v := range scene.Tags {
-				db.Model(&scene).Association("Tags").Delete(&v)
-			}
-
-			for _, v := range newTags {
-				db.Model(&scene).Association("Tags").Append(&v)
-			}
-		}
-
-		newCast := make([]models.Actor, 0)
-		for _, v := range r.Cast {
-			nc := models.Actor{}
-			db.Where(&models.Actor{Name: v}).FirstOrCreate(&nc)
-			newCast = append(newCast, nc)
-		}
-
-		diffs = deep.Equal(scene.Cast, newCast)
-		if len(diffs) > 0 {
-			exactDifferences := getCastDifferences(scene.Cast, newCast)
-			for _, v := range exactDifferences {
-				models.AddAction(scene.SceneID, "edit", "cast", v)
-			}
-
-			for _, v := range scene.Cast {
-				db.Model(&scene).Association("Cast").Delete(&v)
-			}
-
-			for _, v := range newCast {
-				db.Model(&scene).Association("Cast").Append(&v)
-			}
-		}
-
-		scene.Save()
-
-		resp.WriteHeaderAndEntity(http.StatusOK, scene)
-	}
-}
-
-func getTagDifferences(arr1, arr2 []models.Tag) []string {
-	output := make([]string, 0)
-	for _, v := range arr1 {
-		if !tagsContains(arr2, v) {
-			output = append(output, fmt.Sprintf("-%v", v.Name))
-		}
-	}
-	for _, v := range arr2 {
-		if !tagsContains(arr1, v) {
-			output = append(output, fmt.Sprintf("+%v", v.Name))
-		}
-	}
-	return output
-}
-
-func getCastDifferences(arr1, arr2 []models.Actor) []string {
-	output := make([]string, 0)
-	for _, v := range arr1 {
-		if !castContains(arr2, v) {
-			output = append(output, fmt.Sprintf("-%v", v.Name))
-		}
-	}
-	for _, v := range arr2 {
-		if !castContains(arr1, v) {
-			output = append(output, fmt.Sprintf("+%v", v.Name))
-		}
-	}
-	return output
-}
-
-func tagsContains(arr []models.Tag, val interface{}) bool {
-	for _, v := range arr {
-		diffs := deep.Equal(v, val)
-		if len(diffs) == 0 {
-			return true
-		}
-	}
-	return false
-}
-
-func castContains(arr []models.Actor, val interface{}) bool {
-	for _, v := range arr {
-		diffs := deep.Equal(v, val)
-		if len(diffs) == 0 {
-			return true
-		}
-	}
-	return false
 }

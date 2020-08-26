@@ -229,8 +229,6 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 		scene.FilenamesArr = string(tmp)
 	}
 
-	models.AddAction(scene.SceneID, "match", "filenames_arr", scene.FilenamesArr)
-
 	// Finally, update scene available/accessible status
 	scene.IsAvailable = true
 	scene.AddedDate = f.CreatedTime
