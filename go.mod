@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
 	github.com/PuerkitoBio/goquery v1.5.1
+	github.com/UnnoTed/fileb0x v1.1.4 // indirect
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/envpprof v1.0.0 // indirect
 	github.com/anacrolix/ffprobe v0.0.0-20190307025918-9b483c5f7751
@@ -15,8 +16,8 @@ require (
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/blevesearch/bleve v1.0.9
 	github.com/blevesearch/bleve v1.0.10
+	github.com/creasty/defaults v1.5.1
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect

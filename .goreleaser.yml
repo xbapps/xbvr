@@ -2,7 +2,7 @@ before:
   hooks:
     - go mod download
     - go get github.com/UnnoTed/fileb0x
-    - go generate ./...
+#    - go generate ./...
 
 builds:
 - id: xbvr-mac
