@@ -39,6 +39,7 @@ type VersionCheckResponse struct {
 
 type RequestSaveOptionsWeb struct {
 	TagSort      string   `json:"tagSort"`
+	SceneEdit    bool     `json:"sceneEdit"`
 }
 
 type RequestSaveOptionsDLNA struct {
@@ -60,7 +61,8 @@ type RequestSaveOptionsPreviews struct {
 type GetStateResponse struct {
 	CurrentState struct {
 		Web struct {
-			TagSort  string   `json:"tagSort"`
+			TagSort   string  `json:"tagSort"`
+			SceneEdit bool    `json:"sceneEdit"`
 		} `json:"web"`
 		DLNA struct {
 			Running  bool     `json:"running"`
@@ -205,6 +207,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	}
 
 	config.Config.Web.TagSort = r.TagSort
+	config.Config.Web.SceneEdit = r.SceneEdit
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -374,6 +377,7 @@ func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 
 	// Preferences
 	out.CurrentState.Web.TagSort = config.Config.Web.TagSort
+	out.CurrentState.Web.SceneEdit = config.Config.Web.SceneEdit
 
 	// DLNA
 	out.CurrentState.DLNA.Running = IsDMSStarted()
