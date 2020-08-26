@@ -34,7 +34,7 @@ require (
 	github.com/go-test/deep v1.0.7
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
-	github.com/gorilla/mux v1.7.4
+	github.com/gorilla/mux v1.8.0
 	github.com/gowww/log v0.0.0-20170712202755-af3772f4bb12
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/jinzhu/gorm v1.9.16
