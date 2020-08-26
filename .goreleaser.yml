@@ -45,26 +45,11 @@ builds:
     - linux
   goarch:
     - amd64
-- id: xbvr-linux-arm
-  binary: xbvr
-  flags:
-    - -tags=json1
-  env:
-    - CGO_ENABLED=1
-    - CC=arm-linux-gnueabi-gcc
-  goos:
-    - linux
-  goarch:
-    - arm
-  goarm:
-    - 6
-    - 7
 
 archives:
 - id: archive-linux
   builds:
     - xbvr-linux-amd64
-    - xbvr-linux-arm
   replacements:
     linux: Linux
     windows: Windows
