@@ -17,6 +17,7 @@ require (
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
 <<<<<<< HEAD
+<<<<<<< HEAD
 	github.com/blevesearch/bleve v1.0.10
 =======
 	github.com/blevesearch/bleve v1.0.9
@@ -26,6 +27,10 @@ require (
 =======
 	github.com/creasty/defaults v1.4.0
 >>>>>>> parent of 828fa3a... Merge remote-tracking branch 'origin/dependabot/go_modules/theRealKLH-patch-1/github.com/creasty/defaults-1.5.1' into theRealKLH-patch-1
+=======
+	github.com/blevesearch/bleve v1.0.9
+	github.com/creasty/defaults v1.5.1
+>>>>>>> parent of 0ced0c4... Merge remote-tracking branch 'origin/dependabot/go_modules/theRealKLH-patch-1/github.com/blevesearch/bleve-1.0.10' into theRealKLH-patch-1
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
