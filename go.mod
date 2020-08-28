@@ -16,7 +16,11 @@ require (
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
+<<<<<<< HEAD
 	github.com/blevesearch/bleve v1.0.10
+=======
+	github.com/blevesearch/bleve v1.0.9
+>>>>>>> parent of 0ced0c4... Merge remote-tracking branch 'origin/dependabot/go_modules/theRealKLH-patch-1/github.com/blevesearch/bleve-1.0.10' into theRealKLH-patch-1
 	github.com/creasty/defaults v1.5.1
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
