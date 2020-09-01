@@ -13,6 +13,8 @@
           <b-menu-list :label="$t('Scene data')">
             <b-menu-item :label="$t('Scrapers')" :active="active==='data-scrapers'"
                          @click="setActive('data-scrapers')"/>
+            <b-menu-item :label="$t('Scrapers Table')" :active="active==='scrapers-table'"
+                         @click="setActive('scrapers-table')" />
             <b-menu-item :label="$t('Data import/export')" :active="active==='data-import-export'"
                          @click="setActive('data-import-export')"/>
           </b-menu-list>
@@ -30,6 +32,7 @@
           <Cache v-show="active==='cache'"/>
           <Previews v-show="active==='previews'"/>
           <SceneDataScrapers v-show="active==='data-scrapers'"/>
+          <ScrapersTable v-show="active==='scrapers-table'" />
           <SceneDataImportExport v-show="active==='data-import-export'"/>
           <InterfaceWeb v-show="active==='interface_web'"/>
           <InterfaceDLNA v-show="active==='interface_dlna'"/>
@@ -48,12 +51,13 @@
   import InterfaceDLNA from "./sections/InterfaceDLNA.vue";
   import Cache from "./sections/Cache.vue";
   import Previews from "./sections/Previews.vue";
+  import ScrapersTable from "./sections/ScrapersTable";
 
   export default {
-    components: {Storage, SceneDataScrapers, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, Cache, Previews},
+    components: {Storage, SceneDataScrapers, ScrapersTable, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, Cache, Previews},
     data: function () {
       return {
-        active: "storage",
+        active: "scrapers-table",
       }
     },
     methods: {
