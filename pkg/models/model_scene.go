@@ -481,7 +481,11 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	case "scene_updated_desc":
 		tx = tx.Order("updated_at desc")
 	case "random":
-		tx = tx.Order("random()")
+		if dbConn.Driver == "mysql" {
+			tx = tx.Order("rand()")
+		} else {
+			tx = tx.Order("random()")
+		}
 	default:
 		tx = tx.Order("release_date desc")
 	}
