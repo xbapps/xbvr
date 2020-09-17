@@ -34,10 +34,14 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		var tmpCast []string
 
-		// Scene ID - get from URL
-		e.ForEach(`link[rel=shortlink]`, func(id int, e *colly.HTMLElement) {
-			sc.SiteID = strings.Split(e.Attr("href"), "?p=")[1]
-			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		e.ForEach(`body`, func(id int, e *colly.HTMLElement) {
+			bodyClasses := strings.Split(e.Attr("class"), " ")
+			for _, c := range bodyClasses {
+				if strings.HasPrefix(c, "postid-") {
+					sc.SiteID = strings.Split(c, "-")[1]
+					sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+				}
+			}
 		})
 
 		// Title
