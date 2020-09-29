@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
 	github.com/PuerkitoBio/goquery v1.5.1
+	github.com/UnnoTed/fileb0x v1.1.4 // indirect
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/envpprof v1.0.0 // indirect
 	github.com/anacrolix/ffprobe v0.0.0-20190307025918-9b483c5f7751
@@ -28,6 +29,7 @@ require (
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.0
+	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7 // indirect
 	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
 	github.com/go-openapi/spec v0.19.8
 	github.com/go-test/deep v1.0.7
