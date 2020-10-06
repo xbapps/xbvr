@@ -34,9 +34,12 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		var tmpCast []string
 
-		// Scene ID - get from URL
-		e.ForEach(`link[rel=shortlink]`, func(id int, e *colly.HTMLElement) {
-			sc.SiteID = strings.Split(e.Attr("href"), "?p=")[1]
+		e.ForEach(`script[id="deovr-js-extra"]`, func(id int, e *colly.HTMLElement) {
+			var jsonObj map[string]interface{}
+			jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-12]
+			json.Unmarshal([]byte(jsonData), &jsonObj)
+
+			sc.SiteID = jsonObj["post_id"].(string)
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 		})
 
@@ -55,7 +58,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		})
 
 		// Gallery
-		e.ForEach(`a.w-gallery-tnail`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`figure[itemprop="associatedMedia"] a`, func(id int, e *colly.HTMLElement) {
 			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(strings.Split(e.Attr("href"), "?")[0]))
 		})
 
