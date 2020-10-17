@@ -182,14 +182,21 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
+        var height = file.VideoHeight;
+        var width = file.VideoWidth;
+        if height > 2160 {
+            height = height / 10;
+            width = width / 10;
+        }
+ 
 	var sources []DeoSceneEncoding
 	sources = append(sources, DeoSceneEncoding{
 		Name: fmt.Sprintf("File 1/1 - %v", humanize.Bytes(uint64(file.Size))),
 		VideoSources: []DeoSceneVideoSource{
 			{
-				Resolution: file.VideoHeight,
-				Height:     file.VideoHeight,
-				Width:      file.VideoWidth,
+				Resolution: height,
+				Height:     height,
+				Width:      width,
 				Size:       file.Size,
 				URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, file.ID),
 			},
