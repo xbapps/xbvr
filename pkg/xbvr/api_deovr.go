@@ -182,6 +182,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
+	//TODO: remove temporary workaround, once DeoVR doesn't block hi-res videos anymore
 	var height = file.VideoHeight
 	var width = file.VideoWidth
 	if height > 2160 {
@@ -254,6 +255,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 
 	var sources []DeoSceneEncoding
 	for i := range scene.Files {
+		//TODO: remove temporary workaround, once DeoVR doesn't block hi-res videos anymore
 		var height = scene.Files[i].VideoHeight
 		var width = scene.Files[i].VideoWidth
 		if height > 2160 {
