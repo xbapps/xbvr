@@ -89,7 +89,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Synopsis = strings.TrimSpace(e.ChildText(`div.video-content__description div.less-text`))
 
 		// Tags
-		e.ForEach(`div.video-item__tags a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.video-item__tag a`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, e.Text)
 		})
 		if scraperID == "vrbgay" {
