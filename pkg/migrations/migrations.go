@@ -307,9 +307,6 @@ func Migrate() {
 		{
 			ID: "0016-action-value-size",
 			Migrate: func(tx *gorm.DB) error {
-				if models.GetDBConn().Driver == "mysql" {
-					return tx.AutoMigrate(&models.Action{}).Error
-				}
 				tx.Model(&models.Action{}).Exec("ALTER TABLE actions RENAME TO actions_old")
 				tx.AutoMigrate(&models.Action{})
 				return tx.Model(&models.Action{}).Exec("INSERT INTO actions SELECT * FROM actions_old").Error
