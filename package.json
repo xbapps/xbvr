@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.13.1",
-    "@fortawesome/fontawesome-svg-core": "1.2.29",
+    "@fortawesome/fontawesome-svg-core": "1.2.32",
     "@mdi/font": "5.3.45",
     "buefy": "0.8.20",
     "bulma-extensions": "6.2.7",
@@ -22,14 +22,14 @@
     "pretty-bytes": "5.3.0",
     "videojs-hotkeys": "0.2.26",
     "videojs-vr": "1.7.1",
-    "vue": "2.6.11",
+    "vue": "2.6.12",
     "vue-debounce": "2.5.7",
     "vue-gallery": "2.0.1",
     "vue-global-events": "1.1.2",
     "vue-i18n": "8.18.2",
     "vue-load-image": "0.1.11",
     "vue-router": "3.3.4",
-    "vue-slider-component": "3.2.2",
+    "vue-slider-component": "3.2.7",
     "vue-star-rating": "1.6.1",
     "vuex": "3.5.1",
     "wampy": "6.2.2"
@@ -48,8 +48,8 @@
     "sass-loader": "9.0.2",
     "simple-progress-webpack-plugin": "1.1.2",
     "vue-cli-plugin-i18n": "1.0.1",
-    "vue-i18n-extract": "1.1.1",
-    "vue-template-compiler": "2.6.11"
+    "vue-i18n-extract": "1.1.10",
+    "vue-template-compiler": "2.6.12"
   },
   "eslintConfig": {
     "root": true,
