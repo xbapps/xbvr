@@ -311,7 +311,8 @@ func Migrate() {
     				tx.Model(&models.Action{}).Exec("RENAME TABLE actions TO actions_old")
 				} else {
     				tx.Model(&models.Action{}).Exec("ALTER TABLE actions RENAME TO actions_old")
-}				tx.AutoMigrate(&models.Action{})
+				}
+				tx.AutoMigrate(&models.Action{})
 				return tx.Model(&models.Action{}).Exec("INSERT INTO actions SELECT * FROM actions_old").Error
 			},
 		},
