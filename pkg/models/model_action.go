@@ -8,7 +8,7 @@ type Action struct {
 	SceneID       string `json:"scene_id"`
 	ActionType    string `json:"action_type"`
 	ChangedColumn string `json:"changed_column"`
-	NewValue      string `json:"new_value"`
+	NewValue      string `json:"new_value" gorm:"size:4095"`
 }
 
 func (a *Action) GetIfExist(id uint) error {
