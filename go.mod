@@ -28,7 +28,7 @@ require (
 	github.com/emicklei/go-restful v2.13.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/fatih/color v1.7.0 // indirect
-	github.com/gammazero/nexus/v3 v3.0.0
+	github.com/gammazero/nexus/v3 v3.0.1
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7 // indirect
 	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
 	github.com/go-openapi/spec v0.19.8
@@ -77,7 +77,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xo/dburl v0.0.0-20200124232849-e9ec94f52bc3
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae
