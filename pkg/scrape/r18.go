@@ -51,6 +51,19 @@ func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString str
 			if id == 0 {
 				tmpDate, _ := goment.New(strings.TrimSpace(e.Text), "MMM. DD, YYYY")
 				sc.Released = tmpDate.Format("YYYY-MM-DD")
+				
+				// Following 2 if statements kludges the date into submission!
+				badDate := strings.TrimSpace(e.Text)
+				if strings.Contains(badDate, "July") || strings.Contains(badDate, "June") {
+					tmpDate, _ := goment.New(badDate, "MMMM DD, YYYY")
+					sc.Released = tmpDate.Format("YYYY-MM-DD")
+				}
+				if strings.Contains(badDate, ".") {
+					s := strings.TrimSpace(strings.Replace(e.Text, ".", "", -1))
+					tmpDate, _ := goment.New(s, "MMM DD, YYYY")
+					sc.Released = tmpDate.Format("YYYY-MM-DD")
+				}
+				
 			}
 			if id == 1 {
 				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Text, "min.", "", -1)))
