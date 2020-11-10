@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
-	github.com/PuerkitoBio/goquery v1.5.1
+	github.com/PuerkitoBio/goquery v1.6.0
 	github.com/UnnoTed/fileb0x v1.1.4 // indirect
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/envpprof v1.0.0 // indirect
