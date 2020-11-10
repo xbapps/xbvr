@@ -43,7 +43,7 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		})
 
 		// Regex for original resolution of both covers and gallery
-		reGetOriginal := regexp.MustCompile(`^(https?:\/\/k3y8c8f9\.ssl\.hwcdn\.net\/vrh\/)(?:largethumbs|hugethumbs|rollover_large)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
+		reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vrh\/)(?:largethumbs|hugethumbs|rollover_large)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
 
 		// Cover URLs
 		// note 'largethumbs' could be changed to 'hugethumbs' for HQ original but those are easily 5Mb+
