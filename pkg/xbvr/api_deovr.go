@@ -182,22 +182,14 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
-	//TODO: remove temporary workaround, once DeoVR doesn't block hi-res videos anymore
-	var height = file.VideoHeight
-	var width = file.VideoWidth
-	if height > 2160 {
-		height = height / 10
-		width = width / 10
-	}
-
 	var sources []DeoSceneEncoding
 	sources = append(sources, DeoSceneEncoding{
 		Name: fmt.Sprintf("File 1/1 - %v", humanize.Bytes(uint64(file.Size))),
 		VideoSources: []DeoSceneVideoSource{
 			{
-				Resolution: height,
-				Height:     height,
-				Width:      width,
+				Resolution: file.VideoHeight,
+				Height:     file.VideoHeight,
+				Width:      file.VideoWidth,
 				Size:       file.Size,
 				URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, file.ID),
 			},
@@ -255,20 +247,12 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 
 	var sources []DeoSceneEncoding
 	for i := range scene.Files {
-		//TODO: remove temporary workaround, once DeoVR doesn't block hi-res videos anymore
-		var height = scene.Files[i].VideoHeight
-		var width = scene.Files[i].VideoWidth
-		if height > 2160 {
-			height = height / 10
-			width = width / 10
-		}
 		sources = append(sources, DeoSceneEncoding{
-			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(scene.Files), scene.Files[i].VideoHeight, humanize.Bytes(uint64(scene.Files[i].Size))),
 			VideoSources: []DeoSceneVideoSource{
 				{
-					Resolution: height,
-					Height:     height,
-					Width:      width,
+					Resolution: scene.Files[i].VideoHeight,
+					Height:     scene.Files[i].VideoHeight,
+					Width:      scene.Files[i].VideoWidth,
 					Size:       scene.Files[i].Size,
 					URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, scene.Files[i].ID),
 				},
