@@ -113,6 +113,11 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		out <- sc
 	})
 
+	siteCollector.OnHTML(`div.pagination a`, func(e *colly.HTMLElement) {
+		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+		siteCollector.Visit(pageURL)
+	})
+
 	siteCollector.OnHTML(`div.scene-list-item`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
 
