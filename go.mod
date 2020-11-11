@@ -25,7 +25,7 @@ require (
 	github.com/djherbis/times v1.2.0
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
-	github.com/emicklei/go-restful v2.13.0+incompatible
+	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gammazero/nexus/v3 v3.0.1
