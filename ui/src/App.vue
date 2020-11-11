@@ -1,7 +1,6 @@
 <template>
   <div>
     <GlobalEvents
-      :filter="e => !['INPUT', 'TEXTAREA'].includes(e.target.tagName)"
       @keypress.prevent.questionMark="$store.commit('overlay/showQuickFind')"
     />
     <Navbar/>

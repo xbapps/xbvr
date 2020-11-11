@@ -1,8 +1,8 @@
 package scrape
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"html"
 	"strconv"
 	"strings"
@@ -20,9 +20,9 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com")
-	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com")
-	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com")
+	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
+	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
+	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	castCollector.AllowURLRevisit = true
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -34,6 +34,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		var tmpCast []string
 
+		// Scene ID - get from DeoVR JavaScript
 		e.ForEach(`script[id="deovr-js-extra"]`, func(id int, e *colly.HTMLElement) {
 			var jsonObj map[string]interface{}
 			jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-12]
@@ -63,7 +64,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		})
 
 		// Tags
-		e.ForEach(`a[href*="/tag/"] span`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`a[href*="/tag/"]`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 		if scraperID == "virtualrealgay" {
@@ -83,7 +84,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			sc.Synopsis = html.UnescapeString(jsonResult["description"].(string))
 
 			cast := jsonResult["actors"].([]interface{})
-			for _,v := range cast {
+			for _, v := range cast {
 				m := v.(map[string]interface{})
 				tmpCast = append(tmpCast, m["url"].(string))
 			}
@@ -102,6 +103,9 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 					siteIDAcronym := "VRP"
 					if siteID == "VirtualRealTrans" {
 						siteIDAcronym = "VRT"
+					}
+					if siteID == "VirtualRealAmateur" {
+						siteIDAcronym = "VRAM"
 					}
 					if siteID == "VirtualRealGay" {
 						siteIDAcronym = "VRG"
@@ -234,6 +238,9 @@ func VirtualRealPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealtrans", "VirtualRealTrans", "https://virtualrealtrans.com/")
 }
+func VirtualRealAmateur(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealamateur", "VirtualRealAmateur", "https://virtualrealamateurporn.com/")
+}
 func VirtualRealGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealgay", "VirtualRealGay", "https://virtualrealgay.com/")
 }
@@ -246,4 +253,5 @@ func init() {
 	registerScraper("virtualrealtrans", "VirtualRealTrans", "https://twivatar.glitch.me/virtualrealporn", VirtualRealTrans)
 	registerScraper("virtualrealgay", "VirtualRealGay", "https://twivatar.glitch.me/virtualrealgay", VirtualRealGay)
 	registerScraper("virtualrealpassion", "VirtualRealPassion", "https://twivatar.glitch.me/vrpassion", VirtualRealPassion)
+	registerScraper("virtualrealamateur", "VirtualRealAmateur", "https://mcdn.vrporn.com/files/20170718094205/virtualrealameteur-vr-porn-studio-vrporn.com-virtual-reality.png", VirtualRealAmateur)
 }

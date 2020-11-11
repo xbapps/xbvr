@@ -1,7 +1,6 @@
 <template>
   <div class="modal is-active">
     <GlobalEvents
-      :filter="e => !['INPUT', 'TEXTAREA'].includes(e.target.tagName)"
       @keyup.esc="close"
       @keydown.arrowLeft="playerStepBack"
       @keydown.arrowRight="playerStepForward"
