@@ -122,7 +122,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			// Filenames
 			// Only shown for logged in users so need to generate them
 			// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
-			resolutions := []string{"_6400p_", "_2880p_", "_2700p_", "_1440p_", "_1080p_", "_original_"}
+			resolutions := []string{"_6400p_", "_3160p", "_2880p_", "_2700p_", "_1440p_", "_1080p_", "_original_"}
 			baseName := "SLR_" + siteID + "_" + sc.Title
 			if videotype == "360°" { // Sadly can't determine if TB or MONO so have to add both
 				filenames := make([]string, 0, 2*len(resolutions))
@@ -371,6 +371,17 @@ func xVirtual(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	return SexLikeReal(wg, updateSite, knownScenes, out, "xvirtual", "xVirtual", "xVirtual")
 }
 
+// AnalDelight no website. better metadata (description) than vrporn.com
+func AnalDelight(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "anal-delight", "Anal Delight", "AnalDelight")
+
+}
+
+// No2StudioVR no website. better metadata (description) than vrporn.com
+func No2StudioVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return SexLikeReal(wg, updateSite, knownScenes, out, "no2studiovr", "No2StudioVR", "No2StudioVR")
+}
+
 func init() {
 	registerScraper("slr-originals", "SLR Originals", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", SLROriginals)
 	registerScraper("istripper", "iStripper (SLR)", "https://www.istripper.com/favicons/istripper/apple-icon-120x120.png", iStripper)
@@ -412,4 +423,6 @@ func init() {
 	registerScraper("grannies-vr", "GranniesVR (SLR)", "https://mcdn.vrporn.com/files/20180222024100/itsmorti-logo-vr-porn-studio-vrporn.com-virtual-reality.jpg", GranniesVR)
 	registerScraper("jvrporn", "JVRPorn (SLR)", "https://mcdn.vrporn.com/files/20170710084815/jvrporn-vr-porn-studio-vrporn.com-virtual-reality.png", JVRPorn)
 	registerScraper("xvirtual", "xVirtual (SLR)", "https://mcdn.vrporn.com/files/20181116133947/xvirtuallogo.jpg", xVirtual)
+	registerScraper("anal-delight", "Anal Delight (SLR)", "https://mcdn.vrporn.com/files/20200907184611/AnalDelight_Logo.jpg", AnalDelight)
+	registerScraper("no2studiovr", "Nto2StudioVR (SLR)", "https://mcdn.vrporn.com/files/20201021145654/No2StudioVR_400x400-1.jpg", No2StudioVR)
 }
