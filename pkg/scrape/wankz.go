@@ -53,11 +53,11 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		// Filenames
-		base := sc.Title
-		base = strings.Replace(base, " ", "-", -1)
-		sc.Filenames = append(sc.Filenames, base+"-180_180x180_3dh_LR.mp4")
-		sc.Filenames = append(sc.Filenames, base+"-gearvr-180_180x180_3dh_LR.mp4")
-		sc.Filenames = append(sc.Filenames, base+"-smartphone-180_180x180_3dh_LR.mp4")
+		base := e.Request.URL.Path
+		base = strings.Split(strings.Replace(base, "/", "", -1), sc.SiteID)[0]
+		sc.Filenames = append(sc.Filenames, base+"180_180x180_3dh_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"gearvr-180_180x180_3dh_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"smartphone-180_180x180_3dh_LR.mp4")
 
 		// Cover URLs
 		for _, x := range []string{"cover", "hero"} {
