@@ -122,7 +122,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			// Filenames
 			// Only shown for logged in users so need to generate them
 			// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
-			resolutions := []string{"_6400p_", "_3160p", "_2880p_", "_2700p_", "_1440p_", "_1080p_", "_original_"}
+			resolutions := []string{"_6400p_", "_3160p_", "_2880p_", "_2700p_", "_2650p_", "_1440p_", "_1080p_", "_original_"}
 			baseName := "SLR_" + siteID + "_" + sc.Title
 			if videotype == "360°" { // Sadly can't determine if TB or MONO so have to add both
 				filenames := make([]string, 0, 2*len(resolutions))
