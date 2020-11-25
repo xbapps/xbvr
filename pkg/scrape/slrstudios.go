@@ -69,7 +69,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			}
 
 			// To determine filenames
-			if e.Attr("title") == "180°" || e.Attr("title") == "360°" {
+			if e.Attr("title") == "Fisheye" || e.Attr("title") == "360°" {
 				videotype = e.Attr("title")
 			}
 
@@ -81,64 +81,68 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
 			JsonMetadata := strings.TrimSpace(e.Text)
 
-			// Title
-			if gjson.Get(JsonMetadata, "name").Exists() {
-				sc.Title = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "name").String()))
-			}
+			// skip non video Metadata
+			if gjson.Get(JsonMetadata, "@type").String() == "VideoObject" {
 
-			// Date
-			if gjson.Get(JsonMetadata, "datePublished").Exists() {
-				sc.Released = gjson.Get(JsonMetadata, "datePublished").String()
-			}
+				//Title
+				if gjson.Get(JsonMetadata, "name").Exists() {
+					sc.Title = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "name").String()))
+				}
 
-			// Cast
-			actornames := gjson.Get(JsonMetadata, "actor.#.name")
-			for _, name := range actornames.Array() {
-				sc.Cast = append(sc.Cast, strings.TrimSpace(html.UnescapeString(name.String())))
-			}
+				// Date
+				if gjson.Get(JsonMetadata, "datePublished").Exists() {
+					sc.Released = gjson.Get(JsonMetadata, "datePublished").String()
+				}
 
-			// Duration
-			// NOTE: SLR fails to include hours (1h55m30s shows up as T55M30S)
-			// ...but this is ready for the format of T01H55M30S should SLR fix that
-			duration := 0
-			if gjson.Get(JsonMetadata, "duration").Exists() {
-				tmpParts := durationRegEx.FindStringSubmatch(gjson.Get(JsonMetadata, "duration").String())
-				if len(tmpParts[1]) > 0 {
-					if h, err := strconv.Atoi(tmpParts[1]); err == nil {
-						hrs := h
+				// Cast
+				actornames := gjson.Get(JsonMetadata, "actor.#.name")
+				for _, name := range actornames.Array() {
+					sc.Cast = append(sc.Cast, strings.TrimSpace(html.UnescapeString(name.String())))
+				}
+
+				// Duration
+				// NOTE: SLR fails to include hours (1h55m30s shows up as T55M30S)
+				// ...but this is ready for the format of T01H55M30S should SLR fix that
+				duration := 0
+				if gjson.Get(JsonMetadata, "duration").Exists() {
+					tmpParts := durationRegEx.FindStringSubmatch(gjson.Get(JsonMetadata, "duration").String())
+					if len(tmpParts[1]) > 0 {
+						if h, err := strconv.Atoi(tmpParts[1]); err == nil {
+							hrs := h
+							if m, err := strconv.Atoi(tmpParts[2]); err == nil {
+								mins := m
+								duration = (hrs * 60) + mins
+							}
+						}
+					} else {
 						if m, err := strconv.Atoi(tmpParts[2]); err == nil {
-							mins := m
-							duration = (hrs * 60) + mins
+							duration = m
 						}
 					}
-				} else {
-					if m, err := strconv.Atoi(tmpParts[2]); err == nil {
-						duration = m
+					sc.Duration = duration
+				}
+
+				// Filenames
+				// Only shown for logged in users so need to generate them
+				// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
+				resolutions := []string{"_6400p_", "_3160p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_1440p_", "_1080p_", "_original_"}
+				baseName := "SLR_" + siteID + "_" + sc.Title
+				switch videotype {
+				case "360°": // Sadly can't determine if TB or MONO so have to add both
+					for i := range resolutions {
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MONO_360.mp4")
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_TB_360.mp4")
+					}
+				case "Fisheye": // 200° videos named with MKX200
+					for i := range resolutions {
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
+					}
+				default: // Assuming everything else is 180 and LR, yet to find a TB_180
+					for i := range resolutions {
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_LR_180.mp4")
 					}
 				}
-				sc.Duration = duration
 			}
-
-			// Filenames
-			// Only shown for logged in users so need to generate them
-			// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
-			resolutions := []string{"_6400p_", "_3160p_", "_2880p_", "_2700p_", "_2650p_", "_1440p_", "_1080p_", "_original_"}
-			baseName := "SLR_" + siteID + "_" + sc.Title
-			if videotype == "360°" { // Sadly can't determine if TB or MONO so have to add both
-				filenames := make([]string, 0, 2*len(resolutions))
-				for i := range resolutions {
-					filenames = append(filenames, baseName+resolutions[i]+sc.SiteID+"_MONO_360.mp4")
-					filenames = append(filenames, baseName+resolutions[i]+sc.SiteID+"_TB_360.mp4")
-					sc.Filenames = filenames
-				}
-			} else { // Assuming everything else is 180 and LR, yet to find a TB_180
-				filenames := make([]string, 0, len(resolutions))
-				for i := range resolutions {
-					filenames = append(filenames, baseName+resolutions[i]+sc.SiteID+"_LR_180.mp4")
-				}
-				sc.Filenames = filenames
-			}
-
 		})
 
 		out <- sc
@@ -381,6 +385,9 @@ func AnalDelight(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 func No2StudioVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return SexLikeReal(wg, updateSite, knownScenes, out, "no2studiovr", "No2StudioVR", "No2StudioVR")
 }
+
+// UNUSED allows unused variables to be included in Go programs
+func UNUSED(x ...interface{}) {}
 
 func init() {
 	registerScraper("slr-originals", "SLR Originals", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png", SLROriginals)
