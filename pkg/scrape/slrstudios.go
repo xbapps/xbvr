@@ -377,7 +377,7 @@ func xVirtual(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 // AnalDelight no website. better metadata (description) than vrporn.com
 func AnalDelight(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return SexLikeReal(wg, updateSite, knownScenes, out, "anal-delight", "Anal Delight", "AnalDelight")
+	return SexLikeReal(wg, updateSite, knownScenes, out, "anal-delight", "Anal Delight", "Anal Delight")
 
 }
 
@@ -430,6 +430,6 @@ func init() {
 	registerScraper("grannies-vr", "GranniesVR (SLR)", "https://mcdn.vrporn.com/files/20180222024100/itsmorti-logo-vr-porn-studio-vrporn.com-virtual-reality.jpg", GranniesVR)
 	registerScraper("jvrporn", "JVRPorn (SLR)", "https://mcdn.vrporn.com/files/20170710084815/jvrporn-vr-porn-studio-vrporn.com-virtual-reality.png", JVRPorn)
 	registerScraper("xvirtual", "xVirtual (SLR)", "https://mcdn.vrporn.com/files/20181116133947/xvirtuallogo.jpg", xVirtual)
-	registerScraper("anal-delight", "Anal Delight (SLR)", "https://mcdn.vrporn.com/files/20200907184611/AnalDelight_Logo.jpg", AnalDelight)
-	registerScraper("no2studiovr", "Nto2StudioVR (SLR)", "https://mcdn.vrporn.com/files/20201021145654/No2StudioVR_400x400-1.jpg", No2StudioVR)
+	registerScraper("anal-delight", "Anal Delight", "https://mcdn.vrporn.com/files/20200907184611/AnalDelight_Logo.jpg", AnalDelight)
+	registerScraper("no2studiovr", "No2StudioVR", "https://mcdn.vrporn.com/files/20201021145654/No2StudioVR_400x400-1.jpg", No2StudioVR)
 }
