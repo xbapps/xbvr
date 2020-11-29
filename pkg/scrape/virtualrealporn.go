@@ -91,8 +91,8 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		})
 
 		e.ForEach(`dl8-video source`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				origURL := e.Attr("src")
+			origURL := e.Attr("src") //moved origURL prior to if & added value check due to "4th Anniversary" page causing crash
+			if id == 0 && origURL != "https://virtualrealporn.com/&mode=streaming" {
 				fragmentName := strings.Split(origURL, "/")
 
 				fpName := strings.Split(fragmentName[len(fragmentName)-1], "?")[0]
