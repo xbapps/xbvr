@@ -91,11 +91,16 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		})
 
 		e.ForEach(`dl8-video source`, func(id int, e *colly.HTMLElement) {
-			origURL := e.Attr("src") //moved origURL prior to if & added value check due to "4th Anniversary" page causing crash
-			if id == 0 && origURL != "https://virtualrealporn.com/&mode=streaming" {
+			if id == 0 {
+				origURL := e.Attr("src")
 				fragmentName := strings.Split(origURL, "/")
+				fpName := strings.Split(fragmentName[len(fragmentName)-1], "&")[0]
 
-				fpName := strings.Split(fragmentName[len(fragmentName)-1], "?")[0]
+				// A couple of pages will crash the scraper (ex. url https://virtualrealporn.com/&mode=streaming)
+				if fpName == "" {
+					return
+				}
+
 				prefix := siteID + ".com_-_"
 				if strings.HasPrefix(fpName, prefix) {
 					fpName = strings.Split(fpName, prefix)[1]
@@ -108,7 +113,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 				if siteID == "VirtualRealTrans" {
 					siteIDAcronym = "VRT"
 				}
-				if siteID == "VirtualRealAmateur" {
+				if siteID == "VirtualRealAmateurPorn" {
 					siteIDAcronym = "VRAM"
 				}
 				if siteID == "VirtualRealGay" {
@@ -242,7 +247,7 @@ func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealtrans", "VirtualRealTrans", "https://virtualrealtrans.com/")
 }
 func VirtualRealAmateur(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealamateur", "VirtualRealAmateur", "https://virtualrealamateurporn.com/")
+	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealamateur", "VirtualRealAmateurPorn", "https://virtualrealamateurporn.com/")
 }
 func VirtualRealGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealgay", "VirtualRealGay", "https://virtualrealgay.com/")
@@ -256,5 +261,5 @@ func init() {
 	registerScraper("virtualrealtrans", "VirtualRealTrans", "https://twivatar.glitch.me/virtualrealporn", VirtualRealTrans)
 	registerScraper("virtualrealgay", "VirtualRealGay", "https://twivatar.glitch.me/virtualrealgay", VirtualRealGay)
 	registerScraper("virtualrealpassion", "VirtualRealPassion", "https://twivatar.glitch.me/vrpassion", VirtualRealPassion)
-	registerScraper("virtualrealamateur", "VirtualRealAmateur", "https://mcdn.vrporn.com/files/20170718094205/virtualrealameteur-vr-porn-studio-vrporn.com-virtual-reality.png", VirtualRealAmateur)
+	registerScraper("virtualrealamateur", "VirtualRealAmateurPorn", "https://mcdn.vrporn.com/files/20170718094205/virtualrealameteur-vr-porn-studio-vrporn.com-virtual-reality.png", VirtualRealAmateur)
 }
