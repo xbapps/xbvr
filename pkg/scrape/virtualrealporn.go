@@ -64,7 +64,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		})
 
 		// Tags
-		e.ForEach(`a[href*="/tag/"]`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`a[href*="/tag/"] span`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 		if scraperID == "virtualrealgay" {
