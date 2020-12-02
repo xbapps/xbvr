@@ -1,8 +1,8 @@
 package scrape
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"html"
 	"strconv"
 	"strings"
@@ -20,9 +20,9 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com")
-	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com")
-	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com")
+	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
+	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
+	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	castCollector.AllowURLRevisit = true
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -34,6 +34,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		var tmpCast []string
 
+		// Scene ID - get from DeoVR JavaScript
 		e.ForEach(`script[id="deovr-js-extra"]`, func(id int, e *colly.HTMLElement) {
 			var jsonObj map[string]interface{}
 			jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-12]
@@ -83,7 +84,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			sc.Synopsis = html.UnescapeString(jsonResult["description"].(string))
 
 			cast := jsonResult["actors"].([]interface{})
-			for _,v := range cast {
+			for _, v := range cast {
 				m := v.(map[string]interface{})
 				tmpCast = append(tmpCast, m["url"].(string))
 			}
@@ -93,61 +94,72 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			if id == 0 {
 				origURL := e.Attr("src")
 				fragmentName := strings.Split(origURL, "/")
+				fpName := strings.Split(fragmentName[len(fragmentName)-1], "&")[0]
 
-				fpName := strings.Split(fragmentName[len(fragmentName)-1], "?")[0]
+				// A couple of pages will crash the scraper (ex. url https://virtualrealporn.com/&mode=streaming)
+				if fpName == "" {
+					return
+				}
+
 				prefix := siteID + ".com_-_"
 				if strings.HasPrefix(fpName, prefix) {
 					fpName = strings.Split(fpName, prefix)[1]
-					fpName = strings.SplitN(fpName, "_-_Trailer", 2)[0]
-					siteIDAcronym := "VRP"
-					if siteID == "VirtualRealTrans" {
-						siteIDAcronym = "VRT"
-					}
-					if siteID == "VirtualRealGay" {
-						siteIDAcronym = "VRG"
-					}
-					if siteID == "VirtualRealPassion" {
-						siteIDAcronym = "VRPA"
-					}
-
-					var outFilenames []string
-
-					// Playstation VR
-					outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_Trailer_PS4_180_sbs.mp4") // Trailer
-					outFilenames = append(outFilenames, siteID+"_"+fpName+"_3K_180_sbs.mp4")                 // PS4
-					outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_180_sbs.mp4")             // PS4 (older videos)
-					outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_180_sbs.mp4")            // PS4 (oldest videos)
-					outFilenames = append(outFilenames, siteID+"_"+fpName+"_4096x2040_180_sbs.mp4")          // PS4 Pro
-					outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_Pro_180_sbs.mp4")         // PS4 Pro (older videos)
-					outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Pro_180_sbs.mp4")        // PS4 Pro (oldest videos)
-
-					// Oculus Go / Quest
-					outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Trailer.mp4")       // Trailer (same for Oculus Rift (S) / Vive / Windows MR)
-					outFilenames = append(outFilenames, siteID+"_"+fpName+"_4864_180x180_3dh.mp4")      // 4K+
-					outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_h264P_180x180_3dh.mp4") // 4K+ (older videos)
-					outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_30M_180x180_3dh.mp4")    // 4K HQ (same for Gear VR / Daydream and Oculus Rift (S) / Vive / Windows MR)
-					outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_h265_180x180_3dh.mp4")   // 4K h265 (same for Oculus Rift (S) / Vive / Windows MR)
-					outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_vp9_180x180_3dh.mp4")   // 4K VP9 (older videos; same for Gear VR / Daydream and Oculus Rift (S) / Vive / Windows MR)
-					outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_180x180_3dh.mp4")       // 4K h264 (older videos; same for Gear VR / Daydream)
-
-					// Gear VR / Daydream
-					outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_Trailer_Streaming_3dh.mp4") // Trailer
-					outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_180x180_3dh.mp4")            // 4K (same for Smartphone)
-
-					// Smartphone
-					outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Trailer_-_Smartphone.mp4") // Trailer
-					outFilenames = append(outFilenames, siteID+"_"+fpName+"_1920_180x180_3dh.mp4")             // Full HD (same for Oculus Rift (S) / Vive / Windows MR)
-					outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_1920.mp4")                 // Full HD (older videos; same for Oculus Rift (S) / Vive / Windows MR)
-
-					// Oculus Rift (S) / Vive / Windows MR
-					outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_30M_180x180_3dh.mp4")     // 5K HQ
-					outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_180x180_3dh.mp4")         // 5K
-					outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_5K_180x180_3dh.mp4")     // 5K (older videos)
-					outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_5K_180x180_3dh.mp4") // 5K (before site update)
-					outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_h264.mp4")           // 4K 264 (older videos)
-
-					sc.Filenames = outFilenames
+				} else {
+					prefix = siteID + "_-_"
+					fpName = strings.Split(fpName, prefix)[1]
 				}
+				fpName = strings.SplitN(fpName, "_-_Trailer", 2)[0]
+				siteIDAcronym := "VRP"
+				if siteID == "VirtualRealTrans" {
+					siteIDAcronym = "VRT"
+				}
+				if siteID == "VirtualRealAmateurPorn" {
+					siteIDAcronym = "VRAM"
+				}
+				if siteID == "VirtualRealGay" {
+					siteIDAcronym = "VRG"
+				}
+				if siteID == "VirtualRealPassion" {
+					siteIDAcronym = "VRPA"
+				}
+
+				var outFilenames []string
+
+				// Playstation VR
+				outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_Trailer_PS4_180_sbs.mp4") // Trailer
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_3K_180_sbs.mp4")                 // PS4
+				outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_180_sbs.mp4")             // PS4 (older videos)
+				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_180_sbs.mp4")            // PS4 (oldest videos)
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4096x2040_180_sbs.mp4")          // PS4 Pro
+				outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_Pro_180_sbs.mp4")         // PS4 Pro (older videos)
+				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Pro_180_sbs.mp4")        // PS4 Pro (oldest videos)
+
+				// Oculus Go / Quest
+				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Trailer.mp4")       // Trailer (same for Oculus Rift (S) / Vive / Windows MR)
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4864_180x180_3dh.mp4")      // 4K+
+				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_h264P_180x180_3dh.mp4") // 4K+ (older videos)
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_30M_180x180_3dh.mp4")    // 4K HQ (same for Gear VR / Daydream and Oculus Rift (S) / Vive / Windows MR)
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_h265_180x180_3dh.mp4")   // 4K h265 (same for Oculus Rift (S) / Vive / Windows MR)
+				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_vp9_180x180_3dh.mp4")   // 4K VP9 (older videos; same for Gear VR / Daydream and Oculus Rift (S) / Vive / Windows MR)
+				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_180x180_3dh.mp4")       // 4K h264 (older videos; same for Gear VR / Daydream)
+
+				// Gear VR / Daydream
+				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_Trailer_Streaming_3dh.mp4") // Trailer
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_180x180_3dh.mp4")            // 4K (same for Smartphone)
+
+				// Smartphone
+				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Trailer_-_Smartphone.mp4") // Trailer
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_1920_180x180_3dh.mp4")             // Full HD (same for Oculus Rift (S) / Vive / Windows MR)
+				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_1920.mp4")                 // Full HD (older videos; same for Oculus Rift (S) / Vive / Windows MR)
+
+				// Oculus Rift (S) / Vive / Windows MR
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_30M_180x180_3dh.mp4")     // 5K HQ
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_180x180_3dh.mp4")         // 5K
+				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_5K_180x180_3dh.mp4")     // 5K (older videos)
+				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_5K_180x180_3dh.mp4") // 5K (before site update)
+				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_h264.mp4")           // 4K 264 (older videos)
+
+				sc.Filenames = outFilenames
 			}
 		})
 
@@ -234,6 +246,9 @@ func VirtualRealPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealtrans", "VirtualRealTrans", "https://virtualrealtrans.com/")
 }
+func VirtualRealAmateur(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealamateur", "VirtualRealAmateurPorn", "https://virtualrealamateurporn.com/")
+}
 func VirtualRealGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, "virtualrealgay", "VirtualRealGay", "https://virtualrealgay.com/")
 }
@@ -246,4 +261,5 @@ func init() {
 	registerScraper("virtualrealtrans", "VirtualRealTrans", "https://twivatar.glitch.me/virtualrealporn", VirtualRealTrans)
 	registerScraper("virtualrealgay", "VirtualRealGay", "https://twivatar.glitch.me/virtualrealgay", VirtualRealGay)
 	registerScraper("virtualrealpassion", "VirtualRealPassion", "https://twivatar.glitch.me/vrpassion", VirtualRealPassion)
+	registerScraper("virtualrealamateur", "VirtualRealAmateurPorn", "https://mcdn.vrporn.com/files/20170718094205/virtualrealameteur-vr-porn-studio-vrporn.com-virtual-reality.png", VirtualRealAmateur)
 }
