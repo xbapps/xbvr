@@ -48,6 +48,20 @@ steps:
         from_secret: DOCKER_PASSWORD
       repo: xbapps/xbvr
       auto_tag: true
+      build_args: DRONE_TAG=${DRONE_TAG}
+      dockerfile: .drone.dockerfile
+
+  - name: docker
+    image: plugins/docker:18.09
+    when:
+      event:
+        - tag
+    settings:
+      username:
+        from_secret: DOCKER_LOGIN
+      password:
+        from_secret: DOCKER_PASSWORD
+      repo: xbapps/xbvr
       tags: latest
       build_args: DRONE_TAG=${DRONE_TAG}
       dockerfile: .drone.dockerfile
