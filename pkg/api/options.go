@@ -1,4 +1,4 @@
-package xbvr
+package api
 
 import (
 	"context"
@@ -21,6 +21,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/tasks"
 	"golang.org/x/oauth2"
 	"gopkg.in/resty.v1"
 )
@@ -321,7 +322,7 @@ func (i ConfigResource) removeStorage(req *restful.Request, resp *restful.Respon
 	// Inform UI about state change
 	common.PublishWS("state.change.optionsStorage", nil)
 
-	RescanVolumes()
+	tasks.RescanVolumes()
 
 	log.WithField("task", "rescan").Info("Removed storage", vol.Path)
 
@@ -380,7 +381,7 @@ func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 	out.CurrentState.Web.SceneEdit = config.Config.Web.SceneEdit
 
 	// DLNA
-	out.CurrentState.DLNA.Running = IsDMSStarted()
+	out.CurrentState.DLNA.Running = tasks.IsDMSStarted()
 	out.CurrentState.DLNA.RecentIP = config.RecentIPAddresses
 	dlnaImages, _ := assets.WalkDirs("dlna", false)
 	for _, v := range dlnaImages {
@@ -434,13 +435,13 @@ func (i ConfigResource) saveOptionsDLNA(req *restful.Request, resp *restful.Resp
 	config.Config.Interfaces.DLNA.AllowedIP = r.AllowedIP
 	config.SaveConfig()
 
-	if IsDMSStarted() {
-		StopDMS()
+	if tasks.IsDMSStarted() {
+		tasks.StopDMS()
 		time.Sleep(1 * time.Second)
 	}
 
 	if r.Enabled {
-		StartDMS()
+		tasks.StartDMS()
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -494,7 +495,7 @@ func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.
 	if _, err := os.Stat(destFile); os.IsNotExist(err) {
 		// Preview file does not exist, generate it
 		go func() {
-			renderPreview(
+			tasks.RenderPreview(
 				files[0].GetPath(),
 				destFile,
 				r.StartTime,

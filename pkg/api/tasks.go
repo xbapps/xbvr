@@ -1,8 +1,9 @@
-package xbvr
+package api
 
 import (
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
+	"github.com/xbapps/xbvr/pkg/tasks"
 )
 
 type RequestScrapeJAVR struct {
@@ -48,15 +49,15 @@ func (i TaskResource) WebService() *restful.WebService {
 }
 
 func (i TaskResource) rescan(req *restful.Request, resp *restful.Response) {
-	go RescanVolumes()
+	go tasks.RescanVolumes()
 }
 
 func (i TaskResource) cleanTags(req *restful.Request, resp *restful.Response) {
-	go CleanTags()
+	go tasks.CleanTags()
 }
 
 func (i TaskResource) index(req *restful.Request, resp *restful.Response) {
-	go SearchIndex()
+	go tasks.SearchIndex()
 }
 
 func (i TaskResource) scrape(req *restful.Request, resp *restful.Response) {
@@ -64,20 +65,20 @@ func (i TaskResource) scrape(req *restful.Request, resp *restful.Response) {
 	if qSiteID == "" {
 		qSiteID = "_enabled"
 	}
-	go Scrape(qSiteID)
+	go tasks.Scrape(qSiteID)
 }
 
 func (i TaskResource) importBundle(req *restful.Request, resp *restful.Response) {
 	url := req.QueryParameter("url")
-	go ImportBundle(url)
+	go tasks.ImportBundle(url)
 }
 
 func (i TaskResource) exportBundle(req *restful.Request, resp *restful.Response) {
-	go ExportBundle()
+	go tasks.ExportBundle()
 }
 
 func (i TaskResource) previewGenerate(req *restful.Request, resp *restful.Response) {
-	go GeneratePreviews()
+	go tasks.GeneratePreviews()
 }
 
 func (i TaskResource) scrapeJAVR(req *restful.Request, resp *restful.Response) {
@@ -89,6 +90,6 @@ func (i TaskResource) scrapeJAVR(req *restful.Request, resp *restful.Response) {
 	}
 
 	if r.Query != "" {
-		go ScrapeJAVR(r.Query)
+		go tasks.ScrapeJAVR(r.Query)
 	}
 }

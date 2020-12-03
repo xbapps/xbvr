@@ -1,4 +1,4 @@
-package metrics
+package common
 
 import (
 	"os"
@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/lomik/go-whisper"
-	"github.com/xbapps/xbvr/pkg/common"
 )
 
 func GetMetric(name string) (*whisper.Whisper, error) {
 	retentions, err := whisper.ParseRetentionDefs("1m:1d,1h:60d,12h:20y")
-	path := filepath.Join(common.MetricsDir, name+".wsp")
+	path := filepath.Join(MetricsDir, name+".wsp")
 
 	wsp, err := whisper.Create(path, retentions, whisper.Last, 0.5)
 
@@ -30,7 +29,7 @@ func GetMetric(name string) (*whisper.Whisper, error) {
 	return wsp, nil
 }
 
-func WritePoint(name string, value float64) error {
+func AddMetricPoint(name string, value float64) error {
 	db, err := GetMetric(name)
 	defer db.Close()
 	if err != nil {

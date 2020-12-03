@@ -11,7 +11,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/config"
-	"github.com/xbapps/xbvr/pkg/xbvr"
+	"github.com/xbapps/xbvr/pkg/tasks"
 )
 
 var version = "CURRENT"
@@ -34,7 +34,7 @@ func onExit() {
 
 func onReady() {
 	go func() {
-		xbvr.StartServer(version, commit, branch, date)
+		tasks.StartServer(version, commit, branch, date)
 	}()
 
 	if runtime.GOOS == "windows" {

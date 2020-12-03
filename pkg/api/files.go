@@ -1,4 +1,4 @@
-package xbvr
+package api
 
 import (
 	"context"
