@@ -36,7 +36,7 @@ steps:
     commands:
       - goreleaser --skip-validate --rm-dist
 
-  - name: docker
+  - name: docker-tag-version
     image: plugins/docker:18.09
     when:
       event:
@@ -51,7 +51,7 @@ steps:
       build_args: DRONE_TAG=${DRONE_TAG}
       dockerfile: .drone.dockerfile
 
-  - name: docker
+  - name: docker-tag-latest
     image: plugins/docker:18.09
     when:
       event:
