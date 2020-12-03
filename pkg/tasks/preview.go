@@ -1,4 +1,4 @@
-package xbvr
+package tasks
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ func GeneratePreviews() {
 				if files[0].Exists() {
 					log.Infof("Rendering %v", scene.SceneID)
 					destFile := filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4")
-					err := renderPreview(
+					err := RenderPreview(
 						files[0].GetPath(),
 						destFile,
 						config.Config.Library.Preview.StartTime,
@@ -54,7 +54,7 @@ func GeneratePreviews() {
 	models.RemoveLock("previews")
 }
 
-func renderPreview(inputFile string, destFile string, startTime int, snippetLength float64, snippetAmount int, resolution int, extraSnippet bool) error {
+func RenderPreview(inputFile string, destFile string, startTime int, snippetLength float64, snippetAmount int, resolution int, extraSnippet bool) error {
 	tmpPath := filepath.Join(common.VideoPreviewDir, "tmp")
 	os.MkdirAll(tmpPath, os.ModePerm)
 	defer os.RemoveAll(tmpPath)
