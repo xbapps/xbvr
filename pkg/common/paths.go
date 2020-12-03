@@ -13,6 +13,7 @@ var BinDir string
 var CacheDir string
 var ImgDir string
 var MetricsDir string
+var HeatmapDir string
 var IndexDirV2 string
 var ScrapeCacheDir string
 var VideoPreviewDir string
@@ -39,6 +40,7 @@ func InitPaths() {
 	BinDir = filepath.Join(AppDir, "bin")
 	ImgDir = filepath.Join(AppDir, "imageproxy")
 	MetricsDir = filepath.Join(AppDir, "metrics")
+	HeatmapDir = filepath.Join(AppDir, "heatmap")
 	IndexDirV2 = filepath.Join(AppDir, "search-v2")
 
 	ScrapeCacheDir = filepath.Join(CacheDir, "scrape_cache")
@@ -52,6 +54,7 @@ func InitPaths() {
 	_ = os.MkdirAll(AppDir, os.ModePerm)
 	_ = os.MkdirAll(ImgDir, os.ModePerm)
 	_ = os.MkdirAll(MetricsDir, os.ModePerm)
+	_ = os.MkdirAll(HeatmapDir, os.ModePerm)
 	_ = os.MkdirAll(CacheDir, os.ModePerm)
 	_ = os.MkdirAll(BinDir, os.ModePerm)
 	_ = os.MkdirAll(IndexDirV2, os.ModePerm)

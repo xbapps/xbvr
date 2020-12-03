@@ -25,6 +25,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
+	"github.com/xbapps/xbvr/pkg/deo_remote"
 	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/tasks"
@@ -187,6 +188,9 @@ func StartServer(version, commit, branch, date string) {
 	if config.Config.Interfaces.DLNA.Enabled {
 		go tasks.StartDMS()
 	}
+
+	// DeoVR remote
+	go deo_remote.DeoRemote()
 
 	// Cron
 	SetupCron()
