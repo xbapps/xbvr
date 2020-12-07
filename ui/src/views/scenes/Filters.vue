@@ -21,6 +21,7 @@
             <option value="scene_added_desc">↓ {{$t("Scene added date")}}</option>
             <option value="scene_updated_desc">↓ {{$t("Scene updated date")}}</option>
             <option value="last_opened">↻ {{$t("Recently viewed")}}</option>
+            <option value="last_opened_asc">↻ {{$t("Anciently viewed")}}</option>
             <option value="random">↯ {{$t("Random")}}</option>
           </select>
         </div>
