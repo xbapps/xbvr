@@ -5,21 +5,6 @@ before:
     - go generate ./...
 
 builds:
-# - id: xbvr-mac
-#   binary: XBVR.app/Contents/MacOS/XBVR
-#   main: pkg/tray/main.go
-#   flags:
-#     - -tags=json1
-#   env:
-#     - CGO_ENABLED=1
-#     - CC=o64-clang
-#     - CXX=o64-clang++
-#   goos:
-#     - darwin
-#   goarch:
-#     - amd64
-#   hooks:
-#     post: ./appify.sh -s ./dist/xbvr-mac_darwin_amd64/XBVR.app/Contents/MacOS/XBVR -i ./ui/public/icons/xbvr-mac.icns -n XBVR
 - id: xbvr-windows
   binary: xbvr
   main: pkg/tray/main.go
@@ -35,55 +20,6 @@ builds:
     - windows
   goarch:
     - amd64
-# - id: xbvr-linux-amd64
-#   binary: xbvr
-#   flags:
-#     - -tags=json1
-#   env:
-#     - CGO_ENABLED=1
-#   goos:
-#     - linux
-#   goarch:
-#     - amd64
-# - id: xbvr-linux-arm
-#   binary: xbvr
-#   flags:
-#     - -tags=json1
-#   env:
-#     - CGO_ENABLED=1
-#     - CC=arm-linux-gnueabi-gcc
-#   goos:
-#     - linux
-#   goarch:
-#     - arm
-#   goarm:
-#     - 6
-#     - 7
-
-archives:
-# - id: archive-linux
-#   builds:
-#     - xbvr-linux-amd64
-#     - xbvr-linux-arm
-#   replacements:
-#     linux: Linux
-#     windows: Windows
-#     amd64: x86_64
-- id: archive-win
-  builds:
-    - xbvr-windows
-  format: zip
-  replacements:
-    windows: Windows
-# - id: archive-mac
-#   builds:
-#     - xbvr-mac
-#   format: zip
-#   replacements:
-#     darwin: macOS
-#   files:
-#     - XBVR.app/Contents/Resources/XBVR.icns
-#     - XBVR.app/Contents/Info.plist
 
 snapshot:
   name_template: "{{ .Tag }}-next"
@@ -96,7 +32,7 @@ changelog:
     - '^test:'
 
 release:
-  disable: true
+  disable: false
   github:
-    owner: yep-it-not-me
+    owner: xbapps
     name: xbvr
