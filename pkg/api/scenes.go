@@ -1,11 +1,13 @@
-package xbvr
+package api
 
 import (
 	"fmt"
-	"github.com/go-test/deep"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/go-test/deep"
+	"github.com/xbapps/xbvr/pkg/tasks"
 
 	"github.com/blevesearch/bleve"
 	"github.com/emicklei/go-restful"
@@ -234,8 +236,8 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	idx := NewIndex("scenes")
-	defer idx.bleve.Close()
+	idx := tasks.NewIndex("scenes")
+	defer idx.Bleve.Close()
 	query := bleve.NewQueryStringQuery(q)
 
 	searchRequest := bleve.NewSearchRequest(query)
@@ -245,7 +247,7 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 	searchRequest.Size = 25
 	searchRequest.SortBy([]string{"-_score"})
 
-	searchResults, err := idx.bleve.Search(searchRequest)
+	searchResults, err := idx.Bleve.Search(searchRequest)
 	if err != nil {
 		log.Error(err)
 		return

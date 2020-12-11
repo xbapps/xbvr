@@ -1,4 +1,4 @@
-package xbvr
+package tasks
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 )
 
 type Index struct {
-	bleve bleve.Index
+	Bleve bleve.Index
 }
 
 type SceneIndexed struct {
@@ -31,12 +31,12 @@ func NewIndex(name string) *Index {
 		idx, err = bleve.Open(path)
 	}
 
-	i.bleve = idx
+	i.Bleve = idx
 	return i
 }
 
 func (i *Index) Exist(id string) bool {
-	d, err := i.bleve.Document(id)
+	d, err := i.Bleve.Document(id)
 	if err != nil || d == nil {
 		return false
 	}
@@ -54,7 +54,7 @@ func (i *Index) PutScene(scene models.Scene) error {
 	si := SceneIndexed{
 		Fulltext: fmt.Sprintf("%v %v %v %v %v %v", scene.SceneID, scene.Title, scene.Site, scene.Synopsis, cast, castConcat),
 	}
-	if err := i.bleve.Index(scene.SceneID, si); err != nil {
+	if err := i.Bleve.Index(scene.SceneID, si); err != nil {
 		return err
 	}
 
@@ -101,7 +101,7 @@ func SearchIndex() {
 			offset = offset + 100
 		}
 
-		idx.bleve.Close()
+		idx.Bleve.Close()
 
 		tlog.Infof("Search index built!")
 

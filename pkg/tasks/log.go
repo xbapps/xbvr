@@ -1,4 +1,4 @@
-package xbvr
+package tasks
 
 import (
 	"github.com/xbapps/xbvr/pkg/common"

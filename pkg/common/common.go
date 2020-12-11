@@ -7,6 +7,10 @@ import (
 
 var (
 	DEBUG             = os.Getenv("DEBUG")
+	DEOPASSWORD       = os.Getenv("DEO_PASSWORD")
+	DEOUSER           = os.Getenv("DEO_USERNAME")
+	UIPASSWORD        = os.Getenv("UI_PASSWORD")
+	UIUSER            = os.Getenv("UI_USERNAME")
 	DISABLE_ANALYTICS = os.Getenv("DISABLE_ANALYTICS")
 	SQL_DEBUG         = envToBool("SQL_DEBUG", false)
 	DATABASE_URL      = ""

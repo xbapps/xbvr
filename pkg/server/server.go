@@ -1,17 +1,12 @@
-package xbvr
+package server
 
 import (
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/xbapps/xbvr/pkg/analytics"
-	"github.com/xbapps/xbvr/pkg/config"
-	"golang.org/x/crypto/bcrypt"
 
 	auth "github.com/abbot/go-http-auth"
 	"github.com/emicklei/go-restful"
@@ -25,39 +20,23 @@ import (
 	"github.com/koding/websocketproxy"
 	"github.com/peterbourgon/diskv"
 	"github.com/rs/cors"
+	"github.com/xbapps/xbvr/pkg/analytics"
+	"github.com/xbapps/xbvr/pkg/api"
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/config"
+	"github.com/xbapps/xbvr/pkg/deo_remote"
 	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/tasks"
 	"willnorris.com/go/imageproxy"
 )
 
 var (
-	DEBUG          = common.DEBUG
-	DEOPASSWORD    = os.Getenv("DEO_PASSWORD")
-	DEOUSER        = os.Getenv("DEO_USERNAME")
-	UIPASSWORD     = os.Getenv("UI_PASSWORD")
-	UIUSER         = os.Getenv("UI_USERNAME")
-	wsAddr         = common.WsAddr
+	DEBUG  = common.DEBUG
+	wsAddr = common.WsAddr
+	log    = common.Log
 )
-
-func uiAuthEnabled() bool {
-	if UIPASSWORD != "" && UIUSER != "" {
-		return true
-	} else {
-		return false
-	}
-}
-
-func uiSecret(user string, realm string) string {
-	if user == UIUSER {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(UIPASSWORD), bcrypt.DefaultCost)
-		if err == nil {
-			return string(hashedPassword)
-		}
-	}
-	return ""
-}
 
 func authHandle(pattern string, authEnabled bool, authSecret auth.SecretProvider, handler http.Handler) {
 	if authEnabled {
@@ -68,7 +47,6 @@ func authHandle(pattern string, authEnabled bool, authSecret auth.SecretProvider
 	} else {
 		http.Handle(pattern, http.StripPrefix(pattern, handler))
 	}
-
 }
 
 func StartServer(version, commit, branch, date string) {
@@ -87,7 +65,7 @@ func StartServer(version, commit, branch, date string) {
 	models.RemoveLock("update-scenes")
 	models.RemoveLock("previews")
 
-	go CheckDependencies()
+	go tasks.CheckDependencies()
 	models.CheckVolumes()
 
 	models.InitSites()
@@ -100,13 +78,13 @@ func StartServer(version, commit, branch, date string) {
 	}))
 
 	restful.Add(ws)
-	restful.Add(SceneResource{}.WebService())
-	restful.Add(TaskResource{}.WebService())
-	restful.Add(DMSResource{}.WebService())
-	restful.Add(ConfigResource{}.WebService())
-	restful.Add(FilesResource{}.WebService())
-	restful.Add(DeoVRResource{}.WebService())
-	restful.Add(PlaylistResource{}.WebService())
+	restful.Add(api.SceneResource{}.WebService())
+	restful.Add(api.TaskResource{}.WebService())
+	restful.Add(api.DMSResource{}.WebService())
+	restful.Add(api.ConfigResource{}.WebService())
+	restful.Add(api.FilesResource{}.WebService())
+	restful.Add(api.DeoVRResource{}.WebService())
+	restful.Add(api.PlaylistResource{}.WebService())
 
 	restConfig := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),
@@ -144,9 +122,9 @@ func StartServer(version, commit, branch, date string) {
 
 	// Static files
 	if DEBUG == "" {
-		authHandle("/ui/", uiAuthEnabled(), uiSecret, http.FileServer(assets.HTTP))
+		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(assets.HTTP))
 	} else {
-		authHandle("/ui/", uiAuthEnabled(), uiSecret, http.FileServer(http.Dir("ui/dist")))
+		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(http.Dir("ui/dist")))
 	}
 
 	// Imageproxy
@@ -208,8 +186,11 @@ func StartServer(version, commit, branch, date string) {
 
 	// DMS
 	if config.Config.Interfaces.DLNA.Enabled {
-		go StartDMS()
+		go tasks.StartDMS()
 	}
+
+	// DeoVR remote
+	go deo_remote.DeoRemote()
 
 	// Cron
 	SetupCron()
@@ -223,8 +204,8 @@ func StartServer(version, commit, branch, date string) {
 		}
 	}
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
-	log.Infof("Web UI Authentication enabled: %v", uiAuthEnabled())
-	log.Infof("DeoVR Authentication enabled: %v", deoAuthEnabled())
+	log.Infof("Web UI Authentication enabled: %v", common.IsUIAuthEnabled())
+	log.Infof("DeoVR Authentication enabled: %v", common.IsDeoAuthEnabled())
 	log.Infof("Using database: %s", common.DATABASE_URL)
 
 	httpAddr := fmt.Sprintf("%v:%v", config.Config.Server.BindAddress, config.Config.Server.Port)
