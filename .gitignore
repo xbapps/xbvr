@@ -17,3 +17,4 @@ yarn-error.log
 *.plist
 XBVR.app/Contents/MacOS/XBVR
 XBVR.app/Contents/Resources/XBVR.icns
+docker-compose.yml
