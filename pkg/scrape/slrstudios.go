@@ -69,7 +69,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			}
 
 			// To determine filenames
-			if e.Attr("title") == "180°" || e.Attr("title") == "360°" {
+			if e.Attr("title") == "Fisheye" || e.Attr("title") == "360°" {
 				videotype = e.Attr("title")
 			}
 
