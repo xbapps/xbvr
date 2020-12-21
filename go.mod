@@ -4,8 +4,7 @@ go 1.15
 
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
-	github.com/PuerkitoBio/goquery v1.6.0
-	github.com/UnnoTed/fileb0x v1.1.4 // indirect
+	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/envpprof v1.0.0 // indirect
 	github.com/anacrolix/ffprobe v0.0.0-20190307025918-9b483c5f7751
