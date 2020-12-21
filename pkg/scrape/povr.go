@@ -29,7 +29,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "-")
 		sc.SiteID = tmp[len(tmp)-1]
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		sc.SceneID = slugify.Slugify(scraperID) + "-" + sc.SiteID
 
 		// Title
 		e.ForEach(`h1.player__title`, func(id int, e *colly.HTMLElement) {
