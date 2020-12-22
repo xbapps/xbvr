@@ -29,7 +29,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "-")
 		sc.SiteID = tmp[len(tmp)-1]
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		sc.SceneID = slugify.Slugify(scraperID) + "-" + sc.SiteID
 
 		// Title
 		e.ForEach(`h1.player__title`, func(id int, e *colly.HTMLElement) {
@@ -107,7 +107,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		}
 	})
 
-	siteCollector.Visit("https://povr.com/" + company)
+	siteCollector.Visit("https://povr.com/" + scraperID)
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -118,7 +118,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 
 func addPOVRScraper(id string, name string, company string, avatarURL string) {
 	suffixedName := name
-	if company != "povr-originals" {
+	if company != "POVR.COM" {
 		suffixedName += " (POVR)"
 	}
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
@@ -127,6 +127,6 @@ func addPOVRScraper(id string, name string, company string, avatarURL string) {
 }
 
 func init() {
-	addPOVRScraper("povr", "POVR Originals", "povr-originals", "https://images.povr.com/img/povr/android-icon-192x192.png")
-	addPOVRScraper("herpovr", "herPOVR", "herpovr", "https://images.povr.com/img/povr/android-icon-192x192.png")
+	addPOVRScraper("povr-originals", "POVR Originals", "POVR.COM", "https://images.povr.com/img/povr/android-icon-192x192.png")
+	addPOVRScraper("herpovr", "herPOVR", "POVR.COM", "https://images.povr.com/img/povr/android-icon-192x192.png")
 }
