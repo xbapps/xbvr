@@ -36,7 +36,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		sc.SiteID = tmp[len(tmp)-1]
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
-		//Title
+		// Title
 		sc.Title = strings.TrimSpace(e.ChildText(`Title`))
 
 		// Date
