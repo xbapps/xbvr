@@ -92,7 +92,7 @@ func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 				ctx.Put("id", value.Get("id").String())
 				ctx.Put("released", value.Get("released").String())
 				ctx.Put("title", value.Get("title").String())
-				sceneCollector.Request("GET", sceneURL + "?hl=1", nil, ctx, nil)
+				sceneCollector.Request("GET", sceneURL+"?hl=1", nil, ctx, nil)
 			}
 			return true
 		})
