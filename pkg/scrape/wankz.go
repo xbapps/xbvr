@@ -54,7 +54,7 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		// Filenames
 		base := e.Request.URL.Path
-		base = strings.Split(strings.Replace(base, "/", "", -1), sc.SiteID)[0]
+		base = strings.Split(strings.Replace(base, "/", scraperID+"-", -1), sc.SiteID)[0]
 		sc.Filenames = append(sc.Filenames, base+"180_180x180_3dh_LR.mp4")
 		sc.Filenames = append(sc.Filenames, base+"gearvr-180_180x180_3dh_LR.mp4")
 		sc.Filenames = append(sc.Filenames, base+"smartphone-180_180x180_3dh_LR.mp4")
