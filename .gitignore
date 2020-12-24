@@ -18,3 +18,4 @@ yarn-error.log
 XBVR.app/Contents/MacOS/XBVR
 XBVR.app/Contents/Resources/XBVR.icns
 docker-compose.yml
+__debug_bin
