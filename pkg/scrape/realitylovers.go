@@ -22,7 +22,7 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
-		sc.Studio = siteID
+		sc.Studio = "RealityLovers"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
