@@ -32,7 +32,6 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		// Title
 		e.ForEach(`div.content-title h2`, func(id int, e *colly.HTMLElement) {
 			sc.Title = strings.TrimSpace(e.Text)
-			log.Infof("title: %s", sc.Title)
 		})
 
 		// Covers
@@ -119,5 +118,5 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("vrlatina", "VRLatina", "https://vrlatina.com/templates/vrlatina_2020/images/logo.png", VRLatina)
+	registerScraper("vrlatina", "VRLatina", "https://vrlatina.com/templates/vrlatina_2020/images/touch/fav.jpg", VRLatina)
 }
