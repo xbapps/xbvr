@@ -36,6 +36,10 @@
         <b-icon pack="mdi" icon="heart" size="is-small"/>
         <span>{{ $t("Favourite") }}</span>
       </b-checkbox-button>
+      <b-checkbox-button v-model="lists" native-value="multifiles" type="is-danger">
+        <b-icon pack="mdi" icon="images-multiple" size="is-small"/>
+        <span>{{ $t("Multifiles") }}</span>
+      </b-checkbox-button>
     </b-field>
 
     <b-field label="Watched" label-position="on-border" :addons="true" class="field-extra">

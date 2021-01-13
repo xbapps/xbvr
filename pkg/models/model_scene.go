@@ -404,6 +404,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		if i.OrElse("") == "favourite" {
 			tx = tx.Where("favourite = ?", true)
 		}
+		if i.OrElse("") == "multifiles" {
+			tx = tx.Where("len(filenames_arr) > ?", 0)
+		}
 	}
 
 	var sites []string

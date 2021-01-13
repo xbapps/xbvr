@@ -316,6 +316,28 @@ func Migrate() {
 				return tx.Model(&models.Action{}).Exec("INSERT INTO actions SELECT * FROM actions_old").Error
 			},
 		},
+		{
+			ID: "0017-update-default-lists",
+			Migrate: func(tx *gorm.DB) error {
+				list := RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Lists:        []optional.String{optional.NewString("multifiles")},
+					Sort:         optional.NewString("release_date_desc"),
+				}
+				listDeoMulti := models.Playlist{
+					Name:         "Multifiles",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: true,
+					Ordering:     -46,
+					SearchParams: list.ToJSON(),
+				}
+				listDeoMulti.Save()
+
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
