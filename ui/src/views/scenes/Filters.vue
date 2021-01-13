@@ -53,6 +53,21 @@
       </div>
     </b-field>
 
+    <b-field :grouped="true" class="field-extra">
+      <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
+        <b-icon pack="mdi" icon="calendar-check" size="is-small"/>
+        <span>{{ $t("Watchlist") }}</span>
+      </b-checkbox-button>
+      <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
+        <b-icon pack="mdi" icon="heart" size="is-small"/>
+        <span>{{ $t("Favourite") }}</span>
+      </b-checkbox-button>
+      <b-checkbox-button v-model="lists" native-value="multifiles" type="is-danger">
+        <b-icon pack="mdi" icon="images-multiple" size="is-small"/>
+        <span>{{ $t("Multifiles") }}</span>
+      </b-checkbox-button>
+    </b-field>
+
     <b-field label="Watched" label-position="on-border" :addons="true" class="field-extra">
       <div class="control is-expanded">
         <div class="select is-fullwidth">

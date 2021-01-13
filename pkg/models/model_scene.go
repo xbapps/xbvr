@@ -534,6 +534,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		if i.OrElse("") == "scripted" {
 			tx = tx.Where("is_scripted = ?", true)
 		}
+		if i.OrElse("") == "multifiles" {
+			tx = tx.Where("len(filenames_arr) > ?", 0)
+		}
 	}
 
 	var sites []string
