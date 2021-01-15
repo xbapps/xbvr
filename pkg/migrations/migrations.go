@@ -20,6 +20,7 @@ type RequestSceneList struct {
 	IsAvailable  optional.Bool     `json:"isAvailable"`
 	IsAccessible optional.Bool     `json:"isAccessible"`
 	IsWatched    optional.Bool     `json:"isWatched"`
+	FilenamesArr []optional.String `json:"filenames_arr"`
 	Lists        []optional.String `json:"lists"`
 	Sites        []optional.String `json:"sites"`
 	Tags         []optional.String `json:"tags"`
@@ -322,11 +323,11 @@ func Migrate() {
 				list := RequestSceneList{
 					IsAvailable:  optional.NewBool(true),
 					IsAccessible: optional.NewBool(true),
-					Lists:        []optional.String{optional.NewString("multifiles")},
+					Lists:        []optional.String{optional.NewString("versions")},
 					Sort:         optional.NewString("release_date_desc"),
 				}
 				listDeoMulti := models.Playlist{
-					Name:         "Multifiles",
+					Name:         "Versions",
 					IsSystem:     true,
 					IsSmart:      true,
 					IsDeoEnabled: true,
@@ -336,6 +337,15 @@ func Migrate() {
 				listDeoMulti.Save()
 
 				return nil
+			},
+		},
+		{
+			ID: "0018-versions",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					Versions bool `json:"versions" gorm:"false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
 	})

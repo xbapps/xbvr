@@ -47,14 +47,13 @@
   import {format, parseISO} from "date-fns";
   import WatchlistButton from "../../components/WatchlistButton";
   import FavouriteButton from "../../components/FavouriteButton";
-  import MultiFilesButton from "../../components/MultiFilesButton";
   import EditButton from "../../components/EditButton";
   import StarRating from 'vue-star-rating';
 
   export default {
     name: "SceneCard",
     props: {item: Object},
-    components: {WatchlistButton, FavouriteButton, MultiFilesButton, EditButton, StarRating},
+    components: {WatchlistButton, FavouriteButton, EditButton, StarRating},
     data() {
       return {
         preview: false,

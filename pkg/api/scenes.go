@@ -227,10 +227,6 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 		scene.Favourite = !scene.Favourite
 	}
 
-	/*	if r.List == "multifiles" {
-			scene.Multifiles = !scene.Multifiles
-		}
-	*/
 	scene.Save()
 }
 

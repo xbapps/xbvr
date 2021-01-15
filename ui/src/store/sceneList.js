@@ -86,8 +86,8 @@ const mutations = {
         if (payload.list === "favourite") {
           obj.favourite = !obj.favourite;
         }
-        if (payload.list === "multifiles") {
-          obj.multifiles = !obj.multifiles;
+        if (payload.list === "versions") {
+          obj.versions = !obj.versions;
         }
       }
       return obj;
