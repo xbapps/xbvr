@@ -96,6 +96,9 @@ type Scene struct {
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
+
+	// Multiple versions of the scene exist
+	Versions bool `json:"versions" gorm:"default:false"`
 }
 
 type Image struct {
@@ -534,8 +537,8 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		if i.OrElse("") == "scripted" {
 			tx = tx.Where("is_scripted = ?", true)
 		}
-		if i.OrElse("") == "multifiles" {
-			tx = tx.Where("len(filenames_arr) > ?", 0)
+		if i.OrElse("") == "versions" {
+			tx = tx.Where("versions = ?", true)
 		}
 	}
 
