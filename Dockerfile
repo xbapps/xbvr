@@ -1,7 +1,7 @@
 FROM node:10.16.3-jessie as build-env
 
 ### Install Go ###
-ENV GO_VERSION=1.15.5 \
+ENV GO_VERSION=1.13.15 \
     GOPATH=$HOME/go-packages \
     GOROOT=$HOME/go
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH

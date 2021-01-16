@@ -4,7 +4,7 @@ ENV HOME=/home/gitpod
 WORKDIR $HOME
 USER gitpod
 
-ENV GO_VERSION=1.15 \
+ENV GO_VERSION=1.13 \
   GOPATH=$HOME/go-packages \
   GOROOT=$HOME/go
 RUN export PATH=$(echo "$PATH" | sed -e 's|:/workspace/go/bin||' -e 's|:/home/gitpod/go/bin||' -e 's|:/home/gitpod/go-packages/bin||')

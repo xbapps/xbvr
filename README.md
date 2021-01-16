@@ -73,7 +73,7 @@ Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG)
 
 Make sure you have following installed:
 
-- Go 1.15
+- Go 1.13
 - Node.js 10.x
 - Yarn 1.17.x
 - fileb0x (run `go get github.com/UnnoTed/fileb0x` outside project directory)
