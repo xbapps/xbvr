@@ -86,6 +86,9 @@ const mutations = {
         if (payload.list === "favourite") {
           obj.favourite = !obj.favourite;
         }
+        if (payload.list === "versions") {
+          obj.versions = !obj.versions;
+        }
       }
       return obj;
     });
