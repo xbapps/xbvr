@@ -61,12 +61,8 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Synposis
-		e.ForEach(`div[data-id="description"]`, func(id int, e *colly.HTMLElement) {
-			if id == 1 {
-				fmt.Printf("%o", e.Text)
-				fmt.Printf("%o", strings.TrimSuffix(e.Text, "ess"))
-				sc.Synopsis = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(e.Text), "Read less"))
-			}
+		e.ForEach(`.video-detail__description .hidden`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(e.Text), "Read less"))
 		})
 
 		// Release date / Duration
