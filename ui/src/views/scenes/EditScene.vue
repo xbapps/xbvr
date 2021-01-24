@@ -198,6 +198,7 @@ export default {
       })
 
       this.$store.commit('sceneList/updateScene', this.scene)
+      this.changesMade = false
 
       this.close()
     },
