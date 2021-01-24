@@ -102,5 +102,5 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 }
 
 func init() {
-	registerScraper("hologirlsvr", "HoloGirlsVR", "https://twivatar.glitch.me/hologirlsvr", HoloGirlsVR)
+	registerScraper("hologirlsvr", "HoloGirlsVR", "https://pbs.twimg.com/profile_images/836310876797837312/Wb3-FTxD_200x200.jpg", HoloGirlsVR)
 }
