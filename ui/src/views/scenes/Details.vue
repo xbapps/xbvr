@@ -349,7 +349,11 @@
         }
       },
       getIndicatorURL(idx) {
-        return this.getImageURL(this.images[idx].url, "x40")
+        if (this.images[idx] !== undefined) {
+          return this.getImageURL(this.images[idx].url, "x40");
+        } else {
+          return "";
+        }
       },
       playCuepoint(cuepoint) {
         this.player.currentTime(cuepoint.time_start);
