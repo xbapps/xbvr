@@ -141,6 +141,7 @@
 
   .card {
     height: 100%;
+    overflow: visible;
   }
 
   .card-content {
