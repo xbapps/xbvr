@@ -20,7 +20,7 @@
             <option value="rating_asc">↑ {{$t("Rating")}}</option>
             <option value="scene_added_desc">↓ {{$t("Scene added date")}}</option>
             <option value="scene_updated_desc">↓ {{$t("Scene updated date")}}</option>
-            <option value="last_opened">↓ {{$t("Last viewed date")}}</option>
+            <option value="last_opened_desc">↓ {{$t("Last viewed date")}}</option>
             <option value="last_opened_asc">↑ {{$t("Last viewed date")}}</option>
             <option value="random">↯ {{$t("Random")}}</option>
           </select>
