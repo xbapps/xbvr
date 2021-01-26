@@ -144,7 +144,7 @@ func TranzVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 }
 
 func init() {
-	registerScraper("wankzvr", "WankzVR", "https://twivatar.glitch.me/wankzvr", WankzVR)
-	registerScraper("milfvr", "MilfVR", "https://twivatar.glitch.me/milfvr", MilfVR)
-	registerScraper("tranzvr", "TranzVR", "https://twivatar.glitch.me/tranzvr", TranzVR)
+	registerScraper("wankzvr", "WankzVR", "https://pbs.twimg.com/profile_images/705066968986955776/3Pme_Bss_200x200.jpg", WankzVR)
+	registerScraper("milfvr", "MilfVR", "https://pbs.twimg.com/profile_images/839152136449470464/Yw3Q3es2_200x200.jpg", MilfVR)
+	registerScraper("tranzvr", "TranzVR", "https://pbs.twimg.com/profile_images/1038092474822979584/JduwAUTl_200x200.jpg", TranzVR)
 }

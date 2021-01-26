@@ -144,5 +144,5 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 }
 
 func init() {
-	registerScraper("czechvr", "Czech VR (all sites)", "https://twivatar.glitch.me/czechvr", CzechVR)
+	registerScraper("czechvr", "Czech VR (all sites)", "https://pbs.twimg.com/profile_images/1341840147382464517/ZLFgYrt6_200x200.jpg", CzechVR)
 }

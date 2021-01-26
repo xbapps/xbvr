@@ -118,5 +118,5 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("vrlatina", "VRLatina", "https://vrlatina.com/templates/vrlatina_2020/images/touch/fav.jpg", VRLatina)
+	registerScraper("vrlatina", "VRLatina", "https://pbs.twimg.com/profile_images/979329978750898176/074YPl3H_200x200.jpg", VRLatina)
 }
