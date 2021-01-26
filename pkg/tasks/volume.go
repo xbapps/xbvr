@@ -1,4 +1,4 @@
-package xbvr
+package tasks
 
 import (
 	"context"
@@ -17,7 +17,6 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/ffprobe"
-	"github.com/xbapps/xbvr/pkg/metrics"
 	"github.com/xbapps/xbvr/pkg/models"
 	"gopkg.in/cheggaaa/pb.v1"
 )
@@ -97,7 +96,7 @@ func RescanVolumes() {
 			Joins("left join volumes on files.volume_id = volumes.id").
 			Where("volumes.type = ?", "local").
 			Count(&localFilesCount)
-		metrics.WritePoint("local_files_count", float64(localFilesCount))
+		common.AddMetricPoint("local_files_count", float64(localFilesCount))
 
 		var localFiles []models.File
 		var localFilesSize int64 = 0
@@ -108,19 +107,19 @@ func RescanVolumes() {
 		for _, v := range localFiles {
 			localFilesSize = localFilesSize + v.Size
 		}
-		metrics.WritePoint("local_files_size", float64(localFilesSize))
+		common.AddMetricPoint("local_files_size", float64(localFilesSize))
 
 		r := models.RequestSceneList{}
-		metrics.WritePoint("scenes_scraped", float64(models.QueryScenes(r, false).Results))
+		common.AddMetricPoint("scenes_scraped", float64(models.QueryScenes(r, false).Results))
 
 		r = models.RequestSceneList{IsAvailable: optional.NewBool(true)}
-		metrics.WritePoint("scenes_downloaded", float64(models.QueryScenes(r, false).Results))
+		common.AddMetricPoint("scenes_downloaded", float64(models.QueryScenes(r, false).Results))
 
 		r = models.RequestSceneList{IsWatched: optional.NewBool(true)}
-		metrics.WritePoint("scenes_watched_overall", float64(models.QueryScenes(r, false).Results))
+		common.AddMetricPoint("scenes_watched_overall", float64(models.QueryScenes(r, false).Results))
 
 		r = models.RequestSceneList{IsWatched: optional.NewBool(false), IsAvailable: optional.NewBool(true)}
-		metrics.WritePoint("scenes_downloaded_unwatched", float64(models.QueryScenes(r, false).Results))
+		common.AddMetricPoint("scenes_downloaded_unwatched", float64(models.QueryScenes(r, false).Results))
 	}
 
 	models.RemoveLock("rescan")

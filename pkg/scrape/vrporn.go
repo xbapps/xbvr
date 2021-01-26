@@ -64,9 +64,9 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		// Skipping some very generic and useless tags
 		skiptags := map[string]bool{
-			"3D":      true,
-			"60 FPS":  true,
-			"HD":      true,
+			"3D":     true,
+			"60 FPS": true,
+			"HD":     true,
 		}
 
 		// Tags
@@ -101,7 +101,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		if len(tmpParts) > 2 {
 			if h, err := strconv.Atoi(tmpParts[0]); err == nil {
 				if m, err := strconv.Atoi(tmpParts[1]); err == nil {
-					duration = h * 60 + m
+					duration = h*60 + m
 				}
 			}
 		} else {
@@ -137,7 +137,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func addVRPornScraper(id string, name string, company string, avatarURL string) {
-	registerScraper(id, name + " (VRPorn)", avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	registerScraper(id, name+" (VRPorn)", avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 		return VRPorn(wg, updateSite, knownScenes, out, id, name, company)
 	})
 }

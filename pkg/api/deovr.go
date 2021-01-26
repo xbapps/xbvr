@@ -1,11 +1,9 @@
-package xbvr
+package api
 
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -13,6 +11,8 @@ import (
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/markphelps/optional"
+	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/deo_remote"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -90,16 +90,16 @@ type DeoSceneVideoSource struct {
 	URL        string `json:"url"`
 }
 
-func deoAuthEnabled() bool {
-	if DEOPASSWORD != "" && DEOUSER != "" {
-		return true
-	} else {
-		return false
+func setDeoPlayerHost(req *restful.Request) {
+	deoIP := strings.Split(req.Request.RemoteAddr, ":")[0]
+	if deoIP != deo_remote.DeoPlayerHost {
+		common.Log.Infof("DeoVR Player connecting from %v", deoIP)
+		deo_remote.DeoPlayerHost = deoIP
 	}
 }
 
 func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	if deoAuthEnabled() {
+	if common.IsDeoAuthEnabled() {
 		var authorized bool
 
 		u, err := req.BodyParameter("login")
@@ -112,7 +112,7 @@ func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *rest
 			authorized = false
 		}
 
-		if u == DEOUSER && p == DEOPASSWORD {
+		if u == common.DEOUSER && p == common.DEOPASSWORD {
 			authorized = true
 		}
 
@@ -144,6 +144,8 @@ func (i DeoVRResource) WebService() *restful.WebService {
 		Consumes(restful.MIME_JSON, "application/x-www-form-urlencoded").
 		Produces(restful.MIME_JSON)
 
+	ws.Route(ws.HEAD("").To(i.getDeoLibrary))
+
 	ws.Route(ws.GET("").Filter(restfulAuthFilter).To(i.getDeoLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
@@ -169,6 +171,8 @@ func (i DeoVRResource) WebService() *restful.WebService {
 }
 
 func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) {
+	setDeoPlayerHost(req)
+
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -182,14 +186,8 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
-	//TODO: remove temporary workaround, once DeoVR doesn't block hi-res videos anymore
 	var height = file.VideoHeight
 	var width = file.VideoWidth
-	if height > 2160 {
-		height = height / 10
-		width = width / 10
-	}
-
 	var sources []DeoSceneEncoding
 	sources = append(sources, DeoSceneEncoding{
 		Name: fmt.Sprintf("File 1/1 - %v", humanize.Bytes(uint64(file.Size))),
@@ -199,7 +197,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
-				URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, file.ID),
+				URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, file.ID),
 			},
 		},
 	})
@@ -220,6 +218,8 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 }
 
 func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response) {
+	setDeoPlayerHost(req)
+
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -255,13 +255,9 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 
 	var sources []DeoSceneEncoding
 	for i := range scene.Files {
-		//TODO: remove temporary workaround, once DeoVR doesn't block hi-res videos anymore
 		var height = scene.Files[i].VideoHeight
 		var width = scene.Files[i].VideoWidth
-		if height > 2160 {
-			height = height / 10
-			width = width / 10
-		}
+
 		sources = append(sources, DeoSceneEncoding{
 			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(scene.Files), scene.Files[i].VideoHeight, humanize.Bytes(uint64(scene.Files[i].Size))),
 			VideoSources: []DeoSceneVideoSource{
@@ -270,7 +266,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 					Height:     height,
 					Width:      width,
 					Size:       scene.Files[i].Size,
-					URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, scene.Files[i].ID),
+					URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, scene.Files[i].ID),
 				},
 			},
 		})
@@ -325,6 +321,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 }
 
 func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Response) {
+	setDeoPlayerHost(req)
+
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -368,33 +366,10 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	})
 }
 
-func getBaseURL() string {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "unknown"
-	}
-
-	addrs, err := net.LookupIP(hostname)
-	if err != nil {
-		return hostname
-	}
-
-	for _, addr := range addrs {
-		if ipv4 := addr.To4(); ipv4 != nil {
-			ip, err := ipv4.MarshalText()
-			if err != nil {
-				return hostname
-			}
-			return string(ip)
-		}
-	}
-	return hostname
-}
-
 func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem {
 	baseURL := "http://" + req.Request.Host
 
-	var list []DeoListItem
+	list := make([]DeoListItem, 0)
 	for i := range scenes {
 		item := DeoListItem{
 			Title:        scenes[i].Title,
@@ -410,7 +385,7 @@ func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem 
 func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 	baseURL := "http://" + req.Request.Host
 
-	var list []DeoListItem
+	list := make([]DeoListItem, 0)
 	for i := range files {
 		if files[i].Volume.Type == "local" {
 			if !files[i].Volume.IsAvailable {
@@ -421,7 +396,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 			Title:        files[i].Filename,
 			VideoLength:  int(files[i].VideoDuration),
 			ThumbnailURL: baseURL + "/ui/images/blank.png",
-			VideoURL:     baseURL + "/deovr/file/" + fmt.Sprint(files[i].ID),
+			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, files[i].ID),
 		}
 		list = append(list, item)
 	}

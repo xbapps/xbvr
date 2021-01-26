@@ -3,7 +3,7 @@ package main
 //go:generate fileb0x .assets.toml
 
 import (
-	"github.com/xbapps/xbvr/pkg/xbvr"
+	"github.com/xbapps/xbvr/pkg/server"
 )
 
 var version = "CURRENT"
@@ -12,5 +12,5 @@ var branch = "master"
 var date = "moment ago"
 
 func main() {
-	xbvr.StartServer(version, commit, branch, date)
+	server.StartServer(version, commit, branch, date)
 }

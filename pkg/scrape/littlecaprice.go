@@ -53,10 +53,10 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 		// Duration
 		minutes := durationRegEx.FindStringSubmatch(e.ChildText(`.vid_length`))[1]
-		sc.Duration,_ = strconv.Atoi(minutes)
+		sc.Duration, _ = strconv.Atoi(minutes)
 
 		// Released
-		dt,_ := time.Parse("January 2, 2006", e.ChildText(`.vid_date`))
+		dt, _ := time.Parse("January 2, 2006", e.ChildText(`.vid_date`))
 		sc.Released = dt.Format("2006-01-02")
 
 		// Synopsis
@@ -70,7 +70,7 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		})
 
 		// Gallery
-		galleryPage,_ := e.DOM.Find(`.vid_buttons a[href*="project"]`).Attr("href")
+		galleryPage, _ := e.DOM.Find(`.vid_buttons a[href*="project"]`).Attr("href")
 		ctx := colly.NewContext()
 		ctx.Put("scene", sc)
 
