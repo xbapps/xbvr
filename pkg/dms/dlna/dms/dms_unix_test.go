@@ -15,7 +15,7 @@ func TestIsHiddenPath(t *testing.T) {
 	for path, expected := range data {
 		if actual, err := isHiddenPath(path); err != nil {
 			t.Errorf("isHiddenPath(%v) returned unexpected error: %s", path, err)
-		] else if expected != actual {
+		} else if expected != actual {
 			t.Errorf("isHiddenPath(%v), expected %v, got %v", path, expected, actual)
 		}
 	}
