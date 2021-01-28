@@ -23,7 +23,7 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	siteCollector := createCollector("vrallure.com")
 
 	// Regex for original resolution of both covers and gallery
-	reGetOriginal := regexp.MustCompile(`^(https?:\/\/k3y8c8f9\.ssl\.hwcdn\.net\/vra\/)(?:largethumbs|hugethumbs|rollover_large)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
+	reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vra\/)(?:largethumbs|hugethumbs|rollover_large)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
