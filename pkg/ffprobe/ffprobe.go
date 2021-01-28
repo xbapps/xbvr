@@ -30,4 +30,3 @@ func GetProbeData(filePath string, timeout time.Duration) (data *ProbeData, err 
 
 	return GetProbeDataContext(ctx, filePath)
 }
-
