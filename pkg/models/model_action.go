@@ -3,7 +3,7 @@ package models
 import "github.com/avast/retry-go"
 
 type Action struct {
-	ID            uint   `gorm:"primary_key" json:"id"`
+	ID uint `gorm:"primary_key" json:"id"`
 
 	SceneID       string `json:"scene_id"`
 	ActionType    string `json:"action_type"`
@@ -40,10 +40,10 @@ func (a *Action) Save() {
 
 func AddAction(sceneID string, actionType string, changedColumn string, newValue string) {
 	action := Action{
-		SceneID: sceneID,
-		ActionType: actionType,
+		SceneID:       sceneID,
+		ActionType:    actionType,
 		ChangedColumn: changedColumn,
-		NewValue: newValue,
+		NewValue:      newValue,
 	}
 
 	action.Save()

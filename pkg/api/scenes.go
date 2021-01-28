@@ -30,17 +30,17 @@ type RequestSetSceneRating struct {
 }
 
 type RequestEditSceneDetails struct {
-	Title        string    `json:"title"`
-	Synopsis     string    `json:"synopsis"`
-	Studio       string    `json:"studio"`
-	Site         string    `json:"site"`
-	SceneURL     string    `json:"scene_url"`
-	ReleaseDate  string    `json:"release_date_text"`
-	Cast         []string  `json:"castArray"`
-	Tags         []string  `json:"tagsArray"`
-	FilenamesArr string    `json:"filenames_arr"`
-	Images       string    `json:"images"`
-	CoverURL     string    `json:"cover_url"`
+	Title        string   `json:"title"`
+	Synopsis     string   `json:"synopsis"`
+	Studio       string   `json:"studio"`
+	Site         string   `json:"site"`
+	SceneURL     string   `json:"scene_url"`
+	ReleaseDate  string   `json:"release_date_text"`
+	Cast         []string `json:"castArray"`
+	Tags         []string `json:"tagsArray"`
+	FilenamesArr string   `json:"filenames_arr"`
+	Images       string   `json:"images"`
+	CoverURL     string   `json:"cover_url"`
 }
 
 type ResponseGetScenes struct {

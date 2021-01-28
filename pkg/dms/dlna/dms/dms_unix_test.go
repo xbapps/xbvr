@@ -1,4 +1,4 @@
-//+build unix
+// +build unix
 
 package dms
 
@@ -6,11 +6,11 @@ import "testing"
 
 func TestIsHiddenPath(t *testing.T) {
 	var data = map[string]bool{
-		"/some/path": false,
-		"/some/foo.bar": false,
+		"/some/path":         false,
+		"/some/foo.bar":      false,
 		"/some/path/.hidden": true,
 		"/some/.hidden/path": true,
-		"/.hidden/path": true,
+		"/.hidden/path":      true,
 	}
 	for path, expected := range data {
 		if actual, err := isHiddenPath(path); err != nil {
