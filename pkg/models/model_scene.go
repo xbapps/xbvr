@@ -472,10 +472,14 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.
 			Where("star_rating > ?", 0).
 			Order("star_rating asc")
-	case "last_opened":
+	case "last_opened_desc":
 		tx = tx.
 			Where("last_opened > ?", "0001-01-01 00:00:00+00:00").
 			Order("last_opened desc")
+	case "last_opened_asc":
+		tx = tx.
+			Where("last_opened > ?", "0001-01-01 00:00:00+00:00").
+			Order("last_opened asc")
 	case "scene_added_desc":
 		tx = tx.Order("created_at desc")
 	case "scene_updated_desc":
