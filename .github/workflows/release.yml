@@ -25,11 +25,11 @@ jobs:
           go-version: '~1.13.1'
 
       - name: Release dry run
-        run: make release-dry-run
+        run: make release-dry-run-snapshot
 
       - name: Setup release environment
         run: |-
-          echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
+          echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}' > .release-env
 
       - name: Release publish
-        run: make release
+        run: make release-snapshot
