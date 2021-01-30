@@ -1,4 +1,4 @@
-GOLANG_CROSS_VERSION  ?= v1.15.2
+GOLANG_CROSS_VERSION  ?= v1.15.7
 
 SYSROOT_DIR     ?= sysroots
 SYSROOT_ARCHIVE ?= sysroots.tar.bz2
@@ -12,7 +12,7 @@ sysroot-unpack:
 	@pv $(SYSROOT_ARCHIVE) | pbzip2 -cd | tar -xf -
 
 .PHONY: release-dry-run-snapshot
-release-dry-run:
+release-dry-run-snapshot:
 	@docker run \
 		--rm \
 		--privileged \
