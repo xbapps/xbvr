@@ -1,4 +1,4 @@
-GOLANG_CROSS_VERSION  ?= v1.15.7
+GOLANG_CROSS_VERSION  ?= v1.15.6
 
 SYSROOT_DIR     ?= sysroots
 SYSROOT_ARCHIVE ?= sysroots.tar.bz2
