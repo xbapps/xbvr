@@ -1,4 +1,4 @@
-name: CI
+name: lint
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
+
     - name: Install Go
       uses: actions/setup-go@v2
       with:
@@ -24,6 +24,6 @@ jobs:
 
     - name: Checkout code
       uses: actions/checkout@v2
-      
+
     - name: Check code formatting using gofmt
       uses: Jerome1337/gofmt-action@v1.0.4
