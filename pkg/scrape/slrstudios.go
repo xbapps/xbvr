@@ -227,5 +227,5 @@ func init() {
 	addSLRScraper("net69vr", "Net69VR", "Net69VR", "https://mcdn.vrporn.com/files/20171113233505/net69vr-vr-porn-studio-vrporn.com-virtual-reality.png")
 	addSLRScraper("VRpussyVision", "VRpussyVision", "VRpussyVision", "https://mcdn.vrporn.com/files/20180313160830/vrpussyvision-square-banner.png")
 	addSLRScraper("altporn4u-vr", "AltPorn4uVR", "AltPorn4uVR", "https://www.altporn4u.com/favicon.ico")
-
+	addSLRScraper("deepinsex", "DeepInSex", "DeepInSex", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/266/logo_crop_1610126420.png")
 }
