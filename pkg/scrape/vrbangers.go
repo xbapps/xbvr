@@ -146,7 +146,7 @@ func VRBGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("vrbangers", "VRBangers", "https://twivatar.glitch.me/vrbangers", VRBangers)
-	registerScraper("vrbtrans", "VRBTrans", "https://twivatar.glitch.me/vrbtrans", VRBTrans)
-	registerScraper("vrbgay", "VRBGay", "https://twivatar.glitch.me/vrbgay", VRBGay)
+	registerScraper("vrbangers", "VRBangers", "https://pbs.twimg.com/profile_images/1115746243320246272/Tiaofu5P_200x200.png", VRBangers)
+	registerScraper("vrbtrans", "VRBTrans", "https://pbs.twimg.com/profile_images/980851177557340160/eTnu1ZzO_200x200.jpg", VRBTrans)
+	registerScraper("vrbgay", "VRBGay", "https://pbs.twimg.com/profile_images/916453413344313344/8pT50i9j_200x200.jpg", VRBGay)
 }

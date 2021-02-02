@@ -39,8 +39,8 @@ type VersionCheckResponse struct {
 }
 
 type RequestSaveOptionsWeb struct {
-	TagSort      string   `json:"tagSort"`
-	SceneEdit    bool     `json:"sceneEdit"`
+	TagSort   string `json:"tagSort"`
+	SceneEdit bool   `json:"sceneEdit"`
 }
 
 type RequestSaveOptionsDLNA struct {
@@ -62,8 +62,8 @@ type RequestSaveOptionsPreviews struct {
 type GetStateResponse struct {
 	CurrentState struct {
 		Web struct {
-			TagSort   string  `json:"tagSort"`
-			SceneEdit bool    `json:"sceneEdit"`
+			TagSort   string `json:"tagSort"`
+			SceneEdit bool   `json:"sceneEdit"`
 		} `json:"web"`
 		DLNA struct {
 			Running  bool     `json:"running"`

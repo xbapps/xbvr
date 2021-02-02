@@ -98,14 +98,14 @@
 </template>
 
 <script>
-import ky from "ky";
+import ky from 'ky';
 import GlobalEvents from 'vue-global-events';
-import ListEditor from "../../components/ListEditor";
+import ListEditor from '../../components/ListEditor';
 
 export default {
-  name: "EditScene",
-  components: {ListEditor, GlobalEvents},
-  data() {
+  name: 'EditScene',
+  components: { ListEditor, GlobalEvents },
+  data () {
     /*
     title: string,
     synopsis: string,
@@ -118,111 +118,112 @@ export default {
     images: object[]
     filenames_arr: string[]
      */
-    const scene = Object.assign({}, this.$store.state.overlay.edit.scene);
-    scene.castArray = scene.cast.map(c => c.name);
-    scene.tagsArray = scene.tags.map(t => t.name);
-    const images = JSON.parse(scene.images);
-    scene.covers = images.filter(i => i.type === 'cover').map(i => i.url);
-    scene.gallery = images.filter(i => i.type === 'gallery').map(i => i.url);
-    scene.files = JSON.parse(scene.filenames_arr);
+    const scene = Object.assign({}, this.$store.state.overlay.edit.scene)
+    scene.castArray = scene.cast.map(c => c.name)
+    scene.tagsArray = scene.tags.map(t => t.name)
+    const images = JSON.parse(scene.images)
+    scene.covers = images.filter(i => i.type === 'cover').map(i => i.url)
+    scene.gallery = images.filter(i => i.type === 'gallery').map(i => i.url)
+    scene.files = JSON.parse(scene.filenames_arr)
     return {
       scene,
       // A shallow copy won't work, need a deep copy
       source: JSON.parse(JSON.stringify(scene)),
       filteredCast: [],
       filteredTags: [],
-      changesMade: false,
-    };
+      changesMade: false
+    }
   },
   methods: {
-    getFilteredCast(text) {
+    getFilteredCast (text) {
       this.filteredCast = this.filters.cast.filter(option =>
-        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0);
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0)
     },
-    getFilteredTags(text) {
+    getFilteredTags (text) {
       this.filteredTags = this.filters.tags.filter(option =>
-        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0);
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0)
     },
-    close() {
+    close () {
       if (this.changesMade) {
         this.$buefy.dialog.confirm({
-          title: "Close without saving",
-          message: "Are you sure you want to close before saving your changes?",
-          confirmText: "Close",
-          type: "is-warning",
+          title: 'Close without saving',
+          message: 'Are you sure you want to close before saving your changes?',
+          confirmText: 'Close',
+          type: 'is-warning',
           hasIcon: true,
-          onConfirm: () => this.$store.commit("overlay/hideEditDetails"),
-        });
-        return;
+          onConfirm: () => this.$store.commit('overlay/hideEditDetails')
+        })
+        return
       }
-      this.$store.commit("overlay/hideEditDetails");
+      this.$store.commit('overlay/hideEditDetails')
     },
-    save() {
-      const images = [];
+    save () {
+      const images = []
       this.scene.covers.forEach(url => {
         images.push({
           url,
-          type: "cover",
-          orientation: "",
-        });
-      });
+          type: 'cover',
+          orientation: ''
+        })
+      })
       this.scene.gallery.forEach(url => {
         images.push({
           url,
-          type: "gallery",
-          orientation: "",
+          type: 'gallery',
+          orientation: ''
         })
-      });
-      this.scene.images = JSON.stringify(images);
-      this.scene.cover_url = this.scene.covers[0];
-      this.scene.filenames_arr = JSON.stringify(this.scene.files);
+      })
+      this.scene.images = JSON.stringify(images)
+      this.scene.cover_url = this.scene.covers[0]
+      this.scene.filenames_arr = JSON.stringify(this.scene.files)
 
-      ky.post(`/api/scene/edit/${this.scene.id}`, {json: {...this.scene}});
+      ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } })
 
       this.scene.cast = this.scene.castArray.map(a => {
-        const find = this.scene.cast.find(o => o.name === a);
-        if (find) return find;
+        const find = this.scene.cast.find(o => o.name === a)
+        if (find) return find
         return {
           name: a,
-          count: 0,
-        }
-      });
-
-      this.scene.tags = this.scene.tagsArray.map(t => {
-        const find = this.scene.tags.find(o => o.name === t);
-        if (find) return find;
-        return {
-          name: t,
-          count: 0,
+          count: 0
         }
       })
 
-      this.$store.commit('sceneList/updateScene', this.scene);
+      this.scene.tags = this.scene.tagsArray.map(t => {
+        const find = this.scene.tags.find(o => o.name === t)
+        if (find) return find
+        return {
+          name: t,
+          count: 0
+        }
+      })
 
-      this.close();
+      this.$store.commit('sceneList/updateScene', this.scene)
+      this.changesMade = false
+
+      this.close()
     },
-    blur(field) {
-      if (this.changesMade) return; // Changes have already been made. No point to check any further
+    blur (field) {
+      if (this.changesMade) return // Changes have already been made. No point to check any further
       if (['castArray', 'tagsArray', 'files', 'covers', 'gallery'].includes(field)) {
         if (this.scene[field].length !== this.source[field].length) {
-          this.changesMade = true;
+          this.changesMade = true
         } else {
           for (let i = 0; i < this.scene[field].length; i++) {
             if (this.scene[field][i] !== this.source[field][i]) {
-              this.changesMade = true;
-              break;
+              this.changesMade = true
+              break
             }
           }
         }
       } else if (this.scene[field] !== this.source[field]) {
-        this.changesMade = true;
+        this.changesMade = true
       }
-    },
+    }
   },
   computed: {
-    filters() {
-      return this.$store.state.sceneList.filterOpts;
-    },
+    filters () {
+      return this.$store.state.sceneList.filterOpts
+    }
   }
 }
 </script>

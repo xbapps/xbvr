@@ -114,5 +114,5 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("tmwvrnet", "TmwVRnet", "https://twivatar.glitch.me/tmwvrnet", TmwVRnet)
+	registerScraper("tmwvrnet", "TmwVRnet", "https://pbs.twimg.com/profile_images/832208391967797250/1rEowkN6_200x200.jpg", TmwVRnet)
 }
