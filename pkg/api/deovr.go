@@ -197,7 +197,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
-				URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, file.ID),
+				URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, file.ID),
 			},
 		},
 	})
@@ -266,7 +266,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 					Height:     height,
 					Width:      width,
 					Size:       scene.Files[i].Size,
-					URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, scene.Files[i].ID),
+					URL:        fmt.Sprintf("%v/api/dms/file/%v", baseURL, scene.Files[i].ID),
 				},
 			},
 		})
@@ -396,7 +396,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 			Title:        files[i].Filename,
 			VideoLength:  int(files[i].VideoDuration),
 			ThumbnailURL: baseURL + "/ui/images/blank.png",
-			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, files[i].ID),
+			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v", baseURL, files[i].ID),
 		}
 		list = append(list, item)
 	}
