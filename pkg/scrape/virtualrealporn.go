@@ -34,13 +34,13 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		var tmpCast []string
 
-		// Scene ID - get from DeoVR JavaScript
-		e.ForEach(`script[id="deovr-js-extra"]`, func(id int, e *colly.HTMLElement) {
+		// Scene ID - get from JavaScript
+		e.ForEach(`script[id="virtualreal_video-streaming-js-extra"]`, func(id int, e *colly.HTMLElement) {
 			var jsonObj map[string]interface{}
 			jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-12]
 			json.Unmarshal([]byte(jsonData), &jsonObj)
 
-			sc.SiteID = jsonObj["post_id"].(string)
+			sc.SiteID = jsonObj["vid"].(string)
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 		})
 
@@ -90,25 +90,16 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			}
 		})
 
-		e.ForEach(`dl8-video source`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`script[id="downloadLinks-js-extra"]`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				origURL := e.Attr("src")
-				fragmentName := strings.Split(origURL, "/")
-				fpName := strings.Split(fragmentName[len(fragmentName)-1], "&")[0]
+				jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-12]
+				fpName := gjson.Get(jsonData, "videopart").String()
 
 				// A couple of pages will crash the scraper (ex. url https://virtualrealporn.com/&mode=streaming)
 				if fpName == "" {
 					return
 				}
 
-				prefix := siteID + ".com_-_"
-				if strings.HasPrefix(fpName, prefix) {
-					fpName = strings.Split(fpName, prefix)[1]
-				} else {
-					prefix = siteID + "_-_"
-					fpName = strings.Split(fpName, prefix)[1]
-				}
-				fpName = strings.SplitN(fpName, "_-_Trailer", 2)[0]
 				siteIDAcronym := "VRP"
 				if siteID == "VirtualRealTrans" {
 					siteIDAcronym = "VRT"
