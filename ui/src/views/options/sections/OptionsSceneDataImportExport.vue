@@ -22,24 +22,24 @@
 </template>
 
 <script>
-  import ky from "ky";
+import ky from 'ky'
 
-  export default {
-    name: "OptionsSceneDataImportExport",
-    data() {
-      return {
-        bundleURL: "",
+export default {
+  name: 'OptionsSceneDataImportExport',
+  data () {
+    return {
+      bundleURL: ''
+    }
+  },
+  methods: {
+    importContent () {
+      if (this.bundleURL !== '') {
+        ky.get('/api/task/bundle/import', { searchParams: { url: this.bundleURL } })
       }
     },
-    methods: {
-      importContent() {
-        if (this.bundleURL !== "") {
-          ky.get(`/api/task/bundle/import`, {searchParams: {url: this.bundleURL}});
-        }
-      },
-      exportContent() {
-        ky.get(`/api/task/bundle/export`);
-      },
-    },
+    exportContent () {
+      ky.get('/api/task/bundle/export')
+    }
   }
+}
 </script>

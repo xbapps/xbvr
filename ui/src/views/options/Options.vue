@@ -41,25 +41,25 @@
 </template>
 
 <script>
-  import InterfaceWeb from "./sections/InterfaceWeb"
-  import Storage from "./sections/Storage";
-  import SceneDataScrapers from "./sections/OptionsSceneDataScrapers";
-  import SceneDataImportExport from "./sections/OptionsSceneDataImportExport";
-  import InterfaceDLNA from "./sections/InterfaceDLNA.vue";
-  import Cache from "./sections/Cache.vue";
-  import Previews from "./sections/Previews.vue";
+import InterfaceWeb from './sections/InterfaceWeb'
+import Storage from './sections/Storage'
+import SceneDataScrapers from './sections/OptionsSceneDataScrapers'
+import SceneDataImportExport from './sections/OptionsSceneDataImportExport'
+import InterfaceDLNA from './sections/InterfaceDLNA.vue'
+import Cache from './sections/Cache.vue'
+import Previews from './sections/Previews.vue'
 
-  export default {
-    components: {Storage, SceneDataScrapers, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, Cache, Previews},
-    data: function () {
-      return {
-        active: "storage",
-      }
-    },
-    methods: {
-      setActive: function (e) {
-        this.active = e;
-      }
-    },
+export default {
+  components: { Storage, SceneDataScrapers, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, Cache, Previews },
+  data: function () {
+    return {
+      active: 'storage'
+    }
+  },
+  methods: {
+    setActive: function (e) {
+      this.active = e
+    }
   }
+}
 </script>

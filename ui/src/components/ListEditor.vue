@@ -15,25 +15,25 @@
 </template>
 
 <script>
-  export default {
-    name: "ListEditor",
-    props: {
-      list: Array,
-      blurFn: Function,
+export default {
+  name: 'ListEditor',
+  props: {
+    list: Array,
+    blurFn: Function
+  },
+  methods: {
+    addRow () {
+      this.list.push('')
     },
-    methods: {
-      addRow() {
-        this.list.push("");
-      },
-      deleteRow(i) {
-        this.list.splice(i, 1);
-      },
-      blur(i) {
-        this.list[i] = document.querySelector(`.list-editor-input-${i} input`).value;
-        this.blurFn.call(null);
-      },
+    deleteRow (i) {
+      this.list.splice(i, 1)
+    },
+    blur (i) {
+      this.list[i] = document.querySelector(`.list-editor-input-${i} input`).value
+      this.blurFn.call(null)
     }
   }
+}
 </script>
 
 <style scoped>

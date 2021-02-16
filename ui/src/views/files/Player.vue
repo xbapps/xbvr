@@ -14,61 +14,61 @@
 </template>
 
 <script>
-  import videojs from "video.js";
-  import vr from "videojs-vr/dist/videojs-vr.min.js";
-  import hotkeys from "videojs-hotkeys";
+import videojs from 'video.js'
+import vr from 'videojs-vr/dist/videojs-vr.min.js'
+import hotkeys from 'videojs-hotkeys'
 
-  export default {
-    name: "Details",
-    data() {
-      return {
-        player: {},
+export default {
+  name: 'Details',
+  data () {
+    return {
+      player: {}
+    }
+  },
+  computed: {
+    sourceUrl () {
+      if (this.$store.state.overlay.player.file) {
+        return '/api/dms/file/' + this.$store.state.overlay.player.file.id + '?dnt=1'
       }
-    },
-    computed: {
-      sourceUrl() {
-        if (this.$store.state.overlay.player.file) {
-          return "/api/dms/file/" + this.$store.state.overlay.player.file.id + "?dnt=1";
-        }
-        return "";
-      }
-    },
-    mounted() {
-      this.player = videojs(this.$refs.player);
-      let vr = this.player.vr({
-        projection: '180',
-        forceCardboard: false
-      });
+      return ''
+    }
+  },
+  mounted () {
+    this.player = videojs(this.$refs.player)
+    const vr = this.player.vr({
+      projection: '180',
+      forceCardboard: false
+    })
 
-      this.player.hotkeys({
-        alwaysCaptureHotkeys: true,
-        volumeStep: 0.1,
-        seekStep: 5,
-        enableModifiersForNumbers: false,
-        customKeys: {
-          closeModal: {
-            key: function (event) {
-              return event.which === 27
-            },
-            handler: (player, options, event) => {
-              this.player.dispose();
-              this.$store.commit("overlay/hidePlayer");
-            }
+    this.player.hotkeys({
+      alwaysCaptureHotkeys: true,
+      volumeStep: 0.1,
+      seekStep: 5,
+      enableModifiersForNumbers: false,
+      customKeys: {
+        closeModal: {
+          key: function (event) {
+            return event.which === 27
+          },
+          handler: (player, options, event) => {
+            this.player.dispose()
+            this.$store.commit('overlay/hidePlayer')
           }
         }
-      });
+      }
+    })
 
-      this.player.on("loadedmetadata", function () {
-        vr.camera.position.set(-1, 0, -1);
-      });
-    },
-    methods: {
-      close() {
-        this.player.dispose();
-        this.$store.commit("overlay/hidePlayer");
-      },
+    this.player.on('loadedmetadata', function () {
+      vr.camera.position.set(-1, 0, -1)
+    })
+  },
+  methods: {
+    close () {
+      this.player.dispose()
+      this.$store.commit('overlay/hidePlayer')
     }
   }
+}
 </script>
 
 <style scoped>

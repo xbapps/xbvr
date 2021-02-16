@@ -44,36 +44,36 @@
 </template>
 
 <script>
-  import {format, parseISO} from "date-fns";
-  import WatchlistButton from "../../components/WatchlistButton";
-  import FavouriteButton from "../../components/FavouriteButton";
-  import EditButton from "../../components/EditButton";
-  import StarRating from 'vue-star-rating';
+import { format, parseISO } from 'date-fns'
+import WatchlistButton from '../../components/WatchlistButton'
+import FavouriteButton from '../../components/FavouriteButton'
+import EditButton from '../../components/EditButton'
+import StarRating from 'vue-star-rating'
 
-  export default {
-    name: "SceneCard",
-    props: {item: Object},
-    components: {WatchlistButton, FavouriteButton, EditButton, StarRating},
-    data() {
-      return {
-        preview: false,
-        format,
-        parseISO
+export default {
+  name: 'SceneCard',
+  props: { item: Object },
+  components: { WatchlistButton, FavouriteButton, EditButton, StarRating },
+  data () {
+    return {
+      preview: false,
+      format,
+      parseISO
+    }
+  },
+  methods: {
+    getImageURL (u) {
+      if (u.startsWith('http')) {
+        return '/img/700x/' + u.replace('://', ':/')
+      } else {
+        return u
       }
     },
-    methods: {
-      getImageURL(u) {
-        if (u.startsWith("http")) {
-          return "/img/700x/" + u.replace("://", ":/");
-        } else {
-          return u;
-        }
-      },
-      showDetails(scene) {
-        this.$store.commit("overlay/showDetails", {scene: scene});
-      }
+    showDetails (scene) {
+      this.$store.commit('overlay/showDetails', { scene: scene })
     }
   }
+}
 </script>
 
 <style scoped>

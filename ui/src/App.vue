@@ -14,14 +14,14 @@
 </template>
 
 <script>
-  import Navbar from "./Navbar.vue";
-  import Socket from "./Socket.vue";
-  import QuickFind from "./QuickFind";
-  import GlobalEvents from 'vue-global-events';
+import Navbar from './Navbar.vue'
+import Socket from './Socket.vue'
+import QuickFind from './QuickFind'
+import GlobalEvents from 'vue-global-events'
 
-  export default {
-    components: {Navbar, Socket, QuickFind, GlobalEvents},
-  }
+export default {
+  components: { Navbar, Socket, QuickFind, GlobalEvents }
+}
 </script>
 
 <style>

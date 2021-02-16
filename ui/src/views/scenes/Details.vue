@@ -179,268 +179,268 @@
 </template>
 
 <script>
-  import ky from "ky";
-  import videojs from "video.js";
-  import vr from "videojs-vr/dist/videojs-vr.min.js";
-  import {format, formatDistance, parseISO} from "date-fns";
-  import prettyBytes from "pretty-bytes";
-  import VueLoadImage from "vue-load-image";
-  import GlobalEvents from 'vue-global-events';
-  import StarRating from 'vue-star-rating';
-  import FavouriteButton from "../../components/FavouriteButton";
-  import WatchlistButton from "../../components/WatchlistButton";
-  import EditButton from "../../components/EditButton";
+import ky from 'ky'
+import videojs from 'video.js'
+import vr from 'videojs-vr/dist/videojs-vr.min.js'
+import { format, formatDistance, parseISO } from 'date-fns'
+import prettyBytes from 'pretty-bytes'
+import VueLoadImage from 'vue-load-image'
+import GlobalEvents from 'vue-global-events'
+import StarRating from 'vue-star-rating'
+import FavouriteButton from '../../components/FavouriteButton'
+import WatchlistButton from '../../components/WatchlistButton'
+import EditButton from '../../components/EditButton'
 
-  export default {
-    name: "Details",
-    components: {VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton},
-    data() {
-      return {
-        index: 1,
-        activeTab: 0,
-        activeMedia: 0,
-        player: {},
-        tagAct: "",
-        tagPosition: "",
-        cuepointPositionTags: ["", "standing", "sitting", "laying", "kneeling"],
-        cuepointActTags: ["", "handjob", "blowjob", "doggy", "cowgirl", "revcowgirl", "missionary", "titfuck", "anal", "cumshot", "69", "facesit"],
-        carouselSlide: 0,
+export default {
+  name: 'Details',
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton },
+  data () {
+    return {
+      index: 1,
+      activeTab: 0,
+      activeMedia: 0,
+      player: {},
+      tagAct: '',
+      tagPosition: '',
+      cuepointPositionTags: ['', 'standing', 'sitting', 'laying', 'kneeling'],
+      cuepointActTags: ['', 'handjob', 'blowjob', 'doggy', 'cowgirl', 'revcowgirl', 'missionary', 'titfuck', 'anal', 'cumshot', '69', 'facesit'],
+      carouselSlide: 0
+    }
+  },
+  computed: {
+    item () {
+      const item = this.$store.state.overlay.details.scene
+      if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
+        item.tags.sort((a, b) => a.name < b.name ? -1 : 1)
       }
+      return item
     },
-    computed: {
-      item() {
-        const item = this.$store.state.overlay.details.scene;
-        if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
-          item.tags.sort((a, b) => a.name < b.name ? -1 : 1);
-        }
-        return item;
-      },
-      // Properties for gallery
-      images() {
-        return JSON.parse(this.item.images);
-      },
-      // Tab: cuepoints
-      sortedCuepoints() {
-        if (this.item.cuepoints !== null) {
-          return this.item.cuepoints.sort((a, b) => (a.time_start > b.time_start) ? 1 : -1);
-        }
-        return [];
-      },
-      // Tab: files
-      fileCount() {
-        if (this.item.file !== null) {
-          return this.item.file.length;
-        }
-        return 0;
-      },
-      // Tab: history
-      historySessionsCount() {
-        if (this.item.history !== null) {
-          return this.item.history.length;
-        }
-        return 0;
-      },
-      historySessionsDuration() {
-        if (this.item.history !== null) {
-          let total = 0;
-          this.item.history.map(i => {
-            total = total + i.duration;
-          });
-          return total;
-        }
-        return 0;
-      },
-      showEdit() {
-        return this.$store.state.overlay.edit.show;
+    // Properties for gallery
+    images () {
+      return JSON.parse(this.item.images)
+    },
+    // Tab: cuepoints
+    sortedCuepoints () {
+      if (this.item.cuepoints !== null) {
+        return this.item.cuepoints.sort((a, b) => (a.time_start > b.time_start) ? 1 : -1)
       }
+      return []
     },
-    mounted() {
-      this.setupPlayer();
+    // Tab: files
+    fileCount () {
+      if (this.item.file !== null) {
+        return this.item.file.length
+      }
+      return 0
     },
-    methods: {
-      setupPlayer() {
-        this.player = videojs(this.$refs.player, {
-          aspectRatio: '1:1',
-          fluid: true,
-          loop: true
-        });
+    // Tab: history
+    historySessionsCount () {
+      if (this.item.history !== null) {
+        return this.item.history.length
+      }
+      return 0
+    },
+    historySessionsDuration () {
+      if (this.item.history !== null) {
+        let total = 0
+        this.item.history.map(i => {
+          total = total + i.duration
+        })
+        return total
+      }
+      return 0
+    },
+    showEdit () {
+      return this.$store.state.overlay.edit.show
+    }
+  },
+  mounted () {
+    this.setupPlayer()
+  },
+  methods: {
+    setupPlayer () {
+      this.player = videojs(this.$refs.player, {
+        aspectRatio: '1:1',
+        fluid: true,
+        loop: true
+      })
 
-        this.player.hotkeys({
-          alwaysCaptureHotkeys: true,
-          volumeStep: 0.1,
-          seekStep: 5,
-          enableModifiersForNumbers: false,
-          customKeys: {
-            closeModal: {
-              key: function (event) {
-                return event.which === 27
-              },
-              handler: (player, options, event) => {
-                this.player.dispose();
-                this.$store.commit("overlay/hideDetails");
-              }
+      this.player.hotkeys({
+        alwaysCaptureHotkeys: true,
+        volumeStep: 0.1,
+        seekStep: 5,
+        enableModifiersForNumbers: false,
+        customKeys: {
+          closeModal: {
+            key: function (event) {
+              return event.which === 27
+            },
+            handler: (player, options, event) => {
+              this.player.dispose()
+              this.$store.commit('overlay/hideDetails')
             }
           }
-        });
-      },
-      updatePlayer(src, projection) {
-        this.player.reset();
+        }
+      })
+    },
+    updatePlayer (src, projection) {
+      this.player.reset()
 
-        let vr = this.player.vr({
-          projection: projection,
-          forceCardboard: false
-        });
+      const vr = this.player.vr({
+        projection: projection,
+        forceCardboard: false
+      })
 
-        this.player.on("loadedmetadata", function () {
-          // vr.camera.position.set(-1, 0, 2);
-        });
+      this.player.on('loadedmetadata', function () {
+        // vr.camera.position.set(-1, 0, 2);
+      })
 
-        this.player.src({src: src, type: "video/mp4"});
-        this.player.poster(this.getImageURL(this.item.cover_url, ""));
-      },
-      showCastScenes(actor) {
-        this.$store.state.sceneList.filters.cast = actor;
-        this.$store.state.sceneList.filters.sites = [];
-        this.$store.state.sceneList.filters.tags = [];
-        this.$router.push({
-          name: 'scenes',
-          query: {q: this.$store.getters['sceneList/filterQueryParams']}
-        });
-        this.close();
-      },
-      showTagScenes(tag) {
-        this.$store.state.sceneList.filters.cast = [];
-        this.$store.state.sceneList.filters.sites = [];
-        this.$store.state.sceneList.filters.tags = tag;
-        this.$router.push({
-          name: 'scenes',
-          query: {q: this.$store.getters['sceneList/filterQueryParams']}
-        });
-        this.close();
-      },
-      playPreview() {
-        this.activeMedia = 1;
-        this.updatePlayer("/api/dms/preview/" + this.item.scene_id, "NONE");
-        this.player.play();
-      },
-      playFile(file) {
-        this.activeMedia = 1;
-        this.updatePlayer("/api/dms/file/" + file.id + "?dnt=1", "180");
-        this.player.play();
-      },
-      removeFile(file) {
-        this.$buefy.dialog.confirm({
-          title: 'Remove file',
-          message: `You're about to remove file <strong>${file.filename}</strong> from <strong>disk</strong>.`,
-          type: 'is-danger',
-          hasIcon: true,
-          onConfirm: () => {
-            ky.delete(`/api/files/file/${file.id}`).json().then(data => {
-              this.$store.commit("overlay/showDetails", {scene: data});
-            });
-          }
-        });
-      },
-      getImageURL(u, size) {
-        if (u.startsWith("http") || u.startsWith("https")) {
-          return "/img/" + size + "/" + u.replace("://", ":/");
-        } else {
-          return u;
+      this.player.src({ src: src, type: 'video/mp4' })
+      this.player.poster(this.getImageURL(this.item.cover_url, ''))
+    },
+    showCastScenes (actor) {
+      this.$store.state.sceneList.filters.cast = actor
+      this.$store.state.sceneList.filters.sites = []
+      this.$store.state.sceneList.filters.tags = []
+      this.$router.push({
+        name: 'scenes',
+        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
+      })
+      this.close()
+    },
+    showTagScenes (tag) {
+      this.$store.state.sceneList.filters.cast = []
+      this.$store.state.sceneList.filters.sites = []
+      this.$store.state.sceneList.filters.tags = tag
+      this.$router.push({
+        name: 'scenes',
+        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
+      })
+      this.close()
+    },
+    playPreview () {
+      this.activeMedia = 1
+      this.updatePlayer('/api/dms/preview/' + this.item.scene_id, 'NONE')
+      this.player.play()
+    },
+    playFile (file) {
+      this.activeMedia = 1
+      this.updatePlayer('/api/dms/file/' + file.id + '?dnt=1', '180')
+      this.player.play()
+    },
+    removeFile (file) {
+      this.$buefy.dialog.confirm({
+        title: 'Remove file',
+        message: `You're about to remove file <strong>${file.filename}</strong> from <strong>disk</strong>.`,
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: () => {
+          ky.delete(`/api/files/file/${file.id}`).json().then(data => {
+            this.$store.commit('overlay/showDetails', { scene: data })
+          })
         }
-      },
-      getIndicatorURL(idx) {
-        return this.getImageURL(this.images[idx].url, "x40")
-      },
-      playCuepoint(cuepoint) {
-        this.player.currentTime(cuepoint.time_start);
-        this.player.play();
-      },
-      addCuepoint() {
-        let name = "";
-        if (this.tagAct !== "") {
-          name = this.tagAct;
+      })
+    },
+    getImageURL (u, size) {
+      if (u.startsWith('http') || u.startsWith('https')) {
+        return '/img/' + size + '/' + u.replace('://', ':/')
+      } else {
+        return u
+      }
+    },
+    getIndicatorURL (idx) {
+      return this.getImageURL(this.images[idx].url, 'x40')
+    },
+    playCuepoint (cuepoint) {
+      this.player.currentTime(cuepoint.time_start)
+      this.player.play()
+    },
+    addCuepoint () {
+      let name = ''
+      if (this.tagAct !== '') {
+        name = this.tagAct
+      }
+      if (this.tagPosition !== '') {
+        name = this.tagPosition
+      }
+      if (this.tagPosition !== '' && this.tagAct !== '') {
+        name = `${this.tagPosition}-${this.tagAct}`
+      }
+      ky.post(`/api/scene/cuepoint/${this.item.id}`, {
+        json: {
+          name: name,
+          time_start: this.player.currentTime()
         }
-        if (this.tagPosition !== "") {
-          name = this.tagPosition;
-        }
-        if (this.tagPosition !== "" && this.tagAct !== "") {
-          name = `${this.tagPosition}-${this.tagAct}`;
-        }
-        ky.post(`/api/scene/cuepoint/${this.item.id}`, {
-          json: {
-            name: name,
-            time_start: this.player.currentTime()
-          }
-        }).json().then(data => {
-          this.$store.commit("overlay/showDetails", {scene: data});
-        });
-      },
-      close() {
-        this.player.dispose();
-        this.$store.commit("overlay/hideDetails");
-      },
-      humanizeSeconds(seconds) {
-        return new Date(seconds * 1000).toISOString().substr(11, 8);
-      },
-      setRating(val) {
-        ky.post(`/api/scene/rate/${this.item.id}`, {json: {rating: val}});
+      }).json().then(data => {
+        this.$store.commit('overlay/showDetails', { scene: data })
+      })
+    },
+    close () {
+      this.player.dispose()
+      this.$store.commit('overlay/hideDetails')
+    },
+    humanizeSeconds (seconds) {
+      return new Date(seconds * 1000).toISOString().substr(11, 8)
+    },
+    setRating (val) {
+      ky.post(`/api/scene/rate/${this.item.id}`, { json: { rating: val } })
 
-        let updatedScene = Object.assign({}, this.item);
-        updatedScene.star_rating = val;
-        this.$store.commit('sceneList/updateScene', updatedScene);
-      },
-      nextScene() {
-        let data = this.$store.getters['sceneList/nextScene'](this.item);
-        if (data !== null) {
-          this.$store.commit("overlay/showDetails", {scene: data});
-          this.updatePlayer('180');
-        }
-      },
-      prevScene() {
-        let data = this.$store.getters['sceneList/prevScene'](this.item);
-        if (data !== null) {
-          this.$store.commit("overlay/showDetails", {scene: data});
-          this.updatePlayer('180');
-        }
-      },
-      playerStepBack() {
-        let wasPlaying = !this.player.paused();
-        if (wasPlaying) {
-          this.player.pause();
-        }
-        let seekTime = this.player.currentTime() - 5;
-        if (seekTime <= 0) {
-          seekTime = 0;
-        }
-        this.player.currentTime(seekTime);
-        if (wasPlaying) {
-          this.player.play();
-        }
-      },
-      playerStepForward() {
-        let duration = this.player.duration();
-        let wasPlaying = !this.player.paused();
-        if (wasPlaying) {
-          this.player.pause();
-        }
-        let seekTime = this.player.currentTime() + 5;
-        if (seekTime >= duration) {
-          seekTime = wasPlaying ? duration - .001 : duration;
-        }
-        this.player.currentTime(seekTime);
-        if (wasPlaying) {
-          this.player.play();
-        }
-      },
-      toggleGallery() {
-        this.activeMedia = 0;
-      },
-      format,
-      parseISO,
-      prettyBytes,
-      formatDistance,
-    }
+      const updatedScene = Object.assign({}, this.item)
+      updatedScene.star_rating = val
+      this.$store.commit('sceneList/updateScene', updatedScene)
+    },
+    nextScene () {
+      const data = this.$store.getters['sceneList/nextScene'](this.item)
+      if (data !== null) {
+        this.$store.commit('overlay/showDetails', { scene: data })
+        this.updatePlayer('180')
+      }
+    },
+    prevScene () {
+      const data = this.$store.getters['sceneList/prevScene'](this.item)
+      if (data !== null) {
+        this.$store.commit('overlay/showDetails', { scene: data })
+        this.updatePlayer('180')
+      }
+    },
+    playerStepBack () {
+      const wasPlaying = !this.player.paused()
+      if (wasPlaying) {
+        this.player.pause()
+      }
+      let seekTime = this.player.currentTime() - 5
+      if (seekTime <= 0) {
+        seekTime = 0
+      }
+      this.player.currentTime(seekTime)
+      if (wasPlaying) {
+        this.player.play()
+      }
+    },
+    playerStepForward () {
+      const duration = this.player.duration()
+      const wasPlaying = !this.player.paused()
+      if (wasPlaying) {
+        this.player.pause()
+      }
+      let seekTime = this.player.currentTime() + 5
+      if (seekTime >= duration) {
+        seekTime = wasPlaying ? duration - 0.001 : duration
+      }
+      this.player.currentTime(seekTime)
+      if (wasPlaying) {
+        this.player.play()
+      }
+    },
+    toggleGallery () {
+      this.activeMedia = 0
+    },
+    format,
+    parseISO,
+    prettyBytes,
+    formatDistance
   }
+}
 </script>
 
 <style lang="less" scoped>

@@ -4,10 +4,10 @@ module.exports = {
   lintOnSave: false,
 
   chainWebpack: config => {
-    config.plugins.delete('progress');
+    config.plugins.delete('progress')
     config.plugin('simple-progress-webpack-plugin').use(require.resolve('simple-progress-webpack-plugin'), [
       {
-        format: 'minimal',
+        format: 'minimal'
       }
     ])
   },
@@ -20,4 +20,4 @@ module.exports = {
       enableInSFC: false
     }
   }
-};
+}

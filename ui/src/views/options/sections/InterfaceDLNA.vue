@@ -64,66 +64,66 @@
 </template>
 
 <script>
-  export default {
-    name: "InterfaceDLNA",
-    mounted() {
-      this.$store.dispatch("optionsDLNA/load");
+export default {
+  name: 'InterfaceDLNA',
+  mounted () {
+    this.$store.dispatch('optionsDLNA/load')
+  },
+  methods: {
+    save () {
+      this.$store.dispatch('optionsDLNA/save')
     },
-    methods: {
-      save() {
-        this.$store.dispatch("optionsDLNA/save");
-      },
-      addIP(value) {
-        let tmp = [...this.allowedIp];
-        tmp.push(value);
+    addIP (value) {
+      const tmp = [...this.allowedIp]
+      tmp.push(value)
 
-        if (!this.hasDuplicates(tmp)) {
-          this.allowedIp = tmp;
-        }
-      },
-      hasDuplicates(array) {
-        return (new Set(array)).size !== array.length;
+      if (!this.hasDuplicates(tmp)) {
+        this.allowedIp = tmp
       }
     },
-    computed: {
-      enabled: {
-        get() {
-          return this.$store.state.optionsDLNA.dlna.enabled;
-        },
-        set(value) {
-          this.$store.state.optionsDLNA.dlna.enabled = value;
-        }
+    hasDuplicates (array) {
+      return (new Set(array)).size !== array.length
+    }
+  },
+  computed: {
+    enabled: {
+      get () {
+        return this.$store.state.optionsDLNA.dlna.enabled
       },
-      name: {
-        get() {
-          return this.$store.state.optionsDLNA.dlna.name;
-        },
-        set(value) {
-          this.$store.state.optionsDLNA.dlna.name = value;
-        }
-      },
-      image: {
-        get() {
-          return this.$store.state.optionsDLNA.dlna.image;
-        },
-        set(value) {
-          this.$store.state.optionsDLNA.dlna.image = value;
-        }
-      },
-      allowedIp: {
-        get() {
-          return this.$store.state.optionsDLNA.dlna.allowedIp;
-        },
-        set(value) {
-          this.$store.state.optionsDLNA.dlna.allowedIp = value;
-        }
-      },
-      isLoading: function () {
-        return this.$store.state.optionsDLNA.loading;
-      },
-      dlnaOptions: function () {
-        return this.$store.state.optionsDLNA.dlna;
-      },
+      set (value) {
+        this.$store.state.optionsDLNA.dlna.enabled = value
+      }
     },
+    name: {
+      get () {
+        return this.$store.state.optionsDLNA.dlna.name
+      },
+      set (value) {
+        this.$store.state.optionsDLNA.dlna.name = value
+      }
+    },
+    image: {
+      get () {
+        return this.$store.state.optionsDLNA.dlna.image
+      },
+      set (value) {
+        this.$store.state.optionsDLNA.dlna.image = value
+      }
+    },
+    allowedIp: {
+      get () {
+        return this.$store.state.optionsDLNA.dlna.allowedIp
+      },
+      set (value) {
+        this.$store.state.optionsDLNA.dlna.allowedIp = value
+      }
+    },
+    isLoading: function () {
+      return this.$store.state.optionsDLNA.loading
+    },
+    dlnaOptions: function () {
+      return this.$store.state.optionsDLNA.dlna
+    }
   }
+}
 </script>

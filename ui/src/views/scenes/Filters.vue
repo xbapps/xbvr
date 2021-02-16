@@ -119,139 +119,139 @@
 </template>
 
 <script>
-import SavedSearch from "./SavedSearch";
+import SavedSearch from './SavedSearch'
 
 export default {
-  name: "Filters",
-  components: {SavedSearch},
-  mounted() {
-    this.$store.dispatch("sceneList/filters");
+  name: 'Filters',
+  components: { SavedSearch },
+  mounted () {
+    this.$store.dispatch('sceneList/filters')
   },
-  data() {
+  data () {
     return {
       filteredCast: [],
       filteredSites: [],
-      filteredTags: [],
+      filteredTags: []
     }
   },
   methods: {
-    reloadList() {
+    reloadList () {
       this.$router.push({
         name: 'scenes',
         query: {
           q: this.$store.getters['sceneList/filterQueryParams']
         }
-      });
+      })
     },
-    getFilteredCast(text) {
+    getFilteredCast (text) {
       this.filteredCast = this.filters.cast.filter((option) => {
         return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
       })
     },
-    getFilteredSites(text) {
+    getFilteredSites (text) {
       this.filteredSites = this.filters.sites.filter((option) => {
         return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
       })
     },
-    getFilteredTags(text) {
+    getFilteredTags (text) {
       this.filteredTags = this.filters.tags.filter((option) => {
         return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
       })
     },
-    clearReleaseMonth() {
-      this.$store.state.sceneList.filters.releaseMonth = "";
-      this.reloadList();
+    clearReleaseMonth () {
+      this.$store.state.sceneList.filters.releaseMonth = ''
+      this.reloadList()
     },
-    clearVolume() {
-      this.$store.state.sceneList.filters.volume = 0;
-      this.reloadList();
-    },
+    clearVolume () {
+      this.$store.state.sceneList.filters.volume = 0
+      this.reloadList()
+    }
   },
   computed: {
-    filters() {
-      return this.$store.state.sceneList.filterOpts;
+    filters () {
+      return this.$store.state.sceneList.filterOpts
     },
     lists: {
-      get() {
-        return this.$store.state.sceneList.filters.lists;
+      get () {
+        return this.$store.state.sceneList.filters.lists
       },
-      set(value) {
-        this.$store.state.sceneList.filters.lists = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.lists = value
+        this.reloadList()
       }
     },
     releaseMonth: {
-      get() {
-        return this.$store.state.sceneList.filters.releaseMonth;
+      get () {
+        return this.$store.state.sceneList.filters.releaseMonth
       },
-      set(value) {
-        this.$store.state.sceneList.filters.releaseMonth = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.releaseMonth = value
+        this.reloadList()
       }
     },
     volume: {
-      get() {
-        return this.$store.state.sceneList.filters.volume;
+      get () {
+        return this.$store.state.sceneList.filters.volume
       },
-      set(value) {
-        this.$store.state.sceneList.filters.volume = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.volume = value
+        this.reloadList()
       }
     },
     cast: {
-      get() {
-        return this.$store.state.sceneList.filters.cast;
+      get () {
+        return this.$store.state.sceneList.filters.cast
       },
-      set(value) {
-        this.$store.state.sceneList.filters.cast = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.cast = value
+        this.reloadList()
       }
     },
     sites: {
-      get() {
-        return this.$store.state.sceneList.filters.sites;
+      get () {
+        return this.$store.state.sceneList.filters.sites
       },
-      set(value) {
-        this.$store.state.sceneList.filters.sites = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.sites = value
+        this.reloadList()
       }
     },
     tags: {
-      get() {
-        return this.$store.state.sceneList.filters.tags;
+      get () {
+        return this.$store.state.sceneList.filters.tags
       },
-      set(value) {
-        this.$store.state.sceneList.filters.tags = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.tags = value
+        this.reloadList()
       }
     },
     cuepoint: {
-      get() {
-        return this.$store.state.sceneList.filters.cuepoint;
+      get () {
+        return this.$store.state.sceneList.filters.cuepoint
       },
-      set(value) {
-        this.$store.state.sceneList.filters.cuepoint = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.cuepoint = value
+        this.reloadList()
       }
     },
     sort: {
-      get() {
-        return this.$store.state.sceneList.filters.sort;
+      get () {
+        return this.$store.state.sceneList.filters.sort
       },
-      set(value) {
-        this.$store.state.sceneList.filters.sort = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.sort = value
+        this.reloadList()
       }
     },
     isWatched: {
-      get() {
-        return this.$store.state.sceneList.filters.isWatched;
+      get () {
+        return this.$store.state.sceneList.filters.isWatched
       },
-      set(value) {
-        this.$store.state.sceneList.filters.isWatched = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.isWatched = value
+        this.reloadList()
       }
-    },
+    }
   }
 }
 </script>

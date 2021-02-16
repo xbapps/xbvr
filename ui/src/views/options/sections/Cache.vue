@@ -57,37 +57,36 @@
 </template>
 
 <script>
-  import ky from "ky";
-  import prettyBytes from "pretty-bytes";
+import ky from 'ky'
+import prettyBytes from 'pretty-bytes'
 
-  export default {
-    name: "Cache",
-    data() {
-      return {
-        isLoading: true,
-        sizes: {}
-      }
-    },
-    async mounted() {
-      await this.loadState();
-    },
-    methods: {
-      async loadState() {
-        this.isLoading = true;
-        await ky.get(`/api/options/state`)
-          .json()
-          .then(data => {
-            this.sizes = data.currentState.cacheSize;
-            this.isLoading = false;
-          });
-      },
-      async resetCache(kind) {
-        this.isLoading = true;
-        await ky.delete(`/api/options/cache/reset/${kind}`, {timeout: 30000});
-        await this.loadState();
-      },
-      prettyBytes,
+export default {
+  name: 'Cache',
+  data () {
+    return {
+      isLoading: true,
+      sizes: {}
     }
+  },
+  async mounted () {
+    await this.loadState()
+  },
+  methods: {
+    async loadState () {
+      this.isLoading = true
+      await ky.get('/api/options/state')
+        .json()
+        .then(data => {
+          this.sizes = data.currentState.cacheSize
+          this.isLoading = false
+        })
+    },
+    async resetCache (kind) {
+      this.isLoading = true
+      await ky.delete(`/api/options/cache/reset/${kind}`, { timeout: 30000 })
+      await this.loadState()
+    },
+    prettyBytes
   }
+}
 </script>
-
