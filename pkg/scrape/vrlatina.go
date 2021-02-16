@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -10,7 +11,6 @@ import (
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
-	"mvdan.cc/xurls/v2"
 )
 
 func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
@@ -30,96 +30,76 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Title
-		e.ForEach(`div.video-info-left h2`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.content-title h2`, func(id int, e *colly.HTMLElement) {
 			sc.Title = strings.TrimSpace(e.Text)
 		})
 
 		// Covers
-		e.ForEach(`script`, func(id int, e *colly.HTMLElement) {
-			if strings.Contains(e.Text, "vidcontainer1") {
-				url := xurls.Strict().FindAllString(e.Text, -1)[0]
-				sc.Covers = append(sc.Covers, url)
-			}
-		})
+		coverurl := e.ChildAttr(`meta[property="og:image"]`, "content")
+		if coverurl != "" {
+			sc.Covers = append(sc.Covers, "http://"+coverurl)
+		}
 
 		// Gallery
-		e.ForEach(`div.sub-video a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.video-gallery a.video-gallery-item`, func(id int, e *colly.HTMLElement) {
 			sc.Gallery = append(sc.Gallery, e.Attr("href"))
 		})
 
 		// Cast
-		e.ForEach(`div.video-info-left h3 a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.content-links.-models a`, func(id int, e *colly.HTMLElement) {
 			if strings.TrimSpace(e.Text) != "" {
 				sc.Cast = append(sc.Cast, strings.TrimSpace(strings.ReplaceAll(e.Text, "!", "")))
 			}
 		})
 
 		// Tags
-		// Note: rare multi-girl scenes only feature one cast name, other girls are added as tags only
-		edgecases := map[string]bool{
-			"Alicia Feliz":     true,
-			"Karina Rojo":      true,
-			"Samantha Sanchez": true,
-			"Diana Dimon":      true,
-		}
 
-		e.ForEach(`div.video-tag-section a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.content-links.-tags a.tag`, func(id int, e *colly.HTMLElement) {
 			tag := strings.TrimSpace(e.Text)
-
-			// Check tag for edgecases and add missing names to sc.Cast
-			if edgecases[tag] {
-				if !funk.Contains(sc.Cast, tag) {
-					sc.Cast = append(sc.Cast, tag)
-				}
-			}
-
-			// Note: need case-insensitive compare here, castname-tags can be lower case (nikol sparta)
-			tagIsActor := false
-			for _, actor := range sc.Cast {
-				if strings.EqualFold(actor, tag) {
-					tagIsActor = true
-				}
-			}
-
-			if !tagIsActor {
+			if tag != "" {
 				sc.Tags = append(sc.Tags, strings.ToLower(tag))
 			}
 		})
 
 		// Synposis
-		e.ForEach(`div.video-bottom-txt`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.content-desc`, func(id int, e *colly.HTMLElement) {
 			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
 		// Release date / Duration
-		e.ForEach(`div.video-info-left-icon span`, func(id int, e *colly.HTMLElement) {
-			if id == 2 {
-				tmpDate, _ := goment.New(strings.TrimSpace(e.Text), "DDMMM,YYYY")
-				sc.Released = tmpDate.Format("YYYY-MM-DD")
-			}
-			if id == 1 {
-				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Text, "min", "", -1)))
+		e.ForEach(`div.info-elem.-length span.sub-label`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
+				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Split(e.Text, ":")[0]))
 				if err == nil {
 					sc.Duration = tmpDuration
 				}
 			}
+			if id == 1 {
+				tmpDate, _ := goment.New(strings.TrimSpace(e.Text), "MMM DD, YYYY")
+				sc.Released = tmpDate.Format("YYYY-MM-DD")
+			}
+
 		})
 
 		// Scene ID
-		e.ForEach(`link[rel=shortlink]`, func(id int, e *colly.HTMLElement) {
-			sc.SiteID = strings.Split(e.Attr("href"), "?p=")[1]
+		url := e.ChildAttr(`link[rel="canonical"]`, "href")
+		r := regexp.MustCompile(`-(\d+).html`)
+		matches := r.FindStringSubmatch(url)
+		if matches != nil {
+			sc.SiteID = matches[1]
 			sc.SceneID = fmt.Sprintf("vrlatina-%v", sc.SiteID)
-		})
 
-		out <- sc
+			// save only if we got a SceneID
+			out <- sc
+		}
 	})
 
-	siteCollector.OnHTML(`span.pagination-wrap-inn a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.pagination a`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.video-info-left h2 a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.item-col.-video a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
@@ -128,7 +108,7 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		}
 	})
 
-	siteCollector.Visit("https://vrlatina.com/videos/?typ=newest")
+	siteCollector.Visit("https://vrlatina.com/most-recent/")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
