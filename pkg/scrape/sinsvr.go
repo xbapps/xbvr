@@ -18,8 +18,8 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteID := "SinsVR"
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("sinsvr.com", "www.sinsvr.com")
-	siteCollector := createCollector("sinsvr.com", "www.sinsvr.com")
+	sceneCollector := createCollector("xsinsvr.com")
+	siteCollector := createCollector("xsinsvr.com")
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -28,65 +28,86 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		// Scene ID - get from URL
-		tmp := strings.Split(sc.HomepageURL, "/")
-		sc.SiteID = strings.Split(tmp[len(tmp)-1], "-")[0]
+		// Scene ID / Title
+		sc.SiteID = strings.TrimSpace(e.ChildAttrs(`dl8-video`, "data-scene")[0])
+		sc.Title = strings.TrimSpace(e.ChildAttrs(`dl8-video`, "title")[0])
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
-		sc.Title = e.Request.Ctx.Get("title")
-		sc.Covers = append(sc.Covers, e.Request.Ctx.Get("cover"))
+		//Cover
+		if len(e.ChildAttrs(`dl8-video`, "poster")) > 0 {
+			sc.Covers = append(sc.Covers, e.ChildAttrs(`dl8-video`, "poster")[0])
+		}
 
-		sc.Gallery = e.ChildAttrs(`img[itemprop="thumbnail"]`, "data-srcset")
+		// Gallery
+		e.ForEach(`div.tn-photo__container div.cell a `, func(id int, e *colly.HTMLElement) {
+			tnphotomore := e.ChildAttr(`div`, "class")
+			if tnphotomore == "tn-photo" {
+				sc.Gallery = append(sc.Gallery, e.Attr(`href`))
+			}
+		})
 
-		e.ForEach(`.c-video-meta span`, func(id int, e *colly.HTMLElement) {
-			c := e.Attr("class")
-			if strings.Contains(c, "u-mr--nine") {
-				// Oct 19, 2019
-				tmpDate, _ := goment.New(strings.TrimSpace(e.Text), "MMM D, YYYY")
-				sc.Released = tmpDate.Format("YYYY-MM-DD")
+		//Cast and Released
+		e.ForEach(`.video-detail__specs div.cell`, func(id int, e *colly.HTMLElement) {
+			c := strings.TrimSpace(e.Text)
+			// Cast
+			if strings.Contains(c, "Starring") {
+				e.ForEach(`.cell a`, func(id int, e *colly.HTMLElement) {
+					cast := strings.Split(e.Text, ",")
+					sc.Cast = append(sc.Cast, cast...)
+				})
 			} else {
-				tmpDuration, err := strconv.Atoi(strings.Split(e.Text, " ")[0])
-				if err == nil {
-					sc.Duration = tmpDuration
+				// Released - Date Oct 19, 2019
+				if strings.Contains(c, "Released") {
+					tmpDate, _ := goment.New(strings.TrimSpace(e.ChildText(`.cell span`)), "MMM D, YYYY")
+					sc.Released = tmpDate.Format("YYYY-MM-DD")
 				}
 			}
 		})
 
-		e.ForEach(`a.u-base`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-		})
+		// Duration
+		tmpDuration, err := strconv.Atoi(strings.Split(e.ChildText(`div.video-player-container__info div.tn-video-props span`), ":")[0])
+		if err == nil {
+			sc.Duration = tmpDuration
+		}
 
-		e.ForEach(`.c-video-tags li`, func(id int, e *colly.HTMLElement) {
+		//Tags
+		e.ForEach(`.tags-item a`, func(id int, e *colly.HTMLElement) {
 			tags := strings.Split(e.Text, " / ")
+			if tags[0] == "VR - Virtual-Reality" {
+				tags[0] = "180°"
+			} else {
+				if tags[0] == "Masturbation/Fingering" {
+					tags[0] = "Masturbation"
+				}
+			}
 			sc.Tags = append(sc.Tags, tags...)
+			if tags[0] == "Cinematographic" {
+				sc.Tags = append(sc.Tags, "Voyeur")
+			}
 		})
 
-		sc.Synopsis = e.ChildText(`p.u-lh--opt`)
+		sc.Synopsis = e.ChildText(`div.tabs li.video-detail__desc p`)
 
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`.u-none--tablet-wd a[title]`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-
-		ctx := colly.NewContext()
-		ctx.Put("title", e.Attr("title"))
-		ctx.Put("cover", e.ChildAttr(`img`, "data-srcset"))
-
-		// If scene exist in database, there's no need to scrape
-		if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/join") {
-			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
-		}
-	})
-
-	siteCollector.OnHTML(`.u-none--tablet-wd .c-pagination ul a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`nav.pagination a`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 		if !strings.Contains(pageURL, "/join") {
 			siteCollector.Visit(pageURL)
 		}
 	})
 
-	siteCollector.Visit("https://sinsvr.com/virtualreality/list/sort/Recent")
+	siteCollector.OnHTML(`div.tn-video a`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+
+		// If scene exist in database, there's no need to scrape
+		if !funk.ContainsString(knownScenes, sceneURL) && strings.Contains(sceneURL, "/video") && !strings.Contains(sceneURL, "/join") {
+			sceneCollector.Visit(sceneURL)
+		}
+	})
+
+	siteCollector.Visit("https://xsinsvr.com/studio/sinsvr/videos")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -96,5 +117,5 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("sinsvr", "SinsVR", "https://sinsvr.com/s/images/favicons/apple-touch-icon.png", SinsVR)
+	registerScraper("sinsvr", "SinsVR", "https://assets.xsinsvr.com/logo.black.svg", SinsVR)
 }
