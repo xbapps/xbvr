@@ -91,6 +91,9 @@ type Scene struct {
 
 	Fulltext string  `gorm:"-" json:"fulltext"`
 	Score    float64 `gorm:"-" json:"_score"`
+
+	// Multiple versions of the scene exist
+	Versions bool `json:"versions" gorm:"default:false"`
 }
 
 type Image struct {
@@ -403,6 +406,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		}
 		if i.OrElse("") == "favourite" {
 			tx = tx.Where("favourite = ?", true)
+		}
+		if i.OrElse("") == "versions" {
+			tx = tx.Where("versions = ?", true)
 		}
 	}
 
