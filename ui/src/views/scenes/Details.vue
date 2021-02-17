@@ -212,6 +212,8 @@
         const item = this.$store.state.overlay.details.scene;
         if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
           item.tags.sort((a, b) => a.name < b.name ? -1 : 1);
+        } else if (this.$store.state.optionsWeb.web.tagSort === 'by-tag-count') {
+          item.tags.sort((a, b) => a.count > b.count ? -1 : 1);
         }
         return item;
       },

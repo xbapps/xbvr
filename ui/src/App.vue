@@ -21,6 +21,9 @@
 
   export default {
     components: {Navbar, Socket, QuickFind, GlobalEvents},
+    mounted() {
+      this.$store.dispatch("optionsWeb/load");
+    }
   }
 </script>
 

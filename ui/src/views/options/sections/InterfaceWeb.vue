@@ -37,9 +37,6 @@
 <script>
   export default {
     name: 'InterfaceWeb',
-    mounted() {
-      this.$store.dispatch("optionsWeb/load");
-    },
     methods: {
       save() {
         this.$store.dispatch("optionsWeb/save");
