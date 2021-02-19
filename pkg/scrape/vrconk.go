@@ -32,8 +32,7 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "/")
 		s := strings.Split(tmp[len(tmp)-1], "-")
-		sc.SiteID = tmp[len(tmp)-1]
-		sc.SiteID = s[0]
+		sc.SiteID = s[len(s)-1]
 
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
@@ -101,19 +100,19 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://vrconk.com/virtualreality/list")
+	siteCollector.Visit("https://vrconk.com/videos")
 
 	// Edge-cases: Some early scenes are unlisted in both scenes and model index
 	// #1-10 + 15 by FantAsia, #11-14, 19, 23 by Miss K. #22, 25 by Emi.
 	// Unlisted but not added here: #86 by CumCoders (7 scenes on SLR) & some recent ones are WankzVR scenes from covid partnership.
-	unlistedscenes := [19]string{"1-sex-with-slavic-chick", "2-only-for-your-eyes", "3-looking-for-your-cock",
-		"4-finger-warm-up", "5-fun-with-sex-toy", "6-may-i-suck-it", "7-my-pleasure-in-your-hands", "8-take-me-baby",
-		"9-breakfast-on-the-table", "10-united-boobs-of-desire", "15-i-change-my-lingerie-three-times-for-you",
-		"11-take-care-of-the-bunny", "12-pussy-wide-open", "13-want-to-know-whats-for-dinner", "14-your-eastern-maid",
-		"19-fun-with-real-vr-amateur", "22-juicy-holes", "23-rabbit-fuck", "25-amateur-chick-in-the-kitchen"}
+	unlistedscenes := [19]string{"sex-with-slavic-chick-1", "only-for-your-eyes-2", "looking-for-your-cock-3",
+		"finger-warm-up-4", "fun-with-sex-toy-5", "may-i-suck-it-6", "my-pleasure-in-your-hands-7", "take-me-baby-8",
+		"breakfast-on-the-table-9", "united-boobs-of-desire-10", "i-change-my-lingerie-three-times-for-you-15",
+		"take-care-of-the-bunny-11", "pussy-wide-open-12", "want-to-know-whats-for-dinner-13", "your-eastern-maid-14",
+		"fun-with-real-vr-amateur-19", "juicy-holes-22", "rabbit-fuck-23", "amateur-chick-in-the-kitchen-25"}
 
 	for _, scene := range unlistedscenes {
-		sceneURL := "https://vrconk.com/virtualreality/scene/id/" + scene
+		sceneURL := "https://vrconk.com/" + scene
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}

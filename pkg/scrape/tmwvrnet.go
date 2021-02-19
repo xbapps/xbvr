@@ -36,10 +36,10 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		})
 
 		// Title / Cover / ID
-		e.ForEach(`deo-video`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
 			sc.Title = strings.TrimSpace(e.Attr("title"))
 
-			tmpCover := e.Attr("cover-image")
+			tmpCover := e.Attr("poster")
 			sc.Covers = append(sc.Covers, tmpCover)
 
 			tmp := strings.Split(tmpCover, "/")
