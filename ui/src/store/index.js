@@ -8,6 +8,7 @@ import files from './files'
 import optionsStorage from './optionsStorage'
 import optionsWeb from './optionsWeb'
 import optionsDLNA from './optionsDLNA'
+import optionsDeoVR from './optionsDeoVR'
 import optionsSites from './optionsSites'
 import optionsPreviews from './optionsPreviews'
 
@@ -21,6 +22,7 @@ export default new Vuex.Store({
     files,
     optionsStorage,
     optionsDLNA,
+    optionsDeoVR,
     optionsWeb,
     optionsSites,
     optionsPreviews

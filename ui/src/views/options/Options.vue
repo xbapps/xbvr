@@ -17,9 +17,9 @@
                          @click="setActive('data-import-export')"/>
           </b-menu-list>
           <b-menu-list :label="$t('Interfaces')">
-            <b-menu-item :label="$t('Web UI')" :active="active==='interface_web'" @click="setActive('interface_web')"/>
+            <b-menu-item :label="$t('DeoVR')" :active="active==='interface_deovr'" @click="setActive('interface_deovr')"/>
             <b-menu-item :label="$t('DLNA')" :active="active==='interface_dlna'" @click="setActive('interface_dlna')"/>
-            <!--            <b-menu-item :label="$t('DeoVR')" :active="active==='interface_deovr'" @click="setActive('ui_deovr')"/>-->
+            <b-menu-item :label="$t('Web UI')" :active="active==='interface_web'" @click="setActive('interface_web')"/>
           </b-menu-list>
         </b-menu>
       </div>
@@ -33,6 +33,7 @@
           <SceneDataImportExport v-show="active==='data-import-export'"/>
           <InterfaceWeb v-show="active==='interface_web'"/>
           <InterfaceDLNA v-show="active==='interface_dlna'"/>
+          <InterfaceDeoVR v-show="active==='interface_deovr'"/>
         </div>
       </div>
 
@@ -48,9 +49,10 @@ import SceneDataImportExport from './sections/OptionsSceneDataImportExport'
 import InterfaceDLNA from './sections/InterfaceDLNA.vue'
 import Cache from './sections/Cache.vue'
 import Previews from './sections/Previews.vue'
+import InterfaceDeoVR from './sections/InterfaceDeoVR.vue'
 
 export default {
-  components: { Storage, SceneDataScrapers, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, Cache, Previews },
+  components: { Storage, SceneDataScrapers, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews },
   data: function () {
     return {
       active: 'storage'

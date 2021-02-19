@@ -28,7 +28,7 @@ export default {
   computed: {
     sourceUrl () {
       if (this.$store.state.overlay.player.file) {
-        return '/api/dms/file/' + this.$store.state.overlay.player.file.id + '?dnt=1'
+        return '/api/dms/file/' + this.$store.state.overlay.player.file.id + '?dnt=true'
       }
       return ''
     }

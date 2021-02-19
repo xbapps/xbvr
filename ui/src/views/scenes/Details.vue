@@ -325,7 +325,7 @@ export default {
     },
     playFile (file) {
       this.activeMedia = 1
-      this.updatePlayer('/api/dms/file/' + file.id + '?dnt=1', '180')
+      this.updatePlayer('/api/dms/file/' + file.id + '?dnt=true', '180')
       this.player.play()
     },
     removeFile (file) {

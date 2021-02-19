@@ -4,14 +4,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func IsDeoAuthEnabled() bool {
-	if DEOPASSWORD != "" && DEOUSER != "" {
-		return true
-	} else {
-		return false
-	}
-}
-
 func IsUIAuthEnabled() bool {
 	if UIPASSWORD != "" && UIUSER != "" {
 		return true

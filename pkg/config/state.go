@@ -8,6 +8,9 @@ import (
 )
 
 type ObjectState struct {
+	Server struct {
+		BoundIP []string `json:"bound_ip"`
+	} `json:"server"`
 	Web struct {
 		TagSort   string `json:"tagSort"`
 		SceneEdit bool   `json:"sceneEdit"`

@@ -20,6 +20,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/tasks"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 	"gopkg.in/resty.v1"
 )
@@ -46,6 +47,14 @@ type RequestSaveOptionsDLNA struct {
 	ServiceName  string   `json:"name"`
 	ServiceImage string   `json:"image"`
 	AllowedIP    []string `json:"allowedIp"`
+}
+
+type RequestSaveOptionsDeoVR struct {
+	Enabled       bool   `json:"enabled"`
+	AuthEnabled   bool   `json:"auth_enabled"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+	RemoteEnabled bool   `json:"remote_enabled"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -105,6 +114,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 
 	// "DLNA" section endpoints
 	ws.Route(ws.PUT("/interface/dlna").To(i.saveOptionsDLNA).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Web UI" section endpoints
+	ws.Route(ws.PUT("/interface/deovr").To(i.saveOptionsDeoVR).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Web UI" section endpoints
@@ -192,6 +205,27 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 
 	config.Config.Web.TagSort = r.TagSort
 	config.Config.Web.SceneEdit = r.SceneEdit
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+
+func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsDeoVR
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Interfaces.DeoVR.Enabled = r.Enabled
+	config.Config.Interfaces.DeoVR.AuthEnabled = r.AuthEnabled
+	config.Config.Interfaces.DeoVR.RemoteEnabled = r.RemoteEnabled
+	config.Config.Interfaces.DeoVR.Username = r.Username
+	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
+		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
+		config.Config.Interfaces.DeoVR.Password = string(hash)
+	}
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)

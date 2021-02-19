@@ -1,13 +1,13 @@
-package deo_remote
+package session
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/posthog/posthog-go"
@@ -17,6 +17,7 @@ import (
 )
 
 var (
+	sessionSource      string
 	currentFileID      int
 	lastSessionID      uint
 	lastSessionSceneID uint
@@ -26,13 +27,43 @@ var (
 
 var currentSessionHeatmap []int
 
-func TrackSession(packet DeoPacket) {
+func TrackSessionFromFile(f models.File, doNotTrack string) {
+	sessionSource = "file"
+
+	if f.SceneID != 0 && doNotTrack != "true" {
+		if lastSessionSceneID != f.SceneID {
+			if lastSessionID != 0 {
+				watchSessionFlush()
+			}
+
+			lastSessionSceneID = f.SceneID
+			lastSessionStart = time.Now()
+			newWatchSession()
+		}
+
+		lastSessionEnd = time.Now()
+	}
+}
+
+func FinishTrackingFromFile(doNotTrack string) {
+	lastSessionEnd = time.Now()
+	if doNotTrack == "false" {
+		watchSessionFlush()
+	}
+}
+
+func TrackSessionFromRemote(packet DeoPacket) {
 	if packet.Path == "" || packet.Duration == 0 {
 		return
 	}
 
-	tmpPath := strings.Split(packet.Path, "/")
-	tmpCurrentFileID, err := strconv.Atoi(tmpPath[len(tmpPath)-1])
+	sessionSource = "deovr"
+
+	tmpPath, err := url.Parse(packet.Path)
+	if err != nil {
+		return
+	}
+	tmpCurrentFileID, err := strconv.Atoi(path.Base(tmpPath.Path))
 	if err != nil {
 		return
 	}
@@ -72,7 +103,14 @@ func TrackSession(packet DeoPacket) {
 }
 
 func CheckForDeadSession() {
-	if time.Since(lastSessionEnd).Seconds() > 5 && lastSessionSceneID != 0 && lastSessionID != 0 {
+	var timeout float64
+	if sessionSource == "file" {
+		timeout = 60
+	} else {
+		timeout = 5
+	}
+
+	if time.Since(lastSessionEnd).Seconds() > timeout && lastSessionSceneID != 0 && lastSessionID != 0 {
 		watchSessionFlush()
 		lastSessionID = 0
 		lastSessionSceneID = 0
@@ -93,7 +131,7 @@ func newWatchSession() {
 	lastSessionID = obj.ID
 
 	analytics.Event("watchsession-new", posthog.NewProperties().Set("scene-id", scene.SceneID))
-	common.Log.Infof("New session #%v for scene #%v", lastSessionID, lastSessionSceneID)
+	common.Log.Infof("New session #%v for scene #%v from %v", lastSessionID, lastSessionSceneID, sessionSource)
 }
 
 func watchSessionFlush() {
@@ -116,30 +154,33 @@ func watchSessionFlush() {
 		common.Log.Infof("Session #%v duration for scene #%v is %v", lastSessionID, lastSessionSceneID, time.Since(lastSessionStart).Seconds())
 
 		// Dump heatmap
-		path := path.Join(common.HeatmapDir, fmt.Sprintf("%v.json", lastSessionSceneID))
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			// Create new heatmap
-			data, _ := json.Marshal(currentSessionHeatmap)
-			ioutil.WriteFile(path, data, 0644)
-		} else {
-			// Update existing heatmap
-			b, err := ioutil.ReadFile(path)
-			if err != nil {
-				return
-			}
+		// TODO: handle multipart scenes
+		if !scene.IsMultipart && sessionSource == "deovr" {
+			path := path.Join(common.HeatmapDir, fmt.Sprintf("%v.json", lastSessionSceneID))
+			if _, err := os.Stat(path); os.IsNotExist(err) {
+				// Create new heatmap
+				data, _ := json.Marshal(currentSessionHeatmap)
+				ioutil.WriteFile(path, data, 0644)
+			} else {
+				// Update existing heatmap
+				b, err := ioutil.ReadFile(path)
+				if err != nil {
+					return
+				}
 
-			tmpHeatmap := make([]int, len(currentSessionHeatmap))
-			err = json.Unmarshal(b, &tmpHeatmap)
-			if err != nil {
-				return
-			}
+				tmpHeatmap := make([]int, len(currentSessionHeatmap))
+				err = json.Unmarshal(b, &tmpHeatmap)
+				if err != nil {
+					return
+				}
 
-			for k, v := range tmpHeatmap {
-				currentSessionHeatmap[k] = currentSessionHeatmap[k] + v
-			}
+				for k, v := range tmpHeatmap {
+					currentSessionHeatmap[k] = currentSessionHeatmap[k] + v
+				}
 
-			data, _ := json.Marshal(currentSessionHeatmap)
-			ioutil.WriteFile(path, data, 0644)
+				data, _ := json.Marshal(currentSessionHeatmap)
+				ioutil.WriteFile(path, data, 0644)
+			}
 		}
 	}
 
