@@ -16,9 +16,12 @@ func SetupCron() {
 	cronInstance := cron.New()
 	cronInstance.AddFunc("@every 20s", api.CheckForDeadSession)
 	cronInstance.AddFunc("@every 2s", deo_remote.CheckForDeadSession)
+	cronInstance.AddFunc("@every 6h", tasks.CalculateCacheSizes)
 	cronInstance.AddFunc(fmt.Sprintf("@every %vh", config.Config.Cron.ScrapeContentInterval), scrapeCron)
 	cronInstance.AddFunc(fmt.Sprintf("@every %vh", config.Config.Cron.RescanLibraryInterval), tasks.RescanVolumes)
 	cronInstance.Start()
+
+	go tasks.CalculateCacheSizes()
 }
 
 func scrapeCron() {

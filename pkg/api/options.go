@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -17,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio/putio"
 	"github.com/tidwall/gjson"
-	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -60,23 +58,8 @@ type RequestSaveOptionsPreviews struct {
 }
 
 type GetStateResponse struct {
-	CurrentState struct {
-		Web struct {
-			TagSort   string `json:"tagSort"`
-			SceneEdit bool   `json:"sceneEdit"`
-		} `json:"web"`
-		DLNA struct {
-			Running  bool     `json:"running"`
-			Images   []string `json:"images"`
-			RecentIP []string `json:"recentIp"`
-		} `json:"dlna"`
-		CacheSize struct {
-			Images      int64 `json:"images"`
-			Previews    int64 `json:"previews"`
-			SearchIndex int64 `json:"searchIndex"`
-		} `json:"cacheSize"`
-	} `json:"currentState"`
-	Config config.Object `json:"config"`
+	CurrentState config.ObjectState  `json:"currentState"`
+	Config       config.ObjectConfig `json:"config"`
 }
 
 type ConfigResource struct{}
@@ -130,7 +113,7 @@ func (i ConfigResource) WebService() *restful.WebService {
 
 	// "Cache" section endpoints
 	ws.Route(ws.DELETE("/cache/reset/{cache}").To(i.resetCache).
-		Param(ws.PathParameter("cache", "Cache to reset").DataType("string")).
+		Param(ws.PathParameter("cache", "Cache to reset - possible choices are `images`, `previews`, and `searchIndex`").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Previews" section endpoints
@@ -374,24 +357,11 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 
 func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 	var out GetStateResponse
+
+	tasks.UpdateState()
+
 	out.Config = config.Config
-
-	// Preferences
-	out.CurrentState.Web.TagSort = config.Config.Web.TagSort
-	out.CurrentState.Web.SceneEdit = config.Config.Web.SceneEdit
-
-	// DLNA
-	out.CurrentState.DLNA.Running = tasks.IsDMSStarted()
-	out.CurrentState.DLNA.RecentIP = config.RecentIPAddresses
-	dlnaImages, _ := assets.WalkDirs("dlna", false)
-	for _, v := range dlnaImages {
-		out.CurrentState.DLNA.Images = append(out.CurrentState.DLNA.Images, strings.Replace(strings.Split(v, "/")[1], ".png", "", -1))
-	}
-
-	// Caches
-	out.CurrentState.CacheSize.Images, _ = common.DirSize(common.ImgDir)
-	out.CurrentState.CacheSize.Previews, _ = common.DirSize(common.VideoPreviewDir)
-	out.CurrentState.CacheSize.SearchIndex, _ = common.DirSize(common.IndexDirV2)
+	out.CurrentState = config.State
 
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
 }
@@ -402,11 +372,13 @@ func (i ConfigResource) resetCache(req *restful.Request, resp *restful.Response)
 	if cache == "images" {
 		os.RemoveAll(common.ImgDir)
 		os.MkdirAll(common.ImgDir, os.ModePerm)
+		config.State.CacheSize.Images = 0
 	}
 
 	if cache == "searchIndex" {
 		os.RemoveAll(common.IndexDirV2)
 		os.MkdirAll(common.IndexDirV2, os.ModePerm)
+		config.State.CacheSize.SearchIndex = 0
 	}
 
 	if cache == "previews" {
@@ -416,7 +388,10 @@ func (i ConfigResource) resetCache(req *restful.Request, resp *restful.Response)
 
 		os.RemoveAll(common.VideoPreviewDir)
 		os.MkdirAll(common.VideoPreviewDir, os.ModePerm)
+		config.State.CacheSize.Previews = 0
 	}
+
+	config.SaveState()
 
 	resp.WriteHeader(http.StatusOK)
 }

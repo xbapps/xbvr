@@ -8,7 +8,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-type Object struct {
+type ObjectConfig struct {
 	Server struct {
 		BindAddress string `default:"0.0.0.0" json:"bindAddress"`
 		Port        int    `default:"9999" json:"port"`
@@ -48,7 +48,7 @@ type Object struct {
 	} `json:"cron"`
 }
 
-var Config Object
+var Config ObjectConfig
 var RecentIPAddresses []string
 
 func LoadConfig() {

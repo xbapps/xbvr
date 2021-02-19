@@ -16,8 +16,8 @@ const actions = {
     ky.get('/api/options/state')
       .json()
       .then(data => {
-        state.web.tagSort = data.currentState.web.tagSort
-        state.web.sceneEdit = data.currentState.web.sceneEdit
+        state.web.tagSort = data.config.web.tagSort
+        state.web.sceneEdit = data.config.web.sceneEdit
         state.loading = false
       })
   },
