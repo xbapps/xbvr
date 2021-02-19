@@ -13,7 +13,7 @@
               <b-tag v-if="item.is_watched">
                 <b-icon pack="mdi" icon="eye" size="is-small"/>
               </b-tag>
-              <b-tag type="is-info" v-if="item.file.length > 1">
+              <b-tag type="is-info" v-if="item.file.length > 1 && !item.is_multipart">
                 <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
                 {{item.file.length}}
               </b-tag>

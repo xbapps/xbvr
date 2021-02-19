@@ -316,6 +316,12 @@ func Migrate() {
 				return tx.Model(&models.Action{}).Exec("INSERT INTO actions SELECT * FROM actions_old").Error
 			},
 		},
+		{
+			ID: "0017-scene-multipart",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(&models.Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

@@ -71,6 +71,7 @@ type Scene struct {
 	ReleaseDateText string    `json:"release_date_text"`
 	CoverURL        string    `json:"cover_url"`
 	SceneURL        string    `json:"scene_url"`
+	IsMultipart     bool      `json:"is_multipart"`
 
 	StarRating    float64         `json:"star_rating"`
 	Favourite     bool            `json:"favourite" gorm:"default:false"`

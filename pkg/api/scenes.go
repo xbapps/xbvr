@@ -41,6 +41,7 @@ type RequestEditSceneDetails struct {
 	FilenamesArr string   `json:"filenames_arr"`
 	Images       string   `json:"images"`
 	CoverURL     string   `json:"cover_url"`
+	IsMultipart  bool     `json:"is_multipart"`
 }
 
 type ResponseGetScenes struct {
@@ -381,6 +382,10 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 		if scene.CoverURL != r.CoverURL {
 			scene.CoverURL = r.CoverURL
 			models.AddAction(scene.SceneID, "edit", "cover_url", r.CoverURL)
+		}
+		if scene.IsMultipart != r.IsMultipart {
+			scene.IsMultipart = r.IsMultipart
+			models.AddAction(scene.SceneID, "edit", "is_multipart", strconv.FormatBool(r.IsMultipart))
 		}
 
 		var diffs []string
