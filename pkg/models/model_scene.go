@@ -79,6 +79,7 @@ type Scene struct {
 	IsAvailable   bool            `json:"is_available" gorm:"default:false"`
 	IsAccessible  bool            `json:"is_accessible" gorm:"default:false"`
 	IsWatched     bool            `json:"is_watched" gorm:"default:false"`
+	IsScripted    bool            `json:"is_scripted" gorm:"default:false"`
 	Cuepoints     []SceneCuepoint `json:"cuepoints"`
 	History       []History       `json:"history"`
 	AddedDate     time.Time       `json:"added_date"`
@@ -179,6 +180,16 @@ func (o *Scene) GetFiles() ([]File, error) {
 	return files, nil
 }
 
+func (o *Scene) GetVideoFiles() ([]File, error) {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var files []File
+	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "video").Find(&files)
+
+	return files, nil
+}
+
 func (o *Scene) PreviewExists() bool {
 	if _, err := os.Stat(filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", o.SceneID))); os.IsNotExist(err) {
 		return false
@@ -194,35 +205,61 @@ func (o *Scene) UpdateStatus() {
 	}
 
 	changed := false
+	scripts := 0
+	videos := 0
 
 	if len(files) > 0 {
-		if !o.IsAvailable {
-			o.IsAvailable = true
-			changed = true
-		}
-
 		var newestFileDate time.Time
 		var totalFileSize int64
 		for j := range files {
 			totalFileSize = totalFileSize + files[j].Size
-			if files[j].Exists() {
-				if files[j].CreatedTime.After(newestFileDate) || newestFileDate.IsZero() {
-					newestFileDate = files[j].CreatedTime
-				}
-				if !o.IsAccessible {
-					o.IsAccessible = true
-					changed = true
-				}
-			} else {
-				if o.IsAccessible {
-					o.IsAccessible = false
-					changed = true
+
+			if files[j].Type == "script" {
+				scripts = scripts + 1
+			}
+
+			if files[j].Type == "video" {
+				videos = videos + 1
+
+				if files[j].Exists() {
+					if files[j].CreatedTime.After(newestFileDate) || newestFileDate.IsZero() {
+						newestFileDate = files[j].CreatedTime
+					}
+					if !o.IsAccessible {
+						o.IsAccessible = true
+						changed = true
+					}
+				} else {
+					if o.IsAccessible {
+						o.IsAccessible = false
+						changed = true
+					}
 				}
 			}
 		}
 
 		if totalFileSize != o.TotalFileSize {
 			o.TotalFileSize = totalFileSize
+			changed = true
+		}
+
+		if scripts > 0 && o.IsScripted == false {
+			o.IsScripted = true
+			changed = true
+		}
+
+		if scripts == 0 && o.IsScripted == true {
+			o.IsScripted = false
+			changed = true
+		}
+
+		if videos > 0 && o.IsAvailable == false {
+			o.IsAvailable = true
+			changed = true
+		}
+
+		if videos == 0 && o.IsAvailable == true {
+			o.IsAvailable = false
 			changed = true
 		}
 
@@ -404,6 +441,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		}
 		if i.OrElse("") == "favourite" {
 			tx = tx.Where("favourite = ?", true)
+		}
+		if i.OrElse("") == "scripted" {
+			tx = tx.Where("is_scripted = ?", true)
 		}
 	}
 

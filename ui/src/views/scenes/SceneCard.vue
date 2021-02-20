@@ -13,7 +13,7 @@
               <b-tag v-if="item.is_watched">
                 <b-icon pack="mdi" icon="eye" size="is-small"/>
               </b-tag>
-              <b-tag type="is-info" v-if="item.file.length > 1 && !item.is_multipart">
+              <b-tag type="is-info" v-if="videoFilesCount > 1 && !item.is_multipart">
                 <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
                 {{item.file.length}}
               </b-tag>
@@ -48,17 +48,27 @@ import { format, parseISO } from 'date-fns'
 import WatchlistButton from '../../components/WatchlistButton'
 import FavouriteButton from '../../components/FavouriteButton'
 import EditButton from '../../components/EditButton'
-import StarRating from 'vue-star-rating'
 
 export default {
   name: 'SceneCard',
   props: { item: Object },
-  components: { WatchlistButton, FavouriteButton, EditButton, StarRating },
+  components: { WatchlistButton, FavouriteButton, EditButton },
   data () {
     return {
       preview: false,
       format,
       parseISO
+    }
+  },
+  computed: {
+    videoFilesCount () {
+      let count = 0
+      this.item.file.map(obj => {
+        if (obj.type === 'video') {
+          count = count + 1
+        }
+      })
+      return count
     }
   },
   methods: {
@@ -90,6 +100,10 @@ export default {
     overflow: hidden;
     padding: 0;
     line-height: 0;
+  }
+
+  .is-scripted {
+    background: ;
   }
 
   .overlay {

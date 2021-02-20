@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/posthog/posthog-go"
@@ -63,7 +64,8 @@ func TrackSessionFromRemote(packet DeoPacket) {
 	if err != nil {
 		return
 	}
-	tmpCurrentFileID, err := strconv.Atoi(path.Base(tmpPath.Path))
+	tmp := strings.Split(tmpPath.Path, "/")
+	tmpCurrentFileID, err := strconv.Atoi(tmp[len(tmp)-2])
 	if err != nil {
 		return
 	}

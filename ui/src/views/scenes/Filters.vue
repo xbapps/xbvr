@@ -4,6 +4,29 @@
 
     <SavedSearch/>
 
+    <div class="is-divider" data-content="Properties"></div>
+
+    <div class="columns is-multiline is-gapless">
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
+          <b-icon pack="mdi" icon="calendar-check"/>
+          <span>{{ $t('Watchlist') }}</span>
+        </b-checkbox-button>
+      </div>
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
+          <b-icon pack="mdi" icon="heart"/>
+          <span>{{ $t('Favourite') }}</span>
+        </b-checkbox-button>
+      </div>
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="scripted" type="is-info">
+          <b-icon pack="mdi" icon="pulse"/>
+          <span>{{ $t('Scripted') }}</span>
+        </b-checkbox-button>
+      </div>
+    </div>
+
     <div class="is-divider" data-content="Sorting / Status / Release"></div>
 
     <b-field :label="$t('Sort by')" label-position="on-border" :addons="true" class="field-extra">
@@ -26,17 +49,6 @@
           </select>
         </div>
       </div>
-    </b-field>
-
-    <b-field :grouped="true" class="field-extra">
-      <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
-        <b-icon pack="mdi" icon="calendar-check" size="is-small"/>
-        <span>{{ $t("Watchlist") }}</span>
-      </b-checkbox-button>
-      <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
-        <b-icon pack="mdi" icon="heart" size="is-small"/>
-        <span>{{ $t("Favourite") }}</span>
-      </b-checkbox-button>
     </b-field>
 
     <b-field label="Watched" label-position="on-border" :addons="true" class="field-extra">
@@ -258,6 +270,10 @@ export default {
 
 <style lang="scss" scoped>
 @import "~bulma-extensions/bulma-divider/dist/css/bulma-divider.min.css";
+
+.is-gapless div.control {
+  margin: 0.1rem;
+}
 
 .is-divider {
   margin: 1.5rem 0;

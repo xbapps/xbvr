@@ -232,12 +232,7 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	models.AddAction(scene.SceneID, "match", "filenames_arr", scene.FilenamesArr)
 
 	// Finally, update scene available/accessible status
-	scene.IsAvailable = true
-	scene.AddedDate = f.CreatedTime
-	if f.Exists() {
-		scene.IsAccessible = true
-	}
-	scene.Save()
+	scene.UpdateStatus()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, nil)
 }

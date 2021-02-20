@@ -18,10 +18,9 @@ import (
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/ffprobe"
 	"github.com/xbapps/xbvr/pkg/models"
-	"gopkg.in/cheggaaa/pb.v1"
 )
 
-var allowedExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
+var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
 
 func RescanVolumes() {
 	if !models.CheckLock("rescan") {
@@ -59,6 +58,7 @@ func RescanVolumes() {
 
 		for i := range files {
 			fn := files[i].Filename
+			fn = strings.Replace(fn, ".funscript", ".mp4", -1)
 			err := db.Where("filenames_arr LIKE ?", fmt.Sprintf("%%\"%v\"%%", path.Base(fn))).Find(&scenes).Error
 			if err != nil {
 				log.Error(err, " when matching "+path.Base(fn))
@@ -128,27 +128,30 @@ func RescanVolumes() {
 func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 	if vol.IsMounted() {
 
-		var procList []string
+		var videoProcList []string
+		var scriptProcList []string
 		_ = filepath.Walk(vol.Path, func(path string, f os.FileInfo, err error) error {
 			if !f.Mode().IsDir() {
 				// Make sure the filename should be considered
-				if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(allowedExt, strings.ToLower(filepath.Ext(path))) {
+				if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(allowedVideoExt, strings.ToLower(filepath.Ext(path))) {
 					var fl models.File
 					err = db.Where(&models.File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
 
 					if err == gorm.ErrRecordNotFound || fl.VolumeID == 0 || fl.VideoDuration == 0 || fl.VideoProjection == "" {
-						procList = append(procList, path)
+						videoProcList = append(videoProcList, path)
 					}
+				}
+
+				if !strings.HasPrefix(filepath.Base(path), ".") && filepath.Ext(path) == ".funscript" {
+					scriptProcList = append(scriptProcList, path)
 				}
 			}
 			return nil
 		})
 
-		bar := pb.StartNew(len(procList))
-		bar.Output = nil
-		for j, pth := range procList {
-			fStat, _ := os.Stat(pth)
-			fTimes, _ := times.Stat(pth)
+		for j, path := range videoProcList {
+			fStat, _ := os.Stat(path)
+			fTimes, _ := times.Stat(path)
 
 			var birthtime time.Time
 			if fTimes.HasBirthTime() {
@@ -158,8 +161,9 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			}
 			var fl models.File
 			db.Where(&models.File{
-				Path:     filepath.Dir(pth),
-				Filename: filepath.Base(pth),
+				Path:     filepath.Dir(path),
+				Filename: filepath.Base(path),
+				Type:     "video",
 			}).FirstOrCreate(&fl)
 
 			fl.Size = fStat.Size()
@@ -167,9 +171,9 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			fl.UpdatedTime = fTimes.ModTime()
 			fl.VolumeID = vol.ID
 
-			ffdata, err := ffprobe.GetProbeData(pth, time.Second*3)
+			ffdata, err := ffprobe.GetProbeData(path, time.Second*3)
 			if err != nil {
-				tlog.Errorf("Error running ffprobe", pth, err)
+				tlog.Error("Error running ffprobe", path, err)
 			} else {
 				vs := ffdata.GetFirstVideoStream()
 				if vs.BitRate != "" {
@@ -197,14 +201,29 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 
 			err = fl.Save()
 			if err != nil {
-				tlog.Errorf("New file %s, but got error %s", pth, err)
+				tlog.Errorf("New file %s, but got error %s", path, err)
 			}
 
-			bar.Increment()
-			tlog.Infof("Scanning %v (%v/%v)", vol.Path, j+1, len(procList))
+			tlog.Infof("Scanning %v (%v/%v)", vol.Path, j+1, len(videoProcList))
 		}
 
-		bar.Finish()
+		for _, path := range scriptProcList {
+			var fl models.File
+			db.Where(&models.File{
+				Path:     filepath.Dir(path),
+				Filename: filepath.Base(path),
+				Type:     "script",
+			}).FirstOrCreate(&fl)
+
+			fStat, _ := os.Stat(path)
+			fTimes, _ := times.Stat(path)
+
+			fl.Size = fStat.Size()
+			fl.CreatedTime = fTimes.ModTime()
+			fl.UpdatedTime = fTimes.ModTime()
+			fl.VolumeID = vol.ID
+			fl.Save()
+		}
 
 		vol.LastScan = time.Now()
 		vol.Save()
@@ -238,7 +257,7 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 	// Walk
 	var currentFileID []string
 	for i := range files {
-		if !files[i].IsDir() && funk.Contains(allowedExt, strings.ToLower(filepath.Ext(files[i].Name))) {
+		if !files[i].IsDir() && funk.Contains(allowedVideoExt, strings.ToLower(filepath.Ext(files[i].Name))) {
 			var fl models.File
 			err = db.Where(&models.File{Path: strconv.FormatInt(files[i].ID, 10), Filename: files[i].Name}).First(&fl).Error
 
@@ -250,6 +269,7 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				}).FirstOrCreate(&fl)
 				fl.VideoProjection = "180_sbs"
 				fl.Size = files[i].Size
+				fl.Type = "video"
 				fl.CreatedTime = files[i].CreatedAt.Time
 				fl.UpdatedTime = files[i].UpdatedAt.Time
 				fl.VolumeID = vol.ID
@@ -268,7 +288,7 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			db.Delete(&allFiles[i])
 		}
 	}
-
+	
 	// Update volume info
 	vol.IsAvailable = true
 	vol.Path = "Put.io (" + acct.Username + ")"
