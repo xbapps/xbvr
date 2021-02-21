@@ -148,7 +148,10 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		bar.Output = nil
 		for j, pth := range procList {
 			fStat, _ := os.Stat(pth)
-			fTimes, _ := times.Stat(pth)
+			fTimes, err := times.Stat(pth)
+			if err != nil {
+				tlog.Errorf("Can't get the modification/creation times for %s, error: %s", pth, err)
+			}
 
 			var birthtime time.Time
 			if fTimes.HasBirthTime() {
