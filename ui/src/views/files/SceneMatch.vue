@@ -59,93 +59,94 @@
 </template>
 
 <script>
-import ky from "ky";
-import {format, parseISO} from "date-fns";
-import prettyBytes from "pretty-bytes";
-import VueLoadImage from "vue-load-image";
+import ky from 'ky'
+import { format, parseISO } from 'date-fns'
+import prettyBytes from 'pretty-bytes'
+import VueLoadImage from 'vue-load-image'
 
 export default {
-  name: "SceneMatch",
-  components: {VueLoadImage,},
-  data() {
+  name: 'SceneMatch',
+  components: { VueLoadImage },
+  data () {
     return {
       data: [],
       currentPage: 1,
-      queryString: "",
-      format, parseISO
+      queryString: '',
+      format,
+      parseISO
     }
   },
   computed: {
-    file() {
-      return this.$store.state.overlay.match.file;
-    },
+    file () {
+      return this.$store.state.overlay.match.file
+    }
   },
-  mounted() {
-    this.initView();
+  mounted () {
+    this.initView()
   },
   methods: {
-    initView() {
-      this.data = [];
-      this.queryString = this.file.filename.replace(/\./g, " ").replace(/\_/g, " ").replace(/\+/g, " ").replace(/\-/g, " ");
-      this.loadData();
+    initView () {
+      this.data = []
+      this.queryString = this.file.filename.replace(/\./g, ' ').replace(/\_/g, ' ').replace(/\+/g, ' ').replace(/\-/g, ' ')
+      this.loadData()
     },
-    loadData: async function loadData() {
-      let resp = await ky.get(`/api/scene/search`, {
+    loadData: async function loadData () {
+      const resp = await ky.get('/api/scene/search', {
         searchParams: {
-          q: this.queryString,
+          q: this.queryString
         }
-      }).json();
+      }).json()
 
       if (resp.scenes !== null) {
-        this.data = resp.scenes;
+        this.data = resp.scenes
       } else {
-        this.data = [];
+        this.data = []
       }
-      this.currentPage = 1;
+      this.currentPage = 1
     },
-    getImageURL(u) {
-      if (u.startsWith("http")) {
-        return "/img/120x/" + u.replace("://", ":/");
+    getImageURL (u) {
+      if (u.startsWith('http')) {
+        return '/img/120x/' + u.replace('://', ':/')
       } else {
-        return u;
+        return u
       }
     },
-    assign: async function assign(scene_id) {
-      await ky.post(`/api/files/match`, {
+    assign: async function assign (scene_id) {
+      await ky.post('/api/files/match', {
         json: {
           file_id: this.toInt(this.$store.state.overlay.match.file.id),
-          scene_id: scene_id,
+          scene_id: scene_id
         }
-      });
+      })
 
-      this.$store.dispatch("files/load");
+      this.$store.dispatch('files/load')
 
-      let data = this.$store.getters['files/nextFile'](this.file);
+      const data = this.$store.getters['files/nextFile'](this.file)
       if (data !== null) {
-        this.nextFile();
+        this.nextFile()
       }
     },
-    nextFile() {
-      let data = this.$store.getters['files/nextFile'](this.file);
+    nextFile () {
+      const data = this.$store.getters['files/nextFile'](this.file)
       if (data !== null) {
-        this.$store.commit("overlay/showMatch", {file: data});
-        this.initView();
+        this.$store.commit('overlay/showMatch', { file: data })
+        this.initView()
       }
     },
-    prevFile() {
-      let data = this.$store.getters['files/prevFile'](this.file);
+    prevFile () {
+      const data = this.$store.getters['files/prevFile'](this.file)
       if (data !== null) {
-        this.$store.commit("overlay/showMatch", {file: data});
-        this.initView();
+        this.$store.commit('overlay/showMatch', { file: data })
+        this.initView()
       }
     },
-    close() {
-      this.$store.commit("overlay/hideMatch");
+    close () {
+      this.$store.commit('overlay/hideMatch')
     },
-    toInt(value, radix, defaultValue) {
-      return parseInt(value, radix || 10) || defaultValue || 0;
+    toInt (value, radix, defaultValue) {
+      return parseInt(value, radix || 10) || defaultValue || 0
     },
-    prettyBytes,
+    prettyBytes
   }
 }
 </script>

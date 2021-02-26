@@ -49,81 +49,82 @@
 </template>
 
 <script>
-  import ky from "ky";
-  import VueLoadImage from "vue-load-image";
-  import GlobalEvents from 'vue-global-events';
-  import {format, parseISO} from "date-fns";
+import ky from 'ky'
+import VueLoadImage from 'vue-load-image'
+import GlobalEvents from 'vue-global-events'
+import { format, parseISO } from 'date-fns'
 
-  export default {
-    name: "ModalNewTag",
-    props: {
-      active: Boolean,
-      sceneId: String,
-    },
-    components: {VueLoadImage, GlobalEvents},
-    computed: {
-      isActive: {
-        get() {
-          const out = this.$store.state.overlay.showQuickFind;
-          if (out === true) {
-            this.$nextTick(() => {
-              this.$refs.autocompleteInput.$refs.input.focus();
-            });
-          }
-          return out;
-        },
-        set(values) {
-          this.$store.state.overlay.showQuickFind = values;
+export default {
+  name: 'ModalNewTag',
+  props: {
+    active: Boolean,
+    sceneId: String
+  },
+  components: { VueLoadImage, GlobalEvents },
+  computed: {
+    isActive: {
+      get () {
+        const out = this.$store.state.overlay.showQuickFind
+        if (out === true) {
+          this.$nextTick(() => {
+            this.$refs.autocompleteInput.$refs.input.focus()
+          })
         }
-      }
-    },
-    data() {
-      return {
-        data: [],
-        selected: null,
-        isFetching: false
-      }
-    },
-    methods: {
-      format, parseISO,
-      getAsyncData: async function (query) {
-        if (!query.length) {
-          this.data = []
-          return
-        }
-
-        this.isFetching = true;
-
-        let resp = await ky.get(`/api/scene/search`, {
-          searchParams: {
-            q: query,
-          }
-        }).json();
-
-        this.isFetching = false;
-
-        if (resp.results > 0) {
-          this.data = resp.scenes;
-        } else {
-          this.data = [];
-        }
+        return out
       },
-      getImageURL(u) {
-        if (u.startsWith("http")) {
-          return "/img/120x/" + u.replace("://", ":/");
-        } else {
-          return u;
-        }
-      },
-      showSceneDetails(scene) {
-        if (this.$router.currentRoute.name !== "scenes") {
-          this.$router.push({name: "scenes"});
-        }
-        this.$store.commit('overlay/hideQuickFind');
-        this.$store.commit('overlay/showDetails', {scene});
+      set (values) {
+        this.$store.state.overlay.showQuickFind = values
       }
     }
+  },
+  data () {
+    return {
+      data: [],
+      selected: null,
+      isFetching: false
+    }
+  },
+  methods: {
+    format,
+    parseISO,
+    getAsyncData: async function (query) {
+      if (!query.length) {
+        this.data = []
+        return
+      }
+
+      this.isFetching = true
+
+      const resp = await ky.get('/api/scene/search', {
+        searchParams: {
+          q: query
+        }
+      }).json()
+
+      this.isFetching = false
+
+      if (resp.results > 0) {
+        this.data = resp.scenes
+      } else {
+        this.data = []
+      }
+    },
+    getImageURL (u) {
+      if (u.startsWith('http')) {
+        return '/img/120x/' + u.replace('://', ':/')
+      } else {
+        return u
+      }
+    },
+    showSceneDetails (scene) {
+      if (this.$router.currentRoute.name !== 'scenes') {
+        this.$router.push({ name: 'scenes' })
+      }
+      this.$store.commit('overlay/hideQuickFind')
+      this.$store.commit('overlay/showDetails', { scene })
+    }
   }
+}
 </script>
 
 <style scoped>

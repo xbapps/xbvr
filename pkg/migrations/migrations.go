@@ -318,7 +318,7 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0017-update-default-lists",
+			ID: "099a-update-default-lists",
 			Migrate: func(tx *gorm.DB) error {
 				list := RequestSceneList{
 					IsAvailable:  optional.NewBool(true),
@@ -340,12 +340,18 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0018-versions",
+			ID: "0099b-versions",
 			Migrate: func(tx *gorm.DB) error {
 				type Scene struct {
 					Versions bool `json:"versions" gorm:"false"`
 				}
 				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
+			ID: "0017-scene-multipart",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(&models.Scene{}).Error
 			},
 		},
 	})

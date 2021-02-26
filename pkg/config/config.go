@@ -8,7 +8,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-type Object struct {
+type ObjectConfig struct {
 	Server struct {
 		BindAddress string `default:"0.0.0.0" json:"bindAddress"`
 		Port        int    `default:"9999" json:"port"`
@@ -29,7 +29,11 @@ type Object struct {
 			AllowedIP    []string `default:"[]" json:"allowedIp"`
 		} `json:"dlna"`
 		DeoVR struct {
-			Enabled bool `default:"true" json:"enabled"`
+			Enabled       bool   `default:"true" json:"enabled"`
+			AuthEnabled   bool   `default:"false" json:"auth_enabled"`
+			RemoteEnabled bool   `default:"false" json:"remote_enabled"`
+			Username      string `default:"" json:"username"`
+			Password      string `default:"" json:"password"`
 		} `json:"deovr"`
 	} `json:"interfaces"`
 	Library struct {
@@ -48,7 +52,7 @@ type Object struct {
 	} `json:"cron"`
 }
 
-var Config Object
+var Config ObjectConfig
 var RecentIPAddresses []string
 
 func LoadConfig() {

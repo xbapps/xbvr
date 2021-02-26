@@ -74,9 +74,9 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 		SetHeader("User-Agent", userAgent).
 		SetHeader("content-type", "application/json;charset=UTF-8").
 		SetHeader("accept", "application/json, text/plain, */*").
-		SetHeader("referer", URL + "videos").
+		SetHeader("referer", URL+"videos").
 		SetHeader("origin", URL).
-		SetHeader("authority", siteID + ".com").
+		SetHeader("authority", siteID+".com").
 		SetBody(`{"searchQuery":"","categoryId":null,"perspective":null,"actorId":null,"offset":"5000","isInitialLoad":true,"sortBy":"NEWEST","videoView":"MEDIUM","device":"DESKTOP"}`).
 		Post(URL + "videos/search?hl=1")
 	if err == nil || r.StatusCode() == 200 {

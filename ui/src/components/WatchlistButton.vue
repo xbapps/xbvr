@@ -6,16 +6,16 @@
 </template>
 
 <script>
-  export default {
-    name: "WatchlistButton",
-    props: {item: Object},
-    computed: {
-      buttonClass() {
-        if (this.item.watchlist) {
-          return "button is-primary is-small";
-        }
-        return "button is-primary is-outlined is-small";
-      },
+export default {
+  name: 'WatchlistButton',
+  props: { item: Object },
+  computed: {
+    buttonClass () {
+      if (this.item.watchlist) {
+        return 'button is-primary is-small'
+      }
+      return 'button is-primary is-outlined is-small'
     }
   }
+}
 </script>

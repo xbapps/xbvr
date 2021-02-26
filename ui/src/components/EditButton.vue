@@ -6,13 +6,13 @@
 </template>
 
 <script>
-  export default {
-    name: "EditButton",
-    props: {item: Object},
-    methods: {
-      editScene(scene) {
-        this.$store.commit("overlay/editDetails", { scene });
-      }
+export default {
+  name: 'EditButton',
+  props: { item: Object },
+  methods: {
+    editScene (scene) {
+      this.$store.commit('overlay/editDetails', { scene })
     }
   }
+}
 </script>

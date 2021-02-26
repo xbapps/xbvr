@@ -21,6 +21,10 @@
               <b-input type="text" v-model="scene.title" @blur="blur('title')"/>
             </b-field>
 
+            <b-field :label="$t('Multipart scene')">
+              <b-checkbox v-model="scene.is_multipart"/>
+            </b-field>
+
             <b-field grouped group-multiline>
               <b-field :label="$t('Studio')">
                 <b-input type="text" v-model="scene.studio" @blur="blur('studio')"/>
@@ -117,6 +121,7 @@ export default {
     tags: object[]
     images: object[]
     filenames_arr: string[]
+    is_multipart: bool
      */
     const scene = Object.assign({}, this.$store.state.overlay.edit.scene)
     scene.castArray = scene.cast.map(c => c.name)

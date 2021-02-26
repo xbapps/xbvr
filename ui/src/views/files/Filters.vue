@@ -115,79 +115,79 @@
 </template>
 
 <script>
-  import {subDays} from "date-fns";
+import { subDays } from 'date-fns'
 
-  export default {
-    name: "Filters",
-    methods: {
-      clearFilename() {
-        this.fileName = '';
-      },
-      clearRange() {
-        this.fileCreation = [];
-      },
-      setRange(start, end) {
-        this.fileCreation = [start, end];
-      },
-      subDays,
+export default {
+  name: 'Filters',
+  methods: {
+    clearFilename () {
+      this.fileName = ''
     },
-    computed: {
-      fileName: {
-        get() {
-          return this.$store.state.files.filters.filename;
-        },
-        set(value) {
-          this.$store.state.files.filters.filename = value;
-          if (value.length > 3 || value.length == 0) {
-            this.$store.dispatch("files/load");
-          }
-        }
+    clearRange () {
+      this.fileCreation = []
+    },
+    setRange (start, end) {
+      this.fileCreation = [start, end]
+    },
+    subDays
+  },
+  computed: {
+    fileName: {
+      get () {
+        return this.$store.state.files.filters.filename
       },
-      fileBitrates: {
-        get() {
-          return this.$store.state.files.filters.bitrates;
-        },
-        set(values) {
-          this.$store.state.files.filters.bitrates = values;
-          this.$store.dispatch("files/load");
+      set (value) {
+        this.$store.state.files.filters.filename = value
+        if (value.length > 3 || value.length == 0) {
+          this.$store.dispatch('files/load')
         }
+      }
+    },
+    fileBitrates: {
+      get () {
+        return this.$store.state.files.filters.bitrates
       },
-      fileFramerates: {
-        get() {
-          return this.$store.state.files.filters.framerates;
-        },
-        set(values) {
-          this.$store.state.files.filters.framerates = values;
-          this.$store.dispatch("files/load");
-        }
+      set (values) {
+        this.$store.state.files.filters.bitrates = values
+        this.$store.dispatch('files/load')
+      }
+    },
+    fileFramerates: {
+      get () {
+        return this.$store.state.files.filters.framerates
       },
-      fileResolutions: {
-        get() {
-          return this.$store.state.files.filters.resolutions;
-        },
-        set(values) {
-          this.$store.state.files.filters.resolutions = values;
-          this.$store.dispatch("files/load");
-        }
+      set (values) {
+        this.$store.state.files.filters.framerates = values
+        this.$store.dispatch('files/load')
+      }
+    },
+    fileResolutions: {
+      get () {
+        return this.$store.state.files.filters.resolutions
       },
-      fileState: {
-        get() {
-          return this.$store.state.files.filters.state;
-        },
-        set(value) {
-          this.$store.state.files.filters.state = value;
-          this.$store.dispatch("files/load");
-        }
+      set (values) {
+        this.$store.state.files.filters.resolutions = values
+        this.$store.dispatch('files/load')
+      }
+    },
+    fileState: {
+      get () {
+        return this.$store.state.files.filters.state
       },
-      fileCreation: {
-        get() {
-          return this.$store.state.files.filters.createdDate;
-        },
-        set(value) {
-          this.$store.state.files.filters.createdDate = value;
-          this.$store.dispatch("files/load");
-        }
+      set (value) {
+        this.$store.state.files.filters.state = value
+        this.$store.dispatch('files/load')
+      }
+    },
+    fileCreation: {
+      get () {
+        return this.$store.state.files.filters.createdDate
       },
+      set (value) {
+        this.$store.state.files.filters.createdDate = value
+        this.$store.dispatch('files/load')
+      }
     }
   }
+}
 </script>

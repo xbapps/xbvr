@@ -1,4 +1,4 @@
-package deo_remote
+package session
 
 import (
 	"encoding/binary"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/config"
 )
 
 type DeoPacket struct {
@@ -25,12 +26,13 @@ var DeoPlayerHost = ""
 func DeoRemote() {
 	for {
 		deoLoop()
+		DeoPlayerHost = ""
 		time.Sleep(1 * time.Second)
 	}
 }
 
 func deoLoop() error {
-	if DeoPlayerHost == "" {
+	if DeoPlayerHost == "" || !config.Config.Interfaces.DeoVR.RemoteEnabled {
 		return nil
 	}
 	conn, err := net.Dial("tcp", DeoPlayerHost+":23554")
@@ -61,7 +63,7 @@ func deoLoop() error {
 			}
 
 			packet := decodePacket(recvBuf)
-			go TrackSession(packet)
+			go TrackSessionFromRemote(packet)
 		}
 
 		// Write

@@ -35,38 +35,38 @@
 </template>
 
 <script>
-  export default {
-    name: 'InterfaceWeb',
-    mounted() {
-      this.$store.dispatch("optionsWeb/load");
-    },
-    methods: {
-      save() {
-        this.$store.dispatch("optionsWeb/save");
+export default {
+  name: 'InterfaceWeb',
+  mounted () {
+    this.$store.dispatch('optionsWeb/load')
+  },
+  methods: {
+    save () {
+      this.$store.dispatch('optionsWeb/save')
+    }
+  },
+  computed: {
+    tagSort: {
+      get () {
+        return this.$store.state.optionsWeb.web.tagSort
       },
-    },
-    computed: {
-      tagSort: {
-        get() {
-          return this.$store.state.optionsWeb.web.tagSort;
-        },
-        set(value) {
-          this.$store.state.optionsWeb.web.tagSort = value;
-        }
-      },
-      sceneEdit: {
-        get() {
-          return this.$store.state.optionsWeb.web.sceneEdit;
-        },
-        set(value) {
-          this.$store.state.optionsWeb.web.sceneEdit = value;
-        }
-      },
-      isLoading: function() {
-        return this.$store.state.optionsWeb.loading;
+      set (value) {
+        this.$store.state.optionsWeb.web.tagSort = value
       }
+    },
+    sceneEdit: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneEdit
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneEdit = value
+      }
+    },
+    isLoading: function () {
+      return this.$store.state.optionsWeb.loading
     }
   }
+}
 </script>
 
 <style scoped>

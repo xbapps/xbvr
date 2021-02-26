@@ -12,8 +12,10 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/common"
-	"github.com/xbapps/xbvr/pkg/deo_remote"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/session"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type DeoLibrary struct {
@@ -90,16 +92,26 @@ type DeoSceneVideoSource struct {
 	URL        string `json:"url"`
 }
 
+func isDeoAuthEnabled() bool {
+	if config.Config.Interfaces.DeoVR.AuthEnabled &&
+		config.Config.Interfaces.DeoVR.Username != "" &&
+		config.Config.Interfaces.DeoVR.Password != "" {
+		return true
+	} else {
+		return false
+	}
+}
+
 func setDeoPlayerHost(req *restful.Request) {
 	deoIP := strings.Split(req.Request.RemoteAddr, ":")[0]
-	if deoIP != deo_remote.DeoPlayerHost {
+	if deoIP != session.DeoPlayerHost {
 		common.Log.Infof("DeoVR Player connecting from %v", deoIP)
-		deo_remote.DeoPlayerHost = deoIP
+		session.DeoPlayerHost = deoIP
 	}
 }
 
 func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	if common.IsDeoAuthEnabled() {
+	if isDeoAuthEnabled() {
 		var authorized bool
 
 		u, err := req.BodyParameter("login")
@@ -112,7 +124,8 @@ func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *rest
 			authorized = false
 		}
 
-		if u == common.DEOUSER && p == common.DEOPASSWORD {
+		err = bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(p))
+		if u == config.Config.Interfaces.DeoVR.Username && err == nil {
 			authorized = true
 		}
 
@@ -171,6 +184,10 @@ func (i DeoVRResource) WebService() *restful.WebService {
 }
 
 func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) {
+	if !config.Config.Interfaces.DeoVR.Enabled {
+		return
+	}
+
 	setDeoPlayerHost(req)
 
 	db, _ := models.GetDB()
@@ -197,7 +214,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
-				URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, file.ID),
+				URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=%v", baseURL, file.ID, strconv.FormatBool(config.Config.Interfaces.DeoVR.RemoteEnabled)),
 			},
 		},
 	})
@@ -218,6 +235,10 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 }
 
 func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response) {
+	if !config.Config.Interfaces.DeoVR.Enabled {
+		return
+	}
+
 	setDeoPlayerHost(req)
 
 	db, _ := models.GetDB()
@@ -266,7 +287,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 					Height:     height,
 					Width:      width,
 					Size:       scene.Files[i].Size,
-					URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, scene.Files[i].ID),
+					URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=%v", baseURL, scene.Files[i].ID, strconv.FormatBool(config.Config.Interfaces.DeoVR.RemoteEnabled)),
 				},
 			},
 		})
@@ -321,6 +342,10 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 }
 
 func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Response) {
+	if !config.Config.Interfaces.DeoVR.Enabled {
+		return
+	}
+
 	setDeoPlayerHost(req)
 
 	db, _ := models.GetDB()
@@ -396,7 +421,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 			Title:        files[i].Filename,
 			VideoLength:  int(files[i].VideoDuration),
 			ThumbnailURL: baseURL + "/ui/images/blank.png",
-			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, files[i].ID),
+			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v?dnt=%v", baseURL, files[i].ID, strconv.FormatBool(config.Config.Interfaces.DeoVR.RemoteEnabled)),
 		}
 		list = append(list, item)
 	}

@@ -13,7 +13,7 @@
               <b-tag v-if="item.is_watched">
                 <b-icon pack="mdi" icon="eye" size="is-small"/>
               </b-tag>
-              <b-tag type="is-info" v-if="item.file.length > 1">
+              <b-tag type="is-info" v-if="item.file.length > 1 && !item.is_multipart">
                 <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
                 {{item.file.length}}
               </b-tag>
@@ -44,36 +44,36 @@
 </template>
 
 <script>
-  import {format, parseISO} from "date-fns";
-  import WatchlistButton from "../../components/WatchlistButton";
-  import FavouriteButton from "../../components/FavouriteButton";
-  import EditButton from "../../components/EditButton";
-  import StarRating from 'vue-star-rating';
+import { format, parseISO } from 'date-fns'
+import WatchlistButton from '../../components/WatchlistButton'
+import FavouriteButton from '../../components/FavouriteButton'
+import EditButton from '../../components/EditButton'
+import StarRating from 'vue-star-rating'
 
-  export default {
-    name: "SceneCard",
-    props: {item: Object},
-    components: {WatchlistButton, FavouriteButton, EditButton, StarRating},
-    data() {
-      return {
-        preview: false,
-        format,
-        parseISO
+export default {
+  name: 'SceneCard',
+  props: { item: Object },
+  components: { WatchlistButton, FavouriteButton, EditButton, StarRating },
+  data () {
+    return {
+      preview: false,
+      format,
+      parseISO
+    }
+  },
+  methods: {
+    getImageURL (u) {
+      if (u.startsWith('http')) {
+        return '/img/700x/' + u.replace('://', ':/')
+      } else {
+        return u
       }
     },
-    methods: {
-      getImageURL(u) {
-        if (u.startsWith("http")) {
-          return "/img/700x/" + u.replace("://", ":/");
-        } else {
-          return u;
-        }
-      },
-      showDetails(scene) {
-        this.$store.commit("overlay/showDetails", {scene: scene});
-      }
+    showDetails (scene) {
+      this.$store.commit('overlay/showDetails', { scene: scene })
     }
   }
+}
 </script>
 
 <style scoped>

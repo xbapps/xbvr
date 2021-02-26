@@ -25,9 +25,9 @@ import (
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
-	"github.com/xbapps/xbvr/pkg/deo_remote"
 	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/session"
 	"github.com/xbapps/xbvr/pkg/tasks"
 	"willnorris.com/go/imageproxy"
 )
@@ -190,11 +190,12 @@ func StartServer(version, commit, branch, date string) {
 	}
 
 	// DeoVR remote
-	go deo_remote.DeoRemote()
+	go session.DeoRemote()
 
 	// Cron
 	SetupCron()
 
+	// List binding addresses
 	addrs, _ := net.InterfaceAddrs()
 	ips := []string{}
 	for _, addr := range addrs {
@@ -203,9 +204,14 @@ func StartServer(version, commit, branch, date string) {
 			ips = append(ips, fmt.Sprintf("http://%v:%v/", ip.IP, config.Config.Server.Port))
 		}
 	}
+
+	// Prepare state
+	tasks.UpdateState()
+	config.State.Server.BoundIP = ips
+	config.SaveState()
+
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Web UI Authentication enabled: %v", common.IsUIAuthEnabled())
-	log.Infof("DeoVR Authentication enabled: %v", common.IsDeoAuthEnabled())
 	log.Infof("Using database: %s", common.DATABASE_URL)
 
 	httpAddr := fmt.Sprintf("%v:%v", config.Config.Server.BindAddress, config.Config.Server.Port)

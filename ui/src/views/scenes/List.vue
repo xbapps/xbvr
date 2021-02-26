@@ -55,88 +55,88 @@
 </template>
 
 <script>
-  import SceneCard from "./SceneCard";
+import SceneCard from './SceneCard'
 
-  export default {
-    name: "List",
-    components: {SceneCard},
-    computed: {
-      cardSize: {
-        get() {
-          return this.$store.state.sceneList.filters.cardSize;
-        },
-        set(value) {
-          this.$store.state.sceneList.filters.cardSize = value;
-        }
+export default {
+  name: 'List',
+  components: { SceneCard },
+  computed: {
+    cardSize: {
+      get () {
+        return this.$store.state.sceneList.filters.cardSize
       },
-      cardSizeClass() {
-        switch (this.$store.state.sceneList.filters.cardSize) {
-          case "1":
-            return "is-one-fifth";
-          case "2":
-            return "is-one-quarter";
-          case "3":
-            return "is-one-third";
-          default:
-            return "is-one-fifth";
-        }
-      },
-      dlState: {
-        get() {
-          return this.$store.state.sceneList.filters.dlState;
-        },
-        set(value) {
-          this.$store.state.sceneList.filters.dlState = value;
-
-          switch (this.$store.state.sceneList.filters.dlState) {
-            case "any":
-              this.$store.state.sceneList.filters.isAvailable = null;
-              this.$store.state.sceneList.filters.isAccessible = null;
-              break;
-            case "available":
-              this.$store.state.sceneList.filters.isAvailable = true;
-              this.$store.state.sceneList.filters.isAccessible = true;
-              break;
-            case "downloaded":
-              this.$store.state.sceneList.filters.isAvailable = true;
-              this.$store.state.sceneList.filters.isAccessible = null;
-              break;
-            case "missing":
-              this.$store.state.sceneList.filters.isAvailable = false;
-              this.$store.state.sceneList.filters.isAccessible = null;
-              break;
-          }
-
-          this.reloadList();
-        }
-      },
-      isLoading() {
-        return this.$store.state.sceneList.isLoading;
-      },
-      items() {
-        return this.$store.state.sceneList.items;
-      },
-      total() {
-        return this.$store.state.sceneList.total;
-      },
-      counts() {
-        return this.$store.state.sceneList.counts;
-      },
-    },
-    methods: {
-      reloadList() {
-        this.$router.push({
-          name: 'scenes',
-          query: {
-            q: this.$store.getters['sceneList/filterQueryParams']
-          }
-        });
-      },
-      async loadMore() {
-        this.$store.dispatch("sceneList/load", {offset: this.$store.state.sceneList.offset});
+      set (value) {
+        this.$store.state.sceneList.filters.cardSize = value
       }
+    },
+    cardSizeClass () {
+      switch (this.$store.state.sceneList.filters.cardSize) {
+        case '1':
+          return 'is-one-fifth'
+        case '2':
+          return 'is-one-quarter'
+        case '3':
+          return 'is-one-third'
+        default:
+          return 'is-one-fifth'
+      }
+    },
+    dlState: {
+      get () {
+        return this.$store.state.sceneList.filters.dlState
+      },
+      set (value) {
+        this.$store.state.sceneList.filters.dlState = value
+
+        switch (this.$store.state.sceneList.filters.dlState) {
+          case 'any':
+            this.$store.state.sceneList.filters.isAvailable = null
+            this.$store.state.sceneList.filters.isAccessible = null
+            break
+          case 'available':
+            this.$store.state.sceneList.filters.isAvailable = true
+            this.$store.state.sceneList.filters.isAccessible = true
+            break
+          case 'downloaded':
+            this.$store.state.sceneList.filters.isAvailable = true
+            this.$store.state.sceneList.filters.isAccessible = null
+            break
+          case 'missing':
+            this.$store.state.sceneList.filters.isAvailable = false
+            this.$store.state.sceneList.filters.isAccessible = null
+            break
+        }
+
+        this.reloadList()
+      }
+    },
+    isLoading () {
+      return this.$store.state.sceneList.isLoading
+    },
+    items () {
+      return this.$store.state.sceneList.items
+    },
+    total () {
+      return this.$store.state.sceneList.total
+    },
+    counts () {
+      return this.$store.state.sceneList.counts
+    }
+  },
+  methods: {
+    reloadList () {
+      this.$router.push({
+        name: 'scenes',
+        query: {
+          q: this.$store.getters['sceneList/filterQueryParams']
+        }
+      })
+    },
+    async loadMore () {
+      this.$store.dispatch('sceneList/load', { offset: this.$store.state.sceneList.offset })
     }
   }
+}
 </script>
 
 <style scoped>

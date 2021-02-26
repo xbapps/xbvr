@@ -37,49 +37,49 @@
 </template>
 
 <script>
-  import ky from "ky";
+import ky from 'ky'
 
-  export default {
-    data() {
-      return {
-        currentVersion: "",
-        latestVersion: "",
-      }
-    },
-    computed: {
-      lockRescan() {
-        return this.$store.state.messages.lockRescan;
-      },
-      lastRescanMessage() {
-        return this.$store.state.messages.lastRescanMessage;
-      },
-      lockScrape() {
-        return this.$store.state.messages.lockScrape;
-      },
-      lastScrapeMessage() {
-        return this.$store.state.messages.lastScrapeMessage;
-      },
-    },
-    mounted() {
-      ky.get(`/api/options/version-check`).json().then(data => {
-        this.currentVersion = data.current_version;
-        this.latestVersion = data.latest_version;
-
-        if (data.update_notify && this.currentVersion !== "CURRENT") {
-          this.$buefy.snackbar.open({
-            message: `Version ${this.latestVersion} available!`,
-            type: 'is-warning',
-            position: 'is-top',
-            actionText: this.$t('Download now'),
-            indefinite: true,
-            onAction: () => {
-              window.location = "https://github.com/xbapps/xbvr/releases";
-            }
-          })
-        }
-      });
+export default {
+  data () {
+    return {
+      currentVersion: '',
+      latestVersion: ''
     }
+  },
+  computed: {
+    lockRescan () {
+      return this.$store.state.messages.lockRescan
+    },
+    lastRescanMessage () {
+      return this.$store.state.messages.lastRescanMessage
+    },
+    lockScrape () {
+      return this.$store.state.messages.lockScrape
+    },
+    lastScrapeMessage () {
+      return this.$store.state.messages.lastScrapeMessage
+    }
+  },
+  mounted () {
+    ky.get('/api/options/version-check').json().then(data => {
+      this.currentVersion = data.current_version
+      this.latestVersion = data.latest_version
+
+      if (data.update_notify && this.currentVersion !== 'CURRENT') {
+        this.$buefy.snackbar.open({
+          message: `Version ${this.latestVersion} available!`,
+          type: 'is-warning',
+          position: 'is-top',
+          actionText: this.$t('Download now'),
+          indefinite: true,
+          onAction: () => {
+            window.location = 'https://github.com/xbapps/xbvr/releases'
+          }
+        })
+      }
+    })
   }
+}
 </script>
 
 <style scoped>
