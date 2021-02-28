@@ -2,7 +2,7 @@ image:
   file: .gitpod.dockerfile
 tasks:
   - name: Continuous Build
-    command: cd /workspace/xbvr && modd
+    command: cd /workspace/xbvr && yarn dev
 ports:
   - port: 9999
     onOpen: open-preview

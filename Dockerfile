@@ -1,4 +1,4 @@
-FROM node:10.16.3-jessie as build-env
+FROM node:12 as build-env
 
 ### Install Go ###
 ENV GO_VERSION=1.13.15 \
