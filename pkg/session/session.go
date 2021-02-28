@@ -19,7 +19,10 @@ import (
 
 var (
 	sessionSource      string
+	isPlaying          bool
+	currentPosition    float64
 	currentFileID      int
+	currentSceneID     uint
 	lastSessionID      uint
 	lastSessionSceneID uint
 	lastSessionStart   time.Time
@@ -33,13 +36,7 @@ func TrackSessionFromFile(f models.File, doNotTrack string) {
 
 	if f.SceneID != 0 && doNotTrack != "true" {
 		if lastSessionSceneID != f.SceneID {
-			if lastSessionID != 0 {
-				watchSessionFlush()
-			}
-
-			lastSessionSceneID = f.SceneID
-			lastSessionStart = time.Now()
-			newWatchSession()
+			newWatchSession(f.SceneID)
 		}
 
 		lastSessionEnd = time.Now()
@@ -48,7 +45,7 @@ func TrackSessionFromFile(f models.File, doNotTrack string) {
 
 func FinishTrackingFromFile(doNotTrack string) {
 	lastSessionEnd = time.Now()
-	if doNotTrack == "false" {
+	if doNotTrack != "true" {
 		watchSessionFlush()
 	}
 }
@@ -59,13 +56,15 @@ func TrackSessionFromRemote(packet DeoPacket) {
 	}
 
 	sessionSource = "deovr"
+	isPlaying = packet.PlayerState == PLAYING
+	currentPosition = packet.CurrentTime
 
 	tmpPath, err := url.Parse(packet.Path)
 	if err != nil {
 		return
 	}
 	tmp := strings.Split(tmpPath.Path, "/")
-	tmpCurrentFileID, err := strconv.Atoi(tmp[len(tmp)-2])
+	tmpCurrentFileID, err := strconv.Atoi(tmp[len(tmp)-1])
 	if err != nil {
 		return
 	}
@@ -80,15 +79,10 @@ func TrackSessionFromRemote(packet DeoPacket) {
 		err = db.First(&f, currentFileID).Error
 		defer db.Close()
 
-		// Flush old session
-		if lastSessionID != 0 {
-			watchSessionFlush()
-		}
-
 		// Create new session
-		lastSessionSceneID = f.SceneID
-		lastSessionStart = time.Now()
-		newWatchSession()
+		if lastSessionSceneID != f.SceneID {
+			newWatchSession(f.SceneID)
+		}
 
 		currentSessionHeatmap = make([]int, int(packet.Duration))
 	}
@@ -119,18 +113,28 @@ func CheckForDeadSession() {
 	}
 }
 
-func newWatchSession() {
-	obj := models.History{SceneID: lastSessionSceneID, TimeStart: lastSessionStart}
+func newWatchSession(sceneID uint) {
+	if lastSessionID != 0 {
+		watchSessionFlush()
+	}
+
+	lastSessionSceneID = sceneID
+	lastSessionStart = time.Now()
+
+	obj := models.History{SceneID: sceneID, TimeStart: lastSessionStart}
 	obj.Save()
 
 	var scene models.Scene
-	err := scene.GetIfExistByPK(lastSessionSceneID)
+	err := scene.GetIfExistByPK(sceneID)
 	if err == nil {
 		scene.LastOpened = time.Now()
 		scene.Save()
+	} else {
+		return
 	}
 
 	lastSessionID = obj.ID
+	currentSceneID = scene.ID
 
 	analytics.Event("watchsession-new", posthog.NewProperties().Set("scene-id", scene.SceneID))
 	common.Log.Infof("New session #%v for scene #%v from %v", lastSessionID, lastSessionSceneID, sessionSource)
@@ -158,35 +162,44 @@ func watchSessionFlush() {
 		// Dump heatmap
 		// TODO: handle multipart scenes
 		if !scene.IsMultipart && sessionSource == "deovr" {
-			path := path.Join(common.HeatmapDir, fmt.Sprintf("%v.json", lastSessionSceneID))
-			if _, err := os.Stat(path); os.IsNotExist(err) {
-				// Create new heatmap
-				data, _ := json.Marshal(currentSessionHeatmap)
-				ioutil.WriteFile(path, data, 0644)
-			} else {
-				// Update existing heatmap
-				b, err := ioutil.ReadFile(path)
-				if err != nil {
-					return
-				}
-
-				tmpHeatmap := make([]int, len(currentSessionHeatmap))
-				err = json.Unmarshal(b, &tmpHeatmap)
-				if err != nil {
-					return
-				}
-
-				for k, v := range tmpHeatmap {
-					currentSessionHeatmap[k] = currentSessionHeatmap[k] + v
-				}
-
-				data, _ := json.Marshal(currentSessionHeatmap)
-				ioutil.WriteFile(path, data, 0644)
+			err = dumpHeatmap(lastSessionSceneID, currentSessionHeatmap)
+			if err != nil {
+				common.Log.Error("Error while writing heatmap data", err)
 			}
 		}
 	}
 
 	currentFileID = 0
+	currentSceneID = 0
 	lastSessionID = 0
 	lastSessionSceneID = 0
+}
+
+func dumpHeatmap(sceneID uint, data []int) error {
+	path := path.Join(common.HeatmapDir, fmt.Sprintf("%v.json", sceneID))
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// Create new heatmap
+		dataOut, _ := json.Marshal(data)
+		ioutil.WriteFile(path, dataOut, 0644)
+	} else {
+		// Update existing heatmap
+		b, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		tmpHeatmap := make([]int, len(data))
+		err = json.Unmarshal(b, &tmpHeatmap)
+		if err != nil {
+			return err
+		}
+
+		for k, v := range tmpHeatmap {
+			data[k] = data[k] + v
+		}
+
+		dataOut, _ := json.Marshal(data)
+		ioutil.WriteFile(path, dataOut, 0644)
+	}
+	return nil
 }

@@ -49,7 +49,11 @@ func InitPaths() {
 	VideoThumbnailDir = filepath.Join(AppDir, "video_thumbnail")
 
 	// Initialize DATABASE_URL once appdir path is known
-	DATABASE_URL = getEnv("DATABASE_URL", fmt.Sprintf("sqlite:%v", filepath.Join(AppDir, "main.db")))
+	if EnvConfig.DatabaseURL != "" {
+		DATABASE_URL = EnvConfig.DatabaseURL
+	} else {
+		DATABASE_URL = fmt.Sprintf("sqlite:%v", filepath.Join(AppDir, "main.db"))
+	}
 
 	_ = os.MkdirAll(AppDir, os.ModePerm)
 	_ = os.MkdirAll(ImgDir, os.ModePerm)

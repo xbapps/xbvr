@@ -191,6 +191,11 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 
 	setDeoPlayerHost(req)
 
+	dnt := ""
+	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+		dnt = "?dnt=true"
+	}
+
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -213,7 +218,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
-				URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=%v", session.DeoRequestHost, file.ID, strconv.FormatBool(config.Config.Interfaces.DeoVR.RemoteEnabled)),
+				URL:        fmt.Sprintf("%v/api/dms/file/%v%v", session.DeoRequestHost, file.ID, dnt),
 			},
 		},
 	})
@@ -244,6 +249,11 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	}
 
 	setDeoPlayerHost(req)
+
+	dnt := ""
+	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+		dnt = "?dnt=true"
+	}
 
 	db, _ := models.GetDB()
 	defer db.Close()
@@ -299,7 +309,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 					Height:     height,
 					Width:      width,
 					Size:       file.Size,
-					URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=%v", session.DeoRequestHost, file.ID, strconv.FormatBool(config.Config.Interfaces.DeoVR.RemoteEnabled)),
+					URL:        fmt.Sprintf("%v/api/dms/file/%v%v", session.DeoRequestHost, file.ID, dnt),
 				},
 			},
 		})
@@ -422,6 +432,11 @@ func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem 
 func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 	setDeoPlayerHost(req)
 
+	dnt := ""
+	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+		dnt = "?dnt=true"
+	}
+
 	list := make([]DeoListItem, 0)
 	for i := range files {
 		if files[i].Volume.Type == "local" {
@@ -433,7 +448,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 			Title:        files[i].Filename,
 			VideoLength:  int(files[i].VideoDuration),
 			ThumbnailURL: session.DeoRequestHost + "/ui/images/blank.png",
-			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v?dnt=%v", session.DeoRequestHost, files[i].ID, strconv.FormatBool(config.Config.Interfaces.DeoVR.RemoteEnabled)),
+			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v%v", session.DeoRequestHost, files[i].ID, dnt),
 		}
 		list = append(list, item)
 	}

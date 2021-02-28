@@ -97,6 +97,10 @@ func (i SceneResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
+	ws.Route(ws.GET("/{scene-id}").To(i.getScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
 	return ws
 }
 
@@ -184,6 +188,21 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 		ReleaseMonths: outRelease,
 		Volumes:       outVolumes,
 	})
+}
+
+func (i SceneResource) getScene(req *restful.Request, resp *restful.Response) {
+	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var scene models.Scene
+	db, _ := models.GetDB()
+	err = scene.GetIfExistByPK(uint(sceneId))
+	db.Close()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
 
 func (i SceneResource) getScenes(req *restful.Request, resp *restful.Response) {

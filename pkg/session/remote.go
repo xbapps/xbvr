@@ -22,11 +22,19 @@ const PLAYING = 0
 const PAUSED = 1
 
 var DeoPlayerHost = ""
+var DeoRequestHost = ""
 
 func DeoRemote() {
 	for {
-		deoLoop()
-		DeoPlayerHost = ""
+		go common.PublishWS("remote.state", map[string]interface{}{
+			"connected": false,
+		})
+
+		err := deoLoop()
+		if err != nil {
+			common.Log.Error(err)
+		}
+
 		time.Sleep(1 * time.Second)
 	}
 }
@@ -53,6 +61,9 @@ func deoLoop() error {
 		lenBuf := make([]byte, 4)
 		_, err = conn.Read(lenBuf[:]) // recv data
 		bodyLength := binary.LittleEndian.Uint32(lenBuf)
+		if err != nil {
+			return err
+		}
 
 		// Read packet
 		if bodyLength > 0 {
@@ -78,6 +89,17 @@ func deoLoop() error {
 		if err != nil {
 			return err
 		}
+
+		go common.PublishWS("remote.state", map[string]interface{}{
+			"connected": true,
+			"deovrHost": DeoPlayerHost,
+			"isPlaying": isPlaying,
+			"currentPosition": currentPosition,
+			"sessionStart": lastSessionStart,
+			"sessionEnd": lastSessionEnd,
+			"currentFileID": currentFileID,
+			"currentSceneID": currentSceneID,
+		})
 	}
 }
 

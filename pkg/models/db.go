@@ -51,7 +51,7 @@ func SaveWithRetry(db *gorm.DB, i interface{}) error {
 }
 
 func GetDB() (*gorm.DB, error) {
-	if common.DEBUG != "" {
+	if common.EnvConfig.DebugSQL {
 		log.Debug("Getting DB handle from ", common.GetCallerFunctionName())
 	}
 
@@ -61,7 +61,7 @@ func GetDB() (*gorm.DB, error) {
 	err = retry.Do(
 		func() error {
 			db, err = gorm.Open(dbConn.Driver, dbConn.DSN)
-			db.LogMode(common.SQL_DEBUG)
+			db.LogMode(common.EnvConfig.DebugSQL)
 			if err != nil {
 				return err
 			}

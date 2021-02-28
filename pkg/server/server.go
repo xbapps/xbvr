@@ -33,7 +33,6 @@ import (
 )
 
 var (
-	DEBUG  = common.DEBUG
 	wsAddr = common.WsAddr
 	log    = common.Log
 )
@@ -121,7 +120,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(restfulspec.NewOpenAPIService(restConfig))
 
 	// Static files
-	if DEBUG == "" {
+	if !common.EnvConfig.Debug {
 		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(assets.HTTP))
 	} else {
 		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(http.Dir("ui/dist")))
@@ -215,11 +214,10 @@ func StartServer(version, commit, branch, date string) {
 	log.Infof("Using database: %s", common.DATABASE_URL)
 
 	httpAddr := fmt.Sprintf("%v:%v", config.Config.Server.BindAddress, config.Config.Server.Port)
-	if DEBUG == "" {
-		log.Fatal(http.ListenAndServe(httpAddr, handler))
-	} else {
-		log.Infof("Running in DEBUG mode")
+	if common.EnvConfig.DebugRequests {
 		log.Fatal(http.ListenAndServe(httpAddr, wwwlog.Handle(handler, &wwwlog.Options{Color: true})))
+	} else {
+		log.Fatal(http.ListenAndServe(httpAddr, handler))
 	}
 }
 

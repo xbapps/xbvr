@@ -288,7 +288,7 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			db.Delete(&allFiles[i])
 		}
 	}
-	
+
 	// Update volume info
 	vol.IsAvailable = true
 	vol.Path = "Put.io (" + acct.Username + ")"
