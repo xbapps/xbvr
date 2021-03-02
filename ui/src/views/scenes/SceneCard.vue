@@ -63,7 +63,7 @@ export default {
   computed: {
     videoFilesCount () {
       let count = 0
-      this.item.file.map(obj => {
+      this.item.file.forEach(obj => {
         if (obj.type === 'video') {
           count = count + 1
         }

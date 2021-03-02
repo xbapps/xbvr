@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="is-divider" data-content="Saved lists" style="margin-top:0.8em;"></div>
+    <div class="is-divider" data-content="Saved searches" style="margin-top:0.8em;"></div>
 
     <SavedSearch/>
 
