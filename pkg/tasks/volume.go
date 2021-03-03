@@ -149,7 +149,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			return nil
 		})
 
-		for j, pth := range procList {
+		for j, pth := range videoProcList {
 			fStat, _ := os.Stat(pth)
 			fTimes, err := times.Stat(pth)
 			if err != nil {
