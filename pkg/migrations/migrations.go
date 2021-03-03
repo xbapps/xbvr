@@ -322,6 +322,26 @@ func Migrate() {
 				return tx.AutoMigrate(&models.Scene{}).Error
 			},
 		},
+		{
+			ID: "0018-added-file-type",
+			Migrate: func(tx *gorm.DB) error {
+				err := tx.AutoMigrate(&models.File{}).Error
+
+				var files []models.File
+				db.Find(&files)
+				for _, file := range files {
+					file.Type = "video"
+					file.Save()
+				}
+				return err
+			},
+		},
+		{
+			ID: "0019-scene-is-scripted",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(&models.Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

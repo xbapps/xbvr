@@ -14,7 +14,7 @@ require (
 	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/blevesearch/bleve v1.0.13
+	github.com/blevesearch/bleve v1.0.14
 	github.com/creasty/defaults v1.5.1
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
@@ -58,8 +58,8 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/posthog/posthog-go v0.0.0-20200525173953-e46dc8e6b89b
+	github.com/prometheus/common v0.9.1
 	github.com/putdotio/go-putio/putio v0.0.0-20200123120452-16d982cac2b8
-	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/robertkrimen/otto v0.0.0-20200922221731-ef014fd054ac
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/cors v1.7.0
@@ -67,18 +67,17 @@ require (
 	github.com/satori/go.uuid v0.0.0-20180103174451-36e9d2ebbde5
 	github.com/sirupsen/logrus v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-	github.com/tecbot/gorocksdb v0.0.0-20190705090504-162552197222 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
 	github.com/thoas/go-funk v0.7.0
-	github.com/tidwall/gjson v1.6.3
+	github.com/tidwall/gjson v1.6.8
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xo/dburl v0.0.0-20200910011426-652e0d5720a3
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
-	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
-	golang.org/x/oauth2 v0.0.0-20201203001011-0b49973bad19
-	golang.org/x/sys v0.0.0-20201204225414-ed752295db88
+	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
+	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
+	golang.org/x/sys v0.0.0-20210228012217-479acdf4ea46
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
