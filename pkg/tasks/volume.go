@@ -186,6 +186,8 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				fl.VideoHeight = vs.Height
 				if dur, err := strconv.ParseFloat(vs.Duration, 64); err == nil {
 					fl.VideoDuration = dur
+				} else if ffdata.Format.DurationSeconds > 0.0 {
+					fl.VideoDuration = ffdata.Format.DurationSeconds
 				}
 
 				if vs.Height*2 == vs.Width || vs.Width > vs.Height {
