@@ -7,7 +7,7 @@
     "lint": "cd ui && vue-cli-service lint",
     "i18n:report": "vue-cli-service i18n:report --src './src/**/*.?(js|vue)' --locales './src/locales/**/*.json'",
     "i18n:extract": "yarn vue-i18n-extract report -v './ui/src/**/*.?(js|vue)' -l './ui/src/locales/*.?(js|json)'",
-    "dev": "concurrently 'npm:dev:ui' 'npm:dev:go'",
+    "dev": "concurrently 'go generate' 'npm:dev:ui' 'npm:dev:go'",
     "dev:go": "air",
     "dev:ui": "cd ui && vue-cli-service build --watch --silent"
   },
