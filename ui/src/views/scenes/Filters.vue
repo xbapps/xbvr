@@ -1,8 +1,37 @@
 <template>
   <div>
-    <div class="is-divider" data-content="Saved lists" style="margin-top:0.8em;"></div>
+    <div class="is-divider" data-content="Saved searches" style="margin-top:0.8em;"></div>
 
     <SavedSearch/>
+
+    <div class="is-divider" data-content="Properties"></div>
+
+    <div class="columns is-multiline is-gapless">
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
+          <b-icon pack="mdi" icon="calendar-check"/>
+          <span>{{ $t('Watchlist') }}</span>
+        </b-checkbox-button>
+      </div>
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
+          <b-icon pack="mdi" icon="heart"/>
+          <span>{{ $t('Favourite') }}</span>
+        </b-checkbox-button>
+      </div>
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="scripted" type="is-info">
+          <b-icon pack="mdi" icon="pulse"/>
+          <span>{{ $t('Scripted') }}</span>
+        </b-checkbox-button>
+      </div>
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="versions" type="is-info">
+          <b-icon pack="mdi" icon="image-multiple"/>
+          <span>{{ $t('Versions') }}</span>
+        </b-checkbox-button>
+      </div>
+    </div>
 
     <div class="is-divider" data-content="Sorting / Status / Release"></div>
 
@@ -27,23 +56,6 @@
         </div>
       </div>
     </b-field>
-
-    <b-field :grouped="true" group-multiline="true" class="field-extra">
-      <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
-        <b-icon pack="mdi" icon="calendar-check" size="is-small"/>
-        <span>{{ $t("Watchlist") }}</span>
-      </b-checkbox-button>
-      <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
-        <b-icon pack="mdi" icon="heart" size="is-small"/>
-        <span>{{ $t("Favourite") }}</span>
-      </b-checkbox-button>
-      <b-checkbox-button v-model="lists" native-value="versions" type="is-info">
-        <b-icon pack="mdi" icon="image-multiple" size="is-small"/>
-        <span>{{ $t("Versions") }}</span>
-      </b-checkbox-button>
-    </b-field>
-
-    <div class="is-divider" style="margin-top:0.8em;"></div>
 
     <b-field label="Watched" label-position="on-border" :addons="true" class="field-extra">
       <div class="control is-expanded">
@@ -264,6 +276,10 @@ export default {
 
 <style lang="scss" scoped>
 @import "~bulma-extensions/bulma-divider/dist/css/bulma-divider.min.css";
+
+.is-gapless div.control {
+  margin: 0.1rem;
+}
 
 .is-divider {
   margin: 1.5rem 0;

@@ -88,10 +88,13 @@
 
                 <b-tab-item :label="`Files (${fileCount})`">
                   <div class="block-tab-content block">
-                    <div class="content media is-small" v-for="f in item.file">
+                    <div class="content media is-small" v-for="(f, idx) in filesByType" :key="idx">
                       <div class="media-left">
-                        <button rounded class="button is-success is-small" @click='playFile(f)'>
+                        <button rounded class="button is-success is-small" @click='playFile(f)' v-show="f.type === 'video'">
                           <b-icon pack="fas" icon="play" size="is-small"></b-icon>
+                        </button>
+                        <button rounded class="button is-info is-small is-outlined" v-show="f.type === 'script'">
+                          <b-icon pack="mdi" icon="pulse"></b-icon>
                         </button>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
@@ -99,7 +102,8 @@
                         <small>
                           <span class="pathDetails">{{f.path}}</span>
                           <br/>
-                          {{prettyBytes(f.size)}}, {{f.video_width}}x{{f.video_height}},
+                          {{prettyBytes(f.size)}},
+                          <span v-if="f.type === 'video'">{{f.video_width}}x{{f.video_height}},</span>
                           {{format(parseISO(f.created_time), "yyyy-MM-dd")}}
                         </small>
                       </div>
@@ -131,7 +135,7 @@
                     </div>
                     <div class="content is-small">
                       <ul>
-                        <li v-for="c in sortedCuepoints">
+                        <li v-for="(c, idx) in sortedCuepoints" :key="idx">
                           <code>{{humanizeSeconds(c.time_start)}}</code> -
                           <a @click="playCuepoint(c)"><strong>{{c.name}}</strong></a>
                         </li>
@@ -147,7 +151,7 @@
                       {{humanizeSeconds(historySessionsDuration)}}
                     </div>
                     <div class="content is-small">
-                      <div class="block" v-for="session in item.history">
+                      <div class="block" v-for="(session, idx) in item.history" :key="idx">
                         <strong>{{format(parseISO(session.time_start), "yyyy-MM-dd kk:mm:ss")}} -
                           {{humanizeSeconds(session.duration)}}</strong>
                       </div>
@@ -222,7 +226,7 @@ export default {
     // Tab: cuepoints
     sortedCuepoints () {
       if (this.item.cuepoints !== null) {
-        return this.item.cuepoints.sort((a, b) => (a.time_start > b.time_start) ? 1 : -1)
+        return this.item.cuepoints.slice().sort((a, b) => (a.time_start > b.time_start) ? 1 : -1)
       }
       return []
     },
@@ -232,6 +236,12 @@ export default {
         return this.item.file.length
       }
       return 0
+    },
+    filesByType () {
+      if (this.item.file !== null) {
+        return this.item.file.slice().sort((a, b) => (a.type === 'video') ? -1 : 1)
+      }
+      return []
     },
     // Tab: history
     historySessionsCount () {
@@ -243,8 +253,9 @@ export default {
     historySessionsDuration () {
       if (this.item.history !== null) {
         let total = 0
-        this.item.history.map(i => {
+        this.item.history.slice().map(i => {
           total = total + i.duration
+          return 0
         })
         return total
       }

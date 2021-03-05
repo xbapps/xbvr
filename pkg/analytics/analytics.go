@@ -34,7 +34,7 @@ func GenerateID() {
 }
 
 func UserData() {
-	if common.DISABLE_ANALYTICS == "" {
+	if !common.EnvConfig.DisableAnalytics {
 		client.Enqueue(posthog.Identify{
 			DistinctId: distinctID,
 			Properties: posthog.NewProperties().
@@ -46,7 +46,7 @@ func UserData() {
 }
 
 func Event(event string, prop posthog.Properties) {
-	if common.DISABLE_ANALYTICS == "" {
+	if !common.EnvConfig.DisableAnalytics {
 		client.Enqueue(posthog.Capture{
 			DistinctId: distinctID,
 			Event:      event,

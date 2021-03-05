@@ -5,7 +5,7 @@ import (
 )
 
 func IsUIAuthEnabled() bool {
-	if UIPASSWORD != "" && UIUSER != "" {
+	if EnvConfig.UIUsername != "" && EnvConfig.UIPassword != "" {
 		return true
 	} else {
 		return false
@@ -13,8 +13,8 @@ func IsUIAuthEnabled() bool {
 }
 
 func GetUISecret(user string, realm string) string {
-	if user == UIUSER {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(UIPASSWORD), bcrypt.DefaultCost)
+	if user == EnvConfig.UIUsername {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(EnvConfig.UIPassword), bcrypt.DefaultCost)
 		if err == nil {
 			return string(hashedPassword)
 		}

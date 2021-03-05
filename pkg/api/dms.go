@@ -68,6 +68,7 @@ func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
 	switch f.Volume.Type {
 	case "local":
 		// Track current session
+		setDeoPlayerHost(req)
 		session.TrackSessionFromFile(f, doNotTrack)
 
 		if err == gorm.ErrRecordNotFound {

@@ -1,4 +1,4 @@
-FROM node:12.20.1-buster as build-env
+FROM node:12 as build-env
 
 ### Install Go ###
 ENV GO_VERSION=1.13.15 \
@@ -33,7 +33,7 @@ RUN cd /app && \
     go generate && \
     go build -tags='json1' -ldflags '-w' -o xbvr main.go
 
-FROM gcr.io/distroless/base-debian10
+FROM gcr.io/distroless/base
 COPY --from=build-env /app/xbvr /
 
 EXPOSE 9998-9999
