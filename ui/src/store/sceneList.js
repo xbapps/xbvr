@@ -61,14 +61,14 @@ const getters = {
     return Buffer.from(JSON.stringify(st)).toString('base64')
   },
   prevScene: (state) => (currentScene) => {
-    const i = state.items.findIndex(item => item.scene_id == currentScene.scene_id)
+    const i = state.items.findIndex(item => item.scene_id === currentScene.scene_id)
     if (i === 0) {
       return null
     }
     return state.items[i - 1]
   },
   nextScene: (state) => (currentScene) => {
-    const i = state.items.findIndex(item => item.scene_id == currentScene.scene_id)
+    const i = state.items.findIndex(item => item.scene_id === currentScene.scene_id)
     if (i === state.items.length - 1) {
       return null
     }
@@ -77,6 +77,9 @@ const getters = {
 }
 
 const mutations = {
+  setItems (state, payload) {
+    state.items = payload
+  },
   toggleSceneList (state, payload) {
     state.items = state.items.map(obj => {
       if (obj.scene_id === payload.scene_id) {
@@ -133,7 +136,7 @@ const actions = {
     // Reverse list of release months for display purposes
     state.filterOpts.release_month = state.filterOpts.release_month.reverse()
   },
-  async load ({ state, getters }, params) {
+  async load ({ state, getters, commit }, params) {
     const iOffset = params.offset || 0
 
     state.isLoading = true
@@ -149,10 +152,10 @@ const actions = {
     state.isLoading = false
 
     if (iOffset === 0) {
-      state.items = []
+      commit('setItems', [])
     }
 
-    state.items = state.items.concat(data.scenes)
+    commit('setItems', state.items.concat(data.scenes))
     state.offset = iOffset + state.limit
     state.total = data.results
 

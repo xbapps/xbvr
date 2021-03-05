@@ -82,6 +82,11 @@ export default {
     ws.subscribe('options.previews.previewReady', (arr, obj) => {
       this.$store.commit('optionsPreviews/showPreview', { previewFn: arr.argsDict.previewFn })
     })
+
+    // Remote
+    ws.subscribe('remote.state', (arr, obj) => {
+      this.$store.dispatch('remote/processMessage', arr.argsDict)
+    })
   }
 }
 </script>

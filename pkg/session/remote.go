@@ -91,14 +91,14 @@ func deoLoop() error {
 		}
 
 		go common.PublishWS("remote.state", map[string]interface{}{
-			"connected": true,
-			"deovrHost": DeoPlayerHost,
-			"isPlaying": isPlaying,
+			"connected":       true,
+			"deovrHost":       DeoPlayerHost,
+			"isPlaying":       isPlaying,
 			"currentPosition": currentPosition,
-			"sessionStart": lastSessionStart,
-			"sessionEnd": lastSessionEnd,
-			"currentFileID": currentFileID,
-			"currentSceneID": currentSceneID,
+			"sessionStart":    lastSessionStart,
+			"sessionEnd":      lastSessionEnd,
+			"currentFileID":   currentFileID,
+			"currentSceneID":  currentSceneID,
 		})
 	}
 }
