@@ -151,7 +151,10 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 
 		for j, path := range videoProcList {
 			fStat, _ := os.Stat(path)
-			fTimes, _ := times.Stat(path)
+			fTimes, err := times.Stat(path)
+			if err != nil {
+				tlog.Errorf("Can't get the modification/creation times for %s, error: %s", path, err)
+			}
 
 			var birthtime time.Time
 			if fTimes.HasBirthTime() {
