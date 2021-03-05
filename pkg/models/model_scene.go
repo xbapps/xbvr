@@ -73,18 +73,19 @@ type Scene struct {
 	SceneURL        string    `json:"scene_url"`
 	IsMultipart     bool      `json:"is_multipart"`
 
-	StarRating    float64         `json:"star_rating"`
-	Favourite     bool            `json:"favourite" gorm:"default:false"`
-	Watchlist     bool            `json:"watchlist" gorm:"default:false"`
-	IsAvailable   bool            `json:"is_available" gorm:"default:false"`
-	IsAccessible  bool            `json:"is_accessible" gorm:"default:false"`
-	IsWatched     bool            `json:"is_watched" gorm:"default:false"`
-	IsScripted    bool            `json:"is_scripted" gorm:"default:false"`
-	Cuepoints     []SceneCuepoint `json:"cuepoints"`
-	History       []History       `json:"history"`
-	AddedDate     time.Time       `json:"added_date"`
-	LastOpened    time.Time       `json:"last_opened"`
-	TotalFileSize int64           `json:"total_file_size"`
+	StarRating     float64         `json:"star_rating"`
+	Favourite      bool            `json:"favourite" gorm:"default:false"`
+	Watchlist      bool            `json:"watchlist" gorm:"default:false"`
+	IsAvailable    bool            `json:"is_available" gorm:"default:false"`
+	IsAccessible   bool            `json:"is_accessible" gorm:"default:false"`
+	IsWatched      bool            `json:"is_watched" gorm:"default:false"`
+	IsScripted     bool            `json:"is_scripted" gorm:"default:false"`
+	Cuepoints      []SceneCuepoint `json:"cuepoints"`
+	History        []History       `json:"history"`
+	AddedDate      time.Time       `json:"added_date"`
+	LastOpened     time.Time       `json:"last_opened"`
+	TotalFileSize  int64           `json:"total_file_size"`
+	TotalWatchTime int             `json:"total_watch_time" gorm:"default:0"`
 
 	HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
 	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
@@ -178,6 +179,16 @@ func (o *Scene) GetFiles() ([]File, error) {
 	db.Preload("Volume").Where(&File{SceneID: o.ID}).Find(&files)
 
 	return files, nil
+}
+
+func (o *Scene) GetTotalWatchTime() int {
+	db, _ := GetDB()
+	defer db.Close()
+
+	totalResult := struct{ Total float64 }{}
+	db.Raw(`select sum(duration) as total from histories where scene_id = ?`, o.ID).Scan(&totalResult)
+
+	return int(totalResult.Total)
 }
 
 func (o *Scene) GetVideoFiles() ([]File, error) {
@@ -276,6 +287,12 @@ func (o *Scene) UpdateStatus() {
 
 	if o.HasVideoPreview && !o.PreviewExists() {
 		o.HasVideoPreview = false
+		changed = true
+	}
+
+	totalWatchTime := o.GetTotalWatchTime()
+	if o.TotalWatchTime != totalWatchTime {
+		o.TotalWatchTime = totalWatchTime
 		changed = true
 	}
 
@@ -505,6 +522,10 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("total_file_size desc")
 	case "total_file_size_asc":
 		tx = tx.Order("total_file_size asc")
+	case "total_watch_time_desc":
+		tx = tx.Order("total_watch_time desc")
+	case "total_watch_time_asc":
+		tx = tx.Order("total_watch_time asc")
 	case "rating_desc":
 		tx = tx.
 			Where("star_rating > ?", 0).

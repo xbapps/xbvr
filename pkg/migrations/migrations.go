@@ -319,7 +319,10 @@ func Migrate() {
 		{
 			ID: "0017-scene-multipart",
 			Migrate: func(tx *gorm.DB) error {
-				return tx.AutoMigrate(&models.Scene{}).Error
+				type Scene struct {
+					IsMultipart bool `json:"is_multipart"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
 		{
@@ -339,7 +342,19 @@ func Migrate() {
 		{
 			ID: "0019-scene-is-scripted",
 			Migrate: func(tx *gorm.DB) error {
-				return tx.AutoMigrate(&models.Scene{}).Error
+				type Scene struct {
+					IsScripted bool `json:"is_scripted" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
+			ID: "0020-scene-total-watch-time",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					TotalWatchTime int `json:"total_watch_time" gorm:"default:0"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
 	})
