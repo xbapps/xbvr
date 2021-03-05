@@ -357,6 +357,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	SaveWithRetry(db, &o)
 
 	// Clean & Associate Tags
+	db.Model(&o).Association("Tags").Clear()
 	var tmpTag Tag
 	for _, name := range ext.Tags {
 		tagClean := ConvertTag(name)
@@ -368,6 +369,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	}
 
 	// Clean & Associate Actors
+	db.Model(&o).Association("Cast").Clear()
 	var tmpActor Actor
 	for _, name := range ext.Cast {
 		tmpActor = Actor{}
