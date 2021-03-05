@@ -140,6 +140,7 @@ export default {
   }
 
   .card {
+    overflow: visible;
     height: 100%;
   }
 
