@@ -5,6 +5,7 @@ import sceneList from './sceneList'
 import messages from './messages'
 import overlay from './overlay'
 import files from './files'
+import remote from './remote'
 import optionsStorage from './optionsStorage'
 import optionsWeb from './optionsWeb'
 import optionsDLNA from './optionsDLNA'
@@ -20,6 +21,7 @@ export default new Vuex.Store({
     messages,
     overlay,
     files,
+    remote,
     optionsStorage,
     optionsDLNA,
     optionsDeoVR,
