@@ -58,7 +58,6 @@ type DeoScene struct {
 	Encodings      []DeoSceneEncoding  `json:"encodings"`
 	Timestamps     []DeoSceneTimestamp `json:"timeStamps"`
 	Actors         []DeoSceneActor     `json:"actors"`
-	Categories     []DeoSceneCategory  `json:"categories"`
 	FullVideoReady bool                `json:"fullVideoReady"`
 	FullAccess     bool                `json:"fullAccess"`
 }
@@ -279,14 +278,6 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		})
 	}
 
-	var categories []DeoSceneCategory
-	for i := range scene.Tags {
-		categories = append(categories, DeoSceneCategory{
-			ID:   scene.Tags[i].ID,
-			Name: scene.Tags[i].Name,
-		})
-	}
-
 	var videoLength float64
 
 	var sources []DeoSceneEncoding
@@ -341,7 +332,6 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Title:          scene.Title,
 		Description:    scene.Synopsis,
 		Actors:         actors,
-		Categories:     categories,
 		Paysite:        DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
 		IsFavorite:     scene.Favourite,
 		RatingAvg:      scene.StarRating,
