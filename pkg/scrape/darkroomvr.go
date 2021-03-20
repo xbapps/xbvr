@@ -81,7 +81,7 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		base := e.Request.URL.Path
 		base = strings.TrimPrefix(base, "/video/")
 		for _, suffix := range suffixes {
-			sc.Filenames = append(sc.Filenames, "drvr-"+base+"-"+suffix+".mp4")
+			sc.Filenames = append(sc.Filenames, "drvr-"+base+"-"+suffix+"_180_LR.mp4")
 		}
 
 		// Scene ID
