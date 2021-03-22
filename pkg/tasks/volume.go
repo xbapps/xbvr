@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -149,6 +150,8 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			return nil
 		})
 
+		filenameSeparator := regexp.MustCompile("[ _.-]+")
+
 		for j, path := range videoProcList {
 			fStat, _ := os.Stat(path)
 			fTimes, err := times.Stat(path)
@@ -195,6 +198,12 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 
 				if vs.Height*2 == vs.Width || vs.Width > vs.Height {
 					fl.VideoProjection = "180_sbs"
+					nameparts := filenameSeparator.Split(strings.ToLower(filepath.Base(path)), -1)
+					for _, part := range nameparts {
+						if part == "mkx200" {
+							fl.VideoProjection = "mkx200"
+						}
+					}
 				}
 
 				if vs.Height == vs.Width {
