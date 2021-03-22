@@ -129,4 +129,5 @@ func addPOVRScraper(id string, name string, company string, avatarURL string) {
 func init() {
 	addPOVRScraper("povr-originals", "POVR Originals", "POVR.COM", "https://images.povr.com/img/povr/android-icon-192x192.png")
 	addPOVRScraper("herpovr", "herPOVR", "POVR.COM", "https://images.povr.com/img/povr/android-icon-192x192.png")
+	addPOVRScraper("brasilvr", "BrasilVR", "BrasilVR", "https://images.povr.com/assets/logos/channels/0/4/4145/200.svg")
 }
