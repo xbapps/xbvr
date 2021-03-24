@@ -78,15 +78,15 @@
           </b-tab-item>
 
           <b-tab-item :label="$t('Filenames')">
-            <ListEditor :list="this.scene.files" :blurFn="() => blur('files')"/>
+            <ListEditor :list="this.scene.files" type="files" :blurFn="() => blur('files')"/>
           </b-tab-item>
 
           <b-tab-item :label="$t('Covers')">
-            <ListEditor :list="this.scene.covers" :blurFn="() => blur('covers')"/>
+            <ListEditor :list="this.scene.covers" type="covers" :blurFn="() => blur('covers')"/>
           </b-tab-item>
 
           <b-tab-item :label="$t('Gallery')">
-            <ListEditor :list="this.scene.gallery" :blurFn="() => blur('gallery')"/>
+            <ListEditor :list="this.scene.gallery" type="gallery" :blurFn="() => blur('gallery')"/>
           </b-tab-item>
         </b-tabs>
 
