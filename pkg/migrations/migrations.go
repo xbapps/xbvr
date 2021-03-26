@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -355,6 +357,29 @@ func Migrate() {
 					TotalWatchTime int `json:"total_watch_time" gorm:"default:0"`
 				}
 				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
+			ID: "0021-change-mkx200-projection",
+			Migrate: func(tx *gorm.DB) error {
+				err := tx.AutoMigrate(&models.File{}).Error
+
+				filenameSeparator := regexp.MustCompile("[ _.-]+")
+				var files []models.File
+				db.Find(&files)
+				for _, file := range files {
+					if file.VideoProjection == "180_sbs" {
+						nameparts := filenameSeparator.Split(strings.ToLower(file.Filename), -1)
+						for _, part := range nameparts {
+							if part == "mkx200" {
+								file.VideoProjection = "mkx200"
+								file.Save()
+								break
+							}
+						}
+					}
+				}
+				return err
 			},
 		},
 	})
