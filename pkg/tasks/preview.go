@@ -85,6 +85,7 @@ func RenderPreview(inputFile string, destFile string, startTime int, snippetLeng
 			"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
 			"-i", inputFile,
 			"-vf", vfArgs,
+			"-pix_fmt", "yuv420p",
 			"-t", fmt.Sprintf("%v", snippetLength),
 			"-an", snippetFile,
 		}
