@@ -74,12 +74,22 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		})
 
 		// Cover URLs
-		if len(e.ChildAttrs(`dl8-video`, "poster")) > 0 {
-			sc.Covers = append(sc.Covers, e.ChildAttrs(`dl8-video`, "poster")[0])
+		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
+				// some pages are not referencing the "cover" but instead the VRB logo
+				tmpCover := strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0]
+				if tmpCover != "https://vrbangers.com/wp-content/uploads/2020/03/VR-Bangers-Logo.jpg" && tmpCover != "https://vrbgay.com/wp-content/uploads/2020/03/VRB-Gay-Logo.jpg" && tmpCover != "https://vrbtrans.com/wp-content/uploads/2020/03/VRB-Trans-Logo.jpg" {
+					sc.Covers = append(sc.Covers, tmpCover)
+				}
+			}
+		})
+
+		if len(e.ChildAttrs(`section.banner picture img`, "data-pagespeed-lazy-src")) > 0 {
+			sc.Covers = append(sc.Covers, e.ChildAttrs(`section.banner picture img`, "data-pagespeed-lazy-src")[0])
 		}
 
-		if len(e.ChildAttrs(`section.banner picture img`, "src")) > 0 {
-			sc.Covers = append(sc.Covers, e.ChildAttrs(`section.banner picture img`, "src")[0])
+		if len(e.ChildAttrs(`section.base-content--bg img`, "data-pagespeed-lazy-src")) > 0 {
+			sc.Covers = append(sc.Covers, e.ChildAttrs(`section.base-content--bg img`, "data-pagespeed-lazy-src")[0])
 		}
 
 		// Gallery
