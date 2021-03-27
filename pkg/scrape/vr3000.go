@@ -81,10 +81,10 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 					sc.Filenames = append(sc.Filenames, f)
 				} else {
 					// We're just gonna guess based on the newest filenames
-					filenames := []string{"VR3000_%s_1920_60fps_30mb_180x180_3dh.mp4",
-						"VR3000_%s_1440_60fps_30mb_180x180_3dh.mp4",
-						"VR3000_%s_960_60fps_15mb_180x180_3dh.mp4",
-						"VR3000_%s_960_30fps_10mb_180x180_3dh.mp4"}
+					filenames := []string{"%s_1920_60fps_30mb_180x180_3dh.mp4",
+						"%s_1440_60fps_30mb_180x180_3dh.mp4",
+						"%s_960_60fps_15mb_180x180_3dh.mp4",
+						"%s_960_30fps_10mb_180x180_3dh.mp4"}
 					for i := range filenames {
 						filenames[i] = fmt.Sprintf(filenames[i], sc.SiteID)
 					}
