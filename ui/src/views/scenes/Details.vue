@@ -41,6 +41,9 @@
               </b-tab-item>
 
               <b-tab-item label="Player">
+                <div v-if="showHevcWarning" class="notification is-warning">
+                  Firefox does not support HEVC (h265) videos. Use Chromium instead.
+                </div>
                 <video ref="player" class="video-js vjs-default-skin" controls playsinline preload="none"/>
               </b-tab-item>
 
@@ -203,6 +206,7 @@ export default {
       index: 1,
       activeTab: 0,
       activeMedia: 0,
+      showHevcWarning: false,
       player: {},
       tagAct: '',
       tagPosition: '',
@@ -333,11 +337,13 @@ export default {
       this.activeMedia = 1
       this.updatePlayer('/api/dms/preview/' + this.item.scene_id, 'NONE')
       this.player.play()
+      this.showHevcWarning = false
     },
     playFile (file) {
       this.activeMedia = 1
       this.updatePlayer('/api/dms/file/' + file.id + '?dnt=true', '180')
       this.player.play()
+      this.showHevcWarning = file.codec === 'hevc' && navigator.userAgent.includes('Firefox')
     },
     removeFile (file) {
       this.$buefy.dialog.confirm({
