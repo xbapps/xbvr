@@ -17,6 +17,9 @@
                 <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
                 {{item.file.length}}
               </b-tag>
+              <b-tag type="is-info" v-if="item.is_scripted">
+                <b-icon pack="mdi" icon="pulse" size="is-small"/>
+              </b-tag>
               <b-tag type="is-warning" v-if="item.star_rating > 0">
                 <b-icon pack="mdi" icon="star" size="is-small"/>
                 {{item.star_rating}}
@@ -100,10 +103,6 @@ export default {
     overflow: hidden;
     padding: 0;
     line-height: 0;
-  }
-
-  .is-scripted {
-    background: ;
   }
 
   .overlay {
