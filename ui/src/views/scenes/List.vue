@@ -40,6 +40,8 @@
       </div>
     </div>
 
+    <div class="is-clearfix"></div>
+
     <div class="columns is-multiline">
       <div :class="['column', 'is-multiline', cardSizeClass]"
            v-for="item in items" :key="item.id">

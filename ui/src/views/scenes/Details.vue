@@ -60,8 +60,8 @@
                 <small>{{item.site}}</small>
                 <div class="columns">
                   <div class="column">
-                    <star-rating :rating="item.star_rating" @rating-selected="setRating" :increment="0.5"
-                                 :star-size="20"/>
+                    <star-rating :key="item.id" :rating="item.star_rating" @rating-selected="setRating"
+                                 :increment="0.5" :star-size="20"/>
                   </div>
                   <div class="column">
                     <div class="is-pulled-right">
