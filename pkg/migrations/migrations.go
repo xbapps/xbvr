@@ -382,6 +382,29 @@ func Migrate() {
 				return err
 			},
 		},
+		{
+			ID: "0022-change-video-projection",
+			Migrate: func(tx *gorm.DB) error {
+				err := tx.AutoMigrate(&models.File{}).Error
+
+				filenameSeparator := regexp.MustCompile("[ _.-]+")
+				var files []models.File
+				db.Find(&files)
+				for _, file := range files {
+					if file.VideoProjection == "180_sbs" {
+						nameparts := filenameSeparator.Split(strings.ToLower(file.Filename), -1)
+						for _, part := range nameparts {
+							if part == "mkx200" || part == "mkx220" || part == "vrca220" {
+								file.VideoProjection = part
+								file.Save()
+								break
+							}
+						}
+					}
+				}
+				return err
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

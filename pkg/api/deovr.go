@@ -316,9 +316,11 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		})
 	}
 
-	if videoFiles[0].VideoProjection == "mkx200" {
+	if videoFiles[0].VideoProjection == "mkx200" ||
+		videoFiles[0].VideoProjection == "mkx220" ||
+		videoFiles[0].VideoProjection == "vrca220" {
 		stereoMode = "sbs"
-		screenType = "mkx200"
+		screenType = videoFiles[0].VideoProjection
 	}
 
 	if videoFiles[0].VideoProjection == "180_sbs" {
