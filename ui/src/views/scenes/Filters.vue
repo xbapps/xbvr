@@ -158,19 +158,22 @@ export default {
       })
     },
     getFilteredCast (text) {
-      this.filteredCast = this.filters.cast.filter((option) => {
-        return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
-      })
+      this.filteredCast = this.filters.cast.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.cast.some(entry => entry.toString() === option.toString())
+      ))
     },
     getFilteredSites (text) {
-      this.filteredSites = this.filters.sites.filter((option) => {
-        return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
-      })
+      this.filteredSites = this.filters.sites.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.sites.some(entry => entry.toString() === option.toString())
+      ))
     },
     getFilteredTags (text) {
-      this.filteredTags = this.filters.tags.filter((option) => {
-        return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
-      })
+      this.filteredTags = this.filters.tags.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.tags.some(entry => entry.toString() === option.toString())
+      ))
     },
     clearReleaseMonth () {
       this.$store.state.sceneList.filters.releaseMonth = ''
