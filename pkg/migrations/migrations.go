@@ -405,6 +405,15 @@ func Migrate() {
 				return err
 			},
 		},
+		{
+			ID: "0023-file-has-heatmap",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					HasHeatmap bool `json:"has_heatmap" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

@@ -106,7 +106,10 @@
                           <span v-if="f.type === 'video'">{{f.video_width}}x{{f.video_height}},</span>
                           {{format(parseISO(f.created_time), "yyyy-MM-dd")}}
                         </small>
-                      </div>
+                        <div v-if="f.type='script' && f.has_heatmap"> 
+                          <img :src="getHeatmapURL(f.id)" style="width:100%;height:20px;margin:3px;border:1px solid black" />
+                        </div>                     
+                     </div>
                       <div class="media-right">
                         <button class="button is-danger is-small is-outlined" @click='removeFile(f)'>
                           <b-icon pack="fas" icon="trash" size="is-small"></b-icon>
@@ -450,6 +453,10 @@ export default {
     toggleGallery () {
       this.activeMedia = 0
     },
+    getHeatmapURL (file_id) {
+      return '/api/dms/heatmap/' + file_id
+    },
+
     format,
     parseISO,
     prettyBytes,
