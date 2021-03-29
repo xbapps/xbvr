@@ -102,9 +102,9 @@
 </template>
 
 <script>
-import ky from 'ky';
-import GlobalEvents from 'vue-global-events';
-import ListEditor from '../../components/ListEditor';
+import ky from 'ky'
+import GlobalEvents from 'vue-global-events'
+import ListEditor from '../../components/ListEditor'
 
 export default {
   name: 'EditScene',
@@ -141,12 +141,16 @@ export default {
   },
   methods: {
     getFilteredCast (text) {
-      this.filteredCast = this.filters.cast.filter(option =>
-        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0)
+      this.filteredCast = this.filters.cast.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0) &&
+        !this.scene.cast.some(entry => entry.name === option.toString())
+      )
     },
     getFilteredTags (text) {
-      this.filteredTags = this.filters.tags.filter(option =>
-        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0)
+      this.filteredTags = this.filters.tags.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0) &&
+        !this.scene.tags.some(entry => entry.name === option.toString())
+      )
     },
     close () {
       if (this.changesMade) {
