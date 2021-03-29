@@ -7,21 +7,22 @@
            @mouseover="preview = true"
            @mouseleave="preview = false">
         <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
-        <div v-else>
-          <div class="overlay align-bottom-left">
-            <div style="padding: 5px">
-              <b-tag v-if="item.is_watched">
-                <b-icon pack="mdi" icon="eye" size="is-small"/>
-              </b-tag>
-              <b-tag type="is-info" v-if="videoFilesCount > 1 && !item.is_multipart">
-                <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
-                {{item.file.length}}
-              </b-tag>
-              <b-tag type="is-warning" v-if="item.star_rating > 0">
-                <b-icon pack="mdi" icon="star" size="is-small"/>
-                {{item.star_rating}}
-              </b-tag>
-            </div>
+        <div class="overlay align-bottom-left">
+          <div style="padding: 5px">
+            <b-tag v-if="item.is_watched">
+              <b-icon pack="mdi" icon="eye" size="is-small"/>
+            </b-tag>
+            <b-tag type="is-info" v-if="videoFilesCount > 1 && !item.is_multipart">
+              <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
+              {{item.file.length}}
+            </b-tag>
+            <b-tag type="is-info" v-if="item.is_scripted">
+              <b-icon pack="mdi" icon="pulse" size="is-small"/>
+            </b-tag>
+            <b-tag type="is-warning" v-if="item.star_rating > 0">
+              <b-icon pack="mdi" icon="star" size="is-small"/>
+              {{item.star_rating}}
+            </b-tag>
           </div>
         </div>
       </div>
@@ -102,8 +103,15 @@ export default {
     line-height: 0;
   }
 
-  .is-scripted {
-    background: ;
+  .bbox:not(:hover) > video {
+    display: none;
+  }
+
+  video {
+    object-fit: cover;
+    position: absolute;
+    width: 100%;
+    height: 100%;
   }
 
   .overlay {
@@ -119,6 +127,7 @@ export default {
     top: 0;
     right: 0;
     bottom: 0;
+    pointer-events: none;
   }
 
   .align-bottom-left {
