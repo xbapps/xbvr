@@ -36,6 +36,8 @@ type File struct {
 	VideoCodecName       string  `json:"-"`
 	VideoDuration        float64 `json:"duration"`
 	VideoProjection      string  `json:"projection"`
+
+	HasHeatmap bool `json:"has_heatmap"`
 }
 
 func (f *File) GetPath() string {

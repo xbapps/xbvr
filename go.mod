@@ -43,6 +43,7 @@ require (
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/lomik/go-whisper v0.0.0-20170919072952-744ab80ef70d
+	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/marcsauter/single v0.0.0-20201009143647-9f8d81240be2
 	github.com/markphelps/optional v0.7.0
 	github.com/mattn/go-colorable v0.1.1 // indirect

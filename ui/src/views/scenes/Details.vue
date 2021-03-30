@@ -53,11 +53,11 @@
             <div class="block-info block">
               <div class="content">
                 <h3>
-                  <span v-if="item.title">{{item.title}}</span>
+                  <span v-if="item.title">{{ item.title }}</span>
                   <span v-else class="missing">(no title)</span>
-                  <small class="is-pulled-right">{{format(parseISO(item.release_date), "yyyy-MM-dd")}}</small>
+                  <small class="is-pulled-right">{{ format(parseISO(item.release_date), "yyyy-MM-dd") }}</small>
                 </h3>
-                <small>{{item.site}}</small>
+                <small>{{ item.site }}</small>
                 <div class="columns">
                   <div class="column">
                     <star-rating :key="item.id" :rating="item.star_rating" @rating-selected="setRating"
@@ -67,7 +67,7 @@
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
-                      <edit-button :item="item" />
+                      <edit-button :item="item"/>
                     </div>
                   </div>
                 </div>
@@ -77,9 +77,9 @@
             <div class="block-tags block">
               <b-taglist>
                 <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])'
-                   class="tag is-warning is-small">{{c.name}} ({{c.count}})</a>
+                   class="tag is-warning is-small">{{ c.name }} ({{ c.count }})</a>
                 <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])'
-                   class="tag is-info is-small">{{tag.name}} ({{tag.count}})</a>
+                   class="tag is-info is-small">{{ tag.name }} ({{ tag.count }})</a>
               </b-taglist>
             </div>
 
@@ -90,7 +90,8 @@
                   <div class="block-tab-content block">
                     <div class="content media is-small" v-for="(f, idx) in filesByType" :key="idx">
                       <div class="media-left">
-                        <button rounded class="button is-success is-small" @click='playFile(f)' v-show="f.type === 'video'">
+                        <button rounded class="button is-success is-small" @click='playFile(f)'
+                                v-show="f.type === 'video'">
                           <b-icon pack="fas" icon="play" size="is-small"></b-icon>
                         </button>
                         <button rounded class="button is-info is-small is-outlined" v-show="f.type === 'script'">
@@ -98,14 +99,17 @@
                         </button>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
-                        <strong>{{f.filename}}</strong><br/>
+                        <strong>{{ f.filename }}</strong><br/>
                         <small>
-                          <span class="pathDetails">{{f.path}}</span>
+                          <span class="pathDetails">{{ f.path }}</span>
                           <br/>
-                          {{prettyBytes(f.size)}},
-                          <span v-if="f.type === 'video'">{{f.video_width}}x{{f.video_height}},</span>
-                          {{format(parseISO(f.created_time), "yyyy-MM-dd")}}
+                          {{ prettyBytes(f.size) }},
+                          <span v-if="f.type === 'video'">{{ f.video_width }}x{{ f.video_height }},</span>
+                          {{ format(parseISO(f.created_time), "yyyy-MM-dd") }}
                         </small>
+                        <div v-if="f.type === 'script' && f.has_heatmap" class="heatmapFunscript">
+                          <img :src="getHeatmapURL(f.id)"/>
+                        </div>
                       </div>
                       <div class="media-right">
                         <button class="button is-danger is-small is-outlined" @click='removeFile(f)'>
@@ -136,8 +140,8 @@
                     <div class="content is-small">
                       <ul>
                         <li v-for="(c, idx) in sortedCuepoints" :key="idx">
-                          <code>{{humanizeSeconds(c.time_start)}}</code> -
-                          <a @click="playCuepoint(c)"><strong>{{c.name}}</strong></a>
+                          <code>{{ humanizeSeconds(c.time_start) }}</code> -
+                          <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
                         </li>
                       </ul>
                     </div>
@@ -147,13 +151,13 @@
                 <b-tab-item label="Watch history">
                   <div class="block-tab-content block">
                     <div>
-                      {{historySessionsCount}} view sessions, total duration
-                      {{humanizeSeconds(historySessionsDuration)}}
+                      {{ historySessionsCount }} view sessions, total duration
+                      {{ humanizeSeconds(historySessionsDuration) }}
                     </div>
                     <div class="content is-small">
                       <div class="block" v-for="(session, idx) in item.history" :key="idx">
-                        <strong>{{format(parseISO(session.time_start), "yyyy-MM-dd kk:mm:ss")}} -
-                          {{humanizeSeconds(session.duration)}}</strong>
+                        <strong>{{ format(parseISO(session.time_start), "yyyy-MM-dd kk:mm:ss") }} -
+                          {{ humanizeSeconds(session.duration) }}</strong>
                       </div>
                     </div>
                   </div>
@@ -366,6 +370,9 @@ export default {
         return ''
       }
     },
+    getHeatmapURL (fileId) {
+      return `/api/dms/heatmap/${fileId}`
+    },
     playCuepoint (cuepoint) {
       this.player.currentTime(cuepoint.time_start)
       this.player.play()
@@ -459,82 +466,96 @@ export default {
 </script>
 
 <style lang="less" scoped>
-  .bbox {
-    flex: 1 0 calc(25%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    padding: 0;
-    line-height: 0;
-  }
+.bbox {
+  flex: 1 0 calc(25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0;
+  line-height: 0;
+}
 
-  .is-1by1 {
-    padding-top: calc(100% - 40px - 1em) !important;
-  }
+.is-1by1 {
+  padding-top: calc(100% - 40px - 1em) !important;
+}
 
-  .video-js {
-    margin: 0 auto;
-  }
+.video-js {
+  margin: 0 auto;
+}
 
-  .modal-card {
-    width: 85%;
-  }
+.modal-card {
+  width: 85%;
+}
 
-  .missing {
-    opacity: 0.6;
-  }
+.missing {
+  opacity: 0.6;
+}
 
-  .block-tab-content {
-    flex: 1 1 auto;
-  }
+.block-tab-content {
+  flex: 1 1 auto;
+}
 
-  .block-info {
-  }
+.block-info {
+}
 
-  .block-tags {
-    max-height: 200px;
-    overflow: scroll;
-    scrollbar-width: none;
-  }
+.block-tags {
+  max-height: 200px;
+  overflow: scroll;
+  scrollbar-width: none;
+}
 
-  .block-tags::-webkit-scrollbar {
-    display: none;
-  }
+.block-tags::-webkit-scrollbar {
+  display: none;
+}
 
-  .block-opts {
-  }
+.block-opts {
+}
 
-  .prev, .next {
-    cursor: pointer;
-    position: absolute;
-    top: 50%;
-    width: auto;
-    padding: 16px;
-    margin-top: -50px;
-    color: white;
-    font-weight: bold;
-    font-size: 24px;
-    border-radius: 0 3px 3px 0;
-    user-select: none;
-    -webkit-user-select: none;
-  }
+.prev, .next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: auto;
+  padding: 16px;
+  margin-top: -50px;
+  color: white;
+  font-weight: bold;
+  font-size: 24px;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
 
-  .next {
-    right: 0;
-    border-radius: 3px 0 0 3px;
-  }
+.next {
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
 
-  .prev {
-    left: 0;
-    border-radius: 3px 0 0 3px;
-  }
+.prev {
+  left: 0;
+  border-radius: 3px 0 0 3px;
+}
 
-  span.is-active img {
-    border: 2px;
-  }
+span.is-active img {
+  border: 2px;
+}
 
-  .pathDetails {
-    color: #b0b0b0;
-  }
+.pathDetails {
+  color: #b0b0b0;
+}
+
+.heatmapFunscript {
+  width: 100%;
+  padding: 0;
+  margin-top: 0.5em;
+}
+
+.heatmapFunscript img {
+  border: 1px #888 solid;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+}
 </style>

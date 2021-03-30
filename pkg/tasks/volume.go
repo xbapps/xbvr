@@ -86,6 +86,10 @@ func RescanVolumes() {
 			}
 		}
 
+		tlog.Infof("Generating heatmaps")
+
+		GenerateHeatmaps()
+
 		tlog.Infof("Scanning complete")
 
 		// Inform UI about state change
