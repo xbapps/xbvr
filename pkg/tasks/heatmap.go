@@ -80,7 +80,6 @@ func GenerateHeatmaps() {
 }
 
 func RenderHeatmap(inputFile string, destFile string, width, height, numSegments int) error {
-
 	data, err := ioutil.ReadFile(inputFile)
 	if err != nil {
 		return err
@@ -95,9 +94,7 @@ func RenderHeatmap(inputFile string, destFile string, width, height, numSegments
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	for x := 0; x < width; x++ {
-
 		c := gradient.GetInterpolatedColorFor(float64(x) / float64(width))
-
 		draw.Draw(img, image.Rect(x, 0, x+1, height), &image.Uniform{c}, image.Point{}, draw.Src)
 	}
 
