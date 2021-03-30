@@ -45,6 +45,72 @@ type GradientTable []struct {
 	Pos float64
 }
 
+func GenerateHeatmaps() {
+	if !models.CheckLock("heatmaps") {
+		models.CreateLock("heatmaps")
+
+		db, _ := models.GetDB()
+		defer db.Close()
+
+		var scriptfiles []models.File
+		db.Model(&models.File{}).Preload("Volume").Where("type = ?", "script").Where("has_heatmap = ?", false).Find(&scriptfiles)
+
+		for _, file := range scriptfiles {
+			if file.Exists() {
+				log.Infof("Rendering %v", file.Filename)
+				destFile := filepath.Join(common.ScriptHeatmapDir, fmt.Sprintf("heatmap-%d.png", file.ID))
+				err := RenderHeatmap(
+					file.GetPath(),
+					destFile,
+					1000,
+					10,
+					250,
+				)
+				if err == nil {
+					file.HasHeatmap = true
+					file.Save()
+				} else {
+					log.Warn(err)
+				}
+			}
+		}
+	}
+
+	models.RemoveLock("heatmaps")
+}
+
+func RenderHeatmap(inputFile string, destFile string, width, height, numSegments int) error {
+
+	data, err := ioutil.ReadFile(inputFile)
+	if err != nil {
+		return err
+	}
+
+	var funscript Script
+	json.Unmarshal(data, &funscript)
+	sort.SliceStable(funscript.Actions, func(i, j int) bool { return funscript.Actions[i].At < funscript.Actions[j].At })
+
+	funscript.UpdateIntesity()
+	gradient := funscript.getGradientTable(numSegments)
+
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for x := 0; x < width; x++ {
+
+		c := gradient.GetInterpolatedColorFor(float64(x) / float64(width))
+
+		draw.Draw(img, image.Rect(x, 0, x+1, height), &image.Uniform{c}, image.Point{}, draw.Src)
+	}
+
+	outpng, err := os.Create(destFile)
+	if err != nil {
+		return fmt.Errorf("Error storing png: " + err.Error())
+	}
+	defer outpng.Close()
+
+	png.Encode(outpng, img)
+	return nil
+}
+
 func (gt GradientTable) GetInterpolatedColorFor(t float64) colorful.Color {
 	for i := 0; i < len(gt)-1; i++ {
 		c1 := gt[i]
@@ -63,29 +129,21 @@ func (gt GradientTable) GetInterpolatedColorFor(t float64) colorful.Color {
 func (funscript Script) UpdateIntesity() {
 
 	var t1, t2 int64
+	var p1, p2 int
 	var slope float64
-	var i1 int64
 	for i := range funscript.Actions {
 		if i == 0 {
 			continue
 		}
 		t1 = funscript.Actions[i].At
 		t2 = funscript.Actions[i-1].At
+		p1 = funscript.Actions[i].Pos
+		p2 = funscript.Actions[i-1].Pos
 
 		slope = math.Min(math.Max(1/(2*float64(t1-t2)/1000), 0), 20)
 
-		j := i
-		for j >= 0 && funscript.Actions[i].At-funscript.Actions[j].At < 5000 {
-			j = j - 1
-		}
-
-		p1 := funscript.Actions[i].Pos
-		p2 := funscript.Actions[i-1].Pos
-
-		i1 = int64(slope * math.Abs((float64)(p1-p2)))
-
 		funscript.Actions[i].Slope = slope
-		funscript.Actions[i].Intensity = i1
+		funscript.Actions[i].Intensity = int64(slope * math.Abs((float64)(p1-p2)))
 	}
 }
 
@@ -154,70 +212,4 @@ func (funscript Script) getGradientTable(numSegments int) GradientTable {
 	}
 
 	return gradient
-}
-
-func GenerateHeatmaps() {
-	if !models.CheckLock("heatmaps") {
-		models.CreateLock("heatmaps")
-
-		db, _ := models.GetDB()
-		defer db.Close()
-
-		var scriptfiles []models.File
-		db.Model(&models.File{}).Preload("Volume").Where("type = ?", "script").Where("has_heatmap = ?", false).Find(&scriptfiles)
-
-		for _, file := range scriptfiles {
-			if file.Exists() {
-				log.Infof("Rendering %v", file.Filename)
-				destFile := filepath.Join(common.ScriptHeatmapDir, fmt.Sprintf("heatmap-%d.png", file.ID))
-				err := RenderHeatmap(
-					file.GetPath(),
-					destFile,
-					1000,
-					10,
-					250,
-				)
-				if err == nil {
-					file.HasHeatmap = true
-					file.Save()
-				} else {
-					log.Warn(err)
-				}
-			}
-		}
-	}
-
-	models.RemoveLock("heatmaps")
-}
-
-func RenderHeatmap(inputFile string, destFile string, width, height, numSegments int) error {
-
-	data, err := ioutil.ReadFile(inputFile)
-	if err != nil {
-		return err
-	}
-
-	var funscript Script
-	json.Unmarshal(data, &funscript)
-	sort.SliceStable(funscript.Actions, func(i, j int) bool { return funscript.Actions[i].At < funscript.Actions[j].At })
-
-	funscript.UpdateIntesity()
-	gradient := funscript.getGradientTable(numSegments)
-
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	for x := 0; x < width; x++ {
-
-		c := gradient.GetInterpolatedColorFor(float64(x) / float64(width))
-
-		draw.Draw(img, image.Rect(x, 0, x+1, height), &image.Uniform{c}, image.Point{}, draw.Src)
-	}
-
-	outpng, err := os.Create(destFile)
-	if err != nil {
-		return fmt.Errorf("Error storing png: " + err.Error())
-	}
-	defer outpng.Close()
-
-	png.Encode(outpng, img)
-	return nil
 }
