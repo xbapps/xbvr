@@ -88,8 +88,9 @@ export default {
     initView () {
       const commonWords = [
         '180', '180x180', '30fps', '360', '3dh', '4k', '5k', '60fps', '6k', '7k', '8k',
-        'funscript', 'h264', 'h265', 'hevc', 'hq', 'lq', 'lr', 'mkv', 'mkx200', 'mono',
-        'mp4', 'oculus', 'oculusrift', 'original', 'smartphone', 'vp9'
+        'funscript', 'h264', 'h265', 'hevc', 'hq', 'lq', 'lr', 'mkv', 'mkx200', 'mkx220',
+        'mono', 'mp4', 'oculus', 'oculus5k', 'oculusrift', 'original', 'smartphone',
+        'vrca220', 'vp9'
       ]
       const isNotCommonWord = word => !commonWords.includes(word.toLowerCase()) && !/^[0-9]+p$/.test(word)
 

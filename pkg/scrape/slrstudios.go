@@ -136,6 +136,8 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				case "Fisheye": // 200° videos named with MKX200
 					for i := range resolutions {
 						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220.mp4")
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220.mp4")
 					}
 				default: // Assuming everything else is 180 and LR, yet to find a TB_180
 					for i := range resolutions {
