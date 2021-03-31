@@ -136,6 +136,8 @@ export default {
       const data = this.$store.getters['files/nextFile'](this.file)
       if (data !== null) {
         this.nextFile()
+      } else {
+        this.close()
       }
     },
     nextFile () {
