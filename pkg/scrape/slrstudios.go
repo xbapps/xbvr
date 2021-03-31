@@ -210,7 +210,7 @@ func init() {
 	addSLRScraper("pervrt", "perVRt/Terrible", "Terrible", "https://mcdn.vrporn.com/files/20181218151630/pervrt-logo.jpg")
 	addSLRScraper("povcentralvr", "POVcentralVR", "POV Central", "https://mcdn.vrporn.com/files/20191125091909/POVCentralLogo.jpg")
 	addSLRScraper("pvrstudio", "PVRStudio", "PVRStudio", "https://pvr.fun/uploads/2019/10/08/084230gbctdepe7kovu4hs.jpg")
-	addSLRScraper("realhotvr", "RealHotVR", "RealHotVR", "https://g8iek4luc8.ent-cdn.com/templates/realhotvr/images/favicon.jpg")
+	addSLRScraper("realhotvr", "RealHotVR", "RealHotVR", "https://images.povr.com/assets/logos/channels/0/3/3835/200.svg")
 	addSLRScraper("screwboxvr", "ScrewBoxVR", "ScrewBox", "https://pbs.twimg.com/profile_images/1137432770936918016/ycL3ag5c_200x200.png")
 	addSLRScraper("stockingsvr", "StockingsVR", "StockingsVR", "https://mcdn.vrporn.com/files/20171107092330/stockingsvr_logo_vr_porn_studio_vrporn.com_virtual_reality1-1.png")
 	addSLRScraper("stripzvr", "StripzVR", "N1ck Inc.", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg")
