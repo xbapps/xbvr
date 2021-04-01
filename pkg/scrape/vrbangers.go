@@ -96,7 +96,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Gallery = e.ChildAttrs(`div.free-gallery a.fancybox`, "href")
 
 		// Synopsis
-		sc.Synopsis = strings.TrimSpace(e.ChildText(`div.video-content__description div.less-text`))
+		sc.Synopsis = strings.TrimSpace(strings.Replace(e.ChildText(`div.video-content__description div.less-text`), `arrow_drop_up`, ``, -1))
 
 		// Tags
 		e.ForEach(`div.video-item__tags a`, func(id int, e *colly.HTMLElement) {
