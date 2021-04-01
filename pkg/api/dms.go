@@ -38,6 +38,10 @@ func (i DMSResource) WebService() *restful.WebService {
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/heatmap/{file-id}").To(i.getHeatmap).
+		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.GET("/preview/{scene-id}").To(i.getPreview).
 		Param(ws.PathParameter("scene-id", "Scene ID")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
@@ -48,6 +52,11 @@ func (i DMSResource) WebService() *restful.WebService {
 func (i DMSResource) getPreview(req *restful.Request, resp *restful.Response) {
 	sceneID := req.PathParameter("scene-id")
 	http.ServeFile(resp.ResponseWriter, req.Request, filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", sceneID)))
+}
+
+func (i DMSResource) getHeatmap(req *restful.Request, resp *restful.Response) {
+	fileID := req.PathParameter("file-id")
+	http.ServeFile(resp.ResponseWriter, req.Request, filepath.Join(common.ScriptHeatmapDir, fmt.Sprintf("heatmap-%v.png", fileID)))
 }
 
 func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {

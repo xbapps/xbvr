@@ -86,15 +86,16 @@ func RescanVolumes() {
 			}
 		}
 
+
+		tlog.Infof("Generating heatmaps")
+
+		GenerateHeatmaps()
 		// Update versions statuses
 		tlog.Infof("Finding Scenes with multiple versions")
 
-		/*		db.Model(&models.Scene{}).Where("id IN "
 
-				db.Group("files.scene_id").Count()
-					Find(&scenes)
-		*/
 		db.Exec("UPDATE scenes set versions = true where id IN (select scene_id from files where scene_id > 0 group by scene_id HAVING count(scene_id) > 1)")
+
 
 		tlog.Infof("Scanning complete")
 
