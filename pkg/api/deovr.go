@@ -300,7 +300,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 					Height:     height,
 					Width:      width,
 					Size:       file.Size,
-					URL:        fmt.Sprintf("%v/api/dms/file/%v%v", session.DeoRequestHost, file.ID, dnt),
+					URL:        fmt.Sprintf("%v/api/dms/file/%v/%v%v", session.DeoRequestHost, file.ID, scene.GetFunscriptTitle(), dnt),
 				},
 			},
 		})
@@ -333,10 +333,16 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		screenType = "sphere"
 	}
 
+	var title = scene.Title
+
+	if scene.IsScripted {
+		title = scene.GetFunscriptTitle()
+	}
+
 	deoScene := DeoScene{
 		ID:             scene.ID,
 		Authorized:     1,
-		Title:          scene.Title,
+		Title:          title,
 		Description:    scene.Synopsis,
 		Actors:         actors,
 		Paysite:        DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},

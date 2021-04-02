@@ -414,6 +414,15 @@ func Migrate() {
 				return tx.AutoMigrate(File{}).Error
 			},
 		},
+		{
+			ID: "0024-file-is-selected-script",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					IsSelectedScript bool `json:"is_selected_script" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
