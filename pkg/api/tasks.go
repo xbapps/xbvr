@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/xbapps/xbvr/pkg/tasks"
 )
 
@@ -42,6 +42,9 @@ func (i TaskResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/bundle/export").To(i.exportBundle).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/funscript/export").To(i.exportFunscripts).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.POST("/scrape-javr").To(i.scrapeJAVR).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -75,6 +78,10 @@ func (i TaskResource) importBundle(req *restful.Request, resp *restful.Response)
 
 func (i TaskResource) exportBundle(req *restful.Request, resp *restful.Response) {
 	go tasks.ExportBundle()
+}
+
+func (i TaskResource) exportFunscripts(req *restful.Request, resp *restful.Response) {
+	tasks.ExportFunscripts(resp.ResponseWriter)
 }
 
 func (i TaskResource) previewGenerate(req *restful.Request, resp *restful.Response) {

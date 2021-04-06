@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -35,6 +35,10 @@ func (i DMSResource) WebService() *restful.WebService {
 		Produces(restful.MIME_JSON)
 
 	ws.Route(ws.GET("/file/{file-id}").To(i.getFile).
+		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/file/{file-id}/{var:*}").To(i.getFile).
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 

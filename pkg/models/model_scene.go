@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -174,6 +175,21 @@ func (o *Scene) GetIfExistURL(u string) error {
 		Where(&Scene{SceneURL: u}).First(o).Error
 }
 
+func (o *Scene) GetFunscriptTitle() string {
+
+	// first make the title filename safe
+	var re = regexp.MustCompile(`[?/\<>|]`)
+
+	title := o.Title
+	// Colons are pretty common in titles, so we use a unicode alternative
+	title = strings.ReplaceAll(title, ":", "꞉")
+	// all other unsafe characters get removed
+	title = re.ReplaceAllString(title, "")
+
+	// add ID to prevent title collisions
+	return fmt.Sprintf("%d - %s", o.ID, title)
+}
+
 func (o *Scene) GetFiles() ([]File, error) {
 	db, _ := GetDB()
 	defer db.Close()
@@ -200,6 +216,16 @@ func (o *Scene) GetVideoFiles() ([]File, error) {
 
 	var files []File
 	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "video").Find(&files)
+
+	return files, nil
+}
+
+func (o *Scene) GetScriptFiles() ([]File, error) {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var files []File
+	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "script").Order("is_selected_script DESC, created_time DESC").Find(&files)
 
 	return files, nil
 }
