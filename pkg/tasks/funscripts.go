@@ -22,7 +22,7 @@ func ExportFunscripts(w http.ResponseWriter) {
 	defer db.Close()
 
 	var scenes []models.Scene
-	db.Model(&models.Scene{}).Debug().Where("is_scripted = ?", true).Order("scene_id").Find(&scenes)
+	db.Model(&models.Scene{}).Where("is_scripted = ?", true).Order("scene_id").Find(&scenes)
 
 	for _, scene := range scenes {
 		scriptFiles, err := scene.GetScriptFiles()
