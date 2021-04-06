@@ -63,7 +63,6 @@ func init() {
 		//		defer lfile.Close()
 		mw := io.MultiWriter(lfile, os.Stdout)
 		Log.Out = ansicolor.NewAnsiColorWriter(mw)
-		Log.Info("BEGIN")
 	} else {
 		Log.Info("Failed to log to file, using default stderr")
 	}
