@@ -88,7 +88,7 @@ func RescanVolumes() {
 
 		tlog.Infof("Generating heatmaps")
 
-		GenerateHeatmaps()
+		GenerateHeatmaps(tlog)
 
 		tlog.Infof("Scanning complete")
 

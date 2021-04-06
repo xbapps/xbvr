@@ -13,6 +13,7 @@ import (
 	"sort"
 
 	"github.com/lucasb-eyer/go-colorful"
+	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -45,7 +46,7 @@ type GradientTable []struct {
 	Pos float64
 }
 
-func GenerateHeatmaps() {
+func GenerateHeatmaps(tlog *logrus.Entry) {
 	if !models.CheckLock("heatmaps") {
 		models.CreateLock("heatmaps")
 
@@ -55,7 +56,10 @@ func GenerateHeatmaps() {
 		var scriptfiles []models.File
 		db.Model(&models.File{}).Preload("Volume").Where("type = ?", "script").Where("has_heatmap = ?", false).Find(&scriptfiles)
 
-		for _, file := range scriptfiles {
+		for i, file := range scriptfiles {
+			if tlog != nil && (i%50) == 0 {
+				tlog.Infof("Generating heatmaps (%v/%v)", i+1, len(scriptfiles))
+			}
 			if file.Exists() {
 				log.Infof("Rendering %v", file.Filename)
 				destFile := filepath.Join(common.ScriptHeatmapDir, fmt.Sprintf("heatmap-%d.png", file.ID))
@@ -111,6 +115,17 @@ func RenderHeatmap(inputFile string, destFile string, width, height, numSegments
 	for x := 0; x < width; x++ {
 		c := gradient.GetInterpolatedColorFor(float64(x) / float64(width))
 		draw.Draw(img, image.Rect(x, 0, x+1, height), &image.Uniform{c}, image.Point{}, draw.Src)
+	}
+
+	// add 10 minute marks
+	maxts := funscript.Actions[len(funscript.Actions)-1].At
+	const tick = 600000
+	var ts int64 = tick
+	c, _ := colorful.Hex("#000000")
+	for ts < maxts {
+		x := int(float64(ts) / float64(maxts) * float64(width))
+		draw.Draw(img, image.Rect(x-1, height/2, x+1, height), &image.Uniform{c}, image.Point{}, draw.Src)
+		ts += tick
 	}
 
 	outpng, err := os.Create(destFile)

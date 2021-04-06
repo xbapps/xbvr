@@ -31,6 +31,17 @@
               </div>
               <hr/>
               <div class="block">
+                <b-field label="Funscript heatmaps">
+                  <b-switch v-model="renderHeatmaps">
+                    Enabled
+                  </b-switch>
+                </b-field>
+                <p>
+                  If you are using funscripts, you can add a heatmap to the thumbnails of scripted scenes in the DeoVR interface.
+                </p>
+              </div>
+              <hr/>
+              <div class="block">
                 <b-field label="Remote mode">
                   <b-switch v-model="remoteEnabled">
                     Enabled
@@ -104,6 +115,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.deovr.auth_enabled = value
+      }
+    },
+    renderHeatmaps: {
+      get () {
+        return this.$store.state.optionsDeoVR.deovr.render_heatmaps
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.deovr.render_heatmaps = value
       }
     },
     remoteEnabled: {
