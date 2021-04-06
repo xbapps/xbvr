@@ -29,7 +29,8 @@
     </div>
 
     <div style="padding-top:4px;">
-
+      <div class="scene_title">{{item.title}}</div>
+      
       <watchlist-button :item="item"/>
       <favourite-button :item="item"/>
       <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
@@ -143,5 +144,13 @@ export default {
 
   .tag {
     margin-left: 0.2em;
+  }
+
+  .scene_title {
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
