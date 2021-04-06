@@ -22,7 +22,7 @@ func ExportFunscripts(w http.ResponseWriter) {
 	defer db.Close()
 
 	var scenes []models.Scene
-	db.Model(&models.Scene{}).Debug().Where("is_scripted = ?", true).Order("scene_id").Find(&scenes)
+	db.Model(&models.Scene{}).Where("is_scripted = ?", true).Order("scene_id").Find(&scenes)
 
 	for _, scene := range scenes {
 		scriptFiles, err := scene.GetScriptFiles()
@@ -34,10 +34,9 @@ func ExportFunscripts(w http.ResponseWriter) {
 		for _, file := range scriptFiles {
 			if file.Exists() {
 				funscriptName := fmt.Sprintf("%s.funscript", scene.GetFunscriptTitle())
-				log.Infof("adding " + funscriptName)
 
 				if err = AddFileToZip(zipWriter, file.GetPath(), funscriptName); err != nil {
-					log.Infof("Error when adding file to zip: %v", err)
+					log.Infof("Error when adding file to zip: %v (%s)", err, funscriptName)
 					continue
 				}
 				break
