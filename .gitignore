@@ -14,3 +14,5 @@ node_modules/
 /ui/public/static/bundle.*
 npm-debug.log
 yarn-error.log
+
+.goreleaser.yml
