@@ -39,10 +39,16 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			sc.Title = strings.TrimSpace(e.Text)
 		})
 
-		// Cover URLs
-		e.ForEach(`div#videoPreviewContainer picture img`, func(id int, e *colly.HTMLElement) {
+		// Cover URLs for paid videos
+		e.ForEach(`div#videoPreviewContainer .video-image-container picture img`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				sc.Covers = append(sc.Covers, strings.Split(e.Attr("src"), "?")[0])
+			}
+		})
+		// Cover URLs for free videos
+		e.ForEach(`div#videoPreviewContainer dl8-video`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
+				sc.Covers = append(sc.Covers, strings.Split(e.Attr("poster"), "?")[0])
 			}
 		})
 
