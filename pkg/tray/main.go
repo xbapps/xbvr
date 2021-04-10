@@ -5,11 +5,11 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/ProtonMail/go-appdir"
 	"github.com/getlantern/systray"
 	"github.com/marcsauter/single"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/xbapps/xbvr/pkg/assets"
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/server"
 )
@@ -59,9 +59,9 @@ func onReady() {
 		case <-mOpenUI.ClickedCh:
 			go open.Run(fmt.Sprintf("http://localhost:%v", config.Config.Server.Port))
 		case <-mOpenConfig.ClickedCh:
-			go open.Run(appdir.New("xbvr").UserConfig())
+			go open.Run(common.AppDir)
 		case <-mOpenLog.ClickedCh:
-			go open.Run(appdir.New("xbvr").UserConfig() + "/xbvr.log")
+			go open.Run(common.AppDir + "/xbvr.log")
 		case <-mQuit.ClickedCh:
 			systray.Quit()
 			return
