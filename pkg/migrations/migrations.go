@@ -423,6 +423,15 @@ func Migrate() {
 				return tx.AutoMigrate(File{}).Error
 			},
 		},
+		{
+			ID: "0025-file-is-exported",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					IsExported bool `json:"is_exported" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

@@ -15,9 +15,13 @@
       <p>
         {{$t('To use this export with ScriptPlayer: Unzip and put the files in a folder of your choice. In the ScriptPlayer settings, add this folder in the Paths section, then connect to DeoVR.')}}
       </p>
-      <b-button type="is-primary" @click="exportFunscripts" :disabled="count === 0">{{$t('Download funscripts for DeoVR')}}</b-button>
+      <hr/>
+      <p><strong>Download funscripts for DeoVR</strong></p>
       <p>
-        {{count}} scripted scenes available.
+      <b-button type="is-primary" @click="exportAllFunscripts" :disabled="countTotal === 0" icon-left="download">{{$t('Download all funscripts')}} ({{countTotal}})</b-button>
+      </p>
+      <p>
+      <b-button type="is-primary" @click="exportNewFunscripts" :disabled="countUpdated === 0" icon-left="download">{{$t('Download changes since last export')}} ({{countUpdated}})</b-button>
       </p>
     </div>
   </div>
@@ -32,15 +36,23 @@ export default {
     this.$store.dispatch('optionsFunscripts/load')
   },
   methods: {
-    exportFunscripts () {
+    exportAllFunscripts () {
       const link = document.createElement('a')
-      link.href = '/api/task/funscript/export'
+      link.href = '/api/task/funscript/export-all'
+      link.click()
+    },
+    exportNewFunscripts () {
+      const link = document.createElement('a')
+      link.href = '/api/task/funscript/export-new'
       link.click()
     },
   },
   computed: {
-    count: function () {
-      return this.$store.state.optionsFunscripts.count
+    countTotal: function () {
+      return this.$store.state.optionsFunscripts.countTotal
+    },
+    countUpdated: function () {
+      return this.$store.state.optionsFunscripts.countUpdated
     },
   }
 }

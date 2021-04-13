@@ -39,6 +39,7 @@ type File struct {
 
 	HasHeatmap       bool `json:"has_heatmap"`
 	IsSelectedScript bool `json:"is_selected_script"`
+	IsExported       bool `json:"is_exported"`
 }
 
 func (f *File) GetPath() string {

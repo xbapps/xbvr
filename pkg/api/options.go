@@ -71,6 +71,11 @@ type GetStateResponse struct {
 	Config       config.ObjectConfig `json:"config"`
 }
 
+type GetFunscriptCountResponse struct {
+	Total   int64 `json:"total"`
+	Updated int64 `json:"updated"`
+}
+
 type ConfigResource struct{}
 
 func (i ConfigResource) WebService() *restful.WebService {
@@ -533,8 +538,19 @@ func (i ConfigResource) getFunscriptsCount(req *restful.Request, resp *restful.R
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	var count int64
-	db.Model(&models.Scene{}).Where("is_scripted = ?", true).Count(&count)
+	var r GetFunscriptCountResponse
 
-	resp.WriteHeaderAndEntity(http.StatusOK, count)
+	var scenes []models.Scene
+	db.Model(&models.Scene{}).Preload("Files", func(db *gorm.DB) *gorm.DB {
+		return db.Where("type = ?", "script").Order("is_selected_script DESC, created_time DESC")
+	}).Where("is_scripted = ?", true).Find(&scenes)
+
+	for _, scene := range scenes {
+		r.Total++
+		if len(scene.Files) > 0 && !scene.Files[0].IsExported {
+			r.Updated++
+		}
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }

@@ -10,10 +10,14 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func ExportFunscripts(w http.ResponseWriter) {
+func ExportFunscripts(w http.ResponseWriter, updatedOnly bool) {
 
 	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", "attachment; filename=\"funscripts.zip\"")
+	if updatedOnly {
+		w.Header().Set("Content-Disposition", "attachment; filename=\"funscripts-update.zip\"")
+	} else {
+		w.Header().Set("Content-Disposition", "attachment; filename=\"funscripts.zip\"")
+	}
 
 	zipWriter := zip.NewWriter(w)
 	defer zipWriter.Close()
@@ -31,15 +35,28 @@ func ExportFunscripts(w http.ResponseWriter) {
 			return
 		}
 
-		for _, file := range scriptFiles {
-			if file.Exists() {
-				funscriptName := fmt.Sprintf("%s.funscript", scene.GetFunscriptTitle())
+		for i, file := range scriptFiles {
+			if i == 0 {
+				if file.Exists() {
+					if !file.IsExported || !updatedOnly {
+						funscriptName := fmt.Sprintf("%s.funscript", scene.GetFunscriptTitle())
 
-				if err = AddFileToZip(zipWriter, file.GetPath(), funscriptName); err != nil {
-					log.Infof("Error when adding file to zip: %v (%s)", err, funscriptName)
-					continue
+						if err = AddFileToZip(zipWriter, file.GetPath(), funscriptName); err != nil {
+							log.Infof("Error when adding file to zip: %v (%s)", err, funscriptName)
+							continue
+						}
+					}
+
+					if !file.IsExported {
+						file.IsExported = true
+						file.Save()
+					}
 				}
-				break
+			} else {
+				if file.IsExported {
+					file.IsExported = false
+					file.Save()
+				}
 			}
 		}
 	}

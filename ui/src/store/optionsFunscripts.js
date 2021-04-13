@@ -1,14 +1,20 @@
 import ky from 'ky'
 
 const state = {
-  count: 0,
+  countTotal: 0,
+  countUpdated: 0
 }
 
 const mutations = {}
 
 const actions = {
   async load ({ state }, params) {
-    state.count = await ky.get('/api/options/funscripts/count').json()
+    ky.get('/api/options/funscripts/count')
+      .json()
+      .then(data => {
+        state.countTotal = data.total
+        state.countUpdated = data.updated
+      })
   },
 }
 
