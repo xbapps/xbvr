@@ -445,7 +445,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 			Title:        files[i].Filename,
 			VideoLength:  int(files[i].VideoDuration),
 			ThumbnailURL: session.DeoRequestHost + "/ui/images/blank.png",
-			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v%v", session.DeoRequestHost, files[i].ID, dnt),
+			VideoURL:     fmt.Sprintf("%v/deovr/file/%v%v", session.DeoRequestHost, files[i].ID, dnt),
 		}
 		list = append(list, item)
 	}
