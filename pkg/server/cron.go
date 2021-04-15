@@ -16,12 +16,20 @@ func SetupCron() {
 	cronInstance.AddFunc("@every 2s", session.CheckForDeadSession)
 	cronInstance.AddFunc("@every 6h", tasks.CalculateCacheSizes)
 	cronInstance.AddFunc(fmt.Sprintf("@every %vh", config.Config.Cron.ScrapeContentInterval), scrapeCron)
-	cronInstance.AddFunc(fmt.Sprintf("@every %vh", config.Config.Cron.RescanLibraryInterval), tasks.RescanVolumes)
+	cronInstance.AddFunc(fmt.Sprintf("@every %vh", config.Config.Cron.RescanLibraryInterval), rescanCron)
 	cronInstance.Start()
 
 	go tasks.CalculateCacheSizes()
 }
 
 func scrapeCron() {
-	tasks.Scrape("_enabled")
+	if !session.HasActiveSession() {
+		tasks.Scrape("_enabled")
+	}
+}
+
+func rescanCron() {
+	if !session.HasActiveSession() {
+		tasks.RescanVolumes()
+	}
 }
