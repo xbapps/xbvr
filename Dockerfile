@@ -28,7 +28,7 @@ RUN curl -fsSL https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.t
 WORKDIR /app
 ADD . /app
 RUN cd /app && \
-    yarn install && \
+    yarn install --network-timeout 300000&& \
     yarn build && \
     go generate && \
     go build -tags='json1' -ldflags '-w' -o xbvr main.go
