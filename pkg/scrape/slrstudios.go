@@ -212,7 +212,7 @@ func init() {
 	addSLRScraper("no2studiovr", "No2StudioVR", "No2StudioVR", "https://mcdn.vrporn.com/files/20201021145654/No2StudioVR_400x400-1.jpg")
 	addSLRScraper("only3xvr", "Only3xVR", "Only3xVR", "https://mcdn.vrporn.com/files/20190821140339/only3xvr-profile-pic.jpg")
 	addSLRScraper("onlytease", "OnlyTease", "OT Publishing Ltd", "https://www.onlytease.com/assets/img/favicons/ot/apple-touch-icon.png")
-	addSLRScraper("pervrt", "perVRt/Terrible", "Terrible", "https://mcdn.vrporn.com/files/20181218151630/pervrt-logo.jpg")
+	addSLRScraper("pervrt", "perVRt", "Terrible", "https://mcdn.vrporn.com/files/20181218151630/pervrt-logo.jpg")
 	addSLRScraper("pornbcn", "Pornbcn", "Pornbcn", "https://mcdn.vrporn.com/files/20190923110340/CHANNEL-LOGO-2.jpg")
 	addSLRScraper("povcentralvr", "POVcentralVR", "POV Central", "https://mcdn.vrporn.com/files/20191125091909/POVCentralLogo.jpg")
 	addSLRScraper("pvrstudio", "PVRStudio", "PVRStudio", "https://pvr.fun/uploads/2019/10/08/084230gbctdepe7kovu4hs.jpg")
