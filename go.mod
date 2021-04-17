@@ -15,6 +15,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/blevesearch/bleve v1.0.14
+	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
 	github.com/creasty/defaults v1.5.1
 	github.com/darwayne/go-timecode v1.1.0
 	github.com/djherbis/times v1.2.0
@@ -77,6 +78,7 @@ require (
 	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
 	golang.org/x/sys v0.0.0-20210228012217-479acdf4ea46
+	golang.org/x/text v0.3.4
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
