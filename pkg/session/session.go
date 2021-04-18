@@ -96,7 +96,7 @@ func TrackSessionFromRemote(packet DeoPacket) {
 		lastSessionEnd = time.Now()
 
 		position := int(packet.CurrentTime)
-		if position != 0 && len(currentSessionHeatmap) >= position {
+		if position > 0 && position < len(currentSessionHeatmap) {
 			currentSessionHeatmap[position] = currentSessionHeatmap[position] + 1
 		}
 	}
