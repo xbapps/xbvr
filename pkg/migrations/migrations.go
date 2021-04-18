@@ -455,6 +455,14 @@ func Migrate() {
 				return tx.AutoMigrate(File{}).Error
 			},
 		},
+    {
+    	// perVRt change siteID
+			ID: "0025-revert-pervrt",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				return db.Model(&scenes).Where("site = ?", "perVRt/Terrible").Update("site", "perVRt").Error
+      },
+    },
 	})
 
 	if err := m.Migrate(); err != nil {
