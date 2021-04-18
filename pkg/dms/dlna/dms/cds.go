@@ -210,7 +210,8 @@ func (me *contentDirectoryService) sceneToContainer(scene models.Scene, parent s
 		c = append(c, scene.Cast[i].Name)
 	}
 
-	if len(scene.Files) == 0 {
+	videoFiles, err := scene.GetVideoFiles()
+	if err != null || len(videoFiles) == 0 {
 		return nil
 	}
 
@@ -240,7 +241,7 @@ func (me *contentDirectoryService) sceneToContainer(scene models.Scene, parent s
 		Res:    make([]upnpav.Resource, 0, 2),
 	}
 
-	file := scene.Files[0]
+	file := videoFiles[0]
 	mimeType := "video/mp4"
 
 	item.Res = append(item.Res, upnpav.Resource{
