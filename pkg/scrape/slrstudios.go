@@ -145,7 +145,6 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 					}
 				}
 			}
-
 		})
 
 		out <- sc

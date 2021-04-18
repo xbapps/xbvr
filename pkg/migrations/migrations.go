@@ -22,6 +22,7 @@ type RequestSceneList struct {
 	IsAvailable  optional.Bool     `json:"isAvailable"`
 	IsAccessible optional.Bool     `json:"isAccessible"`
 	IsWatched    optional.Bool     `json:"isWatched"`
+	FilenamesArr []optional.String `json:"filenames_arr"`
 	Lists        []optional.String `json:"lists"`
 	Sites        []optional.String `json:"sites"`
 	Tags         []optional.String `json:"tags"`
@@ -319,6 +320,37 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "099a-update-default-lists",
+			Migrate: func(tx *gorm.DB) error {
+				list := RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Lists:        []optional.String{optional.NewString("versions")},
+					Sort:         optional.NewString("release_date_desc"),
+				}
+				listDeoMulti := models.Playlist{
+					Name:         "Versions",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: true,
+					Ordering:     -46,
+					SearchParams: list.ToJSON(),
+				}
+				listDeoMulti.Save()
+
+				return nil
+			},
+		},
+		{
+			ID: "0099b-versions",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					Versions bool `json:"versions" gorm:"false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
 			ID: "0017-scene-multipart",
 			Migrate: func(tx *gorm.DB) error {
 				type Scene struct {
@@ -415,14 +447,22 @@ func Migrate() {
 			},
 		},
 		{
-			// perVRt change siteID
-			ID: "0024-revert-pervrt",
+			ID: "0024-file-is-selected-script",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					IsSelectedScript bool `json:"is_selected_script" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
+    {
+    	// perVRt change siteID
+			ID: "0025-revert-pervrt",
 			Migrate: func(tx *gorm.DB) error {
 				var scenes []models.Scene
 				return db.Model(&scenes).Where("site = ?", "perVRt/Terrible").Update("site", "perVRt").Error
-
-			},
-		},
+      },
+    },
 	})
 
 	if err := m.Migrate(); err != nil {
