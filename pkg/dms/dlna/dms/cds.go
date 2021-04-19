@@ -211,7 +211,7 @@ func (me *contentDirectoryService) sceneToContainer(scene models.Scene, parent s
 	}
 
 	videoFiles, err := scene.GetVideoFiles()
-	if err != null || len(videoFiles) == 0 {
+	if err != nil || len(videoFiles) == 0 {
 		return nil
 	}
 
