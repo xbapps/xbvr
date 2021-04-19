@@ -116,6 +116,10 @@ func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
+	siteCollector.OnHTML(`.pagination-large .pagination__item[rel="next"]`, func(e *colly.HTMLElement) {
+		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+		siteCollector.Visit(pageURL)
+	})
 	siteCollector.Visit("https://en.caribbeancom.com/eng/listpages/vr1.htm")
 
 	if updateSite {
