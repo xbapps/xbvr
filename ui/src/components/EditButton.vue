@@ -1,6 +1,7 @@
 <template>
   <a class="button is-dark is-outlined is-small"
-    @click="editScene(item)">
+    @click="editScene(item)"
+    title="Edit scene details">
     <b-icon pack="mdi" icon="lead-pencil" size="is-small" />
   </a>
 </template>
