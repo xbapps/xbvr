@@ -449,8 +449,17 @@ func Migrate() {
 					if playlist.IsSystem {
 						var jsonResult RequestSceneList
 						json.Unmarshal([]byte(playlist.SearchParams), &jsonResult)
+
+						hasChanged := false
 						if !jsonResult.DlState.Present() {
 							jsonResult.DlState = optional.NewString("available")
+							hasChanged = true
+						}
+						if !jsonResult.Volume.Present() {
+							jsonResult.Volume = optional.NewInt(0)
+							hasChanged = true
+						}
+						if hasChanged {
 							playlist.SearchParams = jsonResult.ToJSON()
 							playlist.Save()
 						}
