@@ -29,6 +29,7 @@ type ScrapedScene struct {
 	Cast        []string `json:"cast"`
 	Filenames   []string `json:"filename"`
 	Duration    int      `json:"duration"`
+	IntroLength float64  `json:"intro_length"`
 	Synopsis    string   `json:"synopsis"`
 	Released    string   `json:"released"`
 	HomepageURL string   `json:"homepage_url"`

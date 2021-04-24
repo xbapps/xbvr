@@ -57,6 +57,7 @@ type DeoScene struct {
 	VideoThumbnail string              `json:"videoThumbnail"`
 	VideoPreview   string              `json:"videoPreview,omitempty"`
 	Encodings      []DeoSceneEncoding  `json:"encodings"`
+	SkipIntro      float64             `json:"skipIntro"`
 	Timestamps     []DeoSceneTimestamp `json:"timeStamps"`
 	Actors         []DeoSceneActor     `json:"actors"`
 	FullVideoReady bool                `json:"fullVideoReady"`
@@ -360,6 +361,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		ScreenType:     screenType,
 		Encodings:      sources,
 		VideoLength:    int(videoLength),
+		SkipIntro:      scene.IntroLength,
 		Timestamps:     cuepoints,
 	}
 

@@ -34,6 +34,10 @@ type RequestSelectScript struct {
 	FileID uint `json:"file_id"`
 }
 
+type RequestSetSceneIntro struct {
+	IntroLength float64 `json:"intro_length"`
+}
+
 type RequestEditSceneDetails struct {
 	Title        string   `json:"title"`
 	Synopsis     string   `json:"synopsis"`
@@ -103,6 +107,10 @@ func (i SceneResource) WebService() *restful.WebService {
 		Writes(models.Scene{}))
 
 	ws.Route(ws.POST("/edit/{scene-id}").To(i.editScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
+	ws.Route(ws.POST("/intro/{scene-id}").To(i.setIntroLength).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
 
@@ -548,6 +556,37 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 
 		scene.Save()
 
+		resp.WriteHeaderAndEntity(http.StatusOK, scene)
+	}
+}
+
+func (i SceneResource) setIntroLength(req *restful.Request, resp *restful.Response) {
+	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var r RequestSetSceneIntro
+	err = req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	if r.IntroLength < 0.0 {
+		log.Error("Intro length must be non-negative.")
+		return
+	}
+
+	var scene models.Scene
+	db, _ := models.GetDB()
+	defer db.Close()
+	err = scene.GetIfExistByPK(uint(sceneId))
+	if err == nil {
+		scene.IntroLength = r.IntroLength
+		models.AddAction(scene.SceneID, "edit", "intro_length", strconv.FormatFloat(r.IntroLength, 'f', 3, 64))
+		scene.Save()
 		resp.WriteHeaderAndEntity(http.StatusOK, scene)
 	}
 }
