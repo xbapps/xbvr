@@ -90,6 +90,10 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			}
 		})
 
+		// Intro length, based on Studio and ID
+		sc.IntroLength = 5.0
+		// 18VR: no intro on 1-25, 6s intro on 26-50, 5s intro on 51-151, 7s intro on 152-current
+
 		ctx := colly.NewContext()
 		ctx.Put("scene", sc)
 
