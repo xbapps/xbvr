@@ -270,12 +270,17 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	var stereoMode string
 	var screenType string
 
+	actorlist := ""
 	var actors []DeoSceneActor
 	for i := range scene.Cast {
 		actors = append(actors, DeoSceneActor{
 			ID:   scene.Cast[i].ID,
 			Name: scene.Cast[i].Name,
 		})
+		if len(actorlist) > 0 {
+			actorlist += ", "
+		}
+		actorlist += scene.Cast[i].Name
 	}
 
 	var videoLength float64
@@ -339,7 +344,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Title:          scene.Title,
 		Description:    scene.Synopsis,
 		Actors:         actors,
-		Paysite:        DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
+		Paysite:        DeoScenePaysite{ID: 1, Name: scene.Site + " - " + actorlist, Is3rdParty: true},
 		IsFavorite:     scene.Favourite,
 		RatingAvg:      scene.StarRating,
 		FullVideoReady: true,
