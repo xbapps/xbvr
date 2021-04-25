@@ -414,6 +414,12 @@ func Migrate() {
 				return tx.AutoMigrate(File{}).Error
 			},
 		},
+		{
+			ID: "0024-drop-actions-old",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.Exec("DROP TABLE IF EXISTS actions_old").Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
