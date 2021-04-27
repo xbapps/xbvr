@@ -1,6 +1,6 @@
 FROM node:12 as build-env
 
-### Install Go ###
+#### Install Go ####
 ENV GO_VERSION=1.13.15 \
     GOPATH=$HOME/go-packages \
     GOROOT=$HOME/go
