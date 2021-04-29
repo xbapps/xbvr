@@ -447,7 +447,13 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0024-file-is-selected-script",
+			ID: "0024-drop-actions-old",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.Exec("DROP TABLE IF EXISTS actions_old").Error
+			},
+		},
+    {
+			ID: "0098-file-is-selected-script",
 			Migrate: func(tx *gorm.DB) error {
 				type File struct {
 					IsSelectedScript bool `json:"is_selected_script" gorm:"default:false"`
@@ -457,7 +463,7 @@ func Migrate() {
 		},
     {
     	// perVRt change siteID
-			ID: "0025-revert-pervrt",
+			ID: "0099-revert-pervrt",
 			Migrate: func(tx *gorm.DB) error {
 				var scenes []models.Scene
 				return db.Model(&scenes).Where("site = ?", "perVRt/Terrible").Update("site", "perVRt").Error
