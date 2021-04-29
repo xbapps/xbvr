@@ -1,14 +1,15 @@
 FROM node:12 as build-env
 
-### Install Go ###
-ENV GO_VERSION=1.13.15 \
+#### Install Go ####
+ENV GO_VERSION=1.16 \
     GOPATH=$HOME/go-packages \
     GOROOT=$HOME/go
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
 RUN curl -fsSL https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.tar.gz | tar -xzv \
     && GO111MODULE=on go get -u -v \
         github.com/UnnoTed/fileb0x
-
+        
 WORKDIR /app
 ADD . /app
 RUN cd /app && \
