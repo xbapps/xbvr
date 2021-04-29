@@ -415,14 +415,19 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0024-drop-actions-old",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.Exec("DROP TABLE IF EXISTS actions_old").Error
+			},
+		},
+    {
 			// perVRt change siteID
 			ID: "0025-revert-pervrt",
 			Migrate: func(tx *gorm.DB) error {
 				var scenes []models.Scene
 				return db.Model(&scenes).Where("site = ?", "perVRt/Terrible").Update("site", "perVRt").Error
-
-			},
-		},
+      },
+    },
 	})
 
 	if err := m.Migrate(); err != nil {
