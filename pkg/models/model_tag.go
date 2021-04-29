@@ -85,7 +85,7 @@ func ConvertTag(t string) string {
 		return "blowjob"
 	}
 
-	if funk.Contains([]string{"boobs job", "titty fucking", "titjob"}, t) {
+	if funk.Contains([]string{"boobs job", "titty fucking", "tittyfuck", "titjob"}, t) {
 		return "titty fuck"
 	}
 
@@ -297,7 +297,7 @@ func ConvertTag(t string) string {
 		return "parody"
 	}
 
-	if funk.Contains([]string{"fingering"}, t) {
+	if funk.Contains([]string{"fingering", "masterbation"}, t) {
 		return "masturbation"
 	}
 
