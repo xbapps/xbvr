@@ -136,6 +136,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/previews/test").To(i.generateTestPreview).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	// "Funscripts" section endpoints
+	ws.Route(ws.GET("/funscripts/count").To(i.getFunscriptsCount).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	return ws
 }
 
@@ -523,4 +527,14 @@ func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.
 
 	common.PublishWS("options.previews.previewReady", map[string]interface{}{"previewFn": previewFn})
 	resp.WriteHeader(http.StatusOK)
+}
+
+func (i ConfigResource) getFunscriptsCount(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var count int64
+	db.Model(&models.Scene{}).Where("is_scripted = ?", true).Count(&count)
+
+	resp.WriteHeaderAndEntity(http.StatusOK, count)
 }

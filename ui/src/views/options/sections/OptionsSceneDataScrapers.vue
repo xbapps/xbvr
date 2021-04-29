@@ -142,6 +142,7 @@ export default {
   .card {
     overflow: visible;
     height: 100%;
+    overflow: visible;
   }
 
   .card-content {

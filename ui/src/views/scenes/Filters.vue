@@ -25,6 +25,12 @@
           <span>{{ $t('Scripted') }}</span>
         </b-checkbox-button>
       </div>
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="versions" type="is-info">
+          <b-icon pack="mdi" icon="image-multiple"/>
+          <span>{{ $t('Versions') }}</span>
+        </b-checkbox-button>
+      </div>
     </div>
 
     <div class="is-divider" data-content="Sorting / Status / Release"></div>
