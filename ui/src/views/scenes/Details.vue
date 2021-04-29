@@ -310,7 +310,9 @@ export default {
         // vr.camera.position.set(-1, 0, 2);
       })
 
-      this.player.src({ src: src, type: 'video/mp4' })
+      if (src) {
+        this.player.src({ src: src, type: 'video/mp4' })
+      }
       this.player.poster(this.getImageURL(this.item.cover_url, ''))
     },
     showCastScenes (actor) {
@@ -367,7 +369,7 @@ export default {
       if (this.images[idx] !== undefined) {
         return this.getImageURL(this.images[idx].url, 'x40')
       } else {
-        return ''
+        return '/ui/images/blank.png'
       }
     },
     getHeatmapURL (fileId) {
@@ -415,14 +417,18 @@ export default {
       const data = this.$store.getters['sceneList/nextScene'](this.item)
       if (data !== null) {
         this.$store.commit('overlay/showDetails', { scene: data })
-        this.updatePlayer('180')
+        this.activeMedia = 0
+        this.carouselSlide = 0
+        this.updatePlayer(undefined, '180')
       }
     },
     prevScene () {
       const data = this.$store.getters['sceneList/prevScene'](this.item)
       if (data !== null) {
         this.$store.commit('overlay/showDetails', { scene: data })
-        this.updatePlayer('180')
+        this.activeMedia = 0
+        this.carouselSlide = 0
+        this.updatePlayer(undefined, '180')
       }
     },
     playerStepBack () {
