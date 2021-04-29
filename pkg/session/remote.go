@@ -20,6 +20,7 @@ type DeoPacket struct {
 
 const PLAYING = 0
 const PAUSED = 1
+const FINISHED = 2
 
 var DeoPlayerHost = ""
 var DeoRequestHost = ""
