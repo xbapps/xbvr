@@ -142,7 +142,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div[class=site-list] div[class=scene-item] a[class=contain-img]`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div[class=site-list] div[class=scene-item] a.contain-img`, func(e *colly.HTMLElement) {
 		sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
 
 		// If scene exist in database, there's no need to scrape

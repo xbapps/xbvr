@@ -735,7 +735,11 @@ func (server *Server) initMux(mux *http.ServeMux) {
 			var scene models.Scene
 			scene.GetIfExist(sceneId)
 
-			filePath = filepath.Join(scene.Files[0].Path, scene.Files[0].Filename)
+			videoFiles, err := scene.GetVideoFiles()
+			if err != nil || len(videoFiles) == 0 {
+				return
+			}
+			filePath = filepath.Join(videoFiles[0].Path, videoFiles[0].Filename)
 		}
 
 		if fileId != 0 {
