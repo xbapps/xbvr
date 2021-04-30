@@ -60,6 +60,9 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
 			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
 			base := strings.Split(strings.Replace(e.Attr("poster"), "//", "", -1), "/")
+			if len(base) < 7 {
+				return
+			}
 			baseName := base[5] + base[6]
 			defaultBaseName := "nam" + base[6]
 
@@ -80,7 +83,14 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		// Old video element
 		e.ForEach(`a.play-trailer img.start-card.desktop-only`, func(id int, e *colly.HTMLElement) {
 			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
-			base := strings.Split(strings.Replace(e.Attr("data-srcset"), "//", "", -1), "/")
+			srcset := e.Attr("data-srcset")
+			if srcset == "" {
+				srcset = e.Attr("srcset")
+			}
+			base := strings.Split(strings.Replace(srcset, "//", "", -1), "/")
+			if len(base) < 7 {
+				return
+			}
 			baseName := base[5] + base[6]
 			defaultBaseName := "nam" + base[6]
 
