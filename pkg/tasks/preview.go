@@ -76,7 +76,7 @@ func RenderPreview(inputFile string, destFile string, startTime int, snippetLeng
 	vfArgs := fmt.Sprintf("crop=%v,scale=%v:%v", crop, resolution, resolution)
 
 	// Prepare snippets
-	interval := dur/float64(snippetAmount) - float64(startTime)
+	interval := (dur - float64(startTime)) / float64(snippetAmount)
 	for i := 1; i <= snippetAmount; i++ {
 		start := time.Duration(float64(i)*interval+float64(startTime)) * time.Second
 		snippetFile := filepath.Join(tmpPath, fmt.Sprintf("%v.mp4", i))
@@ -97,7 +97,7 @@ func RenderPreview(inputFile string, destFile string, startTime int, snippetLeng
 	}
 
 	// Ensure ending is always in preview
-	if extraSnippet {
+	if extraSnippet && dur/float64(snippetAmount) > float64(150) {
 		snippetAmount = snippetAmount + 1
 
 		start := time.Duration(dur-float64(150)) * time.Second

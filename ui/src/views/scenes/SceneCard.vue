@@ -14,10 +14,11 @@
             </b-tag>
             <b-tag type="is-info" v-if="videoFilesCount > 1 && !item.is_multipart">
               <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
-              {{item.file.length}}
+              {{videoFilesCount}}
             </b-tag>
             <b-tag type="is-info" v-if="item.is_scripted">
               <b-icon pack="mdi" icon="pulse" size="is-small"/>
+              <span v-if="scriptFilesCount > 1">{{scriptFilesCount}}</span>
             </b-tag>
             <b-tag type="is-warning" v-if="item.star_rating > 0">
               <b-icon pack="mdi" icon="star" size="is-small"/>
@@ -66,6 +67,15 @@ export default {
       let count = 0
       this.item.file.forEach(obj => {
         if (obj.type === 'video') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    scriptFilesCount () {
+      let count = 0
+      this.item.file.forEach(obj => {
+        if (obj.type === 'script') {
           count = count + 1
         }
       })
