@@ -82,6 +82,11 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			return !funk.ContainsString(sc.Cast, t)
 		})
 
+		// Synopsis
+		e.ForEach(`.d-desc`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.TrimSpace(e.Text)
+		})
+
 		out <- sc
 	})
 
