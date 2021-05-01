@@ -94,9 +94,12 @@
                                 v-show="f.type === 'video'">
                           <b-icon pack="fas" icon="play" size="is-small"></b-icon>
                         </button>
-                        <button rounded class="button is-info is-small is-outlined" v-show="f.type === 'script'">
+                        <b-tooltip :label="$t('Select this script for export')" position="is-right">
+                        <button rounded class="button is-info is-small is-outlined" @click='selectScript(f)'
+                          v-show="f.type === 'script'" v-bind:class="{ 'is-success': f.is_selected_script, 'is-info' :!f.is_selected_script }">
                           <b-icon pack="mdi" icon="pulse"></b-icon>
                         </button>
+                        </b-tooltip>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
                         <strong>{{ f.filename }}</strong><br/>
@@ -356,6 +359,15 @@ export default {
             this.$store.commit('overlay/showDetails', { scene: data })
           })
         }
+      })
+    },
+    selectScript (file) {
+      ky.post(`/api/scene/selectscript/${this.item.id}`, {
+        json: {
+          file_id: file.id,
+        }
+      }).json().then(data => {
+          this.$store.commit('overlay/showDetails', { scene: data })
       })
     },
     getImageURL (u, size) {

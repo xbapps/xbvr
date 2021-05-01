@@ -71,6 +71,11 @@ type GetStateResponse struct {
 	Config       config.ObjectConfig `json:"config"`
 }
 
+type GetFunscriptCountResponse struct {
+	Total   int64 `json:"total"`
+	Updated int64 `json:"updated"`
+}
+
 type ConfigResource struct{}
 
 func (i ConfigResource) WebService() *restful.WebService {
@@ -134,6 +139,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/previews/test").To(i.generateTestPreview).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Funscripts" section endpoints
+	ws.Route(ws.GET("/funscripts/count").To(i.getFunscriptsCount).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
@@ -523,4 +532,25 @@ func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.
 
 	common.PublishWS("options.previews.previewReady", map[string]interface{}{"previewFn": previewFn})
 	resp.WriteHeader(http.StatusOK)
+}
+
+func (i ConfigResource) getFunscriptsCount(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var r GetFunscriptCountResponse
+
+	var scenes []models.Scene
+	db.Model(&models.Scene{}).Preload("Files", func(db *gorm.DB) *gorm.DB {
+		return db.Where("type = ?", "script").Order("is_selected_script DESC, created_time DESC")
+	}).Where("is_scripted = ?", true).Find(&scenes)
+
+	for _, scene := range scenes {
+		r.Total++
+		if len(scene.Files) > 0 && !scene.Files[0].IsExported {
+			r.Updated++
+		}
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }
