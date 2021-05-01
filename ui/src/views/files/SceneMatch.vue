@@ -70,6 +70,8 @@ export default {
   data () {
     return {
       data: [],
+      dataNumRequests: 0,
+      dataNumResponses: 0,
       currentPage: 1,
       queryString: '',
       format,
@@ -103,18 +105,25 @@ export default {
       this.loadData()
     },
     loadData: async function loadData () {
+      const requestIndex = this.dataNumRequests
+      this.dataNumRequests = this.dataNumRequests + 1
+
       const resp = await ky.get('/api/scene/search', {
         searchParams: {
           q: this.queryString
         }
       }).json()
 
-      if (resp.scenes !== null) {
-        this.data = resp.scenes
-      } else {
-        this.data = []
+      if (requestIndex >= this.dataNumResponses) {
+        this.dataNumResponses = requestIndex + 1
+
+        if (resp.scenes !== null) {
+          this.data = resp.scenes
+        } else {
+          this.data = []
+        }
+        this.currentPage = 1
       }
-      this.currentPage = 1
     },
     getImageURL (u) {
       if (u.startsWith('http')) {
