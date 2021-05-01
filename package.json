@@ -12,13 +12,13 @@
     "dev:ui": "cd ui && vue-cli-service build --watch --silent"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "5.15.2",
-    "@fortawesome/fontawesome-svg-core": "1.2.34",
+    "@fortawesome/fontawesome-free": "5.15.3",
+    "@fortawesome/fontawesome-svg-core": "1.2.35",
     "@mdi/font": "5.8.55",
     "buefy": "0.9.4",
     "bulma-extensions": "6.2.7",
     "date-fns": "2.16.1",
-    "ky": "0.26.0",
+    "ky": "0.27.0",
     "pretty-bytes": "5.5.0",
     "videojs-hotkeys": "0.2.27",
     "videojs-vr": "1.7.1",
@@ -32,12 +32,12 @@
     "vue-slider-component": "3.2.11",
     "vue-star-rating": "1.7.0",
     "vuex": "3.6.2",
-    "wampy": "6.3.0"
+    "wampy": "6.3.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "4.5.11",
-    "@vue/cli-plugin-eslint": "~4.5.11",
-    "@vue/cli-service": "4.5.11",
+    "@vue/cli-plugin-babel": "4.5.12",
+    "@vue/cli-plugin-eslint": "~4.5.12",
+    "@vue/cli-service": "4.5.12",
     "@vue/eslint-config-standard": "6.0.0",
     "babel-eslint": "^10.1.0",
     "concurrently": "5.3.0",
@@ -49,7 +49,7 @@
     "eslint-plugin-vue": "7.3.0",
     "less": "3.12.2",
     "less-loader": "6.2.0",
-    "node-sass": "4.14.1",
+    "sass": "1.32.12",
     "sass-loader": "9.0.2",
     "simple-progress-webpack-plugin": "1.1.2",
     "vue-cli-plugin-i18n": "1.0.1",
