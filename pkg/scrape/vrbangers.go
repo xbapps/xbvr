@@ -28,6 +28,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
+		if e.ChildAttr(`link[rel=shortlink]`, "href") == "" {
+			return
+		}
 		// Scene ID - get from URL
 		sc.SiteID = strings.Split(e.ChildAttr(`link[rel=shortlink]`, "href"), "?p=")[1]
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
