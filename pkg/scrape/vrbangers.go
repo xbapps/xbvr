@@ -29,6 +29,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		if e.ChildAttr(`link[rel=shortlink]`, "href") == "" {
+			log.Printf("Skipping %s because it is not a valid scene.", e.Request.URL.String())
 			return
 		}
 		// Scene ID - get from URL
