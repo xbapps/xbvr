@@ -176,10 +176,10 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 }
 
 func addSLRScraper(id string, name string, company string, avatarURL string) {
-	addSLRScraperWithAltenativeId(id, id, name, company, avatarURL)
+	addSLRScraperWithAlternativeId(id, id, name, company, avatarURL)
 }
 
-func addSLRScraperWithAltenativeId(slrId string, id string, name string, company string, avatarURL string) {
+func addSLRScraperWithAlternativeId(slrId string, id string, name string, company string, avatarURL string) {
 	suffixedName := name
 	if company != "SexLikeReal" {
 		suffixedName += " (SLR)"
@@ -232,7 +232,7 @@ func init() {
 	addSLRScraper("vredging", "VRedging", "VRedging", "https://mcdn.vrporn.com/files/20200630081500/VRedging_LOGO_v1-400x400.jpg")
 	addSLRScraper("vrextasy", "VReXtasy", "VReXtasy", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
 	addSLRScraper("vrfirsttimer", "VRFirstTimer", "VRFirstTimer", "https://mcdn.vrporn.com/files/20200511115233/VRFirstTimers_Logo.jpg")
-	addSLRScraperWithAltenativeId("vrlatina", "vrlatina-slr", "VRLatina", "VRLatina", "https://pbs.twimg.com/profile_images/979329978750898176/074YPl3H_200x200.jpg")
+	addSLRScraperWithAlternativeId("vrlatina", "vrlatina-slr", "VRLatina", "VRLatina", "https://pbs.twimg.com/profile_images/979329978750898176/074YPl3H_200x200.jpg")
 	addSLRScraper("vrpussyvision", "VRpussyVision", "VRpussyVision", "https://mcdn.vrporn.com/files/20180313160830/vrpussyvision-square-banner.png")
 	addSLRScraper("vrsexperts", "VRSexperts", "VRSexperts", "https://mcdn.vrporn.com/files/20190812141431/vrsexpertslogo2.jpg")
 	addSLRScraper("vrsolos", "VRSolos", "VRSolos", "https://mcdn.vrporn.com/files/20191226092954/VRSolos_Logo.jpg")
