@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -376,10 +377,15 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 		SiteName string `json:"site_name"`
 	}
 
+	SNSuffix := strings.NewReplacer(" (SLR)", "", " (VRPorn)", "", " (POVR)", "", " (all sites)", "")
+
 	if err := req.ReadEntity(&r); err != nil {
 		APIError(req, resp, http.StatusInternalServerError, err)
 		return
 	}
+
+	NoSuffix := SNSuffix.Replace(r.SiteName)
+	r.SiteName = NoSuffix
 
 	db, _ := models.GetDB()
 	defer db.Close()
