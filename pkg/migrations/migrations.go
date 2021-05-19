@@ -424,6 +424,15 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0025-file-is-exported",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					IsExported bool `json:"is_exported" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
+		{
 			ID: "0024-drop-actions-old",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.Exec("DROP TABLE IF EXISTS actions_old").Error

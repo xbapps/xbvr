@@ -333,7 +333,22 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 
 	o.NeedsUpdate = false
 	o.SceneID = ext.SceneID
-	o.Title = ext.Title
+
+	if o.Title != ext.Title {
+		o.Title = ext.Title
+
+		// reset scriptfile.IsExported state on title change
+		scriptfiles, err := o.GetScriptFiles()
+		if err == nil {
+			for _, file := range scriptfiles {
+				if file.IsExported {
+					file.IsExported = false
+					file.Save()
+				}
+			}
+		}
+	}
+
 	o.SceneType = ext.SceneType
 	o.Studio = ext.Studio
 	o.Site = ext.Site
