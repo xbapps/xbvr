@@ -108,9 +108,9 @@ func createHeatmapThumbnail(out *bytes.Buffer, r io.Reader, heatmapImage image.I
 
 	canvas := image.NewNRGBA(image.Rect(0, 0, thumbnailWidth, thumbnailHeight))
 
-	drawRect := image.Rect(0, heatmapHeight+heatmapMargin, thumbnailWidth, thumbnailHeight)
+	drawRect := image.Rect(0, 0, thumbnailWidth, thumbnailHeight-heatmapHeight-heatmapMargin)
 	draw.Draw(canvas, drawRect, thumbnailImage, image.Point{}, draw.Over)
-	drawRect = image.Rect(0, 0, thumbnailWidth, heatmapHeight)
+	drawRect = image.Rect(0, thumbnailHeight-heatmapHeight, thumbnailWidth, thumbnailHeight)
 	draw.Draw(canvas, drawRect, heatmapImage, image.Point{}, draw.Over)
 	jpeg.Encode(out, canvas, &jpeg.Options{Quality: 90})
 	return nil
