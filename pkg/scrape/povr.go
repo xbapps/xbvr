@@ -98,7 +98,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 	//		siteCollector.Visit(pageURL)
 	//	})
 
-	siteCollector.OnHTML(`div.teaser-video a.teaser-video__main`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.thumbnail-wrap div.thumbnail a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
