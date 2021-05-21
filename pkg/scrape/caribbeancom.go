@@ -116,11 +116,12 @@ func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	/*	siteCollector.OnHTML(`.pagination-large .pagination__item[rel="next"]`, func(e *colly.HTMLElement) {
-			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-			siteCollector.Visit(pageURL)
-		})
-	*/
+	siteCollector.OnHTML(`.pagination-large .pagination__item[rel="next"]`, func(e *colly.HTMLElement) {
+		// replace "all" with "vr" to allow for correct page navigation
+		pageURL := strings.Replace(e.Request.AbsoluteURL(e.Attr("href")), "all", "vr", 1)
+		siteCollector.Visit(pageURL)
+	})
+
 	siteCollector.Visit("https://en.caribbeancom.com/eng/listpages/vr1.htm")
 
 	if updateSite {
