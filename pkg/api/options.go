@@ -361,10 +361,15 @@ func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Resp
 		SiteName string `json:"site_name"`
 	}
 
+	SNSuffix := strings.NewReplacer(" (SLR)", "", " (VRPorn)", "", " (POVR)", "", " (all sites)", "")
+
 	if err := req.ReadEntity(&r); err != nil {
 		APIError(req, resp, http.StatusInternalServerError, err)
 		return
 	}
+
+	NoSuffix := SNSuffix.Replace(r.SiteName)
+	r.SiteName = NoSuffix
 
 	db, _ := models.GetDB()
 	defer db.Close()
