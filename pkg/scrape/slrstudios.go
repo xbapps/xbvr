@@ -63,6 +63,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// ...a lot of these are shared with RealJamVR which uses the same tags though.
 		// Could split by / but would run into issues with "f/f/m" and "shorts / skirts"
 		var videotype string
+		var FB360 = ".mp4"
 		e.ForEach(`ul.c-meta--scene-tags li a`, func(id int, e *colly.HTMLElement) {
 			if !skiptags[e.Attr("title")] {
 				sc.Tags = append(sc.Tags, e.Attr("title"))
@@ -71,6 +72,9 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			// To determine filenames
 			if e.Attr("title") == "Fisheye" || e.Attr("title") == "360°" {
 				videotype = e.Attr("title")
+			}
+			if e.Attr("title") == "Spatial audio" {
+				FB360 = "_FB360.MP4"
 			}
 
 		})
@@ -125,7 +129,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				// Filenames
 				// Only shown for logged in users so need to generate them
 				// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
-				resolutions := []string{"_6400p_", "_3160p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
+				resolutions := []string{"_6400p_", "_3840p_", "_3160p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
 				baseName := "SLR_" + siteID + "_" + sc.Title
 				switch videotype {
 				case "360°": // Sadly can't determine if TB or MONO so have to add both
@@ -135,9 +139,9 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 					}
 				case "Fisheye": // 200° videos named with MKX200
 					for i := range resolutions {
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220.mp4")
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220.mp4")
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200"+FB360)
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220"+FB360)
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220"+FB360)
 					}
 				default: // Assuming everything else is 180 and LR, yet to find a TB_180
 					for i := range resolutions {
