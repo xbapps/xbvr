@@ -402,6 +402,7 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	db.Model(&unmatched).
 		Preload("Volume").
 		Where("files.scene_id = 0").
+		Where("files.type = 'video'").
 		Order("created_time desc").
 		Find(&unmatched)
 
