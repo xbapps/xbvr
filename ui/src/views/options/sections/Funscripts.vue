@@ -4,7 +4,7 @@
       
       <h3>{{$t('Export funscripts')}}</h3>
       <p>
-        {{$t('Here you can download a ZIP file containing a funscript for each scripted scene. The files are named by scene title and scene id, just like they appear in the DeoVR interface. If a scene has multiple scripts you can choose a preferred script in the scene details view. Otherwise, the last added script is chosen.')}}
+        {{$t('Here you can download a ZIP file containing a funscript for each scripted scene. The file names include scene title and scene id, as expected by DeoVR. If a scene has multiple scripts you can choose a preferred script in the scene details view. Otherwise, the most recently added script is chosen.')}}
       </p>
       <p>
         {{$t('Note that the filenames are not compatible with DLNA.')}}
