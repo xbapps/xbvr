@@ -49,7 +49,7 @@
               </div>
             </b-table-column>
             <b-table-column style="white-space: nowrap;">
-              <button class="button is-danger is-outlined" @click='removeFile(props.row)'>
+              <button class="button is-danger is-outlined" @click='removeFile(props.row)' title='Delete file from disk'>
                 <b-icon pack="fas" icon="trash"></b-icon>
               </button>
             </b-table-column>

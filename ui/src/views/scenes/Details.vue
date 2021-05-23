@@ -140,11 +140,14 @@
                         <b-button @click="addCuepoint">Add cuepoint</b-button>
                       </b-field>
                     </div>
-                    <div class="content is-small">
+                    <div class="content cuepoint-list">
                       <ul>
                         <li v-for="(c, idx) in sortedCuepoints" :key="idx">
                           <code>{{ humanizeSeconds(c.time_start) }}</code> -
                           <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
+                          <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(c)" title="Delete cuepoint">
+                            <b-icon pack="fas" icon="trash" />
+                          </button>
                         </li>
                       </ul>
                     </div>
@@ -192,7 +195,7 @@
 <script>
 import ky from 'ky'
 import videojs from 'video.js'
-import vr from 'videojs-vr/dist/videojs-vr.min.js'
+import 'videojs-vr/dist/videojs-vr.min.js'
 import { format, formatDistance, parseISO } from 'date-fns'
 import prettyBytes from 'pretty-bytes'
 import VueLoadImage from 'vue-load-image'
@@ -304,7 +307,7 @@ export default {
     updatePlayer (src, projection) {
       this.player.reset()
 
-      const vr = this.player.vr({
+      /* const vr = */ this.player.vr({
         projection: projection,
         forceCardboard: false
       })
@@ -402,7 +405,7 @@ export default {
       if (this.tagPosition !== '' && this.tagAct !== '') {
         name = `${this.tagPosition}-${this.tagAct}`
       }
-      ky.post(`/api/scene/cuepoint/${this.item.id}`, {
+      ky.post(`/api/scene/${this.item.id}/cuepoint`, {
         json: {
           name: name,
           time_start: this.player.currentTime()
@@ -410,6 +413,12 @@ export default {
       }).json().then(data => {
         this.$store.commit('overlay/showDetails', { scene: data })
       })
+    },
+    deleteCuepoint (cuepoint) {
+      ky.delete(`/api/scene/${this.item.id}/cuepoint/${cuepoint.id}`)
+        .json().then(data => {
+          this.$store.commit('overlay/showDetails', { scene: data })
+        })
     },
     close () {
       this.player.dispose()
@@ -561,6 +570,10 @@ span.is-active img {
 
 .pathDetails {
   color: #b0b0b0;
+}
+
+.cuepoint-list li > button {
+  margin-left: 7px;
 }
 
 .heatmapFunscript {

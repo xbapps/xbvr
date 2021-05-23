@@ -38,7 +38,7 @@
                   <b-icon icon="dots-vertical"></b-icon>
                 </template>
                 <b-dropdown-item aria-role="listitem" @click="taskScrape(item.id)">
-                  {{$t('Scrape this site')}}
+                  {{$t('Run this scraper')}}
                 </b-dropdown-item>
                 <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(item.name)">
                   {{$t('Force update scenes')}}

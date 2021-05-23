@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
+	"github.com/jinzhu/gorm"
 	"github.com/xbapps/xbvr/pkg/tasks"
 
 	"github.com/blevesearch/bleve"
@@ -85,7 +86,11 @@ func (i SceneResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
-	ws.Route(ws.POST("/cuepoint/{scene-id}").To(i.addSceneCuepoint).
+	ws.Route(ws.POST("/{scene-id}/cuepoint").To(i.addSceneCuepoint).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
+	ws.Route(ws.DELETE("/{scene-id}/cuepoint/{cuepoint-id}").To(i.deleteSceneCuepoint).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
 
@@ -328,6 +333,39 @@ func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Resp
 		scene.GetIfExistByPK(uint(sceneId))
 	}
 	db.Close()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+
+func (i SceneResource) deleteSceneCuepoint(req *restful.Request, resp *restful.Response) {
+	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	cuepointId, err := strconv.Atoi(req.PathParameter("cuepoint-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	db, _ := models.GetDB()
+
+	cuepoint := models.SceneCuepoint{}
+	err = db.First(&cuepoint, cuepointId).Error
+
+	if err == gorm.ErrRecordNotFound {
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	db.Where("id = ? AND scene_id = ?", cuepointId, sceneId).Delete(models.SceneCuepoint{})
+	db.Delete(&cuepoint)
+
+	var scene models.Scene
+	err = scene.GetIfExistByPK(uint(sceneId))
+	defer db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
