@@ -17,6 +17,7 @@ import (
 )
 
 type RequestSceneList struct {
+	DlState      optional.String   `json:"dlState"`
 	Limit        optional.Int      `json:"limit"`
 	Offset       optional.Int      `json:"offset"`
 	IsAvailable  optional.Bool     `json:"isAvailable"`
@@ -27,6 +28,7 @@ type RequestSceneList struct {
 	Tags         []optional.String `json:"tags"`
 	Cast         []optional.String `json:"cast"`
 	Cuepoint     []optional.String `json:"cuepoint"`
+	Volume       optional.Int      `json:"volume"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
 }
@@ -436,6 +438,34 @@ func Migrate() {
 			ID: "0024-drop-actions-old",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.Exec("DROP TABLE IF EXISTS actions_old").Error
+			},
+		},
+		{
+			ID: "0025-playlist-add-dlstate",
+			Migrate: func(tx *gorm.DB) error {
+				var playlists []models.Playlist
+				db.Find(&playlists)
+				for _, playlist := range playlists {
+					if playlist.IsSystem {
+						var jsonResult RequestSceneList
+						json.Unmarshal([]byte(playlist.SearchParams), &jsonResult)
+
+						hasChanged := false
+						if !jsonResult.DlState.Present() {
+							jsonResult.DlState = optional.NewString("available")
+							hasChanged = true
+						}
+						if !jsonResult.Volume.Present() {
+							jsonResult.Volume = optional.NewInt(0)
+							hasChanged = true
+						}
+						if hasChanged {
+							playlist.SearchParams = jsonResult.ToJSON()
+							playlist.Save()
+						}
+					}
+				}
+				return nil
 			},
 		},
 	})
