@@ -264,7 +264,11 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	idx := tasks.NewIndex("scenes")
+	idx, err := tasks.NewIndex("scenes")
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	defer idx.Bleve.Close()
 	query := bleve.NewQueryStringQuery(q)
 
