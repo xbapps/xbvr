@@ -57,13 +57,15 @@
                   <span v-else class="missing">(no title)</span>
                   <small class="is-pulled-right">{{ format(parseISO(item.release_date), "yyyy-MM-dd") }}</small>
                 </h3>
-                <small>{{ item.site }}</small>
-                <div class="columns">
-                  <div class="column">
+                <small>
+                  <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>
+                </small>
+                <div class="columns mt-0">
+                  <div class="column pt-0">
                     <star-rating :key="item.id" :rating="item.star_rating" @rating-selected="setRating"
                                  :increment="0.5" :star-size="20"/>
                   </div>
-                  <div class="column">
+                  <div class="column pt-0">
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
