@@ -169,7 +169,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		var name string
 		e.ForEach(`h1.model-title`, func(id int, e *colly.HTMLElement) {
-			name = strings.Split(e.Text, " (")[0]
+			name = strings.TrimSpace(strings.Split(e.Text, " (")[0])
 		})
 
 		var gender string
