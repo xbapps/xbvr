@@ -46,6 +46,7 @@ type RequestSaveOptionsWeb struct {
 	TagSort           string `json:"tagSort"`
 	SceneWatchlist    bool   `json:"sceneWatchlist"`
 	SceneFavourite    bool   `json:"sceneFavourite"`
+	SceneWishlist     bool   `json:"sceneWishlist"`
 	SceneWatched      bool   `json:"sceneWatched"`
 	SceneEdit         bool   `json:"sceneEdit"`
 	SceneDuration     bool   `json:"sceneDuration"`
@@ -359,6 +360,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.TagSort = r.TagSort
 	config.Config.Web.SceneWatchlist = r.SceneWatchlist
 	config.Config.Web.SceneFavourite = r.SceneFavourite
+	config.Config.Web.SceneWishlist = r.SceneWishlist
 	config.Config.Web.SceneWatched = r.SceneWatched
 	config.Config.Web.SceneEdit = r.SceneEdit
 	config.Config.Web.SceneDuration = r.SceneDuration

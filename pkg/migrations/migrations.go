@@ -17,12 +17,13 @@ import (
 	"github.com/markphelps/optional"
 	"github.com/mozillazg/go-slugify"
 	"github.com/tidwall/gjson"
+	"gopkg.in/gormigrate.v1"
+
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/tasks"
-	"gopkg.in/gormigrate.v1"
 )
 
 type RequestSceneList struct {
@@ -727,6 +728,15 @@ func Migrate() {
 				return tx.Exec("update scenes set script_published = '0000-00-00' where script_published is null").Error
 			},
 		},
+		{
+			ID: "0026-scene-wishlist",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					Wishlist bool `json:"wishlist" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
@@ -1020,7 +1030,6 @@ func Migrate() {
 		{
 			ID: "0033a-move-tngf-to-tngf",
 			Migrate: func(tx *gorm.DB) error {
-
 				// seed information old date -> new date -> new sceneid/url
 				vrporn := [...]string{"2020-04-07", "2020-04-15", "2021-01-09", "2021-01-25", "2021-01-31", "2021-02-21", "2021-03-27", "2021-04-10", "2021-04-23", "2021-05-16", "2021-05-21", "2021-06-15", "2021-06-21", "2021-07-05", "2021-07-18", "2021-07-31", "2021-08-17", "2021-08-29", "2021-10-09", "2021-10-11", "2021-10-19", "2021-11-20", "2021-11-24", "2021-11-25"}
 				tngf := [...]string{"2020-03-27", "2020-04-03", "2021-01-08", "2021-01-22", "2021-01-29", "2021-02-12", "2021-03-25", "2021-04-08", "2021-04-22", "2021-05-06", "2021-05-20", "2021-06-03", "2021-06-17", "2021-07-01", "2021-07-15", "2021-07-29", "2021-08-12", "2021-08-26", "2021-09-09", "2021-09-23", "2021-10-07", "2021-10-21", "2021-11-04", "2021-11-19"}
@@ -1276,7 +1285,7 @@ func Migrate() {
 				}
 				for _, scene := range scenes {
 					id := scene.SceneID[strings.LastIndex(scene.SceneID, "-")+1:]
-					var re = regexp.MustCompile(`(?m).*.(\.com|\.net)\/`)
+					re := regexp.MustCompile(`(?m).*.(\.com|\.net)\/`)
 					baseUrl := re.FindAllString(scene.SceneURL, -1)
 
 					if len(baseUrl) == 0 {
@@ -1336,7 +1345,7 @@ func Migrate() {
 					case "BrasilVR", "POVR Originals", "WankzVR", "herPOVR":
 						scene.TrailerSource = baseUrl[0] + "heresphere/" + id
 					case "Czech VR", "Czech VR Casting", "Czech VR Fetish", "VR Intimacy":
-						var re = regexp.MustCompile(`detail-(\d*)`)
+						re := regexp.MustCompile(`detail-(\d*)`)
 						internalId := re.FindStringSubmatch(scene.SceneURL)
 						if internalId != nil {
 							scene.TrailerSource = baseUrl[0] + "heresphere/videoID" + internalId[1]
@@ -1453,16 +1462,96 @@ func Migrate() {
 					SiteId    string
 					NewPrefix string
 				}
-				//backup bundle
+				// backup bundle
 				common.Log.Infof("Creating pre-migration backup, please waiit, backups can take some time on a system with a large number of scenes ")
 				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, "0", "xbvr-premigration-bundle.json", "2")
 				common.Log.Infof("Go to download/xbvr-premigration-bundle.json, or http://xxx.xxx.xxx.xxx:9999/download/xbvr-premigration-bundle.json if you need access to the backup")
 				var sites []models.Site
 				officalSiteChanges := []SiteChange{
-					{"povr-originals", "povr"}, {"wankzvr", "povr"}, {"milfvr", "povr"}, {"herpovr", "povr"}, {"brasilvr", "povr"}, {"tranzvr", "povr"},
-					{"slr-originals", "slr"}, {"slr-labs", "slr"}, {"slr-jav-originals", "slr"}, {"amateurcouplesvr", "slr"}, {"amateurvr3d", "slr"}, {"amorevr", "slr"}, {"astrodomina", "slr"}, {"blondehexe", "slr"}, {"blush-erotica", "slr"}, {"bravomodelsmedia", "slr"}, {"casanova", "slr"}, {"covert-japan", "slr"}, {"cuties-vr", "slr"}, {"dandy", "slr"}, {"deepinsex", "slr"}, {"deviantsvr", "slr"}, {"ellielouisevr", "slr"}, {"emilybloom", "slr"}, {"erotic-sinners", "slr"}, {"fatp", "slr"}, {"footsiebay", "slr"}, {"fuckpassvr", "slr"}, {"heathering", "slr"}, {"istripper", "slr"}, {"jackandjillvr", "slr"}, {"jimmydraws", "slr"}, {"kinkygirlsberlin", "slr"}, {"kmpvr", "slr"}, {"koalavr", "slr"}, {"lustreality", "slr"}, {"lustyvr", "slr"}, {"manny-s", "slr"}, {"mongercash", "slr"}, {"mugur-porn-vr", "slr"}, {"mutiny-vr", "slr"}, {"no2studiovr", "slr"}, {"noir", "slr"}, {"only3xvr", "slr"}, {"onlytease", "slr"}, {"peeping-thom", "slr"}, {"pervrt", "slr"}, {"petersmax", "slr"}, {"pip-vr", "slr"}, {"plushiesvr", "slr"}, {"povcentralvr", "slr"}, {"ps-porn", "slr"}, {"realhotvr", "slr"}, {"sodcreate", "slr"}, {"squeeze-vr", "slr"}, {"stockingsvr", "slr"}, {"strictlyglamourvr", "slr"}, {"stripzvr", "slr"}, {"suckmevr", "slr"}, {"swallowbay", "slr"}, {"sweetlonglips", "slr"}, {"taboo-vr-porn", "slr"}, {"tadpolexxxstudio", "slr"}, {"thatrandomeditor", "slr"}, {"tmavr", "slr"}, {"v1vr", "slr"}, {"virtualxporn", "slr"}, {"vr-pornnow", "slr"}, {"vredging", "slr"}, {"vrixxens", "slr"}, {"vrlab9division", "slr"}, {"vrmodels", "slr"}, {"vroomed", "slr"}, {"vrpfilms", "slr"}, {"vrpornjack", "slr"}, {"vrsexperts", "slr"}, {"vrsolos", "slr"}, {"vrstars", "slr"}, {"vrvids", "slr"},
-					{"vrphub-vrhush", "vrphub"}, {"vrphub-stripzvr", "vrphub"},
-					{"randysroadstop", "vrporn"}, {"realteensvr", "vrporn"}, {"vrclubz", "vrporn"},
+					{"povr-originals", "povr"},
+					{"wankzvr", "povr"},
+					{"milfvr", "povr"},
+					{"herpovr", "povr"},
+					{"brasilvr", "povr"},
+					{"tranzvr", "povr"},
+					{"slr-originals", "slr"},
+					{"slr-labs", "slr"},
+					{"slr-jav-originals", "slr"},
+					{"amateurcouplesvr", "slr"},
+					{"amateurvr3d", "slr"},
+					{"amorevr", "slr"},
+					{"astrodomina", "slr"},
+					{"blondehexe", "slr"},
+					{"blush-erotica", "slr"},
+					{"bravomodelsmedia", "slr"},
+					{"casanova", "slr"},
+					{"covert-japan", "slr"},
+					{"cuties-vr", "slr"},
+					{"dandy", "slr"},
+					{"deepinsex", "slr"},
+					{"deviantsvr", "slr"},
+					{"ellielouisevr", "slr"},
+					{"emilybloom", "slr"},
+					{"erotic-sinners", "slr"},
+					{"fatp", "slr"},
+					{"footsiebay", "slr"},
+					{"fuckpassvr", "slr"},
+					{"heathering", "slr"},
+					{"istripper", "slr"},
+					{"jackandjillvr", "slr"},
+					{"jimmydraws", "slr"},
+					{"kinkygirlsberlin", "slr"},
+					{"kmpvr", "slr"},
+					{"koalavr", "slr"},
+					{"lustreality", "slr"},
+					{"lustyvr", "slr"},
+					{"manny-s", "slr"},
+					{"mongercash", "slr"},
+					{"mugur-porn-vr", "slr"},
+					{"mutiny-vr", "slr"},
+					{"no2studiovr", "slr"},
+					{"noir", "slr"},
+					{"only3xvr", "slr"},
+					{"onlytease", "slr"},
+					{"peeping-thom", "slr"},
+					{"pervrt", "slr"},
+					{"petersmax", "slr"},
+					{"pip-vr", "slr"},
+					{"plushiesvr", "slr"},
+					{"povcentralvr", "slr"},
+					{"ps-porn", "slr"},
+					{"realhotvr", "slr"},
+					{"sodcreate", "slr"},
+					{"squeeze-vr", "slr"},
+					{"stockingsvr", "slr"},
+					{"strictlyglamourvr", "slr"},
+					{"stripzvr", "slr"},
+					{"suckmevr", "slr"},
+					{"swallowbay", "slr"},
+					{"sweetlonglips", "slr"},
+					{"taboo-vr-porn", "slr"},
+					{"tadpolexxxstudio", "slr"},
+					{"thatrandomeditor", "slr"},
+					{"tmavr", "slr"},
+					{"v1vr", "slr"},
+					{"virtualxporn", "slr"},
+					{"vr-pornnow", "slr"},
+					{"vredging", "slr"},
+					{"vrixxens", "slr"},
+					{"vrlab9division", "slr"},
+					{"vrmodels", "slr"},
+					{"vroomed", "slr"},
+					{"vrpfilms", "slr"},
+					{"vrpornjack", "slr"},
+					{"vrsexperts", "slr"},
+					{"vrsolos", "slr"},
+					{"vrstars", "slr"},
+					{"vrvids", "slr"},
+					{"vrphub-vrhush", "vrphub"},
+					{"vrphub-stripzvr", "vrphub"},
+					{"randysroadstop", "vrporn"},
+					{"realteensvr", "vrporn"},
+					{"vrclubz", "vrporn"},
 				}
 
 				isOfficalSite := func(siteList []SiteChange, siteID string) bool {
@@ -1619,12 +1708,12 @@ func Migrate() {
 			Migrate: func(tx *gorm.DB) error {
 				// new sexbabes scraper does not have filenames, this creates an edit record (if there is not already one)
 				// to reapply the filenames after scraping, so they are not lost
-				sql := `insert into actions (scene_id, action_type, changed_column, new_value) 
+				sql := `insert into actions (scene_id, action_type, changed_column, new_value)
 				select s.scene_id, 'edit', 'filenames_arr', filenames_arr
-				from scenes s 
+				from scenes s
 				left join actions a on a.scene_id = s.scene_id and a.changed_column = 'filenames_arr'
-				where s.scene_id like 'sexbab%' 
-				and a.scene_id is null  
+				where s.scene_id like 'sexbab%'
+				and a.scene_id is null
 				and filenames_arr <> 'null'
 				`
 				return tx.Exec(sql).Error

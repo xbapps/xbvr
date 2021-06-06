@@ -503,6 +503,11 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 	if r.List == "is_hidden" {
 		scene.IsHidden = !scene.IsHidden
 	}
+
+	if r.List == "wishlist" && !scene.IsAvailable {
+		scene.Wishlist = !scene.Wishlist
+	}
+
 	scene.Save()
 }
 
