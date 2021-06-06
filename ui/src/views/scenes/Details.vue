@@ -69,6 +69,7 @@
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
+                      <wishlist-button v-if="!item.is_available" :item="item"/>&nbsp;
                       <edit-button :item="item"/>
                     </div>
                   </div>
@@ -206,11 +207,12 @@ import GlobalEvents from 'vue-global-events'
 import StarRating from 'vue-star-rating'
 import FavouriteButton from '../../components/FavouriteButton'
 import WatchlistButton from '../../components/WatchlistButton'
+import WishlistButton from '../../components/WishlistButton'
 import EditButton from '../../components/EditButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WishlistButton, EditButton },
   data () {
     return {
       index: 1,

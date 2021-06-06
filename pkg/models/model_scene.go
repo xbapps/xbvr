@@ -77,6 +77,7 @@ type Scene struct {
 	StarRating     float64         `json:"star_rating"`
 	Favourite      bool            `json:"favourite" gorm:"default:false"`
 	Watchlist      bool            `json:"watchlist" gorm:"default:false"`
+	Wishlist       bool            `json:"wishlist" gorm:"default:false"`
 	IsAvailable    bool            `json:"is_available" gorm:"default:false"`
 	IsAccessible   bool            `json:"is_accessible" gorm:"default:false"`
 	IsWatched      bool            `json:"is_watched" gorm:"default:false"`
@@ -296,6 +297,7 @@ func (o *Scene) UpdateStatus() {
 
 		if videos > 0 && o.IsAvailable == false {
 			o.IsAvailable = true
+			o.Wishlist = false
 			changed = true
 		}
 
@@ -505,6 +507,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		}
 		if i.OrElse("") == "favourite" {
 			tx = tx.Where("favourite = ?", true)
+		}
+		if i.OrElse("") == "wishlist" {
+			tx = tx.Where("wishlist = ?", true)
 		}
 		if i.OrElse("") == "scripted" {
 			tx = tx.Where("is_scripted = ?", true)
