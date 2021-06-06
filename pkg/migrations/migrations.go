@@ -468,6 +468,15 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0026-scene-has-intro-length",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					IntroLength float64 `json:"intro_length" gorm:"default:0.0"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

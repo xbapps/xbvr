@@ -136,6 +136,11 @@ func ReapplyEdits() {
 			}
 			continue
 		}
+		if a.ChangedColumn == "intro_length" {
+			val, _ := strconv.ParseFloat(a.NewValue, 64)
+			db.Model(&scene).Update(a.ChangedColumn, val)
+			continue
+		}
 		// Reapply other edits
 		db.Model(&scene).Update(a.ChangedColumn, a.NewValue)
 		if a.ChangedColumn == "release_date_text" {

@@ -81,6 +81,7 @@ type Scene struct {
 	IsAccessible   bool            `json:"is_accessible" gorm:"default:false"`
 	IsWatched      bool            `json:"is_watched" gorm:"default:false"`
 	IsScripted     bool            `json:"is_scripted" gorm:"default:false"`
+	IntroLength    float64         `json:"intro_length" gorm:"default:0.0"`
 	Cuepoints      []SceneCuepoint `json:"cuepoints"`
 	History        []History       `json:"history"`
 	AddedDate      time.Time       `json:"added_date"`
@@ -89,7 +90,6 @@ type Scene struct {
 	TotalWatchTime int             `json:"total_watch_time" gorm:"default:0"`
 
 	HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
-	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
 
 	NeedsUpdate bool `json:"needs_update"`
 
@@ -362,6 +362,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	if ext.Covers != nil {
 		o.CoverURL = ext.Covers[0]
 	}
+	o.IntroLength = ext.IntroLength
 	o.SceneURL = ext.HomepageURL
 
 	if ext.Released != "" {

@@ -142,6 +142,17 @@
                     </div>
                     <div class="content cuepoint-list">
                       <ul>
+                        <li>
+                          <b-field>
+                            <b-numberinput v-model="introLength" min="0" step="0.1" size="is-small" expanded :controls="false" />
+                            <div class="control">
+                              <b-button @click="updateIntroLength" icon-pack="fas" icon-left="save" size="is-small" type="is-dark" outlined title="Save intro length" />
+                            </div>
+                            <div class="control cuepoint-intro">
+                              - <a @click="playCuepoint({ time_start: introLength })"><strong>intro</strong></a>
+                            </div>
+                          </b-field>
+                        </li>
                         <li v-for="(c, idx) in sortedCuepoints" :key="idx">
                           <code>{{ humanizeSeconds(c.time_start) }}</code> -
                           <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
@@ -218,6 +229,7 @@ export default {
       tagPosition: '',
       cuepointPositionTags: ['', 'standing', 'sitting', 'laying', 'kneeling'],
       cuepointActTags: ['', 'handjob', 'blowjob', 'doggy', 'cowgirl', 'revcowgirl', 'missionary', 'titfuck', 'anal', 'cumshot', '69', 'facesit'],
+      introLength: this.$store.state.overlay.details.scene.intro_length,
       carouselSlide: 0
     }
   },
@@ -367,10 +379,10 @@ export default {
     selectScript (file) {
       ky.post(`/api/scene/selectscript/${this.item.id}`, {
         json: {
-          file_id: file.id,
+          file_id: file.id
         }
       }).json().then(data => {
-          this.$store.commit('overlay/showDetails', { scene: data })
+        this.$store.commit('overlay/showDetails', { scene: data })
       })
     },
     getImageURL (u, size) {
@@ -412,6 +424,17 @@ export default {
         }
       }).json().then(data => {
         this.$store.commit('overlay/showDetails', { scene: data })
+        this.$store.commit('sceneList/updateScene', data)
+      })
+    },
+    updateIntroLength () {
+      ky.post(`/api/scene/intro/${this.item.id}`, {
+        json: {
+          intro_length: this.introLength
+        }
+      }).json().then(data => {
+        this.$store.commit('overlay/showDetails', { scene: data })
+        this.$store.commit('sceneList/updateScene', data)
       })
     },
     deleteCuepoint (cuepoint) {
@@ -572,6 +595,7 @@ span.is-active img {
   color: #b0b0b0;
 }
 
+.cuepoint-intro,
 .cuepoint-list li > button {
   margin-left: 7px;
 }
