@@ -86,8 +86,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			cast := jsonResult["actors"].([]interface{})
 			for _, v := range cast {
 				m := v.(map[string]interface{})
-				path := m["url"].(string)
-				tmpCast = append(tmpCast, URL+path[1:])
+				tmpCast = append(tmpCast, e.Request.AbsoluteURL(m["url"].(string)))
 			}
 		})
 
