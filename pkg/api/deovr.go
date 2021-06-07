@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -300,7 +301,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 					Height:     height,
 					Width:      width,
 					Size:       file.Size,
-					URL:        fmt.Sprintf("%v/api/dms/file/%v%v", session.DeoRequestHost, file.ID, dnt),
+					URL:        fmt.Sprintf("%v/api/dms/file/%v/%v%v", session.DeoRequestHost, file.ID, scene.GetFunscriptTitle(), dnt),
 				},
 			},
 		})
@@ -315,6 +316,9 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 			Name: scene.Cuepoints[i].Name,
 		})
 	}
+	sort.Slice(cuepoints, func(i, j int) bool {
+		return cuepoints[i].TS < cuepoints[j].TS
+	})
 
 	if videoFiles[0].VideoProjection == "mkx200" ||
 		videoFiles[0].VideoProjection == "mkx220" ||
@@ -333,10 +337,16 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		screenType = "sphere"
 	}
 
+	var title = scene.Title
+
+	if scene.IsScripted {
+		title = scene.GetFunscriptTitle()
+	}
+
 	deoScene := DeoScene{
 		ID:             scene.ID,
 		Authorized:     1,
-		Title:          scene.Title,
+		Title:          title,
 		Description:    scene.Synopsis,
 		Actors:         actors,
 		Paysite:        DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
@@ -396,6 +406,7 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	db.Model(&unmatched).
 		Preload("Volume").
 		Where("files.scene_id = 0").
+		Where("files.type = 'video'").
 		Order("created_time desc").
 		Find(&unmatched)
 
@@ -445,7 +456,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 			Title:        files[i].Filename,
 			VideoLength:  int(files[i].VideoDuration),
 			ThumbnailURL: session.DeoRequestHost + "/ui/images/blank.png",
-			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v%v", session.DeoRequestHost, files[i].ID, dnt),
+			VideoURL:     fmt.Sprintf("%v/deovr/file/%v%v", session.DeoRequestHost, files[i].ID, dnt),
 		}
 		list = append(list, item)
 	}

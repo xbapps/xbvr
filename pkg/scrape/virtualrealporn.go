@@ -86,7 +86,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			cast := jsonResult["actors"].([]interface{})
 			for _, v := range cast {
 				m := v.(map[string]interface{})
-				tmpCast = append(tmpCast, m["url"].(string))
+				tmpCast = append(tmpCast, e.Request.AbsoluteURL(m["url"].(string)))
 			}
 		})
 
@@ -169,7 +169,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		var name string
 		e.ForEach(`h1.model-title`, func(id int, e *colly.HTMLElement) {
-			name = strings.Split(e.Text, " (")[0]
+			name = strings.TrimSpace(strings.Split(e.Text, " (")[0])
 		})
 
 		var gender string

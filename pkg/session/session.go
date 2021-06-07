@@ -31,6 +31,10 @@ var (
 
 var currentSessionHeatmap []int
 
+func HasActiveSession() bool {
+	return lastSessionID != 0
+}
+
 func TrackSessionFromFile(f models.File, doNotTrack string) {
 	sessionSource = "file"
 
@@ -92,7 +96,7 @@ func TrackSessionFromRemote(packet DeoPacket) {
 		lastSessionEnd = time.Now()
 
 		position := int(packet.CurrentTime)
-		if position != 0 && len(currentSessionHeatmap) >= position {
+		if position > 0 && position < len(currentSessionHeatmap) {
 			currentSessionHeatmap[position] = currentSessionHeatmap[position] + 1
 		}
 	}
@@ -106,7 +110,7 @@ func CheckForDeadSession() {
 		timeout = 5
 	}
 
-	if time.Since(lastSessionEnd).Seconds() > timeout && lastSessionSceneID != 0 && lastSessionID != 0 {
+	if time.Since(lastSessionEnd).Seconds() > timeout && lastSessionSceneID != 0 && HasActiveSession() {
 		watchSessionFlush()
 		lastSessionID = 0
 		lastSessionSceneID = 0
@@ -114,7 +118,7 @@ func CheckForDeadSession() {
 }
 
 func newWatchSession(sceneID uint) {
-	if lastSessionID != 0 {
+	if HasActiveSession() {
 		watchSessionFlush()
 	}
 

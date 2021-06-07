@@ -80,6 +80,8 @@ export default {
   data () {
     return {
       data: [],
+      dataNumRequests: 0,
+      dataNumResponses: 0,
       selected: null,
       isFetching: false
     }
@@ -88,8 +90,13 @@ export default {
     format,
     parseISO,
     getAsyncData: async function (query) {
+      const requestIndex = this.dataNumRequests
+      this.dataNumRequests = this.dataNumRequests + 1
+
       if (!query.length) {
         this.data = []
+        this.dataNumResponses = requestIndex + 1
+        this.isFetching = false
         return
       }
 
@@ -101,12 +108,18 @@ export default {
         }
       }).json()
 
-      this.isFetching = false
 
-      if (resp.results > 0) {
-        this.data = resp.scenes
-      } else {
-        this.data = []
+      if (requestIndex >= this.dataNumResponses) {
+        this.dataNumResponses = requestIndex + 1
+        if (this.dataNumResponses === this.dataNumRequests) {
+          this.isFetching = false
+        }
+
+        if (resp.results > 0) {
+          this.data = resp.scenes
+        } else {
+          this.data = []
+        }
       }
     },
     getImageURL (u) {

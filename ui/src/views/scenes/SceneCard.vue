@@ -14,10 +14,11 @@
             </b-tag>
             <b-tag type="is-info" v-if="videoFilesCount > 1 && !item.is_multipart">
               <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
-              {{item.file.length}}
+              {{videoFilesCount}}
             </b-tag>
             <b-tag type="is-info" v-if="item.is_scripted">
               <b-icon pack="mdi" icon="pulse" size="is-small"/>
+              <span v-if="scriptFilesCount > 1">{{scriptFilesCount}}</span>
             </b-tag>
             <b-tag type="is-warning" v-if="item.star_rating > 0">
               <b-icon pack="mdi" icon="star" size="is-small"/>
@@ -35,7 +36,7 @@
       <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
-        <a :href="item.scene_url" target="_blank">{{item.site}}</a><br/>
+        <a :href="item.scene_url" target="_blank" rel="noreferrer">{{item.site}}</a><br/>
         <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
         </span>
@@ -66,6 +67,15 @@ export default {
       let count = 0
       this.item.file.forEach(obj => {
         if (obj.type === 'video') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    scriptFilesCount () {
+      let count = 0
+      this.item.file.forEach(obj => {
+        if (obj.type === 'script') {
           count = count + 1
         }
       })

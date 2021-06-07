@@ -94,9 +94,12 @@
                                 v-show="f.type === 'video'">
                           <b-icon pack="fas" icon="play" size="is-small"></b-icon>
                         </button>
-                        <button rounded class="button is-info is-small is-outlined" v-show="f.type === 'script'">
+                        <b-tooltip :label="$t('Select this script for export')" position="is-right">
+                        <button rounded class="button is-info is-small is-outlined" @click='selectScript(f)'
+                          v-show="f.type === 'script'" v-bind:class="{ 'is-success': f.is_selected_script, 'is-info' :!f.is_selected_script }">
                           <b-icon pack="mdi" icon="pulse"></b-icon>
                         </button>
+                        </b-tooltip>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
                         <strong>{{ f.filename }}</strong><br/>
@@ -137,11 +140,14 @@
                         <b-button @click="addCuepoint">Add cuepoint</b-button>
                       </b-field>
                     </div>
-                    <div class="content is-small">
+                    <div class="content cuepoint-list">
                       <ul>
                         <li v-for="(c, idx) in sortedCuepoints" :key="idx">
                           <code>{{ humanizeSeconds(c.time_start) }}</code> -
                           <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
+                          <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(c)" title="Delete cuepoint">
+                            <b-icon pack="fas" icon="trash" />
+                          </button>
                         </li>
                       </ul>
                     </div>
@@ -189,7 +195,7 @@
 <script>
 import ky from 'ky'
 import videojs from 'video.js'
-import vr from 'videojs-vr/dist/videojs-vr.min.js'
+import 'videojs-vr/dist/videojs-vr.min.js'
 import { format, formatDistance, parseISO } from 'date-fns'
 import prettyBytes from 'pretty-bytes'
 import VueLoadImage from 'vue-load-image'
@@ -301,7 +307,7 @@ export default {
     updatePlayer (src, projection) {
       this.player.reset()
 
-      const vr = this.player.vr({
+      /* const vr = */ this.player.vr({
         projection: projection,
         forceCardboard: false
       })
@@ -310,7 +316,9 @@ export default {
         // vr.camera.position.set(-1, 0, 2);
       })
 
-      this.player.src({ src: src, type: 'video/mp4' })
+      if (src) {
+        this.player.src({ src: src, type: 'video/mp4' })
+      }
       this.player.poster(this.getImageURL(this.item.cover_url, ''))
     },
     showCastScenes (actor) {
@@ -356,6 +364,15 @@ export default {
         }
       })
     },
+    selectScript (file) {
+      ky.post(`/api/scene/selectscript/${this.item.id}`, {
+        json: {
+          file_id: file.id,
+        }
+      }).json().then(data => {
+          this.$store.commit('overlay/showDetails', { scene: data })
+      })
+    },
     getImageURL (u, size) {
       if (u.startsWith('http') || u.startsWith('https')) {
         return '/img/' + size + '/' + u.replace('://', ':/')
@@ -367,7 +384,7 @@ export default {
       if (this.images[idx] !== undefined) {
         return this.getImageURL(this.images[idx].url, 'x40')
       } else {
-        return ''
+        return '/ui/images/blank.png'
       }
     },
     getHeatmapURL (fileId) {
@@ -388,7 +405,7 @@ export default {
       if (this.tagPosition !== '' && this.tagAct !== '') {
         name = `${this.tagPosition}-${this.tagAct}`
       }
-      ky.post(`/api/scene/cuepoint/${this.item.id}`, {
+      ky.post(`/api/scene/${this.item.id}/cuepoint`, {
         json: {
           name: name,
           time_start: this.player.currentTime()
@@ -396,6 +413,12 @@ export default {
       }).json().then(data => {
         this.$store.commit('overlay/showDetails', { scene: data })
       })
+    },
+    deleteCuepoint (cuepoint) {
+      ky.delete(`/api/scene/${this.item.id}/cuepoint/${cuepoint.id}`)
+        .json().then(data => {
+          this.$store.commit('overlay/showDetails', { scene: data })
+        })
     },
     close () {
       this.player.dispose()
@@ -415,14 +438,18 @@ export default {
       const data = this.$store.getters['sceneList/nextScene'](this.item)
       if (data !== null) {
         this.$store.commit('overlay/showDetails', { scene: data })
-        this.updatePlayer('180')
+        this.activeMedia = 0
+        this.carouselSlide = 0
+        this.updatePlayer(undefined, '180')
       }
     },
     prevScene () {
       const data = this.$store.getters['sceneList/prevScene'](this.item)
       if (data !== null) {
         this.$store.commit('overlay/showDetails', { scene: data })
-        this.updatePlayer('180')
+        this.activeMedia = 0
+        this.carouselSlide = 0
+        this.updatePlayer(undefined, '180')
       }
     },
     playerStepBack () {
@@ -543,6 +570,10 @@ span.is-active img {
 
 .pathDetails {
   color: #b0b0b0;
+}
+
+.cuepoint-list li > button {
+  margin-left: 7px;
 }
 
 .heatmapFunscript {

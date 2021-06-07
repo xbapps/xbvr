@@ -20,7 +20,7 @@ type SceneIndexed struct {
 	Fulltext string `json:"fulltext"`
 }
 
-func NewIndex(name string) *Index {
+func NewIndex(name string) (*Index, error) {
 	i := new(Index)
 
 	path := filepath.Join(common.IndexDirV2, name)
@@ -30,9 +30,12 @@ func NewIndex(name string) *Index {
 	if err != nil && err == bleve.ErrorIndexPathExists {
 		idx, err = bleve.Open(path)
 	}
+	if err != nil {
+		return nil, err
+	}
 
 	i.Bleve = idx
-	return i
+	return i, nil
 }
 
 func (i *Index) Exist(id string) bool {
@@ -67,7 +70,12 @@ func SearchIndex() {
 
 		tlog := log.WithFields(logrus.Fields{"task": "scrape"})
 
-		idx := NewIndex("scenes")
+		idx, err := NewIndex("scenes")
+		if err != nil {
+			log.Error(err)
+			models.RemoveLock("index")
+			return
+		}
 
 		db, _ := models.GetDB()
 		defer db.Close()

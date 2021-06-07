@@ -28,6 +28,10 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
+		if e.ChildAttr(`link[rel=shortlink]`, "href") == "" {
+			log.Printf("Skipping %s because it is not a valid scene.", e.Request.URL.String())
+			return
+		}
 		// Scene ID - get from URL
 		sc.SiteID = strings.Split(e.ChildAttr(`link[rel=shortlink]`, "href"), "?p=")[1]
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
@@ -63,7 +67,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 				baseName = strings.Replace(baseName, "vrbtrans_", "VRBTRANS_", -1)
 				baseName = strings.Replace(baseName, "vrbgay_", "VRBGAY_", -1)
 
-				filenames := []string{"6K_180x180_3dh", "5K_180x180_3dh", "4K_180x180_3dh", "HD_180x180_3dh", "HQ_180x180_3dh", "PSVRHQ_180x180_3dh", "UHD_180x180_3dh", "PSVRHQ_180_sbs", "PSVR_mono", "HQ_mono360", "HD_mono360", "PSVRHQ_ou", "UHD_3dv", "HD_3dv", "HQ_3dv"}
+				filenames := []string{"8K_180x180_3dh", "6K_180x180_3dh", "5K_180x180_3dh", "4K_180x180_3dh", "HD_180x180_3dh", "HQ_180x180_3dh", "PSVRHQ_180x180_3dh", "UHD_180x180_3dh", "PSVRHQ_180_sbs", "PSVR_mono", "HQ_mono360", "HD_mono360", "PSVRHQ_ou", "UHD_3dv", "HD_3dv", "HQ_3dv"}
 
 				for i := range filenames {
 					filenames[i] = baseName + "_" + filenames[i] + ".mp4"
