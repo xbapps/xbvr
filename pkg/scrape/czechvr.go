@@ -14,8 +14,6 @@ import (
 
 func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, nwID string) error {
 	defer wg.Done()
-	//	scraperID := "czechvr"
-	//	siteID := "CzechVR"
 	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("www.czechvrnetwork.com")
@@ -38,6 +36,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 		})
 
+		// Covers
 		e.ForEach(`div.post dl8-video`, func(id int, e *colly.HTMLElement) {
 			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("poster")))
 		})
