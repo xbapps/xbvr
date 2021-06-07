@@ -183,6 +183,7 @@
           </div>
         </div>
       </section>
+      <div class="scene-id">{{ item.scene_id }}</div>
     </div>
     <button class="modal-close is-large" aria-label="close" @click="close()"></button>
     <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"
@@ -537,6 +538,14 @@ export default {
 }
 
 .block-opts {
+}
+
+.scene-id {
+  position: absolute;
+  right:10px;
+  bottom: 5px;
+  font-size: 11px;
+  color: #b0b0b0;
 }
 
 .prev, .next {
