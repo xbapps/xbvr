@@ -18,6 +18,7 @@ require (
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
 	github.com/creasty/defaults v1.5.1
 	github.com/darwayne/go-timecode v1.1.0
+	github.com/disintegration/imaging v1.6.0
 	github.com/djherbis/times v1.2.0
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.0

@@ -131,6 +131,8 @@ func StartServer(version, commit, branch, date string) {
 	p := imageproxy.NewProxy(nil, diskCache(filepath.Join(common.AppDir, "imageproxy")))
 	p.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
 	r.PathPrefix("/img/").Handler(http.StripPrefix("/img", p))
+	hmp := NewHeatmapThumbnailProxy(p, diskCache(filepath.Join(common.AppDir, "heatmapthumbnailproxy")))
+	r.PathPrefix("/imghm/").Handler(http.StripPrefix("/imghm", hmp))
 	r.SkipClean(true)
 
 	r.PathPrefix("/").Handler(http.DefaultServeMux)

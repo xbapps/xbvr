@@ -337,10 +337,14 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		screenType = "sphere"
 	}
 
-	var title = scene.Title
+	title := scene.Title
+	thumbnailURL := session.DeoRequestHost + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 
 	if scene.IsScripted {
 		title = scene.GetFunscriptTitle()
+		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
+			thumbnailURL = session.DeoRequestHost + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
+		}
 	}
 
 	deoScene := DeoScene{
@@ -354,7 +358,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		RatingAvg:      scene.StarRating,
 		FullVideoReady: true,
 		FullAccess:     true,
-		ThumbnailURL:   session.DeoRequestHost + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1),
+		ThumbnailURL:   thumbnailURL,
 		StereoMode:     stereoMode,
 		Is3D:           true,
 		ScreenType:     screenType,
@@ -426,10 +430,16 @@ func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem 
 
 	list := make([]DeoListItem, 0)
 	for i := range scenes {
+		thumbnailURL := fmt.Sprintf("%v/img/700x/%v", session.DeoRequestHost, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
+
+		if config.Config.Interfaces.DeoVR.RenderHeatmaps && scenes[i].IsScripted {
+			thumbnailURL = fmt.Sprintf("%v/imghm/%d/%v", session.DeoRequestHost, scenes[i].ID, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
+		}
+
 		item := DeoListItem{
 			Title:        scenes[i].Title,
 			VideoLength:  scenes[i].Duration * 60,
-			ThumbnailURL: fmt.Sprintf("%v/img/700x/%v", session.DeoRequestHost, strings.Replace(scenes[i].CoverURL, "://", ":/", -1)),
+			ThumbnailURL: thumbnailURL,
 			VideoURL:     fmt.Sprintf("%v/deovr/%v", session.DeoRequestHost, scenes[i].ID),
 		}
 		list = append(list, item)

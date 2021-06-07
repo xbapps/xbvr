@@ -13,6 +13,7 @@ import (
 	"sort"
 
 	"github.com/lucasb-eyer/go-colorful"
+	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -45,7 +46,7 @@ type GradientTable []struct {
 	Pos float64
 }
 
-func GenerateHeatmaps() {
+func GenerateHeatmaps(tlog *logrus.Entry) {
 	if !models.CheckLock("heatmaps") {
 		models.CreateLock("heatmaps")
 
@@ -55,7 +56,10 @@ func GenerateHeatmaps() {
 		var scriptfiles []models.File
 		db.Model(&models.File{}).Preload("Volume").Where("type = ?", "script").Where("has_heatmap = ?", false).Find(&scriptfiles)
 
-		for _, file := range scriptfiles {
+		for i, file := range scriptfiles {
+			if tlog != nil && (i%50) == 0 {
+				tlog.Infof("Generating heatmaps (%v/%v)", i+1, len(scriptfiles))
+			}
 			if file.Exists() {
 				log.Infof("Rendering %v", file.Filename)
 				destFile := filepath.Join(common.ScriptHeatmapDir, fmt.Sprintf("heatmap-%d.png", file.ID))
@@ -79,23 +83,49 @@ func GenerateHeatmaps() {
 	models.RemoveLock("heatmaps")
 }
 
-func RenderHeatmap(inputFile string, destFile string, width, height, numSegments int) error {
-	data, err := ioutil.ReadFile(inputFile)
+func LoadFunscriptData(path string) (Script, error) {
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return err
+		return Script{}, err
 	}
 
 	var funscript Script
-	json.Unmarshal(data, &funscript)
+	err = json.Unmarshal(data, &funscript)
+	if err != nil {
+		return Script{}, err
+	}
+
+	if funscript.Actions == nil {
+		return Script{}, fmt.Errorf("actions list missing in %s", path)
+	}
+
 	sort.SliceStable(funscript.Actions, func(i, j int) bool { return funscript.Actions[i].At < funscript.Actions[j].At })
 
-	funscript.UpdateIntesity()
+	return funscript, nil
+}
+
+func RenderHeatmap(inputFile string, destFile string, width, height, numSegments int) error {
+
+	funscript, err := LoadFunscriptData(inputFile)
+
+	funscript.UpdateIntensity()
 	gradient := funscript.getGradientTable(numSegments)
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	for x := 0; x < width; x++ {
 		c := gradient.GetInterpolatedColorFor(float64(x) / float64(width))
 		draw.Draw(img, image.Rect(x, 0, x+1, height), &image.Uniform{c}, image.Point{}, draw.Src)
+	}
+
+	// add 10 minute marks
+	maxts := funscript.Actions[len(funscript.Actions)-1].At
+	const tick = 600000
+	var ts int64 = tick
+	c, _ := colorful.Hex("#000000")
+	for ts < maxts {
+		x := int(float64(ts) / float64(maxts) * float64(width))
+		draw.Draw(img, image.Rect(x-1, height/2, x+1, height), &image.Uniform{c}, image.Point{}, draw.Src)
+		ts += tick
 	}
 
 	outpng, err := os.Create(destFile)
@@ -123,7 +153,7 @@ func (gt GradientTable) GetInterpolatedColorFor(t float64) colorful.Color {
 	return gt[len(gt)-1].Col
 }
 
-func (funscript Script) UpdateIntesity() {
+func (funscript Script) UpdateIntensity() {
 
 	var t1, t2 int64
 	var p1, p2 int
@@ -186,12 +216,7 @@ func (funscript Script) getGradientTable(numSegments int) GradientTable {
 	}, numSegments)
 	gradient := make(GradientTable, numSegments)
 
-	var maxts int64 = 0
-	for _, a := range funscript.Actions {
-		if a.At > maxts {
-			maxts = a.At
-		}
-	}
+	maxts := funscript.Actions[len(funscript.Actions)-1].At
 
 	for _, a := range funscript.Actions {
 		segment := int(float64(a.At) / float64(maxts+1) * float64(numSegments))
@@ -209,4 +234,15 @@ func (funscript Script) getGradientTable(numSegments int) GradientTable {
 	}
 
 	return gradient
+}
+
+func getFunscriptDuration(path string) (float64, error) {
+	funscript, err := LoadFunscriptData(path)
+	if err != nil {
+		return 0.0, err
+	}
+
+	maxts := funscript.Actions[len(funscript.Actions)-1].At
+
+	return float64(maxts) / 1000.0, nil
 }
