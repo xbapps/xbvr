@@ -468,6 +468,26 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0026-playlist-set-lists",
+			Migrate: func(tx *gorm.DB) error {
+				var playlists []models.Playlist
+				db.Find(&playlists)
+				for _, playlist := range playlists {
+					if playlist.IsSystem {
+						var jsonResult RequestSceneList
+						json.Unmarshal([]byte(playlist.SearchParams), &jsonResult)
+
+						if jsonResult.Lists == nil {
+							jsonResult.Lists = []optional.String{}
+							playlist.SearchParams = jsonResult.ToJSON()
+							playlist.Save()
+						}
+					}
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
