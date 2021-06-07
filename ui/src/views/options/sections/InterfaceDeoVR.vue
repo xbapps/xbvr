@@ -38,8 +38,8 @@
                 </b-field>
                 <p>
                   To use remote mode, which enables more precise watch time tracking, you need to turn it on in DeoVR
-                  settings too - see <a href="https://deovr.com/doc#remote-control" target="_blank">instructions in
-                  DeoVR documentation</a>.
+                  settings too - see <a href="https://deovr.com/doc#remote-control" target="_blank" rel="noreferrer">
+                  instructions in DeoVR documentation</a>.
                 </p>
               </div>
             </div>
