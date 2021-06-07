@@ -67,7 +67,7 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		e.ForEach(`.vid_infos .vid_info_content a`, func(id int, e *colly.HTMLElement) {
 			if e.Attr("rel") == "tag" {
 				sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
-				} else {
+			} else {
 				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 			}
 		})
