@@ -361,7 +361,7 @@ func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Resp
 		SiteName string `json:"site_name"`
 	}
 
-	SNSuffix := strings.NewReplacer(" (SLR)", "", " (VRPorn)", "", " (POVR)", "", " (all sites)", "")
+	SNSuffix := strings.NewReplacer(" (SLR)", "", " (VRPorn)", "", " (POVR)", "")
 
 	if err := req.ReadEntity(&r); err != nil {
 		APIError(req, resp, http.StatusInternalServerError, err)
@@ -382,7 +382,7 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 		SiteName string `json:"site_name"`
 	}
 
-	SNSuffix := strings.NewReplacer(" (SLR)", "", " (VRPorn)", "", " (POVR)", "", " (all sites)", "")
+	SNSuffix := strings.NewReplacer(" (SLR)", "", " (VRPorn)", "", " (POVR)", "")
 
 	if err := req.ReadEntity(&r); err != nil {
 		APIError(req, resp, http.StatusInternalServerError, err)
