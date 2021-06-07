@@ -34,7 +34,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		// Title
 		e.ForEach(`h4.title`, func(id int, e *colly.HTMLElement) {
 			// 7K Maid For Play
-			sc.Title = strings.Split(e.Text, "K")[1]
+			sc.Title = e.Text[strings.Index(e.Text, "K")+1:]
 		})
 
 		// Date & Duration
