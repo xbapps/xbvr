@@ -48,7 +48,7 @@
                 <b-button v-else disabled>{{ $t('Match') }}</b-button>
               </div>
             </b-table-column>
-            <b-table-column style="white-space: nowrap;">
+            <b-table-column style="white-space: nowrap;" v-slot="props">
               <button class="button is-danger is-outlined" @click='removeFile(props.row)' title='Delete file from disk'>
                 <b-icon pack="fas" icon="trash"></b-icon>
               </button>
