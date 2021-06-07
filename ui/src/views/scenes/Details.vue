@@ -57,13 +57,15 @@
                   <span v-else class="missing">(no title)</span>
                   <small class="is-pulled-right">{{ format(parseISO(item.release_date), "yyyy-MM-dd") }}</small>
                 </h3>
-                <small>{{ item.site }}</small>
-                <div class="columns">
-                  <div class="column">
+                <small>
+                  <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>
+                </small>
+                <div class="columns mt-0">
+                  <div class="column pt-0">
                     <star-rating :key="item.id" :rating="item.star_rating" @rating-selected="setRating"
                                  :increment="0.5" :star-size="20"/>
                   </div>
-                  <div class="column">
+                  <div class="column pt-0">
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
@@ -140,11 +142,14 @@
                         <b-button @click="addCuepoint">Add cuepoint</b-button>
                       </b-field>
                     </div>
-                    <div class="content is-small">
+                    <div class="content cuepoint-list">
                       <ul>
                         <li v-for="(c, idx) in sortedCuepoints" :key="idx">
                           <code>{{ humanizeSeconds(c.time_start) }}</code> -
                           <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
+                          <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(c)" title="Delete cuepoint">
+                            <b-icon pack="fas" icon="trash" />
+                          </button>
                         </li>
                       </ul>
                     </div>
@@ -180,6 +185,7 @@
           </div>
         </div>
       </section>
+      <div class="scene-id">{{ item.scene_id }}</div>
     </div>
     <button class="modal-close is-large" aria-label="close" @click="close()"></button>
     <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"
@@ -192,7 +198,7 @@
 <script>
 import ky from 'ky'
 import videojs from 'video.js'
-import vr from 'videojs-vr/dist/videojs-vr.min.js'
+import 'videojs-vr/dist/videojs-vr.min.js'
 import { format, formatDistance, parseISO } from 'date-fns'
 import prettyBytes from 'pretty-bytes'
 import VueLoadImage from 'vue-load-image'
@@ -304,7 +310,7 @@ export default {
     updatePlayer (src, projection) {
       this.player.reset()
 
-      const vr = this.player.vr({
+      /* const vr = */ this.player.vr({
         projection: projection,
         forceCardboard: false
       })
@@ -402,7 +408,7 @@ export default {
       if (this.tagPosition !== '' && this.tagAct !== '') {
         name = `${this.tagPosition}-${this.tagAct}`
       }
-      ky.post(`/api/scene/cuepoint/${this.item.id}`, {
+      ky.post(`/api/scene/${this.item.id}/cuepoint`, {
         json: {
           name: name,
           time_start: this.player.currentTime()
@@ -410,6 +416,12 @@ export default {
       }).json().then(data => {
         this.$store.commit('overlay/showDetails', { scene: data })
       })
+    },
+    deleteCuepoint (cuepoint) {
+      ky.delete(`/api/scene/${this.item.id}/cuepoint/${cuepoint.id}`)
+        .json().then(data => {
+          this.$store.commit('overlay/showDetails', { scene: data })
+        })
     },
     close () {
       this.player.dispose()
@@ -530,6 +542,14 @@ export default {
 .block-opts {
 }
 
+.scene-id {
+  position: absolute;
+  right:10px;
+  bottom: 5px;
+  font-size: 11px;
+  color: #b0b0b0;
+}
+
 .prev, .next {
   cursor: pointer;
   position: absolute;
@@ -561,6 +581,10 @@ span.is-active img {
 
 .pathDetails {
   color: #b0b0b0;
+}
+
+.cuepoint-list li > button {
+  margin-left: 7px;
 }
 
 .heatmapFunscript {

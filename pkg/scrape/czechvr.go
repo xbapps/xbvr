@@ -64,7 +64,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		})
 
 		// Cast
-		e.ForEach(`div.post div.featuring a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.featuring > a`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 

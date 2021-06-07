@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -315,6 +316,9 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 			Name: scene.Cuepoints[i].Name,
 		})
 	}
+	sort.Slice(cuepoints, func(i, j int) bool {
+		return cuepoints[i].TS < cuepoints[j].TS
+	})
 
 	if videoFiles[0].VideoProjection == "mkx200" ||
 		videoFiles[0].VideoProjection == "mkx220" ||
@@ -406,6 +410,7 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	db.Model(&unmatched).
 		Preload("Volume").
 		Where("files.scene_id = 0").
+		Where("files.type = 'video'").
 		Order("created_time desc").
 		Find(&unmatched)
 

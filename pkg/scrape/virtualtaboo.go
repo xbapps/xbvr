@@ -60,7 +60,7 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		})
 
 		// Synopsis
-		e.ForEach(`div.description span.full`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.video-detail div.description`, func(id int, e *colly.HTMLElement) {
 			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
