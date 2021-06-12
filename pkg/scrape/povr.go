@@ -32,7 +32,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		sc.SceneID = slugify.Slugify(scraperID) + "-" + sc.SiteID
 
 		// Title
-		e.ForEach(`h4.title`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`h1.title`, func(id int, e *colly.HTMLElement) {
 			// 7K Maid For Play
 			sc.Title = e.Text[strings.Index(e.Text, "K")+1:]
 		})
