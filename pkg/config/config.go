@@ -35,6 +35,7 @@ type ObjectConfig struct {
 			RemoteEnabled  bool   `default:"false" json:"remote_enabled"`
 			Username       string `default:"" json:"username"`
 			Password       string `default:"" json:"password"`
+			TitleFormat    string `default:"{{.Title}}" json:"title_format"`
 		} `json:"deovr"`
 	} `json:"interfaces"`
 	Library struct {

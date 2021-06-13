@@ -53,6 +53,19 @@
                   instructions in DeoVR documentation</a>.
                 </p>
               </div>
+              <hr/>
+              <div class="block">
+                <b-field label="Title Format">
+                  <b-input v-model="titleFormat"></b-input>
+                </b-field>
+                <p>
+                  Custom Title format to use in DeoVR, following Golang's template <a href="https://golang.org/pkg/text/template/" target="_blank" rel="noreferrer">format</a>.
+                  Examples:
+                </p>
+                <ul>
+                  <pre v-pre><li>{{.Studio}} - {{.Title}}</li><li>{{.Title}} ({{.ReleaseDate.Format "2006"}})</li></pre>
+                </ul>
+              </div>
             </div>
           </section>
         </div>
@@ -147,6 +160,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.deovr.password = value
+      }
+    },
+    titleFormat: {
+      get () {
+        return this.$store.state.optionsDeoVR.deovr.title_format
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.deovr.title_format = value
       }
     },
     boundIp: {

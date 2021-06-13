@@ -56,6 +56,7 @@ type RequestSaveOptionsDeoVR struct {
 	Password       string `json:"password"`
 	RemoteEnabled  bool   `json:"remote_enabled"`
 	RenderHeatmaps bool   `json:"render_heatmaps"`
+	TitleFormat    string `json:"title_format"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -233,6 +234,7 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.DeoVR.RenderHeatmaps = r.RenderHeatmaps
 	config.Config.Interfaces.DeoVR.RemoteEnabled = r.RemoteEnabled
 	config.Config.Interfaces.DeoVR.Username = r.Username
+	config.Config.Interfaces.DeoVR.TitleFormat = r.TitleFormat
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)
