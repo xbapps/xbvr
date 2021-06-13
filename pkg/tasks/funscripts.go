@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -39,7 +40,7 @@ func ExportFunscripts(w http.ResponseWriter, updatedOnly bool) {
 			if i == 0 {
 				if file.Exists() {
 					if !file.IsExported || !updatedOnly {
-						funscriptName := fmt.Sprintf("%s.funscript", scene.GetFunscriptTitle())
+						funscriptName := fmt.Sprintf("%s.funscript", scene.GetFunscriptTitle(config.Config.Interfaces.DeoVR.TitleFormat))
 
 						if err = AddFileToZip(zipWriter, file.GetPath(), funscriptName); err != nil {
 							log.Infof("Error when adding file to zip: %v (%s)", err, funscriptName)

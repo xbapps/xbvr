@@ -58,6 +58,7 @@ type ObjectConfig struct {
 			RemoteEnabled  bool   `default:"false" json:"remote_enabled"`
 			Username       string `default:"" json:"username"`
 			Password       string `default:"" json:"password"`
+			TitleFormat    string `default:"{{.Title}}" json:"title_format"`
 		} `json:"deovr"`
 		Heresphere struct {
 			AllowFileDeletes        bool `default:"false" json:"allow_file_deletes"`
