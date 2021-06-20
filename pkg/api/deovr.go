@@ -42,25 +42,26 @@ type DeoSceneTimestamp struct {
 }
 
 type DeoScene struct {
-	ID             uint                `json:"id"`
-	Title          string              `json:"title"`
-	Authorized     uint                `json:"authorized"`
-	Description    string              `json:"description"`
-	Paysite        DeoScenePaysite     `json:"paysite"`
-	IsFavorite     bool                `json:"isFavorite"`
-	Is3D           bool                `json:"is3d"`
-	ThumbnailURL   string              `json:"thumbnailUrl"`
-	RatingAvg      float64             `json:"rating_avg"`
-	ScreenType     string              `json:"screenType"`
-	StereoMode     string              `json:"stereoMode"`
-	VideoLength    int                 `json:"videoLength"`
-	VideoThumbnail string              `json:"videoThumbnail"`
-	VideoPreview   string              `json:"videoPreview,omitempty"`
-	Encodings      []DeoSceneEncoding  `json:"encodings"`
-	Timestamps     []DeoSceneTimestamp `json:"timeStamps"`
-	Actors         []DeoSceneActor     `json:"actors"`
-	FullVideoReady bool                `json:"fullVideoReady"`
-	FullAccess     bool                `json:"fullAccess"`
+	ID             uint                 `json:"id"`
+	Title          string               `json:"title"`
+	Authorized     uint                 `json:"authorized"`
+	Description    string               `json:"description"`
+	Paysite        DeoScenePaysite      `json:"paysite"`
+	IsFavorite     bool                 `json:"isFavorite"`
+	Is3D           bool                 `json:"is3d"`
+	ThumbnailURL   string               `json:"thumbnailUrl"`
+	RatingAvg      float64              `json:"rating_avg"`
+	ScreenType     string               `json:"screenType"`
+	StereoMode     string               `json:"stereoMode"`
+	VideoLength    int                  `json:"videoLength"`
+	VideoThumbnail string               `json:"videoThumbnail"`
+	VideoPreview   string               `json:"videoPreview,omitempty"`
+	Encodings      []DeoSceneEncoding   `json:"encodings"`
+	Timestamps     []DeoSceneTimestamp  `json:"timeStamps"`
+	Actors         []DeoSceneActor      `json:"actors"`
+	Fleshlight     []DeoSceneScriptFile `json:"fleshlight,omitempty"`
+	FullVideoReady bool                 `json:"fullVideoReady"`
+	FullAccess     bool                 `json:"fullAccess"`
 }
 
 type DeoSceneActor struct {
@@ -90,6 +91,11 @@ type DeoSceneVideoSource struct {
 	Width      int    `json:"width"`
 	Size       int64  `json:"size"`
 	URL        string `json:"url"`
+}
+
+type DeoSceneScriptFile struct {
+	Title string `json:"title"`
+	URL   string `json:"url"`
 }
 
 func isDeoAuthEnabled() bool {
@@ -309,6 +315,21 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		videoLength = file.VideoDuration
 	}
 
+	var deoScriptFiles []DeoSceneScriptFile
+	var scriptFiles []models.File
+	scriptFiles, err = scene.GetScriptFiles()
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	for _, file := range scriptFiles {
+		deoScriptFiles = append(deoScriptFiles, DeoSceneScriptFile{
+			Title: file.Filename,
+			URL:   fmt.Sprintf("%v/api/dms/file/%v", session.DeoRequestHost, file.ID),
+		})
+	}
+
 	var cuepoints []DeoSceneTimestamp
 	for i := range scene.Cuepoints {
 		cuepoints = append(cuepoints, DeoSceneTimestamp{
@@ -365,6 +386,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Encodings:      sources,
 		VideoLength:    int(videoLength),
 		Timestamps:     cuepoints,
+		Fleshlight:     deoScriptFiles,
 	}
 
 	if scene.HasVideoPreview {
