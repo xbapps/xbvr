@@ -9,6 +9,7 @@ const state = {
     remote_enabled: false,
     username: '',
     password: '',
+    title_format: '',
     boundIp: []
   }
 }
@@ -27,6 +28,7 @@ const actions = {
         state.deovr.remote_enabled = data.config.interfaces.deovr.remote_enabled
         state.deovr.username = data.config.interfaces.deovr.username
         state.deovr.password = data.config.interfaces.deovr.password
+        state.deovr.title_format = data.config.interfaces.deovr.title_format
         state.deovr.boundIp = data.currentState.server.bound_ip
         state.loading = false
       })

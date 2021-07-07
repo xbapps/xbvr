@@ -1,12 +1,14 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/araddon/dateparse"
@@ -172,12 +174,32 @@ func (o *Scene) GetIfExistURL(u string) error {
 		Where(&Scene{SceneURL: u}).First(o).Error
 }
 
-func (o *Scene) GetFunscriptTitle() string {
+func (scene *Scene) GetDeoFormattedTitle(titleFormat string) string {
+	customTitleTemplate, err := template.New("customTitleTemplate").Parse(titleFormat)
+	if err != nil {
+		common.Log.Warn(err)
+		customTitleTemplate, err = template.New("customTitleTemplate").Parse("{{.Title}}")
+		if err != nil {
+			return scene.Title
+		}
+	}
+	var tpl bytes.Buffer
+	title := scene.Title
+	err = customTitleTemplate.Execute(&tpl, scene)
+	if err == nil {
+		title = tpl.String()
+	} else {
+		common.Log.Warn(err)
+	}
+	return title
+}
+
+func (o *Scene) GetFunscriptTitle(titleFormat string) string {
 
 	// first make the title filename safe
 	var re = regexp.MustCompile(`[?/\<>|]`)
 
-	title := o.Title
+	title := o.GetDeoFormattedTitle(titleFormat)
 	// Colons are pretty common in titles, so we use a unicode alternative
 	title = strings.ReplaceAll(title, ":", "꞉")
 	// all other unsafe characters get removed
