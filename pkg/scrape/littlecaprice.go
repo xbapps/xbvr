@@ -24,7 +24,6 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	galleryCollector := cloneCollector(sceneCollector)
 
 	// RegEx Patterns
-	sceneRegEx := regexp.MustCompile(`^.+?'(.+?)'$`)
 	coverRegEx := regexp.MustCompile(`\.vid_bg {\nbackground: url\('(.+?)'`)
 	durationRegEx := regexp.MustCompile(`(\d+):(\d+)`)
 	descriptionRegEx := regexp.MustCompile(`(?i)^e(?:nglish)?:`)
@@ -64,9 +63,13 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 			descriptionRegEx.ReplaceAllString( // Some scene descriptions include a redundant prefix. We remove it.
 				e.ChildText(`.vid_desc`), ""))
 
-		// Cast
+		// Cast and tags
 		e.ForEach(`.vid_infos .vid_info_content a`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			if e.Attr("rel") == "tag" {
+				sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
+			} else {
+				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			}
 		})
 
 		// Gallery
@@ -92,20 +95,20 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`.ct_video`, func(e *colly.HTMLElement) {
-		sceneURL := sceneRegEx.FindStringSubmatch(e.Attr(`onclick`))[1]
+	siteCollector.OnHTML(`.et_pb_portfolio_item`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
 
 		// If scene exists in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			ctx := colly.NewContext()
-			ctx.Put("cover", e.ChildAttr("img.ct_video_cover", "data-src"))
+			ctx.Put("cover", e.ChildAttr("img", "data-src"))
 
 			//sceneCollector.Visit(sceneURL)
 			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 		}
 	})
 
-	siteCollector.Visit("https://www.littlecaprice-dreams.com/virtual-reality-little-caprice")
+	siteCollector.Visit("https://www.littlecaprice-dreams.com/virtual-reality-little-caprice-dreams/")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
