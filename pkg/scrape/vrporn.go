@@ -78,7 +78,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		})
 
 		// Cast
-		e.ForEach(`.pornstar-box a[href*="/pornstars/"]`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.name_pornstar a[href*="/pornstars/"]`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
