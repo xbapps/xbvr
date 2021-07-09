@@ -12,10 +12,8 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, nwID string) error {
 	defer wg.Done()
-	scraperID := "czechvr"
-	siteID := "CzechVR"
 	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("www.czechvrnetwork.com")
@@ -26,14 +24,10 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		sc.Studio = "CzechVR"
-		sc.Site = "Czech VR"
+		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Title
-		e.ForEach(`div.post div.nazev h2 span.desktop`, func(id int, e *colly.HTMLElement) {
-			sc.Site = strings.TrimSpace(e.Text)
-		})
-
 		e.ForEach(`div.post div.nazev h2`, func(id int, e *colly.HTMLElement) {
 			fullTitle := strings.TrimSpace(e.Text)
 			sc.Title = strings.Split(fullTitle, " - ")[1]
@@ -42,6 +36,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 		})
 
+		// Covers
 		e.ForEach(`div.post dl8-video`, func(id int, e *colly.HTMLElement) {
 			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("poster")))
 		})
@@ -134,7 +129,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		}
 	})
 
-	siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos?next=1")
+	siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos&sites=" + nwID)
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -143,6 +138,15 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	return nil
 }
 
+func addCZVRScraper(id string, name string, nwid string, avatarURL string) {
+	registerScraper(id, name, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+		return CzechVR(wg, updateSite, knownScenes, out, id, name, nwid)
+	})
+}
+
 func init() {
-	registerScraper("czechvr", "Czech VR (all sites)", "https://www.czechvrnetwork.com/images/favicon/android-chrome-256x256.png", CzechVR)
+	addCZVRScraper("czechvr", "Czech VR", "15", "https://www.czechvr.com/images/favicon/android-chrome-256x256.png")
+	addCZVRScraper("czechvrfetish", "Czech VR Fetish", "16", "https://www.czechvrfetish.com/images/favicon/android-chrome-256x256.png")
+	addCZVRScraper("czechvrcasting", "Czech VR Casting", "17", "https://www.czechvrcasting.com/images/favicon/android-chrome-256x256.png")
+	addCZVRScraper("czechvrintimacy", "VR Intimacy", "18", "https://www.vrintimacy.com/images/favicon/android-chrome-256x256.png")
 }
