@@ -33,6 +33,7 @@
 
       <watchlist-button :item="item"/>
       <favourite-button :item="item"/>
+      <wishlist-button v-if="!item.is_available" :item="item"/>
       <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
@@ -49,12 +50,13 @@
 import { format, parseISO } from 'date-fns'
 import WatchlistButton from '../../components/WatchlistButton'
 import FavouriteButton from '../../components/FavouriteButton'
+import WishlistButton from '../../components/WishlistButton'
 import EditButton from '../../components/EditButton'
 
 export default {
   name: 'SceneCard',
   props: { item: Object },
-  components: { WatchlistButton, FavouriteButton, EditButton },
+  components: { WatchlistButton, FavouriteButton, WishlistButton, EditButton },
   data () {
     return {
       preview: false,

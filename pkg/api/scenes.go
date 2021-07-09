@@ -260,6 +260,10 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 		scene.Favourite = !scene.Favourite
 	}
 
+	if r.List == "wishlist" && !scene.IsAvailable {
+		scene.Wishlist = !scene.Wishlist
+	}
+
 	scene.Save()
 }
 

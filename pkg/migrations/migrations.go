@@ -488,6 +488,15 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0026-scene-wishlist",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					Wishlist bool `json:"wishlist" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
