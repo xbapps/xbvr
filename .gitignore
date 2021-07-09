@@ -1,6 +1,6 @@
 /.idea
 .DS_Store
-.vscode/settings.json
+.vscode/
 
 go.sum
 test.db
