@@ -13,7 +13,6 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
-	"gopkg.in/resty.v1"
 )
 
 func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
@@ -186,6 +185,11 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		}
 	})
 
+	siteCollector.OnHTML(`.searchBox option`, func(e *colly.HTMLElement) {
+		pageURL := e.Request.AbsoluteURL(e.Attr("data-url"))
+		siteCollector.Visit(pageURL)
+	})
+
 	siteCollector.OnHTML(`a.w-portfolio-item-anchor`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
@@ -195,34 +199,13 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		}
 	})
 
-	// Request scenes via ajax interface
-	r, err := resty.R().
-		SetHeader("User-Agent", userAgent).
-		SetHeader("Accept", "application/json, text/javascript, */*; q=0.01").
-		SetHeader("Referer", URL).
-		SetHeader("X-Requested-With", "XMLHttpRequest").
-		SetHeader("Authority", scraperID+".com").
-		SetFormData(map[string]string{
-			"action": "get_videos_list",
-			"p":      "1",
-			"vpp":    "1000",
-			"sq":     "",
-			"so":     "date-DESC",
-			"pid":    "8",
-		}).
-		Post("https://" + scraperID + ".com/wp-admin/admin-ajax.php")
-
-	if err == nil || r.StatusCode() == 200 {
-		urls := gjson.Get(r.String(), "data.movies.#.permalink").Array()
-		for i := range urls {
-			sceneURL := urls[i].String()
-			if !funk.ContainsString(knownScenes, sceneURL) {
-				sceneCollector.Visit(sceneURL)
-			}
-		}
+	if scraperID == "virtualrealamateur" {
+		siteCollector.Visit(URL)
+	} else if scraperID == "virtualrealgay" {
+		siteCollector.Visit(URL + "porn-actor/")
+	} else {
+		siteCollector.Visit(URL + "porn-actress/")
 	}
-
-	siteCollector.Visit(URL)
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
