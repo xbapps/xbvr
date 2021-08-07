@@ -73,10 +73,17 @@ func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString str
 			"Hi-Def":           true,
 		}
 
+		// weird... censored word?
+		schoolgirltag := "S********l"
+
 		taglist := gjson.Get(JsonMetadata, "data.categories.#.name")
 		for _, name := range taglist.Array() {
 			if !skiptags[name.Str] {
-				sc.Tags = append(sc.Tags, strings.TrimSpace(html.UnescapeString(name.String())))
+				if name.Str == schoolgirltag {
+					sc.Tags = append(sc.Tags, "schoolgirl")
+				} else {
+					sc.Tags = append(sc.Tags, strings.TrimSpace(html.UnescapeString(name.String())))
+				}
 			}
 		}
 		sc.Tags = append(sc.Tags, "JAVR")
