@@ -1,13 +1,15 @@
 package scrape
 
 import (
+	"html"
 	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly"
-	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
+	"gopkg.in/resty.v1"
 )
 
 func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString string) error {
@@ -20,82 +22,85 @@ func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString str
 		sc.SceneType = "VR"
 		sc.Studio = "JAVR"
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.Site = strings.Split(e.ChildText("title"), "-")[0]
+
+		content_id := strings.Split(sc.HomepageURL, "=")[1]
+
+		r, _ := resty.R().Get("https://www.r18.com/api/v4f/contents/" + content_id)
+
+		JsonMetadata := r.String()
+		//if not VR, bye bye...
+		if gjson.Get(JsonMetadata, "data.is_vr").String() == "false" {
+			return
+		}
 
 		// Title
-		e.ForEach(`h1 cite[itemprop=name]`, func(id int, e *colly.HTMLElement) {
-			sc.Title = strings.TrimSpace(strings.Replace(e.Text, "[VR]", "", -1))
-		})
+		sc.Title = strings.Replace(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "data.title").String())), "[VR] ", "", -1)
+
+		// Studio
+		sc.Studio = gjson.Get(JsonMetadata, "data.maker.name").String()
+		// Date
+		sc.Released = strings.Split(gjson.Get(JsonMetadata, "data.release_date").String(), " ")[0]
+
+		// Time
+		tmpDuration, err := strconv.Atoi(gjson.Get(JsonMetadata, "data.runtime_minutes").String())
+		if err == nil {
+			sc.Duration = tmpDuration
+		}
 
 		// Covers
-		e.ForEach(`div.detail-single-picture img`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, e.Attr("src"))
-		})
+		coverimgs := gjson.Get(JsonMetadata, "data.images.jacket_image.large")
+		sc.Covers = append(sc.Covers, strings.TrimSpace(html.UnescapeString(coverimgs.String())))
 
 		// Gallery
-		e.ForEach(`section#product-gallery img.lazyOwl`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Attr("data-src"))
-		})
+		galleryimgs := gjson.Get(JsonMetadata, "data.gallery.#.large")
+		for _, name := range galleryimgs.Array() {
+			sc.Gallery = append(sc.Gallery, strings.TrimSpace(html.UnescapeString(name.String())))
+		}
 
 		// Cast
-		e.ForEach(`div[itemprop=actors] a`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-		})
+		actornames := gjson.Get(JsonMetadata, "data.actresses.#.name")
+		for _, name := range actornames.Array() {
+			sc.Cast = append(sc.Cast, strings.TrimSpace(html.UnescapeString(name.String())))
+		}
 
 		// Tags
-		e.ForEach(`div.pop-list a`, func(id int, e *colly.HTMLElement) {
-			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
-		})
+		// Skipping some very generic and useless tags
+		skiptags := map[string]bool{
+			"Featured Actress": true,
+			"VR Exclusive":     true,
+			"High-quality VR":  true,
+			"Hi-Def":           true,
+		}
 
-		// Release date / Duration / Site
-		e.ForEach(`div.product-details dd`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				tmpDate, _ := goment.New(strings.TrimSpace(e.Text), "MMM. DD, YYYY")
-				sc.Released = tmpDate.Format("YYYY-MM-DD")
+		// weird... censored word?
+		schoolgirltag := "S********l"
 
-				// Following 2 if statements kludges the date into submission!
-				badDate := strings.TrimSpace(e.Text)
-				if strings.Contains(badDate, "July") || strings.Contains(badDate, "June") {
-					tmpDate, _ := goment.New(badDate, "MMMM DD, YYYY")
-					sc.Released = tmpDate.Format("YYYY-MM-DD")
-				}
-				if strings.Contains(badDate, ".") {
-					s := strings.TrimSpace(strings.Replace(e.Text, ".", "", -1))
-					tmpDate, _ := goment.New(s, "MMM DD, YYYY")
-					sc.Released = tmpDate.Format("YYYY-MM-DD")
-				}
-
-			}
-			if id == 1 {
-				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Text, "min.", "", -1)))
-				if err == nil {
-					sc.Duration = tmpDuration
+		taglist := gjson.Get(JsonMetadata, "data.categories.#.name")
+		for _, name := range taglist.Array() {
+			if !skiptags[name.Str] {
+				if name.Str == schoolgirltag {
+					sc.Tags = append(sc.Tags, "schoolgirl")
+				} else {
+					sc.Tags = append(sc.Tags, strings.TrimSpace(html.UnescapeString(name.String())))
 				}
 			}
-			if id == 4 {
-				sc.Site = strings.TrimSpace(e.Text)
-			}
-		})
+		}
+		sc.Tags = append(sc.Tags, "JAVR")
 
 		// Scene ID
-		var contentID string
-		e.ForEach(`div.product-details dt:contains("Content ID")+dd`, func(id int, e *colly.HTMLElement) {
-			contentID = strings.TrimSpace(e.Text)
-		})
+		dvdID := gjson.Get(JsonMetadata, "data.dvd_id").String()
 
-		var dvdID string
-		e.ForEach(`div.product-details dt:contains("DVD ID")+dd`, func(id int, e *colly.HTMLElement) {
-			dvdID = strings.TrimSpace(e.Text)
-		})
+		//		})
 
 		if dvdID == "----" {
-			sc.SceneID = contentID
-			sc.SiteID = contentID
+			sc.SceneID = content_id
+			sc.SiteID = content_id
 		} else {
 			sc.SceneID = dvdID
 			sc.SiteID = dvdID
 		}
 
-		sc.Tags = append(sc.Tags, "JAVR")
 		*out = append(*out, sc)
 	})
 
