@@ -101,12 +101,16 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		e.ForEach(`dl8-video source`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				origURL := e.Attr("src")
+
+				//This now needs to be made case insensitive (_trailer is now _Trailer)
+				origURLtmp := e.Attr("src")
+				origURL := strings.ToLower(origURLtmp)
 
 				// Some scenes had different trailer name "templates". Some videos didn't have trailers and one VRCosplayX (Death Note) was was missing "_" in the name
-				fpName3m := strings.Split(strings.Split(strings.Split(strings.Split(origURL, "_trailer")[0], "_3M")[0], "_3m")[0], "3M")[0]
-				fpName2m := strings.Split(strings.Split(strings.Split(fpName3m, "_trailer")[0], "_2M")[0], "_2m")[0]
-				fpName := strings.Split(strings.Split(strings.Split(fpName2m, "_trailer")[0], "_1M")[0], "_1m")[0]
+
+				fpName3m := strings.Split(strings.Split(strings.Split(origURL, "_trailer")[0], "_3m")[0], "3m")[0]
+				fpName2m := strings.Split(strings.Split(fpName3m, "_trailer")[0], "_2m")[0]
+				fpName := strings.Split(strings.Split(fpName2m, "_trailer")[0], "_1m")[0]
 
 				fragmentName := strings.Split(fpName, "/")
 				baseName := fragmentName[len(fragmentName)-1]
