@@ -32,9 +32,8 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		sc.SceneID = slugify.Slugify(scraperID) + "-" + sc.SiteID
 
 		// Title
-		e.ForEach(`h1.title`, func(id int, e *colly.HTMLElement) {
-			// 7K Maid For Play
-			sc.Title = e.Text[strings.Index(e.Text, "K")+1:]
+		e.ForEach(`h1.heading-title`, func(id int, e *colly.HTMLElement) {
+			sc.Title = e.Text
 		})
 
 		// Date & Duration
