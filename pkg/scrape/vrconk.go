@@ -50,7 +50,7 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			if strings.Contains(c, "i-clock") {
 				tmpDuration, err := strconv.Atoi(strings.Split(e.ChildText(`.sub-label`), ":")[0])
 				if err == nil {
-					sc.Duration = tmpDuration
+					sc.Duration = tmpDuration / 60
 				}
 			}
 

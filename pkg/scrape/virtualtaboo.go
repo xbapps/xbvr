@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,6 +21,8 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 
 	sceneCollector := createCollector("virtualtaboo.com")
 	siteCollector := createCollector("virtualtaboo.com")
+
+	durationRegEx := regexp.MustCompile(`(?:(\d+) hour(?:s)? )?(\d+) min`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -74,23 +77,23 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
-		// Date
+		// Date & Duration
 		e.ForEach(`div.right-info div.info`, func(id int, e *colly.HTMLElement) {
 			tmpData := funk.ReverseStrings(strings.Split(e.Text, "\n"))
 
 			tmpDate, _ := goment.New(strings.TrimSpace(tmpData[1]), "DD MMMM, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
 
-			sc.Duration, _ = strconv.Atoi(strings.TrimSpace(strings.Replace(tmpData[3], "min", "", -1)))
-
-		})
-
-		// Duration
-		e.ForEach(`p.video-duration`, func(id int, e *colly.HTMLElement) {
-			tmpDuration, err := strconv.Atoi(strings.Split(e.Attr("content"), ":")[1])
-			if err == nil {
-				sc.Duration = tmpDuration
+			tmpDuration := 0
+			durationMatch := durationRegEx.FindStringSubmatch(tmpData[3])
+			if len(durationMatch) == 2 {
+				tmpDuration, _ = strconv.Atoi(durationMatch[1])
+			} else if len(durationMatch) == 3 {
+				hours, _ := strconv.Atoi(durationMatch[1])
+				minutes, _ := strconv.Atoi(durationMatch[2])
+				tmpDuration = hours*60 + minutes
 			}
+			sc.Duration = tmpDuration
 		})
 
 		out <- sc

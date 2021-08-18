@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -82,11 +83,11 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		// Duration
+		durationRegex := regexp.MustCompile(`Duration: ([0-9]+) min`)
 		e.ForEach(`p.video-duration`, func(id int, e *colly.HTMLElement) {
-			content := strings.Replace(strings.Split(e.Attr("content"), "M")[0], "PT", "", -1)
-			tmpDuration, err := strconv.Atoi(content)
-			if err == nil {
-				sc.Duration = tmpDuration
+			m := durationRegex.FindStringSubmatch(e.Text)
+			if len(m) == 2 {
+				sc.Duration, _ = strconv.Atoi(m[1])
 			}
 		})
 
