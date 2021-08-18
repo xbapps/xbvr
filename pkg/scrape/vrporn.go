@@ -119,7 +119,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.sectionWrapper.tube-newest article.post div.tube-post a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`article.post div.tube-post a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 		// If scene exists in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
