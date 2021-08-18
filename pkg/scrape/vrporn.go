@@ -53,7 +53,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 
 		// Gallery
-		e.ForEach(`.vrp-gallery a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.vrp-gallery-pro a`, func(id int, e *colly.HTMLElement) {
 			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
 		})
 
