@@ -22,7 +22,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	// RegEx Patterns
 	sceneIDRegEx := regexp.MustCompile(`^post-(\d+)`)
-	dateRegEx := regexp.MustCompile(`(?i)^VideoPosted on (?:Premium )?(.+)$`)
+	dateRegEx := regexp.MustCompile(`(?i)^VideoPosted on (?:Premium on )?(.+)$`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		if !dateRegEx.MatchString(e.ChildText(`div.content-box.posted-by-box.posted-by-box-sub span.footer-titles`)) {
@@ -78,7 +78,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		})
 
 		// Cast
-		e.ForEach(`.name_pornstar a[href*="/pornstars/"]`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.name_pornstar`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
