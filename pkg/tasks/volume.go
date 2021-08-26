@@ -2,7 +2,6 @@ package tasks
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -58,11 +57,11 @@ func RescanVolumes() {
 		db.Model(&models.File{}).Where("files.scene_id = 0").Find(&files)
 
 		for i := range files {
-			fn := files[i].Filename
-			fn = strings.Replace(fn, ".funscript", ".mp4", -1)
-			err := db.Where("filenames_arr LIKE ?", fmt.Sprintf("%%\"%v\"%%", path.Base(fn))).Find(&scenes).Error
+			fn := path.Base(files[i].Filename)
+			fn2 := strings.Replace(fn, ".funscript", ".mp4", -1)
+			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ?", "%\""+fn+"\"%", "%\""+fn2+"\"%").Find(&scenes).Error
 			if err != nil {
-				log.Error(err, " when matching "+path.Base(fn))
+				log.Error(err, " when matching "+fn)
 			}
 
 			if len(scenes) == 1 {
