@@ -65,7 +65,7 @@ func RescanVolumes() {
 				log.Error(err, " when matching "+path.Base(fn))
 			}
 
-			if len(scenes) >= 1 {
+			if len(scenes) == 1 {
 				files[i].SceneID = scenes[0].ID
 				files[i].Save()
 			}
