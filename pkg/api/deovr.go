@@ -109,7 +109,11 @@ func isDeoAuthEnabled() bool {
 }
 
 func setDeoPlayerHost(req *restful.Request) {
-	deoIP := strings.Split(req.Request.RemoteAddr, ":")[0]
+	deoIP := req.Request.RemoteAddr
+	lastColon := strings.LastIndex(deoIP, ":")
+	if lastColon != -1 {
+		deoIP = deoIP[:lastColon]
+	}
 	if deoIP != session.DeoPlayerHost {
 		common.Log.Infof("DeoVR Player connecting from %v", deoIP)
 		session.DeoPlayerHost = deoIP
