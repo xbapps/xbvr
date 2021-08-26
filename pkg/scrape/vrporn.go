@@ -54,7 +54,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 
 		// Gallery
-		e.ForEach(`.vrp-gallery a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.vrp-gallery-pro a`, func(id int, e *colly.HTMLElement) {
 			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
 		})
 
@@ -79,7 +79,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		})
 
 		// Cast
-		e.ForEach(`.pornstar-box a[href*="/pornstars/"]`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.name_pornstar`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
@@ -111,7 +111,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.sectionWrapper.tube-newest article.post div.tube-post a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`article.post div.tube-post a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 		// If scene exists in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {

@@ -88,12 +88,12 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 			}
 		})
 
-		if len(e.ChildAttrs(`section.banner picture img`, "data-pagespeed-lazy-src")) > 0 {
-			sc.Covers = append(sc.Covers, e.ChildAttrs(`section.banner picture img`, "data-pagespeed-lazy-src")[0])
-		}
+		sc.Covers = append(sc.Covers, e.ChildAttr(`section.banner picture source[type="image/jpeg"]`, "srcset"))
 
-		if len(e.ChildAttrs(`section.base-content--bg img`, "data-pagespeed-lazy-src")) > 0 {
+		if len(e.ChildAttrs(`section.base-content--bg div.base-border img`, "data-pagespeed-lazy-src")) > 0 {
 			sc.Covers = append(sc.Covers, e.ChildAttrs(`section.base-content--bg img`, "data-pagespeed-lazy-src")[0])
+		} else {
+			sc.Covers = append(sc.Covers, e.ChildAttr(`section.base-content--bg div.base-border img`, "src"))
 		}
 
 		// Gallery
