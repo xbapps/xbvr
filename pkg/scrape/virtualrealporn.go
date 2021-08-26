@@ -76,7 +76,17 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			json.Unmarshal([]byte(e.Text), &jsonResult)
 
 			duration := jsonResult["duration"].(string)
-			sc.Duration, _ = strconv.Atoi(strings.Split(duration, ":")[0])
+			tmpParts := strings.Split(duration, ":")
+			if len(tmpParts) == 2 {
+				sc.Duration, _ = strconv.Atoi(tmpParts[0])
+			} else {
+				tmpParts = strings.Split(duration, "h ")
+				if len(tmpParts) == 2 {
+					hours, _ := strconv.Atoi(tmpParts[0])
+					minutes, _ := strconv.Atoi(tmpParts[1])
+					sc.Duration = hours*60 + minutes
+				}
+			}
 
 			sc.Released = jsonResult["datePublished"].(string)
 

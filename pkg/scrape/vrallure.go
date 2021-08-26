@@ -3,9 +3,13 @@ package scrape
 import (
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
+	"golang.org/x/net/html"
+
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
@@ -89,15 +93,28 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		})
 
 		// Duration
-		// Note the element `div.scene-details p.duration` is there but currently inside an HTML comment block
-		/*
-			e.ForEach(`div.scene-details p.duration`, func(id int, e *colly.HTMLElement) {
-				tmpDuration, err := strconv.Atoi(strings.TrimSpace(e.Text))
-				if err == nil {
-					sc.Duration = tmpDuration / 60
+		// Note the element `div.scene-details p.duration` is there but currently inside an HTML comment block.
+		// But it's also in seconds, including 2 decimal places, so it won't just be uncommented as is in the future.
+		// In any case, here we extract the comment, parse what's inside as HTML and extract the text.
+		e.ForEach(`div.scene-meta`, func(id int, e *colly.HTMLElement) {
+			e.DOM.Contents().EachWithBreak(func(i int, selection *goquery.Selection) bool {
+				node := selection.Get(0)
+				if node.Type != html.CommentNode {
+					return true
 				}
+				doc, err := goquery.NewDocumentFromReader(strings.NewReader(node.Data))
+				if err != nil {
+					return true
+				}
+				durationText := strings.TrimSpace(doc.Text())
+				seconds, err := strconv.ParseFloat(durationText, 64)
+				if err != nil {
+					return true
+				}
+				sc.Duration = int(seconds) / 60
+				return false
 			})
-		*/
+		})
 
 		// Filenames
 		e.ForEach(`input.stream-input-box`, func(id int, e *colly.HTMLElement) {

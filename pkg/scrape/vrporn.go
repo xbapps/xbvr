@@ -22,7 +22,8 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	// RegEx Patterns
 	sceneIDRegEx := regexp.MustCompile(`^post-(\d+)`)
-	dateRegEx := regexp.MustCompile(`(?i)^VideoPosted on (?:Premium on )?(.+)$`)
+	dateRegEx := regexp.MustCompile(`(?i)^VideoPosted on (?:Premium )?(.+)$`)
+	durationRegEx := regexp.MustCompile(`var timeAfter="(?:(\d+):)?(\d+):(\d+)";`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		if !dateRegEx.MatchString(e.ChildText(`div.content-box.posted-by-box.posted-by-box-sub span.footer-titles`)) {
@@ -90,26 +91,17 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 
 		// Duration
-		var dur string
-		var duration int
-		if e.DOM.Find(`.lengthvideoAfter.premium-post`) != nil {
-			dur = e.DOM.Find(`.lengthvideoAfter.premium-post`).Text()
-		} else {
-			dur = e.DOM.Find(`.lengthvideoBefore.no-premium`).Text()
-		}
-		tmpParts := strings.Split(dur, ":")
-		if len(tmpParts) > 2 {
-			if h, err := strconv.Atoi(tmpParts[0]); err == nil {
-				if m, err := strconv.Atoi(tmpParts[1]); err == nil {
-					duration = h*60 + m
-				}
+		e.ForEachWithBreak(`script`, func(id int, e *colly.HTMLElement) bool {
+			var duration int
+			m := durationRegEx.FindStringSubmatch(e.Text)
+			if len(m) == 4 {
+				hours, _ := strconv.Atoi("0" + m[1])
+				minutes, _ := strconv.Atoi(m[2])
+				duration = hours*60 + minutes
 			}
-		} else {
-			if m, err := strconv.Atoi(tmpParts[0]); err == nil {
-				duration = m
-			}
-		}
-		sc.Duration = duration
+			sc.Duration = duration
+			return duration == 0
+		})
 
 		out <- sc
 	})

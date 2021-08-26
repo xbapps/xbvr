@@ -23,7 +23,8 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 	// RegEx Patterns
 	coverRegEx := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
-	durationRegEx := regexp.MustCompile(`^T(\d{0,2})H?(\d{2})M(\d{2})S$`)
+	durationRegExForSceneCard := regexp.MustCompile(`^(?:(\d{2}):)?(\d{2}):(\d{2})$`)
+	durationRegExForScenePage := regexp.MustCompile(`^T(\d{0,2})H?(\d{2})M(\d{2})S$`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -79,6 +80,9 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		})
 
+		// Duration
+		sc.Duration = e.Request.Ctx.GetAny("duration").(int)
+
 		// Extract from JSON meta data
 		// NOTE: SLR only provides certain information like duration as json metadata inside a script element
 		// The page code also changes often and is difficult to traverse, best to get as much as possible from metadata
@@ -105,25 +109,29 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				}
 
 				// Duration
-				// NOTE: SLR fails to include hours (1h55m30s shows up as T55M30S)
+				// NOTE: We should already have the duration from the scene list, but if we don't (happens for at least
+				// one scene where SLR fails to include it), we try to get it from here
+				// We don't always get it from here, because SLR fails to include hours (1h55m30s shows up as T55M30S)
 				// ...but this is ready for the format of T01H55M30S should SLR fix that
-				duration := 0
-				if gjson.Get(JsonMetadata, "duration").Exists() {
-					tmpParts := durationRegEx.FindStringSubmatch(gjson.Get(JsonMetadata, "duration").String())
-					if len(tmpParts[1]) > 0 {
-						if h, err := strconv.Atoi(tmpParts[1]); err == nil {
-							hrs := h
+				if sc.Duration == 0 {
+					duration := 0
+					if gjson.Get(JsonMetadata, "duration").Exists() {
+						tmpParts := durationRegExForScenePage.FindStringSubmatch(gjson.Get(JsonMetadata, "duration").String())
+						if len(tmpParts[1]) > 0 {
+							if h, err := strconv.Atoi(tmpParts[1]); err == nil {
+								hrs := h
+								if m, err := strconv.Atoi(tmpParts[2]); err == nil {
+									mins := m
+									duration = (hrs * 60) + mins
+								}
+							}
+						} else {
 							if m, err := strconv.Atoi(tmpParts[2]); err == nil {
-								mins := m
-								duration = (hrs * 60) + mins
+								duration = m
 							}
 						}
-					} else {
-						if m, err := strconv.Atoi(tmpParts[2]); err == nil {
-							duration = m
-						}
+						sc.Duration = duration
 					}
-					sc.Duration = duration
 				}
 
 				// Filenames
@@ -160,12 +168,22 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.c-grid--scenes article a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`div.c-grid--scenes article`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a", "href"))
 		if strings.Contains(sceneURL, "scene") {
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {
-				sceneCollector.Visit(sceneURL)
+				durationText := e.ChildText("div.c-grid-ratio-bottom.u-z--two")
+				m := durationRegExForSceneCard.FindStringSubmatch(durationText)
+				duration := 0
+				if len(m) == 4 {
+					hours, _ := strconv.Atoi("0" + m[1])
+					minutes, _ := strconv.Atoi(m[2])
+					duration = hours*60 + minutes
+				}
+				ctx := colly.NewContext()
+				ctx.Put("duration", duration)
+				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 			}
 		}
 	})

@@ -79,9 +79,17 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 
 		// Duration
 		e.ForEach(`div.video-additional div.grid-one-time span`, func(id int, e *colly.HTMLElement) {
-			tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.DOM.Parent().Text(), "min.", "", -1)))
+			durationText := strings.TrimSpace(strings.Replace(e.DOM.Parent().Text(), "min.", "", -1))
+			tmpDuration, err := strconv.Atoi(durationText)
 			if err == nil {
 				sc.Duration = tmpDuration
+			} else {
+				tmpParts := strings.Split(durationText, ":")
+				if len(tmpParts) == 3 {
+					hours, _ := strconv.Atoi(tmpParts[0])
+					minutes, _ := strconv.Atoi(tmpParts[1])
+					sc.Duration = hours*60 + minutes
+				}
 			}
 		})
 
