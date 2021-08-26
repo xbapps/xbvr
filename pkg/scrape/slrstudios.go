@@ -238,6 +238,7 @@ func init() {
 	addSLRScraper("vrextasy", "VReXtasy", "VReXtasy", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
 	addSLRScraper("vr-fan-service", "VRFanService", "VRFanService", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/153/logo_crop_1619422412.png")
 	addSLRScraper("vrfirsttimer", "VRFirstTimer", "VRFirstTimer", "https://mcdn.vrporn.com/files/20200511115233/VRFirstTimers_Logo.jpg")
+	addSLRScraper("vrpornjack", "VRPornJack", "VRPornJack", "https://mcdn.vrporn.com/files/20210330121852/VRPORNJACK_Logo-400x400.png")
 	addSLRScraper("vrpussyvision", "VRpussyVision", "VRpussyVision", "https://mcdn.vrporn.com/files/20180313160830/vrpussyvision-square-banner.png")
 	addSLRScraper("vrsexperts", "VRSexperts", "VRSexperts", "https://mcdn.vrporn.com/files/20190812141431/vrsexpertslogo2.jpg")
 	addSLRScraper("vrsolos", "VRSolos", "VRSolos", "https://mcdn.vrporn.com/files/20191226092954/VRSolos_Logo.jpg")
