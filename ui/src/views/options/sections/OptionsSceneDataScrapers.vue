@@ -97,12 +97,14 @@ export default {
       ky.get(`/api/task/scrape?site=${site}`)
     },
     forceSiteUpdate (site) {
+      site = site.replace(/ \(SLR\)$/, "");
       ky.post('/api/options/scraper/force-site-update', {
         json: { site_name: site }
       })
       this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`)
     },
     deleteScenes (site) {
+      site = site.replace(/ \(SLR\)$/, "");
       this.$buefy.dialog.confirm({
         title: this.$t('Delete scraped scenes'),
         message: `You're about to delete scraped scenes for <strong>${site}</strong>. Previously matched files will return to unmatched state.`,
