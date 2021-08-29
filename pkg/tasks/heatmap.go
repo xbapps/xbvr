@@ -99,14 +99,20 @@ func LoadFunscriptData(path string) (Script, error) {
 		return Script{}, fmt.Errorf("actions list missing in %s", path)
 	}
 
+	if len(funscript.Actions) == 0 {
+		return Script{}, fmt.Errorf("actions list empty in %s", path)
+	}
+
 	sort.SliceStable(funscript.Actions, func(i, j int) bool { return funscript.Actions[i].At < funscript.Actions[j].At })
 
 	return funscript, nil
 }
 
 func RenderHeatmap(inputFile string, destFile string, width, height, numSegments int) error {
-
 	funscript, err := LoadFunscriptData(inputFile)
+	if err != nil {
+		return err
+	}
 
 	funscript.UpdateIntensity()
 	gradient := funscript.getGradientTable(numSegments)
