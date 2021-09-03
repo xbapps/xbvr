@@ -267,8 +267,8 @@ func (i FilesResource) unmatchFile(req *restful.Request, resp *restful.Response)
 
 	}
 
+	var scene models.Scene
 	if sceneID != 0 {
-		var scene models.Scene
 		err = scene.GetIfExistByPK(sceneID)
 		if err != nil {
 			log.Error(err)
@@ -300,7 +300,7 @@ func (i FilesResource) unmatchFile(req *restful.Request, resp *restful.Response)
 		scene.UpdateStatus()
 	}
 
-	resp.WriteHeaderAndEntity(http.StatusOK, nil)
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
 
 func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) {
