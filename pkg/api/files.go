@@ -296,6 +296,8 @@ func (i FilesResource) unmatchFile(req *restful.Request, resp *restful.Response)
 			scene.FilenamesArr = string(tmp)
 		}
 
+		models.AddAction(scene.SceneID, "unmatch", "filenames_arr", scene.FilenamesArr)
+
 		// Finally, update scene available/accessible status
 		scene.UpdateStatus()
 	}
