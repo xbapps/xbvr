@@ -185,35 +185,39 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				tlog.Error("Error running ffprobe", path, err)
 			} else {
 				vs := ffdata.GetFirstVideoStream()
-				if vs.BitRate != "" {
-					bitRate, _ := strconv.Atoi(vs.BitRate)
-					fl.VideoBitRate = bitRate
-				}
-				fl.VideoAvgFrameRate = vs.AvgFrameRate
-				fl.VideoCodecName = vs.CodecName
-				fl.VideoWidth = vs.Width
-				fl.VideoHeight = vs.Height
-				if dur, err := strconv.ParseFloat(vs.Duration, 64); err == nil {
-					fl.VideoDuration = dur
-				} else if ffdata.Format.DurationSeconds > 0.0 {
-					fl.VideoDuration = ffdata.Format.DurationSeconds
-				}
+				if vs == nil {
+					tlog.Error("No video stream in file ", path)
+				} else {
+					if vs.BitRate != "" {
+						bitRate, _ := strconv.Atoi(vs.BitRate)
+						fl.VideoBitRate = bitRate
+					}
+					fl.VideoAvgFrameRate = vs.AvgFrameRate
+					fl.VideoCodecName = vs.CodecName
+					fl.VideoWidth = vs.Width
+					fl.VideoHeight = vs.Height
+					if dur, err := strconv.ParseFloat(vs.Duration, 64); err == nil {
+						fl.VideoDuration = dur
+					} else if ffdata.Format.DurationSeconds > 0.0 {
+						fl.VideoDuration = ffdata.Format.DurationSeconds
+					}
 
-				if vs.Height*2 == vs.Width || vs.Width > vs.Height {
-					fl.VideoProjection = "180_sbs"
-					nameparts := filenameSeparator.Split(strings.ToLower(filepath.Base(path)), -1)
-					for _, part := range nameparts {
-						if part == "mkx200" || part == "mkx220" || part == "vrca220" {
-							fl.VideoProjection = part
+					if vs.Height*2 == vs.Width || vs.Width > vs.Height {
+						fl.VideoProjection = "180_sbs"
+						nameparts := filenameSeparator.Split(strings.ToLower(filepath.Base(path)), -1)
+						for _, part := range nameparts {
+							if part == "mkx200" || part == "mkx220" || part == "vrca220" {
+								fl.VideoProjection = part
+							}
 						}
 					}
-				}
 
-				if vs.Height == vs.Width {
-					fl.VideoProjection = "360_tb"
-				}
+					if vs.Height == vs.Width {
+						fl.VideoProjection = "360_tb"
+					}
 
-				fl.CalculateFramerate()
+					fl.CalculateFramerate()
+				}
 			}
 
 			err = fl.Save()
