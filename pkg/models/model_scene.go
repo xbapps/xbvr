@@ -437,13 +437,16 @@ type RequestSceneList struct {
 	IsAccessible optional.Bool     `json:"isAccessible"`
 	IsWatched    optional.Bool     `json:"isWatched"`
 	Lists        []optional.String `json:"lists"`
+	ExcludeLists []optional.String `json:"excludeLists"`
 	Sites        []optional.String `json:"sites"`
+	ExcludeSites []optional.String `json:"excludeSites"`
 	Tags         []optional.String `json:"tags"`
 	Cast         []optional.String `json:"cast"`
 	Cuepoint     []optional.String `json:"cuepoint"`
 	Volume       optional.Int      `json:"volume"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
+	Resolutions  []optional.String `json:"resolutions"`
 }
 
 type ResponseSceneList struct {
@@ -498,10 +501,35 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Where("is_watched = ?", r.IsWatched.OrElse(true))
 	}
 
-	if r.Volume.Present() && r.Volume.OrElse(0) != 0 {
-		tx = tx.
-			Joins("left join files on files.scene_id=scenes.id").
-			Where("files.volume_id = ?", r.Volume.OrElse(0))
+	if (r.Volume.Present() && r.Volume.OrElse(0) != 0) || len(r.Resolutions) > 0 {
+		tx = tx.Joins("left join files on files.scene_id=scenes.id")
+
+		if r.Volume.Present() && r.Volume.OrElse(0) != 0 {
+			tx.Where("files.volume_id = ?", r.Volume.OrElse(0))
+		}
+
+		// Resolution
+		resolutionClauses := []string{}
+		if len(r.Resolutions) > 0 {
+			for _, resolution := range r.Resolutions {
+				if resolution.OrElse("") == "below4k" {
+					resolutionClauses = append(resolutionClauses, "files.video_height between 0 and 1899")
+				}
+				if resolution.OrElse("") == "4k" {
+					resolutionClauses = append(resolutionClauses, "files.video_height between 1900 and 2449")
+				}
+				if resolution.OrElse("") == "5k" {
+					resolutionClauses = append(resolutionClauses, "files.video_height between 2450 and 2899")
+				}
+				if resolution.OrElse("") == "6k" {
+					resolutionClauses = append(resolutionClauses, "files.video_height between 2900 and 3299")
+				}
+				if resolution.OrElse("") == "above6k" {
+					resolutionClauses = append(resolutionClauses, "files.video_height between 3300 and 9999")
+				}
+			}
+			tx = tx.Where("(" + strings.Join(resolutionClauses, " OR ") + ") AND files.video_height != 0")
+		}
 	}
 
 	for _, i := range r.Lists {
@@ -516,12 +544,32 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		}
 	}
 
+	for _, i := range r.ExcludeLists {
+		if i.OrElse("") == "watchlist" {
+			tx = tx.Where("watchlist = ?", false)
+		}
+		if i.OrElse("") == "favourite" {
+			tx = tx.Where("favourite = ?", false)
+		}
+		if i.OrElse("") == "scripted" {
+			tx = tx.Where("is_scripted = ?", false)
+		}
+	}
+
 	var sites []string
 	for _, i := range r.Sites {
 		sites = append(sites, i.OrElse(""))
 	}
 	if len(sites) > 0 {
 		tx = tx.Where("site IN (?)", sites)
+	}
+
+	var excludeSites []string
+	for _, i := range r.ExcludeSites {
+		excludeSites = append(excludeSites, i.OrElse(""))
+	}
+	if len(excludeSites) > 0 {
+		tx = tx.Where("site NOT IN (?)", excludeSites)
 	}
 
 	var tags []string
@@ -557,7 +605,7 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		}
 	}
 
-	if r.Released.Present() {
+	if r.Released.Present() && r.Released.OrElse("") != "" {
 		tx = tx.Where("release_date_text LIKE ?", r.Released.OrElse("")+"%")
 	}
 
