@@ -48,6 +48,8 @@ type DeoScene struct {
 	Description    string               `json:"description"`
 	Paysite        DeoScenePaysite      `json:"paysite"`
 	IsFavorite     bool                 `json:"isFavorite"`
+	IsScripted     bool                 `json:"isScripted"`
+	IsWatchlist    bool                 `json:"isWatchlist"`
 	Is3D           bool                 `json:"is3d"`
 	ThumbnailURL   string               `json:"thumbnailUrl"`
 	RatingAvg      float64              `json:"rating_avg"`
@@ -59,6 +61,7 @@ type DeoScene struct {
 	Encodings      []DeoSceneEncoding   `json:"encodings"`
 	Timestamps     []DeoSceneTimestamp  `json:"timeStamps"`
 	Actors         []DeoSceneActor      `json:"actors"`
+	Categories     []DeoSceneCategory   `json:"categories,omitempty"`
 	Fleshlight     []DeoSceneScriptFile `json:"fleshlight,omitempty"`
 	FullVideoReady bool                 `json:"fullVideoReady"`
 	FullAccess     bool                 `json:"fullAccess"`
@@ -70,6 +73,10 @@ type DeoSceneActor struct {
 }
 
 type DeoSceneCategory struct {
+	Tag DeoSceneTag `json:"tag"`
+}
+
+type DeoSceneTag struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }
@@ -289,6 +296,16 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		})
 	}
 
+	var categories []DeoSceneCategory
+	for i := range scene.Tags {
+		categories = append(categories, DeoSceneCategory{
+			Tag: DeoSceneTag{
+				ID:   scene.Tags[i].ID,
+				Name: scene.Tags[i].Name,
+			},
+		})
+	}
+
 	var videoLength float64
 
 	var sources []DeoSceneEncoding
@@ -380,6 +397,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Actors:         actors,
 		Paysite:        DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
 		IsFavorite:     scene.Favourite,
+		IsScripted:     scene.IsScripted,
+		IsWatchlist:    scene.Watchlist,
 		RatingAvg:      scene.StarRating,
 		FullVideoReady: true,
 		FullAccess:     true,
@@ -390,6 +409,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Encodings:      sources,
 		VideoLength:    int(videoLength),
 		Timestamps:     cuepoints,
+		Categories:     categories,
 		Fleshlight:     deoScriptFiles,
 	}
 
