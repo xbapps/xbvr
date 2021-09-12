@@ -64,7 +64,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// ...a lot of these are shared with RealJamVR which uses the same tags though.
 		// Could split by / but would run into issues with "f/f/m" and "shorts / skirts"
 		var videotype string
-		var FB360 = ".mp4"
+		var FB360 string
 		e.ForEach(`ul.c-meta--scene-tags li a`, func(id int, e *colly.HTMLElement) {
 			if !skiptags[e.Attr("title")] {
 				sc.Tags = append(sc.Tags, e.Attr("title"))
@@ -75,7 +75,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				videotype = e.Attr("title")
 			}
 			if e.Attr("title") == "Spatial audio" {
-				FB360 = "_FB360.MP4"
+				FB360 = "_FB360.MKV"
 			}
 
 		})
@@ -147,14 +147,22 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 					}
 				case "Fisheye": // 200° videos named with MKX200
 					for i := range resolutions {
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200"+FB360)
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220"+FB360)
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220"+FB360)
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220.mp4")
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220.mp4")
 					}
 				default: // Assuming everything else is 180 and LR, yet to find a TB_180
 					for i := range resolutions {
 						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_LR_180.mp4")
 					}
+				}
+				if FB360 != "" {
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_LR_180"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX200"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX220"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_VRCA220"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MONO_360"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_TB_360"+FB360)
 				}
 			}
 
