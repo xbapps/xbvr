@@ -55,7 +55,7 @@
               <b-progress show-value :value="props.row._score * 100"></b-progress>
             </b-table-column>
             <b-table-column field="_assign" v-slot="props">
-              <button class="button" type="is-primary" @click="assign(props.row.scene_id)">{{ $t("Assign") }}</button>
+              <button class="button is-primary is-outlined" @click="assign(props.row.scene_id)">{{ $t("Assign") }}</button>
             </b-table-column>
           </b-table>
         </div>
