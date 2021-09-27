@@ -11,6 +11,7 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
+	"gopkg.in/resty.v1"
 )
 
 func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
@@ -58,25 +59,31 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 		})
 
-		//Scene ID - release date + duration
-		sc.SiteID = strings.Replace(strings.TrimSpace(sc.Released), "-", "", -1) + durationParts[0]
+		content_id := strings.Split(strings.Replace(sc.HomepageURL, "//", "/", -1), "/")[3]
+
+		r, _ := resty.R().Get("https://content.vrbangers.com/api/content/v1/videos/" + content_id)
+
+		JsonMetadata := r.String()
+
+		//if not valid scene...
+		if gjson.Get(JsonMetadata, "status.message").String() != "Ok" {
+			return
+		}
+
+		//Scene ID - back 8 of the"id" via api response
+		sc.SiteID = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.id").String()[16:])
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Filenames - VRBANGERS_the_missing_kitten_8K_180x180_3dh.mp4
-		e.ForEach(`script`, func(id int, e *colly.HTMLElement) {
-			if !strings.Contains(e.Text, "videoShortName") {
-				return
-			}
-			jsonData := strings.Replace(e.Text[strings.Index(e.Text, "videoSettings:"):len(e.Text)-3], "videoShortName", "\"videoShortName\"", -1)
-			baseName := sc.Site + "_" + gjson.Get(jsonData, "videoShortName").String()
-			filenames := []string{"8K_180x180_3dh", "6K_180x180_3dh", "5K_180x180_3dh", "4K_180x180_3dh", "HD_180x180_3dh", "HQ_180x180_3dh", "PSVRHQ_180x180_3dh", "UHD_180x180_3dh", "PSVRHQ_180_sbs", "PSVR_mono", "HQ_mono360", "HD_mono360", "PSVRHQ_ou", "UHD_3dv", "HD_3dv", "HQ_3dv"}
+		baseName := sc.Site + "_" + strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.slug").String()) + "_"
+		filenames := []string{"8K_180x180_3dh", "6K_180x180_3dh", "5K_180x180_3dh", "4K_180x180_3dh", "HD_180x180_3dh", "HQ_180x180_3dh", "PSVRHQ_180x180_3dh", "UHD_180x180_3dh", "PSVRHQ_180_sbs", "PSVR_mono", "HQ_mono360", "HD_mono360", "PSVRHQ_ou", "UHD_3dv", "HD_3dv", "HQ_3dv"}
 
-			for i := range filenames {
-				filenames[i] = baseName + "_" + filenames[i] + ".mp4"
-			}
+		for i := range filenames {
+			filenames[i] = baseName + filenames[i] + ".mp4"
+		}
 
-			sc.Filenames = filenames
-		})
+		sc.Filenames = filenames
+
 		// Cover URLs
 		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
 			tmpCover := strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0]
