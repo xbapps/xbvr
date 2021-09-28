@@ -30,14 +30,35 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
+		content_id := strings.Split(strings.Replace(sc.HomepageURL, "//", "/", -1), "/")[3]
+
+		r, _ := resty.R().Get("https://content.vrbangers.com/api/content/v1/videos/" + content_id)
+
+		JsonMetadata := r.String()
+
 		// Sneak Peek 2020 URL will crash the scraper
-		if sc.HomepageURL == "https://vrbangers.com/video/aniversary/" {
-			log.Printf("Skipping %s because it is not a valid scene.", e.Request.URL.String())
+		//if not valid scene...
+		if gjson.Get(JsonMetadata, "status.message").String() != "Ok" {
 			return
 		}
 
+		//Scene ID - back 8 of the"id" via api response
+		sc.SiteID = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.id").String()[16:])
+		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+
 		// Title
-		sc.Title = strings.TrimSpace(e.ChildText(`h1.video-item__title`))
+		sc.Title = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.title").String())
+		//		sc.Title = strings.TrimSpace(e.ChildText(`h1.video-item__title`))
+
+		// Filenames - VRBANGERS_the_missing_kitten_8K_180x180_3dh.mp4
+		baseName := sc.Site + "_" + strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.videoSettings.videoShortName").String()) + "_"
+		filenames := []string{"8K_180x180_3dh", "6K_180x180_3dh", "5K_180x180_3dh", "4K_180x180_3dh", "HD_180x180_3dh", "HQ_180x180_3dh", "PSVRHQ_180x180_3dh", "UHD_180x180_3dh", "PSVRHQ_180_sbs", "PSVR_mono", "HQ_mono360", "HD_mono360", "PSVRHQ_ou", "UHD_3dv", "HD_3dv", "HQ_3dv"}
+
+		for i := range filenames {
+			filenames[i] = baseName + filenames[i] + ".mp4"
+		}
+
+		sc.Filenames = filenames
 
 		var durationParts []string
 		// Date & Duration
@@ -58,31 +79,6 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 			}
 
 		})
-
-		content_id := strings.Split(strings.Replace(sc.HomepageURL, "//", "/", -1), "/")[3]
-
-		r, _ := resty.R().Get("https://content.vrbangers.com/api/content/v1/videos/" + content_id)
-
-		JsonMetadata := r.String()
-
-		//if not valid scene...
-		if gjson.Get(JsonMetadata, "status.message").String() != "Ok" {
-			return
-		}
-
-		//Scene ID - back 8 of the"id" via api response
-		sc.SiteID = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.id").String()[16:])
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
-
-		// Filenames - VRBANGERS_the_missing_kitten_8K_180x180_3dh.mp4
-		baseName := sc.Site + "_" + strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.slug").String()) + "_"
-		filenames := []string{"8K_180x180_3dh", "6K_180x180_3dh", "5K_180x180_3dh", "4K_180x180_3dh", "HD_180x180_3dh", "HQ_180x180_3dh", "PSVRHQ_180x180_3dh", "UHD_180x180_3dh", "PSVRHQ_180_sbs", "PSVR_mono", "HQ_mono360", "HD_mono360", "PSVRHQ_ou", "UHD_3dv", "HD_3dv", "HQ_3dv"}
-
-		for i := range filenames {
-			filenames[i] = baseName + filenames[i] + ".mp4"
-		}
-
-		sc.Filenames = filenames
 
 		// Cover URLs
 		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
@@ -125,7 +121,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sceneURL := e.Request.AbsoluteURL(url)
 
 		// Sneak Peek 2020 URL will crash the scraper
-		if !funk.ContainsString(knownScenes, sceneURL) && sceneURL != "https://vrbangers.com/video/aniversary/" {
+		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
