@@ -136,7 +136,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.Visit(URL + "?sort=latest")
+	siteCollector.Visit(URL + "?sort=latest&bonus-video=1")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
