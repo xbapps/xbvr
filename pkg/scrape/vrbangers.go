@@ -32,23 +32,25 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 		content_id := strings.Split(strings.Replace(sc.HomepageURL, "//", "/", -1), "/")[3]
 
-		r, _ := resty.R().Get("https://content.vrbangers.com/api/content/v1/videos/" + content_id)
+		//https://content.vrbangers.com
+		contentURL := strings.Replace(URL, "//", "//content.", 1)
+
+		r, _ := resty.R().Get("https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id)
 
 		JsonMetadata := r.String()
 
-		// Sneak Peek 2020 URL will crash the scraper
+		// Sneak Peek 2020 VRBangers URL will crash the scraper
 		//if not valid scene...
 		if gjson.Get(JsonMetadata, "status.message").String() != "Ok" {
 			return
 		}
 
 		//Scene ID - back 8 of the"id" via api response
-		sc.SiteID = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.id").String()[16:])
+		sc.SiteID = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.id").String()[15:])
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Title
 		sc.Title = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.title").String())
-		//		sc.Title = strings.TrimSpace(e.ChildText(`h1.video-item__title`))
 
 		// Filenames - VRBANGERS_the_missing_kitten_8K_180x180_3dh.mp4
 		baseName := sc.Site + "_" + strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.videoSettings.videoShortName").String()) + "_"
@@ -91,8 +93,11 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Covers = append(sc.Covers, e.ChildAttr(`section.banner picture img`, "src"))
 		sc.Covers = append(sc.Covers, e.ChildAttr(`section.base-content__bg img[class="object-fit-cover base-border overflow-hidden hero-img"]`, "src"))
 
-		// Gallery
-		sc.Gallery = e.ChildAttrs(`div.swiper-wrapper a`, "data-download-url")
+		// Gallery - https://content.vrbangers.com/uploads/2021/08/611b4e0ca5c54351494706_XL.jpg
+		gallerytmp := gjson.Get(JsonMetadata, "data.item.galleryImages.#.previews.#(sizeAlias==XL).permalink")
+		for _, v := range gallerytmp.Array() {
+			sc.Gallery = append(sc.Gallery, contentURL+v.Str)
+		}
 
 		// Synopsis
 		sc.Synopsis = strings.TrimSpace(strings.Replace(e.ChildText(`div.video-item__description div.short-text`), `arrow_drop_up`, ``, -1))
@@ -114,29 +119,21 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	})
 
 	siteCollector.OnHTML(`div.video-item-info-title a`, func(e *colly.HTMLElement) {
-		// Some index pages have links to german language scene pages:
-		// https://vrbangers.com/video/sensual-seduction/?lang=de
-		// This will strip out the query params... gross
 		url := strings.Split(e.Attr("href"), "?")[0]
 		sceneURL := e.Request.AbsoluteURL(url)
 
-		// Sneak Peek 2020 URL will crash the scraper
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
 
 	siteCollector.OnHTML(`.pagination-next a`, func(e *colly.HTMLElement) {
-		// Some index pages have links to german language scene pages:
-		// https://vrbangers.com/video/sensual-seduction/?lang=de
-		// This will strip out the query params... gross
-		//url := strings.Split(e.Attr("href"), "?")[0]
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.Visit(URL + "?sort=latest&bonus-video=1")
+	siteCollector.Visit(URL + "videos/?sort=latest&bonus-video=1")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -146,13 +143,13 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 }
 
 func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbangers", "VRBangers", "https://vrbangers.com/videos/")
+	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbangers", "VRBangers", "https://vrbangers.com/")
 }
 func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbtrans", "VRBTrans", "https://vrbtrans.com/videos/")
+	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbtrans", "VRBTrans", "https://vrbtrans.com/")
 }
 func VRBGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbgay", "VRBGay", "https://vrbgay.com/videos/")
+	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbgay", "VRBGay", "https://vrbgay.com/")
 }
 
 func init() {

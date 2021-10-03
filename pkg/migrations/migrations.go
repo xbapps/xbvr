@@ -488,6 +488,24 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			// VRBangers have removed scene numbering schema, so it needs to be flushed
+			ID: "0027-flush-vrbangers",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				db.Where("studio = ?", "VRBangers").Find(&scenes)
+
+				for _, obj := range scenes {
+					files, _ := obj.GetFiles()
+					for _, file := range files {
+						file.SceneID = 0
+						file.Save()
+					}
+				}
+
+				return db.Where("studio = ?", "VRBangers").Delete(&models.Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
