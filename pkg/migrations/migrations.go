@@ -570,7 +570,7 @@ func Migrate() {
 				}
 
 				// since scenes have new IDs, we need to re-index them
-				go tasks.SearchIndex()
+				tasks.SearchIndex()
 
 				return nil
 			},
