@@ -1,7 +1,9 @@
 package tasks
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"path"
 	"path/filepath"
@@ -56,12 +58,19 @@ func RescanVolumes() {
 		tlog.Infof("Matching Scenes to known filenames")
 		db.Model(&models.File{}).Where("files.scene_id = 0").Find(&files)
 
+		escape := func(s string) string {
+			var buffer bytes.Buffer
+			json.HTMLEscape(&buffer, []byte(s))
+			return buffer.String()
+		}
+
 		for i := range files {
-			fn := path.Base(files[i].Filename)
-			fn2 := strings.Replace(fn, ".funscript", ".mp4", -1)
-			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ?", "%\""+fn+"\"%", "%\""+fn2+"\"%").Find(&scenes).Error
+			unescapedFilename := path.Base(files[i].Filename)
+			filename := escape(unescapedFilename)
+			filename2 := strings.Replace(filename, ".funscript", ".mp4", -1)
+			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ?", `%"`+filename+`"%`, `%"`+filename2+`"%`).Find(&scenes).Error
 			if err != nil {
-				log.Error(err, " when matching "+fn)
+				log.Error(err, " when matching "+unescapedFilename)
 			}
 
 			if len(scenes) == 1 {
