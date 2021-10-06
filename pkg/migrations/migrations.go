@@ -2,7 +2,9 @@ package migrations
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -11,9 +13,13 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/markphelps/optional"
+	"github.com/mozillazg/go-slugify"
+	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/tasks"
 	"gopkg.in/gormigrate.v1"
+	"gopkg.in/resty.v1"
 )
 
 type RequestSceneList struct {
@@ -485,6 +491,87 @@ func Migrate() {
 						}
 					}
 				}
+				return nil
+			},
+		},
+		{
+			// VRBangers have removed scene numbering schema, so scene IDs need to be changed
+			ID: "0027-fix-vrbangers-ids",
+			Migrate: func(tx *gorm.DB) error {
+				// old slug -> new slug
+				slugMapping := map[string]string{
+					"ayumis-first-time-2": "ayumis-first-time",
+				}
+
+				// site -> slug -> id
+				newScenes := map[string]map[string]string{}
+				newSceneId := func(site string, slug string) (string, error) {
+					mapping, ok := newScenes[site]
+					if !ok {
+						mapping = map[string]string{}
+						queryParams := "page=1&type=videos&sort=latest&show_custom_video=1&bonus-video=1&limit=1000"
+						url := fmt.Sprintf("https://content.%s.com/api/content/v1/videos?%s", strings.ToLower(site), queryParams)
+						r, err := resty.R().Get(url)
+						if err != nil {
+							return "", err
+						}
+						items := gjson.Get(r.String(), "data.items")
+						if !items.Exists() {
+							return "", fmt.Errorf("invalid response from %s API: no scenes found", site)
+						}
+						for _, scene := range items.Array() {
+							id, slug := scene.Get("id").String(), scene.Get("slug").String()
+							if id == "" || slug == "" {
+								return "", fmt.Errorf("invalid response from %s API: no id or slug found", site)
+							}
+							mapping[slug] = slugify.Slugify(site) + "-" + id[15:]
+						}
+						newScenes[site] = mapping
+					}
+					return mapping[slug], nil
+				}
+
+				var scenes []models.Scene
+				err := tx.Where("studio = ?", "VRBangers").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for _, scene := range scenes {
+					trimmedURL := strings.TrimRight(scene.SceneURL, "/")
+					dir, base := path.Split(trimmedURL)
+					slug, ok := slugMapping[base]
+					if !ok {
+						slug = slugify.Slugify(base)
+					}
+
+					sceneID, err := newSceneId(scene.Site, slug)
+					if err != nil {
+						return err
+					}
+					if sceneID == "" {
+						common.Log.Warnf("Could not update scene %s", scene.SceneID)
+						continue
+					}
+
+					// update all actions referring to this scene by its scene_id
+					err = tx.Model(&models.Action{}).Where("scene_id = ?", scene.SceneID).Update("scene_id", sceneID).Error
+					if err != nil {
+						return err
+					}
+
+					// update the scene itself
+					// with trailing slash for consistency with scraped data, to avoid these scenes being re-scraped
+					scene.SceneURL = path.Join(dir, slug) + "/"
+					scene.SceneID = sceneID
+					err = tx.Save(&scene).Error
+					if err != nil {
+						return err
+					}
+				}
+
+				// since scenes have new IDs, we need to re-index them
+				tasks.SearchIndex()
+
 				return nil
 			},
 		},
