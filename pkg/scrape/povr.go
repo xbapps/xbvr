@@ -92,6 +92,11 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		}
 	})
 
+	siteCollector.OnHTML(`div.pagination a[class="pagination__page next"]`, func(e *colly.HTMLElement) {
+		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+		siteCollector.Visit(pageURL)
+	})
+
 	siteCollector.Visit("https://povr.com/" + scraperID)
 
 	if updateSite {
