@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -56,6 +57,17 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		tmpDate, _ := goment.New(dateString, "MMMM D, YYYY")
 		sc.Released = tmpDate.Format("YYYY-MM-DD")
 
+		// Duration
+		r := regexp.MustCompile(`(?:(\d{2}):)?(\d{2}):(\d{2})`)
+		m := r.FindStringSubmatch(e.ChildText(`div.set_meta`))
+		duration := 0
+		if len(m) == 4 {
+			hours, _ := strconv.Atoi("0" + m[1])
+			minutes, _ := strconv.Atoi(m[2])
+			duration = hours*60 + minutes
+		}
+		sc.Duration = duration
+
 		// Pull data from vod page - not every scene has a vod link
 		ctx := colly.NewContext()
 		ctx.Put("scene", &sc)
@@ -72,15 +84,6 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 		// Gallery
 		sc.Gallery = e.ChildAttrs("div.gallery-group img", "data-orig-file")
-
-		// Duration - not every vod page has a duration listed
-		r := strings.NewReplacer("Length: ", "", "Length ", "")
-		tmpDuration := r.Replace(e.ChildText(`ul li:contains(length)`))
-		tmpDuration = strings.Split(tmpDuration, "m")[0]
-		duration, err := strconv.Atoi(tmpDuration)
-		if err == nil && duration > 0 {
-			sc.Duration = duration
-		}
 
 		// Tags
 		e.ForEach(`span.meta-tag a`, func(id int, e *colly.HTMLElement) {
