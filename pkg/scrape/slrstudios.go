@@ -39,14 +39,21 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.SceneID = slugify.Slugify(scraperID) + "-" + sc.SiteID
 
 		// Cover
-		coverURL := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.splash-screen`, "style")))[1]
+		coverURL := e.ChildAttr(`.splash-screen > img`, "src")
 		if len(coverURL) > 0 {
 			sc.Covers = append(sc.Covers, coverURL)
+		} else {
+			m := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.splash-screen`, "style")))
+			if len(m) > 0 && len(m[1]) > 0 {
+				sc.Covers = append(sc.Covers, m[1])
+			}
 		}
 
 		// Gallery
-		e.ForEach(`div#tabs-photos figure a`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
+		e.ForEach(`meta[name^="twitter:image"]`, func(id int, e *colly.HTMLElement) {
+			if e.Attr("name") != "twitter:image" { // we need image1, image2...
+				sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("content")))
+			}
 		})
 
 		// Synopsis
