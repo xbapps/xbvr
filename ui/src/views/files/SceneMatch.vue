@@ -29,7 +29,15 @@
               </vue-load-image>
             </b-table-column>
             <b-table-column field="site" :label="$t('Site')" sortable v-slot="props">
-              {{ props.row.site }}
+              <a :href="props.row.scene_url" target="_blank" rel="noreferrer">{{ props.row.site }}</a><br>
+              <b-tag type="is-info is-light" v-if="videoFilesCount(props.row)">
+                <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
+                {{videoFilesCount(props.row)}}
+              </b-tag>&nbsp;
+              <b-tag type="is-info is-light" v-if="props.row.is_scripted">
+                <b-icon pack="mdi" icon="pulse" size="is-small"/>
+                <span v-if="scriptFilesCount(props.row) > 1">{{scriptFilesCount(props.row)}}</span>
+              </b-tag>
             </b-table-column>
             <b-table-column field="title" :label="$t('Title')" sortable v-slot="props">
               <p v-if="props.row.title">{{ props.row.title }}</p>
@@ -47,7 +55,7 @@
               <b-progress show-value :value="props.row._score * 100"></b-progress>
             </b-table-column>
             <b-table-column field="_assign" v-slot="props">
-              <button class="button" @click="assign(props.row.scene_id)">{{ $t("Assign") }}</button>
+              <button class="button is-primary is-outlined" @click="assign(props.row.scene_id)">{{ $t("Assign") }}</button>
             </b-table-column>
           </b-table>
         </div>
@@ -169,6 +177,25 @@ export default {
     },
     toInt (value, radix, defaultValue) {
       return parseInt(value, radix || 10) || defaultValue || 0
+    },
+    videoFilesCount (scene) {
+      let count = 0
+      console.log(scene)
+      scene.file.forEach(obj => {
+        if (obj.type === 'video') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    scriptFilesCount (scene) {
+      let count = 0
+      scene.file.forEach(obj => {
+        if (obj.type === 'script') {
+          count = count + 1
+        }
+      })
+      return count
     },
     prettyBytes
   }
