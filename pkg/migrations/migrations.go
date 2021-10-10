@@ -561,7 +561,7 @@ func Migrate() {
 
 					// update the scene itself
 					// with trailing slash for consistency with scraped data, to avoid these scenes being re-scraped
-					scene.SceneURL = path.Join(dir, slug) + "/"
+					scene.SceneURL = dir + slug + "/"
 					scene.SceneID = sceneID
 					err = tx.Save(&scene).Error
 					if err != nil {
