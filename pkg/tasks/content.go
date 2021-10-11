@@ -102,7 +102,11 @@ func ReapplyEdits() {
 
 	for _, a := range actions {
 		var scene models.Scene
-		scene.GetIfExist(a.SceneID)
+		err := scene.GetIfExist(a.SceneID)
+		if err != nil {
+			// scene has been deleted, nothing to apply
+			continue
+		}
 		if a.ChangedColumn == "tags" || a.ChangedColumn == "cast" || a.ChangedColumn == "is_multipart" {
 			prefix := string(a.NewValue[0])
 			name := a.NewValue[1:]
