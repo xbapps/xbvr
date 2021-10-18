@@ -35,7 +35,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		//https://content.vrbangers.com
 		contentURL := strings.Replace(URL, "//", "//content.", 1)
 
-		r, _ := resty.R().Get("https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id)
+		r, _ := resty.R().
+			SetHeader("User-Agent", UserAgent).
+			Get("https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id)
 
 		JsonMetadata := r.String()
 

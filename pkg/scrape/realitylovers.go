@@ -80,7 +80,7 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 
 	// Request scenes via REST API
 	r, err := resty.R().
-		SetHeader("User-Agent", userAgent).
+		SetHeader("User-Agent", UserAgent).
 		SetHeader("content-type", "application/json;charset=UTF-8").
 		SetHeader("accept", "application/json, text/plain, */*").
 		SetHeader("referer", URL+"videos").

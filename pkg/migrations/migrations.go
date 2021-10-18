@@ -17,6 +17,7 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/tasks"
 	"gopkg.in/gormigrate.v1"
 	"gopkg.in/resty.v1"
@@ -511,7 +512,7 @@ func Migrate() {
 						mapping = map[string]string{}
 						queryParams := "page=1&type=videos&sort=latest&show_custom_video=1&bonus-video=1&limit=1000"
 						url := fmt.Sprintf("https://content.%s.com/api/content/v1/videos?%s", strings.ToLower(site), queryParams)
-						r, err := resty.R().Get(url)
+						r, err := resty.R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
 						if err != nil {
 							return "", err
 						}
