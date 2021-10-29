@@ -107,7 +107,7 @@ func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString str
 	siteCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sceneURL := ""
 
-		e.ForEach(`li.item-list a:not([class])`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`li.item-list a.i3NLink`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				sceneURL = strings.Split(e.Attr("href"), "?")[0]
 			} else {
