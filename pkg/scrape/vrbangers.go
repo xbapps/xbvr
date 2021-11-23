@@ -108,6 +108,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		e.ForEach(`div.video-item__tags a`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, e.Text)
 		})
+		e.ForEach(`div.video-item__info span.video-item__position-title`, func(id int, e *colly.HTMLElement) {
+			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
+		})
 		if scraperID == "vrbgay" {
 			sc.Tags = append(sc.Tags, "Gay")
 		}
