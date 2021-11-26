@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -534,6 +535,87 @@ func Migrate() {
 
 				var scenes []models.Scene
 				err := tx.Where("studio = ?", "VRBangers").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for _, scene := range scenes {
+					trimmedURL := strings.TrimRight(scene.SceneURL, "/")
+					dir, base := path.Split(trimmedURL)
+					slug, ok := slugMapping[base]
+					if !ok {
+						slug = slugify.Slugify(base)
+					}
+
+					sceneID, err := newSceneId(scene.Site, slug)
+					if err != nil {
+						return err
+					}
+					if sceneID == "" {
+						common.Log.Warnf("Could not update scene %s", scene.SceneID)
+						continue
+					}
+
+					// update all actions referring to this scene by its scene_id
+					err = tx.Model(&models.Action{}).Where("scene_id = ?", scene.SceneID).Update("scene_id", sceneID).Error
+					if err != nil {
+						return err
+					}
+
+					// update the scene itself
+					// with trailing slash for consistency with scraped data, to avoid these scenes being re-scraped
+					scene.SceneURL = dir + slug + "/"
+					scene.SceneID = sceneID
+					err = tx.Save(&scene).Error
+					if err != nil {
+						return err
+					}
+				}
+
+				// since scenes have new IDs, we need to re-index them
+				tasks.SearchIndex()
+
+				return nil
+			},
+		},
+		{
+			// VRConk is now using VRBangers code. renumbering scenes
+			ID: "0028-fix-vrconk-ids",
+			Migrate: func(tx *gorm.DB) error {
+				// old slug -> new slug
+				slugMapping := map[string]string{
+					"vrconk": "vrconk",
+				}
+
+				// site -> slug -> id
+				newScenes := map[string]map[string]string{}
+				newSceneId := func(site string, slug string) (string, error) {
+					mapping, ok := newScenes[site]
+					if !ok {
+						mapping = map[string]string{}
+						//						queryParams := "page=1&type=videos&sort=latest&show_custom_video=1&bonus-video=1&limit=1000"
+						url := fmt.Sprintf("https://content.%s.com/api/content/v1/videos/%s", strings.ToLower(site), slug)
+						r, err := resty.R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
+						if err != nil {
+							return "", err
+						}
+						items := gjson.Get(r.String(), "data.item")
+						if !items.Exists() {
+							return "", fmt.Errorf("invalid response from %s API: no scenes found", site)
+						}
+						//						for _, scene := range items.Array() {
+						id, slug := items.Get("playaId").Int(), items.Get("slug").String()
+						if id == 0 || slug == "" {
+							return "", fmt.Errorf("invalid response from %s API: no id or slug found", site)
+						}
+						mapping[slug] = slugify.Slugify(site) + "-" + strconv.Itoa(int(id))
+						//						}
+						//						newScenes[site] = mapping
+					}
+					return mapping[slug], nil
+				}
+
+				var scenes []models.Scene
+				err := tx.Where("studio = ?", "VRCONK").Find(&scenes).Error
 				if err != nil {
 					return err
 				}

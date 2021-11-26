@@ -42,7 +42,8 @@ func ConvertTag(t string) string {
 
 	if funk.Contains([]string{"180", "60fps", "60 fps", "5k", "5k+", "big dick", "big cocks",
 		"axaxqxrrysrwqua", "girl-boy", "virtual reality", "sex", "new",
-		"virtual reality porn", "vr porn", "180 vr porn", "xxxsex vr",
+		"virtual reality porn", "vr porn", "8k-vr-porn", "7k-vr-porn", "6k-vr-porn", "5k-vr-porn",
+		"4k-vr-porn", "180 vr porn", "xxxsex vr",
 		"xxx vr porn", "VRconk", "sex onbed", "pornstars", "vr", "vrp",
 		"bg", "coming soon", "vr 1080p porn",
 	}, t) {
@@ -77,7 +78,7 @@ func ConvertTag(t string) string {
 		return "threesome fmm"
 	}
 
-	if funk.Contains([]string{"big boobs", "big tits porn"}, t) {
+	if funk.Contains([]string{"busty", "big boobs", "big tits porn", "big-tits"}, t) {
 		return "big tits"
 	}
 
@@ -181,11 +182,11 @@ func ConvertTag(t string) string {
 		return "voyeur"
 	}
 
-	if funk.Contains([]string{"small boobs", "small natural tits"}, t) {
+	if funk.Contains([]string{"small boobs", "small natural tits", "small-tits"}, t) {
 		return "small tits"
 	}
 
-	if funk.Contains([]string{"natural boobs"}, t) {
+	if funk.Contains([]string{"natural boobs", "natural-tits"}, t) {
 		return "natural tits"
 	}
 
@@ -201,12 +202,16 @@ func ConvertTag(t string) string {
 		return "pussy licking"
 	}
 
-	if funk.Contains([]string{"pussy cumshot"}, t) {
+	if funk.Contains([]string{"pussy cumshot", "cum-on-pussy"}, t) {
 		return "cum on pussy"
 	}
 
-	if funk.Contains([]string{"tits cumshoot"}, t) {
+	if funk.Contains([]string{"tits cumshoot", "tits cumshot"}, t) {
 		return "cum on tits"
+	}
+
+	if funk.Contains([]string{"body-cumshot"}, t) {
+		return "cum on body"
 	}
 
 	if funk.Contains([]string{"hairy", "hairy bush"}, t) {
@@ -249,8 +254,8 @@ func ConvertTag(t string) string {
 		return "cum on ass"
 	}
 
-	if funk.Contains([]string{"busty"}, t) {
-		return "big tits"
+	if funk.Contains([]string{"big-ass"}, t) {
+		return "big ass"
 	}
 
 	if funk.Contains([]string{"mature mother"}, t) {
