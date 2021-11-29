@@ -210,7 +210,7 @@ func addSLRScraper(id string, slug string, name string, company string, avatarUR
 		suffixedName += " (SLR)"
 	}
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return SexLikeReal(wg, updateSite, knownScenes, out, slug, name, company, slug)
+		return SexLikeReal(wg, updateSite, knownScenes, out, id, name, company, slug)
 	})
 }
 
