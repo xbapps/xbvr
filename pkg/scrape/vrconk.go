@@ -2,7 +2,6 @@ package scrape
 
 import (
 	"math"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -47,9 +46,12 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			return
 		}
 
-		//Scene ID
-		playaId := gjson.Get(JsonMetadata, "data.item.playaId").Int()
-		sc.SiteID = strconv.Itoa(int(playaId))
+		//Scene ID - back 8 of the"id" via api response
+		sc.SiteID = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.id").String()[15:])
+
+		//Scene ID - use PlayaId for scene-id instead of "random" using id
+		//		playaId := gjson.Get(JsonMetadata, "data.item.playaId").Int()
+		//		sc.SiteID = strconv.Itoa(int(playaId))
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Title

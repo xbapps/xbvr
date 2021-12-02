@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -583,33 +582,34 @@ func Migrate() {
 			Migrate: func(tx *gorm.DB) error {
 				// old slug -> new slug
 				slugMapping := map[string]string{
-					"vrconk": "vrconk",
+					"vrconk-scene": "vrconk-scene-0",
 				}
 
 				// site -> slug -> id
+				re := regexp.MustCompile(`(.*)-\d+$`)
 				newScenes := map[string]map[string]string{}
 				newSceneId := func(site string, slug string) (string, error) {
 					mapping, ok := newScenes[site]
 					if !ok {
 						mapping = map[string]string{}
-						//						queryParams := "page=1&type=videos&sort=latest&show_custom_video=1&bonus-video=1&limit=1000"
-						url := fmt.Sprintf("https://content.%s.com/api/content/v1/videos/%s", strings.ToLower(site), slug)
+						queryParams := "page=1&type=videos&sort=latest&show_custom_video=1&bonus-video=1&limit=1000"
+						url := fmt.Sprintf("https://content.%s.com/api/content/v1/videos?%s", strings.ToLower(site), queryParams)
 						r, err := resty.R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
 						if err != nil {
 							return "", err
 						}
-						items := gjson.Get(r.String(), "data.item")
+						items := gjson.Get(r.String(), "data.items")
 						if !items.Exists() {
 							return "", fmt.Errorf("invalid response from %s API: no scenes found", site)
 						}
-						//						for _, scene := range items.Array() {
-						id, slug := items.Get("playaId").Int(), items.Get("slug").String()
-						if id == 0 || slug == "" {
-							return "", fmt.Errorf("invalid response from %s API: no id or slug found", site)
+						for _, scene := range items.Array() {
+							id, slug := scene.Get("id").String(), scene.Get("slug").String()
+							if id == "" || slug == "" {
+								return "", fmt.Errorf("invalid response from %s API: no id or slug found", site)
+							}
+							mapping[slug] = slugify.Slugify(site) + "-" + id[15:]
 						}
-						mapping[slug] = slugify.Slugify(site) + "-" + strconv.Itoa(int(id))
-						//						}
-						//						newScenes[site] = mapping
+						newScenes[site] = mapping
 					}
 					return mapping[slug], nil
 				}
@@ -622,9 +622,10 @@ func Migrate() {
 				for _, scene := range scenes {
 					trimmedURL := strings.TrimRight(scene.SceneURL, "/")
 					dir, base := path.Split(trimmedURL)
-					slug, ok := slugMapping[base]
+					matches := re.FindStringSubmatch(base)
+					slug, ok := slugMapping[matches[1]]
 					if !ok {
-						slug = slugify.Slugify(base)
+						slug = slugify.Slugify(matches[1])
 					}
 
 					sceneID, err := newSceneId(scene.Site, slug)
