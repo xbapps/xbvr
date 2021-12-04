@@ -385,20 +385,20 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		screenType = "sphere"
 	}
 
-	title := scene.Title
+	// title := scene.Title
 	thumbnailURL := session.DeoRequestHost + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 
-	if scene.IsScripted {
-		title = scene.GetFunscriptTitle()
-		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
-			thumbnailURL = session.DeoRequestHost + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
-		}
-	}
+	// if scene.IsScripted {
+	// 	title = scene.GetFunscriptTitle()
+	// 	if config.Config.Interfaces.DeoVR.RenderHeatmaps {
+	// 		thumbnailURL = session.DeoRequestHost + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
+	// 	}
+	// }
 
 	deoScene := DeoScene{
 		ID:               scene.ID,
 		Authorized:       1,
-		Title:            title,
+		Title:            fmt.Sprintf("%d - %s", scene.FunscriptSpeed, scene.Title),
 		Description:      scene.Synopsis,
 		Actors:           actors,
 		Paysite:          DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
