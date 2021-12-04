@@ -39,6 +39,8 @@ type RequestSceneList struct {
 	Volume       optional.Int      `json:"volume"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
+	MinFunscript optional.Int      `json:"minFunscript"`
+	MaxFunscript optional.Int      `json:"maxFunscript"`
 }
 
 func (i *RequestSceneList) ToJSON() string {

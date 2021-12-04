@@ -130,6 +130,14 @@
         </b-taginput>
       </b-field>
 
+      <b-field label="Funscript speed" label-position="on-border" grouped>
+        <b-field class="field-extra" expanded>
+          <b-numberinput v-model="minFunscript" :controls="false"></b-numberinput>
+        </b-field>
+        <b-field class="field-extra" expanded>
+          <b-numberinput v-model="maxFunscript" :controls="false"></b-numberinput>
+        </b-field>
+      </b-field>
     </div>
   </div>
 </template>
@@ -268,6 +276,24 @@ export default {
       },
       set (value) {
         this.$store.state.sceneList.filters.isWatched = value
+        this.reloadList()
+      }
+    },
+    minFunscript: {
+      get () {
+        return this.$store.state.sceneList.filters.minFunscript
+      },
+      set (value) {
+        this.$store.state.sceneList.filters.minFunscript = value
+        this.reloadList()
+      }
+    },
+    maxFunscript: {
+      get () {
+        return this.$store.state.sceneList.filters.maxFunscript
+      },
+      set (value) {
+        this.$store.state.sceneList.filters.maxFunscript = value
         this.reloadList()
       }
     }

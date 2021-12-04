@@ -488,6 +488,8 @@ type RequestSceneList struct {
 	Volume       optional.Int      `json:"volume"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
+	MinFunscript optional.Int      `json:"minFunscript"`
+	MaxFunscript optional.Int      `json:"maxFunscript"`
 }
 
 type ResponseSceneList struct {
@@ -540,6 +542,14 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 
 	if r.IsWatched.Present() {
 		tx = tx.Where("is_watched = ?", r.IsWatched.OrElse(true))
+	}
+
+	if r.MinFunscript.Present() {
+		tx = tx.Where("funscript_speed > ?", r.MinFunscript.OrElse(0))
+	}
+
+	if r.MaxFunscript.Present() {
+		tx = tx.Where("funscript_speed < ?", r.MaxFunscript.OrElse(0))
 	}
 
 	if r.Volume.Present() && r.Volume.OrElse(0) != 0 {
