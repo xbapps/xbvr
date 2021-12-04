@@ -14,6 +14,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/markphelps/optional"
 	"github.com/mozillazg/go-slugify"
+	"github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -572,6 +573,48 @@ func Migrate() {
 
 				// since scenes have new IDs, we need to re-index them
 				tasks.SearchIndex()
+
+				return nil
+			},
+		},
+		{
+			ID: "0028-file-funscript-speed",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					FunscriptSpeed int `json:"funscript_speed" gorm:"default:0"`
+				}
+				err := tx.AutoMigrate(File{}).Error
+				if err != nil {
+					return err
+				}
+				tlog := common.Log.WithFields(logrus.Fields{"task": "migrate"})
+				tasks.GenerateFunscriptSpeeds(tlog)
+				return nil
+			},
+		},
+		{
+			ID: "0029-scene-funscript-speed",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					FunscriptSpeed int `json:"funscript_speed" gorm:"default:0"`
+				}
+				err := tx.AutoMigrate(Scene{}).Error
+				if err != nil {
+					return err
+				}
+
+				var scenes []models.Scene
+
+				db.Model(&models.Scene{}).Find(&scenes)
+
+				tlog := common.Log.WithFields(logrus.Fields{"task": "migrate"})
+
+				for i := range scenes {
+					scenes[i].UpdateStatus()
+					if (i % 70) == 0 {
+						tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+					}
+				}
 
 				return nil
 			},

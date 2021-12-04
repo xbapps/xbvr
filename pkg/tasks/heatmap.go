@@ -39,6 +39,9 @@ type Action struct {
 
 	Slope     float64
 	Intensity int64
+
+	// Used in funscript speed task
+	Speed float64
 }
 
 type GradientTable []struct {

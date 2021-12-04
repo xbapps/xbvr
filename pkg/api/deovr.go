@@ -490,7 +490,7 @@ func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem 
 		}
 
 		item := DeoListItem{
-			Title:        scenes[i].Title,
+			Title:        fmt.Sprintf("%d - %s", scenes[i].FunscriptSpeed, scenes[i].Title),
 			VideoLength:  scenes[i].Duration * 60,
 			ThumbnailURL: thumbnailURL,
 			VideoURL:     fmt.Sprintf("%v/deovr/%v", session.DeoRequestHost, scenes[i].ID),

@@ -38,6 +38,7 @@ type File struct {
 	VideoProjection      string  `json:"projection"`
 
 	HasHeatmap       bool `json:"has_heatmap"`
+	FunscriptSpeed   int  `json:"funscript_speed" gorm:"default:0"`
 	IsSelectedScript bool `json:"is_selected_script"`
 	IsExported       bool `json:"is_exported"`
 }

@@ -47,6 +47,8 @@
             <option value="scene_updated_desc">↓ {{ $t("Scene updated date") }}</option>
             <option value="last_opened_desc">↓ {{ $t("Last viewed date") }}</option>
             <option value="last_opened_asc">↑ {{ $t("Last viewed date") }}</option>
+            <option value="funscript_speed_desc">↓ {{ $t("Funscript speed") }}</option>
+            <option value="funscript_speed_asc">↑ {{ $t("Funscript speed") }}</option>
             <option value="random">↯ {{ $t("Random") }}</option>
           </select>
         </div>

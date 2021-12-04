@@ -4,9 +4,12 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
+	"sort"
 
+	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -95,4 +98,75 @@ func AddFileToZip(zipWriter *zip.Writer, srcfilename, zipfilename string) error 
 	}
 	_, err = io.Copy(writer, fileToZip)
 	return err
+}
+
+func GenerateFunscriptSpeeds(tlog *logrus.Entry) {
+	if !models.CheckLock("funscript_speeds") {
+		models.CreateLock("funscript_speeds")
+
+		db, _ := models.GetDB()
+		defer db.Close()
+
+		var scriptfiles []models.File
+		db.Model(&models.File{}).Preload("Volume").Where("type = ?", "script").Where("funscript_speed = ?", 0).Find(&scriptfiles)
+
+		for i, file := range scriptfiles {
+			if tlog != nil && (i%50) == 0 {
+				tlog.Infof("Generating funscript speeds (%v/%v)", i+1, len(scriptfiles))
+			}
+			if file.Exists() {
+				speed, err := CalculateFunscriptSpeed(file.GetPath())
+
+				if err == nil {
+					file.FunscriptSpeed = speed
+					file.Save()
+				} else {
+					log.Warn(err)
+				}
+			}
+		}
+	}
+
+	models.RemoveLock("funscript_speeds")
+}
+
+func CalculateFunscriptSpeed(inputFile string) (int, error) {
+	funscript, err := LoadFunscriptData(inputFile)
+	if err != nil {
+		return 0, err
+	}
+	funscript.UpdateSpeed()
+	return funscript.CalculateMedian(), nil
+}
+
+func (funscript *Script) UpdateSpeed() {
+	var t1, t2 int64
+	var p1, p2 int
+
+	for i := range funscript.Actions {
+		if i == 0 {
+			continue
+		}
+		t1 = funscript.Actions[i].At
+		t2 = funscript.Actions[i-1].At
+		p1 = funscript.Actions[i].Pos
+		p2 = funscript.Actions[i-1].Pos
+
+		speed := math.Abs(float64(p1-p2)) / float64(t1-t2) * 1000
+		funscript.Actions[i].Speed = speed
+	}
+}
+
+func (funscript *Script) CalculateMedian() int {
+	sort.Slice(funscript.Actions, func(i, j int) bool {
+		return funscript.Actions[i].Speed < funscript.Actions[j].Speed
+	})
+
+	mNumber := len(funscript.Actions) / 2
+
+	if len(funscript.Actions)%2 != 0 {
+		return int(funscript.Actions[mNumber].Speed)
+	}
+
+	return int((funscript.Actions[mNumber-1].Speed + funscript.Actions[mNumber].Speed) / 2)
 }
