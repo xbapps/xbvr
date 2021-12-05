@@ -53,6 +53,17 @@
                   instructions in DeoVR documentation</a>.
                 </p>
               </div>
+              <div class="block">
+                <b-field label="Funscript Speeds">
+                  <b-switch v-model="funscriptSpeeds">
+                    Enabled
+                  </b-switch>
+                </b-field>
+                <p>
+                  Prepend the scenes funscript speed to the title.<br/>
+                  <b>Warning:</b> only works with dynamically served funscripts. Breaks matching for locally exported scripts.
+                </p>
+              </div>
             </div>
           </section>
         </div>
@@ -123,6 +134,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.deovr.render_heatmaps = value
+      }
+    },
+    funscriptSpeeds: {
+      get () {
+        return this.$store.state.optionsDeoVR.deovr.funscript_speeds
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.deovr.funscript_speeds = value
       }
     },
     remoteEnabled: {
