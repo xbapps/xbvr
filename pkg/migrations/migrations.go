@@ -578,7 +578,7 @@ func Migrate() {
 		},
 		{
 			// SLR/RealJam Titles containing ":" creates invalid filenames breaks automatching. fix filenames changing : to _
-			ID: "0028-fix-slr-rj-filenames",
+			ID: "0029-fix-slr-rj-filenames",
 			Migrate: func(tx *gorm.DB) error {
 				var scenes []models.Scene
 				err := tx.Where("filenames_arr LIKE ?", "%:%").Find(&scenes).Error
