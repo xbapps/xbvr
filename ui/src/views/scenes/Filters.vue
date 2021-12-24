@@ -47,6 +47,8 @@
             <option value="scene_updated_desc">↓ {{ $t("Scene updated date") }}</option>
             <option value="last_opened_desc">↓ {{ $t("Last viewed date") }}</option>
             <option value="last_opened_asc">↑ {{ $t("Last viewed date") }}</option>
+            <option value="funscript_speed_desc">↓ {{ $t("Funscript speed") }}</option>
+            <option value="funscript_speed_asc">↑ {{ $t("Funscript speed") }}</option>
             <option value="random">↯ {{ $t("Random") }}</option>
           </select>
         </div>
@@ -128,6 +130,14 @@
         </b-taginput>
       </b-field>
 
+      <b-field label="Funscript speed" label-position="on-border" grouped>
+        <b-field class="field-extra" expanded>
+          <b-numberinput v-model="minFunscript" :controls="false"></b-numberinput>
+        </b-field>
+        <b-field class="field-extra" expanded>
+          <b-numberinput v-model="maxFunscript" :controls="false"></b-numberinput>
+        </b-field>
+      </b-field>
     </div>
   </div>
 </template>
@@ -266,6 +276,24 @@ export default {
       },
       set (value) {
         this.$store.state.sceneList.filters.isWatched = value
+        this.reloadList()
+      }
+    },
+    minFunscript: {
+      get () {
+        return this.$store.state.sceneList.filters.minFunscript
+      },
+      set (value) {
+        this.$store.state.sceneList.filters.minFunscript = value
+        this.reloadList()
+      }
+    },
+    maxFunscript: {
+      get () {
+        return this.$store.state.sceneList.filters.maxFunscript
+      },
+      set (value) {
+        this.$store.state.sceneList.filters.maxFunscript = value
         this.reloadList()
       }
     }

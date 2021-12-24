@@ -19,6 +19,8 @@
             <b-tag type="is-info" v-if="item.is_scripted">
               <b-icon pack="mdi" icon="pulse" size="is-small"/>
               <span v-if="scriptFilesCount > 1">{{scriptFilesCount}}</span>
+              <b-icon v-if="item.funscript_speed > 0" pack="mdi" icon="speedometer" size="is-small"/>
+                <span v-if="item.funscript_speed > 0">{{item.funscript_speed}}</span>
             </b-tag>
             <b-tag type="is-warning" v-if="item.star_rating > 0">
               <b-icon pack="mdi" icon="star" size="is-small"/>
@@ -80,6 +82,20 @@ export default {
         }
       })
       return count
+    },
+    scriptSpeed () {
+      let first_speed, selected_speed
+      this.item.file.forEach(obj => {
+        if (obj.type === 'script') {
+          if (!first_speed) {
+            first_speed = obj.funscript_speed
+          }
+        }
+        if (obj.is_selected_script === true) {
+          selected_speed = obj.funscript_speed
+        }
+      })
+      return selected_speed ? selected_speed : first_speed
     }
   },
   methods: {

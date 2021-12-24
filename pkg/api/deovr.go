@@ -389,7 +389,11 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	thumbnailURL := session.DeoRequestHost + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 
 	if scene.IsScripted {
-		title = scene.GetFunscriptTitle()
+		if config.Config.Interfaces.DeoVR.FunscriptSpeeds {
+			title = fmt.Sprintf("%d - %s", scene.FunscriptSpeed, scene.Title)
+		} else {
+			title = scene.GetFunscriptTitle()
+		}
 		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
 			thumbnailURL = session.DeoRequestHost + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 		}

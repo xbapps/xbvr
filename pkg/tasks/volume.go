@@ -83,6 +83,9 @@ func RescanVolumes() {
 			}
 		}
 
+		tlog.Infof("Generating funscript speeds")
+		GenerateFunscriptSpeeds(tlog)
+
 		// Update scene statuses
 		tlog.Infof("Update status of Scenes")
 		db.Model(&models.Scene{}).Find(&scenes)
