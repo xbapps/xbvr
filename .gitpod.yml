@@ -2,6 +2,7 @@ image:
   file: .gitpod.dockerfile
 tasks:
   - init: |
+      yarn
       go mod download github.com/ProtonMail/go-appdir
       go generate
       go get
