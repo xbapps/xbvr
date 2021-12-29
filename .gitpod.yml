@@ -4,6 +4,7 @@ tasks:
   - init: |
       go mod download github.com/ProtonMail/go-appdir
       go generate
+      go get
   - name: Continuous Build
     command: cd /workspace/xbvr && yarn dev
 ports:
