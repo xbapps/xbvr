@@ -5,7 +5,6 @@ tasks:
     command: |
       cd /workspace/xbvr
       yarn install && yarn build && go mod download github.com/ProtonMail/go-appdir && go generate && go get
-      yarn dev
 ports:
   - port: 9999
     onOpen: open-preview
