@@ -6,6 +6,7 @@ tasks:
       cd /workspace/xbvr
       yarn
       go mod download github.com/ProtonMail/go-appdir
+      go get
       go generate
       go get
       yarn dev
