@@ -1,6 +1,9 @@
 image:
   file: .gitpod.dockerfile
 tasks:
+  - init: |
+      go mod download github.com/ProtonMail/go-appdir
+      go generate
   - name: Continuous Build
     command: cd /workspace/xbvr && yarn dev
 ports:
