@@ -25,6 +25,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	coverRegEx := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
 	durationRegExForSceneCard := regexp.MustCompile(`^(?:(\d{2}):)?(\d{2}):(\d{2})$`)
 	durationRegExForScenePage := regexp.MustCompile(`^T(\d{0,2})H?(\d{2})M(\d{2})S$`)
+	filenameRegEx := regexp.MustCompile(`[:?]`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -145,7 +146,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				// Only shown for logged in users so need to generate them
 				// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
 				resolutions := []string{"_6400p_", "_3840p_", "_3160p_", "_3072p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
-				baseName := "SLR_" + siteID + "_" + strings.Replace(sc.Title, ":", "_", -1)
+				baseName := "SLR_" + siteID + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
 				switch videotype {
 				case "360°": // Sadly can't determine if TB or MONO so have to add both
 					for i := range resolutions {
