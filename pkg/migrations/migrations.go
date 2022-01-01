@@ -580,9 +580,9 @@ func Migrate() {
 			// SLR/RealJam Titles containing ":" & "?" creates invalid filenames breaks automatching. fix filenames changing to _
 			ID: "0029-fix-slr-rj-filenames",
 			Migrate: func(tx *gorm.DB) error {
-				filenameRegEx := regexp.MustCompile(`[:?]`)
+				filenameRegEx := regexp.MustCompile(`[:?]|( & )|( \\u0026 )`)
 				var scenes []models.Scene
-				err := tx.Where("filenames_arr LIKE ?", "%:%").Or("filenames_arr LIKE ?", "%?%").Find(&scenes).Error
+				err := tx.Where("filenames_arr LIKE ?", "%:%").Or("filenames_arr LIKE ?", "%?%").Or("filenames_arr LIKE ?", "%\\u0026%").Find(&scenes).Error
 				if err != nil {
 					return err
 				}
