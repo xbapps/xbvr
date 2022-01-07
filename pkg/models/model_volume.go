@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 	"github.com/putdotio/go-putio/putio"
 	"golang.org/x/oauth2"
 )

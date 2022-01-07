@@ -1,6 +1,6 @@
 package models
 
-import "github.com/avast/retry-go"
+import "github.com/avast/retry-go/v3"
 
 type Action struct {
 	ID uint `gorm:"primary_key" json:"id"`

@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 )
 
 // Playlist data model
