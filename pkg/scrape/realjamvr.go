@@ -80,18 +80,18 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 			}
 		})
 		for f := range set {
-			sc.Filenames = append(sc.Filenames, strings.ReplaceAll(f, " ", "_"))
+			sc.Filenames = append(sc.Filenames, strings.ReplaceAll(strings.ReplaceAll(f, " ", "_"), ":", "_"))
 		}
 
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`#pagination a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`.c-pagination a`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.movies-list a:not(.promo__info):not(#pagination a)`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.movies-list a:not(.promo__info):not(.c-pagination a)`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape

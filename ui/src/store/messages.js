@@ -1,13 +1,13 @@
 const state = {
   lockScrape: false,
-  lastScrapeMessage: "",
+  lastScrapeMessage: '',
   lockRescan: false,
-  lastRescanMessage: "",
-  lastProgressMessage: "",
-  runningScrapers: [],
-};
+  lastRescanMessage: '',
+  lastProgressMessage: '',
+  runningScrapers: []
+}
 
 export default {
   namespaced: true,
-  state,
+  state
 }

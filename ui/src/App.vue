@@ -8,20 +8,36 @@
     <div class="navbar-pad">
       <router-view/>
     </div>
-    <Socket/>
+
+    <Details v-if="showOverlay"/>
+    <EditScene v-if="showEdit" />
+
     <QuickFind/>
+
+    <Socket/>
   </div>
 </template>
 
 <script>
-  import Navbar from "./Navbar.vue";
-  import Socket from "./Socket.vue";
-  import QuickFind from "./QuickFind";
-  import GlobalEvents from 'vue-global-events';
+import GlobalEvents from 'vue-global-events'
 
-  export default {
-    components: {Navbar, Socket, QuickFind, GlobalEvents},
+import Navbar from './Navbar.vue'
+import Socket from './Socket.vue'
+import QuickFind from './QuickFind'
+import Details from './views/scenes/Details'
+import EditScene from './views/scenes/EditScene'
+
+export default {
+  components: { Navbar, Socket, QuickFind, GlobalEvents, Details, EditScene },
+  computed: {
+    showOverlay () {
+      return this.$store.state.overlay.details.show
+    },
+    showEdit () {
+      return this.$store.state.overlay.edit.show
+    }
   }
+}
 </script>
 
 <style>

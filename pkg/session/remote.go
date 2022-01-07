@@ -1,4 +1,4 @@
-package deo_remote
+package session
 
 import (
 	"encoding/binary"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/config"
 )
 
 type DeoPacket struct {
@@ -19,18 +20,28 @@ type DeoPacket struct {
 
 const PLAYING = 0
 const PAUSED = 1
+const FINISHED = 2
 
 var DeoPlayerHost = ""
+var DeoRequestHost = ""
 
 func DeoRemote() {
 	for {
-		deoLoop()
+		go common.PublishWS("remote.state", map[string]interface{}{
+			"connected": false,
+		})
+
+		err := deoLoop()
+		if err != nil {
+			common.Log.Error(err)
+		}
+
 		time.Sleep(1 * time.Second)
 	}
 }
 
 func deoLoop() error {
-	if DeoPlayerHost == "" {
+	if DeoPlayerHost == "" || !config.Config.Interfaces.DeoVR.RemoteEnabled {
 		return nil
 	}
 	conn, err := net.Dial("tcp", DeoPlayerHost+":23554")
@@ -51,6 +62,9 @@ func deoLoop() error {
 		lenBuf := make([]byte, 4)
 		_, err = conn.Read(lenBuf[:]) // recv data
 		bodyLength := binary.LittleEndian.Uint32(lenBuf)
+		if err != nil {
+			return err
+		}
 
 		// Read packet
 		if bodyLength > 0 {
@@ -61,7 +75,7 @@ func deoLoop() error {
 			}
 
 			packet := decodePacket(recvBuf)
-			go TrackSession(packet)
+			go TrackSessionFromRemote(packet)
 		}
 
 		// Write
@@ -76,6 +90,17 @@ func deoLoop() error {
 		if err != nil {
 			return err
 		}
+
+		go common.PublishWS("remote.state", map[string]interface{}{
+			"connected":       true,
+			"deovrHost":       DeoPlayerHost,
+			"isPlaying":       isPlaying,
+			"currentPosition": currentPosition,
+			"sessionStart":    lastSessionStart,
+			"sessionEnd":      lastSessionEnd,
+			"currentFileID":   currentFileID,
+			"currentSceneID":  currentSceneID,
+		})
 	}
 }
 

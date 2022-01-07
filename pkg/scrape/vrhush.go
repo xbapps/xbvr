@@ -47,8 +47,8 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		// Cover URLs
 		// note 'largethumbs' could be changed to 'hugethumbs' for HQ original but those are easily 5Mb+
-		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
-			tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("poster")))
+		e.ForEach(`deo-video`, func(id int, e *colly.HTMLElement) {
+			tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("cover-image")))
 			sc.Covers = append(sc.Covers, tmpParts[1]+"largethumbs"+tmpParts[2]+tmpParts[3])
 		})
 

@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -17,11 +16,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio/putio"
 	"github.com/tidwall/gjson"
-	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/tasks"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 	"gopkg.in/resty.v1"
 )
@@ -50,6 +49,15 @@ type RequestSaveOptionsDLNA struct {
 	AllowedIP    []string `json:"allowedIp"`
 }
 
+type RequestSaveOptionsDeoVR struct {
+	Enabled        bool   `json:"enabled"`
+	AuthEnabled    bool   `json:"auth_enabled"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	RemoteEnabled  bool   `json:"remote_enabled"`
+	RenderHeatmaps bool   `json:"render_heatmaps"`
+}
+
 type RequestSaveOptionsPreviews struct {
 	Enabled       bool    `json:"enabled"`
 	StartTime     int     `json:"startTime"`
@@ -60,23 +68,13 @@ type RequestSaveOptionsPreviews struct {
 }
 
 type GetStateResponse struct {
-	CurrentState struct {
-		Web struct {
-			TagSort   string `json:"tagSort"`
-			SceneEdit bool   `json:"sceneEdit"`
-		} `json:"web"`
-		DLNA struct {
-			Running  bool     `json:"running"`
-			Images   []string `json:"images"`
-			RecentIP []string `json:"recentIp"`
-		} `json:"dlna"`
-		CacheSize struct {
-			Images      int64 `json:"images"`
-			Previews    int64 `json:"previews"`
-			SearchIndex int64 `json:"searchIndex"`
-		} `json:"cacheSize"`
-	} `json:"currentState"`
-	Config config.Object `json:"config"`
+	CurrentState config.ObjectState  `json:"currentState"`
+	Config       config.ObjectConfig `json:"config"`
+}
+
+type GetFunscriptCountResponse struct {
+	Total   int64 `json:"total"`
+	Updated int64 `json:"updated"`
 }
 
 type ConfigResource struct{}
@@ -125,12 +123,16 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Web UI" section endpoints
+	ws.Route(ws.PUT("/interface/deovr").To(i.saveOptionsDeoVR).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Web UI" section endpoints
 	ws.Route(ws.PUT("/interface/web").To(i.saveOptionsWeb).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Cache" section endpoints
 	ws.Route(ws.DELETE("/cache/reset/{cache}").To(i.resetCache).
-		Param(ws.PathParameter("cache", "Cache to reset").DataType("string")).
+		Param(ws.PathParameter("cache", "Cache to reset - possible choices are `images`, `previews`, and `searchIndex`").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Previews" section endpoints
@@ -138,6 +140,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/previews/test").To(i.generateTestPreview).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Funscripts" section endpoints
+	ws.Route(ws.GET("/funscripts/count").To(i.getFunscriptsCount).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
@@ -209,6 +215,28 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 
 	config.Config.Web.TagSort = r.TagSort
 	config.Config.Web.SceneEdit = r.SceneEdit
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+
+func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsDeoVR
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Interfaces.DeoVR.Enabled = r.Enabled
+	config.Config.Interfaces.DeoVR.AuthEnabled = r.AuthEnabled
+	config.Config.Interfaces.DeoVR.RenderHeatmaps = r.RenderHeatmaps
+	config.Config.Interfaces.DeoVR.RemoteEnabled = r.RemoteEnabled
+	config.Config.Interfaces.DeoVR.Username = r.Username
+	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
+		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
+		config.Config.Interfaces.DeoVR.Password = string(hash)
+	}
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -374,24 +402,11 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 
 func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 	var out GetStateResponse
+
+	tasks.UpdateState()
+
 	out.Config = config.Config
-
-	// Preferences
-	out.CurrentState.Web.TagSort = config.Config.Web.TagSort
-	out.CurrentState.Web.SceneEdit = config.Config.Web.SceneEdit
-
-	// DLNA
-	out.CurrentState.DLNA.Running = tasks.IsDMSStarted()
-	out.CurrentState.DLNA.RecentIP = config.RecentIPAddresses
-	dlnaImages, _ := assets.WalkDirs("dlna", false)
-	for _, v := range dlnaImages {
-		out.CurrentState.DLNA.Images = append(out.CurrentState.DLNA.Images, strings.Replace(strings.Split(v, "/")[1], ".png", "", -1))
-	}
-
-	// Caches
-	out.CurrentState.CacheSize.Images, _ = common.DirSize(common.ImgDir)
-	out.CurrentState.CacheSize.Previews, _ = common.DirSize(common.VideoPreviewDir)
-	out.CurrentState.CacheSize.SearchIndex, _ = common.DirSize(common.IndexDirV2)
+	out.CurrentState = config.State
 
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
 }
@@ -402,11 +417,13 @@ func (i ConfigResource) resetCache(req *restful.Request, resp *restful.Response)
 	if cache == "images" {
 		os.RemoveAll(common.ImgDir)
 		os.MkdirAll(common.ImgDir, os.ModePerm)
+		config.State.CacheSize.Images = 0
 	}
 
 	if cache == "searchIndex" {
 		os.RemoveAll(common.IndexDirV2)
 		os.MkdirAll(common.IndexDirV2, os.ModePerm)
+		config.State.CacheSize.SearchIndex = 0
 	}
 
 	if cache == "previews" {
@@ -416,7 +433,10 @@ func (i ConfigResource) resetCache(req *restful.Request, resp *restful.Response)
 
 		os.RemoveAll(common.VideoPreviewDir)
 		os.MkdirAll(common.VideoPreviewDir, os.ModePerm)
+		config.State.CacheSize.Previews = 0
 	}
+
+	config.SaveState()
 
 	resp.WriteHeader(http.StatusOK)
 }
@@ -514,4 +534,25 @@ func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.
 
 	common.PublishWS("options.previews.previewReady", map[string]interface{}{"previewFn": previewFn})
 	resp.WriteHeader(http.StatusOK)
+}
+
+func (i ConfigResource) getFunscriptsCount(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var r GetFunscriptCountResponse
+
+	var scenes []models.Scene
+	db.Model(&models.Scene{}).Preload("Files", func(db *gorm.DB) *gorm.DB {
+		return db.Where("type = ?", "script").Order("is_selected_script DESC, created_time DESC")
+	}).Where("is_scripted = ?", true).Find(&scenes)
+
+	for _, scene := range scenes {
+		r.Total++
+		if len(scene.Files) > 0 && !scene.Files[0].IsExported {
+			r.Updated++
+		}
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }

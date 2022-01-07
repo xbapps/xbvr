@@ -7,21 +7,23 @@
            @mouseover="preview = true"
            @mouseleave="preview = false">
         <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
-        <div v-else>
-          <div class="overlay align-bottom-left">
-            <div style="padding: 5px">
-              <b-tag v-if="item.is_watched">
-                <b-icon pack="mdi" icon="eye" size="is-small"/>
-              </b-tag>
-              <b-tag type="is-info" v-if="item.file.length > 1">
-                <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
-                {{item.file.length}}
-              </b-tag>
-              <b-tag type="is-warning" v-if="item.star_rating > 0">
-                <b-icon pack="mdi" icon="star" size="is-small"/>
-                {{item.star_rating}}
-              </b-tag>
-            </div>
+        <div class="overlay align-bottom-left">
+          <div style="padding: 5px">
+            <b-tag v-if="item.is_watched">
+              <b-icon pack="mdi" icon="eye" size="is-small"/>
+            </b-tag>
+            <b-tag type="is-info" v-if="videoFilesCount > 1 && !item.is_multipart">
+              <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
+              {{videoFilesCount}}
+            </b-tag>
+            <b-tag type="is-info" v-if="item.is_scripted">
+              <b-icon pack="mdi" icon="pulse" size="is-small"/>
+              <span v-if="scriptFilesCount > 1">{{scriptFilesCount}}</span>
+            </b-tag>
+            <b-tag type="is-warning" v-if="item.star_rating > 0">
+              <b-icon pack="mdi" icon="star" size="is-small"/>
+              {{item.star_rating}}
+            </b-tag>
           </div>
         </div>
       </div>
@@ -34,7 +36,7 @@
       <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
-        <a :href="item.scene_url" target="_blank">{{item.site}}</a><br/>
+        <a :href="item.scene_url" target="_blank" rel="noreferrer">{{item.site}}</a><br/>
         <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
         </span>
@@ -44,36 +46,55 @@
 </template>
 
 <script>
-  import {format, parseISO} from "date-fns";
-  import WatchlistButton from "../../components/WatchlistButton";
-  import FavouriteButton from "../../components/FavouriteButton";
-  import EditButton from "../../components/EditButton";
-  import StarRating from 'vue-star-rating';
+import { format, parseISO } from 'date-fns'
+import WatchlistButton from '../../components/WatchlistButton'
+import FavouriteButton from '../../components/FavouriteButton'
+import EditButton from '../../components/EditButton'
 
-  export default {
-    name: "SceneCard",
-    props: {item: Object},
-    components: {WatchlistButton, FavouriteButton, EditButton, StarRating},
-    data() {
-      return {
-        preview: false,
-        format,
-        parseISO
+export default {
+  name: 'SceneCard',
+  props: { item: Object },
+  components: { WatchlistButton, FavouriteButton, EditButton },
+  data () {
+    return {
+      preview: false,
+      format,
+      parseISO
+    }
+  },
+  computed: {
+    videoFilesCount () {
+      let count = 0
+      this.item.file.forEach(obj => {
+        if (obj.type === 'video') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    scriptFilesCount () {
+      let count = 0
+      this.item.file.forEach(obj => {
+        if (obj.type === 'script') {
+          count = count + 1
+        }
+      })
+      return count
+    }
+  },
+  methods: {
+    getImageURL (u) {
+      if (u.startsWith('http')) {
+        return '/img/700x/' + u.replace('://', ':/')
+      } else {
+        return u
       }
     },
-    methods: {
-      getImageURL(u) {
-        if (u.startsWith("http")) {
-          return "/img/700x/" + u.replace("://", ":/");
-        } else {
-          return u;
-        }
-      },
-      showDetails(scene) {
-        this.$store.commit("overlay/showDetails", {scene: scene});
-      }
+    showDetails (scene) {
+      this.$store.commit('overlay/showDetails', { scene: scene })
     }
   }
+}
 </script>
 
 <style scoped>
@@ -92,6 +113,17 @@
     line-height: 0;
   }
 
+  .bbox:not(:hover) > video {
+    display: none;
+  }
+
+  video {
+    object-fit: cover;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+
   .overlay {
     flex: 1 0 calc(25%);
     display: flex;
@@ -105,6 +137,7 @@
     top: 0;
     right: 0;
     bottom: 0;
+    pointer-events: none;
   }
 
   .align-bottom-left {

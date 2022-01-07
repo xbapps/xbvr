@@ -12,7 +12,7 @@ ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
 RUN GO111MODULE=on go get -u -v \
   github.com/UnnoTed/fileb0x \
-  github.com/cortesi/modd/cmd/modd && \
+  github.com/cosmtrek/air && \
   sudo rm -rf $GOPATH/src && \
   sudo rm -rf $GOPATH/pkg
 # user Go packages

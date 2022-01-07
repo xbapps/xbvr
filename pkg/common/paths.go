@@ -18,6 +18,7 @@ var IndexDirV2 string
 var ScrapeCacheDir string
 var VideoPreviewDir string
 var VideoThumbnailDir string
+var ScriptHeatmapDir string
 
 func DirSize(path string) (int64, error) {
 	var size int64
@@ -47,9 +48,14 @@ func InitPaths() {
 
 	VideoPreviewDir = filepath.Join(AppDir, "video_preview")
 	VideoThumbnailDir = filepath.Join(AppDir, "video_thumbnail")
+	ScriptHeatmapDir = filepath.Join(AppDir, "script_heatmap")
 
 	// Initialize DATABASE_URL once appdir path is known
-	DATABASE_URL = getEnv("DATABASE_URL", fmt.Sprintf("sqlite:%v", filepath.Join(AppDir, "main.db")))
+	if EnvConfig.DatabaseURL != "" {
+		DATABASE_URL = EnvConfig.DatabaseURL
+	} else {
+		DATABASE_URL = fmt.Sprintf("sqlite:%v", filepath.Join(AppDir, "main.db"))
+	}
 
 	_ = os.MkdirAll(AppDir, os.ModePerm)
 	_ = os.MkdirAll(ImgDir, os.ModePerm)
@@ -59,4 +65,5 @@ func InitPaths() {
 	_ = os.MkdirAll(BinDir, os.ModePerm)
 	_ = os.MkdirAll(IndexDirV2, os.ModePerm)
 	_ = os.MkdirAll(ScrapeCacheDir, os.ModePerm)
+	_ = os.MkdirAll(ScriptHeatmapDir, os.ModePerm)
 }

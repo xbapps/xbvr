@@ -9,12 +9,11 @@ import (
 	"time"
 
 	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
-	"github.com/posthog/posthog-go"
-	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/session"
 )
 
 type DMSResource struct{}
@@ -39,6 +38,14 @@ func (i DMSResource) WebService() *restful.WebService {
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/file/{file-id}/{var:*}").To(i.getFile).
+		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/heatmap/{file-id}").To(i.getHeatmap).
+		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.GET("/preview/{scene-id}").To(i.getPreview).
 		Param(ws.PathParameter("scene-id", "Scene ID")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
@@ -49,6 +56,11 @@ func (i DMSResource) WebService() *restful.WebService {
 func (i DMSResource) getPreview(req *restful.Request, resp *restful.Response) {
 	sceneID := req.PathParameter("scene-id")
 	http.ServeFile(resp.ResponseWriter, req.Request, filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", sceneID)))
+}
+
+func (i DMSResource) getHeatmap(req *restful.Request, resp *restful.Response) {
+	fileID := req.PathParameter("file-id")
+	http.ServeFile(resp.ResponseWriter, req.Request, filepath.Join(common.ScriptHeatmapDir, fmt.Sprintf("heatmap-%v.png", fileID)))
 }
 
 func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
@@ -69,17 +81,8 @@ func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
 	switch f.Volume.Type {
 	case "local":
 		// Track current session
-		if f.SceneID != 0 && doNotTrack == "" {
-			if lastSessionSceneID != f.SceneID {
-				if lastSessionID != 0 {
-					watchSessionFlush()
-				}
-
-				lastSessionSceneID = f.SceneID
-				lastSessionStart = time.Now()
-				newWatchSession()
-			}
-		}
+		setDeoPlayerHost(req)
+		session.TrackSessionFromFile(f, doNotTrack)
 
 		if err == gorm.ErrRecordNotFound {
 			resp.WriteHeader(http.StatusNotFound)
@@ -90,10 +93,7 @@ func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
 		http.ServeFile(resp.ResponseWriter, req.Request, f.GetPath())
 		select {
 		case <-ctx.Done():
-			lastSessionEnd = time.Now()
-			if doNotTrack == "" {
-				watchSessionFlush()
-			}
+			session.FinishTrackingFromFile(doNotTrack)
 			return
 		default:
 		}
@@ -108,50 +108,5 @@ func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
 			return
 		}
 		http.Redirect(resp.ResponseWriter, req.Request, url, 302)
-	}
-}
-
-func newWatchSession() {
-	obj := models.History{SceneID: lastSessionSceneID, TimeStart: lastSessionStart}
-	obj.Save()
-
-	var scene models.Scene
-	err := scene.GetIfExistByPK(lastSessionSceneID)
-	if err == nil {
-		scene.LastOpened = time.Now()
-		scene.Save()
-	}
-
-	analytics.Event("watchsession-new", posthog.NewProperties().Set("scene-id", scene.SceneID))
-
-	lastSessionID = obj.ID
-}
-
-func watchSessionFlush() {
-	var obj models.History
-	err := obj.GetIfExist(lastSessionID)
-	if err == nil {
-		obj.TimeEnd = lastSessionEnd
-		obj.Duration = time.Since(lastSessionStart).Seconds()
-		obj.Save()
-
-		var scene models.Scene
-		err := scene.GetIfExistByPK(lastSessionSceneID)
-		if err == nil {
-			if !scene.IsWatched {
-				scene.IsWatched = true
-				scene.Save()
-			}
-		}
-
-		log.Infof("Session #%v duration for scene #%v is %v", lastSessionID, lastSessionSceneID, time.Since(lastSessionStart).Seconds())
-	}
-}
-
-func CheckForDeadSession() {
-	if time.Since(lastSessionEnd).Seconds() > 60 && lastSessionSceneID != 0 && lastSessionID != 0 {
-		watchSessionFlush()
-		lastSessionID = 0
-		lastSessionSceneID = 0
 	}
 }

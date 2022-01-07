@@ -29,7 +29,15 @@
               </vue-load-image>
             </b-table-column>
             <b-table-column field="site" :label="$t('Site')" sortable v-slot="props">
-              {{ props.row.site }}
+              <a :href="props.row.scene_url" target="_blank" rel="noreferrer">{{ props.row.site }}</a><br>
+              <b-tag type="is-info is-light" v-if="videoFilesCount(props.row)">
+                <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
+                {{videoFilesCount(props.row)}}
+              </b-tag>&nbsp;
+              <b-tag type="is-info is-light" v-if="props.row.is_scripted">
+                <b-icon pack="mdi" icon="pulse" size="is-small"/>
+                <span v-if="scriptFilesCount(props.row) > 1">{{scriptFilesCount(props.row)}}</span>
+              </b-tag>
             </b-table-column>
             <b-table-column field="title" :label="$t('Title')" sortable v-slot="props">
               <p v-if="props.row.title">{{ props.row.title }}</p>
@@ -47,7 +55,7 @@
               <b-progress show-value :value="props.row._score * 100"></b-progress>
             </b-table-column>
             <b-table-column field="_assign" v-slot="props">
-              <button class="button" @click="assign(props.row.scene_id)">{{ $t("Assign") }}</button>
+              <button class="button is-primary is-outlined" @click="assign(props.row.scene_id)">{{ $t("Assign") }}</button>
             </b-table-column>
           </b-table>
         </div>
@@ -59,93 +67,137 @@
 </template>
 
 <script>
-import ky from "ky";
-import {format, parseISO} from "date-fns";
-import prettyBytes from "pretty-bytes";
-import VueLoadImage from "vue-load-image";
+import ky from 'ky'
+import { format, parseISO } from 'date-fns'
+import prettyBytes from 'pretty-bytes'
+import VueLoadImage from 'vue-load-image'
 
 export default {
-  name: "SceneMatch",
-  components: {VueLoadImage,},
-  data() {
+  name: 'SceneMatch',
+  components: { VueLoadImage },
+  data () {
     return {
       data: [],
+      dataNumRequests: 0,
+      dataNumResponses: 0,
       currentPage: 1,
-      queryString: "",
-      format, parseISO
+      queryString: '',
+      format,
+      parseISO
     }
   },
   computed: {
-    file() {
-      return this.$store.state.overlay.match.file;
-    },
+    file () {
+      return this.$store.state.overlay.match.file
+    }
   },
-  mounted() {
-    this.initView();
+  mounted () {
+    this.initView()
   },
   methods: {
-    initView() {
-      this.data = [];
-      this.queryString = this.file.filename.replace(/\./g, " ").replace(/\_/g, " ").replace(/\+/g, " ").replace(/\-/g, " ");
-      this.loadData();
-    },
-    loadData: async function loadData() {
-      let resp = await ky.get(`/api/scene/search`, {
-        searchParams: {
-          q: this.queryString,
-        }
-      }).json();
+    initView () {
+      const commonWords = [
+        '180', '180x180', '2880x1440', '3d', '3dh', '3dv', '30fps', '30m', '360',
+        '3840x1920', '4k', '5k', '5400x2700', '60fps', '6k', '7k', '7680x3840',
+        '8k', 'fb360', 'funscript', 'h264', 'h265', 'hevc', 'hq', 'lq', 'lr',
+        'mkv', 'mkx200', 'mkx220', 'mono', 'mp4', 'oculus', 'oculus5k',
+        'oculusrift', 'original', 'smartphone', 'tb', 'uhq', 'vrca220', 'vp9'
+      ]
+      const isNotCommonWord = word => !commonWords.includes(word.toLowerCase()) && !/^[0-9]+p$/.test(word)
 
-      if (resp.scenes !== null) {
-        this.data = resp.scenes;
-      } else {
-        this.data = [];
-      }
-      this.currentPage = 1;
+      this.data = []
+      this.queryString = (
+        this.file.filename
+          .replace(/\.|_|\+|-/g, ' ').replace(/\s+/g, ' ').trim()
+          .split(' ').filter(isNotCommonWord).join(' ')
+          .replace(/ s /g, '\'s '))
+      this.loadData()
     },
-    getImageURL(u) {
-      if (u.startsWith("http")) {
-        return "/img/120x/" + u.replace("://", ":/");
-      } else {
-        return u;
+    loadData: async function loadData () {
+      const requestIndex = this.dataNumRequests
+      this.dataNumRequests = this.dataNumRequests + 1
+
+      const resp = await ky.get('/api/scene/search', {
+        searchParams: {
+          q: this.queryString
+        }
+      }).json()
+
+      if (requestIndex >= this.dataNumResponses) {
+        this.dataNumResponses = requestIndex + 1
+
+        if (resp.scenes !== null) {
+          this.data = resp.scenes
+        } else {
+          this.data = []
+        }
+        this.currentPage = 1
       }
     },
-    assign: async function assign(scene_id) {
-      await ky.post(`/api/files/match`, {
+    getImageURL (u) {
+      if (u.startsWith('http')) {
+        return '/img/120x/' + u.replace('://', ':/')
+      } else {
+        return u
+      }
+    },
+    assign: async function assign (scene_id) {
+      await ky.post('/api/files/match', {
         json: {
           file_id: this.toInt(this.$store.state.overlay.match.file.id),
-          scene_id: scene_id,
+          scene_id: scene_id
         }
-      });
+      })
 
-      this.$store.dispatch("files/load");
+      this.$store.dispatch('files/load')
 
-      let data = this.$store.getters['files/nextFile'](this.file);
+      const data = this.$store.getters['files/nextFile'](this.file)
       if (data !== null) {
-        this.nextFile();
+        this.nextFile()
+      } else {
+        this.close()
       }
     },
-    nextFile() {
-      let data = this.$store.getters['files/nextFile'](this.file);
+    nextFile () {
+      const data = this.$store.getters['files/nextFile'](this.file)
       if (data !== null) {
-        this.$store.commit("overlay/showMatch", {file: data});
-        this.initView();
+        this.$store.commit('overlay/showMatch', { file: data })
+        this.initView()
       }
     },
-    prevFile() {
-      let data = this.$store.getters['files/prevFile'](this.file);
+    prevFile () {
+      const data = this.$store.getters['files/prevFile'](this.file)
       if (data !== null) {
-        this.$store.commit("overlay/showMatch", {file: data});
-        this.initView();
+        this.$store.commit('overlay/showMatch', { file: data })
+        this.initView()
       }
     },
-    close() {
-      this.$store.commit("overlay/hideMatch");
+    close () {
+      this.$store.commit('overlay/hideMatch')
     },
-    toInt(value, radix, defaultValue) {
-      return parseInt(value, radix || 10) || defaultValue || 0;
+    toInt (value, radix, defaultValue) {
+      return parseInt(value, radix || 10) || defaultValue || 0
     },
-    prettyBytes,
+    videoFilesCount (scene) {
+      let count = 0
+      console.log(scene)
+      scene.file.forEach(obj => {
+        if (obj.type === 'video') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    scriptFilesCount (scene) {
+      let count = 0
+      scene.file.forEach(obj => {
+        if (obj.type === 'script') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    prettyBytes
   }
 }
 </script>

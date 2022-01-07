@@ -1,22 +1,21 @@
-import ky from "ky";
+import ky from 'ky'
 
 const state = {
-  items: [],
-};
+  items: []
+}
 
 const mutations = {
-};
+}
 
 const actions = {
-  async load({state}, params) {
-    state.items = await ky.get(`/api/options/storage`).json();
-  },
-};
-
+  async load ({ state }, params) {
+    state.items = await ky.get('/api/options/storage').json()
+  }
+}
 
 export default {
   namespaced: true,
   state,
   mutations,
-  actions,
+  actions
 }

@@ -41,13 +41,15 @@
               <span v-if="props.row.video_avgfps_val !== 0">{{ props.row.video_avgfps_val }}</span>
               <span v-else>-</span>
             </b-table-column>
+            <b-table-column v-slot="props">
+              <div class="block">
+                <b-button @click="play(props.row)" v-if="props.row.type === 'video'">{{ $t('Play') }}</b-button>
+                <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">{{ $t('Match') }}</b-button>
+                <b-button v-else disabled>{{ $t('Match') }}</b-button>
+              </div>
+            </b-table-column>
             <b-table-column style="white-space: nowrap;" v-slot="props">
-              <b-button @click="play(props.row)">{{ $t('Play') }}</b-button>
-              &nbsp;
-              <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">{{ $t('Match') }}</b-button>
-              <b-button v-else disabled>{{ $t('Match') }}</b-button>
-              &nbsp;
-              <button class="button is-danger is-outlined" @click='removeFile(props.row)'>
+              <button class="button is-danger is-outlined" @click='removeFile(props.row)' title='Delete file from disk'>
                 <b-icon pack="fas" icon="trash"></b-icon>
               </button>
             </b-table-column>
@@ -75,51 +77,51 @@
 </template>
 
 <script>
-import prettyBytes from "pretty-bytes";
-import {format, parseISO} from "date-fns";
-import ky from "ky";
+import prettyBytes from 'pretty-bytes'
+import { format, parseISO } from 'date-fns'
+import ky from 'ky'
 
 export default {
-  name: "List",
-  data() {
+  name: 'List',
+  data () {
     return {
       files: [],
       prettyBytes,
       format,
       parseISO,
       sortField: 'created_time',
-      sortOrder: 'desc',
+      sortOrder: 'desc'
     }
   },
   computed: {
-    isLoading() {
-      return this.$store.state.files.isLoading;
+    isLoading () {
+      return this.$store.state.files.isLoading
     },
-    items() {
-      return this.$store.state.files.items;
+    items () {
+      return this.$store.state.files.items
     }
   },
-  mounted() {
-    this.$store.state.files.filters.sort = `${this.sortField}_${this.sortOrder}`;
-    this.$store.dispatch("files/load");
+  mounted () {
+    this.$store.state.files.filters.sort = `${this.sortField}_${this.sortOrder}`
+    this.$store.dispatch('files/load')
   },
   methods: {
-    onSort(field, order) {
-      this.sortField = field;
-      this.sortOrder = order;
-      this.$store.state.files.filters.sort = `${field}_${order}`;
-      this.$store.dispatch("files/load");
+    onSort (field, order) {
+      this.sortField = field
+      this.sortOrder = order
+      this.$store.state.files.filters.sort = `${field}_${order}`
+      this.$store.dispatch('files/load')
     },
-    play(file) {
-      this.$store.commit("overlay/showPlayer", {file: file});
+    play (file) {
+      this.$store.commit('overlay/showPlayer', { file: file })
     },
-    match(file) {
-      this.$store.commit("overlay/showMatch", {file: file});
+    match (file) {
+      this.$store.commit('overlay/showMatch', { file: file })
     },
-    humanizeSeconds(seconds) {
-      return new Date(seconds * 1000).toISOString().substr(11, 8);
+    humanizeSeconds (seconds) {
+      return new Date(seconds * 1000).toISOString().substr(11, 8)
     },
-    removeFile(file) {
+    removeFile (file) {
       this.$buefy.dialog.confirm({
         title: 'Remove file',
         message: `You're about to remove file <strong>${file.filename}</strong> from <strong>disk</strong>.`,
@@ -127,12 +129,12 @@ export default {
         hasIcon: true,
         onConfirm: () => {
           ky.delete(`/api/files/file/${file.id}`).json().then(data => {
-            this.$store.dispatch("files/load");
-          });
+            this.$store.dispatch('files/load')
+          })
         }
-      });
-    },
-  },
+      })
+    }
+  }
 }
 </script>
 

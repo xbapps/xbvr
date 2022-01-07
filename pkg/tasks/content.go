@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -101,8 +102,12 @@ func ReapplyEdits() {
 
 	for _, a := range actions {
 		var scene models.Scene
-		scene.GetIfExist(a.SceneID)
-		if a.ChangedColumn == "tags" || a.ChangedColumn == "cast" {
+		err := scene.GetIfExist(a.SceneID)
+		if err != nil {
+			// scene has been deleted, nothing to apply
+			continue
+		}
+		if a.ChangedColumn == "tags" || a.ChangedColumn == "cast" || a.ChangedColumn == "is_multipart" {
 			prefix := string(a.NewValue[0])
 			name := a.NewValue[1:]
 			// Reapply Tag edits
@@ -127,6 +132,11 @@ func ReapplyEdits() {
 				} else {
 					db.Model(&scene).Association("Cast").Append(&actor)
 				}
+			}
+			// Reapply IsMultipart edits
+			if a.ChangedColumn == "is_multipart" {
+				val, _ := strconv.ParseBool(a.NewValue)
+				db.Model(&scene).Update(a.ChangedColumn, val)
 			}
 			continue
 		}

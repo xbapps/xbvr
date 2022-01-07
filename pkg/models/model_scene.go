@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -71,18 +72,21 @@ type Scene struct {
 	ReleaseDateText string    `json:"release_date_text"`
 	CoverURL        string    `json:"cover_url"`
 	SceneURL        string    `json:"scene_url"`
+	IsMultipart     bool      `json:"is_multipart"`
 
-	StarRating    float64         `json:"star_rating"`
-	Favourite     bool            `json:"favourite" gorm:"default:false"`
-	Watchlist     bool            `json:"watchlist" gorm:"default:false"`
-	IsAvailable   bool            `json:"is_available" gorm:"default:false"`
-	IsAccessible  bool            `json:"is_accessible" gorm:"default:false"`
-	IsWatched     bool            `json:"is_watched" gorm:"default:false"`
-	Cuepoints     []SceneCuepoint `json:"cuepoints"`
-	History       []History       `json:"history"`
-	AddedDate     time.Time       `json:"added_date"`
-	LastOpened    time.Time       `json:"last_opened"`
-	TotalFileSize int64           `json:"total_file_size"`
+	StarRating     float64         `json:"star_rating"`
+	Favourite      bool            `json:"favourite" gorm:"default:false"`
+	Watchlist      bool            `json:"watchlist" gorm:"default:false"`
+	IsAvailable    bool            `json:"is_available" gorm:"default:false"`
+	IsAccessible   bool            `json:"is_accessible" gorm:"default:false"`
+	IsWatched      bool            `json:"is_watched" gorm:"default:false"`
+	IsScripted     bool            `json:"is_scripted" gorm:"default:false"`
+	Cuepoints      []SceneCuepoint `json:"cuepoints"`
+	History        []History       `json:"history"`
+	AddedDate      time.Time       `json:"added_date"`
+	LastOpened     time.Time       `json:"last_opened"`
+	TotalFileSize  int64           `json:"total_file_size"`
+	TotalWatchTime int             `json:"total_watch_time" gorm:"default:0"`
 
 	HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
 	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
@@ -168,12 +172,57 @@ func (o *Scene) GetIfExistURL(u string) error {
 		Where(&Scene{SceneURL: u}).First(o).Error
 }
 
+func (o *Scene) GetFunscriptTitle() string {
+
+	// first make the title filename safe
+	var re = regexp.MustCompile(`[?/\<>|]`)
+
+	title := o.Title
+	// Colons are pretty common in titles, so we use a unicode alternative
+	title = strings.ReplaceAll(title, ":", "꞉")
+	// all other unsafe characters get removed
+	title = re.ReplaceAllString(title, "")
+
+	// add ID to prevent title collisions
+	return fmt.Sprintf("%d - %s", o.ID, title)
+}
+
 func (o *Scene) GetFiles() ([]File, error) {
 	db, _ := GetDB()
 	defer db.Close()
 
 	var files []File
 	db.Preload("Volume").Where(&File{SceneID: o.ID}).Find(&files)
+
+	return files, nil
+}
+
+func (o *Scene) GetTotalWatchTime() int {
+	db, _ := GetDB()
+	defer db.Close()
+
+	totalResult := struct{ Total float64 }{}
+	db.Raw(`select sum(duration) as total from histories where scene_id = ?`, o.ID).Scan(&totalResult)
+
+	return int(totalResult.Total)
+}
+
+func (o *Scene) GetVideoFiles() ([]File, error) {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var files []File
+	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "video").Find(&files)
+
+	return files, nil
+}
+
+func (o *Scene) GetScriptFiles() ([]File, error) {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var files []File
+	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "script").Order("is_selected_script DESC, created_time DESC").Find(&files)
 
 	return files, nil
 }
@@ -193,35 +242,65 @@ func (o *Scene) UpdateStatus() {
 	}
 
 	changed := false
+	scripts := 0
+	videos := 0
 
 	if len(files) > 0 {
-		if !o.IsAvailable {
-			o.IsAvailable = true
-			changed = true
-		}
-
 		var newestFileDate time.Time
 		var totalFileSize int64
 		for j := range files {
 			totalFileSize = totalFileSize + files[j].Size
-			if files[j].Exists() {
-				if files[j].CreatedTime.After(newestFileDate) || newestFileDate.IsZero() {
+
+			if files[j].Type == "script" {
+				scripts = scripts + 1
+
+				if files[j].Exists() && (files[j].CreatedTime.After(newestFileDate) || newestFileDate.IsZero()) {
 					newestFileDate = files[j].CreatedTime
 				}
-				if !o.IsAccessible {
-					o.IsAccessible = true
-					changed = true
-				}
-			} else {
-				if o.IsAccessible {
-					o.IsAccessible = false
-					changed = true
+			}
+
+			if files[j].Type == "video" {
+				videos = videos + 1
+
+				if files[j].Exists() {
+					if files[j].CreatedTime.After(newestFileDate) || newestFileDate.IsZero() {
+						newestFileDate = files[j].CreatedTime
+					}
+					if !o.IsAccessible {
+						o.IsAccessible = true
+						changed = true
+					}
+				} else {
+					if o.IsAccessible {
+						o.IsAccessible = false
+						changed = true
+					}
 				}
 			}
 		}
 
 		if totalFileSize != o.TotalFileSize {
 			o.TotalFileSize = totalFileSize
+			changed = true
+		}
+
+		if scripts > 0 && o.IsScripted == false {
+			o.IsScripted = true
+			changed = true
+		}
+
+		if scripts == 0 && o.IsScripted == true {
+			o.IsScripted = false
+			changed = true
+		}
+
+		if videos > 0 && o.IsAvailable == false {
+			o.IsAvailable = true
+			changed = true
+		}
+
+		if videos == 0 && o.IsAvailable == true {
+			o.IsAvailable = false
 			changed = true
 		}
 
@@ -234,10 +313,21 @@ func (o *Scene) UpdateStatus() {
 			o.IsAvailable = false
 			changed = true
 		}
+
+		if o.IsScripted == true {
+			o.IsScripted = false
+			changed = true
+		}
 	}
 
 	if o.HasVideoPreview && !o.PreviewExists() {
 		o.HasVideoPreview = false
+		changed = true
+	}
+
+	totalWatchTime := o.GetTotalWatchTime()
+	if o.TotalWatchTime != totalWatchTime {
+		o.TotalWatchTime = totalWatchTime
 		changed = true
 	}
 
@@ -252,7 +342,22 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 
 	o.NeedsUpdate = false
 	o.SceneID = ext.SceneID
-	o.Title = ext.Title
+
+	if o.Title != ext.Title {
+		o.Title = ext.Title
+
+		// reset scriptfile.IsExported state on title change
+		scriptfiles, err := o.GetScriptFiles()
+		if err == nil {
+			for _, file := range scriptfiles {
+				if file.IsExported {
+					file.IsExported = false
+					file.Save()
+				}
+			}
+		}
+	}
+
 	o.SceneType = ext.SceneType
 	o.Studio = ext.Studio
 	o.Site = ext.Site
@@ -302,6 +407,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	SaveWithRetry(db, &o)
 
 	// Clean & Associate Tags
+	db.Model(&o).Association("Tags").Clear()
 	var tmpTag Tag
 	for _, name := range ext.Tags {
 		tagClean := ConvertTag(name)
@@ -313,6 +419,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	}
 
 	// Clean & Associate Actors
+	db.Model(&o).Association("Cast").Clear()
 	var tmpActor Actor
 	for _, name := range ext.Cast {
 		tmpActor = Actor{}
@@ -404,6 +511,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		if i.OrElse("") == "favourite" {
 			tx = tx.Where("favourite = ?", true)
 		}
+		if i.OrElse("") == "scripted" {
+			tx = tx.Where("is_scripted = ?", true)
+		}
 	}
 
 	var sites []string
@@ -464,6 +574,10 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("total_file_size desc")
 	case "total_file_size_asc":
 		tx = tx.Order("total_file_size asc")
+	case "total_watch_time_desc":
+		tx = tx.Order("total_watch_time desc")
+	case "total_watch_time_asc":
+		tx = tx.Order("total_watch_time asc")
 	case "rating_desc":
 		tx = tx.
 			Where("star_rating > ?", 0).

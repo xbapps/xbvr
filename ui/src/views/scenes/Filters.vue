@@ -1,8 +1,31 @@
 <template>
   <div>
-    <div class="is-divider" data-content="Saved lists" style="margin-top:0.8em;"></div>
+    <div class="is-divider" data-content="Saved searches" style="margin-top:0.8em;"></div>
 
     <SavedSearch/>
+
+    <div class="is-divider" data-content="Properties"></div>
+
+    <div class="columns is-multiline is-gapless">
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
+          <b-icon pack="mdi" icon="calendar-check"/>
+          <span>{{ $t('Watchlist') }}</span>
+        </b-checkbox-button>
+      </div>
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
+          <b-icon pack="mdi" icon="heart"/>
+          <span>{{ $t('Favourite') }}</span>
+        </b-checkbox-button>
+      </div>
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="scripted" type="is-info">
+          <b-icon pack="mdi" icon="pulse"/>
+          <span>{{ $t('Scripted') }}</span>
+        </b-checkbox-button>
+      </div>
+    </div>
 
     <div class="is-divider" data-content="Sorting / Status / Release"></div>
 
@@ -18,6 +41,8 @@
             <option value="total_file_size_asc">↑ {{ $t("File size") }}</option>
             <option value="rating_desc">↓ {{ $t("Rating") }}</option>
             <option value="rating_asc">↑ {{ $t("Rating") }}</option>
+            <option value="total_watch_time_desc">↓ {{ $t("Watch time") }}</option>
+            <option value="total_watch_time_asc">↑ {{ $t("Watch time") }}</option>
             <option value="scene_added_desc">↓ {{ $t("Scene added date") }}</option>
             <option value="scene_updated_desc">↓ {{ $t("Scene updated date") }}</option>
             <option value="last_opened_desc">↓ {{ $t("Last viewed date") }}</option>
@@ -26,17 +51,6 @@
           </select>
         </div>
       </div>
-    </b-field>
-
-    <b-field :grouped="true" class="field-extra">
-      <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
-        <b-icon pack="mdi" icon="calendar-check" size="is-small"/>
-        <span>{{ $t("Watchlist") }}</span>
-      </b-checkbox-button>
-      <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
-        <b-icon pack="mdi" icon="heart" size="is-small"/>
-        <span>{{ $t("Favourite") }}</span>
-      </b-checkbox-button>
     </b-field>
 
     <b-field label="Watched" label-position="on-border" :addons="true" class="field-extra">
@@ -119,145 +133,152 @@
 </template>
 
 <script>
-import SavedSearch from "./SavedSearch";
+import SavedSearch from './SavedSearch'
 
 export default {
-  name: "Filters",
-  components: {SavedSearch},
-  mounted() {
-    this.$store.dispatch("sceneList/filters");
+  name: 'Filters',
+  components: { SavedSearch },
+  mounted () {
+    this.$store.dispatch('sceneList/filters')
   },
-  data() {
+  data () {
     return {
       filteredCast: [],
       filteredSites: [],
-      filteredTags: [],
+      filteredTags: []
     }
   },
   methods: {
-    reloadList() {
+    reloadList () {
       this.$router.push({
         name: 'scenes',
         query: {
           q: this.$store.getters['sceneList/filterQueryParams']
         }
-      });
-    },
-    getFilteredCast(text) {
-      this.filteredCast = this.filters.cast.filter((option) => {
-        return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
       })
     },
-    getFilteredSites(text) {
-      this.filteredSites = this.filters.sites.filter((option) => {
-        return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
-      })
+    getFilteredCast (text) {
+      this.filteredCast = this.filters.cast.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.cast.some(entry => entry.toString() === option.toString())
+      ))
     },
-    getFilteredTags(text) {
-      this.filteredTags = this.filters.tags.filter((option) => {
-        return option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
-      })
+    getFilteredSites (text) {
+      this.filteredSites = this.filters.sites.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.sites.some(entry => entry.toString() === option.toString())
+      ))
     },
-    clearReleaseMonth() {
-      this.$store.state.sceneList.filters.releaseMonth = "";
-      this.reloadList();
+    getFilteredTags (text) {
+      this.filteredTags = this.filters.tags.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.tags.some(entry => entry.toString() === option.toString())
+      ))
     },
-    clearVolume() {
-      this.$store.state.sceneList.filters.volume = 0;
-      this.reloadList();
+    clearReleaseMonth () {
+      this.$store.state.sceneList.filters.releaseMonth = ''
+      this.reloadList()
     },
+    clearVolume () {
+      this.$store.state.sceneList.filters.volume = 0
+      this.reloadList()
+    }
   },
   computed: {
-    filters() {
-      return this.$store.state.sceneList.filterOpts;
+    filters () {
+      return this.$store.state.sceneList.filterOpts
     },
     lists: {
-      get() {
-        return this.$store.state.sceneList.filters.lists;
+      get () {
+        return this.$store.state.sceneList.filters.lists
       },
-      set(value) {
-        this.$store.state.sceneList.filters.lists = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.lists = value
+        this.reloadList()
       }
     },
     releaseMonth: {
-      get() {
-        return this.$store.state.sceneList.filters.releaseMonth;
+      get () {
+        return this.$store.state.sceneList.filters.releaseMonth
       },
-      set(value) {
-        this.$store.state.sceneList.filters.releaseMonth = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.releaseMonth = value
+        this.reloadList()
       }
     },
     volume: {
-      get() {
-        return this.$store.state.sceneList.filters.volume;
+      get () {
+        return this.$store.state.sceneList.filters.volume
       },
-      set(value) {
-        this.$store.state.sceneList.filters.volume = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.volume = value
+        this.reloadList()
       }
     },
     cast: {
-      get() {
-        return this.$store.state.sceneList.filters.cast;
+      get () {
+        return this.$store.state.sceneList.filters.cast
       },
-      set(value) {
-        this.$store.state.sceneList.filters.cast = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.cast = value
+        this.reloadList()
       }
     },
     sites: {
-      get() {
-        return this.$store.state.sceneList.filters.sites;
+      get () {
+        return this.$store.state.sceneList.filters.sites
       },
-      set(value) {
-        this.$store.state.sceneList.filters.sites = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.sites = value
+        this.reloadList()
       }
     },
     tags: {
-      get() {
-        return this.$store.state.sceneList.filters.tags;
+      get () {
+        return this.$store.state.sceneList.filters.tags
       },
-      set(value) {
-        this.$store.state.sceneList.filters.tags = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.tags = value
+        this.reloadList()
       }
     },
     cuepoint: {
-      get() {
-        return this.$store.state.sceneList.filters.cuepoint;
+      get () {
+        return this.$store.state.sceneList.filters.cuepoint
       },
-      set(value) {
-        this.$store.state.sceneList.filters.cuepoint = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.cuepoint = value
+        this.reloadList()
       }
     },
     sort: {
-      get() {
-        return this.$store.state.sceneList.filters.sort;
+      get () {
+        return this.$store.state.sceneList.filters.sort
       },
-      set(value) {
-        this.$store.state.sceneList.filters.sort = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.sort = value
+        this.reloadList()
       }
     },
     isWatched: {
-      get() {
-        return this.$store.state.sceneList.filters.isWatched;
+      get () {
+        return this.$store.state.sceneList.filters.isWatched
       },
-      set(value) {
-        this.$store.state.sceneList.filters.isWatched = value;
-        this.reloadList();
+      set (value) {
+        this.$store.state.sceneList.filters.isWatched = value
+        this.reloadList()
       }
-    },
+    }
   }
 }
 </script>
 
 <style lang="scss" scoped>
 @import "~bulma-extensions/bulma-divider/dist/css/bulma-divider.min.css";
+
+.is-gapless div.control {
+  margin: 0.1rem;
+}
 
 .is-divider {
   margin: 1.5rem 0;

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -12,8 +13,10 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/common"
-	"github.com/xbapps/xbvr/pkg/deo_remote"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/session"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type DeoLibrary struct {
@@ -39,26 +42,30 @@ type DeoSceneTimestamp struct {
 }
 
 type DeoScene struct {
-	ID             uint                `json:"id"`
-	Title          string              `json:"title"`
-	Authorized     uint                `json:"authorized"`
-	Description    string              `json:"description"`
-	Paysite        DeoScenePaysite     `json:"paysite"`
-	IsFavorite     bool                `json:"isFavorite"`
-	Is3D           bool                `json:"is3d"`
-	ThumbnailURL   string              `json:"thumbnailUrl"`
-	RatingAvg      float64             `json:"rating_avg"`
-	ScreenType     string              `json:"screenType"`
-	StereoMode     string              `json:"stereoMode"`
-	VideoLength    int                 `json:"videoLength"`
-	VideoThumbnail string              `json:"videoThumbnail"`
-	VideoPreview   string              `json:"videoPreview,omitempty"`
-	Encodings      []DeoSceneEncoding  `json:"encodings"`
-	Timestamps     []DeoSceneTimestamp `json:"timeStamps"`
-	Actors         []DeoSceneActor     `json:"actors"`
-	Categories     []DeoSceneCategory  `json:"categories"`
-	FullVideoReady bool                `json:"fullVideoReady"`
-	FullAccess     bool                `json:"fullAccess"`
+	ID               uint                 `json:"id"`
+	Title            string               `json:"title"`
+	Authorized       uint                 `json:"authorized"`
+	Description      string               `json:"description"`
+	Paysite          DeoScenePaysite      `json:"paysite"`
+	IsFavorite       bool                 `json:"isFavorite"`
+	IsScripted       bool                 `json:"isScripted"`
+	IsWatchlist      bool                 `json:"isWatchlist"`
+	Is3D             bool                 `json:"is3d"`
+	ThumbnailURL     string               `json:"thumbnailUrl"`
+	RatingAvg        float64              `json:"rating_avg"`
+	ScreenType       string               `json:"screenType"`
+	StereoMode       string               `json:"stereoMode"`
+	VideoLength      int                  `json:"videoLength"`
+	VideoThumbnail   string               `json:"videoThumbnail"`
+	VideoPreview     string               `json:"videoPreview,omitempty"`
+	Encodings        []DeoSceneEncoding   `json:"encodings"`
+	EncodingsSpatial []DeoSceneEncoding   `json:"encodings_spatial"`
+	Timestamps       []DeoSceneTimestamp  `json:"timeStamps"`
+	Actors           []DeoSceneActor      `json:"actors"`
+	Categories       []DeoSceneCategory   `json:"categories,omitempty"`
+	Fleshlight       []DeoSceneScriptFile `json:"fleshlight,omitempty"`
+	FullVideoReady   bool                 `json:"fullVideoReady"`
+	FullAccess       bool                 `json:"fullAccess"`
 }
 
 type DeoSceneActor struct {
@@ -67,6 +74,10 @@ type DeoSceneActor struct {
 }
 
 type DeoSceneCategory struct {
+	Tag DeoSceneTag `json:"tag"`
+}
+
+type DeoSceneTag struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }
@@ -90,16 +101,36 @@ type DeoSceneVideoSource struct {
 	URL        string `json:"url"`
 }
 
+type DeoSceneScriptFile struct {
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
+
+func isDeoAuthEnabled() bool {
+	if config.Config.Interfaces.DeoVR.AuthEnabled &&
+		config.Config.Interfaces.DeoVR.Username != "" &&
+		config.Config.Interfaces.DeoVR.Password != "" {
+		return true
+	} else {
+		return false
+	}
+}
+
 func setDeoPlayerHost(req *restful.Request) {
-	deoIP := strings.Split(req.Request.RemoteAddr, ":")[0]
-	if deoIP != deo_remote.DeoPlayerHost {
+	deoIP := req.Request.RemoteAddr
+	lastColon := strings.LastIndex(deoIP, ":")
+	if lastColon != -1 {
+		deoIP = deoIP[:lastColon]
+	}
+	if deoIP != session.DeoPlayerHost {
 		common.Log.Infof("DeoVR Player connecting from %v", deoIP)
-		deo_remote.DeoPlayerHost = deoIP
+		session.DeoPlayerHost = deoIP
+		session.DeoRequestHost = "http://" + req.Request.Host
 	}
 }
 
 func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	if common.IsDeoAuthEnabled() {
+	if isDeoAuthEnabled() {
 		var authorized bool
 
 		u, err := req.BodyParameter("login")
@@ -112,7 +143,8 @@ func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *rest
 			authorized = false
 		}
 
-		if u == common.DEOUSER && p == common.DEOPASSWORD {
+		err = bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(p))
+		if u == config.Config.Interfaces.DeoVR.Username && err == nil {
 			authorized = true
 		}
 
@@ -171,7 +203,16 @@ func (i DeoVRResource) WebService() *restful.WebService {
 }
 
 func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) {
+	if !config.Config.Interfaces.DeoVR.Enabled {
+		return
+	}
+
 	setDeoPlayerHost(req)
+
+	dnt := ""
+	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+		dnt = "?dnt=true"
+	}
 
 	db, _ := models.GetDB()
 	defer db.Close()
@@ -180,8 +221,6 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 	if err != nil {
 		return
 	}
-
-	baseURL := "http://" + req.Request.Host
 
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
@@ -197,7 +236,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
-				URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, file.ID),
+				URL:        fmt.Sprintf("%v/api/dms/file/%v%v", session.DeoRequestHost, file.ID, dnt),
 			},
 		},
 	})
@@ -208,7 +247,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 		Description:  file.Filename,
 		Title:        file.Filename,
 		IsFavorite:   false,
-		ThumbnailURL: baseURL + "/ui/images/blank.png",
+		ThumbnailURL: session.DeoRequestHost + "/ui/images/blank.png",
 		Is3D:         true,
 		Encodings:    sources,
 		VideoLength:  int(file.VideoDuration),
@@ -218,19 +257,34 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 }
 
 func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response) {
+	if !config.Config.Interfaces.DeoVR.Enabled {
+		return
+	}
+
+	sceneID := req.PathParameter("scene-id")
+	if sceneID == "" {
+		return
+	}
+
 	setDeoPlayerHost(req)
+
+	dnt := ""
+	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+		dnt = "?dnt=true"
+	}
 
 	db, _ := models.GetDB()
 	defer db.Close()
 
 	var scene models.Scene
-	db.Preload("Cast").
+	err := db.Preload("Cast").
 		Preload("Tags").
-		Preload("Files").
 		Preload("Cuepoints").
-		Where(&models.Scene{SceneID: req.PathParameter("scene-id")}).First(&scene)
-
-	baseURL := "http://" + req.Request.Host
+		Where("id = ?", sceneID).First(&scene).Error
+	if err != nil {
+		log.Error(err)
+		return
+	}
 
 	var stereoMode string
 	var screenType string
@@ -246,32 +300,61 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	var categories []DeoSceneCategory
 	for i := range scene.Tags {
 		categories = append(categories, DeoSceneCategory{
-			ID:   scene.Tags[i].ID,
-			Name: scene.Tags[i].Name,
+			Tag: DeoSceneTag{
+				ID:   scene.Tags[i].ID,
+				Name: scene.Tags[i].Name,
+			},
 		})
 	}
 
 	var videoLength float64
 
 	var sources []DeoSceneEncoding
-	for i := range scene.Files {
-		var height = scene.Files[i].VideoHeight
-		var width = scene.Files[i].VideoWidth
+	var sourcesSpatial []DeoSceneEncoding
+	var videoFiles []models.File
+	videoFiles, err = scene.GetVideoFiles()
+	if err != nil {
+		log.Error(err)
+		return
+	}
 
-		sources = append(sources, DeoSceneEncoding{
-			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(scene.Files), scene.Files[i].VideoHeight, humanize.Bytes(uint64(scene.Files[i].Size))),
+	for i, file := range videoFiles {
+		var height = file.VideoHeight
+		var width = file.VideoWidth
+		var source = DeoSceneEncoding{
+			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(videoFiles), file.VideoHeight, humanize.Bytes(uint64(file.Size))),
 			VideoSources: []DeoSceneVideoSource{
 				{
 					Resolution: height,
 					Height:     height,
 					Width:      width,
-					Size:       scene.Files[i].Size,
-					URL:        fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, scene.Files[i].ID),
+					Size:       file.Size,
+					URL:        fmt.Sprintf("%v/api/dms/file/%v/%v%v", session.DeoRequestHost, file.ID, scene.GetFunscriptTitle(), dnt),
 				},
 			},
-		})
+		}
 
-		videoLength = scene.Files[i].VideoDuration
+		sources = append(sources, source)
+		if strings.Contains(strings.ToLower(file.Filename), "fb360") {
+			sourcesSpatial = append(sourcesSpatial, source)
+		}
+
+		videoLength = file.VideoDuration
+	}
+
+	var deoScriptFiles []DeoSceneScriptFile
+	var scriptFiles []models.File
+	scriptFiles, err = scene.GetScriptFiles()
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	for _, file := range scriptFiles {
+		deoScriptFiles = append(deoScriptFiles, DeoSceneScriptFile{
+			Title: file.Filename,
+			URL:   fmt.Sprintf("%v/api/dms/file/%v", session.DeoRequestHost, file.ID),
+		})
 	}
 
 	var cuepoints []DeoSceneTimestamp
@@ -281,46 +364,74 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 			Name: scene.Cuepoints[i].Name,
 		})
 	}
+	sort.Slice(cuepoints, func(i, j int) bool {
+		return cuepoints[i].TS < cuepoints[j].TS
+	})
 
-	if scene.Files[0].VideoProjection == "180_sbs" {
+	if videoFiles[0].VideoProjection == "mkx200" ||
+		videoFiles[0].VideoProjection == "mkx220" ||
+		videoFiles[0].VideoProjection == "vrca220" {
+		stereoMode = "sbs"
+		screenType = videoFiles[0].VideoProjection
+	}
+
+	if videoFiles[0].VideoProjection == "180_sbs" {
 		stereoMode = "sbs"
 		screenType = "dome"
 	}
 
-	if scene.Files[0].VideoProjection == "360_tb" {
+	if videoFiles[0].VideoProjection == "360_tb" {
 		stereoMode = "tb"
 		screenType = "sphere"
 	}
 
+	title := scene.Title
+	thumbnailURL := session.DeoRequestHost + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
+
+	if scene.IsScripted {
+		title = scene.GetFunscriptTitle()
+		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
+			thumbnailURL = session.DeoRequestHost + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
+		}
+	}
+
 	deoScene := DeoScene{
-		ID:             scene.ID,
-		Authorized:     1,
-		Title:          scene.Title,
-		Description:    scene.Synopsis,
-		Actors:         actors,
-		Categories:     categories,
-		Paysite:        DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
-		IsFavorite:     scene.Favourite,
-		RatingAvg:      scene.StarRating,
-		FullVideoReady: true,
-		FullAccess:     true,
-		ThumbnailURL:   baseURL + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1),
-		StereoMode:     stereoMode,
-		Is3D:           true,
-		ScreenType:     screenType,
-		Encodings:      sources,
-		VideoLength:    int(videoLength),
-		Timestamps:     cuepoints,
+		ID:               scene.ID,
+		Authorized:       1,
+		Title:            title,
+		Description:      scene.Synopsis,
+		Actors:           actors,
+		Paysite:          DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
+		IsFavorite:       scene.Favourite,
+		IsScripted:       scene.IsScripted,
+		IsWatchlist:      scene.Watchlist,
+		RatingAvg:        scene.StarRating,
+		FullVideoReady:   true,
+		FullAccess:       true,
+		ThumbnailURL:     thumbnailURL,
+		StereoMode:       stereoMode,
+		Is3D:             true,
+		ScreenType:       screenType,
+		Encodings:        sources,
+		EncodingsSpatial: sourcesSpatial,
+		VideoLength:      int(videoLength),
+		Timestamps:       cuepoints,
+		Categories:       categories,
+		Fleshlight:       deoScriptFiles,
 	}
 
 	if scene.HasVideoPreview {
-		deoScene.VideoPreview = fmt.Sprintf("%v/api/dms/preview/%v", baseURL, scene.SceneID)
+		deoScene.VideoPreview = fmt.Sprintf("%v/api/dms/preview/%v", session.DeoRequestHost, scene.SceneID)
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, deoScene)
 }
 
 func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Response) {
+	if !config.Config.Interfaces.DeoVR.Enabled {
+		return
+	}
+
 	setDeoPlayerHost(req)
 
 	db, _ := models.GetDB()
@@ -352,6 +463,7 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	db.Model(&unmatched).
 		Preload("Volume").
 		Where("files.scene_id = 0").
+		Where("files.type = 'video'").
 		Order("created_time desc").
 		Find(&unmatched)
 
@@ -367,15 +479,21 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 }
 
 func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem {
-	baseURL := "http://" + req.Request.Host
+	setDeoPlayerHost(req)
 
 	list := make([]DeoListItem, 0)
 	for i := range scenes {
+		thumbnailURL := fmt.Sprintf("%v/img/700x/%v", session.DeoRequestHost, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
+
+		if config.Config.Interfaces.DeoVR.RenderHeatmaps && scenes[i].IsScripted {
+			thumbnailURL = fmt.Sprintf("%v/imghm/%d/%v", session.DeoRequestHost, scenes[i].ID, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
+		}
+
 		item := DeoListItem{
 			Title:        scenes[i].Title,
 			VideoLength:  scenes[i].Duration * 60,
-			ThumbnailURL: baseURL + "/img/700x/" + strings.Replace(scenes[i].CoverURL, "://", ":/", -1),
-			VideoURL:     baseURL + "/deovr/" + scenes[i].SceneID,
+			ThumbnailURL: thumbnailURL,
+			VideoURL:     fmt.Sprintf("%v/deovr/%v", session.DeoRequestHost, scenes[i].ID),
 		}
 		list = append(list, item)
 	}
@@ -383,7 +501,12 @@ func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem 
 }
 
 func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
-	baseURL := "http://" + req.Request.Host
+	setDeoPlayerHost(req)
+
+	dnt := ""
+	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+		dnt = "?dnt=true"
+	}
 
 	list := make([]DeoListItem, 0)
 	for i := range files {
@@ -395,8 +518,8 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 		item := DeoListItem{
 			Title:        files[i].Filename,
 			VideoLength:  int(files[i].VideoDuration),
-			ThumbnailURL: baseURL + "/ui/images/blank.png",
-			VideoURL:     fmt.Sprintf("%v/api/dms/file/%v?dnt=1", baseURL, files[i].ID),
+			ThumbnailURL: session.DeoRequestHost + "/ui/images/blank.png",
+			VideoURL:     fmt.Sprintf("%v/deovr/file/%v%v", session.DeoRequestHost, files[i].ID, dnt),
 		}
 		list = append(list, item)
 	}

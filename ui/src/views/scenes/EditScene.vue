@@ -21,6 +21,10 @@
               <b-input type="text" v-model="scene.title" @blur="blur('title')"/>
             </b-field>
 
+            <b-field :label="$t('Multipart scene')">
+              <b-checkbox v-model="scene.is_multipart"/>
+            </b-field>
+
             <b-field grouped group-multiline>
               <b-field :label="$t('Studio')">
                 <b-input type="text" v-model="scene.studio" @blur="blur('studio')"/>
@@ -74,15 +78,15 @@
           </b-tab-item>
 
           <b-tab-item :label="$t('Filenames')">
-            <ListEditor :list="this.scene.files" :blurFn="() => blur('files')"/>
+            <ListEditor :list="this.scene.files" type="files" :blurFn="() => blur('files')"/>
           </b-tab-item>
 
           <b-tab-item :label="$t('Covers')">
-            <ListEditor :list="this.scene.covers" :blurFn="() => blur('covers')"/>
+            <ListEditor :list="this.scene.covers" type="covers" :blurFn="() => blur('covers')"/>
           </b-tab-item>
 
           <b-tab-item :label="$t('Gallery')">
-            <ListEditor :list="this.scene.gallery" :blurFn="() => blur('gallery')"/>
+            <ListEditor :list="this.scene.gallery" type="gallery" :blurFn="() => blur('gallery')"/>
           </b-tab-item>
         </b-tabs>
 
@@ -98,9 +102,9 @@
 </template>
 
 <script>
-import ky from 'ky';
-import GlobalEvents from 'vue-global-events';
-import ListEditor from '../../components/ListEditor';
+import ky from 'ky'
+import GlobalEvents from 'vue-global-events'
+import ListEditor from '../../components/ListEditor'
 
 export default {
   name: 'EditScene',
@@ -117,6 +121,7 @@ export default {
     tags: object[]
     images: object[]
     filenames_arr: string[]
+    is_multipart: bool
      */
     const scene = Object.assign({}, this.$store.state.overlay.edit.scene)
     scene.castArray = scene.cast.map(c => c.name)
@@ -136,12 +141,16 @@ export default {
   },
   methods: {
     getFilteredCast (text) {
-      this.filteredCast = this.filters.cast.filter(option =>
-        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0)
+      this.filteredCast = this.filters.cast.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0) &&
+        !this.scene.cast.some(entry => entry.name === option.toString())
+      )
     },
     getFilteredTags (text) {
-      this.filteredTags = this.filters.tags.filter(option =>
-        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0)
+      this.filteredTags = this.filters.tags.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0) &&
+        !this.scene.tags.some(entry => entry.name === option.toString())
+      )
     },
     close () {
       if (this.changesMade) {

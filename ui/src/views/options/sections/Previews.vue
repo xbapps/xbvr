@@ -85,83 +85,83 @@
 </template>
 
 <script>
-  import ky from "ky";
-  import prettyBytes from "pretty-bytes";
+import ky from 'ky'
+import prettyBytes from 'pretty-bytes'
 
-  export default {
-    name: "Previews",
-    data() {
-      return {
-        isLoading: true,
-        startTime: 5,
-        snippetLength: 0.2,
-        snippetAmount: 2,
-        resolution: 300,
-        extraSnippet: false,
-      }
-    },
-    async mounted() {
-      await this.loadState();
-    },
-    computed: {
-      generatingPreview() {
-        return this.$store.state.optionsPreviews.generatingPreview;
-      },
-      isPreviewReady() {
-        return this.$store.state.optionsPreviews.isPreviewReady;
-      },
-      previewFn() {
-        return this.$store.state.optionsPreviews.previewFn;
-      },
-    },
-    methods: {
-      async loadState() {
-        this.isLoading = true;
-        await ky.get(`/api/options/state`)
-          .json()
-          .then(data => {
-            this.startTime = data.config.library.preview.startTime;
-            this.snippetLength = data.config.library.preview.snippetLength;
-            this.snippetAmount = data.config.library.preview.snippetAmount;
-            this.resolution = data.config.library.preview.resolution;
-            this.extraSnippet = data.config.library.preview.extraSnippet;
-            this.isLoading = false;
-          });
-      },
-      async saveSettings() {
-        this.isLoading = true;
-        await ky.put(`/api/options/previews`, {
-          json: {
-            startTime: this.startTime,
-            snippetLength: this.snippetLength,
-            snippetAmount: this.snippetAmount,
-            resolution: this.resolution,
-            extraSnippet: this.extraSnippet,
-          }
-        })
-          .json()
-          .then(data => {
-            this.isLoading = false;
-          });
-      },
-      async testSettings() {
-        this.$store.commit("optionsPreviews/hidePreview");
-        await ky.post(`/api/options/previews/test`, {
-          json: {
-            startTime: this.startTime,
-            snippetLength: this.snippetLength,
-            snippetAmount: this.snippetAmount,
-            resolution: this.resolution,
-            extraSnippet: this.extraSnippet,
-          }
-        });
-      },
-      async startGenerating() {
-        await ky.get(`/api/task/preview/generate`);
-      },
-      prettyBytes,
+export default {
+  name: 'Previews',
+  data () {
+    return {
+      isLoading: true,
+      startTime: 5,
+      snippetLength: 0.2,
+      snippetAmount: 2,
+      resolution: 300,
+      extraSnippet: false
     }
+  },
+  async mounted () {
+    await this.loadState()
+  },
+  computed: {
+    generatingPreview () {
+      return this.$store.state.optionsPreviews.generatingPreview
+    },
+    isPreviewReady () {
+      return this.$store.state.optionsPreviews.isPreviewReady
+    },
+    previewFn () {
+      return this.$store.state.optionsPreviews.previewFn
+    }
+  },
+  methods: {
+    async loadState () {
+      this.isLoading = true
+      await ky.get('/api/options/state')
+        .json()
+        .then(data => {
+          this.startTime = data.config.library.preview.startTime
+          this.snippetLength = data.config.library.preview.snippetLength
+          this.snippetAmount = data.config.library.preview.snippetAmount
+          this.resolution = data.config.library.preview.resolution
+          this.extraSnippet = data.config.library.preview.extraSnippet
+          this.isLoading = false
+        })
+    },
+    async saveSettings () {
+      this.isLoading = true
+      await ky.put('/api/options/previews', {
+        json: {
+          startTime: this.startTime,
+          snippetLength: this.snippetLength,
+          snippetAmount: this.snippetAmount,
+          resolution: this.resolution,
+          extraSnippet: this.extraSnippet
+        }
+      })
+        .json()
+        .then(data => {
+          this.isLoading = false
+        })
+    },
+    async testSettings () {
+      this.$store.commit('optionsPreviews/hidePreview')
+      await ky.post('/api/options/previews/test', {
+        json: {
+          startTime: this.startTime,
+          snippetLength: this.snippetLength,
+          snippetAmount: this.snippetAmount,
+          resolution: this.resolution,
+          extraSnippet: this.extraSnippet
+        }
+      })
+    },
+    async startGenerating () {
+      await ky.get('/api/task/preview/generate')
+    },
+    prettyBytes
   }
+}
 </script>
 
 <style scoped>

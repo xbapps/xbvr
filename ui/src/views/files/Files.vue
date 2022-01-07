@@ -16,21 +16,21 @@
 </template>
 
 <script>
-  import Filters from "./Filters";
-  import List from "./List";
-  import Player from "./Player";
-  import SceneMatch from "./SceneMatch";
+import Filters from './Filters'
+import List from './List'
+import Player from './Player'
+import SceneMatch from './SceneMatch'
 
-  export default {
-    name: "Files",
-    components: {Filters, List, Player, SceneMatch},
-    computed: {
-      showPlayerOverlay() {
-        return this.$store.state.overlay.player.show;
-      },
-      showMatchOverlay() {
-        return this.$store.state.overlay.match.show;
-      },
+export default {
+  name: 'Files',
+  components: { Filters, List, Player, SceneMatch },
+  computed: {
+    showPlayerOverlay () {
+      return this.$store.state.overlay.player.show
+    },
+    showMatchOverlay () {
+      return this.$store.state.overlay.match.show
     }
   }
+}
 </script>

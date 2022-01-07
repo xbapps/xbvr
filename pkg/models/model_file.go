@@ -24,8 +24,9 @@ type File struct {
 	CreatedTime time.Time `json:"created_time"`
 	UpdatedTime time.Time `json:"updated_time"`
 
-	SceneID uint  `json:"scene_id"`
-	Scene   Scene `json:"-"`
+	Type    string `json:"type"`
+	SceneID uint   `json:"scene_id"`
+	Scene   Scene  `json:"-"`
 
 	VideoWidth           int     `json:"video_width"`
 	VideoHeight          int     `json:"video_height"`
@@ -35,6 +36,10 @@ type File struct {
 	VideoCodecName       string  `json:"-"`
 	VideoDuration        float64 `json:"duration"`
 	VideoProjection      string  `json:"projection"`
+
+	HasHeatmap       bool `json:"has_heatmap"`
+	IsSelectedScript bool `json:"is_selected_script"`
+	IsExported       bool `json:"is_exported"`
 }
 
 func (f *File) GetPath() string {

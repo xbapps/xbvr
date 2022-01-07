@@ -25,15 +25,14 @@ import (
 	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
-	"github.com/xbapps/xbvr/pkg/deo_remote"
 	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/session"
 	"github.com/xbapps/xbvr/pkg/tasks"
 	"willnorris.com/go/imageproxy"
 )
 
 var (
-	DEBUG  = common.DEBUG
 	wsAddr = common.WsAddr
 	log    = common.Log
 )
@@ -121,7 +120,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(restfulspec.NewOpenAPIService(restConfig))
 
 	// Static files
-	if DEBUG == "" {
+	if !common.EnvConfig.Debug {
 		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(assets.HTTP))
 	} else {
 		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(http.Dir("ui/dist")))
@@ -132,6 +131,8 @@ func StartServer(version, commit, branch, date string) {
 	p := imageproxy.NewProxy(nil, diskCache(filepath.Join(common.AppDir, "imageproxy")))
 	p.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
 	r.PathPrefix("/img/").Handler(http.StripPrefix("/img", p))
+	hmp := NewHeatmapThumbnailProxy(p, diskCache(filepath.Join(common.AppDir, "heatmapthumbnailproxy")))
+	r.PathPrefix("/imghm/").Handler(http.StripPrefix("/imghm", hmp))
 	r.SkipClean(true)
 
 	r.PathPrefix("/").Handler(http.DefaultServeMux)
@@ -190,11 +191,12 @@ func StartServer(version, commit, branch, date string) {
 	}
 
 	// DeoVR remote
-	go deo_remote.DeoRemote()
+	go session.DeoRemote()
 
 	// Cron
 	SetupCron()
 
+	// List binding addresses
 	addrs, _ := net.InterfaceAddrs()
 	ips := []string{}
 	for _, addr := range addrs {
@@ -203,17 +205,21 @@ func StartServer(version, commit, branch, date string) {
 			ips = append(ips, fmt.Sprintf("http://%v:%v/", ip.IP, config.Config.Server.Port))
 		}
 	}
+
+	// Prepare state
+	tasks.UpdateState()
+	config.State.Server.BoundIP = ips
+	config.SaveState()
+
 	log.Infof("Web UI available at %s", strings.Join(ips, ", "))
 	log.Infof("Web UI Authentication enabled: %v", common.IsUIAuthEnabled())
-	log.Infof("DeoVR Authentication enabled: %v", common.IsDeoAuthEnabled())
 	log.Infof("Using database: %s", common.DATABASE_URL)
 
 	httpAddr := fmt.Sprintf("%v:%v", config.Config.Server.BindAddress, config.Config.Server.Port)
-	if DEBUG == "" {
-		log.Fatal(http.ListenAndServe(httpAddr, handler))
-	} else {
-		log.Infof("Running in DEBUG mode")
+	if common.EnvConfig.DebugRequests {
 		log.Fatal(http.ListenAndServe(httpAddr, wwwlog.Handle(handler, &wwwlog.Options{Color: true})))
+	} else {
+		log.Fatal(http.ListenAndServe(httpAddr, handler))
 	}
 }
 
