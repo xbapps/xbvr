@@ -25,6 +25,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	coverRegEx := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
 	durationRegExForSceneCard := regexp.MustCompile(`^(?:(\d{2}):)?(\d{2}):(\d{2})$`)
 	durationRegExForScenePage := regexp.MustCompile(`^T(\d{0,2})H?(\d{2})M(\d{2})S$`)
+	filenameRegEx := regexp.MustCompile(`[:?]|( & )|( \\u0026 )`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -71,7 +72,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// ...a lot of these are shared with RealJamVR which uses the same tags though.
 		// Could split by / but would run into issues with "f/f/m" and "shorts / skirts"
 		var videotype string
-		var FB360 = ".mp4"
+		var FB360 string
 		e.ForEach(`ul.c-meta--scene-tags li a`, func(id int, e *colly.HTMLElement) {
 			if !skiptags[e.Attr("title")] {
 				sc.Tags = append(sc.Tags, e.Attr("title"))
@@ -82,7 +83,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				videotype = e.Attr("title")
 			}
 			if e.Attr("title") == "Spatial audio" {
-				FB360 = "_FB360.MP4"
+				FB360 = "_FB360.MKV"
 			}
 
 		})
@@ -145,7 +146,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				// Only shown for logged in users so need to generate them
 				// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
 				resolutions := []string{"_6400p_", "_3840p_", "_3160p_", "_3072p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
-				baseName := "SLR_" + siteID + "_" + sc.Title
+				baseName := "SLR_" + siteID + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
 				switch videotype {
 				case "360°": // Sadly can't determine if TB or MONO so have to add both
 					for i := range resolutions {
@@ -154,14 +155,22 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 					}
 				case "Fisheye": // 200° videos named with MKX200
 					for i := range resolutions {
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200"+FB360)
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220"+FB360)
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220"+FB360)
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220.mp4")
+						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220.mp4")
 					}
 				default: // Assuming everything else is 180 and LR, yet to find a TB_180
 					for i := range resolutions {
 						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_LR_180.mp4")
 					}
+				}
+				if FB360 != "" {
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_LR_180"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX200"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX220"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_VRCA220"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MONO_360"+FB360)
+					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_TB_360"+FB360)
 				}
 			}
 
