@@ -100,5 +100,5 @@ changelog:
 release:
   disable: false
   github:
-    owner: xbapps
+    owner: cld9x
     name: xbvr
