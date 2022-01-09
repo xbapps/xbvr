@@ -1,11 +1,11 @@
 name: release
 
 on:
-  push:
-    branches: [ master, actions ]
 #  push:
-#    tags:
-#      - "*"
+#    branches: [ master, actions ]
+  push:
+    tags:
+      - "*"
 
 jobs:
 
@@ -27,4 +27,4 @@ jobs:
           echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
 
       - name: Release publish
-        run: make release-snapshot
+        run: make release

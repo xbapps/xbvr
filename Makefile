@@ -21,7 +21,7 @@ release-dry-run-snapshot:
 		-v `pwd`:/go/src \
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src \
-		troian/golang-cross:${GOLANG_CROSS_VERSION} \
+		ghcr.io/troian/golang-cross:${GOLANG_CROSS_VERSION} \
 		--rm-dist --skip-validate --skip-publish --snapshot
 
 .PHONY: release-dry-run
@@ -34,7 +34,7 @@ release-dry-run:
 		-v `pwd`:/go/src \
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src \
-		troian/golang-cross:${GOLANG_CROSS_VERSION} \
+		ghcr.io/troian/golang-cross:${GOLANG_CROSS_VERSION} \
 		--rm-dist --skip-validate --skip-publish
 
 .PHONY: release-snapshot
@@ -52,7 +52,7 @@ release-snapshot:
 		-v `pwd`:/go/src \
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src \
-		troian/golang-cross:${GOLANG_CROSS_VERSION} \
+		ghcr.io/troian/golang-cross:${GOLANG_CROSS_VERSION} \
 		release --rm-dist --snapshot
 
 .PHONY: release
@@ -70,5 +70,5 @@ release:
 		-v `pwd`:/go/src \
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src \
-		troian/golang-cross:${GOLANG_CROSS_VERSION} \
+		ghcr.io/troian/golang-cross:${GOLANG_CROSS_VERSION} \
 		release --rm-dist
