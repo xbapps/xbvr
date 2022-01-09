@@ -4,13 +4,13 @@ ENV HOME=/home/gitpod
 WORKDIR $HOME
 USER gitpod
 
-ENV GO_VERSION=1.13 \
+ENV GO_VERSION=1.16.7 \
   GOPATH=$HOME/go-packages \
   GOROOT=$HOME/go
 RUN export PATH=$(echo "$PATH" | sed -e 's|:/workspace/go/bin||' -e 's|:/home/gitpod/go/bin||' -e 's|:/home/gitpod/go-packages/bin||')
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
-RUN GO111MODULE=on go get -u -v \
+RUN go get -u -v \
   github.com/UnnoTed/fileb0x \
   github.com/cosmtrek/air && \
   sudo rm -rf $GOPATH/src && \

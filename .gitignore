@@ -2,7 +2,6 @@
 .DS_Store
 .vscode/settings.json
 
-go.sum
 test.db
 /test_cache
 
@@ -14,3 +13,4 @@ node_modules/
 /ui/public/static/bundle.*
 npm-debug.log
 yarn-error.log
+.release-env
