@@ -14,7 +14,7 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"github.com/putdotio/go-putio/putio"
+	"github.com/putdotio/go-putio"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
