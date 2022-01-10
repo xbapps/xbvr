@@ -680,7 +680,7 @@ func Migrate() {
 
 				return nil
 			},
-		}
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
