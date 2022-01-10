@@ -7,7 +7,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/ffprobe v0.0.0-20190307025918-9b483c5f7751
-	github.com/araddon/dateparse v0.0.0-20200409225146-d820a6159ab1
+	github.com/araddon/dateparse 6b43995a97de
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/blevesearch/bleve v1.0.14
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
