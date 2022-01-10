@@ -73,10 +73,9 @@ Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG)
 
 Make sure you have following installed:
 
-- Go 1.13
+- Go 1.17
 - Node.js 12.x
 - Yarn 1.17.x
-- fileb0x (run `go get github.com/UnnoTed/fileb0x` outside project directory)
 - air (run `go get github.com/cosmtrek/air` outside project directory)
 
 Once all of the above is installed, running `yarn dev` from project directory launches file-watchers providing livereload for both Go and JavaScript.
