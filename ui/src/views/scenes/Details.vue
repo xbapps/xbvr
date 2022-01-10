@@ -69,7 +69,8 @@
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
-                      <edit-button :item="item"/>
+                      <edit-button :item="item"/>&nbsp;
+                      <refresh-button :item="item"/>
                     </div>
                   </div>
                 </div>
@@ -210,10 +211,11 @@ import StarRating from 'vue-star-rating'
 import FavouriteButton from '../../components/FavouriteButton'
 import WatchlistButton from '../../components/WatchlistButton'
 import EditButton from '../../components/EditButton'
+import RefreshButton from '../../components/RefreshButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton, RefreshButton },
   data () {
     return {
       index: 1,

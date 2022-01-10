@@ -260,6 +260,10 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 		scene.Favourite = !scene.Favourite
 	}
 
+	if r.List == "needs_update" {
+		scene.NeedsUpdate = !scene.NeedsUpdate
+	}
+
 	scene.Save()
 }
 
