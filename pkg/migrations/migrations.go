@@ -1216,6 +1216,95 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0051-multiple-site-suffixes",
+			Migrate: func(tx *gorm.DB) error {
+				// Since we're adding a few SLR scrapers with existing site
+				// scrapers, we are changing the naming convention of scene ids
+				// for those site scrapers
+				var scenes []models.Scene
+				var actions []models.Action
+				// This is used to check whether we need to initiate a reindex
+				var changedScenes = 0
+				// VRLatina migration
+				db.Where(
+					"scene_id LIKE ? AND scene_id NOT LIKE ? AND scene_id NOT LIKE ?",
+					"vrlatina-%",
+					"vrlatina-site-%",
+					"vrlatina-slr-%",
+				).Find(&scenes)
+				for _, scene := range scenes {
+					changedScenes = changedScenes + 1
+					scene.SceneID = fmt.Sprintf("vrlatina-site-%v", strings.Split(scene.SceneID, "-")[1])
+					scene.Save()
+				}
+				db.Where(
+					"scene_id LIKE ? AND scene_id NOT LIKE ? AND scene_id NOT LIKE ?",
+					"vrlatina-%",
+					"vrlatina-site-%",
+					"vrlatina-slr-%",
+				).Find(&actions)
+				for _, action := range actions {
+					action.SceneID = fmt.Sprintf("vrlatina-site-%v", strings.Split(action.SceneID, "-")[1])
+					action.Save()
+				}
+				// HoloGirlsVR migration
+				db.Where(
+					"scene_id LIKE ? AND scene_id NOT LIKE ? AND scene_id NOT LIKE ?",
+					"hologirlsvr-%",
+					"hologirlsvr-site-%",
+					"hologirlsvr-slr-%",
+				).Find(&scenes)
+				for _, scene := range scenes {
+					changedScenes = changedScenes + 1
+					scene.SceneID = fmt.Sprintf("hologirlsvr-site-%v", strings.Split(scene.SceneID, "-")[1])
+					scene.Save()
+				}
+				db.Where(
+					"scene_id LIKE ? AND scene_id NOT LIKE ? AND scene_id NOT LIKE ?",
+					"hologirlsvr-%",
+					"hologirlsvr-site-%",
+					"hologirlsvr-slr-%",
+				).Find(&actions)
+				for _, action := range actions {
+					action.SceneID = fmt.Sprintf("hologirlsvr-site-%v", strings.Split(action.SceneID, "-")[1])
+					action.Save()
+				}
+				// RealityLovers migration
+				db.Where(
+					"scene_id LIKE ? AND scene_id NOT LIKE ? AND scene_id NOT LIKE ?",
+					"realitylovers-%",
+					"realitylovers-site-%",
+					"realitylovers-slr-%",
+				).Find(&scenes)
+				for _, scene := range scenes {
+					changedScenes = changedScenes + 1
+					scene.SceneID = fmt.Sprintf("realitylovers-site-%v", strings.Split(scene.SceneID, "-")[1])
+					scene.Save()
+				}
+				db.Where(
+					"scene_id LIKE ? AND scene_id NOT LIKE ? AND scene_id NOT LIKE ?",
+					"realitylovers-%",
+					"realitylovers-site-%",
+					"realitylovers-slr-%",
+				).Find(&actions)
+				for _, action := range actions {
+					action.SceneID = fmt.Sprintf("realitylovers-site-%v", strings.Split(action.SceneID, "-")[1])
+					action.Save()
+				}
+				// We have to specify the table instead of using models.Site
+				// because of a bug with updating primary id field in Gorm, see
+				// https://github.com/go-gorm/gorm/issues/2473
+				db.Table("sites").Where("id = ?", "vrlatina").Update("id", "vrlatina-site")
+				db.Table("sites").Where("id = ?", "hologirlsvr").Update("id", "hologirlsvr-site")
+				db.Table("sites").Where("id = ?", "realitylovers").Update("id", "realitylovers-site")
+
+				if changedScenes > 0 {
+					tasks.SearchIndex()
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

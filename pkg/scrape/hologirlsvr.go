@@ -13,7 +13,7 @@ import (
 
 func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
-	scraperID := "hologirlsvr"
+	scraperID := "hologirlsvr-site"
 	siteID := "HoloGirlsVR"
 	logScrapeStart(scraperID, siteID)
 
@@ -30,7 +30,7 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "/")
 		sc.SiteID = tmp[len(tmp)-1]
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		sc.SceneID = slugify.Slugify(sc.Site) + "-site-" + sc.SiteID
 
 		// Title
 		e.ForEach(`div.video-title h3`, func(id int, e *colly.HTMLElement) {
@@ -104,5 +104,5 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 }
 
 func init() {
-	registerScraper("hologirlsvr", "HoloGirlsVR", "https://pbs.twimg.com/profile_images/836310876797837312/Wb3-FTxD_200x200.jpg", HoloGirlsVR)
+	registerScraper("hologirlsvr-site", "HoloGirlsVR", "https://pbs.twimg.com/profile_images/836310876797837312/Wb3-FTxD_200x200.jpg", HoloGirlsVR)
 }

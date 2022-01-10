@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/gocolly/colly"
-	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -30,7 +29,7 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 
 		// Scene ID
 		sc.SiteID = e.Request.Ctx.Get("id")
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		sc.SceneID = scraperID + "-" + sc.SiteID
 
 		// Cover
 		sc.Covers = append(sc.Covers, strings.Replace(e.Request.Ctx.Get("cover"), "-Small", "-Large", 1))
@@ -120,7 +119,7 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 }
 
 func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return RealityLoversSite(wg, updateSite, knownScenes, out, "realitylovers", "RealityLovers", "https://realitylovers.com/")
+	return RealityLoversSite(wg, updateSite, knownScenes, out, "realitylovers-site", "RealityLovers", "https://realitylovers.com/")
 }
 
 func TSVirtualLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
@@ -128,6 +127,6 @@ func TSVirtualLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 }
 
 func init() {
-	registerScraper("realitylovers", "RealityLovers", "http://static.rlcontent.com/shared/VR/common/favicons/apple-icon-180x180.png", RealityLovers)
+	registerScraper("realitylovers-site", "RealityLovers", "http://static.rlcontent.com/shared/VR/common/favicons/apple-icon-180x180.png", RealityLovers)
 	registerScraper("tsvirtuallovers", "TSVirtualLovers", "http://static.rlcontent.com/shared/TS/common/favicons/apple-icon-180x180.png", TSVirtualLovers)
 }
