@@ -120,7 +120,8 @@ export default {
       const resp = await ky.get('/api/scene/search', {
         searchParams: {
           q: this.queryString
-        }
+        },
+        timeout: 60000
       }).json()
 
       if (requestIndex >= this.dataNumResponses) {

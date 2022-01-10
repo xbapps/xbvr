@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/araddon/dateparse"
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 	"github.com/jinzhu/gorm"
 	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/common"
