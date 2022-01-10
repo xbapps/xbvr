@@ -1,7 +1,7 @@
 package scrape
 
 import (
-	"strconv"
+	"math"
 	"strings"
 	"sync"
 
@@ -9,8 +9,9 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
-	"mvdan.cc/xurls/v2"
+	"gopkg.in/resty.v1"
 )
 
 func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
@@ -29,83 +30,122 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		// Scene ID - get from URL
-		tmp := strings.Split(sc.HomepageURL, "/")
-		s := strings.Split(tmp[len(tmp)-1], "-")
-		sc.SiteID = s[len(s)-1]
+		content_id := strings.Split(strings.Replace(sc.HomepageURL, "//", "/", -1), "/")[3]
 
+		//https://content.vrconk.com
+		contentURL := strings.Replace("https://vrconk.com", "//", "//content.", 1)
+
+		r, _ := resty.R().
+			SetHeader("User-Agent", UserAgent).
+			Get("https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id)
+
+		JsonMetadata := r.String()
+
+		//if not valid scene...
+		if gjson.Get(JsonMetadata, "status.message").String() != "Ok" {
+			return
+		}
+
+		//Scene ID - back 8 of the"id" via api response
+		sc.SiteID = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.id").String()[15:])
+
+		//Scene ID - use PlayaId for scene-id instead of "random" using id
+		//		playaId := gjson.Get(JsonMetadata, "data.item.playaId").Int()
+		//		sc.SiteID = strconv.Itoa(int(playaId))
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
-		rxRelaxed := xurls.Relaxed()
-		sc.Title = strings.TrimSpace(e.ChildText(`div.item-tr-inner-col h1`))
-		sc.Covers = append(sc.Covers, rxRelaxed.FindString(e.ChildAttr(`div.splash-screen`, "style")))
+		// Title
+		sc.Title = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.title").String())
 
-		e.ForEach(`.gallery-block figure > a`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
+		// Filenames - VRCONK_Ballerina_8K_180x180_3dh.mp4
+		baseName := sc.Site + "_" + strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.videoSettings.videoShortName").String()) + "_"
+		filenames := []string{"8K_180x180_3dh", "6K_180x180_3dh", "5K_180x180_3dh", "4K_180x180_3dh", "HD_180x180_3dh", "HQ_180x180_3dh", "PSVRHQ_180x180_3dh", "UHD_180x180_3dh", "PSVRHQ_180_sbs", "PSVR_mono", "HQ_mono360", "HD_mono360", "PSVRHQ_ou", "UHD_3dv", "HD_3dv", "HQ_3dv"}
+
+		for i := range filenames {
+			filenames[i] = baseName + filenames[i] + ".mp4"
+		}
+
+		sc.Filenames = filenames
+
+		// Date & Duration
+		tmpDate, _ := goment.Unix(gjson.Get(JsonMetadata, "data.item.publishedAt").Int())
+		sc.Released = tmpDate.Format("YYYY-MM-DD")
+		tmpDuration := gjson.Get(JsonMetadata, "data.item.videoSettings.duration").Float()
+		sc.Duration = int(math.Floor((tmpDuration / 60) + 0/5))
+
+		// Cover URLs
+		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
+			tmpCover := strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0]
+			if tmpCover != "https://vrconk.com/wp-content/uploads/2020/03/VR-Conk-Logo.jpg" {
+				sc.Covers = append(sc.Covers, tmpCover)
+			}
 		})
 
-		e.ForEach(`.stats-list li`, func(id int, e *colly.HTMLElement) {
-			// <li><span class="icon i-clock"></span><span class="sub-label">40:54</span></li>
-			c := e.ChildAttr(`span`, "class")
-			if strings.Contains(c, "i-clock") {
-				tmpDuration, err := strconv.Atoi(strings.Split(e.ChildText(`.sub-label`), ":")[0])
-				if err == nil {
-					sc.Duration = tmpDuration / 60
-				}
-			}
+		sc.Covers = append(sc.Covers, e.ChildAttr(`section.banner picture img`, "src"))
+		sc.Covers = append(sc.Covers, e.ChildAttr(`section.base-content__bg img[class="object-fit-cover base-border overflow-hidden hero-img"]`, "src"))
 
-			if strings.Contains(c, "i-calendar") {
-				tmpDate, _ := goment.New(e.ChildText(`.sub-label`))
-				sc.Released = tmpDate.Format("YYYY-MM-DD")
-			}
-		})
-
-		// Tags and Cast
-		unfilteredTags := []string{}
-		e.ForEach(`.tags-block`, func(id int, e *colly.HTMLElement) {
-			c := e.ChildText(`.sub-label`)
-			if strings.Contains(c, "Categories:") || strings.Contains(c, "Tags:") {
-				e.ForEach(`a`, func(id int, ce *colly.HTMLElement) {
-					unfilteredTags = append(unfilteredTags, strings.TrimSpace(ce.Text))
-				})
-			}
-
-			if strings.Contains(c, "Models:") {
-				e.ForEach(`a`, func(id int, ce *colly.HTMLElement) {
-					sc.Cast = append(sc.Cast, strings.TrimSpace(ce.Text))
-				})
-			}
-
-		})
-
-		sc.Tags = funk.FilterString(unfilteredTags, func(t string) bool {
-			return !funk.ContainsString(sc.Cast, t)
-		})
+		// Gallery - https://content.vrconk.com/uploads/2021/08/611b4e0ca5c54351494706_XL.jpg
+		gallerytmp := gjson.Get(JsonMetadata, "data.item.galleryImages.#.previews.#(sizeAlias==XL).permalink")
+		for _, v := range gallerytmp.Array() {
+			sc.Gallery = append(sc.Gallery, contentURL+v.Str)
+		}
 
 		// Synopsis
-		e.ForEach(`.d-desc`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text)
-		})
+		sc.Synopsis = strings.TrimSpace(strings.Replace(e.ChildText(`div.video-item__description div.short-text`), `arrow_drop_up`, ``, -1))
+		//sc.Synopsis = strings.TrimSpace(gjson.Get(JsonMetadata, "data.item.description").String())
+
+		// Tags
+		tagstmp := gjson.Get(JsonMetadata, "data.item.categories.#.slug")
+		for _, v := range tagstmp.Array() {
+			sc.Tags = append(sc.Tags, v.Str)
+		}
+
+		// Positions - 1:"Sitting",2:"Missionary",3:"Standing",4:"Lying",5:"On the knees",6:"Close-up"
+		var position string
+		positions := gjson.Get(JsonMetadata, "data.item.videoTechBar.positions")
+		for _, i := range positions.Array() {
+			switch i.Int() {
+			case 1:
+				position = "sitting"
+			case 2:
+				position = "missionary"
+			case 3:
+				position = "standing"
+			case 4:
+				position = "lying"
+			case 5:
+				position = "on the knees"
+			case 6:
+				position = "close-up"
+			}
+			sc.Tags = append(sc.Tags, strings.TrimSpace(position))
+		}
+
+		// Cast
+		casttmp := gjson.Get(JsonMetadata, "data.item.models.#.title")
+		for _, v := range casttmp.Array() {
+			sc.Cast = append(sc.Cast, strings.TrimSpace(v.Str))
+		}
 
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`a[data-mb="shuffle-thumbs"]`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`div.video-item-info-title a`, func(e *colly.HTMLElement) {
+		url := strings.Split(e.Attr("href"), "?")[0]
+		sceneURL := e.Request.AbsoluteURL(url)
 
-		if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/signup") {
+		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
 
-	siteCollector.OnHTML(`nav.pagination a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`.pagination-next a`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		if !strings.Contains(pageURL, "/user/join") {
-			siteCollector.Visit(pageURL)
-		}
+
+		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.Visit("https://vrconk.com/videos")
+	siteCollector.Visit("https://vrconk.com/videos/?sort=latest&bonus-video=1")
 
 	// Edge-cases: Some early scenes are unlisted in both scenes and model index
 	// #1-10 + 15 by FantAsia, #11-14, 19, 23 by Miss K. #22, 25 by Emi.
@@ -117,7 +157,7 @@ func VRCONK(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		"fun-with-real-vr-amateur-19", "juicy-holes-22", "rabbit-fuck-23", "amateur-chick-in-the-kitchen-25"}
 
 	for _, scene := range unlistedscenes {
-		sceneURL := "https://vrconk.com/" + scene
+		sceneURL := "https://vrconk.com/videos/" + scene
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
