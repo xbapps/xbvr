@@ -681,6 +681,24 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			// Moving VRPFilms to SLR
+			ID: "0031-vrpfilms-to-slr",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				db.Where("site = ?", "VRP Films").Find(&scenes)
+
+				for _, obj := range scenes {
+					files, _ := obj.GetFiles()
+					for _, file := range files {
+						file.SceneID = 0
+						file.Save()
+					}
+				}
+
+				return db.Where("site = ?", "VRP Films").Delete(&models.Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
