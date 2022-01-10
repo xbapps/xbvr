@@ -1,0 +1,28 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+
+  release:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
+      - name: Build UI
+        run:  cd ui && yarn install && yarn build
+
+      - name: Setup release environment
+        run: |-
+          echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
+
+      - name: Release publish
+        run: make release

@@ -44,11 +44,14 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 
 		// Filenames
 		base := strings.Split(e.Request.URL.Path, "/")[2]
-		sc.Filenames = append(sc.Filenames, base+"-files-smartphone.mp4")
-		sc.Filenames = append(sc.Filenames, base+"-files-gear.mp4")
+		sc.Filenames = append(sc.Filenames, base+"-files-smartphone_180_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"-files-gear_180_LR.mp4")
 		sc.Filenames = append(sc.Filenames, base+"-files-psvr_180_sbs.mp4")
-		sc.Filenames = append(sc.Filenames, base+"-files-oculus.mp4")
-		sc.Filenames = append(sc.Filenames, base+"-files-oculus5k.mp4")
+		sc.Filenames = append(sc.Filenames, base+"-files-oculus_180_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"-files-oculus5k_180_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"-files-oculus5k10_180_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"-files-6k_180_LR.mp4")
+		sc.Filenames = append(sc.Filenames, base+"-files-7k_180_LR.mp4")
 
 		// Cover URLs
 		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
@@ -104,7 +107,7 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.video-title a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.video-card__container a[class=video-card__item]`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
