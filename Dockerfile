@@ -5,8 +5,7 @@ ENV GO_VERSION=1.17.5 \
     GOPATH=$HOME/go-packages \
     GOROOT=$HOME/go
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
-RUN curl -fsSL https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.tar.gz | tar -xzv \
-    && go get -u -v github.com/UnnoTed/fileb0x
+RUN curl -fsSL https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.tar.gz | tar -xzv
 
 WORKDIR /app
 ADD . /app

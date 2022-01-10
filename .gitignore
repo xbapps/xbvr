@@ -6,7 +6,6 @@ test.db
 /test_cache
 
 /dist/
-/pkg/assets/
 
 node_modules/
 /ui/dist/

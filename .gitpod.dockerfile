@@ -11,7 +11,6 @@ RUN export PATH=$(echo "$PATH" | sed -e 's|:/workspace/go/bin||' -e 's|:/home/gi
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
 RUN go get -u -v \
-  github.com/UnnoTed/fileb0x \
   github.com/cosmtrek/air && \
   sudo rm -rf $GOPATH/src && \
   sudo rm -rf $GOPATH/pkg

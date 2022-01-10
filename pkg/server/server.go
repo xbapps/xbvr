@@ -22,13 +22,13 @@ import (
 	"github.com/rs/cors"
 	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/api"
-	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/session"
 	"github.com/xbapps/xbvr/pkg/tasks"
+	"github.com/xbapps/xbvr/ui"
 	"willnorris.com/go/imageproxy"
 )
 
@@ -121,7 +121,7 @@ func StartServer(version, commit, branch, date string) {
 
 	// Static files
 	if !common.EnvConfig.Debug {
-		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(assets.HTTP))
+		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.StripPrefix("/dist/", http.FileServer(http.FS(ui.Assets))))
 	} else {
 		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(http.Dir("ui/dist")))
 	}
