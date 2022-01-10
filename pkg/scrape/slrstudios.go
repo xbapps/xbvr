@@ -59,7 +59,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		// Synopsis
 		sc.Synopsis = strings.TrimSpace(
-			e.DOM.Find(`div#tabs-about > div.u-mt--three > div.u-mb--four`).First().Text())
+			e.DOM.Find(`div#tabs-about > div > div.u-px--four > div.u-wh`).First().Text())
 
 		// Skipping some very generic and useless tags
 		skiptags := map[string]bool{
