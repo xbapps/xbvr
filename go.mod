@@ -50,7 +50,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/thoas/go-funk v0.9.1
-	github.com/tidwall/gjson v1.6.8
+	github.com/tidwall/gjson v1.9.3
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.3.0
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
@@ -60,7 +60,6 @@ require (
 	golang.org/x/text v0.3.7
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
-	mvdan.cc/xurls/v2 v2.3.0
 	willnorris.com/go/imageproxy v0.11.2
 )
 
@@ -131,8 +130,8 @@ require (
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/steveyen/gtreap v0.1.0 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
-	github.com/tidwall/match v1.0.3 // indirect
-	github.com/tidwall/pretty v1.0.2 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tinylib/msgp v1.1.0 // indirect
 	github.com/ugorji/go/codec v1.1.13 // indirect
 	github.com/ulikunitz/xz v0.5.6 // indirect
