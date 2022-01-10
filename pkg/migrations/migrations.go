@@ -608,7 +608,6 @@ func Migrate() {
 				}
 
 				// site -> slug -> id
-				re := regexp.MustCompile(`(.*)-\d+$`)
 				newScenes := map[string]map[string]string{}
 				newSceneId := func(site string, slug string) (string, error) {
 					mapping, ok := newScenes[site]
@@ -644,10 +643,9 @@ func Migrate() {
 				for _, scene := range scenes {
 					trimmedURL := strings.TrimRight(scene.SceneURL, "/")
 					dir, base := path.Split(trimmedURL)
-					matches := re.FindStringSubmatch(base)
-					slug, ok := slugMapping[matches[1]]
+					slug, ok := slugMapping[base]
 					if !ok {
-						slug = slugify.Slugify(matches[1])
+						slug = slugify.Slugify(base)
 					}
 
 					sceneID, err := newSceneId(scene.Site, slug)
