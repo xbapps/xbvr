@@ -120,11 +120,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(restfulspec.NewOpenAPIService(restConfig))
 
 	// Static files
-	if !common.EnvConfig.Debug {
-		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.StripPrefix("/dist/", http.FileServer(http.FS(ui.Assets))))
-	} else {
-		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(http.Dir("ui/dist")))
-	}
+	authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(ui.GetFileSystem(common.EnvConfig.Debug)))
 
 	// Imageproxy
 	r := mux.NewRouter()
