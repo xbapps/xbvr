@@ -108,7 +108,7 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`div.c-pagination li.is-active a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.c-pagination li.next a`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 		siteCollector.Visit(pageURL)
 	})
