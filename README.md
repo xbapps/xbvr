@@ -44,9 +44,9 @@ To run this container in docker:
 
 ```
 docker run -t --name=xbvr --net=host --restart=always \
-   --mount type=bind,source=/path/to/your/videos,target=/videos,readonly \
+   --mount type=bind,source=/path/to/your/videos,target=/videos \
    --mount source=xbvr-config,target=/root/.config/ \
-   xbapps/xbvr:latest
+   ghcr.io/xbapps/xbvr:latest
 ```
 
 Adding `-d` to the docker command will run the container in the background.

@@ -11,11 +11,18 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      DOCKER_CLI_EXPERIMENTAL: "enabled"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           submodules: 'true'
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
       - name: Build UI
         run:  cd ui && yarn install && yarn build
@@ -23,6 +30,10 @@ jobs:
       - name: Setup release environment
         run: |-
           echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
+          echo 'GITHUB_USER=${{github.event.repository.owner.login}}' >> .release-env
+          echo 'GITHUB_PROJECT=${{github.event.repository.name}}' >> .release-env
+          echo 'DOCKER_CREDS_FILE=.docker-creds' >> .release-env
+          echo '${{github.event.repository.owner.login}}:${{secrets.GORELEASER_ACCESS_TOKEN}}:ghcr.io' >> .docker-creds
 
       - name: Release publish
         run: make release
