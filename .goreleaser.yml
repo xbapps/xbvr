@@ -4,7 +4,7 @@ before:
     - go generate ./...
 
 builds:
-- id: xbvr-mac
+- id: xbvr-mac-intel
   binary: xbvr
 #  main: pkg/tray/main.go
   flags:
@@ -19,6 +19,24 @@ builds:
     - darwin
   goarch:
     - amd64
+#  hooks:
+#    post: ./appify.sh -s ./dist/xbvr-mac_darwin_amd64/XBVR.app/Contents/MacOS/XBVR -i ./ui/public/icons/xbvr-mac.icns -n XBVR
+
+- id: xbvr-mac-m1
+  binary: xbvr
+#  main: pkg/tray/main.go
+  flags:
+    - -tags=json1
+  ldflags:
+    - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
+  env:
+    - CGO_ENABLED=1
+    - CC=o64-clang
+    - CXX=o64-clang++
+  goos:
+    - darwin
+  goarch:
+    - arm64
 #  hooks:
 #    post: ./appify.sh -s ./dist/xbvr-mac_darwin_amd64/XBVR.app/Contents/MacOS/XBVR -i ./ui/public/icons/xbvr-mac.icns -n XBVR
 
@@ -61,6 +79,48 @@ builds:
   goarch:
     - arm64
 
+dockers:
+  -
+    use: buildx
+    dockerfile: Dockerfile
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
+    build_flag_templates:
+      - --platform=linux/amd64
+      - --no-cache
+      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+  -
+    use: buildx
+    dockerfile: Dockerfile
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+    build_flag_templates:
+      - --platform=linux/arm64
+      - --no-cache
+      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+
+docker_manifests:
+  - name_template: ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+  - name_template: ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:latest
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+
 archives:
 - id: archive-linux
   builds:
@@ -78,10 +138,13 @@ archives:
     windows: Windows
 - id: archive-mac
   builds:
-    - xbvr-mac
+    - xbvr-mac-intel
+    - xbvr-mac-m1
   format: zip
   replacements:
     darwin: macOS
+    amd64: intel
+    arm64: m1
 #  files:
 #    - XBVR.app/Contents/Resources/XBVR.icns
 #    - XBVR.app/Contents/Info.plist
@@ -89,15 +152,25 @@ archives:
 snapshot:
   name_template: "{{ .Tag }}-next"
 
+checksum:
+  name_template: "checksums.txt"
+
 changelog:
+  use: github
   sort: asc
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Others
+      order: 999
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+    - "^docs:"
+    - "^test:"
 
 release:
   disable: false
-  github:
-    owner: xbapps
-    name: xbvr
