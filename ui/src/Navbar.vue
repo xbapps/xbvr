@@ -69,7 +69,7 @@ export default {
         this.$buefy.snackbar.open({
           message: `Version ${this.latestVersion} available!`,
           type: 'is-warning',
-          position: 'is-top',
+          position: 'is-bottom-right',
           actionText: this.$t('Download now'),
           indefinite: true,
           onAction: () => {
