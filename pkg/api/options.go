@@ -38,8 +38,9 @@ type VersionCheckResponse struct {
 }
 
 type RequestSaveOptionsWeb struct {
-	TagSort   string `json:"tagSort"`
-	SceneEdit bool   `json:"sceneEdit"`
+	TagSort     string `json:"tagSort"`
+	SceneEdit   bool   `json:"sceneEdit"`
+	UpdateCheck bool   `json:"updateCheck"`
 }
 
 type RequestSaveOptionsDLNA struct {
@@ -152,7 +153,7 @@ func (i ConfigResource) WebService() *restful.WebService {
 func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Response) {
 	out := VersionCheckResponse{LatestVersion: common.CurrentVersion, CurrentVersion: common.CurrentVersion, UpdateNotify: false}
 
-	if common.CurrentVersion != "CURRENT" {
+	if config.Config.Web.UpdateCheck && common.CurrentVersion != "CURRENT" {
 		r, err := resty.R().
 			SetHeader("User-Agent", "XBVR/"+common.CurrentVersion).
 			Get("https://updates.xbvr.app/latest.json")
@@ -215,6 +216,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 
 	config.Config.Web.TagSort = r.TagSort
 	config.Config.Web.SceneEdit = r.SceneEdit
+	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
