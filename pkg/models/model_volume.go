@@ -2,9 +2,9 @@ package models
 
 import (
 	"context"
+	"io"
 	"os"
 	"time"
-	"io"
 
 	"github.com/avast/retry-go/v3"
 	"github.com/putdotio/go-putio"
@@ -28,17 +28,17 @@ type Volume struct {
 }
 
 func IsDirectoryEmpty(name string) (bool, error) {
-    f, err := os.Open(name)
-    if err != nil {
-        return false, err
-    }
-    defer f.Close()
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
 
-    _, err = f.ReadDir(1) 
-    if err == io.EOF {
-        return true, nil
-    }
-    return false, err 
+	_, err = f.ReadDir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err
 }
 
 func (o *Volume) IsMounted() bool {
