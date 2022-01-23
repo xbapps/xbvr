@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"strings"
 
 	"github.com/go-test/deep"
 	"github.com/jinzhu/gorm"
@@ -86,6 +87,9 @@ func (i SceneResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
+	ws.Route(ws.POST("/create").To(i.createCustomScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.POST("/{scene-id}/cuepoint").To(i.addSceneCuepoint).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
@@ -115,6 +119,48 @@ func (i SceneResource) WebService() *restful.WebService {
 		Writes(models.Scene{}))
 
 	return ws
+}
+
+func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	title := req.QueryParameter("title")
+	if (title == "") {
+		log.Error("Title is missing from request!")
+		return
+	}
+
+	var unusedCustomID string
+
+	var lastScene models.Scene
+	err := db.Where("site = ?", "CustomVR").Order("SceneID").Last(&lastScene)
+
+	if (err.Error == gorm.ErrRecordNotFound) {
+		unusedCustomID = "0"
+	} else {
+		lastID := strings.Replace(lastScene.SceneID, "Custom-", "", 1)
+		lastIDInt, err := strconv.Atoi(lastID)
+
+		if (err != nil) {
+			log.Error("Invalid custom scene id found: ", lastID)
+			return
+		}
+
+		unusedCustomID = strconv.Itoa(lastIDInt + 1)
+	}
+
+	var scene models.ScrapedScene
+	scene.SceneID = "Custom-" + unusedCustomID
+	scene.SceneType = "VR"
+	scene.Title = title
+	scene.Studio = "Custom"
+	scene.Site = "CustomVR"
+	scene.HomepageURL = "http://localhost"
+	scene.Covers = append(scene.Covers, "http://localhost/dont_cause_errors")
+
+	models.SceneCreateUpdateFromExternal(db, scene)
+	tasks.SearchIndex()
 }
 
 func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) {
