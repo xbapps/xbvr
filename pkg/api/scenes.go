@@ -159,6 +159,8 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	scene.HomepageURL = "http://localhost"
 	scene.Covers = append(scene.Covers, "http://localhost/dont_cause_errors")
 
+	log.Infof("Creating custom scene: %v %v", scene.SceneID, scene.Title)
+
 	models.SceneCreateUpdateFromExternal(db, scene)
 	tasks.SearchIndex()
 }
