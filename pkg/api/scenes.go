@@ -87,7 +87,8 @@ func (i SceneResource) WebService() *restful.WebService {
 		Writes(ResponseGetScenes{}))
 
 	ws.Route(ws.POST("/create").To(i.createCustomScene).
-		Metadata(restfulspec.KeyOpenAPITags, tags))
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
 
 	ws.Route(ws.POST("/{scene-id}/cuepoint").To(i.addSceneCuepoint).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -124,24 +125,27 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	db, _ := models.GetDB()
 	defer db.Close()
 
+	//Get scene title
 	title := req.QueryParameter("title")
 	if (title == "") {
 		log.Error("Title is missing from request!")
 		return
 	}
 
-	var CustomID string
+	//Get scene id
+	var customID string
 	scene_id := req.QueryParameter("scene_id")
 	currentTime := time.Now()
 	if (scene_id == "") {
 		log.Infof("SceneID missing from request!")
-		CustomID = "Custom-" + currentTime.Format("2006010215040506")
+		customID = "Custom-" + currentTime.Format("2006010215040506")
 	} else {
-		CustomID = scene_id
+		customID = scene_id
 	}
 
+	//Construct custom scene
 	var scene models.ScrapedScene
-	scene.SceneID = CustomID
+	scene.SceneID = customID
 	scene.SceneType = "VR"
 	scene.Title = title
 	scene.Studio = "Custom"
@@ -152,8 +156,19 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 
 	log.Infof("Creating custom scene: %v %v", scene.SceneID, scene.Title)
 
+	//Create custom scene
 	models.SceneCreateUpdateFromExternal(db, scene)
 	tasks.SearchIndex()
+
+	//Return resulting scene
+	var resultingScene models.Scene
+	err := resultingScene.GetIfExist(customID)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, resultingScene)
 }
 
 func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) {
