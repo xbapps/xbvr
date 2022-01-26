@@ -132,9 +132,10 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 
 	var CustomID string
 	scene_id := req.QueryParameter("scene_id")
+	currentTime := time.Now()
 	if (scene_id == "") {
 		log.Infof("SceneID missing from request!")
-		CustomID = "Custom-" + time.Now().Format("2006010215040506")
+		CustomID = "Custom-" + currentTime.Format("2006010215040506")
 	} else {
 		CustomID = scene_id
 	}
@@ -147,6 +148,7 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	scene.Site = "CustomVR"
 	scene.HomepageURL = "http://localhost/" + scene.SceneID
 	scene.Covers = append(scene.Covers, "http://localhost/dont_cause_errors")
+	scene.Released = currentTime.Format("2006-01-02")
 
 	log.Infof("Creating custom scene: %v %v", scene.SceneID, scene.Title)
 
