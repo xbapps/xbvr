@@ -134,7 +134,7 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	scene_id := req.QueryParameter("scene_id")
 	if (scene_id == "") {
 		log.Infof("SceneID missing from request!")
-		CustomID = "Custom-" + time.Now().Format("20060102150405")
+		CustomID = "Custom-" + time.Now().Format("2006010215040506")
 	} else {
 		CustomID = scene_id
 	}
