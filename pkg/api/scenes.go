@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"strings"
 
 	"github.com/go-test/deep"
 	"github.com/jinzhu/gorm"
@@ -131,32 +130,22 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 		return
 	}
 
-	var unusedCustomID string
-
-	var lastScene models.Scene
-	err := db.Where("site = ?", "CustomVR").Order("SceneID").Last(&lastScene)
-
-	if (err.Error == gorm.ErrRecordNotFound) {
-		unusedCustomID = "0"
+	var CustomID string
+	scene_id := req.QueryParameter("scene_id")
+	if (scene_id == "") {
+		log.Infof("SceneID missing from request!")
+		CustomID = "Custom-" + time.Now().Format("20060102150405")
 	} else {
-		lastID := strings.Replace(lastScene.SceneID, "Custom-", "", 1)
-		lastIDInt, err := strconv.Atoi(lastID)
-
-		if (err != nil) {
-			log.Error("Invalid custom scene id found: ", lastID)
-			return
-		}
-
-		unusedCustomID = strconv.Itoa(lastIDInt + 1)
+		CustomID = scene_id
 	}
 
 	var scene models.ScrapedScene
-	scene.SceneID = "Custom-" + unusedCustomID
+	scene.SceneID = CustomID
 	scene.SceneType = "VR"
 	scene.Title = title
 	scene.Studio = "Custom"
 	scene.Site = "CustomVR"
-	scene.HomepageURL = "http://localhost"
+	scene.HomepageURL = "http://localhost/" + scene.SceneID
 	scene.Covers = append(scene.Covers, "http://localhost/dont_cause_errors")
 
 	log.Infof("Creating custom scene: %v %v", scene.SceneID, scene.Title)
