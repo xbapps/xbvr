@@ -38,7 +38,7 @@
 
 The latest version is always available on the [releases page](https://github.com/xbapps/xbvr/releases).
 
-App is also available in form of Docker image, which makes it possible to run in more specialized environments such as QNAP NAS - downloads at [Docker Hub](https://hub.docker.com/r/xbapps/xbvr).
+App is also available in form of Docker image, which makes it possible to run in more specialized environments such as QNAP NAS - downloads at [GitHub Container Registry](https://github.com/xbapps/xbvr/pkgs/container/xbvr).
 
 To run this container in docker:
 
