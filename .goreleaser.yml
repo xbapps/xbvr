@@ -79,6 +79,20 @@ builds:
   goarch:
     - arm64
 
+- id: xbvr-linux-armv7
+  binary: xbvr
+  flags:
+    - -tags=json1
+  env:
+    - CGO_ENABLED=1
+    - CC=arm-linux-gnueabihf-gcc
+  goos:
+    - linux
+  goarch:
+    - arm
+  goarm:
+    - 7    
+
 dockers:
   -
     use: buildx
@@ -110,22 +124,41 @@ dockers:
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
+  -
+    use: buildx
+    dockerfile: Dockerfile
+    goos: linux
+    goarch: arm
+    goarm: 7
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
+    build_flag_templates:
+      - --platform=linux/arm/v7
+      - --no-cache
+      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}      
 
 docker_manifests:
   - name_template: ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}
     image_templates:
       - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
       - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
   - name_template: ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:latest
     image_templates:
       - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
       - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
 
 archives:
 - id: archive-linux
   builds:
     - xbvr-linux-amd64
     - xbvr-linux-arm64
+    - xbvr-linux-armv7
   replacements:
     linux: Linux
     windows: Windows
