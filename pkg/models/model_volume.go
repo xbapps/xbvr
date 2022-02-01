@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"io"
 	"os"
 	"time"
 
@@ -26,10 +27,27 @@ type Volume struct {
 	TotalSize      int64     `gorm:"-" json:"total_size"`
 }
 
+func IsDirectoryEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.ReadDir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err
+}
+
 func (o *Volume) IsMounted() bool {
 	switch o.Type {
 	case "local":
 		if _, err := os.Stat(o.Path); os.IsNotExist(err) {
+			return false
+		}
+		if isEmpty, err := IsDirectoryEmpty(o.Path); isEmpty || err != nil {
 			return false
 		}
 		return true
