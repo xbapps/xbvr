@@ -178,7 +178,7 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 	defer db.Close()
 
 	var sites []models.Site
-	db.Order("name asc").Find(&sites)
+	db.Order("name COLLATE NOCASE asc").Find(&sites)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
