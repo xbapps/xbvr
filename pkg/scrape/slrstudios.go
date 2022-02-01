@@ -145,7 +145,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				// Filenames
 				// Only shown for logged in users so need to generate them
 				// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
-				resolutions := []string{"_6400p_", "_3840p_", "_3160p_", "_3072p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
+				resolutions := []string{"_6400p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
 				baseName := "SLR_" + siteID + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
 				switch videotype {
 				case "360°": // Sadly can't determine if TB or MONO so have to add both
@@ -240,6 +240,7 @@ func init() {
 	addSLRScraper("deepinsex", "DeepInSex", "DeepInSex", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/266/logo_crop_1610126420.png")
 	addSLRScraper("emilybloom", "EmilyBloom", "Emily Bloom", "https://i.imgur.com/LxYzAQX.png")
 	addSLRScraper("ellielouisevr", "EllieLouiseVR", "EllieLouiseVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/265/logo_crop_1607603680.png")
+	addSLRScraper("fuckpassvr", "FuckPassVR", "FuckPassVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/352/logo_crop_1635153994.png")
 	addSLRScraper("grannies-vr", "GranniesVR", "GranniesVR", "https://mcdn.vrporn.com/files/20180222024100/itsmorti-logo-vr-porn-studio-vrporn.com-virtual-reality.jpg")
 	addSLRScraper("herfirstvr", "HerFirstVR", "HerFirstVR", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
 	addSLRScraper("holivr", "HoliVR", "HoliVR", "https://mcdn.vrporn.com/files/20170519145416/Holi_400x400.jpg")
@@ -281,6 +282,7 @@ func init() {
 	addSLRScraper("vrextasy", "VReXtasy", "VReXtasy", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
 	addSLRScraper("vr-fan-service", "VRFanService", "VRFanService", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/153/logo_crop_1619422412.png")
 	addSLRScraper("vrfirsttimer", "VRFirstTimer", "VRFirstTimer", "https://mcdn.vrporn.com/files/20200511115233/VRFirstTimers_Logo.jpg")
+	addSLRScraper("vrixxens", "VRixxens", "VRixxens", "https://mcdn.vrporn.com/files/20200511115233/VRFirstTimers_Logo.jpg")
 	addSLRScraper("vrpfilms", "VRPFilms", "VRPFilms", "https://vrpfilms.com/storage/settings/March2021/Z0krYIQBMwSJ4R1eCnv1.png")
 	addSLRScraper("vrpornjack", "VRPornJack", "VRPornJack", "https://mcdn.vrporn.com/files/20210330121852/VRPORNJACK_Logo-400x400.png")
 	addSLRScraper("vrpussyvision", "VRpussyVision", "VRpussyVision", "https://mcdn.vrporn.com/files/20180313160830/vrpussyvision-square-banner.png")
