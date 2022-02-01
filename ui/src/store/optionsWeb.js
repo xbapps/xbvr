@@ -4,7 +4,8 @@ const state = {
   loading: false,
   web: {
     tagSort: 'By Tag Count',
-    sceneEdit: false
+    sceneEdit: false,
+    updateCheck: true
   }
 }
 
@@ -18,6 +19,7 @@ const actions = {
       .then(data => {
         state.web.tagSort = data.config.web.tagSort
         state.web.sceneEdit = data.config.web.sceneEdit
+        state.web.updateCheck = data.config.web.updateCheck
         state.loading = false
       })
   },
@@ -28,6 +30,7 @@ const actions = {
       .then(data => {
         state.web.tagSort = data.tagSort
         state.web.sceneEdit = data.sceneEdit
+        state.web.updateCheck = data.updateCheck
         state.loading = false
       })
   }
