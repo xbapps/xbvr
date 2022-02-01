@@ -178,7 +178,12 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 	defer db.Close()
 
 	var sites []models.Site
-	db.Order("name COLLATE NOCASE asc").Find(&sites)
+	switch db.Dialect().GetName() {
+	case "mysql":
+		db.Order("name asc").Find(&sites)
+	case "sqlite3":
+		db.Order("name COLLATE NOCASE asc").Find(&sites)
+	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
