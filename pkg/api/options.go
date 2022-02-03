@@ -213,7 +213,7 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 	case "sqlite3":
 		db.Order("name COLLATE NOCASE asc").Find(&sites)
 	}
-	
+
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
