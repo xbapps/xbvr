@@ -43,7 +43,7 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		})
 
 		// Regex for original resolution of both covers and gallery
-		reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vrh\/)(?:largethumbs|hugethumbs|rollover_large)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
+		reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vrh\/)(?:largethumbs|hugethumbs|rollover_large|rollover_huge)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
 
 		// Cover URLs
 		// note 'largethumbs' could be changed to 'hugethumbs' for HQ original but those are easily 5Mb+
@@ -56,7 +56,9 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		// note 'rollover_large' could be changed to 'rollover_huge' for HQ original but those are easily 5Mb+
 		e.ForEach(`div.owl-carousel img.img-responsive`, func(id int, e *colly.HTMLElement) {
 			tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("src")))
-			sc.Gallery = append(sc.Gallery, tmpParts[1]+"rollover_large"+tmpParts[2]+tmpParts[3])
+			if len(tmpParts) > 3 {
+				sc.Gallery = append(sc.Gallery, tmpParts[1]+"rollover_large"+tmpParts[2]+tmpParts[3])
+			}
 		})
 
 		// Synopsis
