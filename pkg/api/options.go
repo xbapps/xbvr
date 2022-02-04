@@ -209,7 +209,13 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 	site.Save()
 
 	var sites []models.Site
-	db.Order("name asc").Find(&sites)
+	switch db.Dialect().GetName() {
+	case "mysql":
+		db.Order("name asc").Find(&sites)
+	case "sqlite3":
+		db.Order("name COLLATE NOCASE asc").Find(&sites)
+	}
+
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
