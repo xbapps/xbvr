@@ -309,6 +309,7 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				fl.CreatedTime = files[i].CreatedAt.Time
 				fl.UpdatedTime = files[i].UpdatedAt.Time
 				fl.VolumeID = vol.ID
+				fl.OsHash = files[i].OpensubtitlesHash
 				fl.Save()
 			}
 
