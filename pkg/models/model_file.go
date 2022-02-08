@@ -21,6 +21,7 @@ type File struct {
 	Path        string    `json:"path"`
 	Filename    string    `json:"filename"`
 	Size        int64     `json:"size"`
+	OsHash      string    `json:"oshash"`
 	CreatedTime time.Time `json:"created_time"`
 	UpdatedTime time.Time `json:"updated_time"`
 

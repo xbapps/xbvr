@@ -697,6 +697,15 @@ func Migrate() {
 				return db.Where("site = ?", "VRP Films").Delete(&models.Scene{}).Error
 			},
 		},
+		{
+			ID: "0032-file-oshash",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					OsHash string `json:"oshash"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
