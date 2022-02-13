@@ -34,6 +34,11 @@ type RequestSelectScript struct {
 	FileID uint `json:"file_id"`
 }
 
+type RequestCustomScene struct {
+	SceneTitle string `json:"title"`
+	SceneID    string `json:"id"`
+}
+
 type RequestEditSceneDetails struct {
 	Title        string   `json:"title"`
 	Synopsis     string   `json:"synopsis"`
@@ -125,36 +130,33 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	//Get scene title
-	title := req.QueryParameter("title")
-	if (title == "") {
-		log.Error("Title is missing from request!")
+	//Get request data
+	var r RequestCustomScene
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
 		return
 	}
 
 	//Get scene id
-	var customID string
-	scene_id := req.QueryParameter("scene_id")
 	currentTime := time.Now()
-	if (scene_id == "") {
-		log.Infof("SceneID missing from request!")
-		customID = "Custom-" + currentTime.Format("2006010215040506")
-	} else {
-		customID = scene_id
+	if (r.SceneID == "") {
+		log.Info("SceneID missing from request!")
+		r.SceneID = "Custom-" + currentTime.Format("2006010215040506")
 	}
 
 	//Construct custom scene
 	var scene models.ScrapedScene
-	scene.SceneID = customID
+	scene.SceneID = r.SceneID
 	scene.SceneType = "VR"
-	scene.Title = title
+	scene.Title = r.SceneTitle
 	scene.Studio = "Custom"
 	scene.Site = "CustomVR"
 	scene.HomepageURL = "http://localhost/" + scene.SceneID
 	scene.Covers = append(scene.Covers, "http://localhost/dont_cause_errors")
 	scene.Released = currentTime.Format("2006-01-02")
 
-	log.Infof("Creating custom scene: %v %v", scene.SceneID, scene.Title)
+	log.Infof("Creating custom scene: \"%v\" \"%v\"", scene.SceneID, scene.Title)
 
 	//Create custom scene
 	models.SceneCreateUpdateFromExternal(db, scene)
@@ -162,7 +164,7 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 
 	//Return resulting scene
 	var resultingScene models.Scene
-	err := resultingScene.GetIfExist(customID)
+	err = resultingScene.GetIfExist(scene.SceneID)
 	if err != nil {
 		log.Error(err)
 		return
