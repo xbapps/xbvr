@@ -69,9 +69,13 @@
         <h3 class="title">{{$t('Custom scene')}}</h3>
         <div class="card">
           <div class="card-content content">
-            <h5 class="title">Manual entry</h5>
-            <b-field grouped>
-              <b-input v-model="customSceneTitle" placeholder="Scene title" type="search"></b-input>
+            <b-field label="Scene title" label-position="on-border">
+              <b-input v-model="customSceneTitle" placeholder="Stepsis get stuck in washing machine" type="search"></b-input>
+            </b-field>
+            <b-field label="Scene ID" label-position="on-border">
+              <b-input v-model="customSceneID" placeholder="Can be empty" type="search"></b-input>
+            </b-field>
+            <b-field label-position="on-border">
               <b-button class="button is-primary" v-on:click="addScene()">{{$t('Add')}}</b-button>
             </b-field>
           </div>
@@ -107,7 +111,7 @@ export default {
     },
     addScene() {
       if (this.customSceneTitle !== '') {
-        ky.post('/api/scene/create', { searchParams: { title: this.customSceneTitle }, json: {} })
+        ky.post('/api/scene/create', { json: { title: this.customSceneTitle, id: this.customSceneID } })
       }
     },
     taskScrape (site) {
