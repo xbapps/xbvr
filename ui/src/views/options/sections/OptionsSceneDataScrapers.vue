@@ -70,7 +70,7 @@
         <div class="card">
           <div class="card-content content">
             <b-field label="Scene title" label-position="on-border">
-              <b-input v-model="customSceneTitle" placeholder="Stepsis get stuck in washing machine" type="search"></b-input>
+              <b-input v-model="customSceneTitle" placeholder="Stepsis stuck in washing machine" type="search"></b-input>
             </b-field>
             <b-field label="Scene ID" label-position="on-border">
               <b-input v-model="customSceneID" placeholder="Can be empty" type="search"></b-input>
