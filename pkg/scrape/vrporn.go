@@ -22,7 +22,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	// RegEx Patterns
 	sceneIDRegEx := regexp.MustCompile(`^post-(\d+)`)
-	dateRegEx := regexp.MustCompile(`(?i)^VideoPosted on (?:Premium )?(.+)$`)
+	dateRegEx := regexp.MustCompile(`(?i)^VideoPosted (?:on Premium )?on (.+)$`)
 	durationRegEx := regexp.MustCompile(`var timeAfter="(?:(\d+):)?(\d+):(\d+)";`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -140,4 +140,5 @@ func init() {
 	addVRPornScraper("realteensvr", "Real Teens VR", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png")
 	addVRPornScraper("tonightsgirlfriend", "Tonight's Girlfriend VR", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg")
 	addVRPornScraper("vrclubz", "VRClubz", "VixenVR", "https://mcdn.vrporn.com/files/20200421094123/vrclubz_logo_NEW-400x400_webwhite.png")
+	addVRPornScraper("vrhush", "VRHush", "VRHush", "https://mcdn.vrporn.com/files/20170718081617/vrhush-vr-porn-studio-vrporn.com-virtual-reality.png")
 }
