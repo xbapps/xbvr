@@ -1,6 +1,7 @@
 package common
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -35,7 +36,21 @@ func DirSize(path string) (int64, error) {
 }
 
 func InitPaths() {
-	AppDir = appdir.New("xbvr").UserConfig()
+
+	enableLocalStorage := flag.Bool("localstorage", false, "Use local folder to store application data")
+	flag.Parse()
+
+	if *enableLocalStorage {
+		executable, err := os.Executable()
+
+		if err != nil {
+			panic(err)
+		}
+
+		AppDir = filepath.Dir(executable)
+	} else {
+		AppDir = appdir.New("xbvr").UserConfig()
+	}
 
 	CacheDir = filepath.Join(AppDir, "cache")
 	BinDir = filepath.Join(AppDir, "bin")
