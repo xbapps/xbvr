@@ -28,24 +28,29 @@ func GeneratePreviews() {
 		for _, scene := range scenes {
 			files, _ := scene.GetFiles()
 			if len(files) > 0 {
-				if files[0].Exists() {
-					log.Infof("Rendering %v", scene.SceneID)
-					destFile := filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4")
-					err := RenderPreview(
-						files[0].GetPath(),
-						destFile,
-						config.Config.Library.Preview.StartTime,
-						config.Config.Library.Preview.SnippetLength,
-						config.Config.Library.Preview.SnippetAmount,
-						config.Config.Library.Preview.Resolution,
-						config.Config.Library.Preview.ExtraSnippet,
-					)
-					if err == nil {
-						scene.HasVideoPreview = true
-						scene.Save()
-					} else {
-						log.Warn(err)
+				i := 0
+				for files[i].Exists() {
+					if files[i].Type == "video" {
+						log.Infof("Rendering %v", scene.SceneID)
+						destFile := filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4")
+						err := RenderPreview(
+							files[i].GetPath(),
+							destFile,
+							config.Config.Library.Preview.StartTime,
+							config.Config.Library.Preview.SnippetLength,
+							config.Config.Library.Preview.SnippetAmount,
+							config.Config.Library.Preview.Resolution,
+							config.Config.Library.Preview.ExtraSnippet,
+						)
+						if err == nil {
+							scene.HasVideoPreview = true
+							scene.Save()
+							break
+						} else {
+							log.Warn(err)
+						}
 					}
+					i++
 				}
 			}
 		}
