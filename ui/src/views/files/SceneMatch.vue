@@ -99,7 +99,7 @@ export default {
       const commonWords = [
         '180', '180x180', '2880x1440', '3d', '3dh', '3dv', '30fps', '30m', '360',
         '3840x1920', '4k', '5k', '5400x2700', '60fps', '6k', '7k', '7680x3840',
-        '8k', 'fb360', 'funscript', 'h264', 'h265', 'hevc', 'hq', 'lq', 'lr',
+        '8k', 'fb360', 'funscript', 'h264', 'h265', 'hevc', 'hq', 'hsp', 'lq', 'lr',
         'mkv', 'mkx200', 'mkx220', 'mono', 'mp4', 'oculus', 'oculus5k',
         'oculusrift', 'original', 'smartphone', 'tb', 'uhq', 'vrca220', 'vp9'
       ]

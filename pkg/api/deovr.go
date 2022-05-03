@@ -64,6 +64,7 @@ type DeoScene struct {
 	Actors           []DeoSceneActor      `json:"actors"`
 	Categories       []DeoSceneCategory   `json:"categories,omitempty"`
 	Fleshlight       []DeoSceneScriptFile `json:"fleshlight,omitempty"`
+	HSProfile        []DeoSceneHSPFile    `json:"hsp,omitempty"`
 	FullVideoReady   bool                 `json:"fullVideoReady"`
 	FullAccess       bool                 `json:"fullAccess"`
 }
@@ -102,6 +103,11 @@ type DeoSceneVideoSource struct {
 }
 
 type DeoSceneScriptFile struct {
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
+
+type DeoSceneHSPFile struct {
 	Title string `json:"title"`
 	URL   string `json:"url"`
 }
@@ -357,6 +363,21 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		})
 	}
 
+	var deoHSPFiles []DeoSceneHSPFile
+	var hspFiles []models.File
+	hspFiles, err = scene.GetHSPFiles()
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	for _, file := range hspFiles {
+		deoHSPFiles = append(deoHSPFiles, DeoSceneHSPFile{
+			Title: file.Filename,
+			URL:   fmt.Sprintf("%v/api/dms/file/%v", session.DeoRequestHost, file.ID),
+		})
+	}
+
 	var cuepoints []DeoSceneTimestamp
 	for i := range scene.Cuepoints {
 		cuepoints = append(cuepoints, DeoSceneTimestamp{
@@ -418,6 +439,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Timestamps:       cuepoints,
 		Categories:       categories,
 		Fleshlight:       deoScriptFiles,
+		HSProfile:        deoHSPFiles,
 	}
 
 	if scene.HasVideoPreview {
