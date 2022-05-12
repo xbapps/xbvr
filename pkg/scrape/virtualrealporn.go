@@ -178,8 +178,8 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 
 		var name string
-		e.ForEach(`h1.model-title`, func(id int, e *colly.HTMLElement) {
-			name = strings.TrimSpace(strings.Split(e.Text, " (")[0])
+		e.ForEach(`div.model-title h1`, func(id int, e *colly.HTMLElement) {
+			name = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(e.Text), "VR"))
 		})
 
 		var gender string
