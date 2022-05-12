@@ -195,9 +195,12 @@ changelog:
     - title: Features
       regexp: "^.*feat[(\\w)]*:+.*$"
       order: 0
+    - title: 'Scrapers'
+      regexp: "^.*scrapers?[(\\w)]*:+.*$"
+      order: 1
     - title: 'Bug fixes'
       regexp: "^.*fix[(\\w)]*:+.*$"
-      order: 1
+      order: 2
     - title: Others
       order: 999
   filters:
