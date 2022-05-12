@@ -13,8 +13,9 @@ import (
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
+	"github.com/mcuadros/go-version"
 	"github.com/pkg/errors"
-	"github.com/putdotio/go-putio/putio"
+	"github.com/putdotio/go-putio"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -38,8 +39,9 @@ type VersionCheckResponse struct {
 }
 
 type RequestSaveOptionsWeb struct {
-	TagSort   string `json:"tagSort"`
-	SceneEdit bool   `json:"sceneEdit"`
+	TagSort     string `json:"tagSort"`
+	SceneEdit   bool   `json:"sceneEdit"`
+	UpdateCheck bool   `json:"updateCheck"`
 }
 
 type RequestSaveOptionsDLNA struct {
@@ -50,11 +52,12 @@ type RequestSaveOptionsDLNA struct {
 }
 
 type RequestSaveOptionsDeoVR struct {
-	Enabled       bool   `json:"enabled"`
-	AuthEnabled   bool   `json:"auth_enabled"`
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-	RemoteEnabled bool   `json:"remote_enabled"`
+	Enabled        bool   `json:"enabled"`
+	AuthEnabled    bool   `json:"auth_enabled"`
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	RemoteEnabled  bool   `json:"remote_enabled"`
+	RenderHeatmaps bool   `json:"render_heatmaps"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -69,6 +72,11 @@ type RequestSaveOptionsPreviews struct {
 type GetStateResponse struct {
 	CurrentState config.ObjectState  `json:"currentState"`
 	Config       config.ObjectConfig `json:"config"`
+}
+
+type GetFunscriptCountResponse struct {
+	Total   int64 `json:"total"`
+	Updated int64 `json:"updated"`
 }
 
 type ConfigResource struct{}
@@ -136,25 +144,30 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/previews/test").To(i.generateTestPreview).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	// "Funscripts" section endpoints
+	ws.Route(ws.GET("/funscripts/count").To(i.getFunscriptsCount).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	return ws
 }
 
 func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Response) {
 	out := VersionCheckResponse{LatestVersion: common.CurrentVersion, CurrentVersion: common.CurrentVersion, UpdateNotify: false}
 
-	if common.CurrentVersion != "CURRENT" {
+	if config.Config.Web.UpdateCheck && common.CurrentVersion != "CURRENT" {
 		r, err := resty.R().
 			SetHeader("User-Agent", "XBVR/"+common.CurrentVersion).
-			Get("https://updates.xbvr.app/latest.json")
+			SetHeader("Accept", "application/vnd.github.v3+json").
+			Get("https://api.github.com/repos/xbapps/xbvr/releases/latest")
 		if err != nil || r.StatusCode() != 200 {
 			resp.WriteHeaderAndEntity(http.StatusOK, out)
 			return
 		}
 
-		out.LatestVersion = gjson.Get(r.String(), "latestVersion").String()
+		out.LatestVersion = gjson.Get(r.String(), "tag_name").String()
 
 		// Decide if UI notification is needed
-		if out.LatestVersion != common.CurrentVersion {
+		if version.Compare(common.CurrentVersion, out.LatestVersion, "<") {
 			out.UpdateNotify = true
 		}
 	}
@@ -167,7 +180,12 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 	defer db.Close()
 
 	var sites []models.Site
-	db.Order("name asc").Find(&sites)
+	switch db.Dialect().GetName() {
+	case "mysql":
+		db.Order("name asc").Find(&sites)
+	case "sqlite3":
+		db.Order("name COLLATE NOCASE asc").Find(&sites)
+	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
@@ -191,7 +209,13 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 	site.Save()
 
 	var sites []models.Site
-	db.Order("name asc").Find(&sites)
+	switch db.Dialect().GetName() {
+	case "mysql":
+		db.Order("name asc").Find(&sites)
+	case "sqlite3":
+		db.Order("name COLLATE NOCASE asc").Find(&sites)
+	}
+
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
@@ -205,6 +229,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 
 	config.Config.Web.TagSort = r.TagSort
 	config.Config.Web.SceneEdit = r.SceneEdit
+	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -220,6 +245,7 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 
 	config.Config.Interfaces.DeoVR.Enabled = r.Enabled
 	config.Config.Interfaces.DeoVR.AuthEnabled = r.AuthEnabled
+	config.Config.Interfaces.DeoVR.RenderHeatmaps = r.RenderHeatmaps
 	config.Config.Interfaces.DeoVR.RemoteEnabled = r.RemoteEnabled
 	config.Config.Interfaces.DeoVR.Username = r.Username
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
@@ -523,4 +549,25 @@ func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.
 
 	common.PublishWS("options.previews.previewReady", map[string]interface{}{"previewFn": previewFn})
 	resp.WriteHeader(http.StatusOK)
+}
+
+func (i ConfigResource) getFunscriptsCount(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var r GetFunscriptCountResponse
+
+	var scenes []models.Scene
+	db.Model(&models.Scene{}).Preload("Files", func(db *gorm.DB) *gorm.DB {
+		return db.Where("type = ?", "script").Order("is_selected_script DESC, created_time DESC")
+	}).Where("is_scripted = ?", true).Find(&scenes)
+
+	for _, scene := range scenes {
+		r.Total++
+		if len(scene.Files) > 0 && !scene.Files[0].IsExported {
+			r.Updated++
+		}
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }

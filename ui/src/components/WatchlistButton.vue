@@ -1,6 +1,7 @@
 <template>
   <a :class="buttonClass"
-     @click="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})">
+     @click="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+     :title="item.watchlist ? 'Remove from watchlist' : 'Add to watchlist'">
     <b-icon pack="mdi" :icon="item.watchlist ? 'calendar-check' : 'calendar-blank'" size="is-small"/>
   </a>
 </template>

@@ -57,17 +57,20 @@
                   <span v-else class="missing">(no title)</span>
                   <small class="is-pulled-right">{{ format(parseISO(item.release_date), "yyyy-MM-dd") }}</small>
                 </h3>
-                <small>{{ item.site }}</small>
-                <div class="columns">
-                  <div class="column">
+                <small>
+                  <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>
+                </small>
+                <div class="columns mt-0">
+                  <div class="column pt-0">
                     <star-rating :key="item.id" :rating="item.star_rating" @rating-selected="setRating"
                                  :increment="0.5" :star-size="20"/>
                   </div>
-                  <div class="column">
+                  <div class="column pt-0">
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
-                      <edit-button :item="item"/>
+                      <edit-button :item="item"/>&nbsp;
+                      <refresh-button :item="item"/>
                     </div>
                   </div>
                 </div>
@@ -94,9 +97,12 @@
                                 v-show="f.type === 'video'">
                           <b-icon pack="fas" icon="play" size="is-small"></b-icon>
                         </button>
-                        <button rounded class="button is-info is-small is-outlined" v-show="f.type === 'script'">
+                        <b-tooltip :label="$t('Select this script for export')" position="is-right">
+                        <button rounded class="button is-info is-small is-outlined" @click='selectScript(f)'
+                          v-show="f.type === 'script'" v-bind:class="{ 'is-success': f.is_selected_script, 'is-info' :!f.is_selected_script }">
                           <b-icon pack="mdi" icon="pulse"></b-icon>
                         </button>
+                        </b-tooltip>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
                         <strong>{{ f.filename }}</strong><br/>
@@ -113,7 +119,10 @@
                         </div>
                       </div>
                       <div class="media-right">
-                        <button class="button is-danger is-small is-outlined" @click='removeFile(f)'>
+                        <button class="button is-dark is-small is-outlined" title="Unmatch file from scene" @click='unmatchFile(f)'>
+                          <b-icon pack="fas" icon="unlink" size="is-small"></b-icon>
+                        </button>&nbsp;
+                        <button class="button is-danger is-small is-outlined" title="Delete file from disk" @click='removeFile(f)'>
                           <b-icon pack="fas" icon="trash" size="is-small"></b-icon>
                         </button>
                       </div>
@@ -138,11 +147,14 @@
                         <b-button @click="addCuepoint">Add cuepoint</b-button>
                       </b-field>
                     </div>
-                    <div class="content is-small">
+                    <div class="content cuepoint-list">
                       <ul>
                         <li v-for="(c, idx) in sortedCuepoints" :key="idx">
                           <code>{{ humanizeSeconds(c.time_start) }}</code> -
                           <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
+                          <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(c)" title="Delete cuepoint">
+                            <b-icon pack="fas" icon="trash" />
+                          </button>
                         </li>
                       </ul>
                     </div>
@@ -178,6 +190,7 @@
           </div>
         </div>
       </section>
+      <div class="scene-id">{{ item.scene_id }}</div>
     </div>
     <button class="modal-close is-large" aria-label="close" @click="close()"></button>
     <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"
@@ -190,7 +203,7 @@
 <script>
 import ky from 'ky'
 import videojs from 'video.js'
-import vr from 'videojs-vr/dist/videojs-vr.min.js'
+import 'videojs-vr/dist/videojs-vr.min.js'
 import { format, formatDistance, parseISO } from 'date-fns'
 import prettyBytes from 'pretty-bytes'
 import VueLoadImage from 'vue-load-image'
@@ -199,10 +212,11 @@ import StarRating from 'vue-star-rating'
 import FavouriteButton from '../../components/FavouriteButton'
 import WatchlistButton from '../../components/WatchlistButton'
 import EditButton from '../../components/EditButton'
+import RefreshButton from '../../components/RefreshButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton, RefreshButton },
   data () {
     return {
       index: 1,
@@ -302,7 +316,7 @@ export default {
     updatePlayer (src, projection) {
       this.player.reset()
 
-      const vr = this.player.vr({
+      /* const vr = */ this.player.vr({
         projection: projection,
         forceCardboard: false
       })
@@ -346,6 +360,20 @@ export default {
       this.updatePlayer('/api/dms/file/' + file.id + '?dnt=true', '180')
       this.player.play()
     },
+    unmatchFile (file) {
+      this.$buefy.dialog.confirm({
+        title: 'Unmatch file',
+        message: `You're about to unmatch the file <strong>${file.filename}</strong> from this scene. Afterwards, it can be matched again to this or any other scene.`,
+        type: 'is-info is-wide',
+        hasIcon: true,
+        id: 'heh',
+        onConfirm: () => {
+          ky.post(`/api/files/unmatch`, {json:{file_id: file.id}}).json().then(data => {
+            this.$store.commit('overlay/showDetails', { scene: data })
+          })
+        }
+      })
+    },
     removeFile (file) {
       this.$buefy.dialog.confirm({
         title: 'Remove file',
@@ -357,6 +385,15 @@ export default {
             this.$store.commit('overlay/showDetails', { scene: data })
           })
         }
+      })
+    },
+    selectScript (file) {
+      ky.post(`/api/scene/selectscript/${this.item.id}`, {
+        json: {
+          file_id: file.id,
+        }
+      }).json().then(data => {
+          this.$store.commit('overlay/showDetails', { scene: data })
       })
     },
     getImageURL (u, size) {
@@ -391,7 +428,7 @@ export default {
       if (this.tagPosition !== '' && this.tagAct !== '') {
         name = `${this.tagPosition}-${this.tagAct}`
       }
-      ky.post(`/api/scene/cuepoint/${this.item.id}`, {
+      ky.post(`/api/scene/${this.item.id}/cuepoint`, {
         json: {
           name: name,
           time_start: this.player.currentTime()
@@ -399,6 +436,12 @@ export default {
       }).json().then(data => {
         this.$store.commit('overlay/showDetails', { scene: data })
       })
+    },
+    deleteCuepoint (cuepoint) {
+      ky.delete(`/api/scene/${this.item.id}/cuepoint/${cuepoint.id}`)
+        .json().then(data => {
+          this.$store.commit('overlay/showDetails', { scene: data })
+        })
     },
     close () {
       this.player.dispose()
@@ -519,6 +562,14 @@ export default {
 .block-opts {
 }
 
+.scene-id {
+  position: absolute;
+  right:10px;
+  bottom: 5px;
+  font-size: 11px;
+  color: #b0b0b0;
+}
+
 .prev, .next {
   cursor: pointer;
   position: absolute;
@@ -550,6 +601,10 @@ span.is-active img {
 
 .pathDetails {
   color: #b0b0b0;
+}
+
+.cuepoint-list li > button {
+  margin-left: 7px;
 }
 
 .heatmapFunscript {

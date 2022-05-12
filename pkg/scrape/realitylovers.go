@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -39,6 +40,14 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 		// Release date
 		sc.Released = e.Request.Ctx.Get("released")
 
+		// Duration
+		e.ForEach(`.table-plain td:contains("Duration:") ~ td`, func(id int, e *colly.HTMLElement) {
+			tmpDuration, err := strconv.Atoi(strings.Split(e.Text, ":")[0])
+			if err == nil {
+				sc.Duration = tmpDuration
+			}
+		})
+
 		// Cast
 		e.ForEach(`a[itemprop="actor"]`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
@@ -71,7 +80,7 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 
 	// Request scenes via REST API
 	r, err := resty.R().
-		SetHeader("User-Agent", userAgent).
+		SetHeader("User-Agent", UserAgent).
 		SetHeader("content-type", "application/json;charset=UTF-8").
 		SetHeader("accept", "application/json, text/plain, */*").
 		SetHeader("referer", URL+"videos").

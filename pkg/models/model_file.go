@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 )
 
 type File struct {
@@ -37,7 +37,9 @@ type File struct {
 	VideoDuration        float64 `json:"duration"`
 	VideoProjection      string  `json:"projection"`
 
-	HasHeatmap bool `json:"has_heatmap"`
+	HasHeatmap       bool `json:"has_heatmap"`
+	IsSelectedScript bool `json:"is_selected_script"`
+	IsExported       bool `json:"is_exported"`
 }
 
 func (f *File) GetPath() string {

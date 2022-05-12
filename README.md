@@ -38,15 +38,15 @@
 
 The latest version is always available on the [releases page](https://github.com/xbapps/xbvr/releases).
 
-App is also available in form of Docker image, which makes it possible to run in more specialized environments such as QNAP NAS - downloads at [Docker Hub](https://hub.docker.com/r/xbapps/xbvr).
+App is also available in form of Docker image, which makes it possible to run in more specialized environments such as QNAP NAS - downloads at [GitHub Container Registry](https://github.com/xbapps/xbvr/pkgs/container/xbvr).
 
 To run this container in docker:
 
 ```
 docker run -t --name=xbvr --net=host --restart=always \
-   --mount type=bind,source=/path/to/your/videos,target=/videos,readonly \
+   --mount type=bind,source=/path/to/your/videos,target=/videos \
    --mount source=xbvr-config,target=/root/.config/ \
-   xbapps/xbvr:latest
+   ghcr.io/xbapps/xbvr:latest
 ```
 
 Adding `-d` to the docker command will run the container in the background.
@@ -73,10 +73,9 @@ Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG)
 
 Make sure you have following installed:
 
-- Go 1.13
+- Go 1.17
 - Node.js 12.x
 - Yarn 1.17.x
-- fileb0x (run `go get github.com/UnnoTed/fileb0x` outside project directory)
 - air (run `go get github.com/cosmtrek/air` outside project directory)
 
 Once all of the above is installed, running `yarn dev` from project directory launches file-watchers providing livereload for both Go and JavaScript.
@@ -100,3 +99,10 @@ Gitpod has GitHub integration and, once authorized, can fork this repo into your
 Ready to get started?
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/xbapps/xbvr)
+
+
+### How To
+
+#### Add specific filter to DeoVR
+* On the XBVR scenes page, create a filter (cast, site, tags, etc.) and sort order, then create a "saved search" (see top left) and check "use as DeoVR list". 
+* Inside DeoVR you will now see your saved search listed

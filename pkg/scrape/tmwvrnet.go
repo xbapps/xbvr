@@ -29,17 +29,21 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		// Date
-		e.ForEach(`li.icons-date`, func(id int, e *colly.HTMLElement) {
-			tmpDate, _ := goment.New(e.Text, "MMMM DD, YYYY")
+		// Date & Duration
+		e.ForEach(`.info-block__main-info_f`, func(id int, e *colly.HTMLElement) {
+			tmpDate, _ := goment.New(e.ChildText(`.date`), "MMMM DD, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
+			tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.ChildText(`.durations`), " min", "", -1)))
+			if err == nil {
+				sc.Duration = tmpDuration
+			}
 		})
 
 		// Title / Cover / ID
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
 			sc.Title = strings.TrimSpace(e.Attr("title"))
 
-			tmpCover := e.Attr("poster")
+			tmpCover := e.Request.AbsoluteURL(e.Request.Ctx.GetAny("cover-id").(string))
 			sc.Covers = append(sc.Covers, tmpCover)
 
 			tmp := strings.Split(tmpCover, "/")
@@ -48,21 +52,17 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		})
 
 		// Gallery
-		e.ForEach(`ul.slider-set img`, func(id int, e *colly.HTMLElement) {
-			if id > 0 {
-				base := e.Request.AbsoluteURL(e.Attr("src"))
-				base = strings.Split(base, "?")[0]
-				sc.Gallery = append(sc.Gallery, base)
-			}
+		e.ForEach(`div.photo-list img`, func(id int, e *colly.HTMLElement) {
+			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("src")))
 		})
 
 		// Synopsis
-		e.ForEach(`p.ep-desc`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.Replace(strings.Replace(strings.TrimSpace(e.Text), "Read more", "", -1), "\n", "", -1)
+		e.ForEach(`div.about-video p.about`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
 		// Tags
-		e.ForEach(`p.ep-tags a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.about-video .tags-list a`, func(id int, e *colly.HTMLElement) {
 			tag := strings.TrimSpace(e.Text)
 			if tag != "" {
 				sc.Tags = append(sc.Tags, tag)
@@ -70,16 +70,8 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		})
 
 		// Cast
-		e.ForEach(`div.ep-info-l p a`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(strings.Replace(e.Text, ",", "", -1)))
-		})
-
-		// Duration
-		e.ForEach(`li.icons-length`, func(id int, e *colly.HTMLElement) {
-			tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Text, " min", "", -1)))
-			if err == nil {
-				sc.Duration = tmpDuration
-			}
+		e.ForEach(`div.about-video p.featuring a`, func(id int, e *colly.HTMLElement) {
+			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
 		// Filenames
@@ -88,18 +80,21 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`ul.pagination a.in_stditem`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.pagination__element.next a`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.videos-container div.videos-item a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`div.thumbs__image`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
+		ctx := colly.NewContext()
+		ctx.Put("cover-id", e.ChildAttr(`img`, "data-src"))
 
 		if strings.Contains(sceneURL, "trailers") {
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {
-				sceneCollector.Visit(sceneURL)
+
+				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 			}
 		}
 	})

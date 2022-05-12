@@ -1,8 +1,9 @@
 package tasks
 
 import (
+	"bytes"
 	"context"
-	"fmt"
+	"encoding/json"
 	"os"
 	"path"
 	"path/filepath"
@@ -57,15 +58,22 @@ func RescanVolumes() {
 		tlog.Infof("Matching Scenes to known filenames")
 		db.Model(&models.File{}).Where("files.scene_id = 0").Find(&files)
 
+		escape := func(s string) string {
+			var buffer bytes.Buffer
+			json.HTMLEscape(&buffer, []byte(s))
+			return buffer.String()
+		}
+
 		for i := range files {
-			fn := files[i].Filename
-			fn = strings.Replace(fn, ".funscript", ".mp4", -1)
-			err := db.Where("filenames_arr LIKE ?", fmt.Sprintf("%%\"%v\"%%", path.Base(fn))).Find(&scenes).Error
+			unescapedFilename := path.Base(files[i].Filename)
+			filename := escape(unescapedFilename)
+			filename2 := strings.Replace(filename, ".funscript", ".mp4", -1)
+			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ?", `%"`+filename+`"%`, `%"`+filename2+`"%`).Find(&scenes).Error
 			if err != nil {
-				log.Error(err, " when matching "+path.Base(fn))
+				log.Error(err, " when matching "+unescapedFilename)
 			}
 
-			if len(scenes) >= 1 {
+			if len(scenes) == 1 {
 				files[i].SceneID = scenes[0].ID
 				files[i].Save()
 			}
@@ -88,7 +96,7 @@ func RescanVolumes() {
 
 		tlog.Infof("Generating heatmaps")
 
-		GenerateHeatmaps()
+		GenerateHeatmaps(tlog)
 
 		tlog.Infof("Scanning complete")
 
@@ -181,40 +189,44 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			fl.UpdatedTime = fTimes.ModTime()
 			fl.VolumeID = vol.ID
 
-			ffdata, err := ffprobe.GetProbeData(path, time.Second*3)
+			ffdata, err := ffprobe.GetProbeData(path, time.Second*5)
 			if err != nil {
 				tlog.Error("Error running ffprobe", path, err)
 			} else {
 				vs := ffdata.GetFirstVideoStream()
-				if vs.BitRate != "" {
-					bitRate, _ := strconv.Atoi(vs.BitRate)
-					fl.VideoBitRate = bitRate
-				}
-				fl.VideoAvgFrameRate = vs.AvgFrameRate
-				fl.VideoCodecName = vs.CodecName
-				fl.VideoWidth = vs.Width
-				fl.VideoHeight = vs.Height
-				if dur, err := strconv.ParseFloat(vs.Duration, 64); err == nil {
-					fl.VideoDuration = dur
-				} else if ffdata.Format.DurationSeconds > 0.0 {
-					fl.VideoDuration = ffdata.Format.DurationSeconds
-				}
+				if vs == nil {
+					tlog.Error("No video stream in file ", path)
+				} else {
+					if vs.BitRate != "" {
+						bitRate, _ := strconv.Atoi(vs.BitRate)
+						fl.VideoBitRate = bitRate
+					}
+					fl.VideoAvgFrameRate = vs.AvgFrameRate
+					fl.VideoCodecName = vs.CodecName
+					fl.VideoWidth = vs.Width
+					fl.VideoHeight = vs.Height
+					if dur, err := strconv.ParseFloat(vs.Duration, 64); err == nil {
+						fl.VideoDuration = dur
+					} else if ffdata.Format.DurationSeconds > 0.0 {
+						fl.VideoDuration = ffdata.Format.DurationSeconds
+					}
 
-				if vs.Height*2 == vs.Width || vs.Width > vs.Height {
-					fl.VideoProjection = "180_sbs"
-					nameparts := filenameSeparator.Split(strings.ToLower(filepath.Base(path)), -1)
-					for _, part := range nameparts {
-						if part == "mkx200" || part == "mkx220" || part == "vrca220" {
-							fl.VideoProjection = part
+					if vs.Height*2 == vs.Width || vs.Width > vs.Height {
+						fl.VideoProjection = "180_sbs"
+						nameparts := filenameSeparator.Split(strings.ToLower(filepath.Base(path)), -1)
+						for _, part := range nameparts {
+							if part == "mkx200" || part == "mkx220" || part == "vrca220" {
+								fl.VideoProjection = part
+							}
 						}
 					}
-				}
 
-				if vs.Height == vs.Width {
-					fl.VideoProjection = "360_tb"
-				}
+					if vs.Height == vs.Width {
+						fl.VideoProjection = "360_tb"
+					}
 
-				fl.CalculateFramerate()
+					fl.CalculateFramerate()
+				}
 			}
 
 			err = fl.Save()

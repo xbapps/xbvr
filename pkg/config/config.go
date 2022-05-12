@@ -18,8 +18,9 @@ type ObjectConfig struct {
 		Password string `default:"" json:"password"`
 	} `json:"security"`
 	Web struct {
-		TagSort   string `default:"by-tag-count" json:"tagSort"`
-		SceneEdit bool   `default:"false" json:"sceneEdit"`
+		TagSort     string `default:"by-tag-count" json:"tagSort"`
+		SceneEdit   bool   `default:"false" json:"sceneEdit"`
+		UpdateCheck bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
 	Interfaces struct {
 		DLNA struct {
@@ -29,11 +30,12 @@ type ObjectConfig struct {
 			AllowedIP    []string `default:"[]" json:"allowedIp"`
 		} `json:"dlna"`
 		DeoVR struct {
-			Enabled       bool   `default:"true" json:"enabled"`
-			AuthEnabled   bool   `default:"false" json:"auth_enabled"`
-			RemoteEnabled bool   `default:"false" json:"remote_enabled"`
-			Username      string `default:"" json:"username"`
-			Password      string `default:"" json:"password"`
+			Enabled        bool   `default:"true" json:"enabled"`
+			AuthEnabled    bool   `default:"false" json:"auth_enabled"`
+			RenderHeatmaps bool   `default:"false" json:"render_heatmaps"`
+			RemoteEnabled  bool   `default:"false" json:"remote_enabled"`
+			Username       string `default:"" json:"username"`
+			Password       string `default:"" json:"password"`
 		} `json:"deovr"`
 	} `json:"interfaces"`
 	Library struct {

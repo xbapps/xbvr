@@ -29,7 +29,15 @@
               </vue-load-image>
             </b-table-column>
             <b-table-column field="site" :label="$t('Site')" sortable v-slot="props">
-              {{ props.row.site }}
+              <a :href="props.row.scene_url" target="_blank" rel="noreferrer">{{ props.row.site }}</a><br>
+              <b-tag type="is-info is-light" v-if="videoFilesCount(props.row)">
+                <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
+                {{videoFilesCount(props.row)}}
+              </b-tag>&nbsp;
+              <b-tag type="is-info is-light" v-if="props.row.is_scripted">
+                <b-icon pack="mdi" icon="pulse" size="is-small"/>
+                <span v-if="scriptFilesCount(props.row) > 1">{{scriptFilesCount(props.row)}}</span>
+              </b-tag>
             </b-table-column>
             <b-table-column field="title" :label="$t('Title')" sortable v-slot="props">
               <p v-if="props.row.title">{{ props.row.title }}</p>
@@ -47,7 +55,7 @@
               <b-progress show-value :value="props.row._score * 100"></b-progress>
             </b-table-column>
             <b-table-column field="_assign" v-slot="props">
-              <button class="button" @click="assign(props.row.scene_id)">{{ $t("Assign") }}</button>
+              <button class="button is-primary is-outlined" @click="assign(props.row.scene_id)">{{ $t("Assign") }}</button>
             </b-table-column>
           </b-table>
         </div>
@@ -89,10 +97,11 @@ export default {
   methods: {
     initView () {
       const commonWords = [
-        '180', '180x180', '30fps', '30m', '360', '3dh', '4k', '5k', '60fps', '6k', '7k',
-        '8k', 'fb360', 'funscript', 'h264', 'h265', 'hevc', 'hq', 'lq', 'lr', 'mkv',
-        'mkx200', 'mkx220', 'mono', 'mp4', 'oculus', 'oculus5k', 'oculusrift', 'original',
-        'smartphone', 'tb', 'vrca220', 'vp9'
+        '180', '180x180', '2880x1440', '3d', '3dh', '3dv', '30fps', '30m', '360',
+        '3840x1920', '4k', '5k', '5400x2700', '60fps', '6k', '7k', '7680x3840',
+        '8k', 'fb360', 'funscript', 'h264', 'h265', 'hevc', 'hq', 'lq', 'lr',
+        'mkv', 'mkx200', 'mkx220', 'mono', 'mp4', 'oculus', 'oculus5k',
+        'oculusrift', 'original', 'smartphone', 'tb', 'uhq', 'vrca220', 'vp9'
       ]
       const isNotCommonWord = word => !commonWords.includes(word.toLowerCase()) && !/^[0-9]+p$/.test(word)
 
@@ -111,7 +120,8 @@ export default {
       const resp = await ky.get('/api/scene/search', {
         searchParams: {
           q: this.queryString
-        }
+        },
+        timeout: 60000
       }).json()
 
       if (requestIndex >= this.dataNumResponses) {
@@ -168,6 +178,25 @@ export default {
     },
     toInt (value, radix, defaultValue) {
       return parseInt(value, radix || 10) || defaultValue || 0
+    },
+    videoFilesCount (scene) {
+      let count = 0
+      console.log(scene)
+      scene.file.forEach(obj => {
+        if (obj.type === 'video') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    scriptFilesCount (scene) {
+      let count = 0
+      scene.file.forEach(obj => {
+        if (obj.type === 'script') {
+          count = count + 1
+        }
+      })
+      return count
     },
     prettyBytes
   }

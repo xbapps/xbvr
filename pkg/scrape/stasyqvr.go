@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -75,7 +76,7 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		})
 
 		// Duration
-		// NOTE: StasyQVR doesn't provide duration information on scene page
+		sc.Duration = e.Request.Ctx.GetAny("duration").(int)
 
 		// Filenames
 		e.ForEach(`div.video-download a.vd-row`, func(id int, e *colly.HTMLElement) {
@@ -97,14 +98,18 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`section.grid div.grid-info-inner a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`section.grid div.grid-info-inner`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
+		duration, err := strconv.Atoi(strings.Split(e.ChildText(`span:first-of-type`), " ")[0])
+		if err != nil {
+			duration = 0
+		}
 
-		if strings.Contains(sceneURL, "scene") {
-			// If scene exist in database, there's no need to scrape
-			if !funk.ContainsString(knownScenes, sceneURL) {
-				sceneCollector.Visit(sceneURL)
-			}
+		// If scene exist in database, there's no need to scrape
+		if !funk.ContainsString(knownScenes, sceneURL) {
+			ctx := colly.NewContext()
+			ctx.Put("duration", duration)
+			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 		}
 	})
 

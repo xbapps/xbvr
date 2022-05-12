@@ -24,6 +24,12 @@
               </b-switch>
             </b-field>
 
+            <b-field label="Automatically Check for Updates">
+              <b-switch v-model="updateCheck">
+                Enabled
+              </b-switch>
+            </b-field>
+
             <b-field>
               <b-button type="is-primary" @click="save">Save</b-button>
             </b-field>
@@ -60,6 +66,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.sceneEdit = value
+      }
+    },
+    updateCheck: {
+      get () {
+        return this.$store.state.optionsWeb.web.updateCheck
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.updateCheck = value
       }
     },
     isLoading: function () {

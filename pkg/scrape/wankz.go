@@ -44,11 +44,9 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		// Duration
 		e.ForEach(`div.detail__date_time span.time`, func(id int, e *colly.HTMLElement) {
-			if id == 1 {
-				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Text, "minutes", "", -1)))
-				if err == nil {
-					sc.Duration = tmpDuration
-				}
+			tmpDuration, err := strconv.Atoi(strings.Split(strings.TrimSpace(e.Text), " ")[0])
+			if err == nil {
+				sc.Duration = tmpDuration
 			}
 		})
 

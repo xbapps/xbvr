@@ -3,9 +3,13 @@ package scrape
 import (
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
+	"golang.org/x/net/html"
+
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
@@ -23,7 +27,7 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	siteCollector := createCollector("vrallure.com")
 
 	// Regex for original resolution of both covers and gallery
-	reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vra\/)(?:largethumbs|hugethumbs|rollover_large)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
+	reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vra\/)(?:largethumbs|hugethumbs|rollover_large|rollover_huge)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -59,7 +63,9 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 				// However this CDN can resize on request but that's a bit slower. It's possible to use the huge version and resize to 1422x800 like this:
 				// https://k3y8c8f9.ssl.hwcdn.net/vra/rollover_huge/vra0043_kaycarter_180/vra0043_kaycarter_180_01-1422x800.jpg
 				tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("src")))
-				sc.Gallery = append(sc.Gallery, tmpParts[1]+"rollover_large"+tmpParts[2]+tmpParts[3])
+				if len(tmpParts) > 3 {
+					sc.Gallery = append(sc.Gallery, tmpParts[1]+"rollover_large"+tmpParts[2]+tmpParts[3])
+				}
 			}
 		})
 
@@ -89,15 +95,28 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		})
 
 		// Duration
-		// Note the element `div.scene-details p.duration` is there but currently inside an HTML comment block
-		/*
-			e.ForEach(`div.scene-details p.duration`, func(id int, e *colly.HTMLElement) {
-				tmpDuration, err := strconv.Atoi(strings.TrimSpace(e.Text))
-				if err == nil {
-					sc.Duration = tmpDuration / 60
+		// Note the element `div.scene-details p.duration` is there but currently inside an HTML comment block.
+		// But it's also in seconds, including 2 decimal places, so it won't just be uncommented as is in the future.
+		// In any case, here we extract the comment, parse what's inside as HTML and extract the text.
+		e.ForEach(`div.scene-meta`, func(id int, e *colly.HTMLElement) {
+			e.DOM.Contents().EachWithBreak(func(i int, selection *goquery.Selection) bool {
+				node := selection.Get(0)
+				if node.Type != html.CommentNode {
+					return true
 				}
+				doc, err := goquery.NewDocumentFromReader(strings.NewReader(node.Data))
+				if err != nil {
+					return true
+				}
+				durationText := strings.TrimSpace(doc.Text())
+				seconds, err := strconv.ParseFloat(durationText, 64)
+				if err != nil {
+					return true
+				}
+				sc.Duration = int(seconds) / 60
+				return false
 			})
-		*/
+		})
 
 		// Filenames
 		e.ForEach(`input.stream-input-box`, func(id int, e *colly.HTMLElement) {
