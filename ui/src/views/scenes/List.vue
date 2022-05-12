@@ -7,7 +7,7 @@
         <strong>{{total}} results</strong>
       </div>
       <div class="column">
-        <b-field>
+        <div class="columns is-gapless">
           <b-radio-button v-model="dlState" native-value="any" size="is-small">
             {{$t("Any")}} ({{counts.any}})
           </b-radio-button>
@@ -20,7 +20,7 @@
           <b-radio-button v-model="dlState" native-value="missing" size="is-small">
             {{$t("Not downloaded")}} ({{counts.not_downloaded}})
           </b-radio-button>
-        </b-field>
+        </div>
       </div>
       <div class="column">
         <div class="is-pulled-right">
