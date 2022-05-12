@@ -34,6 +34,11 @@ type RequestSelectScript struct {
 	FileID uint `json:"file_id"`
 }
 
+type RequestCustomScene struct {
+	SceneTitle string `json:"title"`
+	SceneID    string `json:"id"`
+}
+
 type RequestEditSceneDetails struct {
 	Title        string   `json:"title"`
 	Synopsis     string   `json:"synopsis"`
@@ -86,6 +91,10 @@ func (i SceneResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
+	ws.Route(ws.POST("/create").To(i.createCustomScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
 	ws.Route(ws.POST("/{scene-id}/cuepoint").To(i.addSceneCuepoint).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
@@ -115,6 +124,53 @@ func (i SceneResource) WebService() *restful.WebService {
 		Writes(models.Scene{}))
 
 	return ws
+}
+
+func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	//Get request data
+	var r RequestCustomScene
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	//Get scene id
+	currentTime := time.Now()
+	if (r.SceneID == "") {
+		log.Info("SceneID missing from request!")
+		r.SceneID = "Custom-" + currentTime.Format("2006010215040506")
+	}
+
+	//Construct custom scene
+	var scene models.ScrapedScene
+	scene.SceneID = r.SceneID
+	scene.SceneType = "VR"
+	scene.Title = r.SceneTitle
+	scene.Studio = "Custom"
+	scene.Site = "CustomVR"
+	scene.HomepageURL = "http://localhost/" + scene.SceneID
+	scene.Covers = append(scene.Covers, "http://localhost/dont_cause_errors")
+	scene.Released = currentTime.Format("2006-01-02")
+
+	log.Infof("Creating custom scene: \"%v\" \"%v\"", scene.SceneID, scene.Title)
+
+	//Create custom scene
+	models.SceneCreateUpdateFromExternal(db, scene)
+	tasks.SearchIndex()
+
+	//Return resulting scene
+	var resultingScene models.Scene
+	err = resultingScene.GetIfExist(scene.SceneID)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, resultingScene)
 }
 
 func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) {

@@ -52,15 +52,31 @@
         </div>
       </div>
     </div>
-    <h3 class="title">{{$t('JAVR scraper')}}</h3>
     <div class="columns is-multiline">
       <div class="column is-multiline is-one-third">
+        <h3 class="title">{{$t('JAVR scraper')}}</h3>
         <div class="card">
           <div class="card-content content">
             <h5 class="title">R18</h5>
             <b-field grouped>
               <b-input v-model="javrQuery" placeholder="URL or ID (XXXX-001)" type="search"></b-input>
               <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
+            </b-field>
+          </div>
+        </div>
+      </div>
+      <div class="column is-multiline is-one-third">
+        <h3 class="title">{{$t('Custom scene')}}</h3>
+        <div class="card">
+          <div class="card-content content">
+            <b-field label="Scene title" label-position="on-border">
+              <b-input v-model="customSceneTitle" placeholder="Stepsis stuck in washing machine" type="search"></b-input>
+            </b-field>
+            <b-field label="Scene ID" label-position="on-border">
+              <b-input v-model="customSceneID" placeholder="Can be empty" type="search"></b-input>
+            </b-field>
+            <b-field label-position="on-border">
+              <b-button class="button is-primary" v-on:click="addScene()">{{$t('Add')}}</b-button>
             </b-field>
           </div>
         </div>
@@ -91,6 +107,11 @@ export default {
         return '/img/128x/' + u.replace('://', ':/')
       } else {
         return u
+      }
+    },
+    addScene() {
+      if (this.customSceneTitle !== '') {
+        ky.post('/api/scene/create', { json: { title: this.customSceneTitle, id: this.customSceneID } })
       }
     },
     taskScrape (site) {
