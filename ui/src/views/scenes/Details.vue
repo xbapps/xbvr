@@ -110,7 +110,8 @@
                           <span class="pathDetails">{{ f.path }}</span>
                           <br/>
                           {{ prettyBytes(f.size) }},
-                          <span v-if="f.type === 'video'">{{ f.video_width }}x{{ f.video_height }},</span>
+                          <span v-if="f.type === 'video'">{{ f.video_width }}x{{ f.video_height }},&nbsp;</span>
+                          <span v-if="f.duration > 1">{{ humanizeSeconds(f.duration) }},</span>
                           {{ format(parseISO(f.created_time), "yyyy-MM-dd") }}
                         </small>
                         <div v-if="f.type === 'script' && f.has_heatmap" class="heatmapFunscript">

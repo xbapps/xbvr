@@ -248,7 +248,19 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			fStat, _ := os.Stat(path)
 			fTimes, _ := times.Stat(path)
 
-			fl.Size = fStat.Size()
+			if fStat.Size() != fl.Size {
+				fl.Size = fStat.Size()
+				fl.HasHeatmap = false
+				fl.VideoDuration = 0.0
+			}
+
+			if fl.VideoDuration < 0.01 {
+				duration, err := getFunscriptDuration(path)
+				if err == nil {
+					fl.VideoDuration = duration
+				}
+			}
+
 			fl.CreatedTime = fTimes.ModTime()
 			fl.UpdatedTime = fTimes.ModTime()
 			fl.VolumeID = vol.ID
