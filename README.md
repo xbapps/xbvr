@@ -99,3 +99,10 @@ Gitpod has GitHub integration and, once authorized, can fork this repo into your
 Ready to get started?
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/xbapps/xbvr)
+
+
+### How To
+
+#### Add specific filter to DeoVR
+* On the XBVR scenes page, create a filter (cast, site, tags, etc.) and sort order, then create a "saved search" (see top left) and check "use as DeoVR list". 
+* Inside DeoVR you will now see your saved search listed
