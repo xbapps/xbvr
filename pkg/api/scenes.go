@@ -140,7 +140,7 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 
 	//Get scene id
 	currentTime := time.Now()
-	if (r.SceneID == "") {
+	if r.SceneID == "" {
 		log.Info("SceneID missing from request!")
 		r.SceneID = "Custom-" + currentTime.Format("2006010215040506")
 	}
