@@ -110,7 +110,7 @@
                           <span class="pathDetails">{{ f.path }}</span>
                           <br/>
                           {{ prettyBytes(f.size) }},
-                          <span v-if="f.type === 'video'">{{ f.video_width }}x{{ f.video_height }},&nbsp;</span>
+                          <span v-if="f.type === 'video'"><span class="videosize">{{ f.video_width }}x{{ f.video_height }} {{ f.video_codec_name }}</span>, {{ f.projection }},&nbsp;</span>
                           <span v-if="f.duration > 1">{{ humanizeSeconds(f.duration) }},</span>
                           {{ format(parseISO(f.created_time), "yyyy-MM-dd") }}
                         </small>
@@ -619,5 +619,9 @@ span.is-active img {
   height: 20px;
   margin: 0;
   padding: 0;
+}
+.videosize {
+  color: rgb(60, 60, 60);
+  font-weight: 550;
 }
 </style>

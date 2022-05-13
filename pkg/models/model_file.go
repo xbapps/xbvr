@@ -33,7 +33,7 @@ type File struct {
 	VideoBitRate         int     `json:"video_bitrate"`
 	VideoAvgFrameRate    string  `json:"-"`
 	VideoAvgFrameRateVal float64 `json:"video_avgfps_val"`
-	VideoCodecName       string  `json:"-"`
+	VideoCodecName       string  `json:"video_codec_name"`
 	VideoDuration        float64 `json:"duration"`
 	VideoProjection      string  `json:"projection"`
 
