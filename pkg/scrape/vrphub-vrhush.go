@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strings"
 	"sync"
 
@@ -77,7 +78,17 @@ func VRPVRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 
 		// Tags
 		e.ForEach(`div.td-main-content div.td-post-source-tags ul.td-tags li a`, func(id int, e *colly.HTMLElement) {
-			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
+			tag := strings.TrimSpace(e.Text)
+			isCast := false
+			for _, cast := range sc.Cast {
+				if cast == tag {
+					isCast = true
+					break
+				}
+			}
+			if !isCast {
+				sc.Tags = append(sc.Tags, tag)
+			}
 		})
 
 		// Duration
@@ -102,12 +113,18 @@ func VRPVRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	siteCollector.OnHTML(`div.td-main-content div.td-module-image-main a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
+		reCover := regexp.MustCompile(`^(.+)-e\d+-\d+x\d+(\.\w+)$`)
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sc := models.ScrapedScene{}
 
 			e.ForEach(`img.entry-thumb-main`, func(id int, e *colly.HTMLElement) {
-				sc.Covers = append(sc.Covers, e.Attr("src"))
+				cover := e.Attr("src")
+				tmpParts := reCover.FindStringSubmatch(cover)
+				if tmpParts != nil {
+					cover = tmpParts[1] + tmpParts[2]
+				}
+				sc.Covers = append(sc.Covers, cover)
 			})
 
 			ctx := colly.NewContext()
