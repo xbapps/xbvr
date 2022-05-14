@@ -39,6 +39,10 @@ type RequestCustomScene struct {
 	SceneID    string `json:"id"`
 }
 
+type RequestDeleteScene struct {
+	SceneID uint `json:"scene_id"`
+}
+
 type RequestEditSceneDetails struct {
 	Title        string   `json:"title"`
 	Synopsis     string   `json:"synopsis"`
@@ -94,6 +98,9 @@ func (i SceneResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/create").To(i.createCustomScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
+
+	ws.Route(ws.POST("/delete").To(i.deleteScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/{scene-id}/cuepoint").To(i.addSceneCuepoint).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -171,6 +178,33 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, resultingScene)
+}
+
+func (i SceneResource) deleteScene(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var r RequestDeleteScene
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var scene models.Scene
+	err = db.First(&scene, r.SceneID).Error
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	files, _ := scene.GetFiles()
+	for _, file := range files {
+		file.SceneID = 0
+		file.Save()
+	}
+	db.Delete(&scene)
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
 
 func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) {
