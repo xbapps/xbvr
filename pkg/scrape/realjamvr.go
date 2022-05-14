@@ -80,7 +80,7 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 			}
 		})
 		for f := range set {
-			sc.Filenames = append(sc.Filenames, strings.ReplaceAll(f, " ", "_"))
+			sc.Filenames = append(sc.Filenames, strings.ReplaceAll(strings.ReplaceAll(f, " ", "_"), ":", "_"))
 		}
 
 		out <- sc

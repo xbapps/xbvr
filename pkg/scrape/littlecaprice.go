@@ -101,7 +101,7 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		// If scene exists in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			ctx := colly.NewContext()
-			ctx.Put("cover", e.ChildAttr("img", "data-src"))
+			ctx.Put("cover", e.ChildAttr("img", "src"))
 
 			//sceneCollector.Visit(sceneURL)
 			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
@@ -109,6 +109,16 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	})
 
 	siteCollector.Visit("https://www.littlecaprice-dreams.com/virtual-reality-little-caprice-dreams/")
+
+	// Missing "Me and You" (my-first-time) scene
+	sceneURL := "https://www.littlecaprice-dreams.com/project/vr-180-little-caprice-my-first-time/"
+	if !funk.ContainsString(knownScenes, sceneURL) {
+		ctx := colly.NewContext()
+		ctx.Put("cover", "https://www.littlecaprice-dreams.com/wp-content/uploads/2021/08/wpp_Little-Caprice-Virtual-Reality_.jpg")
+
+		//sceneCollector.Visit(sceneURL)
+		sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

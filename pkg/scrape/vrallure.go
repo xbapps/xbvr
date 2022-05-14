@@ -27,7 +27,7 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	siteCollector := createCollector("vrallure.com")
 
 	// Regex for original resolution of both covers and gallery
-	reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vra\/)(?:largethumbs|hugethumbs|rollover_large)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
+	reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vra\/)(?:largethumbs|hugethumbs|rollover_large|rollover_huge)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -63,7 +63,9 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 				// However this CDN can resize on request but that's a bit slower. It's possible to use the huge version and resize to 1422x800 like this:
 				// https://k3y8c8f9.ssl.hwcdn.net/vra/rollover_huge/vra0043_kaycarter_180/vra0043_kaycarter_180_01-1422x800.jpg
 				tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("src")))
-				sc.Gallery = append(sc.Gallery, tmpParts[1]+"rollover_large"+tmpParts[2]+tmpParts[3])
+				if len(tmpParts) > 3 {
+					sc.Gallery = append(sc.Gallery, tmpParts[1]+"rollover_large"+tmpParts[2]+tmpParts[3])
+				}
 			}
 		})
 

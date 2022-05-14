@@ -1,7 +1,5 @@
 package main
 
-//go:generate fileb0x .assets.toml
-
 import (
 	"github.com/xbapps/xbvr/pkg/server"
 )

@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/nfnt/resize"
-	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/dms/dlna/dms"
+	"github.com/xbapps/xbvr/ui"
 )
 
 type dmsConfig struct {
@@ -103,7 +103,7 @@ func initDMS() {
 }
 
 func getIconReader(fn string) (io.Reader, error) {
-	b, err := assets.ReadFile("dlna/" + fn + ".png")
+	b, err := ui.Assets.ReadFile("dist/dlna/" + fn + ".png")
 	return bytes.NewReader(b), err
 }
 

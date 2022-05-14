@@ -13,8 +13,9 @@ import (
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
+	"github.com/mcuadros/go-version"
 	"github.com/pkg/errors"
-	"github.com/putdotio/go-putio/putio"
+	"github.com/putdotio/go-putio"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -38,8 +39,9 @@ type VersionCheckResponse struct {
 }
 
 type RequestSaveOptionsWeb struct {
-	TagSort   string `json:"tagSort"`
-	SceneEdit bool   `json:"sceneEdit"`
+	TagSort     string `json:"tagSort"`
+	SceneEdit   bool   `json:"sceneEdit"`
+	UpdateCheck bool   `json:"updateCheck"`
 }
 
 type RequestSaveOptionsDLNA struct {
@@ -152,19 +154,20 @@ func (i ConfigResource) WebService() *restful.WebService {
 func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Response) {
 	out := VersionCheckResponse{LatestVersion: common.CurrentVersion, CurrentVersion: common.CurrentVersion, UpdateNotify: false}
 
-	if common.CurrentVersion != "CURRENT" {
+	if config.Config.Web.UpdateCheck && common.CurrentVersion != "CURRENT" {
 		r, err := resty.R().
 			SetHeader("User-Agent", "XBVR/"+common.CurrentVersion).
-			Get("https://updates.xbvr.app/latest.json")
+			SetHeader("Accept", "application/vnd.github.v3+json").
+			Get("https://api.github.com/repos/xbapps/xbvr/releases/latest")
 		if err != nil || r.StatusCode() != 200 {
 			resp.WriteHeaderAndEntity(http.StatusOK, out)
 			return
 		}
 
-		out.LatestVersion = gjson.Get(r.String(), "latestVersion").String()
+		out.LatestVersion = gjson.Get(r.String(), "tag_name").String()
 
 		// Decide if UI notification is needed
-		if out.LatestVersion != common.CurrentVersion {
+		if version.Compare(common.CurrentVersion, out.LatestVersion, "<") {
 			out.UpdateNotify = true
 		}
 	}
@@ -177,7 +180,12 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 	defer db.Close()
 
 	var sites []models.Site
-	db.Order("name asc").Find(&sites)
+	switch db.Dialect().GetName() {
+	case "mysql":
+		db.Order("name asc").Find(&sites)
+	case "sqlite3":
+		db.Order("name COLLATE NOCASE asc").Find(&sites)
+	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
@@ -201,7 +209,13 @@ func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response)
 	site.Save()
 
 	var sites []models.Site
-	db.Order("name asc").Find(&sites)
+	switch db.Dialect().GetName() {
+	case "mysql":
+		db.Order("name asc").Find(&sites)
+	case "sqlite3":
+		db.Order("name COLLATE NOCASE asc").Find(&sites)
+	}
+
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
@@ -215,6 +229,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 
 	config.Config.Web.TagSort = r.TagSort
 	config.Config.Web.SceneEdit = r.SceneEdit
+	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)

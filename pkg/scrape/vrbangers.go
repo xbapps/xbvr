@@ -35,7 +35,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		//https://content.vrbangers.com
 		contentURL := strings.Replace(URL, "//", "//content.", 1)
 
-		r, _ := resty.R().Get("https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id)
+		r, _ := resty.R().
+			SetHeader("User-Agent", UserAgent).
+			Get("https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id)
 
 		JsonMetadata := r.String()
 
@@ -105,6 +107,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		// Tags
 		e.ForEach(`div.video-item__tags a`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, e.Text)
+		})
+		e.ForEach(`div.video-item__info span.video-item__position-title`, func(id int, e *colly.HTMLElement) {
+			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 		if scraperID == "vrbgay" {
 			sc.Tags = append(sc.Tags, "Gay")

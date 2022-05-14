@@ -44,8 +44,8 @@
             <b-table-column v-slot="props">
               <div class="block">
                 <b-button @click="play(props.row)" v-if="props.row.type === 'video'">{{ $t('Play') }}</b-button>
-                <b-button v-if="props.row.scene_id === 0" @click="match(props.row)">{{ $t('Match') }}</b-button>
-                <b-button v-else disabled>{{ $t('Match') }}</b-button>
+                <b-button v-if="props.row.scene_id === 0" class="is-primary is-outlined" @click="match(props.row)">{{ $t('Match') }}</b-button>
+                <b-button v-else class="is-outlined" @click="unmatch(props.row)">{{ $t('Unmatch') }}</b-button>
               </div>
             </b-table-column>
             <b-table-column style="white-space: nowrap;" v-slot="props">
@@ -118,6 +118,15 @@ export default {
     match (file) {
       this.$store.commit('overlay/showMatch', { file: file })
     },
+    unmatch (file) {
+      ky.post('/api/files/unmatch', {
+        json: {
+          file_id: file.id
+        }
+      }).then(data => {
+            this.$store.dispatch('files/load')
+      })
+    },    
     humanizeSeconds (seconds) {
       return new Date(seconds * 1000).toISOString().substr(11, 8)
     },

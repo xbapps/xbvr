@@ -24,7 +24,7 @@ func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString str
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 		sc.Site = strings.Split(e.ChildText("title"), "-")[0]
 
-		content_id := strings.Split(sc.HomepageURL, "=")[1]
+		content_id := strings.Split(strings.Split(sc.HomepageURL, "=")[1], "/")[0]
 
 		r, _ := resty.R().Get("https://www.r18.com/api/v4f/contents/" + content_id)
 
@@ -93,7 +93,7 @@ func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString str
 
 		//		})
 
-		if dvdID == "----" {
+		if dvdID == "----" || dvdID == "" {
 			sc.SceneID = content_id
 			sc.SiteID = content_id
 		} else {
@@ -107,7 +107,7 @@ func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString str
 	siteCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sceneURL := ""
 
-		e.ForEach(`li.item-list a:not([class])`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`li.item-list a.i3NLink`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				sceneURL = strings.Split(e.Attr("href"), "?")[0]
 			} else {

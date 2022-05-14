@@ -79,29 +79,32 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		out <- sc
 	})
 
-	/*	siteCollector.OnHTML(`div.pagination a`, func(e *colly.HTMLElement) {
-			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`div.pagination a[class="pagination__link "]`, func(e *colly.HTMLElement) {
+		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+		if !strings.Contains(pageURL, "s=billing.payment") {
 			siteCollector.Visit(pageURL)
-		})
-	*/
+		}
+	})
+
 	siteCollector.OnHTML(`div.recommended__item`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
 
-		//Date & Duration from main index
-		ctx := colly.NewContext()
-		e.ForEach(`span.recommended__item__info__date`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				ctx.Put("date", strings.TrimSpace(e.Text))
-			}
-		})
-		e.ForEach(`span.recommended__item__time`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				ctx.Put("dur", strings.TrimSpace(e.Text))
-			}
-		})
-
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
+
+			//Date & Duration from main index
+			ctx := colly.NewContext()
+			e.ForEach(`span.recommended__item__info__date`, func(id int, e *colly.HTMLElement) {
+				if id == 0 {
+					ctx.Put("date", strings.TrimSpace(e.Text))
+				}
+			})
+			e.ForEach(`span.recommended__item__time`, func(id int, e *colly.HTMLElement) {
+				if id == 0 {
+					ctx.Put("dur", strings.TrimSpace(e.Text))
+				}
+			})
+
 			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 		}
 	})

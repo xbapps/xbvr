@@ -78,8 +78,8 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Duration
-		e.ForEach(`div.video-additional div.grid-one-time span`, func(id int, e *colly.HTMLElement) {
-			durationText := strings.TrimSpace(strings.Replace(e.DOM.Parent().Text(), "min.", "", -1))
+		e.ForEach(`div.video-additional div.c-grid-one-time span`, func(id int, e *colly.HTMLElement) {
+			durationText := strings.TrimSpace(strings.Replace(e.Text, "min.", "", -1))
 			tmpDuration, err := strconv.Atoi(durationText)
 			if err == nil {
 				sc.Duration = tmpDuration
@@ -108,12 +108,12 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`div.pager li.is-active a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.c-pagination li.next a`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.cf div.grid-one-hov-field a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.cf div.c-grid-one-hov-field a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
