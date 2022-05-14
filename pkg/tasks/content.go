@@ -15,6 +15,7 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
 	"gopkg.in/resty.v1"
@@ -230,6 +231,61 @@ func ScrapeJAVR(queryString string) {
 		scrape.ScrapeR18(knownScenes, &collectedScenes, queryString)
 
 		if len(collectedScenes) > 0 {
+			db, _ := models.GetDB()
+			for i := range collectedScenes {
+				models.SceneCreateUpdateFromExternal(db, collectedScenes[i])
+			}
+			db.Close()
+
+			tlog.Infof("Updating tag counts")
+			CountTags()
+			SearchIndex()
+
+			tlog.Infof("Scraped %v new scenes in %s",
+				len(collectedScenes),
+				time.Now().Sub(t0).Round(time.Second))
+		} else {
+			tlog.Infof("No new scenes scraped")
+		}
+
+	}
+	models.RemoveLock("scrape")
+}
+
+func ScrapeTPDB(apiToken string, sceneUrl string) {
+	if !models.CheckLock("scrape") {
+		models.CreateLock("scrape")
+		t0 := time.Now()
+		tlog := log.WithField("task", "scrape")
+		tlog.Infof("Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
+
+		// Get all known scenes
+		var scenes []models.Scene
+		db, _ := models.GetDB()
+		db.Find(&scenes)
+		db.Close()
+
+		var knownScenes []string
+		for i := range scenes {
+			knownScenes = append(knownScenes, scenes[i].SceneURL)
+		}
+
+		// Start scraping
+		var collectedScenes []models.ScrapedScene
+
+		tlog.Infof("Scraping TPDB")
+		err := scrape.ScrapeTPDB(knownScenes, &collectedScenes, apiToken, sceneUrl)
+
+		if err != nil {
+			tlog.Errorf(err.Error())
+		} else if len(collectedScenes) > 0 {
+			// At this point we know the API Token is correct, so we will save
+			// it to the config store
+			if config.Config.Vendor.TPDB.ApiToken != apiToken {
+				config.Config.Vendor.TPDB.ApiToken = apiToken
+				config.SaveConfig()
+			}
+
 			db, _ := models.GetDB()
 			for i := range collectedScenes {
 				models.SceneCreateUpdateFromExternal(db, collectedScenes[i])
