@@ -52,24 +52,6 @@
         </div>
       </div>
     </div>
-    <h3 class="title">{{$t('TPDB scraper')}}</h3>
-    <div class="columns is-multiline">
-      <div class="column is-multiline is-one-third">
-        <div class="card">
-          <div class="card-content content">
-            <h5 class="title">API Token</h5>
-            <b-input v-model="tpdbApiToken" placeholder="TPDB API Token" type="search"></b-input>
-            <br>
-            <h5 class="title">TPDB Scene URL</h5>
-            <b-field grouped>
-              <b-input v-model="tpdbSceneUrl" placeholder="TPDB URL" type="search"></b-input>
-              <b-button class="button is-primary" v-on:click="scrapeTPDB()">{{$t('Go')}}</b-button>
-            </b-field>
-          </div>
-        </div>
-      </div>
-    </div>
-    <h3 class="title">{{$t('JAVR scraper')}}</h3>
 
     <div class="columns is-multiline">
       <div class="column is-multiline is-one-third">
@@ -84,6 +66,23 @@
           </div>
         </div>
       </div>
+
+      <div class="column is-multiline is-one-third">
+        <h3 class="title">{{$t('TPDB scraper')}}</h3>
+        <div class="card">
+          <div class="card-content content">
+            <h5 class="title">API Token</h5>
+            <b-input v-model="tpdbApiToken" placeholder="TPDB API Token" type="search"></b-input>
+            <br>
+            <h5 class="title">TPDB Scene URL</h5>
+            <b-field grouped>
+              <b-input v-model="tpdbSceneUrl" placeholder="TPDB URL" type="search"></b-input>
+              <b-button class="button is-primary" v-on:click="scrapeTPDB()">{{$t('Go')}}</b-button>
+            </b-field>
+          </div>
+        </div>
+      </div>
+
       <div class="column is-multiline is-one-third">
         <h3 class="title">{{$t('Custom scene')}}</h3>
         <div class="card">
