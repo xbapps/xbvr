@@ -408,27 +408,43 @@ func CountTags() {
 	var tags []models.Tag
 	db.Model(&models.Tag{}).Find(&tags)
 
-	for i := range tags {
-		var scenes []models.Scene
-		db.Model(tags[i]).Related(&scenes, "Scenes")
+	type CountResults struct {
+		ID          int
+		Cnt         int
+		Existingcnt int
+	}
 
-		if tags[i].Count != len(scenes) {
-			tags[i].Count = len(scenes)
-			tags[i].Save()
+	var results []CountResults
+	db.Model(&models.Tag{}).
+		Select("tags.id, count as existingcnt, count(*) cnt").
+		Group("tags.id").
+		Joins("join scene_tags on scene_tags.tag_id = tags.id").
+		Joins("join scenes on scenes.id=scene_tags.scene_id and scenes.deleted_at is null").
+		Scan(&results)
+
+	for i := range results {
+		var tag models.Tag
+		if results[i].Cnt != results[i].Existingcnt {
+			db.First(&tag, results[i].ID)
+			tag.Count = results[i].Cnt
+			tag.Save()
 		}
 	}
 
-	var cast []models.Actor
-	db.Model(&models.Actor{}).Find(&cast)
-	for i := range cast {
-		var scenes []models.Scene
-		db.Model(cast[i]).Related(&scenes, "Scenes")
+	db.Model(&models.Actor{}).
+		Select("actors.id, count as existingcnt, count(*) cnt").
+		Group("actors.id").
+		Joins("join scene_cast on scene_cast.actor_id = actors.id").
+		Joins("join scenes on scenes.id=scene_cast.scene_id and scenes.deleted_at is null").
+		Scan(&results)
 
-		if cast[i].Count != len(scenes) {
-			cast[i].Count = len(scenes)
-			cast[i].Save()
+	for i := range results {
+		var actor models.Actor
+		if results[i].Cnt != results[i].Existingcnt {
+			db.First(&actor, results[i].ID)
+			actor.Count = results[i].Cnt
+			actor.Save()
 		}
 	}
-
 	// db.Where("count = ?", 0).Delete(&Tag{})
 }
