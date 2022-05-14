@@ -359,7 +359,12 @@ func CountTags() {
 	}
 
 	var results []CountResults
-	db.Model(&models.Tag{}).Select("id, count as existingcnt, count(*) cnt").Group("id, count").Joins("join scene_tags on scene_tags.tag_id = tags.id").Scan(&results)
+	db.Model(&models.Tag{}).
+		Select("tags.id, count as existingcnt, count(*) cnt").
+		Group("tags.id").
+		Joins("join scene_tags on scene_tags.tag_id = tags.id").
+		Joins("join scenes on scenes.id=scene_tags.scene_id and scenes.deleted_at is null").
+		Scan(&results)
 
 	for i := range results {
 		var tag models.Tag
@@ -370,7 +375,12 @@ func CountTags() {
 		}
 	}
 
-	db.Model(&models.Actor{}).Select("id, count as existingcnt, count(*) cnt").Group("id, count").Joins("join scene_cast on scene_cast.actor_id = actors.id").Scan(&results)
+	db.Model(&models.Actor{}).
+		Select("actors.id, count as existingcnt, count(*) cnt").
+		Group("actors.id").
+		Joins("join scene_cast on scene_cast.actor_id = actors.id").
+		Joins("join scenes on scenes.id=scene_cast.scene_id and scenes.deleted_at is null").
+		Scan(&results)
 
 	for i := range results {
 		var actor models.Actor
