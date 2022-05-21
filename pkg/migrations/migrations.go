@@ -697,6 +697,114 @@ func Migrate() {
 				return db.Where("site = ?", "VRP Films").Delete(&models.Scene{}).Error
 			},
 		},
+		{
+			ID: "0032-move-tngf-to-vrphub",
+			Migrate: func(tx *gorm.DB) error {
+				// old slug -> new slug
+				slugMapping := map[string]string{
+					"2022-05-18": "2022-05-17",
+				}
+
+				vrporn := [...]string{"2020-04-07", "2020-04-15", "2021-01-09", "2021-01-25", "2021-01-31", "2021-02-21", "2021-03-27", "2021-04-10", "2021-05-16", "2021-06-15", "2021-06-21", "2021-07-05", "2021-07-18", "2021-07-31", "2021-08-17", "2021-08-29", "2021-10-09", "2021-10-11", "2021-10-19", "2021-11-20", "2021-11-24", "2021-11-25"}
+				vrphub := [...]string{"2020-03-27", "2020-04-04", "2021-01-08", "2021-01-22", "2021-01-30", "2021-02-12", "2021-03-26", "2021-04-09", "2021-05-07", "2021-06-04", "2021-06-18", "2021-07-02", "2021-07-16", "2021-07-30", "2021-08-13", "2021-08-27", "2021-09-10", "2021-09-24", "2021-10-08", "2021-10-22", "2021-11-05", "2021-11-19"}
+
+				// site -> slug -> id
+				newScenes := map[string]map[string]string{}
+				newScenes2 := map[string]map[string]string{}
+				newSceneId := func(site string, slug string) (string, string, error) {
+					mapping2, ok := newScenes2[site]
+					mapping1, ok := newScenes[site]
+					if !ok {
+						mapping1 = map[string]string{}
+						mapping2 = map[string]string{}
+						//            queryParams := "https://vrphub.com/wp-json/wp/v2/posts?categories=2630&per_page=100"
+						url := fmt.Sprintf("https://vrphub.com/wp-json/wp/v2/posts?categories=2630&per_page=100&order=asc")
+						r, err := resty.R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
+						if err != nil {
+							return "", "", err
+						}
+						items := gjson.Get(r.String(), "@this")
+						if !items.Exists() {
+							return "", "", fmt.Errorf("invalid response from %s API: no scenes found", site)
+						}
+						for _, scene := range items.Array() {
+							id, slug, slug2 := scene.Get("id").String(), scene.Get("date").String(), scene.Get("link").String()
+							if id == "" || slug == "" || slug2 == "" {
+								return "", "", fmt.Errorf("invalid response from %s API: no id or slug found", site)
+							}
+							tmpDate, err := time.Parse(time.RFC3339, slug+"+00:00")
+							if err == nil {
+								slug = tmpDate.Format("2006-01-02")
+							}
+							mapping1[slug] = slugify.Slugify(site) + "-" + id
+							mapping2[slug] = slug2
+						}
+						newScenes[site] = mapping1
+						newScenes2[site] = mapping2
+					}
+					return mapping1[slug], mapping2[slug], nil
+				}
+
+				var scenes []models.Scene
+				err := tx.Where("site = ?", "Tonight's Girlfriend VR").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for i, v := range vrporn {
+					for _, scene := range scenes {
+						if scene.ReleaseDateText == v {
+							scene.ReleaseDateText = vrphub[i]
+							err = tx.Save(&scene).Error
+							if err != nil {
+								return err
+							}
+							//							continue
+						}
+					}
+				}
+
+				for _, scene := range scenes {
+					base := strings.TrimSpace(scene.ReleaseDateText)
+					//					slug2 := slugMapping[strings.TrimSpace(scene.SceneURL)]
+					//        dir, base := path.Split(trimmedURL)
+					slug, ok := slugMapping[base]
+					if !ok {
+						slug = base
+						//						slug2 = strings.TrimSpace(scene.SceneURL)
+					}
+
+					sceneID, urllink, err := newSceneId(scene.Site, slug)
+					if err != nil {
+						return err
+					}
+					if sceneID == "" {
+						common.Log.Warnf("Could not update scene %s", scene.SceneID)
+						continue
+					}
+
+					// update all actions referring to this scene by its scene_id
+					err = tx.Model(&models.Action{}).Where("scene_id = ?", scene.SceneID).Update("scene_id", sceneID).Update("scene_url", urllink).Error
+					if err != nil {
+						return err
+					}
+
+					// update the scene itself
+					// with trailing slash for consistency with scraped data, to avoid these scenes being re-scraped
+					scene.SceneURL = urllink
+					scene.SceneID = sceneID
+					err = tx.Save(&scene).Error
+					if err != nil {
+						return err
+					}
+					common.Log.Infof("Updated scene %s", scene.SceneID)
+				}
+
+				// since scenes have new IDs, we need to re-index them
+				tasks.SearchIndex()
+
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
