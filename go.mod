@@ -20,7 +20,7 @@ require (
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/gammazero/nexus/v3 v3.0.4
 	github.com/getlantern/systray v1.1.0
-	github.com/go-openapi/spec v0.20.4
+	github.com/go-openapi/spec v0.20.6
 	github.com/go-test/deep v1.0.8
 	github.com/gocolly/colly v1.2.0
 	github.com/gorilla/mux v1.8.0
@@ -96,7 +96,7 @@ require (
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f // indirect
 	github.com/glycerine/go-unsnap-stream v0.0.0-20181221182339-f9677308dec2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.19.6 // indirect
+	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
