@@ -697,6 +697,34 @@ func Migrate() {
 				return db.Where("site = ?", "VRP Films").Delete(&models.Scene{}).Error
 			},
 		},
+		{
+			ID: "0032-fix-filters-with-playlist",
+			Migrate: func(tx *gorm.DB) error {
+				var playlists []models.Playlist
+				db.Find(&playlists)
+				for _, playlist := range playlists {
+					var jsonResult RequestSceneList
+					json.Unmarshal([]byte(playlist.SearchParams), &jsonResult)
+
+					if jsonResult.Cast == nil {
+						jsonResult.Cast = []optional.String{}
+					}
+					if jsonResult.Sites == nil {
+						jsonResult.Sites = []optional.String{}
+					}
+					if jsonResult.Tags == nil {
+						jsonResult.Tags = []optional.String{}
+					}
+					if jsonResult.Cuepoint == nil {
+						jsonResult.Cuepoint = []optional.String{}
+					}
+
+					playlist.SearchParams = jsonResult.ToJSON()
+					playlist.Save()
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
