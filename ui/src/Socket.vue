@@ -47,6 +47,10 @@ export default {
         this.$store.state.messages.lastScrapeMessage = dataArr.argsDict
       }
 
+      if (dataArr.argsDict.data.task === 'backup') {
+        this.$store.state.messages.lastScrapeMessage = dataArr.argsDict
+      }
+
       if (dataArr.argsDict.data.task === 'scraperProgress') {
         if (dataArr.argsDict.message === 'DONE') {
           this.$store.state.messages.runningScrapers = []

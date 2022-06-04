@@ -1,6 +1,7 @@
 package api
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/emicklei/go-restful"
@@ -55,6 +56,12 @@ func (i TaskResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/funscript/export-new").To(i.exportNewFunscripts).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/bundle/backup").To(i.backupBundle).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/bundle/restore").To(i.restoreBundle).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.POST("/scrape-javr").To(i.scrapeJAVR).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -99,6 +106,34 @@ func (i TaskResource) exportAllFunscripts(req *restful.Request, resp *restful.Re
 
 func (i TaskResource) exportNewFunscripts(req *restful.Request, resp *restful.Response) {
 	tasks.ExportFunscripts(resp.ResponseWriter, true)
+}
+
+func (i TaskResource) backupBundle(req *restful.Request, resp *restful.Response) {
+	inclAllSites, _ := strconv.ParseBool(req.QueryParameter("allSites"))
+	inclScenes, _ := strconv.ParseBool(req.QueryParameter("inclScenes"))
+	inclFileLinks, _ := strconv.ParseBool(req.QueryParameter("inclLinks"))
+	inclCuepoints, _ := strconv.ParseBool(req.QueryParameter("inclCuepoints"))
+	inclHistory, _ := strconv.ParseBool(req.QueryParameter("inclHistory"))
+	inclPlaylists, _ := strconv.ParseBool(req.QueryParameter("inclPlaylists"))
+	inclVolumes, _ := strconv.ParseBool(req.QueryParameter("inclVolumes"))
+	inclActions, _ := strconv.ParseBool(req.QueryParameter("inclActions"))
+
+	go tasks.BackupBundle(inclAllSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions)
+}
+
+func (i TaskResource) restoreBundle(req *restful.Request, resp *restful.Response) {
+	url := req.QueryParameter("url")
+	inclAllSites, _ := strconv.ParseBool(req.QueryParameter("allSites"))
+	inclScenes, _ := strconv.ParseBool(req.QueryParameter("inclScenes"))
+	inclFileLinks, _ := strconv.ParseBool(req.QueryParameter("inclLinks"))
+	inclCuepoints, _ := strconv.ParseBool(req.QueryParameter("inclCuepoints"))
+	inclHistory, _ := strconv.ParseBool(req.QueryParameter("inclHistory"))
+	inclPlaylists, _ := strconv.ParseBool(req.QueryParameter("inclPlaylists"))
+	inclVolumes, _ := strconv.ParseBool(req.QueryParameter("inclVolumes"))
+	inclActions, _ := strconv.ParseBool(req.QueryParameter("inclActions"))
+	overwrite, _ := strconv.ParseBool(req.QueryParameter("overwrite"))
+
+	go tasks.RestoreBundle(inclAllSites, url, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions, overwrite)
 }
 
 func (i TaskResource) previewGenerate(req *restful.Request, resp *restful.Response) {

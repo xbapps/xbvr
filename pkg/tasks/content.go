@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
+	"github.com/jinzhu/gorm"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -30,6 +31,34 @@ type ContentBundle struct {
 type ScraperStatus struct {
 	ID        string `json:"id"`
 	Completed bool   `json:"completed"`
+}
+
+type BackupFileLink struct {
+	SceneID			string  					`json:"scene_id"`
+	Files			[]models.File  				`json:"files"`
+}
+type BackupSceneHistory struct {
+	SceneID			string  					`json:"scene_id"`
+	History			[]models.History  			`json:"history"`
+}
+type BackupSceneCuepoint struct {
+	SceneID			string  					`json:"scene_id"`
+	Cuepoints		[]models.SceneCuepoint		`json:"cuepoints"`
+}
+type BackupSceneAction struct {
+	SceneID			string  					`json:"scene_id"`
+	Actions			[]models.Action				`json:"actions"`
+}
+type BackupContentBundle struct {
+	Timestamp     time.Time             		`json:"timestamp"`
+	BundleVersion string                		`json:"bundleVersion"`	
+	Volumne		  	[]models.Volume				`json:"volumes"`
+	Playlists		[]models.Playlist			`json:"playlists"`
+	Scenes        	[]models.Scene 				`json:"scenes"`
+	FilesLinks		[]BackupFileLink			`json:"sceneFileLinks"`
+	Cuepoints		[]BackupSceneCuepoint		`json:"sceneCuepoints"`
+	History			[]BackupSceneHistory		`json:"sceneHistory"`
+	Actions       	[]BackupSceneAction    		`json:"actions"`
 }
 
 func CleanTags() {
@@ -367,6 +396,498 @@ func ImportBundle(url string) {
 	models.RemoveLock("scrape")
 }
 
+func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes  bool,inclActions bool) {
+	if !models.CheckLock("backup") {
+		models.CreateLock("backup")
+		t0 := time.Now()
+
+		tlog := log.WithField("task", "backup")
+		tlog.Info("Backing up content bundle...")
+
+		db, _ := models.GetDB()
+		defer db.Close()
+
+		var scenes []models.Scene
+		backupSceneList := []models.Scene{}
+		backupCupointList := []BackupSceneCuepoint{}
+		backupFileLinkList := []BackupFileLink{}
+		backupHistoryList := []BackupSceneHistory{}
+		backupActionList := []BackupSceneAction{}
+
+		if inclScenes || inclFileLinks || inclCuepoints || inclHistory || inclActions {
+			var selectedSites []models.Site
+			if inclAllSites == false {
+				db.Where(&models.Site{IsEnabled: true}).Find(&selectedSites)
+			}		
+			
+			db.Select("id, scene_id").Find(&scenes)
+
+			var err error			
+			for cnt, scene := range scenes{			
+				if  cnt % 500 == 0 {
+					tlog.Infof("Reading scene %v of %v", cnt, len(scenes))
+				}
+				
+				// check if the scene is for a site we want
+				if inclAllSites == false {
+					idx := FindSite(selectedSites, scene.SceneID)
+					if idx<0{
+						continue
+					}
+				}
+
+				err = db.Preload("Files").
+				Preload("Cuepoints").
+				Preload("History").
+				Preload("Tags").
+				Preload("Cast").
+				Where(&models.Scene{ID: scene.ID}).First(&scene).Error
+				
+				if err != nil {
+					tlog.Errorf("Error reading scene %s", scene.SceneID)
+				}
+
+				if len(scene.History)>0 && inclHistory {
+					backupHistoryList = append(backupHistoryList, BackupSceneHistory{SceneID: scene.SceneID, History: scene.History })
+				}
+				
+				sceneAction := []models.Action{}
+				if inclActions {
+					if scene.SceneID=="immoral-family-1021491"{
+						log.Info("got immoral-family-1021491")
+					}
+
+					db.Where(&models.Action{SceneID: scene.SceneID  }).Find(&sceneAction)
+					if len(sceneAction) > 0 {
+						backupActionList = append(backupActionList, BackupSceneAction{SceneID: scene.SceneID, Actions:  sceneAction})					
+					}
+				}
+				
+				if inclCuepoints && len(scene.Cuepoints)>0 {
+					backupCupointList = append(backupCupointList, BackupSceneCuepoint{SceneID: scene.SceneID, Cuepoints: scene.Cuepoints})
+				}
+				if inclFileLinks && len(scene.Files)>0 {
+					backupFileLinkList = append(backupFileLinkList,BackupFileLink{SceneID: scene.SceneID, Files: scene.Files})
+				}
+				if inclScenes {
+					scene.Files=[]models.File{}
+					scene.Cuepoints=[]models.SceneCuepoint{}
+					scene.History=[]models.History{}					
+					backupSceneList = append(backupSceneList, scene)
+				}
+				if err != nil {
+					tlog.Errorf("Error reading scene Id %v of %s", scene.ID, err)
+				}		
+			}
+		}
+
+		var actions []models.Action
+		if inclActions {		
+			db.Find(&actions)
+		}
+
+		 var volumes []models.Volume
+		 if inclVolumes {
+		 	db.Find(&volumes)
+		 }
+		var playlists []models.Playlist
+		if inclPlaylists {
+			db.Find(&playlists)
+		}
+		
+		out := BackupContentBundle{
+			Timestamp:     	time.Now().UTC(),
+			BundleVersion: 	"1",			
+			Volumne: 		volumes,
+			Playlists: 		playlists,			
+			Scenes:        	backupSceneList,
+			FilesLinks: 	backupFileLinkList,
+			Cuepoints: 		backupCupointList,	
+			History: 		backupHistoryList,
+			Actions: 		backupActionList,
+		}
+
+		content, err := json.MarshalIndent(out, "", " ")
+		if err == nil {
+			fName := filepath.Join(common.AppDir, fmt.Sprintf("content-backup-bundle-%v.json", time.Now().Unix()))
+			fName = filepath.Join(common.AppDir, fmt.Sprintf("content-backup-bundle.json"))
+			err = ioutil.WriteFile(fName, content, 0644)
+			if err == nil {
+				tlog.Infof("Backup completed in %v, file saved to %v", time.Now().Sub(t0), fName)
+			}
+		}
+	}
+	models.RemoveLock("backup")
+}
+
+func RestoreBundle(inclAllSites bool, url string, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes  bool,inclActions bool, overwrite bool) {
+	if !models.CheckLock("backup") {
+		models.CreateLock("backup")
+
+		//tlog := log.WithField("task", "backup")
+		tlog := log.WithField("task", "backup")
+
+		var bundleData BackupContentBundle
+		tlog.Infof("Restoring data  from URL...")
+		resp, err := resty.R().SetResult(&bundleData).Get(url)
+
+		if err == nil && resp.StatusCode() == 200 {
+			db, _ := models.GetDB()
+			defer db.Close()
+			
+			var selectedSites []models.Site
+			if inclAllSites == false {
+				db.Where(&models.Site{IsEnabled: true}).Find(&selectedSites)
+			}		
+
+			if inclVolumes {
+				RestoreMediaPaths(bundleData.Volumne, overwrite, db)
+			}
+			if inclPlaylists {
+				RestorePlaylist(bundleData.Playlists, overwrite,  db)
+			}
+			if inclScenes {
+				RestoreScenes(bundleData.Scenes, inclAllSites,  selectedSites, overwrite, inclCuepoints, inclFileLinks, inclHistory, db)
+			}
+			if inclCuepoints {
+				RestoreCuepoints(bundleData.Cuepoints, inclAllSites,  selectedSites, overwrite, db)
+			}
+			if inclFileLinks {
+				RestoreSceneFileLinks(bundleData.FilesLinks, inclAllSites,  selectedSites, overwrite, db)
+			}
+			if inclHistory {
+				RestoreHistory(bundleData.History, inclAllSites,  selectedSites, overwrite, db)
+			}
+			if inclActions {
+				RestoreActions(bundleData.Actions, inclAllSites,  selectedSites, overwrite, db)
+			}
+
+			//for i := range bundleData.Scenes {
+				// tlog.Infof("Restoring %v of %v scenes", i+1, len(bundleData.Scenes))
+				 //models.SceneCreateUpdateFromExternal(db, bundleData.Scenes[i])
+			//}			
+
+			if inclScenes || inclFileLinks {
+				UpdateSceneStatus(db)
+			}
+			if inclScenes {
+				CountTags()				
+				SearchIndex()
+			}
+
+			tlog.Infof("Restore complete")
+		} else {
+			tlog.Infof("Download failed!")
+		}
+	}
+	models.RemoveLock("backup")
+}
+
+func RestoreScenes(scenes []models.Scene, inclAllSites bool, selectedSites []models.Site,  overwrite bool,  inclCuepoints bool, inclFileLinks bool, inclHistory bool, db *gorm.DB) {
+	tlog := log.WithField("task", "backup")	
+	tlog.Infof("Restoring scenes")
+	
+	addedCnt := 0
+	for sceneCnt,scene := range scenes {
+		if sceneCnt % 500 == 0 {
+			tlog.Infof("Processing %v of %v scenes", sceneCnt, len(scenes))
+		}
+		// check if the scene is for a site we want
+		if inclAllSites == false {
+			idx := FindSite(selectedSites, scene.SceneID)
+			if idx<0{
+				continue
+			}
+		}
+		var found models.Scene
+		db.Where(&models.Scene{SceneID:scene.SceneID}).First(&found)
+
+		for i := 0; i <= len(scene.Cast)-1; i++ {		
+			var tmpActor models.Actor
+			db.Where(&models.Actor{Name: scene.Cast[i].Name}).FirstOrCreate(&tmpActor)
+			scene.Cast[i]=tmpActor;
+		}		
+		for i := 0; i <= len(scene.Tags)-1; i++ {		
+			var tmpTag models.Tag
+			db.Where(&models.Tag{Name: scene.Tags[i].Name}).FirstOrCreate(&tmpTag)
+			scene.Tags[i]=tmpTag;
+		}
+		if found.ID == 0 {				// id = 0 is a new record
+			scene.ID=0					// dont use the id from json			
+			models.SaveWithRetry(db, &scene)
+			addedCnt++
+		}else{
+			if overwrite {
+				scene.ID=found.ID 	// use the Id from the existing db record
+				models.SaveWithRetry(db, &scene)
+				addedCnt++
+			}			
+		}
+	}
+	tlog.Infof("%v Scenes restored", addedCnt)
+}
+
+func RestoreCuepoints(sceneCuepointList []BackupSceneCuepoint, inclAllSites bool, selectedSites []models.Site,  overwrite bool, db *gorm.DB) {
+	tlog := log.WithField("task", "backup")
+	tlog.Infof("Restoring scene cuepoints")
+	
+	addedCnt := 0
+	for sceneCnt,cuepoints := range sceneCuepointList {
+		if sceneCnt % 500 == 0 {
+			tlog.Infof("Processing cuepoints for %v of %v scenes", sceneCnt, len(sceneCuepointList))
+		}
+		// check if the scene is for a site we want
+		if inclAllSites == false {
+			idx := FindSite(selectedSites, cuepoints.SceneID)
+			if idx<0{
+				continue
+			}
+		}
+		var found models.Scene
+		db.Preload("Cuepoints").Where(&models.Scene{SceneID:cuepoints.SceneID}).First(&found)
+		if found.ID == 0 || len(cuepoints.Cuepoints) + len(found.Cuepoints) == 0 {				
+			continue
+		}else{
+			changed  := false
+			for i, cp := range cuepoints.Cuepoints {
+				cp.SceneID = found.ID
+				cp.ID=0
+				cuepoints.Cuepoints[i]=cp
+			}
+			if overwrite || len(found.Cuepoints) == 0 {
+				if len(cuepoints.Cuepoints) + len(found.Cuepoints) > 0 {					
+					if len(found.Cuepoints) > 0 {			
+						err := db.Delete(&models.SceneCuepoint{}, "scene_id = ?", found.ID).Error
+						//models.SaveWithRetry(db, &del)
+						if err!=nil {
+							tlog.Infof("Eror deleteing cuepoints")
+						}
+					}					
+					found.Cuepoints=cuepoints.Cuepoints
+					models.SaveWithRetry(db, &found)
+					addedCnt++
+				}
+			} else {				
+				for _, cuepoint := range cuepoints.Cuepoints {
+					cpIdx, _ := CheckCuepoint(found.Cuepoints, cuepoint)
+					if cpIdx<0  {
+						found.Cuepoints = append(found.Cuepoints, cuepoint)
+						changed = true
+					}
+				}
+				if changed {
+					models.SaveWithRetry(db, &found)
+					addedCnt++
+				}
+			}
+		}
+	}
+	tlog.Infof("%v Scenes with cuepoints restored", addedCnt)
+}
+
+func RestoreSceneFileLinks(backupFileList []BackupFileLink, inclAllSites bool, selectedSites []models.Site,  overwrite bool, db *gorm.DB) {
+	tlog := log.WithField("task", "backup")
+	tlog.Infof("Restoring scene files links")
+	
+	var volumes [] models.Volume
+	db.Find(&volumes)
+
+	addedCnt := 0
+	for cnt,backupSceneFiles := range backupFileList {
+		if cnt % 500 == 0 {
+			tlog.Infof("Processing files for %v of %v scenes", cnt, len(backupFileList))
+		}
+
+		// check if the scene is for a site we want
+		if inclAllSites == false {
+			idx := FindSite(selectedSites, backupSceneFiles.SceneID)
+			if idx<0{
+				continue
+			}
+		}
+		addedCnt++			
+		if overwrite {
+			 db.Delete(&models.File{}, "scene_id = ?", backupSceneFiles.SceneID)
+		}
+		
+		for _, scenefile := range backupSceneFiles.Files {		
+			var found models.File			
+			db.Where(&models.File{Filename: scenefile.Filename, Path: scenefile.Path }).Find(&found)
+			
+			if found.ID == 0 {
+				scenefile.ID=0				
+				voldId := FindNewVolumeId(volumes, scenefile.Path)
+				if voldId == -1 {
+					tlog.Infof("No volume for path %s, skipping", scenefile.Path)
+					continue  // no volume, can't add
+				}
+				s := models.Scene{}
+				db.Where(&models.Scene{SceneID: backupSceneFiles.SceneID }).Find(&s)
+				scenefile.SceneID=s.ID
+				scenefile.VolumeID = uint(voldId)		
+				models.SaveWithRetry(db, &scenefile)				
+			}  else {
+				if (found.SceneID==0) {
+					s := models.Scene{}
+					db.Where(&models.Scene{SceneID: backupSceneFiles.SceneID }).Find(&s)
+					found.SceneID=s.ID						
+					models.SaveWithRetry(db, &found)
+				} 
+			}			
+		}
+	}
+	tlog.Infof("%v Scenes with file links restored", addedCnt)
+}
+
+func RestoreHistory(sceneHistoryList []BackupSceneHistory, inclAllSites bool, selectedSites []models.Site,  overwrite bool, db *gorm.DB) {
+	tlog := log.WithField("task", "backup")
+	tlog.Infof("Restoring scene history")
+	
+	addedCnt := 0
+	for sceneCnt,histories  := range sceneHistoryList {
+		if sceneCnt % 500 == 0 {
+			tlog.Infof("Processing history for %v of %v scenes", sceneCnt, len(sceneHistoryList))
+		}
+		// check if the scene is for a site we want
+		if inclAllSites == false {
+			idx := FindSite(selectedSites, histories.SceneID)
+			if idx<0{
+				continue
+			}
+		}
+		var found models.Scene
+		db.Preload("History").Where(&models.Scene{SceneID:histories.SceneID}).First(&found)
+		if found.ID == 0 || len(histories.History) + len(found.History) == 0 {				
+			continue
+		}else{
+			changed  := false
+			for i, cp := range histories.History {
+				cp.SceneID = found.ID
+				cp.ID=0
+				histories.History[i]=cp
+			}
+			if overwrite || len(found.History) == 0 {
+				if len(histories.History) + len(found.History) > 0 {					
+					if len(found.History) > 0 {			
+						err := db.Delete(&models.History{}, "scene_id = ?", found.ID).Error
+						//models.SaveWithRetry(db, &del)
+						if err!=nil {
+							tlog.Infof("Eror deleteing history")
+						}
+					}					
+					found.History=histories.History
+					models.SaveWithRetry(db, &found)
+					addedCnt++
+				}
+			} else {				
+				for _, historyEntry := range histories.History {
+					cpIdx, _ := CheckHistory(found.History, historyEntry)
+					if cpIdx<0  {
+						found.History = append(found.History, historyEntry)
+						changed = true
+					}
+				}
+				if changed {
+					models.SaveWithRetry(db, &found)
+					addedCnt++
+				}
+			}
+		}
+	}
+	tlog.Infof("%v Scenes with history restored", addedCnt)
+}
+func RestoreActions(sceneActionList []BackupSceneAction, inclAllSites bool, selectedSites []models.Site,  overwrite bool, db *gorm.DB) {
+	tlog := log.WithField("task", "backup")
+	tlog.Infof("Restoring scene actions")
+	
+	addedCnt := 0
+	for sceneCnt,actions  := range sceneActionList {
+		if sceneCnt % 500 == 0 {
+			tlog.Infof("Processing actions for %v of %v scenes", sceneCnt, len(sceneActionList))
+		}
+		// check if the scene is for a site we want
+		if inclAllSites == false {
+			idx := FindSite(selectedSites, actions.SceneID)
+			if idx<0{
+				continue
+			}
+		}
+		
+		if overwrite {
+			if len(actions.Actions) > 0 {										
+				err := db.Delete(&models.History{}, "scene_id = ?", actions.SceneID).Error
+				if err!=nil {
+					tlog.Infof("Eror deleteing history")
+				}
+			}
+		} else {
+			var existingAction models.Action
+			db.Where(&models.Action{SceneID: actions.SceneID}).First(&existingAction)
+			if existingAction.ID>0 {
+				tlog.Infof("Actions already exist for scene %s, cannot add new actions, use Overwrite+New", actions.SceneID)
+				continue
+			}
+
+		}
+		for _, action := range actions.Actions {
+			action.ID=0
+			models.SaveWithRetry(db, &action)
+		}			
+		addedCnt++
+}
+	tlog.Infof("%v Scenes with actions restored", addedCnt)
+}
+	
+
+
+func RestoreMediaPaths(mediaPaths []models.Volume, overwrite bool, db *gorm.DB) {
+	tlog := log.WithField("task", "backup")
+	tlog.Infof("Restoring media paths")
+	
+	addedCnt := 0
+	for _,mediaPath := range mediaPaths {
+		var found models.Volume	
+		db.Where(&models.Volume{Path:mediaPath.Path}).First(&found)
+
+		if found.ID  == 0 {				// id = 0 is a new record
+			mediaPath.ID =  0			// dont use the id from json
+			models.SaveWithRetry(db,&mediaPath)
+			addedCnt++
+		}else{
+			if overwrite {
+				mediaPath.ID=found.ID 	// use the Id from the existing db record
+				models.SaveWithRetry(db,&mediaPath)
+				addedCnt++
+			}
+		}
+	}
+	tlog.Infof("%v Media paths restored", addedCnt)
+}
+
+func RestorePlaylist(playlists []models.Playlist, overwrite bool, db *gorm.DB) {
+	tlog := log.WithField("task", "backup")
+	tlog.Infof("Restoring playlists")
+	
+	addedCnt := 0
+	for _,playlist := range playlists {
+		var found models.Playlist
+		db.Where(&models.Playlist{Name:playlist.Name}).First(&found)
+
+		if found.ID == 0  {				// id = 0 is a new record
+			playlist.ID=0				// dont use the id from json
+			models.SaveWithRetry(db,&playlist)
+			addedCnt++
+		}else{
+			if overwrite {
+				playlist.ID=found.ID	// use the Id from the existing db record
+				models.SaveWithRetry(db,&playlist)
+				addedCnt++	
+			}
+		}
+	}
+	tlog.Infof("%v Saved Searches restored", addedCnt)
+}
+
 func RenameTags() {
 	db, _ := models.GetDB()
 	defer db.Close()
@@ -447,4 +968,69 @@ func CountTags() {
 		}
 	}
 	// db.Where("count = ?", 0).Delete(&Tag{})
+}
+
+func FindSite(sites []models.Site,findSite string) int {
+	findSite = strings.Replace(findSite,"-","",-1)
+	findSite = strings.Replace(findSite," ","",-1)
+	for i, site := range sites {
+		id := strings.Replace(site.ID,"-","",-1)
+		id = strings.Replace(id," ","",-1)
+		if strings.HasPrefix( findSite, id)  {
+			return i
+		}
+	}
+	return -1
+}
+
+func CheckCuepoint(cuepoints []models.SceneCuepoint, findCuepoint models.SceneCuepoint) (int, bool) {
+    for i, cuepoint := range cuepoints {
+        if cuepoint.TimeStart == findCuepoint.TimeStart {
+			if cuepoint.Name == findCuepoint.Name {
+				return i, true
+			} else {
+				return i, false
+			}            
+        }
+    }
+    return -1, false
+}
+func CheckFiles(files []models.File, findFiles models.File) (int, bool) {
+    for i, file := range files {
+        if file.Filename == findFiles.Filename && file.Path == findFiles.Path{			
+				return i, true
+			}            
+        }
+    return -1, false
+}
+func CheckHistory(historyList []models.History, findHistory models.History) (int, bool) {
+    for i, historyEntry := range historyList {
+        if historyEntry.TimeStart == findHistory.TimeStart {
+			return i, true
+		}            
+    }
+	return -1, false
+}
+func FindNewVolumeId(volumes []models.Volume, path string) int {
+    for _, vol := range volumes {
+        if strings.HasPrefix(path, vol.Path){			
+				return int(vol.ID)
+			}            
+        }
+    return -1
+}
+
+func UpdateSceneStatus(db *gorm.DB) {
+	// Update scene statuses
+	tlog := log.WithField("task", "backup")
+	tlog.Infof("Update status of Scenes")
+	scenes := []models.Scene{}
+	db.Model(&models.Scene{}).Find(&scenes)
+
+	for i := range scenes {
+		scenes[i].UpdateStatus()
+		if (i % 70) == 0 {
+			tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+		}
+	}
 }
