@@ -698,7 +698,7 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0032-move-tngf-to-vrphub",
+			ID: "0033-move-tngf-to-tngf",
 			Migrate: func(tx *gorm.DB) error {
 
 				//seed information old date -> new date -> new sceneid/url
