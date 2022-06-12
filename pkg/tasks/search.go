@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzer/simple"
 	"github.com/blevesearch/bleve/index/scorch"
 	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/common"
@@ -29,7 +30,19 @@ func NewIndex(name string) (*Index, error) {
 
 	path := filepath.Join(common.IndexDirV2, name)
 
+	// the simple analyzer is more approriate for the title and cast
+	// note this does not effect search unless the query includes cast: or title:
+	titleFieldMapping := bleve.NewTextFieldMapping()
+	titleFieldMapping.Analyzer = simple.Name
+	castFieldMapping := bleve.NewTextFieldMapping()
+	castFieldMapping.Analyzer = simple.Name
+	sceneMapping := bleve.NewDocumentMapping()
+	sceneMapping.AddFieldMappingsAt("title", titleFieldMapping)
+	sceneMapping.AddFieldMappingsAt("cast", castFieldMapping)
+
 	mapping := bleve.NewIndexMapping()
+	mapping.AddDocumentMapping("_default", sceneMapping)
+
 	idx, err := bleve.NewUsing(path, mapping, scorch.Name, scorch.Name, nil)
 	if err != nil && err == bleve.ErrorIndexPathExists {
 		idx, err = bleve.Open(path)
