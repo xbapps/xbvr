@@ -13,9 +13,9 @@ export default {
   computed: {
     buttonClass () {
       if (this.item.is_watched) {
-        return 'button is-dark is-info is-small'
+        return 'button is-dark is-small'
       }
-      return 'button is-dark is-info is-outlined is-small'
+      return 'button is-dark is-outlined is-small'
     }
   }
 }
