@@ -109,6 +109,7 @@ func (i TaskResource) exportNewFunscripts(req *restful.Request, resp *restful.Re
 }
 
 func (i TaskResource) backupBundle(req *restful.Request, resp *restful.Response) {
+	formatVersion := req.QueryParameter("formatVersion")
 	inclAllSites, _ := strconv.ParseBool(req.QueryParameter("allSites"))
 	inclScenes, _ := strconv.ParseBool(req.QueryParameter("inclScenes"))
 	inclFileLinks, _ := strconv.ParseBool(req.QueryParameter("inclLinks"))
@@ -118,11 +119,12 @@ func (i TaskResource) backupBundle(req *restful.Request, resp *restful.Response)
 	inclVolumes, _ := strconv.ParseBool(req.QueryParameter("inclVolumes"))
 	inclActions, _ := strconv.ParseBool(req.QueryParameter("inclActions"))
 
-	go tasks.BackupBundle(inclAllSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions)
+	go tasks.BackupBundle(formatVersion, inclAllSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions)
 }
 
 func (i TaskResource) restoreBundle(req *restful.Request, resp *restful.Response) {
 	url := req.QueryParameter("url")
+	formatVersion := req.QueryParameter("formatVersion")
 	inclAllSites, _ := strconv.ParseBool(req.QueryParameter("allSites"))
 	inclScenes, _ := strconv.ParseBool(req.QueryParameter("inclScenes"))
 	inclFileLinks, _ := strconv.ParseBool(req.QueryParameter("inclLinks"))
@@ -133,7 +135,7 @@ func (i TaskResource) restoreBundle(req *restful.Request, resp *restful.Response
 	inclActions, _ := strconv.ParseBool(req.QueryParameter("inclActions"))
 	overwrite, _ := strconv.ParseBool(req.QueryParameter("overwrite"))
 
-	go tasks.RestoreBundle(inclAllSites, url, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions, overwrite)
+	go tasks.RestoreBundle(formatVersion, inclAllSites, url, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions, overwrite)
 }
 
 func (i TaskResource) previewGenerate(req *restful.Request, resp *restful.Response) {

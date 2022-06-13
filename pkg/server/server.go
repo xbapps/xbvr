@@ -61,7 +61,6 @@ func StartServer(version, commit, branch, date string) {
 	// Remove old locks
 	models.RemoveLock("index")
 	models.RemoveLock("scrape")
-	models.RemoveLock("backup")
 	models.RemoveLock("update-scenes")
 	models.RemoveLock("previews")
 

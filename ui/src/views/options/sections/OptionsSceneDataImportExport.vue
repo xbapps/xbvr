@@ -1,83 +1,51 @@
 <template>
   <div>
     <div class="content">
-      <h3>{{$t("Import scene data")}}</h3>
-      <p>
-        {{$t("You can import existing content bundles in JSON format from URL.")}}
-      </p>
-      <b-field grouped>
-        <b-input v-model="bundleURL" :placeholder="$t('Bundle URL')" type="search" icon="web"></b-input>
-        <div class="button is-button is-primary" v-on:click="importContent">{{$t('Import content bundle')}}</div>
-      </b-field>
-      <hr/>
-    </div>
-    <div class="content">
       <h3>{{$t('Export scene data')}}</h3>
       <p>
-        {{$t('If you already have scraped scene data, you can export it below.')}}
+        {{$t('Scrap scene data, and  export it.')}}
       </p>
       <b-button type="is-primary" @click="exportContent">{{$t('Export content bundle')}}</b-button>
     </div>
     <hr/>
     <div class="content">
-      <h3>{{$t("Backup/Restore  scene data")}}</h3>
-      <p>
-        {{$t("You can restore data from a backup bundle in JSON format from URL.")}}
-      </p>      
-      <p>Include</p>
-      <b-field>
-        <b-switch v-model="allSites">
-          <p v-if="allSites">All Sites</p>
-          <p v-else>Only Selected Sites</p>
-        </b-switch>
+      <h3>{{$t("Backup/Restore database data")}}</h3> 
+      <b-field label="Bundle version">
+        <select v-model="formatVersion">
+          <option>1</option>
+          <option>2</option>          
+        </select>        
+      </b-field>
+      <p v-show="formatVersion === '2'" >Include</p>
+      <b-field v-show="formatVersion === '2'" >
+        <b-switch v-model="allSites" ><p>{{ allSites ? 'All Sites' : 'Only Selected Sites' }}</p></b-switch>
       </b-field>        
-      <div class="block">
+      <div class="block" v-show="formatVersion === '2'" >
         <b-field grouped>
           <b-field label="Scenes">
-            <b-switch v-model="restoreScenes">
-              <p v-if="restoreScenes">Included</p>
-              <p v-else>Excluded</p>
-            </b-switch>
+            <b-switch v-model="includeScenes"><p>{{ includeScenes ? 'Included' : 'Excluded' }}</p></b-switch>
           </b-field>
           <b-field label="File Links">
-            <b-switch v-model="restoreFileLinks">
-              <p v-if="restoreFileLinks">Included</p>
-              <p v-else>Excluded</p>
-            </b-switch>
+            <b-switch v-model="includeFileLinks"><p>{{ includeFileLinks ? 'Included' : 'Excluded' }}</p></b-switch>
           </b-field>
           <b-field label="Cuepoints">
-            <b-switch v-model="restoreCuepoints">
-              <p v-if="restoreCuepoints">Included</p>
-              <p v-else>Excluded</p>
-            </b-switch>
+            <b-switch v-model="includeCuepoints"><p>{{ includeCuepoints ? 'Included' : 'Excluded' }}</p></b-switch>
           </b-field>
-          <b-field label="History">
-            <b-switch v-model="restoreHistory">
-              <p v-if="restoreHistory">Included</p>
-              <p v-else>Excluded</p>
-            </b-switch>
+          <b-field label="Watch History">
+            <b-switch v-model="includeHistory"><p>{{ includeHistory ? 'Included' : 'Excluded' }}</p></b-switch>
           </b-field>
-          <b-field label="Actions">
-            <b-switch v-model="restoreActions">
-              <p v-if="restoreActions">Included</p>
-              <p v-else>Excluded</p>
-            </b-switch>
+          <b-field label="Edits">
+            <b-switch v-model="includeActions"><p>{{ includeActions ? 'Included' : 'Excluded' }}</p></b-switch>
           </b-field>
         </b-field>
       </div>
-      <div class="block">
+      <div class="block" v-show="formatVersion === '2'" >
         <b-field grouped>
-          <b-field label="Playlists">
-            <b-switch v-model="restorePlaylists">
-              <p v-if="restorePlaylists">Included</p>
-              <p v-else>Excluded</p>
-            </b-switch>
+          <b-field label="Saved Searches">
+            <b-switch v-model="includePlaylists"><p>{{ includePlaylists ? 'Included' : 'Excluded' }}</p></b-switch>
           </b-field>
-          <b-field label="Media Paths">
-            <b-switch v-model="restoreVolumes">
-              <p v-if="restoreVolumes">Included</p>
-              <p v-else>Excluded</p>
-            </b-switch>
+          <b-field label="Storage Paths">
+            <b-switch v-model="includeVolumes"><p>{{ includeVolumes ? 'Included' : 'Excluded' }}</p></b-switch>
           </b-field>
         </b-field>
       </div>
@@ -87,11 +55,8 @@
       <b-field grouped>
         <div class="button is-button is-primary" v-on:click="restoreContent">{{$t('Restore content bundle')}}</div>
           <b-input v-model="backupBundleURL" :placeholder="$t('Restore Bundle URL')" type="search" icon="web"></b-input>
-          <b-field>
-            <b-switch v-model="overwrite">
-              <p v-if="overwrite">New+Overwrite</p>
-              <p v-else>New Only</p>
-            </b-switch>
+          <b-field v-show="formatVersion === '2'" >
+            <b-switch v-model="overwrite"><p>{{ overwrite ? 'New+Overwrite' : 'New Only' }}</p></b-switch>
           </b-field>        
       </b-field>
     </div>
@@ -107,15 +72,16 @@ export default {
     return {
       bundleURL: '',
       backupBundleURL: '',
-      restoreScenes: 'true',
-      restoreHistory: 'true',
-      restoreFileLinks: 'true',
-      restoreCuepoints: 'true',
-      restoreActions: 'true',
-      restorePlaylists: 'true',
-      restoreVolumes: 'true',
+      includeScenes: 'true',
+      includeHistory: 'true',
+      includeFileLinks: 'true',
+      includeCuepoints: 'true',
+      includeActions: 'true',
+      includePlaylists: 'true',
+      includeVolumes: 'true',
       overwrite: 'true',
       allSites: 'true',
+      formatVersion: '2',
     }
   },
   methods: {
@@ -129,12 +95,13 @@ export default {
     },
     restoreContent () {
       if (this.backupBundleURL !== '') {
-        ky.get('/api/task/bundle/restore', { searchParams: {allSites: this.allSites, url: this.backupBundleURL, inclScenes: this.restoreScenes, inclHistory: this.restoreHistory, inclLinks: this.restoreFileLinks, inclCuepoints: this.restoreCuepoints, inclActions: this.restoreActions, inclPlaylists: this.restorePlaylists, inclVolumes: this.restoreVolumes, overwrite: this.overwrite } })
+        ky.get('/api/task/bundle/restore', { searchParams: {formatVersion:this.formatVersion, allSites: this.allSites, url: this.backupBundleURL, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes, overwrite: this.overwrite } })
       }
     },
     backupContent () {
-      ky.get('/api/task/bundle/backup', { searchParams: {allSites: this.allSites, inclScenes: this.restoreScenes, inclHistory: this.restoreHistory, inclLinks: this.restoreFileLinks, inclCuepoints: this.restoreCuepoints, inclActions: this.restoreActions, inclPlaylists: this.restorePlaylists, inclVolumes: this.restoreVolumes } })
+      ky.get('/api/task/bundle/backup', { searchParams: {formatVersion: this.formatVersion, allSites: this.allSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes } })
     }
-  }
+  }         
 }
+
 </script>
