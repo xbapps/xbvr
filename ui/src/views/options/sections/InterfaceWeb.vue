@@ -31,7 +31,7 @@
               </b-switch>
             </b-field>
             <b-field>
-              <b-switch v-model="sceneWatched" type="is-info">
+              <b-switch v-model="sceneWatched" type="is-dark">
                 show Toggle Watched Status button
               </b-switch>
             </b-field>
