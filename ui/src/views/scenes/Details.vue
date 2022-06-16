@@ -20,17 +20,17 @@
       <section class="modal-card-body">
         <div class="columns">
 
-          <div class="column">
+          <div class="column is-half">
             <b-tabs v-model="activeMedia" position="is-centered" :animated="false">
 
               <b-tab-item label="Gallery">
-                <b-carousel v-model="carouselSlide" :autoplay="false" :indicator-inside="false">
+                <b-carousel v-model="carouselSlide" @change="scrollToActiveIndicator" :autoplay="false" :indicator-inside="false">
                   <b-carousel-item v-for="(carousel, i) in images" :key="i">
                     <div class="image is-1by1 is-full"
                          v-bind:style="{backgroundImage: `url(${getImageURL(carousel.url, '700,fit')})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat'}"></div>
                   </b-carousel-item>
                   <template slot="indicators" slot-scope="props">
-                      <span class="al image">
+                      <span class="al image" style="width:max-content;">
                         <vue-load-image>
                           <img slot="image" :src="getIndicatorURL(props.i)" style="height:40px;"/>
                           <img slot="preloader" src="/ui/images/blank.png" style="height:40px;"/>
@@ -49,7 +49,7 @@
 
           </div>
 
-          <div class="column">
+          <div class="column is-half">
 
             <div class="block-info block">
               <div class="content">
@@ -247,7 +247,7 @@ export default {
     },
     // Properties for gallery
     images () {
-      return JSON.parse(this.item.images)
+      return JSON.parse(this.item.images).filter(im => im && im.url)
     },
     // Tab: cuepoints
     sortedCuepoints () {
@@ -514,6 +514,15 @@ export default {
     toggleGallery () {
       this.activeMedia = 0
     },
+    scrollToActiveIndicator (value) {
+      const indicators = document.querySelector('.carousel-indicator')
+      const active = indicators.children[value]
+      indicators.scrollTo({
+        top: 0,
+        left: active.offsetLeft + active.offsetWidth / 2 - indicators.offsetWidth / 2,
+        behavior: 'smooth'
+      })
+    },
     format,
     parseISO,
     prettyBytes,
@@ -630,5 +639,17 @@ span.is-active img {
 .videosize {
   color: rgb(60, 60, 60);
   font-weight: 550;
+}
+
+/deep/ .carousel .carousel-indicator {
+  justify-content: flex-start;
+  width: 100%;
+  max-width: min-content;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: auto;
+}
+/deep/ .carousel .carousel-indicator .indicator-item:not(.is-active) {
+  opacity: 0.5;
 }
 </style>
