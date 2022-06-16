@@ -18,9 +18,12 @@ type ObjectConfig struct {
 		Password string `default:"" json:"password"`
 	} `json:"security"`
 	Web struct {
-		TagSort     string `default:"by-tag-count" json:"tagSort"`
-		SceneEdit   bool   `default:"false" json:"sceneEdit"`
-		UpdateCheck bool   `default:"true" json:"updateCheck"`
+		TagSort        string `default:"by-tag-count" json:"tagSort"`
+		SceneWatchlist bool   `default:"true" json:"sceneWatchlist"`
+		SceneFavourite bool   `default:"true" json:"sceneFavourite"`
+		SceneWatched   bool   `default:"false" json:"sceneWatched"`
+		SceneEdit      bool   `default:"false" json:"sceneEdit"`
+		UpdateCheck    bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
 	Vendor struct {
 		TPDB struct {
