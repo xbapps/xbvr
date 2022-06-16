@@ -105,6 +105,10 @@
                           <b-icon pack="mdi" icon="pulse"></b-icon>
                         </button>
                         </b-tooltip>
+                        <button rounded class="button is-info is-small is-outlined" disabled
+                                v-show="f.type === 'hsp'">
+                          <b-icon pack="mdi" icon="safety-goggles"></b-icon>
+                        </button>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
                         <strong>{{ f.filename }}</strong><br/>
