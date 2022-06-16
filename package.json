@@ -12,10 +12,10 @@
     "dev:ui": "cd ui && vue-cli-service build --watch --silent"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "5.15.3",
-    "@fortawesome/fontawesome-svg-core": "1.2.35",
-    "@mdi/font": "5.8.55",
-    "buefy": "0.9.4",
+    "@fortawesome/fontawesome-free": "5.15.4",
+    "@fortawesome/fontawesome-svg-core": "1.2.36",
+    "@mdi/font": "5.9.55",
+    "buefy": "0.9.20",
     "bulma-extensions": "6.2.7",
     "date-fns": "2.16.1",
     "ky": "0.27.0",
@@ -50,7 +50,7 @@
     "less": "3.12.2",
     "less-loader": "6.2.0",
     "sass": "1.32.12",
-    "sass-loader": "9.0.2",
+    "sass-loader": "9.0.3",
     "simple-progress-webpack-plugin": "1.1.2",
     "vue-cli-plugin-i18n": "1.0.1",
     "vue-i18n-extract": "1.1.11",
