@@ -23,7 +23,6 @@
 
 <script>
 import ky from 'ky'
-
 export default {
   name: 'OptionsSceneDataImportExport',
   data () {

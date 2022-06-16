@@ -116,7 +116,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	})
 
 	siteCollector.OnHTML(`div#StrankovaniDesktop span.stred a,div#StrankovaniDesktopHome span.stred a`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+		pageURL := e.Request.AbsoluteURL(e.Attr("href") + "&sites=" + nwID)
 		siteCollector.Visit(pageURL)
 	})
 

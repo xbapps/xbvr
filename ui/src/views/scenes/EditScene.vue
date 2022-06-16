@@ -95,6 +95,7 @@
       <footer class="modal-card-foot">
         <b-field>
           <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
+          <b-button type="is-danger" outlined @click="deletescene">{{ $t('Delete Scene') }}</b-button>
         </b-field>
       </footer>
     </div>
@@ -183,7 +184,10 @@ export default {
         })
       })
       this.scene.images = JSON.stringify(images)
-      this.scene.cover_url = this.scene.covers[0]
+      this.scene.cover_url = ""
+      if (this.scene.length > 0) {
+          this.scene.cover_url = this.scene.covers[0]
+      }
       this.scene.filenames_arr = JSON.stringify(this.scene.files)
 
       ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } })
@@ -210,6 +214,22 @@ export default {
       this.changesMade = false
 
       this.close()
+    },
+    deletescene () {
+      this.$buefy.dialog.confirm({
+        title: 'Delete scene',
+        message: `Do you really want to delete the scene <strong>${this.scene.title}</strong> from <strong>${this.scene.studio}</strong>? If this is an existing scene, it will be re-added during the next scrape.`,
+        type: 'is-info is-wide',
+        hasIcon: true,
+        id: 'heh',
+        onConfirm: () => {
+          ky.post(`/api/scene/delete`, {json:{scene_id: this.scene.id}}).json().then(data => {
+            this.$store.dispatch('sceneList/load', { offset: 0 })
+            this.$store.commit('overlay/hideEditDetails')
+            this.$store.commit('overlay/hideDetails')
+          })
+        }
+      })
     },
     blur (field) {
       if (this.changesMade) return // Changes have already been made. No point to check any further

@@ -46,6 +46,7 @@ type DeoScene struct {
 	Title            string               `json:"title"`
 	Authorized       uint                 `json:"authorized"`
 	Description      string               `json:"description"`
+	Date             int64                `json:"date"`
 	Paysite          DeoScenePaysite      `json:"paysite"`
 	IsFavorite       bool                 `json:"isFavorite"`
 	IsScripted       bool                 `json:"isScripted"`
@@ -246,6 +247,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 		Authorized:   1,
 		Description:  file.Filename,
 		Title:        file.Filename,
+		Date:         file.CreatedTime.Unix(),
 		IsFavorite:   false,
 		ThumbnailURL: session.DeoRequestHost + "/ui/images/blank.png",
 		Is3D:         true,
@@ -286,8 +288,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		return
 	}
 
-	var stereoMode string
-	var screenType string
+	var stereoMode string = ""
+	var screenType string = ""
 
 	var actors []DeoSceneActor
 	for i := range scene.Cast {
@@ -318,6 +320,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		return
 	}
 
+	var sceneMultiProjection bool = true
+
 	for i, file := range videoFiles {
 		var height = file.VideoHeight
 		var width = file.VideoWidth
@@ -340,6 +344,11 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		}
 
 		videoLength = file.VideoDuration
+
+		// Test scene w/multiple videos for different projection types
+		if (i > 0) && (file.VideoProjection != videoFiles[i-1].VideoProjection) {
+			sceneMultiProjection = false
+		}
 	}
 
 	var deoScriptFiles []DeoSceneScriptFile
@@ -368,21 +377,24 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		return cuepoints[i].TS < cuepoints[j].TS
 	})
 
-	if videoFiles[0].VideoProjection == "mkx200" ||
-		videoFiles[0].VideoProjection == "mkx220" ||
-		videoFiles[0].VideoProjection == "vrca220" {
-		stereoMode = "sbs"
-		screenType = videoFiles[0].VideoProjection
-	}
+	// Set Scene projection IF either single video or all videos have same projection type
+	if sceneMultiProjection {
+		if videoFiles[0].VideoProjection == "mkx200" ||
+			videoFiles[0].VideoProjection == "mkx220" ||
+			videoFiles[0].VideoProjection == "vrca220" {
+			stereoMode = "sbs"
+			screenType = videoFiles[0].VideoProjection
+		}
 
-	if videoFiles[0].VideoProjection == "180_sbs" {
-		stereoMode = "sbs"
-		screenType = "dome"
-	}
+		if videoFiles[0].VideoProjection == "180_sbs" {
+			stereoMode = "sbs"
+			screenType = "dome"
+		}
 
-	if videoFiles[0].VideoProjection == "360_tb" {
-		stereoMode = "tb"
-		screenType = "sphere"
+		if videoFiles[0].VideoProjection == "360_tb" {
+			stereoMode = "tb"
+			screenType = "sphere"
+		}
 	}
 
 	title := scene.Title
@@ -400,6 +412,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Authorized:       1,
 		Title:            title,
 		Description:      scene.Synopsis,
+		Date:             scene.ReleaseDate.Unix(),
 		Actors:           actors,
 		Paysite:          DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
 		IsFavorite:       scene.Favourite,

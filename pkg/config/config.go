@@ -22,6 +22,11 @@ type ObjectConfig struct {
 		SceneEdit   bool   `default:"false" json:"sceneEdit"`
 		UpdateCheck bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
+	Vendor struct {
+		TPDB struct {
+			ApiToken string `default:"" json:"apiToken"`
+		} `json:"tpdb"`
+	} `json:"vendor"`
 	Interfaces struct {
 		DLNA struct {
 			Enabled      bool     `default:"true" json:"enabled"`

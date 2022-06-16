@@ -9,6 +9,7 @@
       @keydown.p="nextScene"
       @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
       @keydown.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+      @keydown.W="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
       @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
       @keydown.g="toggleGallery"
     />
@@ -69,6 +70,7 @@
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
+                      <watched-button :item="item"/>&nbsp;
                       <edit-button :item="item"/>&nbsp;
                       <refresh-button :item="item"/>
                     </div>
@@ -110,7 +112,8 @@
                           <span class="pathDetails">{{ f.path }}</span>
                           <br/>
                           {{ prettyBytes(f.size) }},
-                          <span v-if="f.type === 'video'">{{ f.video_width }}x{{ f.video_height }},</span>
+                          <span v-if="f.type === 'video'"><span class="videosize">{{ f.video_width }}x{{ f.video_height }} {{ f.video_codec_name }}</span>, {{ f.projection }},&nbsp;</span>
+                          <span v-if="f.duration > 1">{{ humanizeSeconds(f.duration) }},</span>
                           {{ format(parseISO(f.created_time), "yyyy-MM-dd") }}
                         </small>
                         <div v-if="f.type === 'script' && f.has_heatmap" class="heatmapFunscript">
@@ -210,12 +213,13 @@ import GlobalEvents from 'vue-global-events'
 import StarRating from 'vue-star-rating'
 import FavouriteButton from '../../components/FavouriteButton'
 import WatchlistButton from '../../components/WatchlistButton'
+import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import RefreshButton from '../../components/RefreshButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton, RefreshButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton },
   data () {
     return {
       index: 1,
@@ -618,5 +622,9 @@ span.is-active img {
   height: 20px;
   margin: 0;
   padding: 0;
+}
+.videosize {
+  color: rgb(60, 60, 60);
+  font-weight: 550;
 }
 </style>
