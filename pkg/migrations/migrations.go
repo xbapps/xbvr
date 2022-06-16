@@ -697,6 +697,65 @@ func Migrate() {
 				return db.Where("site = ?", "VRP Films").Delete(&models.Scene{}).Error
 			},
 		},
+		{
+			ID: "0033-move-tngf-to-tngf",
+			Migrate: func(tx *gorm.DB) error {
+
+				//seed information old date -> new date -> new sceneid/url
+				vrporn := [...]string{"2020-04-07", "2020-04-15", "2021-01-09", "2021-01-25", "2021-01-31", "2021-02-21", "2021-03-27", "2021-04-10", "2021-04-23", "2021-05-16", "2021-05-21", "2021-06-15", "2021-06-21", "2021-07-05", "2021-07-18", "2021-07-31", "2021-08-17", "2021-08-29", "2021-10-09", "2021-10-11", "2021-10-19", "2021-11-20", "2021-11-24", "2021-11-25"}
+				tngf := [...]string{"2020-03-27", "2020-04-03", "2021-01-08", "2021-01-22", "2021-01-29", "2021-02-12", "2021-03-25", "2021-04-08", "2021-04-22", "2021-05-06", "2021-05-20", "2021-06-03", "2021-06-17", "2021-07-01", "2021-07-15", "2021-07-29", "2021-08-12", "2021-08-26", "2021-09-09", "2021-09-23", "2021-10-07", "2021-10-21", "2021-11-04", "2021-11-19"}
+				tngf_json := `[{"date":"2020-03-27","sceneid":"tonight-s-girlfriend-vr-25906","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/cherie-deville-always-satisfies-her-clients-and-fans-however-they-want-25906"},{"date":"2020-04-03","sceneid":"tonight-s-girlfriend-vr-25913","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/brooklyn-gray-fucks-for-cash-in-vr-25913"},{"date":"2020-04-17","sceneid":"tonight-s-girlfriend-vr-25939","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/kenna-james-gives-her-fan-what-he-wants-25939"},{"date":"2020-04-24","sceneid":"tonight-s-girlfriend-vr-25947","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/jenna-j-ross-satisfies-her-super-fan-25947"},{"date":"2020-05-08","sceneid":"tonight-s-girlfriend-vr-25978","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/ashley-lane-wears-sexy-lingerie-to-fuck-fan-in-hotel-room-25978"},{"date":"2020-06-12","sceneid":"tonight-s-girlfriend-vr-26032","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/kenzie-madison-wears-sexy-lingerie-to-fuck-her-fan-26032"},{"date":"2020-07-03","sceneid":"tonight-s-girlfriend-vr-26068","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/kenna-james-wears-lingerie-before-fucking-fan-26068"},{"date":"2020-12-11","sceneid":"tonight-s-girlfriend-vr-26342","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/a-fan-gets-the-anna-claire-clouds-experience-hes-been-yearning-for-26342"},{"date":"2020-12-25","sceneid":"tonight-s-girlfriend-vr-26364","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/fantasies-come-true-when-daisy-stone-visits-a-fan-for-a-memorable-night-26364"},{"date":"2021-01-08","sceneid":"tonight-s-girlfriend-vr-26379","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/jamie-jett-pleases-a-fan-in-all-the-right-ways-that-only-a-pornstar-can-26379"},{"date":"2021-01-22","sceneid":"tonight-s-girlfriend-vr-26399","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/a-fan-orders-himself-spencer-bradley-for-the-night-26399"},{"date":"2021-01-29","sceneid":"tonight-s-girlfriend-vr-26414","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/emma-hix-shows-she-can-take-a-big-black-cock-with-ease-26414"},{"date":"2021-02-12","sceneid":"tonight-s-girlfriend-vr-26431","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/aila-donovans-fan-gets-the-treatment-hes-been-yearning-for-26431"},{"date":"2021-02-26","sceneid":"tonight-s-girlfriend-vr-26447","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/ivy-lebelle-stops-by-the-hotel-room-of-a-man-in-need-of-a-nice-big-ass-in-sexy-stockings-26447"},{"date":"2021-03-12","sceneid":"tonight-s-girlfriend-vr-26476","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/quinn-wilde-fucks-her-fan-in-sexy-pink-lingerie-26476"},{"date":"2021-03-25","sceneid":"tonight-s-girlfriend-vr-26494","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/kayley-gunner-takes-good-care-of-a-married-man-26494"},{"date":"2021-04-08","sceneid":"tonight-s-girlfriend-vr-26512","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/petite-cutie-kylie-rocket-takes-care-of-a-big-man-with-a-big-package-26512"},{"date":"2021-04-22","sceneid":"tonight-s-girlfriend-vr-26532","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/brooke-banner-gets-rough-fuck-from-thick-dick-fan-26532"},{"date":"2021-05-06","sceneid":"tonight-s-girlfriend-vr-26552","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/casca-akashova-takes-care-of-a-married-man-in-need-of-some-affection-and-attention-26552"},{"date":"2021-05-20","sceneid":"tonight-s-girlfriend-vr-26578","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/the-always-horny-adira-allure-hooks-up-with-her-super-fan-26578"},{"date":"2021-06-03","sceneid":"tonight-s-girlfriend-vr-26594","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/sexy-tattooed-babe-penny-archer-hooks-up-with-her-fan-for-a-night-of-pleasure-26594"},{"date":"2021-06-17","sceneid":"tonight-s-girlfriend-vr-26617","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/the-beautiful-emma-starletto-takes-on-a-married-man-in-his-hotel-26617"},{"date":"2021-07-01","sceneid":"tonight-s-girlfriend-vr-26640","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/the-sexy-gia-derza-gives-her-fan-a-pornstar-experience-hell-never-forget-26640"},{"date":"2021-07-15","sceneid":"tonight-s-girlfriend-vr-26661","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/the-sexy-angel-youngs-takes-special-care-of-a-client-in-need-26661"},{"date":"2021-07-29","sceneid":"tonight-s-girlfriend-vr-26679","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/eliza-ibarra-sits-her-perfect-ass-on-the-cock-of-her-client-26679"},{"date":"2021-08-12","sceneid":"tonight-s-girlfriend-vr-26701","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/mckenzie-lee-helps-her-fan-let-loose-relax-and-relieve-stress-the-best-way-one-can-26701"},{"date":"2021-08-26","sceneid":"tonight-s-girlfriend-vr-26720","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/gianna-grey-finally-gets-together-with-her-longtime-fan-26720"},{"date":"2021-09-09","sceneid":"tonight-s-girlfriend-vr-29338","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/scarlett-mae-shows-up-looking-delicious-and-sexy-in-lingerie-for-her-client-29338"},{"date":"2021-09-23","sceneid":"tonight-s-girlfriend-vr-29976","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/penelope-kay-takes-care-of-her-big-dick-client-29976"},{"date":"2021-10-07","sceneid":"tonight-s-girlfriend-vr-30114","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/diana-grace-dresses-in-sexy-red-lingerie-for-her-big-cock-client-30114"},{"date":"2021-10-21","sceneid":"tonight-s-girlfriend-vr-30629","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/the-sexy-petite-pornstar-brooklyn-gray-shows-she-can-take-a-big-black-cock-anytime-30629"},{"date":"2021-11-04","sceneid":"tonight-s-girlfriend-vr-30648","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/the-sexy-blake-blossom-puts-on-special-lingerie-just-for-her-client-30648"},{"date":"2021-11-19","sceneid":"tonight-s-girlfriend-vr-30677","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/gorgeous-and-fit-babe-ana-foxxx-takes-care-of-her-fan-in-every-way-he-desires-30677"},{"date":"2021-12-03","sceneid":"tonight-s-girlfriend-vr-30760","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/tattooed-babe-jesse-pony-squeezes-every-last-drop-of-cum-out-of-fan-30760"},{"date":"2021-12-17","sceneid":"tonight-s-girlfriend-vr-30788","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/blond-pornstar-babe-kenzie-anne-shows-up-to-her-fans-hotel-room-for-a-night-of-riding-and-worshiping-his-huge-cock-30788"},{"date":"2021-12-31","sceneid":"tonight-s-girlfriend-vr-30811","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/sexy-petite-babe-whitney-wright-rides-her-fans-big-black-cock-30811"},{"date":"2022-01-14","sceneid":"tonight-s-girlfriend-vr-30835","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/caitlin-bell-goes-interracial-and-hooks-up-with-a-big-black-cock-for-the-night-30835"},{"date":"2022-01-28","sceneid":"tonight-s-girlfriend-vr-30828","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/blonde-cutie-jazlyn-ray-gets-all-dolled-up-for-her-client-30828"},{"date":"2022-02-11","sceneid":"tonight-s-girlfriend-vr-30884","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/tngf-octavialawson-30884"},{"date":"2022-02-25","sceneid":"tonight-s-girlfriend-vr-30911","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/tngf-seralawson-30911"},{"date":"2022-03-11","sceneid":"tonight-s-girlfriend-vr-30941","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/tngf-aprilalex-30941"},{"date":"2022-03-24","sceneid":"tonight-s-girlfriend-vr-30966","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/tngf-roryalex-30966"},{"date":"2022-04-07","sceneid":"tonight-s-girlfriend-vr-30992","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/tngf-karmaalex-30992"},{"date":"2022-04-21","sceneid":"tonight-s-girlfriend-vr-31017","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/tngf-pristinealex-31017"},{"date":"2022-05-05","sceneid":"tonight-s-girlfriend-vr-31035","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/tngf-anissaalex-31035"},{"date":"2022-05-19","sceneid":"tonight-s-girlfriend-vr-31074","sceneurl":"https:\/\/www.tonightsgirlfriend.com\/scene\/tngf-slimthicksam-31074"}]`
+
+				var scenes []models.Scene
+				err := tx.Where("site = ?", "Tonight's Girlfriend VR").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for _, scene := range scenes {
+					for i, v := range vrporn {
+						if scene.ReleaseDateText == v {
+							scene.ReleaseDateText = tngf[i]
+							err = tx.Save(&scene).Error
+							if err != nil {
+								return err
+							}
+							continue
+						}
+					}
+				}
+
+				items := gjson.Get(tngf_json, "@this")
+				for _, scene := range scenes {
+					for _, scenejson := range items.Array() {
+						if scene.ReleaseDateText == scenejson.Get("date").String() {
+							scene.ReleaseDateText = scenejson.Get("date").String()
+							scene.ReleaseDate, _ = time.Parse(time.RFC3339, scene.ReleaseDateText+"T00:00:00-04:00")
+							scene.SceneID = scenejson.Get("sceneid").String()
+							scene.SceneURL = scenejson.Get("sceneurl").String()
+
+							// update all actions referring to this scene by its scene_id
+							err = tx.Model(&models.Action{}).Where("scene_id = ?", scene.SceneID).Update("scene_id", scene.SceneID).Update("release_date", scene.ReleaseDate).Update("release_date_text", scene.ReleaseDateText).Update("scene_url", scene.SceneURL).Error
+							if err != nil {
+								return err
+							}
+
+							// update the scene itself
+							err = tx.Save(&scene).Error
+							if err != nil {
+								return err
+							}
+							// common.Log.Infof("Updated scene %s", scene.SceneID)
+							break
+						}
+					}
+				}
+
+				// since scenes have new IDs, we need to re-index them
+				tasks.SearchIndex()
+
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
