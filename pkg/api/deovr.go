@@ -217,7 +217,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 	setDeoPlayerHost(req)
 
 	dnt := ""
-	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+	if config.Config.Interfaces.DeoVR.RemoteEnabled || !config.Config.Interfaces.DeoVR.TrackWatchTime {
 		dnt = "?dnt=true"
 	}
 
@@ -277,7 +277,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	setDeoPlayerHost(req)
 
 	dnt := ""
-	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+	if config.Config.Interfaces.DeoVR.RemoteEnabled || !config.Config.Interfaces.DeoVR.TrackWatchTime {
 		dnt = "?dnt=true"
 	}
 
@@ -539,7 +539,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 	setDeoPlayerHost(req)
 
 	dnt := ""
-	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+	if config.Config.Interfaces.DeoVR.RemoteEnabled || !config.Config.Interfaces.DeoVR.TrackWatchTime {
 		dnt = "?dnt=true"
 	}
 
