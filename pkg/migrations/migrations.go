@@ -725,7 +725,7 @@ func Migrate() {
 				return nil
 			},
 		},
-        {
+		{
 			ID: "0033-move-tngf-to-tngf",
 			Migrate: func(tx *gorm.DB) error {
 
