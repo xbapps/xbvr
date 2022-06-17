@@ -19,10 +19,10 @@ type Index struct {
 
 type SceneIndexed struct {
 	Description string `json:"description"`
-	Title    string `json:"title"`
-	Cast     string `json:"cast"`
-	Site     string `json:"site"`
-	Id       string `json:"id"`
+	Title       string `json:"title"`
+	Cast        string `json:"cast"`
+	Site        string `json:"site"`
+	Id          string `json:"id"`
 }
 
 func NewIndex(name string) (*Index, error) {
@@ -72,11 +72,11 @@ func (i *Index) PutScene(scene models.Scene) error {
 	}
 
 	si := SceneIndexed{
-		Title:    fmt.Sprintf("%v", scene.Title),
+		Title:       fmt.Sprintf("%v", scene.Title),
 		Description: fmt.Sprintf("%v", scene.Synopsis),
-		Cast:     fmt.Sprintf("%v %v", cast, castConcat),
-		Site:     fmt.Sprintf("%v", scene.Site),
-		Id:       fmt.Sprintf("%v", scene.SceneID),
+		Cast:        fmt.Sprintf("%v %v", cast, castConcat),
+		Site:        fmt.Sprintf("%v", scene.Site),
+		Id:          fmt.Sprintf("%v", scene.SceneID),
 	}
 	if err := i.Bleve.Index(scene.SceneID, si); err != nil {
 		return err
