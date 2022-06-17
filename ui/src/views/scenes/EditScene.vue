@@ -184,10 +184,7 @@ export default {
         })
       })
       this.scene.images = JSON.stringify(images)
-      this.scene.cover_url = ""
-      if (this.scene.length > 0) {
-          this.scene.cover_url = this.scene.covers[0]
-      }
+      this.scene.cover_url = this.scene.covers[0]
       this.scene.filenames_arr = JSON.stringify(this.scene.files)
 
       ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } })
