@@ -18,9 +18,12 @@ type ObjectConfig struct {
 		Password string `default:"" json:"password"`
 	} `json:"security"`
 	Web struct {
-		TagSort     string `default:"by-tag-count" json:"tagSort"`
-		SceneEdit   bool   `default:"false" json:"sceneEdit"`
-		UpdateCheck bool   `default:"true" json:"updateCheck"`
+		TagSort        string `default:"by-tag-count" json:"tagSort"`
+		SceneWatchlist bool   `default:"true" json:"sceneWatchlist"`
+		SceneFavourite bool   `default:"true" json:"sceneFavourite"`
+		SceneWatched   bool   `default:"false" json:"sceneWatched"`
+		SceneEdit      bool   `default:"false" json:"sceneEdit"`
+		UpdateCheck    bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
 	Vendor struct {
 		TPDB struct {
@@ -38,6 +41,7 @@ type ObjectConfig struct {
 			Enabled        bool   `default:"true" json:"enabled"`
 			AuthEnabled    bool   `default:"false" json:"auth_enabled"`
 			RenderHeatmaps bool   `default:"false" json:"render_heatmaps"`
+			TrackWatchTime bool   `default:"true" json:"track_watch_time"`
 			RemoteEnabled  bool   `default:"false" json:"remote_enabled"`
 			Username       string `default:"" json:"username"`
 			Password       string `default:"" json:"password"`

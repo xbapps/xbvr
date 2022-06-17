@@ -42,8 +42,13 @@
               </div>
               <hr/>
               <div class="block">
+                <b-field label="Watch time tracking">
+                  <b-switch v-model="watchTimeTrackingEnabled">
+                    Enabled
+                  </b-switch>
+                </b-field>
                 <b-field label="Remote mode">
-                  <b-switch v-model="remoteEnabled">
+                  <b-switch v-model="remoteEnabled" :disabled="watchTimeTrackingEnabled === false">
                     Enabled
                   </b-switch>
                 </b-field>
@@ -123,6 +128,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.deovr.render_heatmaps = value
+      }
+    },
+    watchTimeTrackingEnabled: {
+      get () {
+        return this.$store.state.optionsDeoVR.deovr.track_watch_time
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.deovr.track_watch_time = value
       }
     },
     remoteEnabled: {

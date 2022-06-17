@@ -29,7 +29,7 @@ func GeneratePreviews() {
 			files, _ := scene.GetFiles()
 			if len(files) > 0 {
 				i := 0
-				for files[i].Exists() {
+				for i < len(files) && files[i].Exists() {
 					if files[i].Type == "video" {
 						log.Infof("Rendering %v", scene.SceneID)
 						destFile := filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4")

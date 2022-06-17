@@ -47,6 +47,7 @@ export default {
       if (to.query !== undefined) {
         vm.$store.commit('sceneList/stateFromQuery', to.query)
       }
+      vm.$store.dispatch('optionsWeb/load')
       vm.$store.dispatch('sceneList/load', { offset: 0 })
     })
   },

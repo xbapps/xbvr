@@ -12,9 +12,12 @@ type ObjectState struct {
 		BoundIP []string `json:"bound_ip"`
 	} `json:"server"`
 	Web struct {
-		TagSort     string `json:"tagSort"`
-		SceneEdit   bool   `json:"sceneEdit"`
-		UpdateCheck bool   `json:"updateCheck"`
+		TagSort        string `json:"tagSort"`
+		SceneWatchlist bool   `json:"sceneWatchlist"`
+		SceneFavourite bool   `json:"sceneFavourite"`
+		SceneWatched   bool   `json:"sceneWatched"`
+		SceneEdit      bool   `json:"sceneEdit"`
+		UpdateCheck    bool   `json:"updateCheck"`
 	} `json:"web"`
 	DLNA struct {
 		Running  bool     `json:"running"`
