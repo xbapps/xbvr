@@ -5,6 +5,8 @@
       @keyup.esc="close"
       @keydown.arrowLeft="handleLeftArrow"
       @keydown.arrowRight="handleRightArrow"
+      @keydown.left="handleLeftArrow"
+      @keydown.right="handleRightArrow"
       @keydown.o="prevScene"
       @keydown.p="nextScene"
       @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
