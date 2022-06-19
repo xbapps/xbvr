@@ -108,15 +108,15 @@ Ready to get started?
 * Inside DeoVR you will now see your saved search listed
 
 #### Keyboard Shortcuts
-* Details Pane
-o - previous scene
-p - next scene
-e - edit scene
-w - toggle watchlist
-f - toggle favourite
-v - toggle Watched (v for viewed)
-g - toggles gallery / video window
-esc - closes details pane
-* while playing video in details pane
-left arrow - skips backwards
+- Details Pane  
+o - previous scene  
+p - next scene  
+e - edit scene  
+w - toggle watchlist  
+f - toggle favourite  
+v - toggle Watched (v for viewed)  
+g - toggles gallery / video window  
+esc - closes details pane  
+- while playing video in details pane  
+left arrow - skips backwards  
 right arrow - skips forward
