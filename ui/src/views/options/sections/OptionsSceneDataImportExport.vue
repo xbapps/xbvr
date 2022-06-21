@@ -20,6 +20,16 @@
       <b-field v-show="formatVersion === '2'" >
         <b-switch v-model="allSites" ><p>{{ allSites ? 'All Sites' : 'Only Selected Sites' }}</p></b-switch>
       </b-field>        
+      <div class="column is-one-third">
+        <b-field v-show="formatVersion === '2'" >Filter for Scene Backup:
+          <b-select size="is-small"  expanded v-model="currentPlaylist">
+              <option v-for="(obj, idx) in this.$store.state.sceneList.playlists" :value="obj.id" :key="idx">
+                {{ obj.name }}
+              </option>          
+          </b-select>
+        </b-field>
+      </div>
+
       <div class="block" v-show="formatVersion === '2'" >
         <b-field grouped>
           <b-field label="Scenes">
@@ -68,6 +78,9 @@ import { isThisMinute } from 'date-fns'
 import ky from 'ky'
 export default {
   name: 'OptionsSceneDataImportExport',
+  mounted () {
+    this.$store.dispatch('sceneList/filters')
+  },  
   data () {
     return {
       bundleURL: '',
@@ -82,6 +95,7 @@ export default {
       overwrite: 'true',
       allSites: 'true',
       formatVersion: '2',
+      currentPlaylist: '0',
     }
   },
   methods: {
@@ -99,7 +113,7 @@ export default {
       }
     },
     backupContent () {
-      ky.get('/api/task/bundle/backup', { searchParams: {formatVersion: this.formatVersion, allSites: this.allSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes } })
+      ky.get('/api/task/bundle/backup', { searchParams: {formatVersion: this.formatVersion, allSites: this.allSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes, playlistId: this.currentPlaylist } })
     }
   }         
 }

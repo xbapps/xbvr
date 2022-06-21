@@ -16,6 +16,7 @@ import (
 	"github.com/go-test/deep"
 	"github.com/jinzhu/gorm"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -418,7 +419,7 @@ func ImportBundleV1(bundleData ContentBundle) {
 
 }
 
-func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclActions bool) {
+func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclActions bool, playlistId string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
 		t0 := time.Now()
@@ -442,7 +443,20 @@ func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, incl
 				db.Where(&models.Site{IsEnabled: true}).Find(&selectedSites)
 			}
 
-			db.Select("id, scene_id").Find(&scenes)
+			if playlistId != "0" {
+				// the user selected a Saved Search, filter scenes on that
+				playlist := models.Playlist{}
+				db.First(&playlist, playlistId)
+				var r models.RequestSceneList
+				json.Unmarshal([]byte(playlist.SearchParams), &r)
+				r.Limit = optional.NewInt(100000)
+
+				q := models.QueryScenes(r, false)
+				scenes = q.Scenes
+			} else {
+				// no saved search, so get all scenes
+				db.Select("id, scene_id").Find(&scenes)
+			}
 
 			var err error
 			for cnt, scene := range scenes {
@@ -497,11 +511,6 @@ func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, incl
 					tlog.Errorf("Error reading scene Id %v of %s", scene.ID, err)
 				}
 			}
-		}
-
-		var actions []models.Action
-		if inclActions {
-			db.Find(&actions)
 		}
 
 		var volumes []models.Volume

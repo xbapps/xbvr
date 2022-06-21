@@ -118,8 +118,9 @@ func (i TaskResource) backupBundle(req *restful.Request, resp *restful.Response)
 	inclPlaylists, _ := strconv.ParseBool(req.QueryParameter("inclPlaylists"))
 	inclVolumes, _ := strconv.ParseBool(req.QueryParameter("inclVolumes"))
 	inclActions, _ := strconv.ParseBool(req.QueryParameter("inclActions"))
+	playlistId := req.QueryParameter("playlistId")
 
-	go tasks.BackupBundle(formatVersion, inclAllSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions)
+	go tasks.BackupBundle(formatVersion, inclAllSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions, playlistId)
 }
 
 func (i TaskResource) restoreBundle(req *restful.Request, resp *restful.Response) {
