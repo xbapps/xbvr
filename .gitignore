@@ -1,6 +1,6 @@
 /.idea
 .DS_Store
-.vscode
+.vscode/
 
 test.db
 /test_cache
