@@ -512,7 +512,11 @@ export default {
       }
     },
     toggleGallery () {
-      this.activeMedia = 0
+      if (this.activeMedia == 0) {
+        this.activeMedia = 1
+      } else {
+        this.activeMedia = 0
+        }
     },
     scrollToActiveIndicator (value) {
       const indicators = document.querySelector('.carousel-indicator')
