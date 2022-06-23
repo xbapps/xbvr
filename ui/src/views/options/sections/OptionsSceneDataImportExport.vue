@@ -57,6 +57,9 @@
           <b-field label="Storage Paths">
             <b-switch v-model="includeVolumes"><p>{{ includeVolumes ? 'Included' : 'Excluded' }}</p></b-switch>
           </b-field>
+          <b-field label="Site Settings">
+            <b-switch v-model="includeSites"><p>{{ includeSites ? 'Included' : 'Excluded' }}</p></b-switch>
+          </b-field>
         </b-field>
       </div>
       <b-field grouped>
@@ -92,6 +95,7 @@ export default {
       includeActions: 'true',
       includePlaylists: 'true',
       includeVolumes: 'true',
+      includeSites: 'true',
       overwrite: 'true',
       allSites: 'true',
       formatVersion: '2',
@@ -109,11 +113,11 @@ export default {
     },
     restoreContent () {
       if (this.backupBundleURL !== '') {
-        ky.get('/api/task/bundle/restore', { searchParams: {formatVersion:this.formatVersion, allSites: this.allSites, url: this.backupBundleURL, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes, overwrite: this.overwrite } })
+        ky.get('/api/task/bundle/restore', { searchParams: {formatVersion:this.formatVersion, allSites: this.allSites, url: this.backupBundleURL, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes, inclSites: this.includeSites, overwrite: this.overwrite } })
       }
     },
     backupContent () {
-      ky.get('/api/task/bundle/backup', { searchParams: {formatVersion: this.formatVersion, allSites: this.allSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes, playlistId: this.currentPlaylist } })
+      ky.get('/api/task/bundle/backup', { searchParams: {formatVersion: this.formatVersion, allSites: this.allSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes, inclSites: this.includeSites, playlistId: this.currentPlaylist } })
     }
   }         
 }

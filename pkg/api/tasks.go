@@ -117,10 +117,11 @@ func (i TaskResource) backupBundle(req *restful.Request, resp *restful.Response)
 	inclHistory, _ := strconv.ParseBool(req.QueryParameter("inclHistory"))
 	inclPlaylists, _ := strconv.ParseBool(req.QueryParameter("inclPlaylists"))
 	inclVolumes, _ := strconv.ParseBool(req.QueryParameter("inclVolumes"))
+	inclSites, _ := strconv.ParseBool(req.QueryParameter("inclSites"))
 	inclActions, _ := strconv.ParseBool(req.QueryParameter("inclActions"))
 	playlistId := req.QueryParameter("playlistId")
 
-	go tasks.BackupBundle(formatVersion, inclAllSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions, playlistId)
+	go tasks.BackupBundle(formatVersion, inclAllSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclSites, inclActions, playlistId)
 }
 
 func (i TaskResource) restoreBundle(req *restful.Request, resp *restful.Response) {
@@ -133,10 +134,11 @@ func (i TaskResource) restoreBundle(req *restful.Request, resp *restful.Response
 	inclHistory, _ := strconv.ParseBool(req.QueryParameter("inclHistory"))
 	inclPlaylists, _ := strconv.ParseBool(req.QueryParameter("inclPlaylists"))
 	inclVolumes, _ := strconv.ParseBool(req.QueryParameter("inclVolumes"))
+	inclSites, _ := strconv.ParseBool(req.QueryParameter("inclSites"))
 	inclActions, _ := strconv.ParseBool(req.QueryParameter("inclActions"))
 	overwrite, _ := strconv.ParseBool(req.QueryParameter("overwrite"))
 
-	go tasks.RestoreBundle(formatVersion, inclAllSites, url, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclActions, overwrite)
+	go tasks.RestoreBundle(formatVersion, inclAllSites, url, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclVolumes, inclSites, inclActions, overwrite)
 }
 
 func (i TaskResource) previewGenerate(req *restful.Request, resp *restful.Response) {

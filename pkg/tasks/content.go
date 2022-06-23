@@ -56,6 +56,7 @@ type BackupContentBundle struct {
 	BundleVersion string                `xbvrbackup:"bundleVersion"`
 	Volumne       []models.Volume       `xbvrbackup:"volumes"`
 	Playlists     []models.Playlist     `xbvrbackup:"playlists"`
+	Sites         []models.Site         `xbvrbackup:"sites"`
 	Scenes        []models.Scene        `xbvrbackup:"scenes"`
 	FilesLinks    []BackupFileLink      `xbvrbackup:"sceneFileLinks"`
 	Cuepoints     []BackupSceneCuepoint `xbvrbackup:"sceneCuepoints"`
@@ -419,7 +420,7 @@ func ImportBundleV1(bundleData ContentBundle) {
 
 }
 
-func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclActions bool, playlistId string) {
+func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
 		t0 := time.Now()
@@ -522,6 +523,11 @@ func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, incl
 			db.Find(&playlists)
 		}
 
+		var sites []models.Site
+		if inclSites {
+			db.Find(&sites)
+		}
+
 		// if version 1 choose convert back
 		var content []byte
 		var err error
@@ -533,6 +539,7 @@ func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, incl
 				BundleVersion: "2",
 				Volumne:       volumes,
 				Playlists:     playlists,
+				Sites:         sites,
 				Scenes:        backupSceneList,
 				FilesLinks:    backupFileLinkList,
 				Cuepoints:     backupCupointList,
@@ -614,7 +621,7 @@ func MarshalV1(backupSceneList []models.Scene) ([]byte, error) {
 
 }
 
-func RestoreBundle(formatVersion string, inclAllSites bool, url string, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclActions bool, overwrite bool) {
+func RestoreBundle(formatVersion string, inclAllSites bool, url string, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclSites bool, inclActions bool, overwrite bool) {
 	if formatVersion == "1" {
 		ImportBundle(url)
 		return
@@ -663,6 +670,9 @@ func RestoreBundle(formatVersion string, inclAllSites bool, url string, inclScen
 			}
 			if inclPlaylists {
 				RestorePlaylist(bundleData.Playlists, overwrite, db)
+			}
+			if inclSites {
+				RestoreSites(bundleData.Sites, overwrite, db)
 			}
 			if inclScenes {
 				RestoreScenes(bundleData.Scenes, inclAllSites, selectedSites, overwrite, inclCuepoints, inclFileLinks, inclHistory, db)
@@ -998,6 +1008,27 @@ func RestorePlaylist(playlists []models.Playlist, overwrite bool, db *gorm.DB) {
 	tlog.Infof("%v Saved Searches restored", addedCnt)
 }
 
+func RestoreSites(sites []models.Site, overwrite bool, db *gorm.DB) {
+	tlog := log.WithField("task", "scrape")
+	tlog.Infof("Restoring sites")
+
+	addedCnt := 0
+	for _, site := range sites {
+		var found models.Site
+		db.Where(&models.Site{Name: site.Name}).First(&found)
+
+		if found.ID != "0" { // id = 0 is a new record
+			// restore fields that should not be overwritten from the eisting record
+			site.ID = found.ID
+			site.AvatarURL = found.AvatarURL
+			site.IsBuiltin = found.IsBuiltin
+			site.LastUpdate = found.LastUpdate
+			models.SaveWithRetry(db, &site)
+			addedCnt++
+		}
+	}
+	tlog.Infof("%v Sites  restored", addedCnt)
+}
 func RenameTags() {
 	db, _ := models.GetDB()
 	defer db.Close()
