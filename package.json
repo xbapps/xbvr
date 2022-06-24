@@ -22,7 +22,7 @@
     "pretty-bytes": "5.5.0",
     "videojs-hotkeys": "0.2.27",
     "videojs-vr": "1.7.1",
-    "vue": "2.6.12",
+    "vue": "2.6.14",
     "vue-debounce": "2.6.0",
     "vue-gallery": "2.0.1",
     "vue-global-events": "1.2.1",
@@ -35,9 +35,9 @@
     "wampy": "6.3.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "4.5.12",
-    "@vue/cli-plugin-eslint": "4.5.12",
-    "@vue/cli-service": "4.5.12",
+    "@vue/cli-plugin-babel": "4.5.18",
+    "@vue/cli-plugin-eslint": "4.5.18",
+    "@vue/cli-service": "4.5.18",
     "@vue/eslint-config-standard": "6.0.0",
     "babel-eslint": "10.1.0",
     "concurrently": "5.3.0",
@@ -54,7 +54,7 @@
     "simple-progress-webpack-plugin": "1.1.2",
     "vue-cli-plugin-i18n": "1.0.1",
     "vue-i18n-extract": "1.1.11",
-    "vue-template-compiler": "2.6.12"
+    "vue-template-compiler": "2.6.14"
   },
   "eslintConfig": {
     "root": true,
