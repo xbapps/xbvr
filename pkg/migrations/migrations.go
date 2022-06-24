@@ -798,6 +798,38 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			// some site, vrbangers & vrconk have blank covers, & vrbangers gallery images will not render due to double slashes ie .com//
+			ID: "0035-fix-vrbangers-images",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				err := tx.Where("studio  LIKE ?", "VRBangers").Or("images LIKE ?", "%{\"url\":\"\",\"type\":\"gallery\",\"orientation\":\"\"}%").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+
+				for _, scene := range scenes {
+					changed := false
+					// check for a blank cover image and remove them
+					if strings.Contains(scene.Images, ",{\"url\":\"\",\"type\":\"cover\",\"orientation\":\"\"}") {
+						scene.Images = strings.ReplaceAll(scene.Images, ",{\"url\":\"\",\"type\":\"cover\",\"orientation\":\"\"}", "")
+						changed = true
+					}
+					// remove double slashes from image url for VRBangers
+					if scene.Studio == "VRBangers" && strings.Contains(scene.Images, ".com//") {
+						scene.Images = strings.ReplaceAll(scene.Images, ".com//", ".com/")
+						changed = true
+					}
+					if changed {
+						err = tx.Save(&scene).Error
+						if err != nil {
+							return err
+						}
+					}
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

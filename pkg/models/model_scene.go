@@ -396,17 +396,21 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var images []Image
 
 	for i := range ext.Covers {
-		images = append(images, Image{
-			URL:  ext.Covers[i],
-			Type: "cover",
-		})
+		if ext.Covers[i] != "" {
+			images = append(images, Image{
+				URL:  ext.Covers[i],
+				Type: "cover",
+			})
+		}
 	}
 
 	for i := range ext.Gallery {
-		images = append(images, Image{
-			URL:  ext.Gallery[i],
-			Type: "gallery",
-		})
+		if ext.Gallery[i] != "" {
+			images = append(images, Image{
+				URL:  ext.Gallery[i],
+				Type: "gallery",
+			})
+		}
 	}
 
 	imgTxt, err := json.Marshal(images)
