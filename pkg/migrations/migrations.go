@@ -796,11 +796,11 @@ func Migrate() {
 					tasks.CalculateCacheSizes()
 				}()
 				return nil
-			},			
+			},
 		},
 		{
 			// some site, vrbangers & vrconk have blank covers, & vrbangers gallery images will not render due to double slashes ie .com//
-			ID: "0034-fix-vrbangers-images",
+			ID: "0035-fix-vrbangers-images",
 			Migrate: func(tx *gorm.DB) error {
 				var scenes []models.Scene
 				err := tx.Where("studio  LIKE ?", "VRBangers").Or("images LIKE ?", "%{\"url\":\"\",\"type\":\"gallery\",\"orientation\":\"\"}%").Find(&scenes).Error
