@@ -8,8 +8,8 @@
       @keydown.o="prevScene"
       @keydown.p="nextScene"
       @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
-      @keydown.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
-      @keydown.W="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
+      @keydown.exact.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+      @keydown.shift.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
       @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
       @keydown.g="toggleGallery"
     />
@@ -512,7 +512,11 @@ export default {
       }
     },
     toggleGallery () {
-      this.activeMedia = 0
+      if (this.activeMedia == 0) {
+        this.activeMedia = 1
+      } else {
+        this.activeMedia = 0
+        }
     },
     scrollToActiveIndicator (value) {
       const indicators = document.querySelector('.carousel-indicator')
