@@ -376,7 +376,7 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 	query := bleve.NewQueryStringQuery(q)
 
 	searchRequest := bleve.NewSearchRequest(query)
-	searchRequest.Fields = []string{"fulltext"}
+	searchRequest.Fields = []string{"Id", "title", "cast", "site", "description"}
 	searchRequest.IncludeLocations = true
 	searchRequest.From = 0
 	searchRequest.Size = 25

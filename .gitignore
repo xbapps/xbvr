@@ -1,6 +1,6 @@
 /.idea
 .DS_Store
-.vscode/settings.json
+.vscode/
 
 test.db
 /test_cache
