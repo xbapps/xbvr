@@ -113,7 +113,7 @@ p - next scene
 e - edit scene  
 w - toggle watchlist  
 f - toggle favourite  
-v - toggle Watched status (v for viewed)  
+W - toggle Watched status (Capital W)  
 g - toggles gallery / video window  
 esc - closes details pane  
 left arrow - cycles backwards in gallery / skips backwards in video  
