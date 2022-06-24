@@ -93,8 +93,8 @@ type Scene struct {
 
 	NeedsUpdate bool `json:"needs_update"`
 
-	Fulltext string  `gorm:"-" json:"fulltext"`
-	Score    float64 `gorm:"-" json:"_score"`
+	Description string  `gorm:"-" json:"description"`
+	Score       float64 `gorm:"-" json:"_score"`
 }
 
 type Image struct {
