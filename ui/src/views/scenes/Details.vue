@@ -3,15 +3,13 @@
     <GlobalEvents
       :filter="e => !['INPUT', 'TEXTAREA'].includes(e.target.tagName)"
       @keyup.esc="close"
-      @keydown.arrowLeft="handleLeftArrow"
-      @keydown.arrowRight="handleRightArrow"
       @keydown.left="handleLeftArrow"
       @keydown.right="handleRightArrow"
       @keydown.o="prevScene"
       @keydown.p="nextScene"
       @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
-      @keydown.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
-      @keydown.W="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
+      @keydown.exact.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+      @keydown.shift.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
       @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
       @keydown.g="toggleGallery"
     />
@@ -517,7 +515,7 @@ export default {
       this.activeMedia = 0
     },
     handleLeftArrow () {
-      if (this.activeMedia == 0)
+      if (this.activeMedia === 0)
       {
         this.carouselSlide = this.carouselSlide - 1
       } else {
@@ -525,7 +523,7 @@ export default {
       }
     },
     handleRightArrow () {
-      if (this.activeMedia == 0)
+      if (this.activeMedia === 0)
       {
         this.carouselSlide = this.carouselSlide + 1
       } else {
