@@ -10,7 +10,9 @@
         </a>
       </div>
 
-      <List/>
+      <div class="column is-four-fifths">
+        <List/>
+      </div>
 
     </div>
   </div>

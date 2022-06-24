@@ -1,5 +1,5 @@
 <template>
-  <div class="column">
+  <div>
     <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
 
     <div class="columns is-multiline is-full">
