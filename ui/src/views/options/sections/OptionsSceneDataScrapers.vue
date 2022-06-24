@@ -8,51 +8,55 @@
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
     </div>
-    <div class="columns is-multiline">
-      <div class="column is-multiline is-one-third" v-for="item in items" :key="item.id">
-        <div :class="[runningScrapers.includes(item.id) ? 'card running' : 'card']">
-          <div class="card-content content">
-            <p class="image is-32x32 is-pulled-left avatar">
+    <b-table :data="scraperList">
+      <b-table-column field="icon" width="50" v-slot="props" cell-class="narrow">
+            <span class="image is-32x32">
               <vue-load-image>
-                <img slot="image" :src="getImageURL(item.avatar_url ? item.avatar_url : '/ui/images/blank.png')"/>
+                <img slot="image" :src="getImageURL(props.row.avatar_url ? props.row.avatar_url : '/ui/images/blank.png')"/>
                 <img slot="preloader" src="/ui/images/blank.png"/>
                 <img slot="error" src="/ui/images/blank.png"/>
               </vue-load-image>
-            </p>
-
-            <h5 class="title">{{item.name}}</h5>
-            <p :class="[runningScrapers.includes(item.id) ? 'invisible' : '']">
-              <small v-if="item.last_update !== '0001-01-01T00:00:00Z'">
-                Updated {{formatDistanceToNow(parseISO(item.last_update))}} ago</small>
-              <small v-else>{{$t('Never scraped')}}</small>
-            </p>
-            <p :class="[runningScrapers.includes(item.id) ? '' : 'invisible']">
-              <small>{{$t('Scraping now...')}}</small>
-            </p>
-            <div class="switch">
-              <b-switch :value="item.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: item.id})"/>
-            </div>
+            </span>
+      </b-table-column>
+      <b-table-column field="sitename" :label="$t('Site')" sortable searchable v-slot="props">
+        {{ props.row.sitename }}
+      </b-table-column>
+      <b-table-column field="source" :label="$t('Source')" sortable searchable v-slot="props">
+        {{ props.row.source }}
+      </b-table-column>
+      <b-table-column field="last_update" :label="$t('Last scrape')" sortable v-slot="props">
+            <span :class="[runningScrapers.includes(props.row.id) ? 'invisible' : '']">
+              <span v-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
+                {{formatDistanceToNow(parseISO(props.row.last_update))}} ago</span>
+              <span v-else>{{$t('Never scraped')}}</span>
+            </span>
+            <span :class="[runningScrapers.includes(props.row.id) ? '' : 'invisible']">
+              <span class="pulsate is-info">{{$t('Scraping now...')}}</span>
+            </span>
+      </b-table-column>
+      <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="60" sortable>
+          <span><b-switch v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
+      </b-table-column>
+    <b-table-column field="options" :label="opt" v-slot="props" width="30">
             <div class="menu">
               <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">
                 <template slot="trigger">
-                  <b-icon icon="dots-vertical"></b-icon>
+                  <b-icon icon="dots-vertical mdi-18px"></b-icon>
                 </template>
-                <b-dropdown-item aria-role="listitem" @click="taskScrape(item.id)">
+                <b-dropdown-item aria-role="listitem" @click="taskScrape(props.row.id)">
                   {{$t('Run this scraper')}}
                 </b-dropdown-item>
-                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(item.name)">
+                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(props.row.name)">
                   {{$t('Force update scenes')}}
                 </b-dropdown-item>
-                <b-dropdown-item aria-role="listitem" @click="deleteScenes(item.name)">
+                <b-dropdown-item aria-role="listitem" @click="deleteScenes(props.row.name)">
                   {{$t('Delete scraped scenes')}}
                 </b-dropdown-item>
               </b-dropdown>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+      </b-table-column>
+    </b-table>
+    
     <div class="columns is-multiline">
       <div class="column is-multiline is-one-third">
         <h3 class="title">{{$t('JAVR scraper')}}</h3>
@@ -173,6 +177,21 @@ export default {
     formatDistanceToNow
   },
   computed: {
+    scraperList() {
+      var items = this.$store.state.optionsSites.items;
+      let re = /(.*)\s+\((.+)\)$/;
+      for (let i=0; i < items.length; i++) {
+        items[i].sitename = items[i].name;
+        items[i].source = "";
+
+        var m = re.exec(items[i].name);
+        if (m) {
+          items[i].sitename = m[1];
+          items[i].source = m[2];
+        }
+      }
+      return items;
+    },
     items () {
       return this.$store.state.optionsSites.items
     },
@@ -220,19 +239,31 @@ export default {
     margin-bottom: 0.25em !important;
   }
 
-  .switch {
-    position: absolute;
-    bottom: 0.25em;
-    right: 0em;
-  }
-
   .invisible {
     display: none;
   }
+  .pulsate {
+    -webkit-animation: pulsate 0.8s linear;
+    -webkit-animation-iteration-count: infinite;
+    opacity: 0.5;
+  }
 
-  .menu {
-    position: absolute;
-    top: 0.75em;
-    right: 0.5em;
+  @-webkit-keyframes pulsate {
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1.0;
+    }
+    100% {
+      opacity: 0.5;
+    }
+  }
+</style>
+
+<style>
+  .content table td.narrow{
+    padding-top: 5px;
+    padding-bottom: 2px;
   }
 </style>
