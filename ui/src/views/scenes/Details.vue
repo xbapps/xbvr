@@ -3,8 +3,8 @@
     <GlobalEvents
       :filter="e => !['INPUT', 'TEXTAREA'].includes(e.target.tagName)"
       @keyup.esc="close"
-      @keydown.arrowLeft="playerStepBack"
-      @keydown.arrowRight="playerStepForward"
+      @keydown.left="handleLeftArrow"
+      @keydown.right="handleRightArrow"
       @keydown.o="prevScene"
       @keydown.p="nextScene"
       @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
@@ -517,6 +517,22 @@ export default {
       } else {
         this.activeMedia = 0
         }
+    },
+    handleLeftArrow () {
+      if (this.activeMedia === 0)
+      {
+        this.carouselSlide = this.carouselSlide - 1
+      } else {
+        this.playerStepBack()
+      }
+    },
+    handleRightArrow () {
+      if (this.activeMedia === 0)
+      {
+        this.carouselSlide = this.carouselSlide + 1
+      } else {
+        this.playerStepForward()
+      }
     },
     scrollToActiveIndicator (value) {
       const indicators = document.querySelector('.carousel-indicator')
