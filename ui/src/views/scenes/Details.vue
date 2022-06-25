@@ -441,12 +441,14 @@ export default {
           time_start: this.player.currentTime()
         }
       }).json().then(data => {
+        this.$store.commit('sceneList/updateScene', data)
         this.$store.commit('overlay/showDetails', { scene: data })
       })
     },
     deleteCuepoint (cuepoint) {
       ky.delete(`/api/scene/${this.item.id}/cuepoint/${cuepoint.id}`)
         .json().then(data => {
+          this.$store.commit('sceneList/updateScene', data)
           this.$store.commit('overlay/showDetails', { scene: data })
         })
     },
