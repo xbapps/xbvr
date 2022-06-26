@@ -3,12 +3,13 @@
     <GlobalEvents
       :filter="e => !['INPUT', 'TEXTAREA'].includes(e.target.tagName)"
       @keyup.esc="close"
-      @keydown.arrowLeft="playerStepBack"
-      @keydown.arrowRight="playerStepForward"
+      @keydown.left="handleLeftArrow"
+      @keydown.right="handleRightArrow"
       @keydown.o="prevScene"
       @keydown.p="nextScene"
       @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
-      @keydown.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+      @keydown.exact.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+      @keydown.shift.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
       @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
       @keydown.g="toggleGallery"
     />
@@ -19,17 +20,17 @@
       <section class="modal-card-body">
         <div class="columns">
 
-          <div class="column">
+          <div class="column is-half">
             <b-tabs v-model="activeMedia" position="is-centered" :animated="false">
 
               <b-tab-item label="Gallery">
-                <b-carousel v-model="carouselSlide" :autoplay="false" :indicator-inside="false">
+                <b-carousel v-model="carouselSlide" @change="scrollToActiveIndicator" :autoplay="false" :indicator-inside="false">
                   <b-carousel-item v-for="(carousel, i) in images" :key="i">
                     <div class="image is-1by1 is-full"
                          v-bind:style="{backgroundImage: `url(${getImageURL(carousel.url, '700,fit')})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat'}"></div>
                   </b-carousel-item>
                   <template slot="indicators" slot-scope="props">
-                      <span class="al image">
+                      <span class="al image" style="width:max-content;">
                         <vue-load-image>
                           <img slot="image" :src="getIndicatorURL(props.i)" style="height:40px;"/>
                           <img slot="preloader" src="/ui/images/blank.png" style="height:40px;"/>
@@ -48,7 +49,7 @@
 
           </div>
 
-          <div class="column">
+          <div class="column is-half">
 
             <div class="block-info block">
               <div class="content">
@@ -69,6 +70,7 @@
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
+                      <watched-button :item="item"/>&nbsp;
                       <edit-button :item="item"/>&nbsp;
                       <refresh-button :item="item"/>
                     </div>
@@ -103,6 +105,10 @@
                           <b-icon pack="mdi" icon="pulse"></b-icon>
                         </button>
                         </b-tooltip>
+                        <button rounded class="button is-info is-small is-outlined" disabled
+                                v-show="f.type === 'hsp'">
+                          <b-icon pack="mdi" icon="safety-goggles"></b-icon>
+                        </button>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
                         <strong>{{ f.filename }}</strong><br/>
@@ -110,7 +116,8 @@
                           <span class="pathDetails">{{ f.path }}</span>
                           <br/>
                           {{ prettyBytes(f.size) }},
-                          <span v-if="f.type === 'video'">{{ f.video_width }}x{{ f.video_height }},</span>
+                          <span v-if="f.type === 'video'"><span class="videosize">{{ f.video_width }}x{{ f.video_height }} {{ f.video_codec_name }}</span>, {{ f.projection }},&nbsp;</span>
+                          <span v-if="f.duration > 1">{{ humanizeSeconds(f.duration) }},</span>
                           {{ format(parseISO(f.created_time), "yyyy-MM-dd") }}
                         </small>
                         <div v-if="f.type === 'script' && f.has_heatmap" class="heatmapFunscript">
@@ -210,12 +217,13 @@ import GlobalEvents from 'vue-global-events'
 import StarRating from 'vue-star-rating'
 import FavouriteButton from '../../components/FavouriteButton'
 import WatchlistButton from '../../components/WatchlistButton'
+import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import RefreshButton from '../../components/RefreshButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton, RefreshButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton },
   data () {
     return {
       index: 1,
@@ -239,7 +247,7 @@ export default {
     },
     // Properties for gallery
     images () {
-      return JSON.parse(this.item.images)
+      return JSON.parse(this.item.images).filter(im => im && im.url)
     },
     // Tab: cuepoints
     sortedCuepoints () {
@@ -504,7 +512,36 @@ export default {
       }
     },
     toggleGallery () {
-      this.activeMedia = 0
+      if (this.activeMedia == 0) {
+        this.activeMedia = 1
+      } else {
+        this.activeMedia = 0
+        }
+    },
+    handleLeftArrow () {
+      if (this.activeMedia === 0)
+      {
+        this.carouselSlide = this.carouselSlide - 1
+      } else {
+        this.playerStepBack()
+      }
+    },
+    handleRightArrow () {
+      if (this.activeMedia === 0)
+      {
+        this.carouselSlide = this.carouselSlide + 1
+      } else {
+        this.playerStepForward()
+      }
+    },
+    scrollToActiveIndicator (value) {
+      const indicators = document.querySelector('.carousel-indicator')
+      const active = indicators.children[value]
+      indicators.scrollTo({
+        top: 0,
+        left: active.offsetLeft + active.offsetWidth / 2 - indicators.offsetWidth / 2,
+        behavior: 'smooth'
+      })
     },
     format,
     parseISO,
@@ -618,5 +655,21 @@ span.is-active img {
   height: 20px;
   margin: 0;
   padding: 0;
+}
+.videosize {
+  color: rgb(60, 60, 60);
+  font-weight: 550;
+}
+
+/deep/ .carousel .carousel-indicator {
+  justify-content: flex-start;
+  width: 100%;
+  max-width: min-content;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: auto;
+}
+/deep/ .carousel .carousel-indicator .indicator-item:not(.is-active) {
+  opacity: 0.5;
 }
 </style>

@@ -68,7 +68,8 @@ func RescanVolumes() {
 			unescapedFilename := path.Base(files[i].Filename)
 			filename := escape(unescapedFilename)
 			filename2 := strings.Replace(filename, ".funscript", ".mp4", -1)
-			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ?", `%"`+filename+`"%`, `%"`+filename2+`"%`).Find(&scenes).Error
+			filename3 := strings.Replace(filename, ".hsp", ".mp4", -1)
+			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ? OR filenames_arr LIKE ?", `%"`+filename+`"%`, `%"`+filename2+`"%`, `%"`+filename3+`"%`).Find(&scenes).Error
 			if err != nil {
 				log.Error(err, " when matching "+unescapedFilename)
 			}
@@ -143,6 +144,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 
 		var videoProcList []string
 		var scriptProcList []string
+		var hspProcList []string
 		_ = filepath.Walk(vol.Path, func(path string, f os.FileInfo, err error) error {
 			if !f.Mode().IsDir() {
 				// Make sure the filename should be considered
@@ -150,13 +152,16 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 					var fl models.File
 					err = db.Where(&models.File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
 
-					if err == gorm.ErrRecordNotFound || fl.VolumeID == 0 || fl.VideoDuration == 0 || fl.VideoProjection == "" {
+					if err == gorm.ErrRecordNotFound || fl.VolumeID == 0 || fl.VideoDuration == 0 || fl.VideoProjection == "" || fl.Size != f.Size() {
 						videoProcList = append(videoProcList, path)
 					}
 				}
 
 				if !strings.HasPrefix(filepath.Base(path), ".") && filepath.Ext(path) == ".funscript" {
 					scriptProcList = append(scriptProcList, path)
+				}
+				if !strings.HasPrefix(filepath.Base(path), ".") && filepath.Ext(path) == ".hsp" {
+					hspProcList = append(hspProcList, path)
 				}
 			}
 			return nil
@@ -243,6 +248,36 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				Path:     filepath.Dir(path),
 				Filename: filepath.Base(path),
 				Type:     "script",
+			}).FirstOrCreate(&fl)
+
+			fStat, _ := os.Stat(path)
+			fTimes, _ := times.Stat(path)
+
+			if fStat.Size() != fl.Size {
+				fl.Size = fStat.Size()
+				fl.HasHeatmap = false
+				fl.VideoDuration = 0.0
+			}
+
+			if fl.VideoDuration < 0.01 {
+				duration, err := getFunscriptDuration(path)
+				if err == nil {
+					fl.VideoDuration = duration
+				}
+			}
+
+			fl.CreatedTime = fTimes.ModTime()
+			fl.UpdatedTime = fTimes.ModTime()
+			fl.VolumeID = vol.ID
+			fl.Save()
+		}
+
+		for _, path := range hspProcList {
+			var fl models.File
+			db.Where(&models.File{
+				Path:     filepath.Dir(path),
+				Filename: filepath.Base(path),
+				Type:     "hsp",
 			}).FirstOrCreate(&fl)
 
 			fStat, _ := os.Stat(path)

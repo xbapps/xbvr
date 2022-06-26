@@ -99,7 +99,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			}
 		})
 
-		e.ForEach(`script[id="downloadLinks-js-extra"]`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`script[id="virtualreal_download-links-js-extra"]`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-12]
 				fpName := gjson.Get(jsonData, "videopart").String()
@@ -178,8 +178,8 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 
 		var name string
-		e.ForEach(`h1.model-title`, func(id int, e *colly.HTMLElement) {
-			name = strings.TrimSpace(strings.Split(e.Text, " (")[0])
+		e.ForEach(`div.model-title h1`, func(id int, e *colly.HTMLElement) {
+			name = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(e.Text), "VR"))
 		})
 
 		var gender string

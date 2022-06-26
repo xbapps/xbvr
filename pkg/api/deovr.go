@@ -46,6 +46,7 @@ type DeoScene struct {
 	Title            string               `json:"title"`
 	Authorized       uint                 `json:"authorized"`
 	Description      string               `json:"description"`
+	Date             int64                `json:"date"`
 	Paysite          DeoScenePaysite      `json:"paysite"`
 	IsFavorite       bool                 `json:"isFavorite"`
 	IsScripted       bool                 `json:"isScripted"`
@@ -64,6 +65,7 @@ type DeoScene struct {
 	Actors           []DeoSceneActor      `json:"actors"`
 	Categories       []DeoSceneCategory   `json:"categories,omitempty"`
 	Fleshlight       []DeoSceneScriptFile `json:"fleshlight,omitempty"`
+	HSProfile        []DeoSceneHSPFile    `json:"hsp,omitempty"`
 	FullVideoReady   bool                 `json:"fullVideoReady"`
 	FullAccess       bool                 `json:"fullAccess"`
 }
@@ -102,6 +104,11 @@ type DeoSceneVideoSource struct {
 }
 
 type DeoSceneScriptFile struct {
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
+
+type DeoSceneHSPFile struct {
 	Title string `json:"title"`
 	URL   string `json:"url"`
 }
@@ -210,7 +217,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 	setDeoPlayerHost(req)
 
 	dnt := ""
-	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+	if config.Config.Interfaces.DeoVR.RemoteEnabled || !config.Config.Interfaces.DeoVR.TrackWatchTime {
 		dnt = "?dnt=true"
 	}
 
@@ -246,6 +253,7 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 		Authorized:   1,
 		Description:  file.Filename,
 		Title:        file.Filename,
+		Date:         file.CreatedTime.Unix(),
 		IsFavorite:   false,
 		ThumbnailURL: session.DeoRequestHost + "/ui/images/blank.png",
 		Is3D:         true,
@@ -269,7 +277,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	setDeoPlayerHost(req)
 
 	dnt := ""
-	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+	if config.Config.Interfaces.DeoVR.RemoteEnabled || !config.Config.Interfaces.DeoVR.TrackWatchTime {
 		dnt = "?dnt=true"
 	}
 
@@ -286,8 +294,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		return
 	}
 
-	var stereoMode string
-	var screenType string
+	var stereoMode string = ""
+	var screenType string = ""
 
 	var actors []DeoSceneActor
 	for i := range scene.Cast {
@@ -318,6 +326,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		return
 	}
 
+	var sceneMultiProjection bool = true
+
 	for i, file := range videoFiles {
 		var height = file.VideoHeight
 		var width = file.VideoWidth
@@ -340,6 +350,11 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		}
 
 		videoLength = file.VideoDuration
+
+		// Test scene w/multiple videos for different projection types
+		if (i > 0) && (file.VideoProjection != videoFiles[i-1].VideoProjection) {
+			sceneMultiProjection = false
+		}
 	}
 
 	var deoScriptFiles []DeoSceneScriptFile
@@ -357,6 +372,21 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		})
 	}
 
+	var deoHSPFiles []DeoSceneHSPFile
+	var hspFiles []models.File
+	hspFiles, err = scene.GetHSPFiles()
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	for _, file := range hspFiles {
+		deoHSPFiles = append(deoHSPFiles, DeoSceneHSPFile{
+			Title: file.Filename,
+			URL:   fmt.Sprintf("%v/api/dms/file/%v", session.DeoRequestHost, file.ID),
+		})
+	}
+
 	var cuepoints []DeoSceneTimestamp
 	for i := range scene.Cuepoints {
 		cuepoints = append(cuepoints, DeoSceneTimestamp{
@@ -368,21 +398,24 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		return cuepoints[i].TS < cuepoints[j].TS
 	})
 
-	if videoFiles[0].VideoProjection == "mkx200" ||
-		videoFiles[0].VideoProjection == "mkx220" ||
-		videoFiles[0].VideoProjection == "vrca220" {
-		stereoMode = "sbs"
-		screenType = videoFiles[0].VideoProjection
-	}
+	// Set Scene projection IF either single video or all videos have same projection type
+	if sceneMultiProjection {
+		if videoFiles[0].VideoProjection == "mkx200" ||
+			videoFiles[0].VideoProjection == "mkx220" ||
+			videoFiles[0].VideoProjection == "vrca220" {
+			stereoMode = "sbs"
+			screenType = videoFiles[0].VideoProjection
+		}
 
-	if videoFiles[0].VideoProjection == "180_sbs" {
-		stereoMode = "sbs"
-		screenType = "dome"
-	}
+		if videoFiles[0].VideoProjection == "180_sbs" {
+			stereoMode = "sbs"
+			screenType = "dome"
+		}
 
-	if videoFiles[0].VideoProjection == "360_tb" {
-		stereoMode = "tb"
-		screenType = "sphere"
+		if videoFiles[0].VideoProjection == "360_tb" {
+			stereoMode = "tb"
+			screenType = "sphere"
+		}
 	}
 
 	title := scene.Title
@@ -400,6 +433,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Authorized:       1,
 		Title:            title,
 		Description:      scene.Synopsis,
+		Date:             scene.ReleaseDate.Unix(),
 		Actors:           actors,
 		Paysite:          DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
 		IsFavorite:       scene.Favourite,
@@ -418,6 +452,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Timestamps:       cuepoints,
 		Categories:       categories,
 		Fleshlight:       deoScriptFiles,
+		HSProfile:        deoHSPFiles,
 	}
 
 	if scene.HasVideoPreview {
@@ -504,7 +539,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 	setDeoPlayerHost(req)
 
 	dnt := ""
-	if config.Config.Interfaces.DeoVR.RemoteEnabled {
+	if config.Config.Interfaces.DeoVR.RemoteEnabled || !config.Config.Interfaces.DeoVR.TrackWatchTime {
 		dnt = "?dnt=true"
 	}
 

@@ -39,9 +39,12 @@ type VersionCheckResponse struct {
 }
 
 type RequestSaveOptionsWeb struct {
-	TagSort     string `json:"tagSort"`
-	SceneEdit   bool   `json:"sceneEdit"`
-	UpdateCheck bool   `json:"updateCheck"`
+	TagSort        string `json:"tagSort"`
+	SceneWatchlist bool   `json:"sceneWatchlist"`
+	SceneFavourite bool   `json:"sceneFavourite"`
+	SceneWatched   bool   `json:"sceneWatched"`
+	SceneEdit      bool   `json:"sceneEdit"`
+	UpdateCheck    bool   `json:"updateCheck"`
 }
 
 type RequestSaveOptionsDLNA struct {
@@ -57,6 +60,7 @@ type RequestSaveOptionsDeoVR struct {
 	Username       string `json:"username"`
 	Password       string `json:"password"`
 	RemoteEnabled  bool   `json:"remote_enabled"`
+	TrackWatchTime bool   `json:"track_watch_time"`
 	RenderHeatmaps bool   `json:"render_heatmaps"`
 }
 
@@ -228,6 +232,9 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	}
 
 	config.Config.Web.TagSort = r.TagSort
+	config.Config.Web.SceneWatchlist = r.SceneWatchlist
+	config.Config.Web.SceneFavourite = r.SceneFavourite
+	config.Config.Web.SceneWatched = r.SceneWatched
 	config.Config.Web.SceneEdit = r.SceneEdit
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
@@ -247,6 +254,7 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.DeoVR.AuthEnabled = r.AuthEnabled
 	config.Config.Interfaces.DeoVR.RenderHeatmaps = r.RenderHeatmaps
 	config.Config.Interfaces.DeoVR.RemoteEnabled = r.RemoteEnabled
+	config.Config.Interfaces.DeoVR.TrackWatchTime = r.TrackWatchTime
 	config.Config.Interfaces.DeoVR.Username = r.Username
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)

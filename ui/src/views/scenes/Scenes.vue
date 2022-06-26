@@ -10,7 +10,9 @@
         </a>
       </div>
 
-      <List/>
+      <div class="column is-four-fifths">
+        <List/>
+      </div>
 
     </div>
   </div>
@@ -47,6 +49,7 @@ export default {
       if (to.query !== undefined) {
         vm.$store.commit('sceneList/stateFromQuery', to.query)
       }
+      vm.$store.dispatch('optionsWeb/load')
       vm.$store.dispatch('sceneList/load', { offset: 0 })
     })
   },

@@ -93,8 +93,8 @@ type Scene struct {
 
 	NeedsUpdate bool `json:"needs_update"`
 
-	Fulltext string  `gorm:"-" json:"fulltext"`
-	Score    float64 `gorm:"-" json:"_score"`
+	Description string  `gorm:"-" json:"description"`
+	Score       float64 `gorm:"-" json:"_score"`
 }
 
 type Image struct {
@@ -223,6 +223,16 @@ func (o *Scene) GetScriptFiles() ([]File, error) {
 
 	var files []File
 	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "script").Order("is_selected_script DESC, created_time DESC").Find(&files)
+
+	return files, nil
+}
+
+func (o *Scene) GetHSPFiles() ([]File, error) {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var files []File
+	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "hsp").Find(&files)
 
 	return files, nil
 }
@@ -386,17 +396,21 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var images []Image
 
 	for i := range ext.Covers {
-		images = append(images, Image{
-			URL:  ext.Covers[i],
-			Type: "cover",
-		})
+		if ext.Covers[i] != "" {
+			images = append(images, Image{
+				URL:  ext.Covers[i],
+				Type: "cover",
+			})
+		}
 	}
 
 	for i := range ext.Gallery {
-		images = append(images, Image{
-			URL:  ext.Gallery[i],
-			Type: "gallery",
-		})
+		if ext.Gallery[i] != "" {
+			images = append(images, Image{
+				URL:  ext.Gallery[i],
+				Type: "gallery",
+			})
+		}
 	}
 
 	imgTxt, err := json.Marshal(images)
