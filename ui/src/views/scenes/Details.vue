@@ -140,7 +140,7 @@
                   <div class="block-tab-content block">
                     <div class="block">
                       <b-field grouped>
-                        <b-autocomplete v-model="tagPosition" :data="cuepointPositionTags" :open-on-focus="true"></b-autocomplete>
+                        <b-autocomplete v-model="tagPosition" :data="filteredCuepointPositionList" :open-on-focus="true"></b-autocomplete>
                         <b-autocomplete v-model="tagAct"  :data="filteredCuepointActList" :open-on-focus="true"></b-autocomplete>
                         <b-button @click="addCuepoint">Add cuepoint</b-button>
                       </b-field>
