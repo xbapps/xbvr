@@ -106,3 +106,15 @@ Ready to get started?
 #### Add specific filter to DeoVR
 * On the XBVR scenes page, create a filter (cast, site, tags, etc.) and sort order, then create a "saved search" (see top left) and check "use as DeoVR list". 
 * Inside DeoVR you will now see your saved search listed
+#### Keyboard Shortcuts
+* Details Pane  
+o - previous scene  
+p - next scene  
+e - edit scene  
+w - toggle watchlist  
+f - toggle favourite  
+W - toggle Watched status (Capital W)  
+g - toggles gallery / video window  
+esc - closes details pane  
+left arrow - cycles backwards in gallery / skips backwards in video  
+right arrow - cycles forward in gallery / skips forward in video
