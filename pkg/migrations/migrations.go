@@ -830,6 +830,36 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0036-fix-missing-cover-urls",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				err := tx.Where("cover_url=''").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+
+				var images []models.Image
+				for _, scene := range scenes {
+					changed := false
+					if err := json.Unmarshal([]byte(scene.Images), &images); err == nil {
+						for _, image := range images {
+							if scene.CoverURL == "" && image.Type == "cover" {
+								scene.CoverURL = image.URL
+								changed = true
+							}
+						}
+					}
+					if changed {
+						err = tx.Save(&scene).Error
+						if err != nil {
+							return err
+						}
+					}
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
