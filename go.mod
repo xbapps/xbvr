@@ -57,7 +57,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/net v0.0.0-20220622184535-263ec571b305
 	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2
-	golang.org/x/sys v0.0.0-20220622161953-175b2fd9d664
+	golang.org/x/sys v0.0.0-20220627191245-f75cf1eec38b
 	golang.org/x/text v0.3.7
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
