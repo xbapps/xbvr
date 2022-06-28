@@ -35,9 +35,9 @@
     "wampy": "6.3.1"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "4.5.18",
-    "@vue/cli-plugin-eslint": "4.5.18",
-    "@vue/cli-service": "4.5.18",
+    "@vue/cli-plugin-babel": "4.5.19",
+    "@vue/cli-plugin-eslint": "4.5.19",
+    "@vue/cli-service": "4.5.19",
     "@vue/eslint-config-standard": "6.1.0",
     "babel-eslint": "10.1.0",
     "concurrently": "5.3.0",
