@@ -9442,10 +9442,10 @@ vue-i18n-extract@1.2.3:
     is-valid-glob "^1.0.0"
     js-yaml "^3.14.0"
 
-vue-i18n@8.22.4:
-  version "8.22.4"
-  resolved "https://registry.yarnpkg.com/vue-i18n/-/vue-i18n-8.22.4.tgz#255cbdab4ffa7337c5819b82dd171208af74e385"
-  integrity sha512-XLI5s0AdqMP2Lf4I4CmdmOq8kjb5DDFGR77wAuxCfpEuYSfhTRyyx6MetgZMiL6Lxa0DasjBOiOcciU3NkL3/Q==
+vue-i18n@8.27.2:
+  version "8.27.2"
+  resolved "https://registry.yarnpkg.com/vue-i18n/-/vue-i18n-8.27.2.tgz#b649a65ff42b7d1a482679b732902f889965a068"
+  integrity sha512-QVzn7u2WVH8F7eSKIM00lujC7x1mnuGPaTnDTmB01Hd709jDtB9kYtBqM+MWmp5AJRx3gnqAdZbee9MelqwFBg==
 
 vue-i18n@^8.17.0:
   version "8.24.4"
