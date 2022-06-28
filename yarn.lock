@@ -9423,10 +9423,10 @@ vue-i18n-extract@1.0.2:
     is-valid-glob "^1.0.0"
     yargs "^13.2.2"
 
-vue-i18n-extract@1.1.11:
-  version "1.1.11"
-  resolved "https://registry.yarnpkg.com/vue-i18n-extract/-/vue-i18n-extract-1.1.11.tgz#4c27f32a25639e22714ab885443a1b4cbc41615f"
-  integrity sha512-CYblIKYrqvQkVH2VPPmCiz7k3OJo2F97bBFve1c/zcTPjAI42AJEFO2t6Yei8TWbwsIl6/wh18N9+g3pO2TvIA==
+vue-i18n-extract@1.2.3:
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/vue-i18n-extract/-/vue-i18n-extract-1.2.3.tgz#7a16bbce29d587476df0bad85c0f9453b5bcfcbe"
+  integrity sha512-ZLtF6wp732KHKawHx5ZSmjyydkli9g26z0NfGLP89DkiGx4nKFYZ2oIH35HtImdhcfq1zqkeSwxs7kRzarLoVw==
   dependencies:
     commander "^6.1.0"
     dot-object "^2.1.4"
