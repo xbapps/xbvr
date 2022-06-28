@@ -901,6 +901,13 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
+"@babel/runtime@^7.14.5":
+  version "7.18.6"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.18.6.tgz#6a1ef59f838debd670421f8c7f2cbb8da9751580"
+  integrity sha512-t9wi7/AW6XtKahAe20Yw0/mMljKq0B1r2fPdvaAdV/KPDZewFXdaaa6K7lxmZBZ8FBNpCiAT6iHPmd6QO9bKfQ==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/template@^7.0.0", "@babel/template@^7.12.13":
   version "7.12.13"
   resolved "https://registry.yarnpkg.com/@babel/template/-/template-7.12.13.tgz#530265be8a2589dbb37523844c5bcb55947fb327"
@@ -2524,14 +2531,14 @@ caniuse-lite@^1.0.0, caniuse-lite@^1.0.30001109, caniuse-lite@^1.0.30001219:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001219.tgz#5bfa5d0519f41f993618bd318f606a4c4c16156b"
   integrity sha512-c0yixVG4v9KBc/tQ2rlbB3A/bgBFRvl8h8M4IeUbqCca4gsiCfvtaheUssbnux/Mb66Vjz7x8yYjDgYcNQOhyQ==
 
-cardboard-vr-display@1.0.13:
-  version "1.0.13"
-  resolved "https://registry.yarnpkg.com/cardboard-vr-display/-/cardboard-vr-display-1.0.13.tgz#e192a220b2970002cfb5cc0f1b480ff5fd6748b6"
-  integrity sha512-/ovHu4nHfo3oaw2v20v7ErvDUmIBPih/e/6VG83XUUFs5vPQaGSM8hihqKClOlwy3Fz+52L0FrhcGSH3o+yn6w==
+cardboard-vr-display@^1.0.19:
+  version "1.0.19"
+  resolved "https://registry.yarnpkg.com/cardboard-vr-display/-/cardboard-vr-display-1.0.19.tgz#81dcde1804b329b8228b757ac00e1fd2afa9d748"
+  integrity sha512-+MjcnWKAkb95p68elqZLDPzoiF/dGncQilLGvPBM5ZorABp/ao3lCs7nnRcYBckmuNkg1V/5rdGDKoUaCVsHzQ==
   dependencies:
     gl-preserve-state "^1.0.0"
     nosleep.js "^0.7.0"
-    webvr-polyfill-dpdb "^1.0.7"
+    webvr-polyfill-dpdb "^1.0.17"
 
 case-sensitive-paths-webpack-plugin@^2.3.0:
   version "2.4.0"
@@ -9334,16 +9341,16 @@ videojs-hotkeys@0.2.27:
   resolved "https://registry.yarnpkg.com/videojs-hotkeys/-/videojs-hotkeys-0.2.27.tgz#0df97952b9dff0e6cc1cf8a439fed7eac9c73f01"
   integrity sha512-pwtm1QocRmzJy1PWQsmFVHyeldYHHpLdeATK3FsFHVMmNpz6CROkAn8TFy2UILr8Ghgq134K8jEKNue8HWpudQ==
 
-videojs-vr@1.7.1:
-  version "1.7.1"
-  resolved "https://registry.yarnpkg.com/videojs-vr/-/videojs-vr-1.7.1.tgz#6cbf3e8973eca8571e5391afd09fed72edfaedda"
-  integrity sha512-o9mpGdf529jZjCnYhGEmkyMjmHcMLAVobx94RxX7Z1uhdVDoT7O1Ct88X+RdjlwYn4qUmrEk8NQFYOb6I2wQ1A==
+videojs-vr@1.8.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/videojs-vr/-/videojs-vr-1.8.0.tgz#7f2f07f760d8a329c615acd316e49da6ee8edd34"
+  integrity sha512-776gXqt8g6/rLeV56nn/aUcO0sRy+mgFITCw8cIqzTzl93SE1PEK/QE3YNqtppUfU5igayrx7WKsWhDOpsXMpw==
   dependencies:
-    "@babel/runtime" "^7.5.5"
+    "@babel/runtime" "^7.14.5"
     global "^4.4.0"
     three "0.93.0"
     video.js "^6 || ^7"
-    webvr-polyfill "0.10.6"
+    webvr-polyfill "0.10.12"
 
 videojs-vtt.js@^0.15.2:
   version "0.15.3"
@@ -9736,17 +9743,17 @@ websocket@^1.0.33:
     utf-8-validate "^5.0.2"
     yaeti "^0.0.6"
 
-webvr-polyfill-dpdb@^1.0.7:
+webvr-polyfill-dpdb@^1.0.17:
   version "1.0.18"
   resolved "https://registry.yarnpkg.com/webvr-polyfill-dpdb/-/webvr-polyfill-dpdb-1.0.18.tgz#258484ce06b057bf18898acc911bd173847bce11"
   integrity sha512-O0S1ZGEWyPvyZEkS2VbyV7mtir/NM9MNK3EuhbHPoJ8EHTky2pTXehjIl+IiDPr+Lldgx129QGt3NGly7rwRPw==
 
-webvr-polyfill@0.10.6:
-  version "0.10.6"
-  resolved "https://registry.yarnpkg.com/webvr-polyfill/-/webvr-polyfill-0.10.6.tgz#c1c5f5e3801784bc131a05aacfa2169872ce0b1c"
-  integrity sha512-H+2LI+rHMguGaUAg+1QuiIQ+1Y1wTSkkUXjQfF/GFD2wUL0AdiN8+uPGxnE7bHMBIG7NswN6kgkZhgy4WpwTlw==
+webvr-polyfill@0.10.12:
+  version "0.10.12"
+  resolved "https://registry.yarnpkg.com/webvr-polyfill/-/webvr-polyfill-0.10.12.tgz#47ea0b0d558f09e089bc49fa7b47a4ee7e4b8148"
+  integrity sha512-trDJEVUQnRIVAnmImjEQ0BlL1NfuWl8+eaEdu+bs4g59c7OtETi/5tFkgEFDRaWEYwHntXs/uFF3OXZuutNGGA==
   dependencies:
-    cardboard-vr-display "1.0.13"
+    cardboard-vr-display "^1.0.19"
 
 which-boxed-primitive@^1.0.2:
   version "1.0.2"
