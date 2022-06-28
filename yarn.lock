@@ -9452,10 +9452,10 @@ vue-i18n@^8.17.0:
   resolved "https://registry.yarnpkg.com/vue-i18n/-/vue-i18n-8.24.4.tgz#b158614c1df7db183d9cadddbb73e1d540269492"
   integrity sha512-RZE94WUAGxEiBAANxQ0pptbRwDkNKNSXl3fnJslpFOxVMF6UkUtMDSuYGuW2blDrVgweIXVpethOVkYoNNT9xw==
 
-vue-load-image@0.1.12:
-  version "0.1.12"
-  resolved "https://registry.yarnpkg.com/vue-load-image/-/vue-load-image-0.1.12.tgz#7eb5c6b2ca3e13a50fd3f4fef586989754887c7c"
-  integrity sha512-F2OwNP0hB0OG1wOy/r9SJ5oFiKvpgS1jluMkHtr3VFtbrhQPvuL53wNxatjkONn3Ciw6Ui54hBCgGBLAwwkZYw==
+vue-load-image@0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/vue-load-image/-/vue-load-image-0.2.0.tgz#e82fdd92e24569459f3f32c1e10de5de4a3b3ec2"
+  integrity sha512-Y9xj4bNM3wCZFowFABEaC9pJVVhS0L8k9Ui4SbFEdYxnY/DqP4yi3vOsNENj698Zy6klOXHjJ9yEtP/z1JUOEw==
 
 "vue-loader-v16@npm:vue-loader@^16.1.0":
   version "16.2.0"
