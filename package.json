@@ -32,7 +32,7 @@
     "vue-slider-component": "3.2.16",
     "vue-star-rating": "1.7.0",
     "vuex": "3.6.2",
-    "wampy": "6.3.1"
+    "wampy": "6.4.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "4.5.19",
