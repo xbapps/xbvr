@@ -2,13 +2,16 @@
   <div class="content">
     <div class="columns">
       <div class="column">
-        <h3 class="title">{{$t('Mainstream sites')}}</h3>
+        <h3 class="title">{{$t('Scrape scenes from studios')}}</h3>
       </div>
       <div class="column buttons" align="right">
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
     </div>
     <b-table :data="scraperList">
+      <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="60" sortable>
+          <span><b-switch v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
+      </b-table-column>
       <b-table-column field="icon" width="50" v-slot="props" cell-class="narrow">
             <span class="image is-32x32">
               <vue-load-image>
@@ -18,7 +21,7 @@
               </vue-load-image>
             </span>
       </b-table-column>
-      <b-table-column field="sitename" :label="$t('Site')" sortable searchable v-slot="props">
+      <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">
         {{ props.row.sitename }}
       </b-table-column>
       <b-table-column field="source" :label="$t('Source')" sortable searchable v-slot="props">
@@ -34,76 +37,25 @@
               <span class="pulsate is-info">{{$t('Scraping now...')}}</span>
             </span>
       </b-table-column>
-      <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="60" sortable>
-          <span><b-switch v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
-      </b-table-column>
-    <b-table-column field="options" :label="opt" v-slot="props" width="30">
-            <div class="menu">
-              <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">
-                <template slot="trigger">
-                  <b-icon icon="dots-vertical mdi-18px"></b-icon>
-                </template>
-                <b-dropdown-item aria-role="listitem" @click="taskScrape(props.row.id)">
-                  {{$t('Run this scraper')}}
-                </b-dropdown-item>
-                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(props.row.name)">
-                  {{$t('Force update scenes')}}
-                </b-dropdown-item>
-                <b-dropdown-item aria-role="listitem" @click="deleteScenes(props.row.name)">
-                  {{$t('Delete scraped scenes')}}
-                </b-dropdown-item>
-              </b-dropdown>
-            </div>
+      <b-table-column field="options" :label="opt" v-slot="props" width="30">
+        <div class="menu">
+          <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">
+            <template slot="trigger">
+              <b-icon icon="dots-vertical mdi-18px"></b-icon>
+            </template>
+            <b-dropdown-item aria-role="listitem" @click="taskScrape(props.row.id)">
+              {{$t('Run this scraper')}}
+            </b-dropdown-item>
+            <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(props.row.name)">
+              {{$t('Force update scenes')}}
+            </b-dropdown-item>
+            <b-dropdown-item aria-role="listitem" @click="deleteScenes(props.row.name)">
+              {{$t('Delete scraped scenes')}}
+            </b-dropdown-item>
+          </b-dropdown>
+        </div>
       </b-table-column>
     </b-table>
-    
-    <div class="columns is-multiline">
-      <div class="column is-multiline is-one-third">
-        <h3 class="title">{{$t('JAVR scraper')}}</h3>
-        <div class="card">
-          <div class="card-content content">
-            <h5 class="title">R18</h5>
-            <b-field grouped>
-              <b-input v-model="javrQuery" placeholder="URL or ID (XXXX-001)" type="search"></b-input>
-              <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
-            </b-field>
-          </div>
-        </div>
-      </div>
-
-      <div class="column is-multiline is-one-third">
-        <h3 class="title">{{$t('TPDB scraper')}}</h3>
-        <div class="card">
-          <div class="card-content content">
-            <h5 class="title">API Token</h5>
-            <b-input v-model="tpdbApiToken" placeholder="TPDB API Token" type="search"></b-input>
-            <br>
-            <h5 class="title">TPDB Scene URL</h5>
-            <b-field grouped>
-              <b-input v-model="tpdbSceneUrl" placeholder="TPDB URL" type="search"></b-input>
-              <b-button class="button is-primary" v-on:click="scrapeTPDB()">{{$t('Go')}}</b-button>
-            </b-field>
-          </div>
-        </div>
-      </div>
-
-      <div class="column is-multiline is-one-third">
-        <h3 class="title">{{$t('Custom scene')}}</h3>
-        <div class="card">
-          <div class="card-content content">
-            <b-field label="Scene title" label-position="on-border">
-              <b-input v-model="customSceneTitle" placeholder="Stepsis stuck in washing machine" type="search"></b-input>
-            </b-field>
-            <b-field label="Scene ID" label-position="on-border">
-              <b-input v-model="customSceneID" placeholder="Can be empty" type="search"></b-input>
-            </b-field>
-            <b-field label-position="on-border">
-              <b-button class="button is-primary" v-on:click="addScene()">{{$t('Add')}}</b-button>
-            </b-field>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -123,7 +75,6 @@ export default {
   },
   mounted () {
     this.$store.dispatch('optionsSites/load')
-    this.$store.dispatch('optionsVendor/load')
   },
   methods: {
     getImageURL (u) {
@@ -131,11 +82,6 @@ export default {
         return '/img/128x/' + u.replace('://', ':/')
       } else {
         return u
-      }
-    },
-    addScene() {
-      if (this.customSceneTitle !== '') {
-        ky.post('/api/scene/create', { json: { title: this.customSceneTitle, id: this.customSceneID } })
       }
     },
     taskScrape (site) {
@@ -165,14 +111,6 @@ export default {
     sanitizeSiteName(site) {
       return site.split('(')[0].trim();
     },
-    scrapeJAVR () {
-      ky.post('/api/task/scrape-javr', { json: { q: this.javrQuery } })
-    },
-    scrapeTPDB () {
-      ky.post('/api/task/scrape-tpdb', {
-        json: { apiToken: this.tpdbApiToken, sceneUrl: this.tpdbSceneUrl }
-      })
-    },
     parseISO,
     formatDistanceToNow
   },
@@ -198,14 +136,6 @@ export default {
     runningScrapers () {
       this.$store.dispatch('optionsSites/load')
       return this.$store.state.messages.runningScrapers
-    },
-    tpdbApiToken: {
-      get () {
-        return this.$store.state.optionsVendor.tpdb.apiToken
-      },
-      set (value) {
-        this.$store.state.optionsVendor.tpdb.apiToken = value
-      }
     }
   }
 }
