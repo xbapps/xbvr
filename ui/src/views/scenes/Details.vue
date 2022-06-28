@@ -140,16 +140,8 @@
                   <div class="block-tab-content block">
                     <div class="block">
                       <b-field grouped>
-                        <b-select v-model="tagPosition">
-                          <option v-for="(option, idx) in cuepointPositionTags" :value="option" :key="idx">
-                            {{ option }}
-                          </option>
-                        </b-select>
-                        <b-select v-model="tagAct">
-                          <option v-for="(option, idx) in cuepointActTags" :value="option" :key="idx">
-                            {{ option }}
-                          </option>
-                        </b-select>
+                        <b-autocomplete v-model="tagPosition" :data="filteredCuepointPositionList" :open-on-focus="true"></b-autocomplete>
+                        <b-autocomplete v-model="tagAct"  :data="filteredCuepointActList" :open-on-focus="true"></b-autocomplete>
                         <b-button @click="addCuepoint">Add cuepoint</b-button>
                       </b-field>
                     </div>
@@ -289,6 +281,26 @@ export default {
     },
     showEdit () {
       return this.$store.state.overlay.edit.show
+    },
+    filteredCuepointPositionList () {
+      // filter the list of positions based on what has been entered so far
+      return this.cuepointPositionTags.filter((option) => {
+        return option
+          .toString()
+          .toLowerCase()
+          .trim()
+          .indexOf(this.tagPosition.toLowerCase()) >= 0
+      })
+    },
+    filteredCuepointActList () {
+      // filter the list of acts based on what has been entered so far
+      return this.cuepointActTags.filter((option) => {
+        return option
+          .toString()
+          .toLowerCase()
+          .trim()
+          .indexOf(this.tagAct.toLowerCase()) >= 0
+      })
     }
   },
   mounted () {
