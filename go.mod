@@ -53,7 +53,7 @@ require (
 	github.com/thoas/go-funk v0.9.2
 	github.com/tidwall/gjson v1.12.1
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	github.com/xo/dburl v0.9.0
+	github.com/xo/dburl v0.11.0
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e
 	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2
