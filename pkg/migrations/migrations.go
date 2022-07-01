@@ -771,6 +771,13 @@ func Migrate() {
 							if err != nil {
 								return err
 							}
+							if scene.SceneID == sceneID && !(scene.IsAccessible || scene.IsAvailable) {
+								err = tx.Delete(&scene).Where("scene_id = ?", sceneID).Error
+								if err != nil {
+									return err
+								}
+								continue
+							}
 							scene.SceneID = sceneID
 							// update the scene itself
 							err = tx.Save(&scene).Error
