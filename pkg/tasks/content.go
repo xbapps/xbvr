@@ -21,7 +21,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
-	"gopkg.in/resty.v1"
 )
 
 type ContentBundle struct {
@@ -62,6 +61,19 @@ type BackupContentBundle struct {
 	Cuepoints     []BackupSceneCuepoint `xbvrbackup:"sceneCuepoints"`
 	History       []BackupSceneHistory  `xbvrbackup:"sceneHistory"`
 	Actions       []BackupSceneAction   `xbvrbackup:"actions"`
+}
+type RequestRestore struct {
+	InclAllSites  bool   `json:"allSites"`
+	InclScenes    bool   `json:"inclScenes"`
+	InclFileLinks bool   `json:"inclLinks"`
+	InclCuepoints bool   `json:"inclCuepoints"`
+	InclHistory   bool   `json:"inclHistory"`
+	InclPlaylists bool   `json:"inclPlaylists"`
+	InclVolumes   bool   `json:"inclVolumes"`
+	InclSites     bool   `json:"inclSites"`
+	InclActions   bool   `json:"inclActions"`
+	Overwrite     bool   `json:"overwrite"`
+	UploadData    string `json:"uploadData"`
 }
 
 func CleanTags() {
@@ -363,7 +375,7 @@ func ExportBundle() {
 
 		content, err := json.MarshalIndent(out, "", " ")
 		if err == nil {
-			fName := filepath.Join(common.AppDir, fmt.Sprintf("content-bundle-v1-%v.json", time.Now().Unix()))
+			fName := filepath.Join(common.DownloadDir, fmt.Sprintf("content-bundle-v1-%v.json", time.Now().Unix()))
 			err = ioutil.WriteFile(fName, content, 0644)
 			if err == nil {
 				tlog.Infof("Export completed in %v, file saved to %v", time.Now().Sub(t0), fName)
@@ -373,7 +385,8 @@ func ExportBundle() {
 	models.RemoveLock("scrape")
 }
 
-func ImportBundle(url string) {
+func ImportBundle(uploadData string) {
+
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
 		defer models.RemoveLock("scrape")
@@ -381,20 +394,12 @@ func ImportBundle(url string) {
 		tlog := log.WithField("task", "scrape")
 
 		var bundleData ContentBundle
-		tlog.Infof("Downloading bundle from URL...")
+		tlog.Infof("Restoring bundle ...")
 		var err error
-		var resp *resty.Response
-		var filedata []byte
 
-		tlog.Infof("Restoring data  from URL...")
-		if strings.HasPrefix(url, "file://") {
-			filedata, err = ioutil.ReadFile(url[7:])
-			json.Unmarshal(filedata, &bundleData)
-		} else {
-			resp, err = resty.R().SetResult(&bundleData).Get(url)
-		}
+		json.Unmarshal([]byte(uploadData), &bundleData)
 
-		if err == nil && (strings.HasPrefix(url, "file://") || resp.StatusCode() == 200) {
+		if err == nil {
 			if bundleData.BundleVersion != "1" {
 				tlog.Infof("Restore Failed! Bundle file is version %v, version 1 expected", bundleData.BundleVersion)
 				return
@@ -420,7 +425,11 @@ func ImportBundleV1(bundleData ContentBundle) {
 
 }
 
-func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string) {
+func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string) string {
+	var out BackupContentBundle
+	var content []byte
+	exportCnt := 0
+
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
 		t0 := time.Now()
@@ -462,7 +471,7 @@ func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, incl
 			var err error
 			for cnt, scene := range scenes {
 				if cnt%500 == 0 {
-					tlog.Infof("Reading scene %v of %v", cnt, len(scenes))
+					tlog.Infof("Reading scene %v of %v, selected %v scenes", cnt+1, len(scenes), exportCnt)
 				}
 
 				// check if the scene is for a site we want
@@ -511,6 +520,7 @@ func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, incl
 				if err != nil {
 					tlog.Errorf("Error reading scene Id %v of %s", scene.ID, err)
 				}
+				exportCnt += 1
 			}
 		}
 
@@ -528,102 +538,45 @@ func BackupBundle(formatVersion string, inclAllSites bool, inclScenes bool, incl
 			db.Find(&sites)
 		}
 
-		// if version 1 choose convert back
-		var content []byte
 		var err error
-		if formatVersion == "1" {
-			content, err = MarshalV1(backupSceneList)
-		} else {
-			out := BackupContentBundle{
-				Timestamp:     time.Now().UTC(),
-				BundleVersion: "2",
-				Volumne:       volumes,
-				Playlists:     playlists,
-				Sites:         sites,
-				Scenes:        backupSceneList,
-				FilesLinks:    backupFileLinkList,
-				Cuepoints:     backupCupointList,
-				History:       backupHistoryList,
-				Actions:       backupActionList,
-			}
-
-			var json = jsoniter.Config{
-				EscapeHTML:             true,
-				SortMapKeys:            true,
-				ValidateJsonRawMessage: true,
-				TagKey:                 "xbvrbackup",
-			}.Froze()
-			content, err = json.MarshalIndent(out, "", " ")
+		out = BackupContentBundle{
+			Timestamp:     time.Now().UTC(),
+			BundleVersion: "2",
+			Volumne:       volumes,
+			Playlists:     playlists,
+			Sites:         sites,
+			Scenes:        backupSceneList,
+			FilesLinks:    backupFileLinkList,
+			Cuepoints:     backupCupointList,
+			History:       backupHistoryList,
+			Actions:       backupActionList,
 		}
 
+		var json = jsoniter.Config{
+			EscapeHTML:             true,
+			SortMapKeys:            true,
+			ValidateJsonRawMessage: true,
+			TagKey:                 "xbvrbackup",
+		}.Froze()
+		content, err = json.MarshalIndent(out, "", " ")
+
 		if err == nil {
-			fName := filepath.Join(common.AppDir, fmt.Sprintf("content-bundle-v%v-%v.json", formatVersion, time.Now().Unix()))
+			fName := filepath.Join(common.DownloadDir, "xbvr-content-bundle.json")
 			err = ioutil.WriteFile(fName, content, 0644)
 			if err == nil {
-				tlog.Infof("Backup completed in %v, file saved to %v", time.Since(t0), fName)
+				tlog.Infof("Backup file generated in %v, %v scenes selected, ready to download", time.Since(t0), exportCnt)
+			} else {
+				tlog.Infof("Error in Backup file generation %v, %v scenes selected, ready to download", time.Since(t0), exportCnt)
 			}
 		}
 	}
 	models.RemoveLock("scrape")
+	return string(content)
 }
 
-func MarshalV1(backupSceneList []models.Scene) ([]byte, error) {
-	var scrapedScenes []models.ScrapedScene
-	for _, scene := range backupSceneList {
-		var covers []string
-		var gallery []string
-		var images []models.Image
-		json.Unmarshal([]byte(scene.Images), &images)
-		for _, image := range images {
-			if image.Type == "cover" {
-				covers = append(covers, image.URL)
-			} else {
-				gallery = append(gallery, image.URL)
-			}
-		}
-		var tags []string
-		for _, tag := range scene.Tags {
-			tags = append(tags, tag.Name)
-		}
-		var castList []string
-		for _, cast := range scene.Cast {
-			castList = append(castList, cast.Name)
-		}
-
-		var filenames []string
-		json.Unmarshal([]byte(scene.FilenamesArr), &filenames)
-
-		scrapedscene := models.ScrapedScene{
-			SceneID:     scene.SceneID,
-			SceneType:   scene.SceneType,
-			Title:       scene.Title,
-			Studio:      scene.Studio,
-			Site:        scene.Site,
-			Covers:      covers,
-			Gallery:     gallery,
-			Tags:        tags,
-			Cast:        castList,
-			Filenames:   filenames,
-			Duration:    scene.Duration,
-			Synopsis:    scene.Synopsis,
-			Released:    scene.ReleaseDateText,
-			HomepageURL: scene.SceneURL,
-		}
-		scrapedScenes = append(scrapedScenes, scrapedscene)
-	}
-	out := ContentBundle{
-		Timestamp:     time.Now().UTC(),
-		BundleVersion: "1",
-		Scenes:        scrapedScenes,
-	}
-	content, err := json.MarshalIndent(out, "", " ")
-	return content, err
-
-}
-
-func RestoreBundle(formatVersion string, inclAllSites bool, url string, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclSites bool, inclActions bool, overwrite bool) {
-	if formatVersion == "1" {
-		ImportBundle(url)
+func RestoreBundle(request RequestRestore) {
+	if strings.Contains(request.UploadData, "\"bundleVersion\":\"1\"") {
+		ImportBundle(request.UploadData)
 		return
 	}
 	if !models.CheckLock("scrape") {
@@ -641,59 +594,52 @@ func RestoreBundle(formatVersion string, inclAllSites bool, url string, inclScen
 
 		var bundleData BackupContentBundle
 		var err error
-		var resp *resty.Response
-		var filedata []byte
-		tlog.Infof("Restoring data  from URL...")
-		if strings.HasPrefix(url, "file://") {
-			filedata, err = ioutil.ReadFile(url[7:])
-			json.UnmarshalFromString(string(filedata), &bundleData)
-		} else {
-			resp, err = resty.R().Get(url)
-			json.UnmarshalFromString(resp.String(), &bundleData)
-		}
+		tlog.Infof("Restoring data ...")
 
-		if err == nil && (strings.HasPrefix(url, "file://") || resp.StatusCode() == 200) {
-			if bundleData.BundleVersion != formatVersion {
-				tlog.Infof("Restore Failed! Bundle file is version %v, version %v expected", bundleData.BundleVersion, formatVersion)
+		json.UnmarshalFromString(request.UploadData, &bundleData)
+
+		if err == nil {
+			if bundleData.BundleVersion != "2" {
+				tlog.Infof("Restore Failed! Bundle file is version %v, version %v expected", bundleData.BundleVersion, 2)
 				return
 			}
 			db, _ := models.GetDB()
 			defer db.Close()
 
 			var selectedSites []models.Site
-			if !inclAllSites {
+			if !request.InclAllSites {
 				db.Where(&models.Site{IsEnabled: true}).Find(&selectedSites)
 			}
 
-			if inclVolumes {
-				RestoreMediaPaths(bundleData.Volumne, overwrite, db)
+			if request.InclVolumes {
+				RestoreMediaPaths(bundleData.Volumne, request.Overwrite, db)
 			}
-			if inclPlaylists {
-				RestorePlaylist(bundleData.Playlists, overwrite, db)
+			if request.InclPlaylists {
+				RestorePlaylist(bundleData.Playlists, request.Overwrite, db)
 			}
-			if inclSites {
-				RestoreSites(bundleData.Sites, overwrite, db)
+			if request.InclSites {
+				RestoreSites(bundleData.Sites, request.Overwrite, db)
 			}
-			if inclScenes {
-				RestoreScenes(bundleData.Scenes, inclAllSites, selectedSites, overwrite, inclCuepoints, inclFileLinks, inclHistory, db)
+			if request.InclScenes {
+				RestoreScenes(bundleData.Scenes, request.InclAllSites, selectedSites, request.Overwrite, request.InclCuepoints, request.InclFileLinks, request.InclHistory, db)
 			}
-			if inclCuepoints {
-				RestoreCuepoints(bundleData.Cuepoints, inclAllSites, selectedSites, overwrite, db)
+			if request.InclCuepoints {
+				RestoreCuepoints(bundleData.Cuepoints, request.InclAllSites, selectedSites, request.Overwrite, db)
 			}
-			if inclFileLinks {
-				RestoreSceneFileLinks(bundleData.FilesLinks, inclAllSites, selectedSites, overwrite, db)
+			if request.InclFileLinks {
+				RestoreSceneFileLinks(bundleData.FilesLinks, request.InclAllSites, selectedSites, request.Overwrite, db)
 			}
-			if inclHistory {
-				RestoreHistory(bundleData.History, inclAllSites, selectedSites, overwrite, db)
+			if request.InclHistory {
+				RestoreHistory(bundleData.History, request.InclAllSites, selectedSites, request.Overwrite, db)
 			}
-			if inclActions {
-				RestoreActions(bundleData.Actions, inclAllSites, selectedSites, overwrite, db)
+			if request.InclActions {
+				RestoreActions(bundleData.Actions, request.InclAllSites, selectedSites, request.Overwrite, db)
 			}
 
-			if inclScenes || inclFileLinks {
+			if request.InclScenes || request.InclFileLinks {
 				UpdateSceneStatus(db)
 			}
-			if inclScenes {
+			if request.InclScenes {
 				CountTags()
 				SearchIndex()
 			}
@@ -711,8 +657,8 @@ func RestoreScenes(scenes []models.Scene, inclAllSites bool, selectedSites []mod
 
 	addedCnt := 0
 	for sceneCnt, scene := range scenes {
-		if sceneCnt%500 == 0 {
-			tlog.Infof("Processing %v of %v scenes", sceneCnt, len(scenes))
+		if sceneCnt%250 == 0 {
+			tlog.Infof("Processing %v of %v scenes", sceneCnt+1, len(scenes))
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
@@ -754,9 +700,9 @@ func RestoreCuepoints(sceneCuepointList []BackupSceneCuepoint, inclAllSites bool
 	tlog.Infof("Restoring scene cuepoints")
 
 	addedCnt := 0
-	for sceneCnt, cuepoints := range sceneCuepointList {
-		if sceneCnt%500 == 0 {
-			tlog.Infof("Processing cuepoints for %v of %v scenes", sceneCnt, len(sceneCuepointList))
+	for cnt, cuepoints := range sceneCuepointList {
+		if cnt%500 == 0 {
+			tlog.Infof("Processing cuepoints %v of %v", cnt+1, len(sceneCuepointList))
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
@@ -809,7 +755,7 @@ func RestoreCuepoints(sceneCuepointList []BackupSceneCuepoint, inclAllSites bool
 
 func RestoreSceneFileLinks(backupFileList []BackupFileLink, inclAllSites bool, selectedSites []models.Site, overwrite bool, db *gorm.DB) {
 	tlog := log.WithField("task", "scrape")
-	tlog.Infof("Restoring scene files links")
+	tlog.Infof("Restoring scene matched files")
 
 	var volumes []models.Volume
 	db.Find(&volumes)
@@ -817,7 +763,7 @@ func RestoreSceneFileLinks(backupFileList []BackupFileLink, inclAllSites bool, s
 	addedCnt := 0
 	for cnt, backupSceneFiles := range backupFileList {
 		if cnt%500 == 0 {
-			tlog.Infof("Processing files for %v of %v scenes", cnt, len(backupFileList))
+			tlog.Infof("Processing files %v of %v", cnt+1, len(backupFileList))
 		}
 
 		// check if the scene is for a site we want
@@ -863,12 +809,12 @@ func RestoreSceneFileLinks(backupFileList []BackupFileLink, inclAllSites bool, s
 
 func RestoreHistory(sceneHistoryList []BackupSceneHistory, inclAllSites bool, selectedSites []models.Site, overwrite bool, db *gorm.DB) {
 	tlog := log.WithField("task", "scrape")
-	tlog.Infof("Restoring scene history")
+	tlog.Infof("Restoring scene watch history")
 
 	addedCnt := 0
-	for sceneCnt, histories := range sceneHistoryList {
-		if sceneCnt%500 == 0 {
-			tlog.Infof("Processing history for %v of %v scenes", sceneCnt, len(sceneHistoryList))
+	for cnt, histories := range sceneHistoryList {
+		if cnt%500 == 0 {
+			tlog.Infof("Processing history %v of %v", cnt+1, len(sceneHistoryList))
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
@@ -920,12 +866,12 @@ func RestoreHistory(sceneHistoryList []BackupSceneHistory, inclAllSites bool, se
 }
 func RestoreActions(sceneActionList []BackupSceneAction, inclAllSites bool, selectedSites []models.Site, overwrite bool, db *gorm.DB) {
 	tlog := log.WithField("task", "scrape")
-	tlog.Infof("Restoring scene actions")
+	tlog.Infof("Restoring scene edits")
 
 	addedCnt := 0
-	for sceneCnt, actions := range sceneActionList {
-		if sceneCnt%500 == 0 {
-			tlog.Infof("Processing actions for %v of %v scenes", sceneCnt, len(sceneActionList))
+	for cnt, actions := range sceneActionList {
+		if cnt%500 == 0 {
+			tlog.Infof("Processing actions %v of %v", cnt+1, len(sceneActionList))
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
@@ -1017,7 +963,7 @@ func RestoreSites(sites []models.Site, overwrite bool, db *gorm.DB) {
 		var found models.Site
 		db.Where(&models.Site{Name: site.Name}).First(&found)
 
-		if found.ID != "0" { // id = 0 is a new record
+		if found.ID != "" { // id = "" is a new record
 			// restore fields that should not be overwritten from the eisting record
 			site.ID = found.ID
 			site.AvatarURL = found.AvatarURL

@@ -129,6 +129,8 @@ func StartServer(version, commit, branch, date string) {
 	r.PathPrefix("/img/").Handler(http.StripPrefix("/img", p))
 	hmp := NewHeatmapThumbnailProxy(p, diskCache(filepath.Join(common.AppDir, "heatmapthumbnailproxy")))
 	r.PathPrefix("/imghm/").Handler(http.StripPrefix("/imghm", hmp))
+	downloadhandler := DownloadHandler{}
+	r.PathPrefix("/download/").Handler(http.StripPrefix("/download/", downloadhandler))
 	r.SkipClean(true)
 
 	r.PathPrefix("/").Handler(http.DefaultServeMux)
