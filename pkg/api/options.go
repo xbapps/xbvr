@@ -541,6 +541,7 @@ func (i ConfigResource) generateTestPreview(req *restful.Request, resp *restful.
 			tasks.RenderPreview(
 				files[0].GetPath(),
 				destFile,
+				files[0].VideoProjection,
 				r.StartTime,
 				r.SnippetLength,
 				r.SnippetAmount,
