@@ -13,6 +13,8 @@
           <b-menu-list :label="$t('Scene data')">
             <b-menu-item :label="$t('Scrapers')" :active="active==='data-scrapers'"
                          @click="setActive('data-scrapers')"/>
+            <b-menu-item :label="$t('Create/Import scene')" :active="active==='create-scene'"
+                         @click="setActive('create-scene')"/>
             <b-menu-item :label="$t('Funscripts')" :active="active==='funscripts'"
                          @click="setActive('funscripts')"/>
             <b-menu-item :label="$t('Data import/export')" :active="active==='data-import-export'"
@@ -32,6 +34,7 @@
           <Cache v-show="active==='cache'"/>
           <Previews v-show="active==='previews'"/>
           <SceneDataScrapers v-show="active==='data-scrapers'"/>
+          <SceneCreate v-show="active==='create-scene'"/>
           <Funscripts v-show="active==='funscripts'"/>
           <SceneDataImportExport v-show="active==='data-import-export'"/>
           <InterfaceWeb v-show="active==='interface_web'"/>
@@ -48,6 +51,7 @@
 import InterfaceWeb from './sections/InterfaceWeb'
 import Storage from './sections/Storage'
 import SceneDataScrapers from './sections/OptionsSceneDataScrapers'
+import SceneCreate from './sections/OptionsSceneCreate'
 import Funscripts from './sections/Funscripts'
 import SceneDataImportExport from './sections/OptionsSceneDataImportExport'
 import InterfaceDLNA from './sections/InterfaceDLNA.vue'
@@ -56,7 +60,7 @@ import Previews from './sections/Previews.vue'
 import InterfaceDeoVR from './sections/InterfaceDeoVR.vue'
 
 export default {
-  components: { Storage, SceneDataScrapers, Funscripts, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews },
+  components: { Storage, SceneDataScrapers, SceneCreate, Funscripts, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews },
   data: function () {
     return {
       active: 'storage'
