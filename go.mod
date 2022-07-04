@@ -33,7 +33,7 @@ require (
 	github.com/lomik/go-whisper v0.0.0-20170919072952-744ab80ef70d
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/marcsauter/single v0.0.0-20201009143647-9f8d81240be2
-	github.com/markphelps/optional v0.9.0
+	github.com/markphelps/optional v0.10.0
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mcuadros/go-version v0.0.0-20190830083331-035f6764e8d2
 	github.com/mholt/archiver v3.1.1+incompatible
