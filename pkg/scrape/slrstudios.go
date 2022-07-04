@@ -278,6 +278,7 @@ func init() {
 	addSLRScraper("squeeze-vr", "SqueezeVR", "SqueezeVR", "https://mcdn.vrporn.com/files/20210322150700/squeezevr_logo.png")
 	addSLRScraper("swallowbay", "SwallowBay", "SwallowBay", "https://mcdn.vrporn.com/files/20210330092926/swallowbay-400x400.jpg")
 	addSLRScraper("sweetlonglips", "Sweetlonglips", "Sweetlonglips", "https://mcdn.vrporn.com/files/20200117105304/SLLVRlogo.png")
+	addSLRScraper("taboo-vr-porn", "Taboo VR Porn", "Taboo VR Porn", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/354/logo_crop_1643894389.png")
 	addSLRScraper("tadpolexxxstudio", "TadPoleXXXStudio", "TadPoleXXXStudio", "https://mcdn.vrporn.com/files/20190928101126/tadpolexxx-logo-vr-porn-studio-vrporn.com-virtual-reality.png")
 	addSLRScraper("tmavr", "TMAVR", "TMAVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/207/logo_crop_1606869169.png")
 	addSLRScraper("virtualpee", "VirtualPee", "VirtualPee", "https://mcdn.vrporn.com/files/20180317104121/virtualpeeop-square-banner.jpg")
