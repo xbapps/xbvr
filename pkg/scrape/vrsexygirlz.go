@@ -1,12 +1,12 @@
 package scrape
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/gocolly/colly"
-	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -16,7 +16,7 @@ func VRSexygirlz(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	defer wg.Done()
 
 	scraperID := "vrsexygirlz"
-	siteID := "vrsexygirlz"
+	siteID := "VRSexyGirlz"
 	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("vrsexygirlz.com", "www.vrsexygirlz.com")
@@ -25,18 +25,9 @@ func VRSexygirlz(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
-		sc.Studio = "VRSexygirlZ"
+		sc.Studio = "VRSexyGirlz"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
-
-		// Scene ID - get from URL
-		// SiteID, Scene ID - get from URL
-		tmp := strings.Split(e.Request.URL.Path, "/")
-		sc.SiteID = tmp[len(tmp)-1]
-		if len(sc.SiteID) == 0 {
-			sc.SiteID = tmp[len(tmp)-2]
-		}
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Title
 		e.ForEach(`div.content-block div.ep-info-l h2`, func(id int, e *colly.HTMLElement) {
@@ -83,7 +74,19 @@ func VRSexygirlz(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		// Filenames
 		// NOTE: no way to guess filename
-		out <- sc
+
+		// Scene ID
+		e.ForEach(`link[rel="shortlink"]`, func(id int, e *colly.HTMLElement) {
+			url := e.Attr("href")
+			sc.SiteID = url[strings.LastIndex(url, "=")+1:]
+		})
+
+		if sc.SiteID != "" {
+			sc.SceneID = fmt.Sprintf("vrsexygirlz-%v", sc.SiteID)
+
+			// save only if we got a SceneID
+			out <- sc
+		}
 	})
 
 	siteCollector.OnHTML(`div.wpx-pagination a.next`, func(e *colly.HTMLElement) {
@@ -109,5 +112,5 @@ func VRSexygirlz(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 }
 
 func init() {
-	registerScraper("vrsexygirlz", "VRSexygirlz", "https://www.vrsexygirlz.com/wp-content/uploads/2017/08/logo-trans-300x74.png", VRSexygirlz)
+	registerScraper("vrsexygirlz", "VRSexyGirlz", "https://www.vrsexygirlz.com/wp-content/uploads/2017/08/logo-trans-300x74.png", VRSexygirlz)
 }
