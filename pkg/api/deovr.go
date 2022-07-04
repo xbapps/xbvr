@@ -418,6 +418,11 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 			stereoMode = "tb"
 			screenType = "sphere"
 		}
+
+		if videoFiles[0].VideoProjection == "flat" {
+			stereoMode = "off"
+			screenType = "flat"
+		}
 	}
 
 	title := scene.Title
