@@ -402,6 +402,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	if sceneMultiProjection {
 		if videoFiles[0].VideoProjection == "mkx200" ||
 			videoFiles[0].VideoProjection == "mkx220" ||
+			videoFiles[0].VideoProjection == "rf52" ||
+			videoFiles[0].VideoProjection == "fisheye190" ||
 			videoFiles[0].VideoProjection == "vrca220" {
 			stereoMode = "sbs"
 			screenType = videoFiles[0].VideoProjection
@@ -415,6 +417,11 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		if videoFiles[0].VideoProjection == "360_tb" {
 			stereoMode = "tb"
 			screenType = "sphere"
+		}
+
+		if videoFiles[0].VideoProjection == "flat" {
+			stereoMode = "off"
+			screenType = "flat"
 		}
 	}
 

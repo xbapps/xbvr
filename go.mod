@@ -11,7 +11,7 @@ require (
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/blevesearch/bleve v1.0.14
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
-	github.com/creasty/defaults v1.5.2
+	github.com/creasty/defaults v1.6.0
 	github.com/darwayne/go-timecode v1.1.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/djherbis/times v1.5.0
@@ -19,7 +19,7 @@ require (
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/gammazero/nexus/v3 v3.0.4
-	github.com/getlantern/systray v1.1.0
+	github.com/getlantern/systray v1.2.1
 	github.com/go-openapi/spec v0.20.6
 	github.com/go-test/deep v1.0.8
 	github.com/gocolly/colly v1.2.0
@@ -50,14 +50,14 @@ require (
 	github.com/satori/go.uuid v0.0.0-20180103174451-36e9d2ebbde5
 	github.com/sirupsen/logrus v1.8.1
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-	github.com/thoas/go-funk v0.9.1
+	github.com/thoas/go-funk v0.9.2
 	github.com/tidwall/gjson v1.12.1
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	github.com/xo/dburl v0.9.0
+	github.com/xo/dburl v0.11.0
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
-	golang.org/x/net v0.0.0-20220622184535-263ec571b305
-	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2
-	golang.org/x/sys v0.0.0-20220622161953-175b2fd9d664
+	golang.org/x/net v0.0.0-20220630215102-69896b714898
+	golang.org/x/oauth2 v0.0.0-20220630143837-2104d58473e0
+	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e
 	golang.org/x/text v0.3.7
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
@@ -143,7 +143,7 @@ require (
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	willnorris.com/go/gifresize v1.0.0 // indirect

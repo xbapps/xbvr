@@ -107,6 +107,8 @@ Ready to get started?
 * On the XBVR scenes page, create a filter (cast, site, tags, etc.) and sort order, then create a "saved search" (see top left) and check "use as DeoVR list". 
 * Inside DeoVR you will now see your saved search listed
 #### Keyboard Shortcuts
+* Global
+? - Quick Find  
 * Details Pane  
 o - previous scene  
 p - next scene  
@@ -118,3 +120,9 @@ g - toggles gallery / video window
 esc - closes details pane  
 left arrow - cycles backwards in gallery / skips backwards in video  
 right arrow - cycles forward in gallery / skips forward in video
+* File Match Pane  
+o - previous file  
+p - next file  
+left arrow - next page of search results  
+right arrow - previous  page of search results  
+esc - closes matching pane  
