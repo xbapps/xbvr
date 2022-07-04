@@ -66,7 +66,7 @@ func RenderPreview(inputFile string, destFile string, videoProjection string, st
 	defer os.RemoveAll(tmpPath)
 
 	// Get video duration
-	ffdata, err := ffprobe.GetProbeData(inputFile, time.Second*3)
+	ffdata, err := ffprobe.GetProbeData(inputFile, time.Second*10)
 	if err != nil {
 		return err
 	}
