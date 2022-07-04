@@ -112,5 +112,5 @@ func VRSexygirlz(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 }
 
 func init() {
-	registerScraper("vrsexygirlz", "VRSexyGirlz", "https://www.vrsexygirlz.com/wp-content/uploads/2017/08/logo-trans-300x74.png", VRSexygirlz)
+	registerScraper("vrsexygirlz", "VRSexyGirlz", "https://www.vrsexygirlz.com/wp-content/uploads/2017/03/FV.png", VRSexygirlz)
 }
