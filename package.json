@@ -38,7 +38,7 @@
     "@vue/cli-plugin-babel": "4.5.19",
     "@vue/cli-plugin-eslint": "4.5.19",
     "@vue/cli-service": "4.5.19",
-    "@vue/eslint-config-standard": "6.1.0",
+    "@vue/eslint-config-standard": "7.0.0",
     "babel-eslint": "10.1.0",
     "concurrently": "5.3.0",
     "eslint": "8.19.0",
