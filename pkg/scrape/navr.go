@@ -171,5 +171,5 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 }
 
 func init() {
-	registerScraper("naughtyamericavr", "NaughtyAmerica VR", "https://pbs.twimg.com/profile_images/1176909015369965569/Kr31SHCL_200x200.jpg", NaughtyAmericaVR)
+	registerScraper("naughtyamericavr", "NaughtyAmerica VR", "https://mcdn.vrporn.com/files/20170718100937/naughtyamericavr-vr-porn-studio-vrporn.com-virtual-reality.png", NaughtyAmericaVR)
 }
