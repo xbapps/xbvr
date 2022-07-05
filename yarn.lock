@@ -7347,10 +7347,10 @@ vue-cli-plugin-i18n@2.3.1:
     vue-i18n "^8.17.0"
     vue-i18n-extract "1.0.2"
 
-vue-debounce@2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/vue-debounce/-/vue-debounce-2.6.0.tgz#9907280668ea8d0a2371ed08d7a415648986ac3e"
-  integrity sha512-afSu/LSIyZv7HjLqqmFwgp4k2OhAGIEa8XVH1MYw/qyf6ly7fJbyfUVOagbFRXP4yl61J0ujMVB31DRY0US6RA==
+vue-debounce@4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/vue-debounce/-/vue-debounce-4.0.0.tgz#3f584dabc08a841a0182ab68d19f77f70a416fcc"
+  integrity sha512-+BrcKfLpyDpUJ58ZrAvI35irRCgYHFpnF3NJZwwaz8/kkKmEq6TWPXBIhLh2HQAsUZNwo52K/vQyiEFsJ/1RYA==
 
 vue-eslint-parser@^9.0.1:
   version "9.0.3"
