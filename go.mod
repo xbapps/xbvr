@@ -51,7 +51,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/thoas/go-funk v0.9.2
-	github.com/tidwall/gjson v1.12.1
+	github.com/tidwall/gjson v1.14.1
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.11.0
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
