@@ -7373,10 +7373,10 @@ vue-gallery@2.0.1:
     blueimp-gallery "^2.33.0"
     opencollective-postinstall "^2.0.2"
 
-vue-global-events@1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/vue-global-events/-/vue-global-events-1.2.1.tgz#4c1398a1f67854c73290f5c1cedb5109116c2b50"
-  integrity sha512-035Su/+5GUFnj9potJThJXu9DnayRKSENbuBw5k5sMa6hetiY+6Yu+5zUtPXT4X0S9y8tX7uSxGZJMMYiqhFfg==
+vue-global-events@2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/vue-global-events/-/vue-global-events-2.1.1.tgz#348a2ec4dfc06b58fc8ed46f3dbe86642bf1da50"
+  integrity sha512-iYgBmtbj/yLPADpB86p7MMjMEsiR/G/sYMbl9F85irjVBK7Q1TdqLRR10IfnZ6llNVrH/u91lGvNbE6s7u729Q==
 
 vue-hot-reload-api@^2.3.0:
   version "2.3.4"
