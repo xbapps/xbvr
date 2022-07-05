@@ -1,3 +1,5 @@
+const webpack = require("webpack");
+
 module.exports = {
   publicPath: '/ui',
   outputDir: 'dist',
@@ -12,6 +14,19 @@ module.exports = {
     ])
   },
 
+  configureWebpack: {
+    resolve: {
+        fallback: {
+            buffer: require.resolve('buffer/'),
+        },
+    },
+    plugins: [
+        new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer'],
+        }),
+    ],
+  },
+
   pluginOptions: {
     i18n: {
       locale: 'en_GB',
@@ -19,5 +34,6 @@ module.exports = {
       localeDir: 'locales',
       enableInSFC: false
     }
-  }
+  },
+
 }
