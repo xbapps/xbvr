@@ -674,7 +674,7 @@ span.is-active img {
   font-weight: 550;
 }
 
-/deep/ .carousel .carousel-indicator {
+:deep(.carousel .carousel-indicator) {
   justify-content: flex-start;
   width: 100%;
   max-width: min-content;
@@ -682,7 +682,7 @@ span.is-active img {
   margin-right: auto;
   overflow: auto;
 }
-/deep/ .carousel .carousel-indicator .indicator-item:not(.is-active) {
+:deep(.carousel .carousel-indicator .indicator-item:not(.is-active)) {
   opacity: 0.5;
 }
 </style>
