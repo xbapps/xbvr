@@ -22,7 +22,7 @@
     "pretty-bytes": "6.0.0",
     "videojs-hotkeys": "0.2.27",
     "videojs-vr": "1.8.0",
-    "vue": "2.7.2",
+    "vue": "3.2.37",
     "vue-debounce": "4.0.0",
     "vue-gallery": "2.0.1",
     "vue-global-events": "1.2.1",
@@ -31,7 +31,7 @@
     "vue-router": "3.5.4",
     "vue-slider-component": "3.2.16",
     "vue-star-rating": "1.7.0",
-    "vuex": "3.6.2",
+    "vuex": "4.0.2",
     "wampy": "6.4.2"
   },
   "devDependencies": {
