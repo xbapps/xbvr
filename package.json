@@ -52,7 +52,7 @@
     "sass": "1.53.0",
     "sass-loader": "13.0.2",
     "simple-progress-webpack-plugin": "2.0.0",
-    "vue-cli-plugin-i18n": "1.0.1",
+    "vue-cli-plugin-i18n": "2.3.1",
     "vue-i18n-extract": "1.2.3",
     "vue-template-compiler": "2.7.2"
   },
