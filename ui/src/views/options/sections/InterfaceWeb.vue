@@ -40,6 +40,11 @@
                 show Edit Scene button
               </b-switch>
             </b-field>
+            <b-field>
+              <b-switch v-model="sceneCuepoint" type="is-dark">
+                show Cuepoints  button
+              </b-switch>
+            </b-field>
 
             <b-field label="Automatically Check for Updates">
               <b-switch v-model="updateCheck">
@@ -100,7 +105,7 @@ export default {
       set (value) {
         this.$store.state.optionsWeb.web.sceneWatched = value
       }
-    },            
+    },
     sceneEdit: {
       get () {
         return this.$store.state.optionsWeb.web.sceneEdit
@@ -115,6 +120,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.updateCheck = value
+      }
+    },
+    sceneCuepoint: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneCuepoint
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneCuepoint = value
       }
     },
     isLoading: function () {
