@@ -142,15 +142,22 @@
                       <b-field grouped>
                         <b-autocomplete v-model="tagPosition" :data="filteredCuepointPositionList" :open-on-focus="true"></b-autocomplete>
                         <b-autocomplete v-model="tagAct"  :data="filteredCuepointActList" :open-on-focus="true"></b-autocomplete>
-                        <b-button @click="addCuepoint">Add cuepoint</b-button>
+                        <b-timepicker v-model="vidPosition" rounded editable placeholder="Defaults to player position" hour-format="24" enable-seconds=true :max-time="maxTime" >
+                          <b-button
+                            label="Current Position"
+                            type="is-primary"
+                            @click="vidPosition = new Date(0,0,0,0,0,player.currentTime())" />
+                        </b-timepicker>
+                        <b-button @click="updateCuepoint(false)">Add</b-button>
+                        <b-button v-if="currentCuepointId > 1" @click="updateCuepoint(true)">Edit</b-button>
                       </b-field>
                     </div>
                     <div class="content cuepoint-list">
                       <ul>
                         <li v-for="(c, idx) in sortedCuepoints" :key="idx">
-                          <code>{{ humanizeSeconds(c.time_start) }}</code> -
+                          <a @click="playCuepoint(c)"><code>{{ humanizeSeconds(c.time_start) }}</code></a> -
                           <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
-                          <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(c)" title="Delete cuepoint">
+                          <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(c.id)" title="Delete cuepoint">
                             <b-icon pack="fas" icon="trash" />
                           </button>
                         </li>
@@ -226,7 +233,10 @@ export default {
       tagPosition: '',
       cuepointPositionTags: ['', 'standing', 'sitting', 'laying', 'kneeling'],
       cuepointActTags: ['', 'handjob', 'blowjob', 'doggy', 'cowgirl', 'revcowgirl', 'missionary', 'titfuck', 'anal', 'cumshot', '69', 'facesit'],
-      carouselSlide: 0
+      carouselSlide: 0,
+      vidPosition: null,
+      currentCuepointId: 0,
+      maxTime: new Date(0, 0, 0, 5, 0, 0)
     }
   },
   computed: {
@@ -432,10 +442,25 @@ export default {
       return `/api/dms/heatmap/${fileId}`
     },
     playCuepoint (cuepoint) {
+      // populate the cuepoint edit fields
+      this.vidPosition = new Date(0, 0, 0, 0, 0, cuepoint.time_start)
+      this.currentCuepointId = cuepoint.id
+      if (cuepoint.name.indexOf('-') > 0) {
+        this.tagPosition = cuepoint.name.substr(0, cuepoint.name.indexOf('-'))
+        this.tagAct = cuepoint.name.substr(cuepoint.name.indexOf('-') + 1)
+      } else {
+        this.tagAct = cuepoint.name
+        this.tagPosition = ''
+      }
+      // now mow the player position
       this.player.currentTime(cuepoint.time_start)
       this.player.play()
     },
-    addCuepoint () {
+    updateCuepoint (editCuepoint) {
+      // if edit choosen, delete existing cuepoint before add
+      if (editCuepoint && this.currentCuepointId > 1) {
+        this.deleteCuepoint(this.currentCuepointId)
+      }
       let name = ''
       if (this.tagAct !== '') {
         name = this.tagAct
@@ -446,18 +471,24 @@ export default {
       if (this.tagPosition !== '' && this.tagAct !== '') {
         name = `${this.tagPosition}-${this.tagAct}`
       }
+      let pos = this.player.currentTime()
+      if (this.vidPosition != null) {
+        pos = (this.vidPosition.getMilliseconds() / 1000) + this.vidPosition.getSeconds() + (this.vidPosition.getMinutes() * 60) + (this.vidPosition.getHours() * 60 * 60)
+      }
+      this.currentCuepointId = 0
       ky.post(`/api/scene/${this.item.id}/cuepoint`, {
         json: {
           name: name,
-          time_start: this.player.currentTime()
+          time_start: pos
         }
       }).json().then(data => {
+        this.vidPosition = null
         this.$store.commit('sceneList/updateScene', data)
         this.$store.commit('overlay/showDetails', { scene: data })
       })
     },
-    deleteCuepoint (cuepoint) {
-      ky.delete(`/api/scene/${this.item.id}/cuepoint/${cuepoint.id}`)
+    deleteCuepoint (cuepointid) {
+      ky.delete(`/api/scene/${this.item.id}/cuepoint/${cuepointid}`)
         .json().then(data => {
           this.$store.commit('sceneList/updateScene', data)
           this.$store.commit('overlay/showDetails', { scene: data })
