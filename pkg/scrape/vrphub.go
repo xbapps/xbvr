@@ -12,10 +12,8 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRPVRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, vrpCategory string,  callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
 	defer wg.Done()
-	scraperID := "vrp-vrhush"
-	siteID := "VRHush"
 	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("vrphub.com")
@@ -24,31 +22,9 @@ func VRPVRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 		sc.SceneType = "VR"
-		sc.Studio = "VRHush"
+		sc.Studio = company
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
-
-		// Scene ID - get from videos
-		var tmpVideoUrls []string
-		e.ForEach(`div.td-post-featured-video dl8-video`, func(id int, e *colly.HTMLElement) {
-			tmpVideoUrls = append(tmpVideoUrls, e.Attr("poster"))
-			e.ForEach(`source`, func(id int, e *colly.HTMLElement) {
-				tmpVideoUrls = append(tmpVideoUrls, e.Attr("src"))
-			})
-		})
-
-		for i := range tmpVideoUrls {
-			if sc.SceneID != "" {
-				break
-			}
-
-			tmp := strings.Split(tmpVideoUrls[i], "/")
-			tmp2 := strings.Split(tmp[len(tmp)-1], "_")[0]
-			if tmp2 != "VRHush" {
-				sc.SiteID = strings.Replace(tmp2, "vrh", "", -1)
-				sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
-			}
-		}
 
 		// Title
 		e.ForEach(`div.td-post-header header.td-post-title h1.entry-title`, func(id int, e *colly.HTMLElement) {
@@ -102,6 +78,7 @@ func VRPVRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 			}
 		})
 
+		callback(e, sc)
 		out <- *sc
 	})
 
@@ -134,7 +111,7 @@ func VRPVRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		}
 	})
 
-	siteCollector.Visit("https://vrphub.com/category/vr-hush/")
+	siteCollector.Visit("https://vrphub.com/category/" + vrpCategory + "/")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -143,6 +120,44 @@ func VRPVRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	return nil
 }
 
+func noop(e *colly.HTMLElement, sc *models.ScrapedScene) {}
+
+func vrhushCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
+	// Scene ID - get from videos
+	var tmpVideoUrls []string
+	e.ForEach(`div.td-post-featured-video dl8-video`, func(id int, e *colly.HTMLElement) {
+		tmpVideoUrls = append(tmpVideoUrls, e.Attr("poster"))
+		e.ForEach(`source`, func(id int, e *colly.HTMLElement) {
+			tmpVideoUrls = append(tmpVideoUrls, e.Attr("src"))
+		})
+	})
+
+	for i := range tmpVideoUrls {
+		if sc.SceneID != "" {
+			break
+		}
+
+		tmp := strings.Split(tmpVideoUrls[i], "/")
+		tmp2 := strings.Split(tmp[len(tmp)-1], "_")[0]
+		if tmp2 != "VRHush" {
+			sc.SiteID = strings.Replace(tmp2, "vrh", "", -1)
+			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		}
+	}
+}
+
+func addVRPHubScraper(id string, name string, company string, vrpCategory string, avatarURL string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) {
+	suffixedName := name + " (VRP Hub)"
+
+	if avatarURL == "" {
+		avatarURL = "https://cdn.vrphub.com/wp-content/uploads/2016/08/vrphubnew.png"
+	}
+
+	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+		return VRPHub(wg, updateSite, knownScenes, out, id, name, company, vrpCategory, callback)
+	})
+}
+
 func init() {
-	registerScraper("vrphub-vrhush", "VRHush (VRP Hub)", "https://z5w6x5a4.ssl.hwcdn.net/sites/vrh/favicon/apple-touch-icon-180x180.png", VRPVRHush)
+	addVRPHubScraper("vrphub-vrhush", "VRHush", "VRHush", "vr-hush", "https://z5w6x5a4.ssl.hwcdn.net/sites/vrh/favicon/apple-touch-icon-180x180.png", vrhushCallback)
 }
