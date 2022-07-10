@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -25,6 +26,24 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.Studio = company
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+
+		isPost := false
+		e.ForEach(`link[rel="shortlink"]`, func(id int, e *colly.HTMLElement) {
+			// This is the link that contains the internal post id for VRPHub.
+			// If this doesn't exist, it means we're on a list page instead of
+			// a post page
+			postUrl := e.Attr("href")
+			u, err := url.Parse(postUrl)
+			if err != nil {
+				return
+			}
+			isPost = true
+			sc.SiteID = u.Query()["p"][0]
+			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		})
+		if (!isPost) {
+			return
+		}
 
 		// Title
 		e.ForEach(`div.td-post-header header.td-post-title h1.entry-title`, func(id int, e *colly.HTMLElement) {
@@ -132,8 +151,9 @@ func vrhushCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 		})
 	})
 
+	sceneIdFound := false
 	for i := range tmpVideoUrls {
-		if sc.SceneID != "" {
+		if sceneIdFound {
 			break
 		}
 
@@ -142,6 +162,7 @@ func vrhushCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 		if tmp2 != "VRHush" {
 			sc.SiteID = strings.Replace(tmp2, "vrh", "", -1)
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+			sceneIdFound = true
 		}
 	}
 }
