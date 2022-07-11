@@ -200,9 +200,6 @@ func vrhushCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 }
 
 func stripzvrCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
-	// Make sure we don't collide with SLR StripzVR scraper
-	sc.SceneID = "vrphub-" + sc.SceneID
-
 	// Remove prefix for StripzVR trailers
 	for i := range sc.Filenames {
 		sc.Filenames[i] = strings.TrimPrefix(sc.Filenames[i], "StripzVR-SAMPLE-")
@@ -223,5 +220,5 @@ func addVRPHubScraper(id string, name string, company string, vrpCategory string
 
 func init() {
 	addVRPHubScraper("vrphub-vrhush", "VRHush", "VRHush", "vr-hush", "https://z5w6x5a4.ssl.hwcdn.net/sites/vrh/favicon/apple-touch-icon-180x180.png", vrhushCallback)
-	addVRPHubScraper("vrphub-stripzvr", "StripzVR", "StripzVR", "stripzvr", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", stripzvrCallback)
+	addVRPHubScraper("vrphub-stripzvr", "StripzVR - VRP Hub", "StripzVR", "stripzvr", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", stripzvrCallback)
 }
