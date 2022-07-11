@@ -157,10 +157,10 @@ func vrhushCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 			break
 		}
 
-		tmp := strings.Split(tmpVideoUrls[i], "/")
-		tmp2 := strings.Split(tmp[len(tmp)-1], "_")[0]
-		if tmp2 != "VRHush" {
-			sc.SiteID = strings.Replace(tmp2, "vrh", "", -1)
+		vrhIdRegEx := regexp.MustCompile(`vrh(\d+)_`)
+		matches := vrhIdRegEx.FindStringSubmatch(tmpVideoUrls[i])
+		if len(matches) > 0 && len(matches[1]) > 0 {
+			sc.SiteID = matches[1]
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 			sceneIdFound = true
 		}
