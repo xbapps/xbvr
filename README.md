@@ -74,7 +74,7 @@ Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG)
 Make sure you have following installed:
 
 - Go 1.17
-- Node.js 12.x
+- Node.js 14.x
 - Yarn 1.17.x
 - air (run `go get github.com/cosmtrek/air` outside project directory)
 
