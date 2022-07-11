@@ -184,12 +184,12 @@ func vrhushCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 	})
 
 	sceneIdFound := false
+	vrhIdRegEx := regexp.MustCompile(`vrh(\d+)_`)
 	for i := range tmpVideoUrls {
 		if sceneIdFound {
 			break
 		}
 
-		vrhIdRegEx := regexp.MustCompile(`vrh(\d+)_`)
 		matches := vrhIdRegEx.FindStringSubmatch(tmpVideoUrls[i])
 		if len(matches) > 0 && len(matches[1]) > 0 {
 			sc.SiteID = matches[1]
