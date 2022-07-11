@@ -1,7 +1,9 @@
 package scrape
 
 import (
+	"errors"
 	"net/url"
+	"path"
 	"regexp"
 	"strings"
 	"sync"
@@ -12,6 +14,19 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
+
+// Helper function to get video name from URL
+func getVideoName(fileUrl string) (string, error) {
+	u, err := url.Parse(fileUrl)
+	if err != nil {
+		return "", err
+	}
+	filename := path.Base(u.Path)
+	if !strings.Contains(filename, ".") {
+		return "", errors.New("filename is not valid")
+	}
+	return filename, nil
+}
 
 func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, vrpCategory string,  callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
 	defer wg.Done()
@@ -89,13 +104,30 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		// Duration
 		sc.Duration = 0
 
-		// Filenames
-		e.ForEach(`div.td-post-featured-video dl8-video source:not([quality=Default])`, func(id int, e *colly.HTMLElement) {
-			parts := strings.Split(strings.TrimRight(e.Attr("src"), "/"), "/")
-			if len(parts) > 0 {
-				sc.Filenames = append(sc.Filenames, parts[len(parts)-1])
+		// There are 2 places we can find filenames from - one is in the video
+		// previews, and one is in the trailer download section. Some posts
+		// list filenames in both, and some only list filenames in 1 of them.
+		// We will keep a map of video names to deduplicate filenames from
+		// both places
+		filenames := map[string]bool{}
+		e.ForEach(`div.td-post-featured-video dl8-video source`, func(id int, e *colly.HTMLElement) {
+			filename, err := getVideoName(e.Attr("src"))
+			if err != nil {
+				return
 			}
+			filenames[filename] = true
 		})
+		e.ForEach(`div.td-ss-main-content a.maxbutton:not(.maxbutton-get-the-full-video-now)`, func(id int, e *colly.HTMLElement) {
+			filename, err := getVideoName(e.Attr("href"))
+			if err != nil {
+				return
+			}
+			filenames[filename] = true
+		})
+		// Insert the deduped filenames to scene
+		for filename := range filenames {
+			sc.Filenames = append(sc.Filenames, filename)
+		}
 
 		callback(e, sc)
 		out <- *sc
@@ -167,6 +199,16 @@ func vrhushCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 	}
 }
 
+func stripzvrCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
+	// Make sure we don't collide with SLR StripzVR scraper
+	sc.SceneID = "vrphub-" + sc.SceneID
+
+	// Remove prefix for StripzVR trailers
+	for i := range sc.Filenames {
+		sc.Filenames[i] = strings.TrimPrefix(sc.Filenames[i], "StripzVR-SAMPLE-")
+	}
+}
+
 func addVRPHubScraper(id string, name string, company string, vrpCategory string, avatarURL string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) {
 	suffixedName := name + " (VRP Hub)"
 
@@ -181,4 +223,5 @@ func addVRPHubScraper(id string, name string, company string, vrpCategory string
 
 func init() {
 	addVRPHubScraper("vrphub-vrhush", "VRHush", "VRHush", "vr-hush", "https://z5w6x5a4.ssl.hwcdn.net/sites/vrh/favicon/apple-touch-icon-180x180.png", vrhushCallback)
+	addVRPHubScraper("vrphub-stripzvr", "StripzVR", "StripzVR", "stripzvr", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", stripzvrCallback)
 }
