@@ -28,7 +28,7 @@ func getVideoName(fileUrl string) (string, error) {
 	return filename, nil
 }
 
-func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, vrpCategory string,  callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
+func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, vrpCategory string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -56,7 +56,7 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			sc.SiteID = u.Query()["p"][0]
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 		})
-		if (!isPost) {
+		if !isPost {
 			return
 		}
 
@@ -171,6 +171,7 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	return nil
 }
 
+// We can pass this noop callback for studios that require no modifications
 func noop(e *colly.HTMLElement, sc *models.ScrapedScene) {}
 
 func vrhushCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
