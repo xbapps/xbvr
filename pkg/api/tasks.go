@@ -31,6 +31,9 @@ func (i TaskResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/rescan").To(i.rescan).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/scene-refresh").To(i.sceneRrefresh).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.GET("/clean-tags").To(i.cleanTags).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -66,6 +69,10 @@ func (i TaskResource) WebService() *restful.WebService {
 
 func (i TaskResource) rescan(req *restful.Request, resp *restful.Response) {
 	go tasks.RescanVolumes()
+}
+
+func (i TaskResource) sceneRrefresh(req *restful.Request, resp *restful.Response) {
+	go tasks.RefreshSceneStatuses()
 }
 
 func (i TaskResource) cleanTags(req *restful.Request, resp *restful.Response) {

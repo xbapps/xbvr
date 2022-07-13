@@ -374,6 +374,7 @@ func (i ConfigResource) removeStorage(req *restful.Request, resp *restful.Respon
 	common.PublishWS("state.change.optionsStorage", nil)
 
 	tasks.RescanVolumes()
+	tasks.RefreshSceneStatuses()
 
 	log.WithField("task", "rescan").Info("Removed storage", vol.Path)
 

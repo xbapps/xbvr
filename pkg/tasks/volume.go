@@ -77,21 +77,11 @@ func RescanVolumes() {
 			if len(scenes) == 1 {
 				files[i].SceneID = scenes[0].ID
 				files[i].Save()
+				scenes[0].UpdateStatus()
 			}
 
 			if (i % 50) == 0 {
 				tlog.Infof("Matching Scenes to known filenames (%v/%v)", i+1, len(files))
-			}
-		}
-
-		// Update scene statuses
-		tlog.Infof("Update status of Scenes")
-		db.Model(&models.Scene{}).Find(&scenes)
-
-		for i := range scenes {
-			scenes[i].UpdateStatus()
-			if (i % 70) == 0 {
-				tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
 			}
 		}
 
@@ -359,4 +349,23 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 	vol.Path = "Put.io (" + acct.Username + ")"
 	vol.LastScan = time.Now()
 	vol.Save()
+}
+func RefreshSceneStatuses() {
+	// refreshes the status of all scenes
+	tlog := log.WithFields(logrus.Fields{"task": "rescan"})
+	tlog.Infof("Update status of Scenes")
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var scenes []models.Scene
+	db.Model(&models.Scene{}).Find(&scenes)
+
+	for i := range scenes {
+		scenes[i].UpdateStatus()
+		if (i % 70) == 0 {
+			tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+		}
+	}
+
+	tlog.Infof("Scene status refresh complete")
 }

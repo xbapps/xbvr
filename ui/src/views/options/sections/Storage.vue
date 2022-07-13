@@ -46,7 +46,10 @@
         </template>
       </b-table>
 
-      <div class="button is-button is-primary" v-on:click="taskRescan">{{ $t('Rescan') }}</div>
+      <b-field grouped>
+        <div class="button is-button is-primary" v-on:click="taskRescan">{{ $t('Rescan') }}</div>
+        <b-button type="is-primary" @click="taskRefresh" style="margin-left:1em">Refresh Scenes</b-button>
+      </b-field>
     </div>
     <div v-else>
       <section class="hero">
@@ -131,6 +134,9 @@ export default {
   methods: {
     taskRescan: function () {
       ky.get('/api/task/rescan')
+    },
+    taskRefresh: function () {
+      ky.get('/api/task/scene-refresh')
     },
     addFolder: async function () {
       await ky.post('/api/options/storage', { json: { path: this.newVolumePath, type: 'local' } })
