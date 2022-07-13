@@ -24,7 +24,7 @@ import (
 
 var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
 
-func RescanVolumes() {
+func RescanVolumes(id int) {
 	if !models.CheckLock("rescan") {
 		models.CreateLock("rescan")
 
@@ -38,7 +38,11 @@ func RescanVolumes() {
 		tlog.Infof("Start scanning volumes")
 
 		var vol []models.Volume
-		db.Find(&vol)
+		if id > 0 {
+			db.Where("id=?", id).Find(&vol)
+		} else {
+			db.Find(&vol)
+		}
 
 		for i := range vol {
 			log.Infof("Scanning %v", vol[i].Path)

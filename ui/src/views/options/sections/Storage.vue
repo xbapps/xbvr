@@ -30,6 +30,9 @@
           <span v-else>never</span>
         </b-table-column>
         <b-table-column field="actions" v-slot="props">
+          <button class="button is-small is-outlined" v-on:click='rescanFolder(props.row)' style="margin-right:1em">
+            <b-icon pack="mdi" icon="folder-refresh-outline" size="is-small"></b-icon>
+          </button>
           <button class="button is-danger is-small is-outlined" v-on:click='removeFolder(props.row)'>
             <b-icon pack="mdi" icon="close-circle" size="is-small"></b-icon>
           </button>
@@ -154,6 +157,9 @@ export default {
           ky.delete(`/api/options/storage/${folder.id}`)
         }
       })
+    },
+    rescanFolder: function (folder) {
+      ky.get(`/api/task/rescan/${folder.id}`)
     }
   },
   computed: {
