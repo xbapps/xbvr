@@ -31,6 +31,5 @@ func scrapeCron() {
 func rescanCron() {
 	if !session.HasActiveSession() {
 		tasks.RescanVolumes(-1)
-		tasks.RefreshSceneStatuses()
 	}
 }

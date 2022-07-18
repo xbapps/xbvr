@@ -287,12 +287,17 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		vol.LastScan = time.Now()
 		vol.Save()
 
+		var scene models.Scene
 		// Check if files are still present at the location
 		allFiles := vol.Files()
 		for i := range allFiles {
 			if !allFiles[i].Exists() {
 				log.Info(allFiles[i].GetPath())
 				db.Delete(&allFiles[i])
+				if allFiles[i].SceneID != 0 {
+					scene.GetIfExistByPK(allFiles[i].SceneID)
+					scene.UpdateStatus()
+				}
 			}
 		}
 	}
@@ -339,12 +344,17 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		}
 	}
 
+	var scene models.Scene
 	// Check if local files are present in listing
 	allFiles := vol.Files()
 	for i := range allFiles {
 		if !funk.ContainsString(currentFileID, allFiles[i].Path) {
 			log.Info(allFiles[i].GetPath())
 			db.Delete(&allFiles[i])
+			if allFiles[i].SceneID != 0 {
+				scene.GetIfExistByPK(allFiles[i].SceneID)
+				scene.UpdateStatus()
+			}
 		}
 	}
 

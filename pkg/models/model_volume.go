@@ -101,8 +101,23 @@ func CheckVolumes() {
 	var vol []Volume
 	db.Find(&vol)
 
+	var files []File
 	for i := range vol {
-		vol[i].IsAvailable = vol[i].IsMounted()
-		vol[i].Save()
+		isMounted := vol[i].IsMounted()
+		if isMounted != vol[i].IsAvailable {
+			vol[i].IsAvailable = vol[i].IsMounted()
+			vol[i].Save()
+
+			// update the status of any scene with a file on that volume
+			db.
+				Model(&files).
+				Where("volume_id = ?", vol[i].ID).
+				Find(&files)
+			for _, file := range files {
+				var scene Scene
+				scene.GetIfExistByPK(file.SceneID)
+				scene.UpdateStatus()
+			}
+		}
 	}
 }
