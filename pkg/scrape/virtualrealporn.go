@@ -178,22 +178,22 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 
 		var name string
-		e.ForEach(`div.model-title h1`, func(id int, e *colly.HTMLElement) {
-			name = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(e.Text), "VR"))
-		})
-
 		var gender string
-		e.ForEach(`div.model-info div.one-half div`, func(id int, e *colly.HTMLElement) {
-			if strings.Split(e.Text, " ")[0] == "Gender" {
-				gender = strings.Split(e.Text, " ")[1]
+		e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
+			JsonMetadata := strings.TrimSpace(e.Text)
+
+			// skip non Cast Metadata
+			if gjson.Get(JsonMetadata, "@type").String() == "Person" {
+				name = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "name").String()))
+				gender = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "gender").String()))
+
+				if gender == "Female" || gender == "Transgender" || gender == "Female Trans" {
+					sc.Cast = append(sc.Cast, name)
+				} else if sc.Site == "VirtualRealGay" || sc.Site == "VirtualRealPassion" {
+					sc.Cast = append(sc.Cast, name)
+				}
 			}
 		})
-
-		if gender == "Female" || gender == "Transgender" {
-			sc.Cast = append(sc.Cast, name)
-		} else if sc.SiteID == "VirtualRealGay" || sc.SiteID == "VirtualRealPassion" {
-			sc.Cast = append(sc.Cast, name)
-		}
 	})
 
 	siteCollector.OnHTML(`.searchBox option`, func(e *colly.HTMLElement) {
