@@ -187,5 +187,5 @@ func ZexyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 func init() {
 	registerScraper("wankitnowvr", "WankitNowVR", "https://mcdn.vrporn.com/files/20190103150250/wankitnow-profile.jpg", WankitNowVR)
-	registerScraper("zexyvr", "ZexyVR", "https://mcdn.vrporn.com/files/20190103151557/zexyvr-profile.jpg", ZexyVR)
+	registerScraper("zexyvr", "ZexyVR", "https://mcdn.vrporn.com/files/20210617065837/zexyvr-profile-400x400.jpg", ZexyVR)
 }
