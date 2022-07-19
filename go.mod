@@ -39,7 +39,7 @@ require (
 	github.com/mholt/archiver v3.1.1+incompatible
 	github.com/mozillazg/go-slugify v0.2.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
-	github.com/nleeper/goment v0.0.0-20191101041843-559ff168fc12
+	github.com/nleeper/goment v1.4.4
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/posthog/posthog-go v0.0.0-20211028072449-93c17c49e2b0
@@ -134,6 +134,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tinylib/msgp v1.1.0 // indirect
+	github.com/tkuchiki/go-timezone v0.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.5 // indirect
 	github.com/ulikunitz/xz v0.5.6 // indirect
 	github.com/willf/bitset v1.1.10 // indirect
