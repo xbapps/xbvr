@@ -8,6 +8,15 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
+type CronSchedule struct {
+	Enabled      bool `default:"true" json:"enabled"`
+	HourInterval int  `json:"hourInterval"`
+	UseRange     bool `default:"false" json:"useRange"`
+	MinuteStart  int  `default:"0" json:"minuteStart"`
+	HourStart    int  `default:"0" json:"hourStart"`
+	HourEnd      int  `default:"23" json:"hourEnd"`
+}
+
 type ObjectConfig struct {
 	Server struct {
 		BindAddress string `default:"0.0.0.0" json:"bindAddress"`
@@ -58,8 +67,22 @@ type ObjectConfig struct {
 		} `json:"preview"`
 	} `json:"library"`
 	Cron struct {
-		ScrapeContentInterval int `default:"12" json:"scrapeContentInt"`
-		RescanLibraryInterval int `default:"2" json:"rescanLibraryInt"`
+		RescrapeSchedule struct {
+			Enabled      bool `default:"true" json:"enabled"`
+			HourInterval int  `default:"12" json:"hourInterval"`
+			UseRange     bool `default:"false" json:"useRange"`
+			MinuteStart  int  `default:"0" json:"minuteStart"`
+			HourStart    int  `default:"0" json:"hourStart"`
+			HourEnd      int  `default:"23" json:"hourEnd"`
+		} `json:"rescrapeSchedule"`
+		RescanSchedule struct {
+			Enabled      bool `default:"true" json:"enabled"`
+			HourInterval int  `default:"2" json:"hourInterval"`
+			UseRange     bool `default:"false" json:"useRange"`
+			MinuteStart  int  `default:"0" json:"minuteStart"`
+			HourStart    int  `default:"0" json:"hourStart"`
+			HourEnd      int  `default:"23" json:"hourEnd"`
+		} `json:"rescanSchedule"`
 	} `json:"cron"`
 }
 
