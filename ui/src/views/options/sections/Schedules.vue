@@ -9,15 +9,18 @@
           <section>
             <b-field>
               <h4>{{$t("Rescrape Schedule")}}</h4>
-              <b-switch style="margin-left:2em" v-model="useRescrapeTimeRange">
+              <b-switch style="margin-left:2em" v-model="rescrapeEnabled">
+                <p>{{ rescrapeEnabled ? 'Enabled' : 'Disabled' }}</p>
+              </b-switch>
+              <b-switch v-if="rescrapeEnabled" style="margin-left:2em" v-model="useRescrapeTimeRange">
                 <p>{{ useRescrapeTimeRange ? 'Use Processing Window' : 'Process All Day' }}</p>
               </b-switch>
             </b-field>
-            <b-field label="Interval">
+            <b-field v-if="rescrapeEnabled" label="Interval">
               <b-slider v-model="rescrapeHourInterval" :min="1" :max="23" :step="1" ></b-slider>
               <div class="column is-one-third" style="margin-left:.75em">{{`Repeat every ${this.rescrapeHourInterval} hour${this.rescrapeHourInterval > 1 ? 's': ''}`}}</div>
             </b-field>
-            <div v-if="useRescrapeTimeRange">
+            <div v-if="useRescrapeTimeRange && rescrapeEnabled">
               <b-field label="Processing Window">
                 <b-slider v-model="rescrapeTimeRange" :min="0" :max="48" :step="1" :custom-formatter="val => timeRange[val]" @input="restrictRescrapTo24Hours">
                   <b-slider-tick :value="0">00:00</b-slider-tick>
@@ -40,15 +43,18 @@
             <hr/>
             <b-field>
               <h4>{{$t("Rescan Schedule")}}</h4>
-              <b-switch style="margin-left:2em" v-model="useRescanTimeRange">
+              <b-switch style="margin-left:2em" v-model="rescanEnabled">
+                <p>{{ rescanEnabled ? 'Enabled' : 'Disabled' }}</p>
+              </b-switch>
+              <b-switch v-if="rescanEnabled" style="margin-left:2em" v-model="useRescanTimeRange">
                 <p>{{ useRescanTimeRange ? 'Use Processing Window' : 'Process All Day' }}</p>
               </b-switch>
             </b-field>
-            <b-field label="Interval">
+            <b-field v-if="rescanEnabled" label="Interval">
                <b-slider v-model="rescanHourInterval" :min="1" :max="23" :step="1" ></b-slider>
                <div class="column is-one-third" style="margin-left:.75em">{{`Repeat every ${this.rescanHourInterval} hour${this.rescanHourInterval > 1 ? 's': ''}`}}</div>
             </b-field>
-            <div v-if="useRescanTimeRange">
+            <div v-if="useRescanTimeRange && rescanEnabled">
               <b-field label="Processing Window">
                 <b-slider v-model="rescanTimeRange" :min="0" :max="48" :step="1" :custom-formatter="val => timeRange[val]" @input="restrictRescanTo24Hours">
                   <b-slider-tick :value="0">00:00</b-slider-tick>
@@ -182,8 +188,6 @@ export default {
     },
     async saveSettings () {
       this.isLoading = true
-      this.rescrapeEnabled = true
-      this.rescanEnabled = true
       await ky.post('/api/options/task-schedule', {
         json: {
           rescrapeEnabled: this.rescrapeEnabled,
