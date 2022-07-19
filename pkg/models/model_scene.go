@@ -91,7 +91,8 @@ type Scene struct {
 	HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
 	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
 
-	NeedsUpdate bool `json:"needs_update"`
+	NeedsUpdate  bool `json:"needs_update"`
+	EditsApplied bool `json:"edits_applied" gorm:"default:false"`
 
 	Description string  `gorm:"-" json:"description"`
 	Score       float64 `gorm:"-" json:"_score"`
@@ -351,6 +352,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)
 
 	o.NeedsUpdate = false
+	o.EditsApplied = false
 	o.SceneID = ext.SceneID
 
 	if o.Title != ext.Title {
