@@ -1,6 +1,7 @@
 package api
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/emicklei/go-restful"
@@ -29,6 +30,12 @@ func (i TaskResource) WebService() *restful.WebService {
 		Produces(restful.MIME_JSON)
 
 	ws.Route(ws.GET("/rescan").To(i.rescan).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/rescan/{storage-id}").To(i.rescan).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/scene-refresh").To(i.sceneRrefresh).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.GET("/clean-tags").To(i.cleanTags).
@@ -65,7 +72,19 @@ func (i TaskResource) WebService() *restful.WebService {
 }
 
 func (i TaskResource) rescan(req *restful.Request, resp *restful.Response) {
-	go tasks.RescanVolumes()
+	id, err := strconv.Atoi(req.PathParameter("storage-id"))
+	if err != nil {
+		// no storage-id, refresh all
+		go tasks.RescanVolumes(-1)
+		return
+	} else {
+		// just refresh the specified path
+		go tasks.RescanVolumes(id)
+	}
+}
+
+func (i TaskResource) sceneRrefresh(req *restful.Request, resp *restful.Response) {
+	go tasks.RefreshSceneStatuses()
 }
 
 func (i TaskResource) cleanTags(req *restful.Request, resp *restful.Response) {

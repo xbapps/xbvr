@@ -24,7 +24,7 @@ import (
 
 var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
 
-func RescanVolumes() {
+func RescanVolumes(id int) {
 	if !models.CheckLock("rescan") {
 		models.CreateLock("rescan")
 
@@ -38,7 +38,11 @@ func RescanVolumes() {
 		tlog.Infof("Start scanning volumes")
 
 		var vol []models.Volume
-		db.Find(&vol)
+		if id > 0 {
+			db.Where("id=?", id).Find(&vol)
+		} else {
+			db.Find(&vol)
+		}
 
 		for i := range vol {
 			log.Infof("Scanning %v", vol[i].Path)
@@ -77,21 +81,11 @@ func RescanVolumes() {
 			if len(scenes) == 1 {
 				files[i].SceneID = scenes[0].ID
 				files[i].Save()
+				scenes[0].UpdateStatus()
 			}
 
 			if (i % 50) == 0 {
 				tlog.Infof("Matching Scenes to known filenames (%v/%v)", i+1, len(files))
-			}
-		}
-
-		// Update scene statuses
-		tlog.Infof("Update status of Scenes")
-		db.Model(&models.Scene{}).Find(&scenes)
-
-		for i := range scenes {
-			scenes[i].UpdateStatus()
-			if (i % 70) == 0 {
-				tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
 			}
 		}
 
@@ -293,12 +287,17 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		vol.LastScan = time.Now()
 		vol.Save()
 
+		var scene models.Scene
 		// Check if files are still present at the location
 		allFiles := vol.Files()
 		for i := range allFiles {
 			if !allFiles[i].Exists() {
 				log.Info(allFiles[i].GetPath())
 				db.Delete(&allFiles[i])
+				if allFiles[i].SceneID != 0 {
+					scene.GetIfExistByPK(allFiles[i].SceneID)
+					scene.UpdateStatus()
+				}
 			}
 		}
 	}
@@ -345,12 +344,17 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		}
 	}
 
+	var scene models.Scene
 	// Check if local files are present in listing
 	allFiles := vol.Files()
 	for i := range allFiles {
 		if !funk.ContainsString(currentFileID, allFiles[i].Path) {
 			log.Info(allFiles[i].GetPath())
 			db.Delete(&allFiles[i])
+			if allFiles[i].SceneID != 0 {
+				scene.GetIfExistByPK(allFiles[i].SceneID)
+				scene.UpdateStatus()
+			}
 		}
 	}
 
@@ -359,4 +363,23 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 	vol.Path = "Put.io (" + acct.Username + ")"
 	vol.LastScan = time.Now()
 	vol.Save()
+}
+func RefreshSceneStatuses() {
+	// refreshes the status of all scenes
+	tlog := log.WithFields(logrus.Fields{"task": "rescan"})
+	tlog.Infof("Update status of Scenes")
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var scenes []models.Scene
+	db.Model(&models.Scene{}).Find(&scenes)
+
+	for i := range scenes {
+		scenes[i].UpdateStatus()
+		if (i % 70) == 0 {
+			tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+		}
+	}
+
+	tlog.Infof("Scene status refresh complete")
 }
