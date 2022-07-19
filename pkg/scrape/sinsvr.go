@@ -112,8 +112,14 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.OnHTML(`div.tn-video a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`div.tn-video`, func(e *colly.HTMLElement) {
+		studio := e.ChildText("a.author")
+
+		if studio != "By: SinsVR" && studio != "By: Billie Star" {
+			return
+		}
+
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a.tn-video-name", "href"))
 
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) && strings.Contains(sceneURL, "/video") && !strings.Contains(sceneURL, "/join") {
@@ -122,6 +128,7 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	})
 
 	siteCollector.Visit("https://xsinsvr.com/studio/sinsvr/videos")
+	siteCollector.Visit("https://xsinsvr.com/studio/billie-star/videos")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
