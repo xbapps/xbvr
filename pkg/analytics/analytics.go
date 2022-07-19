@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"runtime"
 
+	uuid "github.com/google/uuid"
 	"github.com/posthog/posthog-go"
-	uuid "github.com/satori/go.uuid"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -23,7 +23,7 @@ func GenerateID() {
 	if err == nil {
 		distinctID = obj.Value
 	} else {
-		uuid, _ := uuid.NewV4()
+		uuid := uuid.New()
 		distinctID = uuid.String()
 
 		obj = models.KV{Key: "distinctid", Value: distinctID}
