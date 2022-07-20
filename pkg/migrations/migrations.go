@@ -901,6 +901,15 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0038-edits-applied",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					EditsApplied bool `json:"edits_applied" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

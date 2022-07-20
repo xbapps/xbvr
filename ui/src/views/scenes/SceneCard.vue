@@ -20,6 +20,10 @@
               <b-icon pack="mdi" icon="pulse" size="is-small"/>
               <span v-if="scriptFilesCount > 1">{{scriptFilesCount}}</span>
             </b-tag>
+            <b-tag type="is-info" v-if="item.cuepoints.length>0 && this.$store.state.optionsWeb.web.sceneCuepoint">
+              <b-icon pack="mdi" icon="skip-next-outline" size="is-small"/>
+              <span v-if="item.cuepoints.length > 1">{{item.cuepoints.length}}</span>
+            </b-tag>
             <b-tag type="is-warning" v-if="item.star_rating > 0">
               <b-icon pack="mdi" icon="star" size="is-small"/>
               {{item.star_rating}}
