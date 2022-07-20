@@ -91,7 +91,8 @@ type Scene struct {
 	HasVideoPreview bool `json:"has_preview" gorm:"default:false" xbvrbackup:"-"`
 	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
 
-	NeedsUpdate bool `json:"needs_update" xbvrbackup:"needs_update" `
+	NeedsUpdate  bool `json:"needs_update"` xbvrbackup:"-"
+	EditsApplied bool `json:"edits_applied" gorm:"default:false"` xbvrbackup:"-"
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
@@ -351,6 +352,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)
 
 	o.NeedsUpdate = false
+	o.EditsApplied = false
 	o.SceneID = ext.SceneID
 
 	if o.Title != ext.Title {

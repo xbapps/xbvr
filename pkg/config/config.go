@@ -32,6 +32,7 @@ type ObjectConfig struct {
 		SceneFavourite bool   `default:"true" json:"sceneFavourite"`
 		SceneWatched   bool   `default:"false" json:"sceneWatched"`
 		SceneEdit      bool   `default:"false" json:"sceneEdit"`
+		SceneCuepoint  bool   `default:"true" json:"sceneCuepoint"`
 		UpdateCheck    bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
 	Vendor struct {
