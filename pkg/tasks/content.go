@@ -99,7 +99,12 @@ func ReapplyEdits() {
 	var actions []models.Action
 	db, _ := models.GetDB()
 	defer db.Close()
-	db.Find(&actions)
+	db.Model(&actions).
+		Joins("join scenes on actions.scene_id=scenes.scene_id").
+		Where("scenes.edits_applied = ?", false).
+		Where("scenes.deleted_at is null").
+		Debug().
+		Find(&actions)
 
 	for _, a := range actions {
 		var scene models.Scene
@@ -148,6 +153,7 @@ func ReapplyEdits() {
 			db.Model(&scene).Update("release_date", dt)
 		}
 	}
+	db.Model(&models.Scene{}).Update("edits_applied", true)
 }
 
 func Scrape(toScrape string) {
