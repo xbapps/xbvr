@@ -171,7 +171,9 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
 		}
 
-		out <- sc
+		if sc.SceneID != "" {
+			out <- sc
+		}
 	})
 
 	castCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
