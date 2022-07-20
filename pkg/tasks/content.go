@@ -103,7 +103,6 @@ func ReapplyEdits() {
 		Joins("join scenes on actions.scene_id=scenes.scene_id").
 		Where("scenes.edits_applied = ?", false).
 		Where("scenes.deleted_at is null").
-		Debug().
 		Find(&actions)
 
 	for _, a := range actions {
