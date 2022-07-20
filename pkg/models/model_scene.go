@@ -22,7 +22,7 @@ type SceneCuepoint struct {
 	CreatedAt time.Time `json:"-" xbvrbackup:"-"`
 	UpdatedAt time.Time `json:"-" xbvrbackup:"-"`
 
-	SceneID   uint    `json:"-" xbvrbackup:"scene_id"`
+	SceneID   uint    `json:"-" xbvrbackup:"-"`
 	TimeStart float64 `json:"time_start" xbvrbackup:"time_start"`
 	Name      string  `json:"name" xbvrbackup:"name"`
 }
@@ -51,7 +51,7 @@ func (o *SceneCuepoint) Save() error {
 
 // Scene data model
 type Scene struct {
-	ID        uint       `gorm:"primary_key" json:"id" xbvrbackup:"_id"`
+	ID        uint       `gorm:"primary_key" json:"id" xbvrbackup:"-"`
 	CreatedAt time.Time  `json:"created_at" xbvrbackup:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at" xbvrbackup:"updated_at"`
 	DeletedAt *time.Time `sql:"index" json:"-" xbvrbackup:"-"`
