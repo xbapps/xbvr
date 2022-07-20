@@ -91,8 +91,8 @@ type Scene struct {
 	HasVideoPreview bool `json:"has_preview" gorm:"default:false" xbvrbackup:"-"`
 	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
 
-	NeedsUpdate  bool `json:"needs_update"` xbvrbackup:"-"
-	EditsApplied bool `json:"edits_applied" gorm:"default:false"` xbvrbackup:"-"
+	NeedsUpdate  bool `json:"needs_update" xbvrbackup:"-"`
+	EditsApplied bool `json:"edits_applied" gorm:"default:false" xbvrbackup:"-"`
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
