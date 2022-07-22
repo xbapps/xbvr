@@ -21,7 +21,7 @@ type Volume struct {
 	Metadata       string    `json:"metadata" xbvrbackup:""`
 	LastScan       time.Time `json:"last_scan" xbvrbackup:""`
 	IsEnabled      bool      `json:"-" xbvrbackup:""`
-	IsAvailable    bool      `json:"is_available" xbvrbackup:""`
+	IsAvailable    bool      `json:"is_available" xbvrbackup:"-"`
 	FileCount      int       `gorm:"-" json:"file_count" xbvrbackup:"-"`
 	UnmatchedCount int       `gorm:"-" json:"unmatched_count" xbvrbackup:"-"`
 	TotalSize      int64     `gorm:"-" json:"total_size" xbvrbackup:"-"`
