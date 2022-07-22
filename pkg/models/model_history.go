@@ -7,14 +7,14 @@ import (
 )
 
 type History struct {
-	ID        uint      `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
+	ID        uint      `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	CreatedAt time.Time `json:"-" xbvrbackup:"created_at-"`
+	UpdatedAt time.Time `json:"-" xbvrbackup:"updated_at"`
 
-	SceneID   uint      `json:"scene_id"`
-	TimeStart time.Time `json:"time_start"`
-	TimeEnd   time.Time `json:"time_end"`
-	Duration  float64   `json:"duration"`
+	SceneID   uint      `json:"scene_id" xbvrbackup:"-"`
+	TimeStart time.Time `json:"time_start" xbvrbackup:"time_start"`
+	TimeEnd   time.Time `json:"time_end" xbvrbackup:"time_end"`
+	Duration  float64   `json:"duration" xbvrbackup:"duration"`
 }
 
 func (o *History) GetIfExist(id uint) error {
