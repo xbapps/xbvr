@@ -3,12 +3,13 @@
     <GlobalEvents
       :filter="e => !['INPUT', 'TEXTAREA'].includes(e.target.tagName)"
       @keyup.esc="close"
-      @keydown.arrowLeft="playerStepBack"
-      @keydown.arrowRight="playerStepForward"
+      @keydown.left="handleLeftArrow"
+      @keydown.right="handleRightArrow"
       @keydown.o="prevScene"
       @keydown.p="nextScene"
       @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
-      @keydown.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+      @keydown.exact.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
+      @keydown.shift.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
       @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
       @keydown.g="toggleGallery"
     />
@@ -19,17 +20,17 @@
       <section class="modal-card-body">
         <div class="columns">
 
-          <div class="column">
+          <div class="column is-half">
             <b-tabs v-model="activeMedia" position="is-centered" :animated="false">
 
               <b-tab-item label="Gallery">
-                <b-carousel v-model="carouselSlide" :autoplay="false" :indicator-inside="false">
+                <b-carousel v-model="carouselSlide" @change="scrollToActiveIndicator" :autoplay="false" :indicator-inside="false">
                   <b-carousel-item v-for="(carousel, i) in images" :key="i">
                     <div class="image is-1by1 is-full"
                          v-bind:style="{backgroundImage: `url(${getImageURL(carousel.url, '700,fit')})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat'}"></div>
                   </b-carousel-item>
                   <template slot="indicators" slot-scope="props">
-                      <span class="al image">
+                      <span class="al image" style="width:max-content;">
                         <vue-load-image>
                           <img slot="image" :src="getIndicatorURL(props.i)" style="height:40px;"/>
                           <img slot="preloader" src="/ui/images/blank.png" style="height:40px;"/>
@@ -48,7 +49,7 @@
 
           </div>
 
-          <div class="column">
+          <div class="column is-half">
 
             <div class="block-info block">
               <div class="content">
@@ -57,17 +58,21 @@
                   <span v-else class="missing">(no title)</span>
                   <small class="is-pulled-right">{{ format(parseISO(item.release_date), "yyyy-MM-dd") }}</small>
                 </h3>
-                <small>{{ item.site }}</small>
-                <div class="columns">
-                  <div class="column">
+                <small>
+                  <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>
+                </small>
+                <div class="columns mt-0">
+                  <div class="column pt-0">
                     <star-rating :key="item.id" :rating="item.star_rating" @rating-selected="setRating"
                                  :increment="0.5" :star-size="20"/>
                   </div>
-                  <div class="column">
+                  <div class="column pt-0">
                     <div class="is-pulled-right">
                       <watchlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
-                      <edit-button :item="item"/>
+                      <watched-button :item="item"/>&nbsp;
+                      <edit-button :item="item"/>&nbsp;
+                      <refresh-button :item="item"/>
                     </div>
                   </div>
                 </div>
@@ -94,8 +99,15 @@
                                 v-show="f.type === 'video'">
                           <b-icon pack="fas" icon="play" size="is-small"></b-icon>
                         </button>
-                        <button rounded class="button is-info is-small is-outlined" v-show="f.type === 'script'">
+                        <b-tooltip :label="$t('Select this script for export')" position="is-right">
+                        <button rounded class="button is-info is-small is-outlined" @click='selectScript(f)'
+                          v-show="f.type === 'script'" v-bind:class="{ 'is-success': f.is_selected_script, 'is-info' :!f.is_selected_script }">
                           <b-icon pack="mdi" icon="pulse"></b-icon>
+                        </button>
+                        </b-tooltip>
+                        <button rounded class="button is-info is-small is-outlined" disabled
+                                v-show="f.type === 'hsp'">
+                          <b-icon pack="mdi" icon="safety-goggles"></b-icon>
                         </button>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
@@ -104,7 +116,8 @@
                           <span class="pathDetails">{{ f.path }}</span>
                           <br/>
                           {{ prettyBytes(f.size) }},
-                          <span v-if="f.type === 'video'">{{ f.video_width }}x{{ f.video_height }},</span>
+                          <span v-if="f.type === 'video'"><span class="videosize">{{ f.video_width }}x{{ f.video_height }} {{ f.video_codec_name }}</span>, {{ f.projection }},&nbsp;</span>
+                          <span v-if="f.duration > 1">{{ humanizeSeconds(f.duration) }},</span>
                           {{ format(parseISO(f.created_time), "yyyy-MM-dd") }}
                         </small>
                         <div v-if="f.type === 'script' && f.has_heatmap" class="heatmapFunscript">
@@ -112,7 +125,10 @@
                         </div>
                       </div>
                       <div class="media-right">
-                        <button class="button is-danger is-small is-outlined" @click='removeFile(f)'>
+                        <button class="button is-dark is-small is-outlined" title="Unmatch file from scene" @click='unmatchFile(f)'>
+                          <b-icon pack="fas" icon="unlink" size="is-small"></b-icon>
+                        </button>&nbsp;
+                        <button class="button is-danger is-small is-outlined" title="Delete file from disk" @click='removeFile(f)'>
                           <b-icon pack="fas" icon="trash" size="is-small"></b-icon>
                         </button>
                       </div>
@@ -124,24 +140,26 @@
                   <div class="block-tab-content block">
                     <div class="block">
                       <b-field grouped>
-                        <b-select v-model="tagPosition">
-                          <option v-for="(option, idx) in cuepointPositionTags" :value="option" :key="idx">
-                            {{ option }}
-                          </option>
-                        </b-select>
-                        <b-select v-model="tagAct">
-                          <option v-for="(option, idx) in cuepointActTags" :value="option" :key="idx">
-                            {{ option }}
-                          </option>
-                        </b-select>
-                        <b-button @click="addCuepoint">Add cuepoint</b-button>
+                        <b-autocomplete v-model="tagPosition" :data="filteredCuepointPositionList" :open-on-focus="true"></b-autocomplete>
+                        <b-autocomplete v-model="tagAct"  :data="filteredCuepointActList" :open-on-focus="true"></b-autocomplete>
+                        <b-timepicker v-model="vidPosition" rounded editable placeholder="Defaults to player position" hour-format="24" enable-seconds=true :max-time="maxTime" >
+                          <b-button
+                            label="Current Position"
+                            type="is-primary"
+                            @click="vidPosition = new Date(0,0,0,0,0,player.currentTime())" />
+                        </b-timepicker>
+                        <b-button @click="updateCuepoint(false)">Add</b-button>
+                        <b-button v-if="currentCuepointId > 1" @click="updateCuepoint(true)">Edit</b-button>
                       </b-field>
                     </div>
-                    <div class="content is-small">
+                    <div class="content cuepoint-list">
                       <ul>
                         <li v-for="(c, idx) in sortedCuepoints" :key="idx">
-                          <code>{{ humanizeSeconds(c.time_start) }}</code> -
+                          <a @click="playCuepoint(c)"><code>{{ humanizeSeconds(c.time_start) }}</code></a> -
                           <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
+                          <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(c.id)" title="Delete cuepoint">
+                            <b-icon pack="fas" icon="trash" />
+                          </button>
                         </li>
                       </ul>
                     </div>
@@ -177,6 +195,7 @@
           </div>
         </div>
       </section>
+      <div class="scene-id">{{ item.scene_id }}</div>
     </div>
     <button class="modal-close is-large" aria-label="close" @click="close()"></button>
     <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"
@@ -189,7 +208,7 @@
 <script>
 import ky from 'ky'
 import videojs from 'video.js'
-import vr from 'videojs-vr/dist/videojs-vr.min.js'
+import 'videojs-vr/dist/videojs-vr.min.js'
 import { format, formatDistance, parseISO } from 'date-fns'
 import prettyBytes from 'pretty-bytes'
 import VueLoadImage from 'vue-load-image'
@@ -197,11 +216,13 @@ import GlobalEvents from 'vue-global-events'
 import StarRating from 'vue-star-rating'
 import FavouriteButton from '../../components/FavouriteButton'
 import WatchlistButton from '../../components/WatchlistButton'
+import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
+import RefreshButton from '../../components/RefreshButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, EditButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton },
   data () {
     return {
       index: 1,
@@ -212,7 +233,10 @@ export default {
       tagPosition: '',
       cuepointPositionTags: ['', 'standing', 'sitting', 'laying', 'kneeling'],
       cuepointActTags: ['', 'handjob', 'blowjob', 'doggy', 'cowgirl', 'revcowgirl', 'missionary', 'titfuck', 'anal', 'cumshot', '69', 'facesit'],
-      carouselSlide: 0
+      carouselSlide: 0,
+      vidPosition: null,
+      currentCuepointId: 0,
+      maxTime: new Date(0, 0, 0, 5, 0, 0)
     }
   },
   computed: {
@@ -225,7 +249,7 @@ export default {
     },
     // Properties for gallery
     images () {
-      return JSON.parse(this.item.images)
+      return JSON.parse(this.item.images).filter(im => im && im.url)
     },
     // Tab: cuepoints
     sortedCuepoints () {
@@ -267,6 +291,26 @@ export default {
     },
     showEdit () {
       return this.$store.state.overlay.edit.show
+    },
+    filteredCuepointPositionList () {
+      // filter the list of positions based on what has been entered so far
+      return this.cuepointPositionTags.filter((option) => {
+        return option
+          .toString()
+          .toLowerCase()
+          .trim()
+          .indexOf(this.tagPosition.toLowerCase()) >= 0
+      })
+    },
+    filteredCuepointActList () {
+      // filter the list of acts based on what has been entered so far
+      return this.cuepointActTags.filter((option) => {
+        return option
+          .toString()
+          .toLowerCase()
+          .trim()
+          .indexOf(this.tagAct.toLowerCase()) >= 0
+      })
     }
   },
   mounted () {
@@ -300,8 +344,7 @@ export default {
     },
     updatePlayer (src, projection) {
       this.player.reset()
-
-      const vr = this.player.vr({
+      /* const vr = */ this.player.vr({
         projection: projection,
         forceCardboard: false
       })
@@ -342,8 +385,22 @@ export default {
     },
     playFile (file) {
       this.activeMedia = 1
-      this.updatePlayer('/api/dms/file/' + file.id + '?dnt=true', '180')
+      this.updatePlayer('/api/dms/file/' + file.id + '?dnt=true', (file.projection == 'flat' ? 'NONE' : '180'))
       this.player.play()
+    },
+    unmatchFile (file) {
+      this.$buefy.dialog.confirm({
+        title: 'Unmatch file',
+        message: `You're about to unmatch the file <strong>${file.filename}</strong> from this scene. Afterwards, it can be matched again to this or any other scene.`,
+        type: 'is-info is-wide',
+        hasIcon: true,
+        id: 'heh',
+        onConfirm: () => {
+          ky.post(`/api/files/unmatch`, {json:{file_id: file.id}}).json().then(data => {
+            this.$store.commit('overlay/showDetails', { scene: data })
+          })
+        }
+      })
     },
     removeFile (file) {
       this.$buefy.dialog.confirm({
@@ -356,6 +413,15 @@ export default {
             this.$store.commit('overlay/showDetails', { scene: data })
           })
         }
+      })
+    },
+    selectScript (file) {
+      ky.post(`/api/scene/selectscript/${this.item.id}`, {
+        json: {
+          file_id: file.id,
+        }
+      }).json().then(data => {
+          this.$store.commit('overlay/showDetails', { scene: data })
       })
     },
     getImageURL (u, size) {
@@ -376,10 +442,25 @@ export default {
       return `/api/dms/heatmap/${fileId}`
     },
     playCuepoint (cuepoint) {
+      // populate the cuepoint edit fields
+      this.vidPosition = new Date(0, 0, 0, 0, 0, cuepoint.time_start)
+      this.currentCuepointId = cuepoint.id
+      if (cuepoint.name.indexOf('-') > 0) {
+        this.tagPosition = cuepoint.name.substr(0, cuepoint.name.indexOf('-'))
+        this.tagAct = cuepoint.name.substr(cuepoint.name.indexOf('-') + 1)
+      } else {
+        this.tagAct = cuepoint.name
+        this.tagPosition = ''
+      }
+      // now mow the player position
       this.player.currentTime(cuepoint.time_start)
       this.player.play()
     },
-    addCuepoint () {
+    updateCuepoint (editCuepoint) {
+      // if edit choosen, delete existing cuepoint before add
+      if (editCuepoint && this.currentCuepointId > 1) {
+        this.deleteCuepoint(this.currentCuepointId)
+      }
       let name = ''
       if (this.tagAct !== '') {
         name = this.tagAct
@@ -390,14 +471,28 @@ export default {
       if (this.tagPosition !== '' && this.tagAct !== '') {
         name = `${this.tagPosition}-${this.tagAct}`
       }
-      ky.post(`/api/scene/cuepoint/${this.item.id}`, {
+      let pos = this.player.currentTime()
+      if (this.vidPosition != null) {
+        pos = (this.vidPosition.getMilliseconds() / 1000) + this.vidPosition.getSeconds() + (this.vidPosition.getMinutes() * 60) + (this.vidPosition.getHours() * 60 * 60)
+      }
+      this.currentCuepointId = 0
+      ky.post(`/api/scene/${this.item.id}/cuepoint`, {
         json: {
           name: name,
-          time_start: this.player.currentTime()
+          time_start: pos
         }
       }).json().then(data => {
+        this.vidPosition = null
+        this.$store.commit('sceneList/updateScene', data)
         this.$store.commit('overlay/showDetails', { scene: data })
       })
+    },
+    deleteCuepoint (cuepointid) {
+      ky.delete(`/api/scene/${this.item.id}/cuepoint/${cuepointid}`)
+        .json().then(data => {
+          this.$store.commit('sceneList/updateScene', data)
+          this.$store.commit('overlay/showDetails', { scene: data })
+        })
     },
     close () {
       this.player.dispose()
@@ -461,7 +556,36 @@ export default {
       }
     },
     toggleGallery () {
-      this.activeMedia = 0
+      if (this.activeMedia == 0) {
+        this.activeMedia = 1
+      } else {
+        this.activeMedia = 0
+        }
+    },
+    handleLeftArrow () {
+      if (this.activeMedia === 0)
+      {
+        this.carouselSlide = this.carouselSlide - 1
+      } else {
+        this.playerStepBack()
+      }
+    },
+    handleRightArrow () {
+      if (this.activeMedia === 0)
+      {
+        this.carouselSlide = this.carouselSlide + 1
+      } else {
+        this.playerStepForward()
+      }
+    },
+    scrollToActiveIndicator (value) {
+      const indicators = document.querySelector('.carousel-indicator')
+      const active = indicators.children[value]
+      indicators.scrollTo({
+        top: 0,
+        left: active.offsetLeft + active.offsetWidth / 2 - indicators.offsetWidth / 2,
+        behavior: 'smooth'
+      })
     },
     format,
     parseISO,
@@ -518,6 +642,14 @@ export default {
 .block-opts {
 }
 
+.scene-id {
+  position: absolute;
+  right:10px;
+  bottom: 5px;
+  font-size: 11px;
+  color: #b0b0b0;
+}
+
 .prev, .next {
   cursor: pointer;
   position: absolute;
@@ -551,6 +683,10 @@ span.is-active img {
   color: #b0b0b0;
 }
 
+.cuepoint-list li > button {
+  margin-left: 7px;
+}
+
 .heatmapFunscript {
   width: 100%;
   padding: 0;
@@ -563,5 +699,21 @@ span.is-active img {
   height: 20px;
   margin: 0;
   padding: 0;
+}
+.videosize {
+  color: rgb(60, 60, 60);
+  font-weight: 550;
+}
+
+:deep(.carousel .carousel-indicator) {
+  justify-content: flex-start;
+  width: 100%;
+  max-width: min-content;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: auto;
+}
+:deep(.carousel .carousel-indicator .indicator-item:not(.is-active)) {
+  opacity: 0.5;
 }
 </style>

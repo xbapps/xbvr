@@ -42,13 +42,15 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// Cover URLs
 		e.ForEach(`div.vidCover`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				sc.Covers = append(sc.Covers, strings.TrimSpace(e.ChildAttr(`img`, "src")))
+				src := strings.TrimSpace(e.ChildAttr(`img`, "src"))
+				sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(src))
 			}
 		})
 
 		// Gallery
 		e.ForEach(`div.vid-flex-container a`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, strings.TrimSpace(e.Attr("href")))
+			href := strings.TrimSpace(e.Attr("href"))
+			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(href))
 		})
 
 		// Synopsis

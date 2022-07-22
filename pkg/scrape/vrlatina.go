@@ -69,16 +69,20 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		// Release date / Duration
 		e.ForEach(`div.info-elem.-length span.sub-label`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Split(e.Text, ":")[0]))
-				if err == nil {
-					sc.Duration = tmpDuration
+				durationParts := strings.Split(strings.TrimSpace(e.Text), ":")
+				hours, minutes := 0, 0
+				if len(durationParts) == 2 {
+					minutes, _ = strconv.Atoi(durationParts[0])
+				} else if len(durationParts) == 3 {
+					hours, _ = strconv.Atoi(durationParts[0])
+					minutes, _ = strconv.Atoi(durationParts[1])
 				}
+				sc.Duration = hours*60 + minutes
 			}
 			if id == 1 {
 				tmpDate, _ := goment.New(strings.TrimSpace(e.Text), "MMM DD, YYYY")
 				sc.Released = tmpDate.Format("YYYY-MM-DD")
 			}
-
 		})
 
 		// Scene ID

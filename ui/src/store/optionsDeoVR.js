@@ -5,6 +5,8 @@ const state = {
   deovr: {
     enabled: false,
     auth_enabled: false,
+    render_heatmaps: false,
+    track_watch_time: true,
     remote_enabled: false,
     username: '',
     password: '',
@@ -22,6 +24,8 @@ const actions = {
       .then(data => {
         state.deovr.enabled = data.config.interfaces.deovr.enabled
         state.deovr.auth_enabled = data.config.interfaces.deovr.auth_enabled
+        state.deovr.render_heatmaps = data.config.interfaces.deovr.render_heatmaps
+        state.deovr.track_watch_time = data.config.interfaces.deovr.track_watch_time
         state.deovr.remote_enabled = data.config.interfaces.deovr.remote_enabled
         state.deovr.username = data.config.interfaces.deovr.username
         state.deovr.password = data.config.interfaces.deovr.password

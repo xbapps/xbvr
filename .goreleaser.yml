@@ -1,15 +1,16 @@
 before:
   hooks:
     - go mod download
-    - go get github.com/UnnoTed/fileb0x
     - go generate ./...
 
 builds:
-- id: xbvr-mac
-  binary: XBVR.app/Contents/MacOS/XBVR
-  main: pkg/tray/main.go
+- id: xbvr-mac-intel
+  binary: xbvr
+#  main: pkg/tray/main.go
   flags:
     - -tags=json1
+  ldflags:
+    - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
   env:
     - CGO_ENABLED=1
     - CC=o64-clang
@@ -18,15 +19,34 @@ builds:
     - darwin
   goarch:
     - amd64
-  hooks:
-    post: ./appify.sh -s ./dist/xbvr-mac_darwin_amd64/XBVR.app/Contents/MacOS/XBVR -i ./ui/public/icons/xbvr-mac.icns -n XBVR
+#  hooks:
+#    post: ./appify.sh -s ./dist/xbvr-mac_darwin_amd64/XBVR.app/Contents/MacOS/XBVR -i ./ui/public/icons/xbvr-mac.icns -n XBVR
+
+- id: xbvr-mac-m1
+  binary: xbvr
+#  main: pkg/tray/main.go
+  flags:
+    - -tags=json1
+  ldflags:
+    - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
+  env:
+    - CGO_ENABLED=1
+    - CC=o64-clang
+    - CXX=o64-clang++
+  goos:
+    - darwin
+  goarch:
+    - arm64
+#  hooks:
+#    post: ./appify.sh -s ./dist/xbvr-mac_darwin_amd64/XBVR.app/Contents/MacOS/XBVR -i ./ui/public/icons/xbvr-mac.icns -n XBVR
+
 - id: xbvr-windows
   binary: xbvr
   main: pkg/tray/main.go
   flags:
     - -tags=json1
   ldflags:
-    - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser -H windowsgui
+    - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -H windowsgui
   env:
     - CGO_ENABLED=1
     - CC=x86_64-w64-mingw32-gcc
@@ -35,6 +55,7 @@ builds:
     - windows
   goarch:
     - amd64
+
 - id: xbvr-linux-amd64
   binary: xbvr
   flags:
@@ -45,26 +66,99 @@ builds:
     - linux
   goarch:
     - amd64
-- id: xbvr-linux-arm
+
+- id: xbvr-linux-arm64
   binary: xbvr
   flags:
     - -tags=json1
   env:
     - CGO_ENABLED=1
-    - CC=arm-linux-gnueabi-gcc
+    - CC=aarch64-linux-gnu-gcc
+  goos:
+    - linux
+  goarch:
+    - arm64
+
+- id: xbvr-linux-armv7
+  binary: xbvr
+  flags:
+    - -tags=json1
+  env:
+    - CGO_ENABLED=1
+    - CC=arm-linux-gnueabihf-gcc
   goos:
     - linux
   goarch:
     - arm
   goarm:
-    - 6
-    - 7
+    - 7    
+
+dockers:
+  -
+    use: buildx
+    dockerfile: Dockerfile
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
+    build_flag_templates:
+      - --platform=linux/amd64
+      - --no-cache
+      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+  -
+    use: buildx
+    dockerfile: Dockerfile
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+    build_flag_templates:
+      - --platform=linux/arm64
+      - --no-cache
+      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+  -
+    use: buildx
+    dockerfile: Dockerfile
+    goos: linux
+    goarch: arm
+    goarm: 7
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
+    build_flag_templates:
+      - --platform=linux/arm/v7
+      - --no-cache
+      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}      
+
+docker_manifests:
+  - name_template: ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
+  - name_template: ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:latest
+    image_templates:
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
 
 archives:
 - id: archive-linux
   builds:
     - xbvr-linux-amd64
-    - xbvr-linux-arm
+    - xbvr-linux-arm64
+    - xbvr-linux-armv7
   replacements:
     linux: Linux
     windows: Windows
@@ -77,26 +171,42 @@ archives:
     windows: Windows
 - id: archive-mac
   builds:
-    - xbvr-mac
+    - xbvr-mac-intel
+    - xbvr-mac-m1
   format: zip
   replacements:
     darwin: macOS
-  files:
-    - XBVR.app/Contents/Resources/XBVR.icns
-    - XBVR.app/Contents/Info.plist
+    amd64: intel
+    arm64: m1
+#  files:
+#    - XBVR.app/Contents/Resources/XBVR.icns
+#    - XBVR.app/Contents/Info.plist
 
 snapshot:
   name_template: "{{ .Tag }}-next"
 
+checksum:
+  name_template: "checksums.txt"
+
 changelog:
+  use: github
   sort: asc
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Scrapers'
+      regexp: "^.*scrapers?[(\\w)]*:+.*$"
+      order: 1
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 2
+    - title: Others
+      order: 999
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+    - "^docs:"
+    - "^test:"
 
 release:
   disable: false
-  github:
-    owner: xbapps
-    name: xbvr

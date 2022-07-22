@@ -31,15 +31,31 @@
               </div>
               <hr/>
               <div class="block">
+                <b-field label="Funscript heatmaps">
+                  <b-switch v-model="renderHeatmaps">
+                    Enabled
+                  </b-switch>
+                </b-field>
+                <p>
+                  If you are using funscripts, you can add a heatmap to the thumbnails of scripted scenes in the DeoVR interface.
+                </p>
+              </div>
+              <hr/>
+              <div class="block">
+                <b-field label="Watch time tracking">
+                  <b-switch v-model="watchTimeTrackingEnabled">
+                    Enabled
+                  </b-switch>
+                </b-field>
                 <b-field label="Remote mode">
-                  <b-switch v-model="remoteEnabled">
+                  <b-switch v-model="remoteEnabled" :disabled="watchTimeTrackingEnabled === false">
                     Enabled
                   </b-switch>
                 </b-field>
                 <p>
                   To use remote mode, which enables more precise watch time tracking, you need to turn it on in DeoVR
-                  settings too - see <a href="https://deovr.com/doc#remote-control" target="_blank">instructions in
-                  DeoVR documentation</a>.
+                  settings too - see <a href="https://deovr.com/doc#remote-control" target="_blank" rel="noreferrer">
+                  instructions in DeoVR documentation</a>.
                 </p>
               </div>
             </div>
@@ -104,6 +120,22 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.deovr.auth_enabled = value
+      }
+    },
+    renderHeatmaps: {
+      get () {
+        return this.$store.state.optionsDeoVR.deovr.render_heatmaps
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.deovr.render_heatmaps = value
+      }
+    },
+    watchTimeTrackingEnabled: {
+      get () {
+        return this.$store.state.optionsDeoVR.deovr.track_watch_time
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.deovr.track_watch_time = value
       }
     },
     remoteEnabled: {

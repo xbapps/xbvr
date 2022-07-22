@@ -1,16 +1,17 @@
 /.idea
 .DS_Store
-.vscode/settings.json
+.vscode/
 
-go.sum
 test.db
 /test_cache
 
 /dist/
-/pkg/assets/
 
 node_modules/
 /ui/dist/
 /ui/public/static/bundle.*
 npm-debug.log
 yarn-error.log
+
+.release-env
+.docker-creds

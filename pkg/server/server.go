@@ -22,13 +22,13 @@ import (
 	"github.com/rs/cors"
 	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/api"
-	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/session"
 	"github.com/xbapps/xbvr/pkg/tasks"
+	"github.com/xbapps/xbvr/ui"
 	"willnorris.com/go/imageproxy"
 )
 
@@ -120,17 +120,17 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(restfulspec.NewOpenAPIService(restConfig))
 
 	// Static files
-	if !common.EnvConfig.Debug {
-		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(assets.HTTP))
-	} else {
-		authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(http.Dir("ui/dist")))
-	}
+	authHandle("/ui/", common.IsUIAuthEnabled(), common.GetUISecret, http.FileServer(ui.GetFileSystem(common.EnvConfig.Debug)))
 
 	// Imageproxy
 	r := mux.NewRouter()
 	p := imageproxy.NewProxy(nil, diskCache(filepath.Join(common.AppDir, "imageproxy")))
 	p.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
 	r.PathPrefix("/img/").Handler(http.StripPrefix("/img", p))
+	hmp := NewHeatmapThumbnailProxy(p, diskCache(filepath.Join(common.AppDir, "heatmapthumbnailproxy")))
+	r.PathPrefix("/imghm/").Handler(http.StripPrefix("/imghm", hmp))
+	downloadhandler := DownloadHandler{}
+	r.PathPrefix("/download/").Handler(http.StripPrefix("/download/", downloadhandler))
 	r.SkipClean(true)
 
 	r.PathPrefix("/").Handler(http.DefaultServeMux)

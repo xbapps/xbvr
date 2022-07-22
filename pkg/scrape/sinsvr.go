@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,6 +21,12 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	sceneCollector := createCollector("xsinsvr.com")
 	siteCollector := createCollector("xsinsvr.com")
+
+	durationRegexes := []*regexp.Regexp{
+		regexp.MustCompile(`(?:(?P<h>\d+):)?(?P<m>\d+):(?P<s>\d+)`),           // e.g. 11:11, 1:11:11
+		regexp.MustCompile(`(?:(?P<h>\d+) h(?:ou)?rs? )?(?P<m>\d+) m(?:i)?n`), // e.g. 11 mn, 11 min, 1 hr 11 mn, 1 hour 11 min
+		regexp.MustCompile(`(?:(?P<h>\d+)')?(?P<m>\d+)"(?P<s>\d+)`),           // e.g. 1"11, 1'11"11
+	}
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -65,9 +72,16 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		})
 
 		// Duration
-		tmpDuration, err := strconv.Atoi(strings.Split(e.ChildText(`div.video-player-container__info div.tn-video-props span`), ":")[0])
-		if err == nil {
-			sc.Duration = tmpDuration
+		durationText := e.ChildText(`div.video-player-container__info div.tn-video-props span`)
+		for _, regex := range durationRegexes {
+			match := regex.FindStringSubmatchIndex(durationText)
+			hours, _ := strconv.Atoi(string(regex.ExpandString([]byte{}, "0$h", durationText, match)))
+			minutes, _ := strconv.Atoi(string(regex.ExpandString([]byte{}, "0$m", durationText, match)))
+			duration := hours*60 + minutes
+			if duration != 0 {
+				sc.Duration = duration
+				break
+			}
 		}
 
 		//Tags
@@ -98,8 +112,14 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.OnHTML(`div.tn-video a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`div.tn-video`, func(e *colly.HTMLElement) {
+		studio := e.ChildText("a.author")
+
+		if studio != "By: SinsVR" && studio != "By: Billie Star" {
+			return
+		}
+
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a.tn-video-name", "href"))
 
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) && strings.Contains(sceneURL, "/video") && !strings.Contains(sceneURL, "/join") {
@@ -108,6 +128,7 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	})
 
 	siteCollector.Visit("https://xsinsvr.com/studio/sinsvr/videos")
+	siteCollector.Visit("https://xsinsvr.com/studio/billie-star/videos")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

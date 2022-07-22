@@ -36,7 +36,7 @@ export default {
   mounted () {
     this.player = videojs(this.$refs.player)
     const vr = this.player.vr({
-      projection: '180',
+      projection: this.$store.state.overlay.player.file.projection == 'flat' ? 'NONE' : '180',
       forceCardboard: false
     })
 

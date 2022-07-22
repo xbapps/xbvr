@@ -3,16 +3,16 @@ package models
 import (
 	"time"
 
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 )
 
 type Site struct {
-	ID         string    `gorm:"primary_key" json:"id"`
-	Name       string    `json:"name"`
-	AvatarURL  string    `json:"avatar_url"`
-	IsBuiltin  bool      `json:"is_builtin"`
-	IsEnabled  bool      `json:"is_enabled"`
-	LastUpdate time.Time `json:"last_update"`
+	ID         string    `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	Name       string    `json:"name"  xbvrbackup:"name"`
+	AvatarURL  string    `json:"avatar_url" xbvrbackup:"-"`
+	IsBuiltin  bool      `json:"is_builtin" xbvrbackup:"-"`
+	IsEnabled  bool      `json:"is_enabled" xbvrbackup:"is_enabled"`
+	LastUpdate time.Time `json:"last_update" xbvrbackup:"-"`
 }
 
 func (i *Site) Save() error {

@@ -14,7 +14,7 @@
         </optgroup>
       </b-select>
 
-      <b-tooltip position="is-bottom" label="Save" :delay="200">
+      <b-tooltip position="is-bottom" label="Save as new" :delay="200">
         <button class="button is-small is-outlined" @click="showNewDialog">
           <b-icon pack="mdi" icon="content-save-outline"></b-icon>
         </button>

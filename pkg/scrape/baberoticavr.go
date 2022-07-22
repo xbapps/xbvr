@@ -44,8 +44,8 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		})
 
 		// Gallery
-		e.ForEach(`ul.caroussel li a`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, "https:"+e.Attr("href"))
+		e.ForEach(`ul.caroussel li img`, func(id int, e *colly.HTMLElement) {
+			sc.Gallery = append(sc.Gallery, "https:"+e.Attr("src"))
 		})
 
 		// there are some weird categories like cup size or eye color, which don't make much sense without context

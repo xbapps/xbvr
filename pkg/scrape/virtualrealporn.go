@@ -13,7 +13,6 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
-	"gopkg.in/resty.v1"
 )
 
 func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
@@ -77,7 +76,17 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			json.Unmarshal([]byte(e.Text), &jsonResult)
 
 			duration := jsonResult["duration"].(string)
-			sc.Duration, _ = strconv.Atoi(strings.Split(duration, ":")[0])
+			tmpParts := strings.Split(duration, ":")
+			if len(tmpParts) == 2 {
+				sc.Duration, _ = strconv.Atoi(tmpParts[0])
+			} else {
+				tmpParts = strings.Split(duration, "h ")
+				if len(tmpParts) == 2 {
+					hours, _ := strconv.Atoi(tmpParts[0])
+					minutes, _ := strconv.Atoi(tmpParts[1])
+					sc.Duration = hours*60 + minutes
+				}
+			}
 
 			sc.Released = jsonResult["datePublished"].(string)
 
@@ -86,11 +95,11 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			cast := jsonResult["actors"].([]interface{})
 			for _, v := range cast {
 				m := v.(map[string]interface{})
-				tmpCast = append(tmpCast, m["url"].(string))
+				tmpCast = append(tmpCast, e.Request.AbsoluteURL(m["url"].(string)))
 			}
 		})
 
-		e.ForEach(`script[id="downloadLinks-js-extra"]`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`script[id="virtualreal_download-links-js-extra"]`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-12]
 				fpName := gjson.Get(jsonData, "videopart").String()
@@ -144,6 +153,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_1920.mp4")                 // Full HD (older videos; same for Oculus Rift (S) / Vive / Windows MR)
 
 				// Oculus Rift (S) / Vive / Windows MR
+				outFilenames = append(outFilenames, siteID+"_"+fpName+"_8K_180x180_3dh.mp4")         // 5K
 				outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_30M_180x180_3dh.mp4")     // 5K HQ
 				outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_180x180_3dh.mp4")         // 5K
 				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_5K_180x180_3dh.mp4")     // 5K (older videos)
@@ -161,33 +171,40 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
 		}
 
-		out <- sc
+		if sc.SceneID != "" {
+			out <- sc
+		}
 	})
 
 	castCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
 
 		var name string
-		e.ForEach(`h1.model-title`, func(id int, e *colly.HTMLElement) {
-			name = strings.Split(e.Text, " (")[0]
-		})
-
 		var gender string
-		e.ForEach(`div.model-info div.one-half div`, func(id int, e *colly.HTMLElement) {
-			if strings.Split(e.Text, " ")[0] == "Gender" {
-				gender = strings.Split(e.Text, " ")[1]
+		e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
+			JsonMetadata := strings.TrimSpace(e.Text)
+
+			// skip non Cast Metadata
+			if gjson.Get(JsonMetadata, "@type").String() == "Person" {
+				name = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "name").String()))
+				gender = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "gender").String()))
+
+				if gender == "Female" || gender == "Transgender" || gender == "Female Trans" {
+					sc.Cast = append(sc.Cast, name)
+				} else if sc.Site == "VirtualRealGay" || sc.Site == "VirtualRealPassion" {
+					sc.Cast = append(sc.Cast, name)
+				}
 			}
 		})
+	})
 
-		if gender == "Female" || gender == "Transgender" {
-			sc.Cast = append(sc.Cast, name)
-		} else if sc.SiteID == "VirtualRealGay" || sc.SiteID == "VirtualRealPassion" {
-			sc.Cast = append(sc.Cast, name)
-		}
+	siteCollector.OnHTML(`.searchBox option`, func(e *colly.HTMLElement) {
+		pageURL := e.Request.AbsoluteURL(e.Attr("data-url"))
+		siteCollector.Visit(pageURL)
 	})
 
 	siteCollector.OnHTML(`a.w-portfolio-item-anchor`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+		sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
 
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
@@ -195,34 +212,13 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		}
 	})
 
-	// Request scenes via ajax interface
-	r, err := resty.R().
-		SetHeader("User-Agent", userAgent).
-		SetHeader("Accept", "application/json, text/javascript, */*; q=0.01").
-		SetHeader("Referer", URL).
-		SetHeader("X-Requested-With", "XMLHttpRequest").
-		SetHeader("Authority", scraperID+".com").
-		SetFormData(map[string]string{
-			"action": "get_videos_list",
-			"p":      "1",
-			"vpp":    "1000",
-			"sq":     "",
-			"so":     "date-DESC",
-			"pid":    "8",
-		}).
-		Post("https://" + scraperID + ".com/wp-admin/admin-ajax.php")
-
-	if err == nil || r.StatusCode() == 200 {
-		urls := gjson.Get(r.String(), "data.movies.#.permalink").Array()
-		for i := range urls {
-			sceneURL := urls[i].String()
-			if !funk.ContainsString(knownScenes, sceneURL) {
-				sceneCollector.Visit(sceneURL)
-			}
-		}
+	if scraperID == "virtualrealamateur" {
+		siteCollector.Visit(URL)
+	} else if scraperID == "virtualrealgay" {
+		siteCollector.Visit(URL + "porn-actor/")
+	} else {
+		siteCollector.Visit(URL + "porn-actress/")
 	}
-
-	siteCollector.Visit(URL)
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

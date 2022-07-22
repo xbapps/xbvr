@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-test/deep"
+	"github.com/jinzhu/gorm"
 	"github.com/xbapps/xbvr/pkg/tasks"
 
 	"github.com/blevesearch/bleve"
@@ -27,6 +28,19 @@ type RequestSceneCuepoint struct {
 
 type RequestSetSceneRating struct {
 	Rating float64 `json:"rating"`
+}
+
+type RequestSelectScript struct {
+	FileID uint `json:"file_id"`
+}
+
+type RequestCustomScene struct {
+	SceneTitle string `json:"title"`
+	SceneID    string `json:"id"`
+}
+
+type RequestDeleteScene struct {
+	SceneID uint `json:"scene_id"`
 }
 
 type RequestEditSceneDetails struct {
@@ -81,11 +95,26 @@ func (i SceneResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseGetScenes{}))
 
-	ws.Route(ws.POST("/cuepoint/{scene-id}").To(i.addSceneCuepoint).
+	ws.Route(ws.POST("/create").To(i.createCustomScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
+	ws.Route(ws.POST("/delete").To(i.deleteScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.POST("/{scene-id}/cuepoint").To(i.addSceneCuepoint).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
+	ws.Route(ws.DELETE("/{scene-id}/cuepoint/{cuepoint-id}").To(i.deleteSceneCuepoint).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
 
 	ws.Route(ws.POST("/rate/{scene-id}").To(i.rateScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
+	ws.Route(ws.POST("/selectscript/{scene-id}").To(i.selectScript).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
 
@@ -102,6 +131,80 @@ func (i SceneResource) WebService() *restful.WebService {
 		Writes(models.Scene{}))
 
 	return ws
+}
+
+func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	//Get request data
+	var r RequestCustomScene
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	//Get scene id
+	currentTime := time.Now()
+	if r.SceneID == "" {
+		log.Info("SceneID missing from request!")
+		r.SceneID = "Custom-" + currentTime.Format("2006010215040506")
+	}
+
+	//Construct custom scene
+	var scene models.ScrapedScene
+	scene.SceneID = r.SceneID
+	scene.SceneType = "VR"
+	scene.Title = r.SceneTitle
+	scene.Studio = "Custom"
+	scene.Site = "CustomVR"
+	scene.HomepageURL = "http://localhost/" + scene.SceneID
+	scene.Covers = append(scene.Covers, "http://localhost/dont_cause_errors")
+	scene.Released = currentTime.Format("2006-01-02")
+
+	log.Infof("Creating custom scene: \"%v\" \"%v\"", scene.SceneID, scene.Title)
+
+	//Create custom scene
+	models.SceneCreateUpdateFromExternal(db, scene)
+	tasks.SearchIndex()
+
+	//Return resulting scene
+	var resultingScene models.Scene
+	err = resultingScene.GetIfExist(scene.SceneID)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, resultingScene)
+}
+
+func (i SceneResource) deleteScene(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var r RequestDeleteScene
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var scene models.Scene
+	err = db.First(&scene, r.SceneID).Error
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	files, _ := scene.GetFiles()
+	for _, file := range files {
+		file.SceneID = 0
+		file.Save()
+	}
+	db.Delete(&scene)
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
 
 func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) {
@@ -247,6 +350,14 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 		scene.Favourite = !scene.Favourite
 	}
 
+	if r.List == "needs_update" {
+		scene.NeedsUpdate = !scene.NeedsUpdate
+	}
+
+	if r.List == "watched" {
+		scene.IsWatched = !scene.IsWatched
+	}
+
 	scene.Save()
 }
 
@@ -256,12 +367,16 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	idx := tasks.NewIndex("scenes")
+	idx, err := tasks.NewIndex("scenes")
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	defer idx.Bleve.Close()
 	query := bleve.NewQueryStringQuery(q)
 
 	searchRequest := bleve.NewSearchRequest(query)
-	searchRequest.Fields = []string{"fulltext"}
+	searchRequest.Fields = []string{"Id", "title", "cast", "site", "description"}
 	searchRequest.IncludeLocations = true
 	searchRequest.From = 0
 	searchRequest.Size = 25
@@ -320,6 +435,39 @@ func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Resp
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
 
+func (i SceneResource) deleteSceneCuepoint(req *restful.Request, resp *restful.Response) {
+	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	cuepointId, err := strconv.Atoi(req.PathParameter("cuepoint-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	db, _ := models.GetDB()
+
+	cuepoint := models.SceneCuepoint{}
+	err = db.First(&cuepoint, cuepointId).Error
+
+	if err == gorm.ErrRecordNotFound {
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	db.Where("id = ? AND scene_id = ?", cuepointId, sceneId).Delete(models.SceneCuepoint{})
+	db.Delete(&cuepoint)
+
+	var scene models.Scene
+	err = scene.GetIfExistByPK(uint(sceneId))
+	defer db.Close()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+
 func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
 	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
 	if err != nil {
@@ -340,6 +488,44 @@ func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
 	if err == nil {
 		scene.StarRating = r.Rating
 		scene.Save()
+	}
+	db.Close()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+
+func (i SceneResource) selectScript(req *restful.Request, resp *restful.Response) {
+	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var r RequestSelectScript
+	err = req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var scene models.Scene
+	var files []models.File
+	db, _ := models.GetDB()
+	err = scene.GetIfExistByPK(uint(sceneId))
+	if err == nil {
+		files, err = scene.GetScriptFiles()
+		if err == nil {
+			for _, file := range files {
+				if file.ID == r.FileID && !file.IsSelectedScript {
+					file.IsSelectedScript = true
+					file.Save()
+				} else if file.ID != r.FileID && file.IsSelectedScript {
+					file.IsSelectedScript = false
+					file.Save()
+				}
+			}
+		}
+		err = scene.GetIfExistByPK(uint(sceneId))
 	}
 	db.Close()
 

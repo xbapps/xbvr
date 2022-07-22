@@ -21,6 +21,10 @@ type RequestMatchFile struct {
 	FileID  uint   `json:"file_id"`
 }
 
+type RequestUnmatchFile struct {
+	FileID uint `json:"file_id"`
+}
+
 type RequestFileList struct {
 	State       optional.String   `json:"state"`
 	CreatedDate []optional.String `json:"createdDate"`
@@ -46,6 +50,9 @@ func (i FilesResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/match").To(i.matchFile).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.POST("/unmatch").To(i.unmatchFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.DELETE("/file/{file-id}").To(i.removeFile).
@@ -235,6 +242,67 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	scene.UpdateStatus()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, nil)
+}
+
+func (i FilesResource) unmatchFile(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var r RequestUnmatchFile
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var f models.File
+	err = db.Preload("Volume").Where(&models.File{ID: r.FileID}).First(&f).Error
+	var sceneID uint = 0
+	if err == nil {
+		sceneID = f.SceneID
+		if sceneID != 0 {
+			f.SceneID = 0
+			f.Save()
+		}
+
+	}
+
+	var scene models.Scene
+	if sceneID != 0 {
+		err = scene.GetIfExistByPK(sceneID)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		// Remove File from the list of Scene filenames so it will be not be auto-matched again
+		var pfTxt []string
+		err = json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		var newFilenamesArr []string
+
+		for _, fn := range pfTxt {
+			if fn != f.Filename {
+				newFilenamesArr = append(newFilenamesArr, fn)
+			}
+		}
+
+		tmp, err := json.Marshal(newFilenamesArr)
+		if err == nil {
+			scene.FilenamesArr = string(tmp)
+		}
+
+		models.AddAction(scene.SceneID, "unmatch", "filenames_arr", scene.FilenamesArr)
+
+		// Finally, update scene available/accessible status
+		scene.UpdateStatus()
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
 
 func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) {

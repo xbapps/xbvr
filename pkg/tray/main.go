@@ -9,9 +9,9 @@ import (
 	"github.com/getlantern/systray"
 	"github.com/marcsauter/single"
 	"github.com/skratchdot/open-golang/open"
-	"github.com/xbapps/xbvr/pkg/assets"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/server"
+	"github.com/xbapps/xbvr/ui"
 )
 
 var version = "CURRENT"
@@ -38,9 +38,11 @@ func onReady() {
 	}()
 
 	if runtime.GOOS == "windows" {
-		systray.SetIcon(assets.FileIconsXbvrWinIco)
+		iconData, _ := ui.Assets.ReadFile("dist/icons/xbvr-win.ico")
+		systray.SetIcon(iconData)
 	} else {
-		systray.SetIcon(assets.FileIconsXbvr128Png)
+		iconData, _ := ui.Assets.ReadFile("dist/icons/xbvr-128.png")
+		systray.SetIcon(iconData)
 	}
 	systray.SetTooltip(fmt.Sprintf("XBVR"))
 

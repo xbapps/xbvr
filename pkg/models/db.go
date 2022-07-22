@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"

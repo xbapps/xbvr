@@ -3,21 +3,21 @@ package models
 import (
 	"time"
 
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 )
 
 // Playlist data model
 type Playlist struct {
-	ID        uint      `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
+	ID        uint      `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	CreatedAt time.Time `json:"-" xbvrbackup:"-"`
+	UpdatedAt time.Time `json:"-" xbvrbackup:"-"`
 
-	Name         string `json:"name"`
-	Ordering     int    `json:"ordering"`
-	IsSystem     bool   `json:"is_system"`
-	IsDeoEnabled bool   `json:"is_deo_enabled"`
-	IsSmart      bool   `json:"is_smart"`
-	SearchParams string `json:"search_params" sql:"type:text;"`
+	Name         string `json:"name" xbvrbackup:"name"`
+	Ordering     int    `json:"ordering" xbvrbackup:"ordering"`
+	IsSystem     bool   `json:"is_system" xbvrbackup:"is_system"`
+	IsDeoEnabled bool   `json:"is_deo_enabled" xbvrbackup:"is_deo_enabled"`
+	IsSmart      bool   `json:"is_smart" xbvrbackup:"is_smart"`
+	SearchParams string `json:"search_params" sql:"type:text;" xbvrbackup:"search_params"`
 }
 
 func (o *Playlist) Save() error {

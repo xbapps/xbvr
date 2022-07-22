@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -82,11 +83,11 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		// Duration
+		durationRegex := regexp.MustCompile(`Duration: ([0-9]+) min`)
 		e.ForEach(`p.video-duration`, func(id int, e *colly.HTMLElement) {
-			content := strings.Replace(strings.Split(e.Attr("content"), "M")[0], "PT", "", -1)
-			tmpDuration, err := strconv.Atoi(content)
-			if err == nil {
-				sc.Duration = tmpDuration
+			m := durationRegex.FindStringSubmatch(e.Text)
+			if len(m) == 2 {
+				sc.Duration, _ = strconv.Atoi(m[1])
 			}
 		})
 
@@ -101,17 +102,21 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		e.ForEach(`dl8-video source`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				origURL := e.Attr("src")
+
+				//This now needs to be made case insensitive (_trailer is now _Trailer)
+				origURLtmp := e.Attr("src")
+				origURL := strings.ToLower(origURLtmp)
 
 				// Some scenes had different trailer name "templates". Some videos didn't have trailers and one VRCosplayX (Death Note) was was missing "_" in the name
-				fpName3m := strings.Split(strings.Split(strings.Split(strings.Split(origURL, "_trailer")[0], "_3M")[0], "_3m")[0], "3M")[0]
-				fpName2m := strings.Split(strings.Split(strings.Split(fpName3m, "_trailer")[0], "_2M")[0], "_2m")[0]
-				fpName := strings.Split(strings.Split(strings.Split(fpName2m, "_trailer")[0], "_1M")[0], "_1m")[0]
+
+				fpName3m := strings.Split(strings.Split(strings.Split(origURL, "_trailer")[0], "_3m")[0], "3m")[0]
+				fpName2m := strings.Split(strings.Split(fpName3m, "_trailer")[0], "_2m")[0]
+				fpName := strings.Split(strings.Split(fpName2m, "_trailer")[0], "_1m")[0]
 
 				fragmentName := strings.Split(fpName, "/")
 				baseName := fragmentName[len(fragmentName)-1]
 
-				filenames := []string{"samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "7k_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
+				filenames := []string{"samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh", "7k_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "7k_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
 
 				for i := range filenames {
 					filenames[i] = baseName + "_" + filenames[i] + ".mp4"

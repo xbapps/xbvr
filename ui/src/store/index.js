@@ -12,6 +12,8 @@ import optionsDLNA from './optionsDLNA'
 import optionsDeoVR from './optionsDeoVR'
 import optionsSites from './optionsSites'
 import optionsPreviews from './optionsPreviews'
+import optionsFunscripts from './optionsFunscripts'
+import optionsVendor from './optionsVendor'
 
 Vue.use(Vuex)
 
@@ -27,6 +29,8 @@ export default new Vuex.Store({
     optionsDeoVR,
     optionsWeb,
     optionsSites,
-    optionsPreviews
+    optionsPreviews,
+    optionsFunscripts,
+    optionsVendor
   }
 })
