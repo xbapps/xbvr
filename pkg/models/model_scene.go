@@ -57,7 +57,7 @@ type Scene struct {
 	DeletedAt *time.Time `sql:"index" json:"-"`
 
 	SceneID         string    `json:"scene_id"`
-	Title           string    `json:"title"`
+	Title           string    `json:"title" sql:"type:varchar(1024);"`
 	SceneType       string    `json:"scene_type"`
 	Studio          string    `json:"studio"`
 	Site            string    `json:"site"`

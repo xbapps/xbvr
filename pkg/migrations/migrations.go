@@ -910,6 +910,15 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0039-title-size-change",
+			Migrate: func(tx *gorm.DB) error {
+				if models.GetDBConn().Driver == "mysql" {
+					return tx.Model(&models.Scene{}).ModifyColumn("title", "varchar(1024)").Error
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
