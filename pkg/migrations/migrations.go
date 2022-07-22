@@ -919,6 +919,13 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			// perVRt change siteID
+			ID: "0040-revert-pervrt",
+			Migrate: func(tx *gorm.DB) error {
+				return db.Model(&models.Scene{}).Where("site = ?", "perVRt/Terrible").Update("site", "perVRt").Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
