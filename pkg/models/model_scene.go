@@ -348,6 +348,10 @@ func (o *Scene) UpdateStatus() {
 }
 
 func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
+	if ext.SceneID == "" {
+		return nil
+	}
+
 	var o Scene
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)
 
