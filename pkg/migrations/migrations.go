@@ -916,7 +916,7 @@ func Migrate() {
 				if models.GetDBConn().Driver == "mysql" {
 					return tx.Model(&models.Scene{}).ModifyColumn("title", "varchar(1024)").Error
 				}
-				return tx.AutoMigrate(&models.Scene{}).Error
+				return nil
 			},
 		},
 	})
