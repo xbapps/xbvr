@@ -7,21 +7,19 @@
       <div class="columns">
         <div class="column">
           <section>
+            <h4>{{$t("Scrape Sites")}}</h4>
             <b-field>
-              <h4>{{$t("Rescrape Schedule")}}</h4>
-              <b-switch style="margin-left:2em" v-model="rescrapeEnabled">
-                <p>{{ rescrapeEnabled ? 'Enabled' : 'Disabled' }}</p>
-              </b-switch>
-              <b-switch v-if="rescrapeEnabled" style="margin-left:2em" v-model="useRescrapeTimeRange">
-                <p>{{ useRescrapeTimeRange ? 'Use Processing Window' : 'Process All Day' }}</p>
-              </b-switch>
+              <b-switch v-model="rescrapeEnabled">Enable schedule</b-switch>
             </b-field>
-            <b-field v-if="rescrapeEnabled" label="Interval">
+            <b-field v-if="rescrapeEnabled">
               <b-slider v-model="rescrapeHourInterval" :min="1" :max="23" :step="1" ></b-slider>
-              <div class="column is-one-third" style="margin-left:.75em">{{`Repeat every ${this.rescrapeHourInterval} hour${this.rescrapeHourInterval > 1 ? 's': ''}`}}</div>
+              <div class="column is-one-third" style="margin-left:.75em">{{`Run every ${this.rescrapeHourInterval} hour${this.rescrapeHourInterval > 1 ? 's': ''}`}}</div>
+            </b-field>
+            <b-field>
+              <b-switch v-if="rescrapeEnabled" v-model="useRescrapeTimeRange">Limit time of day</b-switch>
             </b-field>
             <div v-if="useRescrapeTimeRange && rescrapeEnabled">
-              <b-field label="Processing Window">
+              <b-field>
                 <b-slider v-model="rescrapeTimeRange" :min="0" :max="48" :step="1" :custom-formatter="val => timeRange[val]" @input="restrictRescrapTo24Hours">
                   <b-slider-tick :value="0">00:00</b-slider-tick>
                   <b-slider-tick :value="6">06:00</b-slider-tick>
@@ -41,21 +39,20 @@
               </b-field>
             </div>
             <hr/>
+          
+            <h4>{{$t("Rescan Folders")}}</h4>
             <b-field>
-              <h4>{{$t("Rescan Schedule")}}</h4>
-              <b-switch style="margin-left:2em" v-model="rescanEnabled">
-                <p>{{ rescanEnabled ? 'Enabled' : 'Disabled' }}</p>
-              </b-switch>
-              <b-switch v-if="rescanEnabled" style="margin-left:2em" v-model="useRescanTimeRange">
-                <p>{{ useRescanTimeRange ? 'Use Processing Window' : 'Process All Day' }}</p>
-              </b-switch>
+              <b-switch v-model="rescanEnabled">Enable schedule</b-switch>
             </b-field>
-            <b-field v-if="rescanEnabled" label="Interval">
+            <b-field v-if="rescanEnabled">
                <b-slider v-model="rescanHourInterval" :min="1" :max="23" :step="1" ></b-slider>
-               <div class="column is-one-third" style="margin-left:.75em">{{`Repeat every ${this.rescanHourInterval} hour${this.rescanHourInterval > 1 ? 's': ''}`}}</div>
+               <div class="column is-one-third" style="margin-left:.75em">{{`Run every ${this.rescanHourInterval} hour${this.rescanHourInterval > 1 ? 's': ''}`}}</div>
+            </b-field>
+            <b-field>
+              <b-switch v-if="rescrapeEnabled" v-model="useRescanTimeRange">Limit time of day</b-switch>
             </b-field>
             <div v-if="useRescanTimeRange && rescanEnabled">
-              <b-field label="Processing Window">
+              <b-field>
                 <b-slider v-model="rescanTimeRange" :min="0" :max="48" :step="1" :custom-formatter="val => timeRange[val]" @input="restrictRescanTo24Hours">
                   <b-slider-tick :value="0">00:00</b-slider-tick>
                   <b-slider-tick :value="6">06:00</b-slider-tick>
@@ -81,9 +78,6 @@
           </section>
           <hr/>
           <section>
-            <p>
-              NOTE: The processing window cannot be more than 24 hours.
-            </p>
             <p>
               Restart XBVR to use new schedule settings
             </p>
@@ -213,24 +207,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-  video {
-    width: 100%;
-  }
-
-  .bbox {
-    flex: 1 0 calc(25% - 10px);
-    margin: 5px;
-    background: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .bbox:after {
-    content: '';
-    display: block;
-    padding-bottom: 100%;
-  }
-</style>
