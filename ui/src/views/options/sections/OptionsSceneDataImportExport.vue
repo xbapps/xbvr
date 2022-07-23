@@ -8,11 +8,9 @@
         </b-tabs>
       <h4>{{ isImport ? "Import Scene Data" : "Export Scene Data"}}</h4>
       <b-field grouped>
-          <!--<b-tooltip
-            label="Selected Sites includes scenes for sites enabled in Options/Scrapers. All sites does not filter based on sites."
-            size="is-large" type="is-primary is-light" multilined :delay="1500" >
-            <b-switch v-model="allSites" ><p>{{ allSites ? 'All Sites' : 'Selected Sites' }}</p></b-switch>
-          </b-tooltip>-->
+          <b-tooltip
+            label="Select which studios are considered"
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
               <b-radio v-model="allSites"
                 name="allSites"
                 native-value="true">
@@ -23,11 +21,12 @@
                 native-value="false">
                 Only Studios enabled on Scrapers page
             </b-radio>
+          </b-tooltip>
       </b-field>
       <b-field v-if="isExport">
           <b-tooltip
             label="Only includes scenes matching the Saved Search criteria."
-            size="is-large" type="is-primary is-light" multilined :delay="1500">
+            size="is-large" type="is-primary is-light" multilined :delay="1000">
             <b-field style="margin-top:5px">
               <span style="margin-right:1em"><p>Filter by Saved Search:</p></span>
               <b-select placeholder="Saved Search" size="is-small" expanded v-model="currentPlaylist">
@@ -42,7 +41,7 @@
         <b-field>
           <b-tooltip
             label="Include the main scene data, eg title, site, cast, tags, filenames, images, favorites, star ratings, etc"
-            size="is-large" type="is-primary is-light" multilined :delay="1500" >
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
             <b-switch v-model="includeScenes">Include Scene Data</b-switch>
           </b-tooltip>
         </b-field>
@@ -56,21 +55,21 @@
         <b-field>
           <b-tooltip
             label="Include your history of watched scenes"
-            size="is-large" type="is-primary is-light" multilined :delay="500" >
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
             <b-switch v-model="includeHistory">Include Watch History</b-switch>
           </b-tooltip>
         </b-field>
         <b-field>
           <b-tooltip
             label="Include scene edit data. Edits allows XBVR to reapply your changes to scene data. These would be lost if a scene is rescraped"
-            size="is-large" type="is-primary is-light" multilined :delay="1500" >
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
             <b-switch v-model="includeActions">Include Scene Edits</b-switch>
           </b-tooltip>
         </b-field>
         <b-field>
           <b-tooltip
             label="Include details of files matched to a scene."
-            size="is-large" type="is-primary is-light" multilined :delay="1500" >
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
             <b-switch v-model="includeFileLinks"><p>Include Matched Files</p></b-switch>
           </b-tooltip>
         </b-field>
@@ -81,21 +80,21 @@
         <b-field>
           <b-tooltip
             label="Includes your Saved Search definitions"
-            size="is-large" type="is-primary is-light" multilined :delay="1500" >
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
             <b-switch v-model="includePlaylists">Include Saved Searches</b-switch>
           </b-tooltip>
         </b-field>
         <b-field>
           <b-tooltip
             label="Include Storage Path data setup in Options/Storage"
-            size="is-large" type="is-primary is-light" multilined :delay="1500" >
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
             <b-switch v-model="includeVolumes">Include Storage Paths</b-switch>
           </b-tooltip>
         </b-field>
         <b-field>
           <b-tooltip
             label="Include Studio Enabled settings from Option/Scrappers"
-            size="is-large" type="is-primary is-light" multilined :delay="1500" >
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
             <b-switch v-model="includeSites">Include Scraper Settings</b-switch>
           </b-tooltip>
         </b-field>
@@ -104,14 +103,14 @@
       <b-field v-if="isImport">
         <b-tooltip
           label="Activate to overwite existing data, otherwise only new records will be added"
-          size="is-large" type="is-primary is-light" multilined :delay="1500">
+          size="is-large" type="is-primary is-light" multilined :delay="1000">
           <b-switch v-model="overwrite"><p>Overwrite existing data</p></b-switch>
         </b-tooltip>
       </b-field>
       <b-field v-if="isImport">
         <b-tooltip
             label="Select a file to import."
-            size="is-large" type="is-primary is-light" multilined :delay="1500">
+            size="is-large" type="is-primary is-light" multilined :delay="1000">
           <b-field class="file is-primary" :class="{'has-name': !!file}">
             <b-upload v-model="file" class="file-label" icon-left="upload">
                 <span class="file-cta">
@@ -128,7 +127,7 @@
       <b-field v-if="activeTab == 1">
           <b-tooltip
             label="Generating the data for a large number of scenes is time consuming, montior progress in the status messages in the top right of the browser."
-            size="is-large" type="is-primary is-light" multilined :delay="1500">
+            size="is-large" type="is-primary is-light" multilined :delay="1000">
             <b-button type="is-primary"  @click="backupContent" icon-left="download">Export
             </b-button>
           </b-tooltip>
