@@ -46,6 +46,18 @@
                   <b-button size="is-small" @click="resetCache('searchIndex')">Reset</b-button>
                 </td>
               </tr>
+              <tr>
+                <td>
+                  <p><strong>Scene status</strong></p>
+                  <p>
+                    Refresh scene status when scenes are not marked "available" or "scripted" despite having such files assigned.
+                  </p>
+                </td>
+                <td nowrap></td>
+                <td>
+                  <b-button type="is-small" @click="taskRefresh">Refresh Scenes</b-button>
+                </td>
+              </tr>
             </table>
           </div>
         </div>
@@ -85,6 +97,9 @@ export default {
       this.isLoading = true
       await ky.delete(`/api/options/cache/reset/${kind}`, { timeout: 30000 })
       await this.loadState()
+    },
+    taskRefresh: function () {
+      ky.get('/api/task/scene-refresh')
     },
     prettyBytes
   }

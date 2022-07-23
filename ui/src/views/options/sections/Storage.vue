@@ -1,6 +1,13 @@
 <template>
   <div class="content">
-    <h3 class="title">{{ $t('Storage') }}</h3>
+    <div class="columns">
+      <div class="column">
+        <h3 class="title">{{$t('Storage')}}</h3>
+      </div>
+      <div class="column buttons" align="right">
+        <a class="button is-primary" v-on:click="taskRescan">{{ $t('Rescan all folders') }}</a>
+      </div>
+    </div>
     <div v-if="items.length > 0">
       <b-table :data="items"
                ref="table" default-sort="is_available" default-sort-direction="desc">
@@ -30,12 +37,14 @@
           <span v-else>never</span>
         </b-table-column>
         <b-table-column field="actions" v-slot="props">
-          <button class="button is-small is-outlined" v-on:click='rescanFolder(props.row)' style="margin-right:1em">
-            <b-icon pack="mdi" icon="folder-refresh-outline" size="is-small"></b-icon>
-          </button>
-          <button class="button is-danger is-small is-outlined" v-on:click='removeFolder(props.row)'>
-            <b-icon pack="mdi" icon="close-circle" size="is-small"></b-icon>
-          </button>
+          <b-field grouped>
+            <button class="button is-small is-outlined" v-on:click='rescanFolder(props.row)' style="margin-right:1em" :title="$t('rescan folder')">
+              <b-icon pack="mdi" icon="folder-refresh-outline"></b-icon>
+            </button>
+            <button class="button is-danger is-small is-outlined" v-on:click='removeFolder(props.row)' :title="$t('remove folder')">
+              <b-icon pack="mdi" icon="close-circle" size="is-small"></b-icon>
+            </button>
+          </b-field>
         </b-table-column>
         <template slot="footer">
           <td></td>
@@ -48,11 +57,6 @@
           <td></td>
         </template>
       </b-table>
-
-      <b-field grouped>
-        <div class="button is-button is-primary" v-on:click="taskRescan">{{ $t('Rescan') }}</div>
-        <b-button type="is-primary" @click="taskRefresh" style="margin-left:1em">Refresh Scenes</b-button>
-      </b-field>
     </div>
     <div v-else>
       <section class="hero">
@@ -137,9 +141,6 @@ export default {
   methods: {
     taskRescan: function () {
       ky.get('/api/task/rescan')
-    },
-    taskRefresh: function () {
-      ky.get('/api/task/scene-refresh')
     },
     addFolder: async function () {
       await ky.post('/api/options/storage', { json: { path: this.newVolumePath, type: 'local' } })
