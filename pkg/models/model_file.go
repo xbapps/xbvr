@@ -12,34 +12,34 @@ import (
 )
 
 type File struct {
-	ID        uint      `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time `json:"created_at" json:"-"`
-	UpdatedAt time.Time `json:"updated_at" json:"-"`
+	ID        uint      `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	CreatedAt time.Time `json:"created_at" json:"-" xbvrbackup:"-"`
+	UpdatedAt time.Time `json:"updated_at" json:"-" xbvrbackup:"-"`
 
-	VolumeID    uint      `json:"volume_id"`
-	Volume      Volume    `json:"-"`
-	Path        string    `json:"path"`
-	Filename    string    `json:"filename"`
-	Size        int64     `json:"size"`
-	CreatedTime time.Time `json:"created_time"`
-	UpdatedTime time.Time `json:"updated_time"`
+	VolumeID    uint      `json:"volume_id" xbvrbackup:"-"`
+	Volume      Volume    `json:"-" xbvrbackup:"-"`
+	Path        string    `json:"path" xbvrbackup:"path"`
+	Filename    string    `json:"filename" xbvrbackup:"filename"`
+	Size        int64     `json:"size" xbvrbackup:"size"`
+	CreatedTime time.Time `json:"created_time" xbvrbackup:"created_time"`
+	UpdatedTime time.Time `json:"updated_time" xbvrbackup:"updated_time"`
 
-	Type    string `json:"type"`
-	SceneID uint   `json:"scene_id"`
-	Scene   Scene  `json:"-"`
+	Type    string `json:"type" xbvrbackup:"type"`
+	SceneID uint   `json:"scene_id" xbvrbackup:"-"`
+	Scene   Scene  `json:"-" xbvrbackup:"-"`
 
-	VideoWidth           int     `json:"video_width"`
-	VideoHeight          int     `json:"video_height"`
-	VideoBitRate         int     `json:"video_bitrate"`
-	VideoAvgFrameRate    string  `json:"-"`
-	VideoAvgFrameRateVal float64 `json:"video_avgfps_val"`
-	VideoCodecName       string  `json:"video_codec_name"`
-	VideoDuration        float64 `json:"duration"`
-	VideoProjection      string  `json:"projection"`
+	VideoWidth           int     `json:"video_width" xbvrbackup:"video_width"`
+	VideoHeight          int     `json:"video_height" xbvrbackup:"video_height"`
+	VideoBitRate         int     `json:"video_bitrate" xbvrbackup:"video_bitrate"`
+	VideoAvgFrameRate    string  `json:"-" xbvrbackup:"video_avgfps"`
+	VideoAvgFrameRateVal float64 `json:"video_avgfps_val" xbvrbackup:"video_avgfps_val"`
+	VideoCodecName       string  `json:"-" xbvrbackup:"video_codec_name"`
+	VideoDuration        float64 `json:"duration" xbvrbackup:"duration"`
+	VideoProjection      string  `json:"projection" xbvrbackup:"projection"`
 
-	HasHeatmap       bool `json:"has_heatmap"`
-	IsSelectedScript bool `json:"is_selected_script"`
-	IsExported       bool `json:"is_exported"`
+	HasHeatmap       bool `json:"has_heatmap" xbvrbackup:"-"`
+	IsSelectedScript bool `json:"is_selected_script" xbvrbackup:"is_selected_script"`
+	IsExported       bool `json:"is_exported" xbvrbackup:"-"`
 }
 
 func (f *File) GetPath() string {

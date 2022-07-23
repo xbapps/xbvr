@@ -7,13 +7,13 @@ import (
 )
 
 type Actor struct {
-	ID        uint      `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
+	ID        uint      `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	CreatedAt time.Time `json:"-" xbvrbackup:"-"`
+	UpdatedAt time.Time `json:"-" xbvrbackup:"-"`
 
-	Name   string  `gorm:"unique_index" json:"name"`
-	Scenes []Scene `gorm:"many2many:scene_cast;" json:"-"`
-	Count  int     `json:"count"`
+	Name   string  `gorm:"unique_index" json:"name" xbvrbackup:"name"`
+	Scenes []Scene `gorm:"many2many:scene_cast;" json:"-" xbvrbackup:"-"`
+	Count  int     `json:"count" xbvrbackup:"-"`
 }
 
 func (i *Actor) Save() error {
