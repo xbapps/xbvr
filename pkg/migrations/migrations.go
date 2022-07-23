@@ -579,28 +579,6 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0017-update-default-lists",
-			Migrate: func(tx *gorm.DB) error {
-				list := RequestSceneList{
-					IsAvailable:  optional.NewBool(true),
-					IsAccessible: optional.NewBool(true),
-					Lists:        []optional.String{optional.NewString("versions")},
-					Sort:         optional.NewString("release_date_desc"),
-				}
-				listDeoMulti := models.Playlist{
-					Name:         "Versions",
-					IsSystem:     true,
-					IsSmart:      true,
-					IsDeoEnabled: true,
-					Ordering:     -46,
-					SearchParams: list.ToJSON(),
-				}
-				listDeoMulti.Save()
-
-				return nil
-			},
-		},
-		{
 			// SLR/RealJam Titles containing ":" & "?" creates invalid filenames breaks automatching. fix filenames changing to _
 			ID: "0029-fix-slr-rj-filenames",
 			Migrate: func(tx *gorm.DB) error {
@@ -933,15 +911,6 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0018-versions",
-			Migrate: func(tx *gorm.DB) error {
-				type Scene struct {
-					Versions bool `json:"versions" gorm:"false"`
-				}
-				return tx.AutoMigrate(Scene{}).Error
-			},
-		},
-		{
 			ID: "0039-title-size-change",
 			Migrate: func(tx *gorm.DB) error {
 				if models.GetDBConn().Driver == "mysql" {
@@ -955,6 +924,37 @@ func Migrate() {
 			ID: "0040-revert-pervrt",
 			Migrate: func(tx *gorm.DB) error {
 				return db.Model(&models.Scene{}).Where("site = ?", "perVRt/Terrible").Update("site", "perVRt").Error
+			},
+		},
+		{
+			ID: "0041-update-default-lists",
+			Migrate: func(tx *gorm.DB) error {
+				list := RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Lists:        []optional.String{optional.NewString("versions")},
+					Sort:         optional.NewString("release_date_desc"),
+				}
+				listDeoMulti := models.Playlist{
+					Name:         "Versions",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: true,
+					Ordering:     -46,
+					SearchParams: list.ToJSON(),
+				}
+				listDeoMulti.Save()
+
+				return nil
+			},
+		},
+		{
+			ID: "0042-versions",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					Versions bool `json:"versions" gorm:"false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
 	})
