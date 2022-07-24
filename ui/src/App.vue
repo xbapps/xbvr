@@ -23,9 +23,9 @@ import GlobalEvents from 'vue-global-events'
 
 import Navbar from './Navbar.vue'
 import Socket from './Socket.vue'
-import QuickFind from './QuickFind'
-import Details from './views/scenes/Details'
-import EditScene from './views/scenes/EditScene'
+import QuickFind from './QuickFind.vue'
+import Details from './views/scenes/Details.vue'
+import EditScene from './views/scenes/EditScene.vue'
 
 export default {
   components: { Navbar, Socket, QuickFind, GlobalEvents, Details, EditScene },
