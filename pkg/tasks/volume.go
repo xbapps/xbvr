@@ -214,7 +214,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 						fl.VideoProjection = "180_sbs"
 						nameparts := filenameSeparator.Split(strings.ToLower(filepath.Base(path)), -1)
 						for i, part := range nameparts {
-							if part == "mkx200" || part == "mkx220" || part == "rf52" || part == "fisheye190" || part == "vrca220" || part == "flat" {
+							if part == "mkx200" || part == "mkx220" || part == "rf52" || part == "fisheye190" || part == "vrca220" || part == "flat" || part == "fisheye" {
 								fl.VideoProjection = part
 								break
 							} else if i < len(nameparts)-1 && (part+"_"+nameparts[i+1] == "mono_360" || part+"_"+nameparts[i+1] == "mono_180") {
