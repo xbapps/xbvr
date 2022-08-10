@@ -83,6 +83,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(api.ConfigResource{}.WebService())
 	restful.Add(api.FilesResource{}.WebService())
 	restful.Add(api.DeoVRResource{}.WebService())
+	restful.Add(api.HeresphereResource{}.WebService())
 	restful.Add(api.PlaylistResource{}.WebService())
 
 	restConfig := restfulspec.Config{
@@ -112,6 +113,12 @@ func StartServer(version, commit, branch, date string) {
 					TagProps: spec.TagProps{
 						Name:        "DeoVR",
 						Description: "Endpoints for interfacing with DeoVR player",
+					},
+				},
+				{
+					TagProps: spec.TagProps{
+						Name:        "HereSphere",
+						Description: "Endpoints for interfacing with HereSphere player",
 					},
 				},
 			}
