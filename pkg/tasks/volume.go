@@ -140,6 +140,9 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		var scriptProcList []string
 		var hspProcList []string
 		_ = filepath.Walk(vol.Path, func(path string, f os.FileInfo, err error) error {
+			if err != nil {
+				return nil
+			}
 			if !f.Mode().IsDir() {
 				// Make sure the filename should be considered
 				if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(allowedVideoExt, strings.ToLower(filepath.Ext(path))) {
