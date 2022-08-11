@@ -82,12 +82,11 @@ type HereSphereAuthRequest struct {
 func HeresphereAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	if isDeoAuthEnabled() {
 		var authorized bool
-
 		var requestData HereSphereAuthRequest
-		if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err == nil {
+
+		if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
 			authorized = false
 		} else {
-			log.Infof("%+v", requestData)
 			err := bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(requestData.Password))
 			if requestData.Username == config.Config.Interfaces.DeoVR.Username && err == nil {
 				authorized = true
@@ -130,24 +129,24 @@ func (i HeresphereResource) WebService() *restful.WebService {
 
 	ws.Route(ws.HEAD("").To(i.getHeresphereLibrary))
 
-	ws.Route(ws.GET("").Filter(restfulAuthFilter).To(i.getHeresphereLibrary).
+	ws.Route(ws.GET("").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
-	ws.Route(ws.POST("").Filter(restfulAuthFilter).To(i.getHeresphereLibrary).
+	ws.Route(ws.POST("").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
 
-	ws.Route(ws.GET("/{scene-id}").Filter(restfulAuthFilter).To(i.getHeresphereScene).
+	ws.Route(ws.GET("/{scene-id}").Filter(HeresphereAuthFilter).To(i.getHeresphereScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoScene{}))
-	ws.Route(ws.POST("/{scene-id}").Filter(restfulAuthFilter).To(i.getHeresphereScene).
+	ws.Route(ws.POST("/{scene-id}").Filter(HeresphereAuthFilter).To(i.getHeresphereScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoScene{}))
 
-	ws.Route(ws.GET("/file/{file-id}").Filter(restfulAuthFilter).To(i.getHeresphereFile).
+	ws.Route(ws.GET("/file/{file-id}").Filter(HeresphereAuthFilter).To(i.getHeresphereFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoScene{}))
-	ws.Route(ws.POST("file/{file-id}").Filter(restfulAuthFilter).To(i.getHeresphereFile).
+	ws.Route(ws.POST("file/{file-id}").Filter(HeresphereAuthFilter).To(i.getHeresphereFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoScene{}))
 	return ws
