@@ -220,6 +220,9 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 							if part == "mkx200" || part == "mkx220" || part == "rf52" || part == "fisheye190" || part == "vrca220" || part == "flat" {
 								fl.VideoProjection = part
 								break
+							} else if part == "fisheye" || part == "f180" || part == "180f" {
+								fl.VideoProjection = "fisheye"
+								break
 							} else if i < len(nameparts)-1 && (part+"_"+nameparts[i+1] == "mono_360" || part+"_"+nameparts[i+1] == "mono_180") {
 								fl.VideoProjection = nameparts[i+1] + "_mono"
 								break
