@@ -140,6 +140,9 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		var scriptProcList []string
 		var hspProcList []string
 		_ = filepath.Walk(vol.Path, func(path string, f os.FileInfo, err error) error {
+			if err != nil {
+				return nil
+			}
 			if !f.Mode().IsDir() {
 				// Make sure the filename should be considered
 				if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(allowedVideoExt, strings.ToLower(filepath.Ext(path))) {
@@ -216,6 +219,9 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 						for i, part := range nameparts {
 							if part == "mkx200" || part == "mkx220" || part == "rf52" || part == "fisheye190" || part == "vrca220" || part == "flat" {
 								fl.VideoProjection = part
+								break
+							} else if part == "fisheye" || part == "f180" || part == "180f" {
+								fl.VideoProjection = "fisheye"
 								break
 							} else if i < len(nameparts)-1 && (part+"_"+nameparts[i+1] == "mono_360" || part+"_"+nameparts[i+1] == "mono_180") {
 								fl.VideoProjection = nameparts[i+1] + "_mono"
