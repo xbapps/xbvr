@@ -154,7 +154,7 @@ export default {
       includeVolumes: true,
       includeSites: true,
       overwrite: true,
-      allSites: true,
+      allSites: "true",
       currentPlaylist: '0',
       myUrl: '/download/xbvr-content-bundle.json',
       file: null,
