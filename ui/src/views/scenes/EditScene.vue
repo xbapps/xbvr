@@ -127,11 +127,7 @@ export default {
     const scene = Object.assign({}, this.$store.state.overlay.edit.scene)
     scene.castArray = scene.cast.map(c => c.name)
     scene.tagsArray = scene.tags.map(t => t.name)
-    try {
-      const images = JSON.parse(scene.images)
-    } catch {
-      const images = []
-    }
+    const images = JSON.parse(scene.images)
     scene.covers = images.filter(i => i.type === 'cover').map(i => i.url)
     scene.gallery = images.filter(i => i.type === 'gallery').map(i => i.url)
     try {
