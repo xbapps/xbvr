@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -19,13 +20,7 @@ import (
 
 type HeresphereLibrary struct {
 	Access  int                    `json:"access"`
-	Banner  HeresphereBanner       `json:"banner"`
 	Library []HeresphereListScenes `json:"library"`
-}
-
-type HeresphereBanner struct {
-	Image string `json:"image"`
-	Link  string `json:"link"`
 }
 
 type HeresphereListScenes struct {
@@ -42,7 +37,7 @@ type HeresphereVideo struct {
 	DateReleased         string             `json:"dateReleased"`
 	DateAdded            string             `json:"dateAdded"`
 	DurationMilliseconds uint               `json:"duration"`
-	Rating               float64            `json:"rating"`
+	Rating               float64            `json:"rating,omitempty"`
 	IsFavorite           bool               `json:"isFavorite"`
 	Projection           string             `json:"projection"`
 	Stereo               string             `json:"stereo"`
@@ -50,7 +45,7 @@ type HeresphereVideo struct {
 	Lens                 string             `json:"lens"`
 	HspUrl               string             `json:"hsp,omitempty"`
 	Scripts              []HeresphereScript `json:"scripts,omitempty"`
-	Tags                 []HeresphereTag    `json:"tags"`
+	Tags                 []HeresphereTag    `json:"tags,omitempty"`
 	Media                []HeresphereMedia  `json:"media"`
 }
 
@@ -88,19 +83,15 @@ func HeresphereAuthFilter(req *restful.Request, resp *restful.Response, chain *r
 	if isDeoAuthEnabled() {
 		var authorized bool
 
-		u, err := req.BodyParameter("login")
-		if err != nil {
+		var requestData HereSphereAuthRequest
+		if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err == nil {
 			authorized = false
-		}
-
-		p, err := req.BodyParameter("password")
-		if err != nil {
-			authorized = false
-		}
-
-		err = bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(p))
-		if u == config.Config.Interfaces.DeoVR.Username && err == nil {
-			authorized = true
+		} else {
+			log.Infof("%+v", requestData)
+			err := bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(requestData.Password))
+			if requestData.Username == config.Config.Interfaces.DeoVR.Username && err == nil {
+				authorized = true
+			}
 		}
 
 		if !authorized {
@@ -236,6 +227,13 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		return
 	}
 
+	features := make(map[string]bool, 30)
+	addFeatureTag := func(feature string) {
+		if !features[feature] {
+			features[feature] = true
+		}
+	}
+
 	var media []HeresphereMedia
 
 	var videoFiles []models.File
@@ -250,13 +248,22 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		var height = file.VideoHeight
 		var width = file.VideoWidth
 		var resolution = file.VideoHeight
+		var vertresolution = file.VideoWidth
 
 		if file.VideoProjection == "360_tb" {
 			resolution = resolution / 2
+			vertresolution = vertresolution * 2
+		}
+
+		resolutionClass := fmt.Sprintf("%0.fK", math.Round(float64(vertresolution)/1000))
+		addFeatureTag("Resolution: " + resolutionClass)
+
+		if file.VideoAvgFrameRateVal > 1.0 {
+			addFeatureTag(fmt.Sprintf("Frame Rate: %.0ffps", file.VideoAvgFrameRateVal))
 		}
 
 		var mediafile = HeresphereMedia{
-			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(videoFiles), file.VideoHeight, humanize.Bytes(uint64(file.Size))),
+			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(videoFiles), resolution, humanize.Bytes(uint64(file.Size))),
 			Sources: []HeresphereSource{
 				{
 					Resolution: resolution,
@@ -270,6 +277,10 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 		media = append(media, mediafile)
 		videoLength = file.VideoDuration
+	}
+
+	if len(videoFiles) > 1 {
+		addFeatureTag("Multiple video files")
 	}
 
 	var tags []HeresphereTag
@@ -298,6 +309,10 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		})
 	}
 
+	if len(cuepoints) > 1 {
+		addFeatureTag("Has cuepoints")
+	}
+
 	tags = append(tags, HeresphereTag{
 		Name: "Studio:" + scene.Site,
 	})
@@ -308,9 +323,15 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		})
 	}
 
+	if len(scene.Cast) > 5 {
+		addFeatureTag("Cast: 6+")
+	} else if len(scene.Cast) > 0 {
+		addFeatureTag(fmt.Sprintf("Cast: %d", len(scene.Cast)))
+	}
+
 	for i := range scene.Tags {
 		tags = append(tags, HeresphereTag{
-			Name: "Tag:" + scene.Tags[i].Name,
+			Name: "Category:" + scene.Tags[i].Name,
 		})
 	}
 
@@ -323,6 +344,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	for _, file := range scriptFiles {
+		addFeatureTag("Is scripted")
 		heresphereScriptFiles = append(heresphereScriptFiles, HeresphereScript{
 			Name: file.Filename,
 			URL:  fmt.Sprintf("http://%v/api/dms/file/%v", req.Request.Host, file.ID),
@@ -338,6 +360,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	if len(hspFiles) > 0 {
+		addFeatureTag("Has HSP file")
 		hspUrl = fmt.Sprintf("http://%v/api/dms/file/%v", req.Request.Host, hspFiles[0].ID)
 	}
 
@@ -348,50 +371,60 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	switch videoFiles[0].VideoProjection {
 	case "flat":
+		addFeatureTag("Flat video")
 		projection = "perspective"
 		stereo = "mono"
 
 	case "180_mono":
+		addFeatureTag("FOV: 180°")
 		projection = "equirectangular"
 		stereo = "mono"
 
 	case "360_mono":
+		addFeatureTag("FOV: 360°")
 		projection = "equirectangular360"
 		stereo = "mono"
 
 	case "180_sbs":
+		addFeatureTag("FOV: 180°")
 		projection = "equirectangular"
 
 	case "360_tb":
+		addFeatureTag("FOV: 360°")
 		projection = "equirectangular360"
 		stereo = "tb"
 
 	case "mkx200":
+		addFeatureTag("FOV: 200°")
 		projection = "fisheye"
 		fov = 200.0
 		lens = "MKX200"
 
 	case "mkx220":
+		addFeatureTag("FOV: 220°")
 		projection = "fisheye"
 		fov = 220.0
 		lens = "MKX220"
 
 	case "vrca220":
+		addFeatureTag("FOV: 220°")
 		projection = "fisheye"
 		fov = 220.0
 		lens = "VRCA220"
 
 	case "rf52":
+		addFeatureTag("FOV: 190°")
 		projection = "fisheye"
 		fov = 190.0
 
 	case "fisheye190":
+		addFeatureTag("FOV: 190°")
 		projection = "fisheye"
 		fov = 190.0
 
 	case "fisheye":
+		addFeatureTag("FOV: 180°")
 		projection = "fisheye"
-		fov = 180.0
 	}
 
 	title := scene.Title
@@ -401,6 +434,21 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
 			thumbnailURL = "http://" + req.Request.Host + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 		}
+	}
+
+	if scene.Watchlist {
+		addFeatureTag("Watchlist")
+	}
+
+	if scene.ReleaseDate.Year() > 1900 {
+		addFeatureTag("Month: " + scene.ReleaseDate.Format("2006-01"))
+		addFeatureTag("Year: " + scene.ReleaseDate.Format("2006"))
+	}
+
+	for f, _ := range features {
+		tags = append(tags, HeresphereTag{
+			Name: "Feature:" + f,
+		})
 	}
 
 	video := HeresphereVideo{
@@ -453,10 +501,10 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 
 			q := models.QueryScenes(r, false)
 
-			list := make([]string, 0)
+			list := make([]string, len(q.Scenes))
 			for i := range q.Scenes {
 				url := fmt.Sprintf("http://%v/heresphere/%v", req.Request.Host, q.Scenes[i].ID)
-				list = append(list, url)
+				list[i] = url
 			}
 
 			sceneLists = append(sceneLists, HeresphereListScenes{
@@ -475,17 +523,19 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 		Order("created_time desc").
 		Find(&unmatched)
 
-	list := make([]string, 0)
-	for i := range unmatched {
-		url := fmt.Sprintf("http://%v/heresphere/file/%v", req.Request.Host, unmatched[i].ID)
-		list = append(list, url)
+	if len(unmatched) > 0 {
+		list := make([]string, len(unmatched))
+		for i := range unmatched {
+			url := fmt.Sprintf("http://%v/heresphere/file/%v", req.Request.Host, unmatched[i].ID)
+			list[i] = url
+		}
+
+		sceneLists = append(sceneLists, HeresphereListScenes{
+			Name: "Unmatched",
+			List: list,
+		})
+
 	}
-
-	sceneLists = append(sceneLists, HeresphereListScenes{
-		Name: "Unmatched",
-		List: list,
-	})
-
 	resp.WriteHeaderAndEntity(http.StatusOK, HeresphereLibrary{
 		Access:  1,
 		Library: sceneLists,
