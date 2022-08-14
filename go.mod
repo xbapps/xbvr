@@ -125,6 +125,7 @@ require (
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
+	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
 	github.com/steveyen/gtreap v0.1.0 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
 	github.com/tidwall/match v1.1.1 // indirect

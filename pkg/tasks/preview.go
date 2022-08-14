@@ -18,7 +18,7 @@ import (
 func GeneratePreviews() {
 	if !models.CheckLock("previews") {
 		models.CreateLock("previews")
-
+		log.Infof("Generating previews")
 		db, _ := models.GetDB()
 		defer db.Close()
 
@@ -56,7 +56,7 @@ func GeneratePreviews() {
 			}
 		}
 	}
-
+	log.Infof("Previews generated")
 	models.RemoveLock("previews")
 }
 
