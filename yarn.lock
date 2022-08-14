@@ -1804,10 +1804,10 @@
   optionalDependencies:
     prettier "^1.18.2 || ^2.0.0"
 
-"@vue/eslint-config-standard@8.0.0":
-  version "8.0.0"
-  resolved "https://registry.yarnpkg.com/@vue/eslint-config-standard/-/eslint-config-standard-8.0.0.tgz#ea05af3fb9921f3dbc8cd446455262b39f1f94f9"
-  integrity sha512-ikvNsEOz/43XF+oCibAKHSHVkKQBycJ+sVFsO4PTknttCyjclrBSOIUB/0pu/40Wq8zjFf4v/t+26TG551Z53w==
+"@vue/eslint-config-standard@8.0.1":
+  version "8.0.1"
+  resolved "https://registry.yarnpkg.com/@vue/eslint-config-standard/-/eslint-config-standard-8.0.1.tgz#d6e5f87bf99d142fc7adaaa5c32bc8d6af626ae3"
+  integrity sha512-+FsTb8kOf2GSbXXTwbigRBRRur/byMbwL6Ijii2JoXW4hsLB4arl9lbgV54OUOV5o20INLHDmBVONO16rP/a1g==
   dependencies:
     eslint-config-standard "^17.0.0"
     eslint-import-resolver-custom-alias "^1.3.0"
