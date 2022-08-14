@@ -336,6 +336,11 @@ func (o *Scene) UpdateStatus() {
 		changed = true
 	}
 
+	if !o.HasVideoPreview && o.PreviewExists() {
+		o.HasVideoPreview = true
+		changed = true
+	}
+
 	totalWatchTime := o.GetTotalWatchTime()
 	if o.TotalWatchTime != totalWatchTime {
 		o.TotalWatchTime = totalWatchTime
