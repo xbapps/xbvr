@@ -50,6 +50,7 @@ func onReady() {
 
 	mOpenUI := systray.AddMenuItem("Open UI", "Open UI")
 	mOpenConfig := systray.AddMenuItem("Open config folder", "Open config folder")
+	mOpenLog := systray.AddMenuItem("Open log file", "Open log file")
 
 	systray.AddSeparator()
 
