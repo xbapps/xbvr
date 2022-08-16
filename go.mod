@@ -20,7 +20,7 @@ require (
 	github.com/emicklei/go-restful-openapi v1.4.1
 	github.com/gammazero/nexus/v3 v3.0.4
 	github.com/getlantern/systray v1.2.1
-	github.com/go-openapi/spec v0.20.6
+	github.com/go-openapi/spec v0.20.7
 	github.com/go-test/deep v1.0.8
 	github.com/gocolly/colly v1.2.0
 	github.com/google/uuid v1.3.0
