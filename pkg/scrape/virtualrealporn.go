@@ -214,10 +214,10 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 	if scraperID == "virtualrealamateur" {
 		siteCollector.Visit(URL)
-	} else if scraperID == "virtualrealgay" {
-		siteCollector.Visit(URL + "porn-actor/")
+	} else if scraperID == "virtualrealporn" {
+		siteCollector.Visit(URL + "vr-pornstars/")
 	} else {
-		siteCollector.Visit(URL + "porn-actress/")
+		siteCollector.Visit(URL + "vr-models/")
 	}
 
 	if updateSite {
