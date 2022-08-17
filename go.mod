@@ -44,7 +44,7 @@ require (
 	github.com/nleeper/goment v1.4.4
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/posthog/posthog-go v0.0.0-20220706162856-f7d06545b580
+	github.com/posthog/posthog-go v0.0.0-20220817142604-0b0bbf0f9c0f
 	github.com/putdotio/go-putio v1.6.0
 	github.com/robertkrimen/otto v0.0.0-20211024170158-b87d35c0b86f
 	github.com/robfig/cron/v3 v3.0.1
