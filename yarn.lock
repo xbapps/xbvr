@@ -7080,10 +7080,10 @@ thread-loader@^3.0.0:
     neo-async "^2.6.2"
     schema-utils "^3.0.0"
 
-three@0.93.0:
-  version "0.93.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.93.0.tgz#3fd6c367ef4554abbb6e16ad69936283e895c123"
-  integrity sha1-P9bDZ+9FVKu7bhataZNig+iVwSM=
+three@0.125.2:
+  version "0.125.2"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.125.2.tgz#dcba12749a2eb41522e15212b919cd3fbf729b12"
+  integrity sha512-7rIRO23jVKWcAPFdW/HREU2NZMGWPBZ4XwEMt0Ak0jwLUKVJhcKM55eCBWyGZq/KiQbeo1IeuAoo/9l2dzhTXA==
 
 thunky@^1.0.2:
   version "1.1.0"
@@ -7356,14 +7356,14 @@ videojs-hotkeys@0.2.27:
   resolved "https://registry.yarnpkg.com/videojs-hotkeys/-/videojs-hotkeys-0.2.27.tgz#0df97952b9dff0e6cc1cf8a439fed7eac9c73f01"
   integrity sha512-pwtm1QocRmzJy1PWQsmFVHyeldYHHpLdeATK3FsFHVMmNpz6CROkAn8TFy2UILr8Ghgq134K8jEKNue8HWpudQ==
 
-videojs-vr@1.8.0:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/videojs-vr/-/videojs-vr-1.8.0.tgz#7f2f07f760d8a329c615acd316e49da6ee8edd34"
-  integrity sha512-776gXqt8g6/rLeV56nn/aUcO0sRy+mgFITCw8cIqzTzl93SE1PEK/QE3YNqtppUfU5igayrx7WKsWhDOpsXMpw==
+videojs-vr@1.10.1:
+  version "1.10.1"
+  resolved "https://registry.yarnpkg.com/videojs-vr/-/videojs-vr-1.10.1.tgz#fd9a2900bcda4d0faa1c7295ee5d5d60be6f5473"
+  integrity sha512-mXrxq4e28lKpoWHDruQdirtz5BPdUZxGnBtDL16KB9VKNJBhFk2AbXeOxVVColsL9QGVGNNkey+5hnXsRrZ0tg==
   dependencies:
     "@babel/runtime" "^7.14.5"
     global "^4.4.0"
-    three "0.93.0"
+    three "0.125.2"
     video.js "^6 || ^7"
     webvr-polyfill "0.10.12"
 
