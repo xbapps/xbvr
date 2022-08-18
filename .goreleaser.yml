@@ -206,6 +206,7 @@ changelog:
   filters:
     exclude:
     - "^docs:"
+    - "^minor:"
     - "^test:"
 
 release:
