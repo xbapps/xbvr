@@ -31,8 +31,8 @@ builds:
     - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
   env:
     - CGO_ENABLED=1
-    - CC=o64-clang
-    - CXX=o64-clang++
+    - CC=oa64-clang
+    - CXX=oa64-clang++
   goos:
     - darwin
   goarch:
@@ -206,6 +206,7 @@ changelog:
   filters:
     exclude:
     - "^docs:"
+    - "^minor:"
     - "^test:"
 
 release:
