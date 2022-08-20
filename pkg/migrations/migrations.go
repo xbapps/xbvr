@@ -926,6 +926,21 @@ func Migrate() {
 				return db.Model(&models.Scene{}).Where("site = ?", "perVRt/Terrible").Update("site", "perVRt").Error
 			},
 		},
+		{
+			// populate default cuepoint actions and positions
+			ID: "0041-default-cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				var kv models.KV
+				kv.Key = "cuepoints"
+				db.Find(&kv)
+
+				if kv.Value == "" {
+					kv.Value = "{\"positions\":[\"standing\", \"sitting\", \"laying\", \"kneeling\"],\"actions\":[\"handjob\", \"blowjob\", \"doggy\", \"cowgirl\", \"revcowgirl\", \"missionary\", \"titfuck\", \"anal\", \"cumshot\", \"69\", \"facesit\"]}"
+					kv.Save()
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

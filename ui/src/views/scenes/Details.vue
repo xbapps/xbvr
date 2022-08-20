@@ -79,7 +79,7 @@
               </div>
             </div>
 
-            <div class="block-tags block">
+            <div class="block-tags block" v-if="activeTab != 1">
               <b-taglist>
                 <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])'
                    class="tag is-warning is-small">{{ c.name }} ({{ c.count }})</a>
@@ -87,6 +87,37 @@
                    class="tag is-info is-small">{{ tag.name }} ({{ tag.count }})</a>
               </b-taglist>
             </div>
+            
+            <div class="block-tags block" v-if="activeTab == 1">              
+             <b-taglist>
+                <b-button @click="updateCuepoint(false)" class="tag is-info is-small is-warning" accesskey="a"><u>A</u>dd New</b-button>                
+                <b-button @click="vidPosition = new Date(0,0,0,0,0,player.currentTime())" class="tag is-info is-small is-warning" accesskey="t">Current <u>T</u>ime</b-button>
+                <b-button v-if="currentCuepointId > 1" @click="updateCuepoint(true)" class="tag is-info is-small is-warning" accesskey="s"><u>S</u>ave Edit</b-button>
+                <b-button v-if="tagPosition!=''" @click='setCuepointPosition("")' class="tag is-info is-small is-warning" accesskey="o">Clear P<u>o</u>sition</b-button>
+                <b-button v-if="tagAct!=''" @click='setCuepointAct("")' class="tag is-info is-small is-warning" accesskey="c"><u>C</u>lear Action</b-button>                  
+              </b-taglist>
+            </div>
+            
+            <div class="is-divider" data-content="Cuepoint Positions" v-if="activeTab == 1"></div>
+            <div class="block-tags block" v-if="activeTab == 1">              
+              <b-taglist>                  
+                <b-button v-for="(c, idx) in cuepointPositionTags.slice(1)" :key="'pos' + idx" @click='setCuepointPosition([c])' class="tag is-info is-small">{{c}}</b-button>
+              </b-taglist>
+            </div>
+            <div class="is-divider" data-content="Default Cuepoint Actions" v-if="activeTab == 1"></div>
+            <div class="block-tags block" v-if="activeTab == 1">    
+              <b-taglist>
+                <b-button v-for="(c, idx) in cuepointActTags.slice(1)" :key="'action' + idx" @click='setCuepointAct([c])' class="tag is-info is-small">{{c}}</b-button>
+              </b-taglist>
+            </div>
+            <div class="is-divider" data-content="Cuepoint Scene Tags" v-if="activeTab == 1"></div>
+            <div class="block-tags block" v-if="activeTab == 1">    
+              <b-taglist>
+                <b-button v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='setCuepointAct([tag.name])'
+                   class="tag is-info is-small">{{ tag.name }}</b-button>
+              </b-taglist>              
+            </div>
+            
 
             <div class="block-opts block">
               <b-tabs v-model="activeTab" :animated="false">
@@ -144,12 +175,10 @@
                         <b-autocomplete v-model="tagAct"  :data="filteredCuepointActList" :open-on-focus="true"></b-autocomplete>
                         <b-timepicker v-model="vidPosition" rounded editable placeholder="Defaults to player position" hour-format="24" enable-seconds=true :max-time="maxTime" >
                           <b-button
-                            label="Current Position"
+                            label="Current Time"
                             type="is-primary"
                             @click="vidPosition = new Date(0,0,0,0,0,player.currentTime())" />
                         </b-timepicker>
-                        <b-button @click="updateCuepoint(false)">Add</b-button>
-                        <b-button v-if="currentCuepointId > 1" @click="updateCuepoint(true)">Edit</b-button>
                       </b-field>
                     </div>
                     <div class="content cuepoint-list">
@@ -299,7 +328,7 @@ export default {
           .toString()
           .toLowerCase()
           .trim()
-          .indexOf(this.tagPosition.toLowerCase()) >= 0
+          .indexOf(this.tagPosition.toString().toLowerCase()) >= 0
       })
     },
     filteredCuepointActList () {
@@ -309,13 +338,21 @@ export default {
           .toString()
           .toLowerCase()
           .trim()
-          .indexOf(this.tagAct.toLowerCase()) >= 0
+          .indexOf(this.tagAct.toString().toLowerCase()) >= 0
       })
     }
   },
   mounted () {
     this.setupPlayer()
-  },
+    
+    // load default cuepoint actions & positions from kv entry in the db
+    ky.get('/api/options/cuepoints').json().then(data => { 
+      this.cuepointActTags = data.actions
+      this.cuepointPositionTags = data.positions
+      this.cuepointActTags.unshift("")
+      this.cuepointPositionTags.unshift("")      
+      })  
+},
   methods: {
     setupPlayer () {
       this.player = videojs(this.$refs.player, {
@@ -555,6 +592,18 @@ export default {
         this.player.play()
       }
     },
+    setCuepointAct (param) {      
+      let action = param.toString()      
+      if (this.activeTab === 1) {
+        this.tagAct = action
+      }
+    },
+    setCuepointPosition (param) {
+      let position = param.toString()      
+      if (this.activeTab === 1) {
+        this.tagPosition = position
+      }
+    },
     toggleGallery () {
       if (this.activeMedia == 0) {
         this.activeMedia = 1
@@ -715,5 +764,8 @@ span.is-active img {
 }
 :deep(.carousel .carousel-indicator .indicator-item:not(.is-active)) {
   opacity: 0.5;
+}
+.is-divider {
+  margin: .8rem 0;
 }
 </style>
