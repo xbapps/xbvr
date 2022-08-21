@@ -42,8 +42,24 @@
               </b-tab-item>
 
               <b-tab-item label="Player">
-                <video ref="player" class="video-js vjs-default-skin" controls playsinline preload="none"/>
-              </b-tab-item>
+                <video ref="player" class="video-js vjs-default-skin" controls playsinline preload="none"/>                
+                <b-field position="is-centered">
+                  <b-field>
+                    <b-tooltip v-for="(skipBack, i) in skipBackIntervals" class="is-size-7" :key="i" :active="skipBack == lastSkipBackInterval ? true : false" :label="$t('Keyboard shortcut: Left Arrow')" 
+                        position="is-top" type="is-primary is-light" >
+                    <b-button class="tag is-small is-outlined is-info is-light"  @click="playerStepBack(skipBack)">                      
+                      <b-icon v-if="skipBack == lastSkipBackInterval" pack="mdi" icon="arrow-left-thin" size="is-small"></b-icon> {{ skipBack }}</b-button>
+                    </b-tooltip>
+                  </b-field>
+                  <b-field style="margin-left:1em">
+                    <b-tooltip v-for="(skipForward, i) in skipForwardIntervals" :key="i" :active="skipForward == lastSkipFowardInterval ? true : false" :label="$t('Keyboard shortcut: Right Arrow')" 
+                        position="is-top" type="is-primary is-light" >                    
+                    <b-button class="tag is-small is-outlined is-info is-light" @click="playerStepForward(skipForward)">
+                      <b-icon v-if="skipForward == lastSkipFowardInterval" pack="mdi" icon="arrow-right-thin" size="is-small"></b-icon> +{{ skipForward }}</b-button>
+                    </b-tooltip>
+                  </b-field>
+                </b-field>
+             </b-tab-item>
 
             </b-tabs>
 
@@ -264,6 +280,10 @@ export default {
       cuepointActTags: ['', 'handjob', 'blowjob', 'doggy', 'cowgirl', 'revcowgirl', 'missionary', 'titfuck', 'anal', 'cumshot', '69', 'facesit'],
       carouselSlide: 0,
       vidPosition: null,
+      skipForwardIntervals: [5, 10, 30, 60, 120, 300],
+      skipBackIntervals: [-300, -120, -60, -30, -10, -5],
+      lastSkipFowardInterval: 5,
+      lastSkipBackInterval: -5,
       currentCuepointId: 0,
       maxTime: new Date(0, 0, 0, 5, 0, 0)
     }
@@ -563,27 +583,28 @@ export default {
         this.updatePlayer(undefined, '180')
       }
     },
-    playerStepBack () {
+    playerStepBack (interval) {
       const wasPlaying = !this.player.paused()
       if (wasPlaying) {
         this.player.pause()
       }
-      let seekTime = this.player.currentTime() - 5
+      let seekTime = this.player.currentTime() + interval
       if (seekTime <= 0) {
         seekTime = 0
       }
       this.player.currentTime(seekTime)
       if (wasPlaying) {
         this.player.play()
-      }
+      }      
+      this.lastSkipBackInterval = interval
     },
-    playerStepForward () {
+    playerStepForward (interval) {
       const duration = this.player.duration()
       const wasPlaying = !this.player.paused()
       if (wasPlaying) {
         this.player.pause()
       }
-      let seekTime = this.player.currentTime() + 5
+      let seekTime = this.player.currentTime() + interval
       if (seekTime >= duration) {
         seekTime = wasPlaying ? duration - 0.001 : duration
       }
@@ -591,6 +612,7 @@ export default {
       if (wasPlaying) {
         this.player.play()
       }
+      this.lastSkipFowardInterval = interval
     },
     setCuepointAct (param) {      
       let action = param.toString()      
@@ -611,20 +633,20 @@ export default {
         this.activeMedia = 0
         }
     },
-    handleLeftArrow () {
+    handleLeftArrow () {      
       if (this.activeMedia === 0)
       {
         this.carouselSlide = this.carouselSlide - 1
-      } else {
-        this.playerStepBack()
+      } else {        
+        this.playerStepBack(this.lastSkipBackInterval)
       }
     },
     handleRightArrow () {
       if (this.activeMedia === 0)
       {
         this.carouselSlide = this.carouselSlide + 1
-      } else {
-        this.playerStepForward()
+      } else {        
+        this.playerStepForward(this.lastSkipFowardInterval)
       }
     },
     scrollToActiveIndicator (value) {
