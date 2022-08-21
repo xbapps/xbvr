@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"crypto/sha1"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -99,6 +100,10 @@ type RequestSaveOptionsTaskSchedule struct {
 	RescanHourEnd        int  `json:"rescanHourEnd"`
 }
 
+type RequestCuepointsResponse struct {
+	Positions []string `json:"positions"`
+	Actions   []string `json:"actions"`
+}
 type ConfigResource struct{}
 
 func (i ConfigResource) WebService() *restful.WebService {
@@ -171,6 +176,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/task-schedule").To(i.saveOptionsTaskSchedule).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	// "Cuepoints section endpoints"
+	ws.Route(ws.GET("/cuepoints").To(i.getDefaultCuepoints).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
 	return ws
 }
 
@@ -635,4 +643,17 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
 
+}
+
+func (i ConfigResource) getDefaultCuepoints(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var kv models.KV
+	kv.Key = "cuepoints"
+	db.Find(&kv)
+
+	var cp RequestCuepointsResponse
+	json.Unmarshal([]byte(kv.Value), &cp)
+	resp.WriteHeaderAndEntity(http.StatusOK, &cp)
 }
