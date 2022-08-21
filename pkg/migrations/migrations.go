@@ -444,6 +444,20 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0038-edits-applied",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					EditsApplied bool `json:"edits_applied" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+
+		// ===============================================================================================
+		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
+		// ===============================================================================================
+
+		{
 			ID: "0024-drop-actions-old",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.Exec("DROP TABLE IF EXISTS actions_old").Error
@@ -899,15 +913,6 @@ func Migrate() {
 				config.Config.Cron.RescrapeSchedule.MinuteStart = ms
 				config.SaveConfig()
 				return nil
-			},
-		},
-		{
-			ID: "0038-edits-applied",
-			Migrate: func(tx *gorm.DB) error {
-				type Scene struct {
-					EditsApplied bool `json:"edits_applied" gorm:"default:false"`
-				}
-				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
 		{
