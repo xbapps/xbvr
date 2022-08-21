@@ -1,6 +1,6 @@
 [![Build Status](https://cloud.drone.io/api/badges/xbapps/xbvr/status.svg)](https://cloud.drone.io/xbapps/xbvr) ![GitHub release](https://img.shields.io/github/release/xbapps/xbvr.svg)
 <br>
-<sup><sub><em>Windows 10 • macOS • Linux • Raspberry Pi</em></sub></sup>
+<sup><sub><em>Windows • macOS • Linux • Raspberry Pi</em></sub></sup>
 
 <h1 align="center">
     <img src="https://i.imgur.com/T2UvcHc.png" width="250"/>
@@ -27,8 +27,8 @@
 ## Features
 
 - Automatically match title, tags, cast, cover image, and more to your videos
-- Support for all the most popular VR sites: BadoinkVR, CzechVR Network, DDFNetworkVR, MilfVR, NaughtyAmericaVR, SexBabesVR, StasyQVR, TmwVRnet, VirtualRealPorn, VirtualTaboo, VRBangers, VRHush, VRLatina and WankzVR
-- Supports DeoVR web mode
+- Support for all the most popular VR sites: BadoinkVR, CzechVR Network, DDFNetworkVR, MilfVR, NaughtyAmericaVR, SexBabesVR, StasyQVR, TmwVRnet, VirtualRealPorn, VirtualTaboo, VRBangers, VRHush, VRLatina, WankzVR and many studios on SexLikeReal
+- Directly supports DeoVR and HereSphere VR players via API
 - Built-in DLNA streaming server compatible with popular VR players (Pigasus, Skybox, Mobile Station VR)
 - Sleek and simple web UI
 - Browse your content by cast, site, tags, and release date
@@ -73,10 +73,10 @@ Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG)
 
 Make sure you have following installed:
 
-- Go 1.17
-- Node.js 14.x
+- Go 1.19
+- Node.js 12.x
 - Yarn 1.17.x
-- air (run `go get github.com/cosmtrek/air` outside project directory)
+- air (run `go install github.com/cosmtrek/air@latest` outside project directory)
 
 Once all of the above is installed, running `yarn dev` from project directory launches file-watchers providing livereload for both Go and JavaScript.
 
