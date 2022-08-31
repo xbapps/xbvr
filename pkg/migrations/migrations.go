@@ -947,7 +947,7 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0032-file-oshash",
+			ID: "0042-file-oshash",
 			Migrate: func(tx *gorm.DB) error {
 				type File struct {
 					OsHash string `json:"oshash"`
