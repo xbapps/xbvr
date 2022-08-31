@@ -111,5 +111,5 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 }
 
 func init() {
-	registerScraper("wetvr", "WetVR", "https://wetvr.com/images/sites/wetvr/icon-md-f17eedf082.png", WetVR)
+	registerScraper("wetvr", "WetVR", "https://wetvr.com/assets/images/sites/wetvr/logo-4a2f06a4c9.png", WetVR)
 }

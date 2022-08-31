@@ -1,6 +1,7 @@
 package common
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -19,6 +20,7 @@ var ScrapeCacheDir string
 var VideoPreviewDir string
 var VideoThumbnailDir string
 var ScriptHeatmapDir string
+var DownloadDir string
 
 func DirSize(path string) (int64, error) {
 	var size int64
@@ -35,7 +37,21 @@ func DirSize(path string) (int64, error) {
 }
 
 func InitPaths() {
-	AppDir = appdir.New("xbvr").UserConfig()
+
+	enableLocalStorage := flag.Bool("localstorage", false, "Use local folder to store application data")
+	flag.Parse()
+
+	if *enableLocalStorage {
+		executable, err := os.Executable()
+
+		if err != nil {
+			panic(err)
+		}
+
+		AppDir = filepath.Dir(executable)
+	} else {
+		AppDir = appdir.New("xbvr").UserConfig()
+	}
 
 	CacheDir = filepath.Join(AppDir, "cache")
 	BinDir = filepath.Join(AppDir, "bin")
@@ -49,6 +65,8 @@ func InitPaths() {
 	VideoPreviewDir = filepath.Join(AppDir, "video_preview")
 	VideoThumbnailDir = filepath.Join(AppDir, "video_thumbnail")
 	ScriptHeatmapDir = filepath.Join(AppDir, "script_heatmap")
+
+	DownloadDir = filepath.Join(AppDir, "download")
 
 	// Initialize DATABASE_URL once appdir path is known
 	if EnvConfig.DatabaseURL != "" {
@@ -66,4 +84,5 @@ func InitPaths() {
 	_ = os.MkdirAll(IndexDirV2, os.ModePerm)
 	_ = os.MkdirAll(ScrapeCacheDir, os.ModePerm)
 	_ = os.MkdirAll(ScriptHeatmapDir, os.ModePerm)
+	_ = os.MkdirAll(DownloadDir, os.ModePerm)
 }

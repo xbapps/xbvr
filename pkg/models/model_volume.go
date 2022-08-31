@@ -12,19 +12,19 @@ import (
 )
 
 type Volume struct {
-	ID        uint      `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
+	ID        uint      `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	CreatedAt time.Time `json:"-" xbvrbackup:"-"`
+	UpdatedAt time.Time `json:"-" xbvrbackup:"-"`
 
-	Type           string    `json:"type"`
-	Path           string    `json:"path"`
-	Metadata       string    `json:"metadata"`
-	LastScan       time.Time `json:"last_scan"`
-	IsEnabled      bool      `json:"-"`
-	IsAvailable    bool      `json:"is_available"`
-	FileCount      int       `gorm:"-" json:"file_count"`
-	UnmatchedCount int       `gorm:"-" json:"unmatched_count"`
-	TotalSize      int64     `gorm:"-" json:"total_size"`
+	Type           string    `json:"type" xbvrbackup:""`
+	Path           string    `json:"path" xbvrbackup:""`
+	Metadata       string    `json:"metadata" xbvrbackup:""`
+	LastScan       time.Time `json:"last_scan" xbvrbackup:""`
+	IsEnabled      bool      `json:"-" xbvrbackup:""`
+	IsAvailable    bool      `json:"is_available" xbvrbackup:"-"`
+	FileCount      int       `gorm:"-" json:"file_count" xbvrbackup:"-"`
+	UnmatchedCount int       `gorm:"-" json:"unmatched_count" xbvrbackup:"-"`
+	TotalSize      int64     `gorm:"-" json:"total_size" xbvrbackup:"-"`
 }
 
 func IsDirectoryEmpty(name string) (bool, error) {
@@ -101,8 +101,23 @@ func CheckVolumes() {
 	var vol []Volume
 	db.Find(&vol)
 
+	var files []File
 	for i := range vol {
-		vol[i].IsAvailable = vol[i].IsMounted()
-		vol[i].Save()
+		isMounted := vol[i].IsMounted()
+		if isMounted != vol[i].IsAvailable {
+			vol[i].IsAvailable = vol[i].IsMounted()
+			vol[i].Save()
+
+			// update the status of any scene with a file on that volume
+			db.
+				Model(&files).
+				Where("volume_id = ?", vol[i].ID).
+				Find(&files)
+			for _, file := range files {
+				var scene Scene
+				scene.GetIfExistByPK(file.SceneID)
+				scene.UpdateStatus()
+			}
+		}
 	}
 }

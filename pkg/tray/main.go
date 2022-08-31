@@ -5,10 +5,10 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/ProtonMail/go-appdir"
 	"github.com/getlantern/systray"
 	"github.com/marcsauter/single"
 	"github.com/skratchdot/open-golang/open"
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/server"
 	"github.com/xbapps/xbvr/ui"
@@ -50,6 +50,7 @@ func onReady() {
 
 	mOpenUI := systray.AddMenuItem("Open UI", "Open UI")
 	mOpenConfig := systray.AddMenuItem("Open config folder", "Open config folder")
+	mOpenLog := systray.AddMenuItem("Open log file", "Open log file")
 
 	systray.AddSeparator()
 
@@ -60,7 +61,9 @@ func onReady() {
 		case <-mOpenUI.ClickedCh:
 			go open.Run(fmt.Sprintf("http://localhost:%v", config.Config.Server.Port))
 		case <-mOpenConfig.ClickedCh:
-			go open.Run(appdir.New("xbvr").UserConfig())
+			go open.Run(common.AppDir)
+		case <-mOpenLog.ClickedCh:
+			go open.Run(common.AppDir + "/xbvr.log")
 		case <-mQuit.ClickedCh:
 			systray.Quit()
 			return

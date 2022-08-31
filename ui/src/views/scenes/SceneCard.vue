@@ -9,7 +9,7 @@
         <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
         <div class="overlay align-bottom-left">
           <div style="padding: 5px">
-            <b-tag v-if="item.is_watched">
+            <b-tag v-if="item.is_watched && !this.$store.state.optionsWeb.web.sceneWatched">
               <b-icon pack="mdi" icon="eye" size="is-small"/>
             </b-tag>
             <b-tag type="is-info" v-if="videoFilesCount > 1 && !item.is_multipart">
@@ -19,6 +19,10 @@
             <b-tag type="is-info" v-if="item.is_scripted">
               <b-icon pack="mdi" icon="pulse" size="is-small"/>
               <span v-if="scriptFilesCount > 1">{{scriptFilesCount}}</span>
+            </b-tag>
+            <b-tag type="is-info" v-if="item.cuepoints.length>0 && this.$store.state.optionsWeb.web.sceneCuepoint">
+              <b-icon pack="mdi" icon="skip-next-outline" size="is-small"/>
+              <span v-if="item.cuepoints.length > 1">{{item.cuepoints.length}}</span>
             </b-tag>
             <b-tag type="is-warning" v-if="item.star_rating > 0">
               <b-icon pack="mdi" icon="star" size="is-small"/>
@@ -30,9 +34,11 @@
     </div>
 
     <div style="padding-top:4px;">
+      <div class="scene_title">{{item.title}}</div>
 
-      <watchlist-button :item="item"/>
-      <favourite-button :item="item"/>
+      <watchlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatchlist"/>
+      <favourite-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneFavourite"/>
+      <watched-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatched"/>
       <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
@@ -49,12 +55,13 @@
 import { format, parseISO } from 'date-fns'
 import WatchlistButton from '../../components/WatchlistButton'
 import FavouriteButton from '../../components/FavouriteButton'
+import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 
 export default {
   name: 'SceneCard',
   props: { item: Object },
-  components: { WatchlistButton, FavouriteButton, EditButton },
+  components: { WatchlistButton, FavouriteButton, WatchedButton, EditButton },
   data () {
     return {
       preview: false,
@@ -153,5 +160,13 @@ export default {
 
   .tag {
     margin-left: 0.2em;
+  }
+
+  .scene_title {
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>

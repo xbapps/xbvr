@@ -18,13 +18,13 @@ import (
 
 // SceneCuepoint data model
 type SceneCuepoint struct {
-	ID        uint      `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
+	ID        uint      `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	CreatedAt time.Time `json:"-" xbvrbackup:"-"`
+	UpdatedAt time.Time `json:"-" xbvrbackup:"-"`
 
-	SceneID   uint    `json:"-"`
-	TimeStart float64 `json:"time_start"`
-	Name      string  `json:"name"`
+	SceneID   uint    `json:"-" xbvrbackup:"-"`
+	TimeStart float64 `json:"time_start" xbvrbackup:"time_start"`
+	Name      string  `json:"name" xbvrbackup:"name"`
 }
 
 func (o *SceneCuepoint) Save() error {
@@ -51,50 +51,51 @@ func (o *SceneCuepoint) Save() error {
 
 // Scene data model
 type Scene struct {
-	ID        uint       `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `sql:"index" json:"-"`
+	ID        uint       `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	CreatedAt time.Time  `json:"created_at" xbvrbackup:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at" xbvrbackup:"updated_at"`
+	DeletedAt *time.Time `sql:"index" json:"-" xbvrbackup:"-"`
 
-	SceneID         string    `json:"scene_id"`
-	Title           string    `json:"title"`
-	SceneType       string    `json:"scene_type"`
-	Studio          string    `json:"studio"`
-	Site            string    `json:"site"`
-	Tags            []Tag     `gorm:"many2many:scene_tags;" json:"tags"`
-	Cast            []Actor   `gorm:"many2many:scene_cast;" json:"cast"`
-	FilenamesArr    string    `json:"filenames_arr" sql:"type:text;"`
-	Images          string    `json:"images" sql:"type:text;"`
-	Files           []File    `json:"file"`
-	Duration        int       `json:"duration"`
-	Synopsis        string    `json:"synopsis" sql:"type:text;"`
-	ReleaseDate     time.Time `json:"release_date"`
-	ReleaseDateText string    `json:"release_date_text"`
-	CoverURL        string    `json:"cover_url"`
-	SceneURL        string    `json:"scene_url"`
-	IsMultipart     bool      `json:"is_multipart"`
+	SceneID         string    `json:"scene_id" xbvrbackup:"scene_id"`
+	Title           string    `json:"title" sql:"type:varchar(1024);" xbvrbackup:"title"`
+	SceneType       string    `json:"scene_type" xbvrbackup:"scene_type"`
+	Studio          string    `json:"studio" xbvrbackup:"studio"`
+	Site            string    `json:"site" xbvrbackup:"site"`
+	Tags            []Tag     `gorm:"many2many:scene_tags;" json:"tags" xbvrbackup:"tags"`
+	Cast            []Actor   `gorm:"many2many:scene_cast;" json:"cast" xbvrbackup:"cast"`
+	FilenamesArr    string    `json:"filenames_arr" sql:"type:text;" xbvrbackup:"filenames_arr"`
+	Images          string    `json:"images" sql:"type:text;" xbvrbackup:"images"`
+	Files           []File    `json:"file" xbvrbackup:"-"`
+	Duration        int       `json:"duration" xbvrbackup:"duration"`
+	Synopsis        string    `json:"synopsis" sql:"type:text;" xbvrbackup:"synopsis"`
+	ReleaseDate     time.Time `json:"release_date" xbvrbackup:"release_date"`
+	ReleaseDateText string    `json:"release_date_text" xbvrbackup:"release_date_text"`
+	CoverURL        string    `json:"cover_url" xbvrbackup:"cover_url"`
+	SceneURL        string    `json:"scene_url" xbvrbackup:"scene_url"`
+	IsMultipart     bool      `json:"is_multipart" xbvrbackup:"is_multipart"`
 
-	StarRating     float64         `json:"star_rating"`
-	Favourite      bool            `json:"favourite" gorm:"default:false"`
-	Watchlist      bool            `json:"watchlist" gorm:"default:false"`
-	IsAvailable    bool            `json:"is_available" gorm:"default:false"`
-	IsAccessible   bool            `json:"is_accessible" gorm:"default:false"`
-	IsWatched      bool            `json:"is_watched" gorm:"default:false"`
-	IsScripted     bool            `json:"is_scripted" gorm:"default:false"`
-	Cuepoints      []SceneCuepoint `json:"cuepoints"`
-	History        []History       `json:"history"`
-	AddedDate      time.Time       `json:"added_date"`
-	LastOpened     time.Time       `json:"last_opened"`
-	TotalFileSize  int64           `json:"total_file_size"`
-	TotalWatchTime int             `json:"total_watch_time" gorm:"default:0"`
+	StarRating     float64         `json:"star_rating" xbvrbackup:"star_rating"`
+	Favourite      bool            `json:"favourite" gorm:"default:false" xbvrbackup:"favourite"`
+	Watchlist      bool            `json:"watchlist" gorm:"default:false" xbvrbackup:"watchlist"`
+	IsAvailable    bool            `json:"is_available" gorm:"default:false" xbvrbackup:"-"`
+	IsAccessible   bool            `json:"is_accessible" gorm:"default:false" xbvrbackup:"-"`
+	IsWatched      bool            `json:"is_watched" gorm:"default:false" xbvrbackup:"is_watched"`
+	IsScripted     bool            `json:"is_scripted" gorm:"default:false" xbvrbackup:"-"`
+	Cuepoints      []SceneCuepoint `json:"cuepoints" xbvrbackup:"-"`
+	History        []History       `json:"history" xbvrbackup:"-"`
+	AddedDate      time.Time       `json:"added_date" xbvrbackup:"added_date"`
+	LastOpened     time.Time       `json:"last_opened" xbvrbackup:"last_opened"`
+	TotalFileSize  int64           `json:"total_file_size" xbvrbackup:"-"`
+	TotalWatchTime int             `json:"total_watch_time" gorm:"default:0" xbvrbackup:"total_watch_time"`
 
-	HasVideoPreview bool `json:"has_preview" gorm:"default:false"`
+	HasVideoPreview bool `json:"has_preview" gorm:"default:false" xbvrbackup:"-"`
 	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
 
-	NeedsUpdate bool `json:"needs_update"`
+	NeedsUpdate  bool `json:"needs_update" xbvrbackup:"-"`
+	EditsApplied bool `json:"edits_applied" gorm:"default:false" xbvrbackup:"-"`
 
-	Fulltext string  `gorm:"-" json:"fulltext"`
-	Score    float64 `gorm:"-" json:"_score"`
+	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
+	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
 }
 
 type Image struct {
@@ -227,6 +228,16 @@ func (o *Scene) GetScriptFiles() ([]File, error) {
 	return files, nil
 }
 
+func (o *Scene) GetHSPFiles() ([]File, error) {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var files []File
+	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "hsp").Find(&files)
+
+	return files, nil
+}
+
 func (o *Scene) PreviewExists() bool {
 	if _, err := os.Stat(filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", o.SceneID))); os.IsNotExist(err) {
 		return false
@@ -325,6 +336,11 @@ func (o *Scene) UpdateStatus() {
 		changed = true
 	}
 
+	if !o.HasVideoPreview && o.PreviewExists() {
+		o.HasVideoPreview = true
+		changed = true
+	}
+
 	totalWatchTime := o.GetTotalWatchTime()
 	if o.TotalWatchTime != totalWatchTime {
 		o.TotalWatchTime = totalWatchTime
@@ -337,10 +353,15 @@ func (o *Scene) UpdateStatus() {
 }
 
 func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
+	if ext.SceneID == "" {
+		return nil
+	}
+
 	var o Scene
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)
 
 	o.NeedsUpdate = false
+	o.EditsApplied = false
 	o.SceneID = ext.SceneID
 
 	if o.Title != ext.Title {
@@ -386,17 +407,21 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var images []Image
 
 	for i := range ext.Covers {
-		images = append(images, Image{
-			URL:  ext.Covers[i],
-			Type: "cover",
-		})
+		if ext.Covers[i] != "" {
+			images = append(images, Image{
+				URL:  ext.Covers[i],
+				Type: "cover",
+			})
+		}
 	}
 
 	for i := range ext.Gallery {
-		images = append(images, Image{
-			URL:  ext.Gallery[i],
-			Type: "gallery",
-		})
+		if ext.Gallery[i] != "" {
+			images = append(images, Image{
+				URL:  ext.Gallery[i],
+				Type: "gallery",
+			})
+		}
 	}
 
 	imgTxt, err := json.Marshal(images)

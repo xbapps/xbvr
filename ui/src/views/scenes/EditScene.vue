@@ -95,6 +95,7 @@
       <footer class="modal-card-foot">
         <b-field>
           <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
+          <b-button type="is-danger" outlined @click="deletescene">{{ $t('Delete Scene') }}</b-button>
         </b-field>
       </footer>
     </div>
@@ -126,10 +127,19 @@ export default {
     const scene = Object.assign({}, this.$store.state.overlay.edit.scene)
     scene.castArray = scene.cast.map(c => c.name)
     scene.tagsArray = scene.tags.map(t => t.name)
-    const images = JSON.parse(scene.images)
+    let images;
+    try {
+      images = JSON.parse(scene.images)
+    } catch {
+      images = []
+    }
     scene.covers = images.filter(i => i.type === 'cover').map(i => i.url)
     scene.gallery = images.filter(i => i.type === 'gallery').map(i => i.url)
-    scene.files = JSON.parse(scene.filenames_arr)
+    try {
+      scene.files = JSON.parse(scene.filenames_arr)
+    } catch {
+      scene.files = []
+    }
     return {
       scene,
       // A shallow copy won't work, need a deep copy
@@ -210,6 +220,22 @@ export default {
       this.changesMade = false
 
       this.close()
+    },
+    deletescene () {
+      this.$buefy.dialog.confirm({
+        title: 'Delete scene',
+        message: `Do you really want to delete the scene <strong>${this.scene.title}</strong> from <strong>${this.scene.studio}</strong>? If this is an existing scene, it will be re-added during the next scrape.`,
+        type: 'is-info is-wide',
+        hasIcon: true,
+        id: 'heh',
+        onConfirm: () => {
+          ky.post(`/api/scene/delete`, {json:{scene_id: this.scene.id}}).json().then(data => {
+            this.$store.dispatch('sceneList/load', { offset: 0 })
+            this.$store.commit('overlay/hideEditDetails')
+            this.$store.commit('overlay/hideDetails')
+          })
+        }
+      })
     },
     blur (field) {
       if (this.changesMade) return // Changes have already been made. No point to check any further

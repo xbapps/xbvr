@@ -119,5 +119,5 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 }
 
 func init() {
-	registerScraper("bvr", "VirtualPorn", "https://images2.bangbros.com/virtualporn/h1/vr_logo.png", VirtualPorn)
+	registerScraper("bvr", "VirtualPorn", "https://images.cn77nd.com/members/bangbros/favicon/apple-icon-60x60.png", VirtualPorn)
 }

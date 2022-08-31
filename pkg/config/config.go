@@ -8,6 +8,15 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
+type CronSchedule struct {
+	Enabled      bool `default:"true" json:"enabled"`
+	HourInterval int  `json:"hourInterval"`
+	UseRange     bool `default:"false" json:"useRange"`
+	MinuteStart  int  `default:"0" json:"minuteStart"`
+	HourStart    int  `default:"0" json:"hourStart"`
+	HourEnd      int  `default:"23" json:"hourEnd"`
+}
+
 type ObjectConfig struct {
 	Server struct {
 		BindAddress string `default:"0.0.0.0" json:"bindAddress"`
@@ -18,10 +27,19 @@ type ObjectConfig struct {
 		Password string `default:"" json:"password"`
 	} `json:"security"`
 	Web struct {
-		TagSort     string `default:"by-tag-count" json:"tagSort"`
-		SceneEdit   bool   `default:"false" json:"sceneEdit"`
-		UpdateCheck bool   `default:"true" json:"updateCheck"`
+		TagSort        string `default:"by-tag-count" json:"tagSort"`
+		SceneWatchlist bool   `default:"true" json:"sceneWatchlist"`
+		SceneFavourite bool   `default:"true" json:"sceneFavourite"`
+		SceneWatched   bool   `default:"false" json:"sceneWatched"`
+		SceneEdit      bool   `default:"false" json:"sceneEdit"`
+		SceneCuepoint  bool   `default:"true" json:"sceneCuepoint"`
+		UpdateCheck    bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
+	Vendor struct {
+		TPDB struct {
+			ApiToken string `default:"" json:"apiToken"`
+		} `json:"tpdb"`
+	} `json:"vendor"`
 	Interfaces struct {
 		DLNA struct {
 			Enabled      bool     `default:"true" json:"enabled"`
@@ -33,6 +51,7 @@ type ObjectConfig struct {
 			Enabled        bool   `default:"true" json:"enabled"`
 			AuthEnabled    bool   `default:"false" json:"auth_enabled"`
 			RenderHeatmaps bool   `default:"false" json:"render_heatmaps"`
+			TrackWatchTime bool   `default:"true" json:"track_watch_time"`
 			RemoteEnabled  bool   `default:"false" json:"remote_enabled"`
 			Username       string `default:"" json:"username"`
 			Password       string `default:"" json:"password"`
@@ -49,8 +68,22 @@ type ObjectConfig struct {
 		} `json:"preview"`
 	} `json:"library"`
 	Cron struct {
-		ScrapeContentInterval int `default:"12" json:"scrapeContentInt"`
-		RescanLibraryInterval int `default:"2" json:"rescanLibraryInt"`
+		RescrapeSchedule struct {
+			Enabled      bool `default:"true" json:"enabled"`
+			HourInterval int  `default:"12" json:"hourInterval"`
+			UseRange     bool `default:"false" json:"useRange"`
+			MinuteStart  int  `default:"0" json:"minuteStart"`
+			HourStart    int  `default:"0" json:"hourStart"`
+			HourEnd      int  `default:"23" json:"hourEnd"`
+		} `json:"rescrapeSchedule"`
+		RescanSchedule struct {
+			Enabled      bool `default:"true" json:"enabled"`
+			HourInterval int  `default:"2" json:"hourInterval"`
+			UseRange     bool `default:"false" json:"useRange"`
+			MinuteStart  int  `default:"0" json:"minuteStart"`
+			HourStart    int  `default:"0" json:"hourStart"`
+			HourEnd      int  `default:"23" json:"hourEnd"`
+		} `json:"rescanSchedule"`
 	} `json:"cron"`
 }
 

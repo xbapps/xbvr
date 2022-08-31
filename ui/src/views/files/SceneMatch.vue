@@ -1,5 +1,13 @@
 <template>
   <div class="modal is-active">
+    <GlobalEvents
+      :filter="e => !['INPUT', 'TEXTAREA'].includes(e.target.tagName)"
+      @keyup.esc="close"
+      @keydown.left="handleLeftArrow"
+      @keydown.right="handleRightArrow"
+      @keydown.o="prevFile"
+      @keydown.p="nextFile"
+    />
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
@@ -61,8 +69,8 @@
         </div>
       </section>
     </div>
-    <a class="prev" @click="prevFile">&#10094;</a>
-    <a class="next" @click="nextFile">&#10095;</a>
+    <a class="prev" @click="prevFile" title="Keyboard shortcut: O">&#10094;</a>
+    <a class="next" @click="nextFile" title="Keyboard shortcut: P">&#10095;</a>
   </div>
 </template>
 
@@ -71,10 +79,11 @@ import ky from 'ky'
 import { format, parseISO } from 'date-fns'
 import prettyBytes from 'pretty-bytes'
 import VueLoadImage from 'vue-load-image'
+import GlobalEvents from 'vue-global-events'
 
 export default {
   name: 'SceneMatch',
-  components: { VueLoadImage },
+  components: { VueLoadImage, GlobalEvents },
   data () {
     return {
       data: [],
@@ -99,9 +108,9 @@ export default {
       const commonWords = [
         '180', '180x180', '2880x1440', '3d', '3dh', '3dv', '30fps', '30m', '360',
         '3840x1920', '4k', '5k', '5400x2700', '60fps', '6k', '7k', '7680x3840',
-        '8k', 'fb360', 'funscript', 'h264', 'h265', 'hevc', 'hq', 'lq', 'lr',
+        '8k', 'fb360', 'fisheye190', 'funscript', 'h264', 'h265', 'hevc', 'hq', 'hsp', 'lq', 'lr',
         'mkv', 'mkx200', 'mkx220', 'mono', 'mp4', 'oculus', 'oculus5k',
-        'oculusrift', 'original', 'smartphone', 'tb', 'uhq', 'vrca220', 'vp9'
+        'oculusrift', 'original', 'rf52', 'smartphone', 'tb', 'uhq', 'vrca220', 'vp9'
       ]
       const isNotCommonWord = word => !commonWords.includes(word.toLowerCase()) && !/^[0-9]+p$/.test(word)
 
@@ -197,6 +206,21 @@ export default {
         }
       })
       return count
+    },
+    handleRightArrow () {
+      if ((this.currentPage) * 5 < this.data.length) {
+        this.currentPage = this.currentPage + 1
+      } else {
+        this.currentPage = 1
+      }
+    },
+    handleLeftArrow () {
+      if (this.currentPage === 1) {
+        // dont assume last page is 5
+        this.currentPage = ~~((this.data.length + 4) / 5)
+      } else {
+        this.currentPage = this.currentPage - 1
+      }
     },
     prettyBytes
   }
