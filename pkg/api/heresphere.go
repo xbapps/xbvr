@@ -47,6 +47,10 @@ type HeresphereVideo struct {
 	Scripts              []HeresphereScript `json:"scripts,omitempty"`
 	Tags                 []HeresphereTag    `json:"tags,omitempty"`
 	Media                []HeresphereMedia  `json:"media"`
+	WriteFavorite        bool               `json:"writeFavorite"`
+	WriteRating          bool               `json:"writeRating"`
+	WriteTags            bool               `json:"writeTags"`
+	WriteHSP             bool               `json:"writeHSP"`
 }
 
 type HeresphereScript struct {
@@ -75,8 +79,13 @@ type HeresphereSource struct {
 }
 
 type HereSphereAuthRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username    string           `json:"username"`
+	Password    string           `json:"password"`
+	Rating      *float64         `json:"rating"`
+	IsFavorite  *bool            `json:"isFavorite"`
+	Hsp         *string          `json:"hsp"`
+	Tags        *[]HeresphereTag `json:"tags"`
+	DeleteFiles *bool            `json:"deleteFile"`
 }
 
 func HeresphereAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
@@ -208,6 +217,11 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		return
 	}
 
+	var requestData HereSphereAuthRequest
+	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
+	} else {
+	}
+
 	sceneID := req.PathParameter("scene-id")
 	if sceneID == "" {
 		return
@@ -220,10 +234,32 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	err := db.Preload("Cast").
 		Preload("Tags").
 		Preload("Cuepoints").
+		Preload("Files").
 		Where("id = ?", sceneID).First(&scene).Error
 	if err != nil {
 		log.Error(err)
 		return
+	}
+
+	updateReqd := false
+	if requestData.IsFavorite != nil && *requestData.IsFavorite != scene.Favourite && config.Config.Interfaces.Heresphere.AllowFavoriteUpdates {
+		scene.Favourite = *requestData.IsFavorite
+		updateReqd = true
+	}
+	if requestData.Rating != nil && *requestData.Rating != scene.StarRating && config.Config.Interfaces.Heresphere.AllowRatingUpdates {
+		scene.StarRating = *requestData.Rating
+		updateReqd = true
+	}
+
+	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
+		log.Infof("heresphere requested delete %v", *requestData.DeleteFiles)
+		for _, sceneFile := range scene.Files {
+			removeFileByFileId(sceneFile.ID)
+		}
+	}
+
+	if updateReqd {
+		scene.Save()
 	}
 
 	features := make(map[string]bool, 30)
@@ -468,6 +504,10 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		Scripts:              heresphereScriptFiles,
 		Tags:                 tags,
 		Media:                media,
+		WriteFavorite:        config.Config.Interfaces.Heresphere.AllowFavoriteUpdates,
+		WriteRating:          config.Config.Interfaces.Heresphere.AllowRatingUpdates,
+		WriteTags:            false,
+		WriteHSP:             false,
 	}
 
 	if scene.HasVideoPreview {

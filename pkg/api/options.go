@@ -57,13 +57,16 @@ type RequestSaveOptionsDLNA struct {
 }
 
 type RequestSaveOptionsDeoVR struct {
-	Enabled        bool   `json:"enabled"`
-	AuthEnabled    bool   `json:"auth_enabled"`
-	Username       string `json:"username"`
-	Password       string `json:"password"`
-	RemoteEnabled  bool   `json:"remote_enabled"`
-	TrackWatchTime bool   `json:"track_watch_time"`
-	RenderHeatmaps bool   `json:"render_heatmaps"`
+	Enabled              bool   `json:"enabled"`
+	AuthEnabled          bool   `json:"auth_enabled"`
+	Username             string `json:"username"`
+	Password             string `json:"password"`
+	RemoteEnabled        bool   `json:"remote_enabled"`
+	TrackWatchTime       bool   `json:"track_watch_time"`
+	RenderHeatmaps       bool   `json:"render_heatmaps"`
+	AllowFileDeletes     bool   `json:"allow_file_deletes"`
+	AllowRatingUpdates   bool   `json:"allow_rating_updates"`
+	AllowFavoriteUpdates bool   `json:"allow_favorite_updates"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -284,6 +287,9 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.DeoVR.RemoteEnabled = r.RemoteEnabled
 	config.Config.Interfaces.DeoVR.TrackWatchTime = r.TrackWatchTime
 	config.Config.Interfaces.DeoVR.Username = r.Username
+	config.Config.Interfaces.Heresphere.AllowFileDeletes = r.AllowFileDeletes
+	config.Config.Interfaces.Heresphere.AllowRatingUpdates = r.AllowRatingUpdates
+	config.Config.Interfaces.Heresphere.AllowFavoriteUpdates = r.AllowFavoriteUpdates
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)

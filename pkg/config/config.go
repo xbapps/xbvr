@@ -56,6 +56,11 @@ type ObjectConfig struct {
 			Username       string `default:"" json:"username"`
 			Password       string `default:"" json:"password"`
 		} `json:"deovr"`
+		Heresphere struct {
+			AllowFileDeletes     bool `default:"false" json:"allow_file_deletes"`
+			AllowRatingUpdates   bool `default:"false" json:"allow_rating_updates"`
+			AllowFavoriteUpdates bool `default:"false" json:"allow_favorite_updates"`
+		} `json:"heresphere"`
 	} `json:"interfaces"`
 	Library struct {
 		Preview struct {
