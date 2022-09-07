@@ -106,6 +106,11 @@
               Enabled
             </b-switch>
           </b-field>
+          <b-field label="Allow Saving Hsp Files">
+            <b-switch v-model="allowHspData">
+              Enabled
+            </b-switch>
+          </b-field>
       </div>
       <b-field>
         <b-button type="is-primary" @click="save">Save and apply changes</b-button>
@@ -225,6 +230,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.heresphere.allow_favorite_updates = value
+      }
+    },
+    allowHspData: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_hsp_data
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_hsp_data= value
       }
     },
     isLoading: function () {

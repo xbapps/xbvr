@@ -1,10 +1,13 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,6 +18,7 @@ import (
 	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/tasks"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -241,26 +245,14 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		return
 	}
 
-	updateReqd := false
-	if requestData.IsFavorite != nil && *requestData.IsFavorite != scene.Favourite && config.Config.Interfaces.Heresphere.AllowFavoriteUpdates {
-		scene.Favourite = *requestData.IsFavorite
-		updateReqd = true
-	}
-	if requestData.Rating != nil && *requestData.Rating != scene.StarRating && config.Config.Interfaces.Heresphere.AllowRatingUpdates {
-		scene.StarRating = *requestData.Rating
-		updateReqd = true
+	var videoFiles []models.File
+	videoFiles, err = scene.GetVideoFiles()
+	if err != nil {
+		log.Error(err)
+		return
 	}
 
-	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
-		log.Infof("heresphere requested delete %v", *requestData.DeleteFiles)
-		for _, sceneFile := range scene.Files {
-			removeFileByFileId(sceneFile.ID)
-		}
-	}
-
-	if updateReqd {
-		scene.Save()
-	}
+	ProcessHeresphereUpdates(&scene, requestData, videoFiles[0])
 
 	features := make(map[string]bool, 30)
 	addFeatureTag := func(feature string) {
@@ -271,12 +263,6 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	var media []HeresphereMedia
 
-	var videoFiles []models.File
-	videoFiles, err = scene.GetVideoFiles()
-	if err != nil {
-		log.Error(err)
-		return
-	}
 	videoLength := float64(scene.Duration)
 
 	for i, file := range videoFiles {
@@ -506,14 +492,13 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		Media:                media,
 		WriteFavorite:        config.Config.Interfaces.Heresphere.AllowFavoriteUpdates,
 		WriteRating:          config.Config.Interfaces.Heresphere.AllowRatingUpdates,
-		WriteTags:            false,
-		WriteHSP:             false,
+		WriteTags:            true,
+		WriteHSP:             config.Config.Interfaces.Heresphere.AllowHspData,
 	}
 
 	if scene.HasVideoPreview {
 		video.ThumbnailVideo = fmt.Sprintf("http://%v/api/dms/preview/%v", req.Request.Host, scene.SceneID)
 	}
-
 	resp.WriteHeaderAndEntity(http.StatusOK, video)
 }
 
@@ -579,4 +564,45 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 		Access:  1,
 		Library: sceneLists,
 	})
+}
+
+func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthRequest, videoFile models.File) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	updateReqd := false
+	if requestData.IsFavorite != nil && *requestData.IsFavorite != scene.Favourite && config.Config.Interfaces.Heresphere.AllowFavoriteUpdates {
+		scene.Favourite = *requestData.IsFavorite
+		updateReqd = true
+		log.Errorf("updating favorite %v", *requestData.IsFavorite)
+	}
+	if requestData.Rating != nil && *requestData.Rating != scene.StarRating && config.Config.Interfaces.Heresphere.AllowRatingUpdates {
+		scene.StarRating = *requestData.Rating
+		updateReqd = true
+		log.Errorf("updating rating %v", *requestData.Rating)
+	}
+
+	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
+		for _, sceneFile := range scene.Files {
+			removeFileByFileId(sceneFile.ID)
+		}
+	}
+
+	if requestData.Hsp != nil && config.Config.Interfaces.Heresphere.AllowHspData {
+		hspContent, err := base64.StdEncoding.DecodeString(*requestData.Hsp)
+		if err != nil {
+			log.Error("Error decode heresphere hsp data %v", err)
+		}
+
+		fName := filepath.Join(scene.Files[0].Path, strings.TrimSuffix(scene.Files[0].Filename, filepath.Ext(videoFile.Filename))+".hsp")
+		ioutil.WriteFile(fName, hspContent, 0644)
+
+		tasks.ScanLocalHspFile(fName, videoFile.VolumeID, scene.ID)
+
+	}
+
+	if updateReqd {
+		scene.Save()
+	}
+
 }

@@ -20,6 +20,10 @@
               <b-icon pack="mdi" icon="pulse" size="is-small"/>
               <span v-if="scriptFilesCount > 1">{{scriptFilesCount}}</span>
             </b-tag>
+            <b-tag type="is-info" v-if="hspFilesCount > 0 && this.$store.state.optionsWeb.web.showHspFile">
+              <b-icon pack="mdi" icon="safety-goggles" size="is-small"/>
+              <span v-if="hspFilesCount > 1">{{hspFilesCount}}</span>
+            </b-tag>
             <b-tag type="is-info" v-if="item.cuepoints.length>0 && this.$store.state.optionsWeb.web.sceneCuepoint">
               <b-icon pack="mdi" icon="skip-next-outline" size="is-small"/>
               <span v-if="item.cuepoints.length > 1">{{item.cuepoints.length}}</span>
@@ -83,6 +87,15 @@ export default {
       let count = 0
       this.item.file.forEach(obj => {
         if (obj.type === 'script') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    hspFilesCount () {
+      let count = 0
+      this.item.file.forEach(obj => {
+        if (obj.type === 'hsp') {
           count = count + 1
         }
       })

@@ -46,6 +46,7 @@ type RequestSaveOptionsWeb struct {
 	SceneWatched   bool   `json:"sceneWatched"`
 	SceneEdit      bool   `json:"sceneEdit"`
 	SceneCuepoint  bool   `json:"sceneCuepoint"`
+	ShowHspFile    bool   `json:"showHspFile"`
 	UpdateCheck    bool   `json:"updateCheck"`
 }
 
@@ -67,6 +68,7 @@ type RequestSaveOptionsDeoVR struct {
 	AllowFileDeletes     bool   `json:"allow_file_deletes"`
 	AllowRatingUpdates   bool   `json:"allow_rating_updates"`
 	AllowFavoriteUpdates bool   `json:"allow_favorite_updates"`
+	AllowHspData         bool   `json:"allow_hsp_data"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -267,6 +269,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneWatched = r.SceneWatched
 	config.Config.Web.SceneEdit = r.SceneEdit
 	config.Config.Web.SceneCuepoint = r.SceneCuepoint
+	config.Config.Web.ShowHspFile = r.ShowHspFile
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 
@@ -290,6 +293,7 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.Heresphere.AllowFileDeletes = r.AllowFileDeletes
 	config.Config.Interfaces.Heresphere.AllowRatingUpdates = r.AllowRatingUpdates
 	config.Config.Interfaces.Heresphere.AllowFavoriteUpdates = r.AllowFavoriteUpdates
+	config.Config.Interfaces.Heresphere.AllowHspData = r.AllowHspData
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)

@@ -45,6 +45,11 @@
                 show Cuepoints  button
               </b-switch>
             </b-field>
+            <b-field>
+              <b-switch v-model="hspFile" type="is-dark">
+                show Hsp File button
+              </b-switch>
+            </b-field>
 
             <b-field label="Automatically Check for Updates">
               <b-switch v-model="updateCheck">
@@ -128,6 +133,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.sceneCuepoint = value
+      }
+    },
+    hspFile: {
+      get () {
+        return this.$store.state.optionsWeb.web.showHspFile
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.showHspFile = value
       }
     },
     isLoading: function () {
