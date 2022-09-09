@@ -55,10 +55,10 @@ type HeresphereScript struct {
 }
 
 type HeresphereTag struct {
-	Name              string `json:"name"`
-	StartMilliseconds int    `json:"start,omitempty"`
-	EndMilliseconds   int    `json:"end,omitempty"`
-	Track             *int   `json:"track,omitempty"`
+	Name              string  `json:"name"`
+	StartMilliseconds float64 `json:"start,omitempty"`
+	EndMilliseconds   float64 `json:"end,omitempty"`
+	Track             *int    `json:"track,omitempty"`
 }
 
 type HeresphereMedia struct {
@@ -308,8 +308,8 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 			tags = append(tags, HeresphereTag{
 				Name:              cuepointName,
-				StartMilliseconds: start,
-				EndMilliseconds:   end,
+				StartMilliseconds: float64(start),
+				EndMilliseconds:   float64(end),
 				Track:             &track,
 			})
 		}
