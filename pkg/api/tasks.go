@@ -152,7 +152,7 @@ func (i TaskResource) restoreBundle(req *restful.Request, resp *restful.Response
 }
 
 func (i TaskResource) previewGenerate(req *restful.Request, resp *restful.Response) {
-	go tasks.GeneratePreviews()
+	go tasks.GeneratePreviews(nil)
 }
 
 func (i TaskResource) scrapeJAVR(req *restful.Request, resp *restful.Response) {

@@ -98,6 +98,12 @@ type RequestSaveOptionsTaskSchedule struct {
 	RescanMinuteStart    int  `json:"rescanMinuteStart"`
 	RescanHourStart      int  `json:"rescanHourStart"`
 	RescanHourEnd        int  `json:"rescanHourEnd"`
+	PreviewEnabled       bool `json:"previewEnabled"`
+	PreviewHourInterval  int  `json:"previewHourInterval"`
+	PreviewUseRange      bool `json:"previewUseRange"`
+	PreviewMinuteStart   int  `json:"previewMinuteStart"`
+	PreviewHourStart     int  `json:"previewHourStart"`
+	PreviewHourEnd       int  `json:"previewHourEnd"`
 }
 
 type RequestCuepointsResponse struct {
@@ -624,6 +630,9 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	if r.RescanHourEnd > 23 {
 		r.RescanHourEnd -= 24
 	}
+	if r.PreviewHourEnd > 23 {
+		r.PreviewHourEnd -= 24
+	}
 
 	config.Config.Cron.RescrapeSchedule.Enabled = r.RescrapeEnabled
 	config.Config.Cron.RescrapeSchedule.HourInterval = r.RescrapeHourInterval
@@ -638,6 +647,13 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.Config.Cron.RescanSchedule.MinuteStart = r.RescanMinuteStart
 	config.Config.Cron.RescanSchedule.HourStart = r.RescanHourStart
 	config.Config.Cron.RescanSchedule.HourEnd = r.RescanHourEnd
+
+	config.Config.Cron.PreviewSchedule.Enabled = r.PreviewEnabled
+	config.Config.Cron.PreviewSchedule.HourInterval = r.PreviewHourInterval
+	config.Config.Cron.PreviewSchedule.UseRange = r.PreviewUseRange
+	config.Config.Cron.PreviewSchedule.MinuteStart = r.PreviewMinuteStart
+	config.Config.Cron.PreviewSchedule.HourStart = r.PreviewHourStart
+	config.Config.Cron.PreviewSchedule.HourEnd = r.PreviewHourEnd
 
 	config.SaveConfig()
 
