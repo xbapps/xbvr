@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/dustin/go-humanize"
 	"github.com/emicklei/go-restful"
@@ -63,10 +64,10 @@ type HeresphereScript struct {
 }
 
 type HeresphereTag struct {
-	Name              string `json:"name"`
-	StartMilliseconds int    `json:"start,omitempty"`
-	EndMilliseconds   int    `json:"end,omitempty"`
-	Track             *int   `json:"track,omitempty"`
+	Name              string  `json:"name"`
+	StartMilliseconds float64 `json:"start,omitempty"`
+	EndMilliseconds   float64 `json:"end,omitempty"`
+	Track             *int    `json:"track,omitempty"`
 }
 
 type HeresphereMedia struct {
@@ -223,7 +224,8 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	var requestData HereSphereAuthRequest
 	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
-	} else {
+		log.Errorf("Error decoding heresphere api POST request: %v", err)
+		return
 	}
 
 	sceneID := req.PathParameter("scene-id")
@@ -324,8 +326,8 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		}
 		tags = append(tags, HeresphereTag{
 			Name:              scene.Cuepoints[i].Name,
-			StartMilliseconds: start,
-			EndMilliseconds:   end,
+			StartMilliseconds: float64(start),
+			EndMilliseconds:   float64(end),
 			Track:             &track,
 		})
 	}
@@ -492,7 +494,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		Media:                media,
 		WriteFavorite:        config.Config.Interfaces.Heresphere.AllowFavoriteUpdates,
 		WriteRating:          config.Config.Interfaces.Heresphere.AllowRatingUpdates,
-		WriteTags:            true,
+		WriteTags:            config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates,
 		WriteHSP:             config.Config.Interfaces.Heresphere.AllowHspData,
 	}
 
@@ -500,6 +502,149 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		video.ThumbnailVideo = fmt.Sprintf("http://%v/api/dms/preview/%v", req.Request.Host, scene.SceneID)
 	}
 	resp.WriteHeaderAndEntity(http.StatusOK, video)
+}
+
+var lockHeresphereUpdates sync.Mutex
+
+func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthRequest, videoFile models.File) {
+
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	updateReqd := false
+	if requestData.IsFavorite != nil && *requestData.IsFavorite != scene.Favourite && config.Config.Interfaces.Heresphere.AllowFavoriteUpdates {
+		scene.Favourite = *requestData.IsFavorite
+		updateReqd = true
+	}
+	if requestData.Rating != nil && *requestData.Rating != scene.StarRating && config.Config.Interfaces.Heresphere.AllowRatingUpdates {
+		scene.StarRating = *requestData.Rating
+		updateReqd = true
+	}
+
+	if requestData.Tags != nil && (config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates) {
+		// need lock, heresphere can send a second post too soon
+		lockHeresphereUpdates.Lock()
+		defer lockHeresphereUpdates.Unlock()
+	}
+	if requestData.Tags != nil && config.Config.Interfaces.Heresphere.AllowTagUpdates {
+		var newTags []string
+
+		// need to reread the tags, to handle muti threading issues and the scene record may have changed
+		// just preload the tags, preload all associations and the scene, does not reread the tags?, so just get them and update the scene
+		var tmp models.Scene
+		db.Preload("Tags").Where("id = ?", scene.ID).First(&tmp)
+		scene.Tags = tmp.Tags
+
+		for _, tag := range *requestData.Tags {
+			if strings.HasPrefix(strings.ToLower(tag.Name), "category:") {
+				newTags = append(newTags, tag.Name[9:])
+			}
+		}
+		ProcessTagChanges(scene, &newTags, db)
+		updateReqd = true
+	}
+
+	if requestData.Tags != nil && config.Config.Interfaces.Heresphere.AllowCuepointUpdates {
+		// need to reread the cuepoints, to handle muti threading issues and the scene record may have changed
+		// just preload the cuepoint, preload all associations and the scene, does not reread the cuepoint?, so just get them and update the scene
+		var tmp models.Scene
+		db.Preload("Cuepoints").Where("id = ?", scene.ID).First(&tmp)
+		scene.Cuepoints = tmp.Cuepoints
+
+		var replacementCuepoints []models.SceneCuepoint
+		endpos := findEndPos(requestData)
+		firstTrack := findTheMainTrack(requestData)
+		for _, tag := range *requestData.Tags {
+			if !strings.Contains(tag.Name, ":") {
+				if *tag.Track == firstTrack {
+					replacementCuepoints = append(replacementCuepoints, models.SceneCuepoint{SceneID: scene.ID, TimeStart: float64(tag.StartMilliseconds) / 1000, Name: tag.Name})
+				} else {
+					//allow for multi track, merge into the main cuepoint name
+					if tag.StartMilliseconds > 0 || tag.EndMilliseconds < endpos {
+						for idx, newtag := range replacementCuepoints {
+							// allow 5 seconds lewway to align manually entered tags
+							if math.Abs((newtag.TimeStart)-tag.StartMilliseconds/1000) < 5 {
+								replacementCuepoints[idx].Name = tag.Name + "-" + replacementCuepoints[idx].Name
+							}
+						}
+					}
+				}
+			}
+		}
+		db.Model(&scene).Association("Cuepoints").Replace(&replacementCuepoints)
+
+		updateReqd = true
+	}
+
+	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
+		for _, sceneFile := range scene.Files {
+			removeFileByFileId(sceneFile.ID)
+		}
+	}
+
+	if requestData.Hsp != nil && config.Config.Interfaces.Heresphere.AllowHspData {
+		hspContent, err := base64.StdEncoding.DecodeString(*requestData.Hsp)
+		if err != nil {
+			log.Error("Error decoding heresphere hsp data %v", err)
+		}
+
+		fName := filepath.Join(scene.Files[0].Path, strings.TrimSuffix(scene.Files[0].Filename, filepath.Ext(videoFile.Filename))+".hsp")
+		ioutil.WriteFile(fName, hspContent, 0644)
+
+		tasks.ScanLocalHspFile(fName, videoFile.VolumeID, scene.ID)
+	}
+
+	if updateReqd {
+		scene.Save()
+	}
+}
+func findTheMainTrack(requestData HereSphereAuthRequest) int {
+	// 99% of the time we want Track 0, but the user may have deleted and added whole track
+
+	// find the max duration
+	endpos := findEndPos(requestData)
+	for _, tag := range *requestData.Tags {
+		if endpos < tag.EndMilliseconds {
+			endpos = tag.EndMilliseconds
+		}
+	}
+
+	// find the best track
+	likelyTrack := 9999
+	alternateTrack := 9999
+
+	for _, tag := range *requestData.Tags {
+		if (tag.StartMilliseconds > 0 || tag.EndMilliseconds < endpos) && !strings.Contains(tag.Name, ":") {
+			return *tag.Track
+		}
+
+		if (tag.StartMilliseconds > 0 || tag.EndMilliseconds < endpos) && likelyTrack > *tag.Track {
+			likelyTrack = *tag.Track
+		}
+		if !strings.Contains(tag.Name, ":") && alternateTrack > *tag.Track {
+			alternateTrack = *tag.Track
+		}
+	}
+
+	if likelyTrack < 9999 {
+		return likelyTrack
+	}
+
+	if alternateTrack < 9999 {
+		return likelyTrack
+	}
+
+	return -1
+}
+func findEndPos(requestData HereSphereAuthRequest) float64 {
+	// find the max duration
+	endpos := float64(0)
+	for _, tag := range *requestData.Tags {
+		if endpos < tag.EndMilliseconds {
+			endpos = tag.EndMilliseconds
+		}
+	}
+	return endpos
 }
 
 func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *restful.Response) {
@@ -564,45 +709,4 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 		Access:  1,
 		Library: sceneLists,
 	})
-}
-
-func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthRequest, videoFile models.File) {
-	db, _ := models.GetDB()
-	defer db.Close()
-
-	updateReqd := false
-	if requestData.IsFavorite != nil && *requestData.IsFavorite != scene.Favourite && config.Config.Interfaces.Heresphere.AllowFavoriteUpdates {
-		scene.Favourite = *requestData.IsFavorite
-		updateReqd = true
-		log.Errorf("updating favorite %v", *requestData.IsFavorite)
-	}
-	if requestData.Rating != nil && *requestData.Rating != scene.StarRating && config.Config.Interfaces.Heresphere.AllowRatingUpdates {
-		scene.StarRating = *requestData.Rating
-		updateReqd = true
-		log.Errorf("updating rating %v", *requestData.Rating)
-	}
-
-	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
-		for _, sceneFile := range scene.Files {
-			removeFileByFileId(sceneFile.ID)
-		}
-	}
-
-	if requestData.Hsp != nil && config.Config.Interfaces.Heresphere.AllowHspData {
-		hspContent, err := base64.StdEncoding.DecodeString(*requestData.Hsp)
-		if err != nil {
-			log.Error("Error decode heresphere hsp data %v", err)
-		}
-
-		fName := filepath.Join(scene.Files[0].Path, strings.TrimSuffix(scene.Files[0].Filename, filepath.Ext(videoFile.Filename))+".hsp")
-		ioutil.WriteFile(fName, hspContent, 0644)
-
-		tasks.ScanLocalHspFile(fName, videoFile.VolumeID, scene.ID)
-
-	}
-
-	if updateReqd {
-		scene.Save()
-	}
-
 }

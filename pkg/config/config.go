@@ -62,6 +62,8 @@ type ObjectConfig struct {
 			AllowRatingUpdates   bool `default:"false" json:"allow_rating_updates"`
 			AllowFavoriteUpdates bool `default:"false" json:"allow_favorite_updates"`
 			AllowHspData         bool `default:"false" json:"allow_hsp_data"`
+			AllowTagUpdates      bool `default:"false" json:"allow_tag_updates"`
+			AllowCuepointUpdates bool `default:"false" json:"allow_cuepoint_updates"`
 		} `json:"heresphere"`
 	} `json:"interfaces"`
 	Library struct {

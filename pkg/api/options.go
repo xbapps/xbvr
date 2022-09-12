@@ -69,6 +69,8 @@ type RequestSaveOptionsDeoVR struct {
 	AllowRatingUpdates   bool   `json:"allow_rating_updates"`
 	AllowFavoriteUpdates bool   `json:"allow_favorite_updates"`
 	AllowHspData         bool   `json:"allow_hsp_data"`
+	AllowTagUpdates      bool   `json:"allow_tag_updates"`
+	AllowCuepointUpdates bool   `json:"allow_cuepoint_updates"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -294,6 +296,8 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.Heresphere.AllowRatingUpdates = r.AllowRatingUpdates
 	config.Config.Interfaces.Heresphere.AllowFavoriteUpdates = r.AllowFavoriteUpdates
 	config.Config.Interfaces.Heresphere.AllowHspData = r.AllowHspData
+	config.Config.Interfaces.Heresphere.AllowTagUpdates = r.AllowTagUpdates
+	config.Config.Interfaces.Heresphere.AllowCuepointUpdates = r.AllowCuepointUpdates
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)

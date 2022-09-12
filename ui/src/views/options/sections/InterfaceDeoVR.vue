@@ -106,6 +106,16 @@
               Enabled
             </b-switch>
           </b-field>
+          <b-field label="Allow Tag Updates">
+            <b-switch v-model="allowTagUpdates">
+              Enabled
+            </b-switch>
+          </b-field>
+          <b-field label="Allow Cuepoint Updates">
+            <b-switch v-model="allowCuepointUpdates">
+              Enabled
+            </b-switch>
+          </b-field>
           <b-field label="Allow Saving Hsp Files">
             <b-switch v-model="allowHspData">
               Enabled
@@ -230,6 +240,22 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.heresphere.allow_favorite_updates = value
+      }
+    },
+    allowTagUpdates: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_tag_updates
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_tag_updates = value
+      }
+    },
+    allowCuepointUpdates: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_cuepoint_updates
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_cuepoint_updates = value
       }
     },
     allowHspData: {

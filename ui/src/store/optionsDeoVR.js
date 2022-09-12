@@ -16,6 +16,8 @@ const state = {
     allow_file_deletes: false,
     allow_rating_updates: false,
     allow_favorite_updates: false,
+    allow_tag_updates: false,
+    allow_cuepoint_updates: false,
     allow_hsp_data: false
   }
 }
@@ -39,6 +41,8 @@ const actions = {
         state.heresphere.allow_file_deletes = data.config.interfaces.heresphere.allow_file_deletes
         state.heresphere.allow_rating_updates = data.config.interfaces.heresphere.allow_rating_updates
         state.heresphere.allow_favorite_updates = data.config.interfaces.heresphere.allow_favorite_updates
+        state.heresphere.allow_tag_updates = data.config.interfaces.heresphere.allow_tag_updates
+        state.heresphere.allow_cuepoint_updates = data.config.interfaces.heresphere.allow_cuepoint_updates
         state.heresphere.allow_hsp_data = data.config.interfaces.heresphere.allow_hsp_data
         state.loading = false        
       })
