@@ -946,6 +946,13 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0042-actor-akas",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.
+					AutoMigrate(&models.Aka{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

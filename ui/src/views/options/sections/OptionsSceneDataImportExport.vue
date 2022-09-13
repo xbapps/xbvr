@@ -79,6 +79,13 @@
       <div class="block">
         <b-field>
           <b-tooltip
+            label="Includes your Actor Aka Groups"
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
+            <b-switch v-model="includeActorAkas">Include Actor Aka Groups</b-switch>
+          </b-tooltip>
+        </b-field>
+        <b-field>
+          <b-tooltip
             label="Includes your Saved Search definitions"
             size="is-large" type="is-primary is-light" multilined :delay="1000" >
             <b-switch v-model="includePlaylists">Include Saved Searches</b-switch>
@@ -153,6 +160,7 @@ export default {
       includePlaylists: true,
       includeVolumes: true,
       includeSites: true,
+      includeActorAkas: true,
       overwrite: true,
       allSites: "true",
       currentPlaylist: '0',
@@ -192,13 +200,13 @@ export default {
         // put up a starting msg, as large files can cause it to appear to hang
         this.$store.state.messages.lastScrapeMessage = 'Starting restore'
         ky.post('/api/task/bundle/restore', {
-          json: { allSites: this.allSites == "true", inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes, inclSites: this.includeSites, overwrite: this.overwrite, uploadData: this.uploadData }
+          json: { allSites: this.allSites == "true", inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas,inclVolumes: this.includeVolumes, inclSites: this.includeSites, overwrite: this.overwrite, uploadData: this.uploadData }
         })
         this.file = null
       }
     },
     backupContent () {
-      ky.get('/api/task/bundle/backup', { timeout: false, searchParams: { allSites: this.allSites == "true", inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclVolumes: this.includeVolumes, inclSites: this.includeSites, playlistId: this.currentPlaylist, download: true } }).json().then(data => {
+      ky.get('/api/task/bundle/backup', { timeout: false, searchParams: { allSites: this.allSites == "true", inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclVolumes: this.includeVolumes, inclSites: this.includeSites, playlistId: this.currentPlaylist, download: true } }).json().then(data => {
         const link = document.createElement('a')
         link.href = this.myUrl
         link.click()

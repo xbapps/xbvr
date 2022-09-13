@@ -322,10 +322,16 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		})
 	}
 
-	if len(scene.Cast) > 5 {
+	akaCnt := 0
+	for _, c := range scene.Cast {
+		if strings.HasPrefix(c.Name, "aka:") {
+			akaCnt++
+		}
+	}
+	if (len(scene.Cast) - akaCnt) > 5 {
 		addFeatureTag("Cast: 6+")
-	} else if len(scene.Cast) > 0 {
-		addFeatureTag(fmt.Sprintf("Cast: %d", len(scene.Cast)))
+	} else if (len(scene.Cast) - akaCnt) > 0 {
+		addFeatureTag(fmt.Sprintf("Cast: %d", (len(scene.Cast) - akaCnt)))
 	}
 
 	for i := range scene.Tags {
