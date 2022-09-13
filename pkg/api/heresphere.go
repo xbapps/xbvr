@@ -171,6 +171,12 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 		return
 	}
 
+	var requestData HereSphereAuthRequest
+	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
+		log.Errorf("Error decoding heresphere api POST request: %v", err)
+		return
+	}
+
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -212,6 +218,9 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 		DateAdded:            file.CreatedTime.Format("2006-01-02"),
 		DurationMilliseconds: uint(file.VideoDuration * 1000),
 		Media:                media,
+	}
+	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
+		removeFileByFileId(file.ID)
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, video)
