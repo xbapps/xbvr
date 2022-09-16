@@ -503,7 +503,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		Media:                media,
 		WriteFavorite:        config.Config.Interfaces.Heresphere.AllowFavoriteUpdates,
 		WriteRating:          config.Config.Interfaces.Heresphere.AllowRatingUpdates,
-		WriteTags:            config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates,
+		WriteTags:            config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates || config.Config.Interfaces.Heresphere.AllowWatchlistUpdates,
 		WriteHSP:             config.Config.Interfaces.Heresphere.AllowHspData,
 	}
 
@@ -530,7 +530,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		updateReqd = true
 	}
 
-	if requestData.Tags != nil && (config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates) {
+	if requestData.Tags != nil && (config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates || config.Config.Interfaces.Heresphere.AllowWatchlistUpdates) {
 		// need lock, heresphere can send a second post too soon
 		lockHeresphereUpdates.Lock()
 		defer lockHeresphereUpdates.Unlock()
@@ -551,6 +551,25 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		}
 		ProcessTagChanges(scene, &newTags, db)
 		updateReqd = true
+	}
+
+	if requestData.Tags != nil && config.Config.Interfaces.Heresphere.AllowWatchlistUpdates {
+		// need to reread the tags, to handle muti threading issues and the scene record may have changed
+		// just preload the tags, preload all associations and the scene, does not reread the tags?, so just get them and update the scene
+		var tmp models.Scene
+		db.Preload("Tags").Where("id = ?", scene.ID).First(&tmp)
+		scene.Tags = tmp.Tags
+
+		watchlist := false
+		for _, tag := range *requestData.Tags {
+			if strings.HasPrefix(strings.ToLower(tag.Name), "feature:watchlist") {
+				watchlist = true
+			}
+		}
+		if scene.Watchlist != watchlist {
+			scene.Watchlist = watchlist
+			updateReqd = true
+		}
 	}
 
 	if requestData.Tags != nil && config.Config.Interfaces.Heresphere.AllowCuepointUpdates {

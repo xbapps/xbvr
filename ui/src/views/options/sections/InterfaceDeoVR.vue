@@ -116,6 +116,15 @@
               Enabled
             </b-switch>
           </b-field>
+          <b-tooltip
+            label="Add or delete the Feature:watchlist tag to toggle the Watchlist flag in XBVR"
+            size="is-large" type="is-primary" multilined :delay="250" >
+            <b-field label="Allow Watchlist Updates">
+              <b-switch v-model="allowWatchlistUpdates">
+                Enabled
+              </b-switch>
+            </b-field>
+          </b-tooltip>
           <b-field label="Allow Saving Hsp Files">
             <b-switch v-model="allowHspData">
               Enabled
@@ -256,6 +265,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.heresphere.allow_cuepoint_updates = value
+      }
+    },
+    allowWatchlistUpdates: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_watchlist_updates
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_watchlist_updates = value
       }
     },
     allowHspData: {
