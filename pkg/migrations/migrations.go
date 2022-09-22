@@ -946,6 +946,43 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			// R18 is being permanently shut down no later than January 31, 2023 - changes images to FANZA URLs//
+			ID: "0042-change-R18-to-FANZA",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				err := tx.Where("images LIKE ?", "%{\"url\":\"https://pics.r18.com%").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+
+				for _, scene := range scenes {
+					changed := false
+					// change all image URLs
+					if strings.Contains(scene.Images, "pics.r18.com") {
+						scene.Images = strings.ReplaceAll(scene.Images, "pics.r18.com", "pics.dmm.co.jp")
+						changed = true
+					}
+					// change cover image URL
+					if strings.Contains(scene.Cover_URL, "pics.r18.com") {
+						scene.Cover_URL = strings.ReplaceAll(scene.Cover_URL, "pics.r18.com", "pics.dmm.co.jp")
+						changed = true
+					}
+					// change scene URL - will direct to a Japanese language page... - thoughts??? the r18.com links will stop working eventually
+				//	if strings.Contains(scene.Scene_URL, "https://www.r18.com/videos/vod/movies/detail/-/") {
+				//		scene.Scene_URL = strings.ReplaceAll(scene.Scene_URL, "https://www.r18.com/videos/vod/movies/detail/-/", "https://www.dmm.co.jp/digital/videoa/-/detail/=/c")
+				//		changed = true
+				//	}
+					if changed {
+						err = tx.Save(&scene).Error
+						if err != nil {
+							return err
+						}
+					}
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
