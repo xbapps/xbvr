@@ -129,11 +129,36 @@
       </b-field>
 
     </div>
+    <div class="is-divider" data-content="Actor Also Known As groups"></div>
+    <b-field>
+      <b-tooltip position="is-bottom" label="New Aka Group" :delay="200">
+        <button class="button is-small is-outlined" @click="createAkaGroup" :disabled="disableNewAkaGroup">
+          <b-icon pack="mdi" icon="account-multiple-plus-outline"></b-icon>
+        </button>
+      </b-tooltip>
+      <b-tooltip position="is-bottom" label="Delete Aka Group" :delay="200">
+        <button class="button is-small is-outlined" @click="deleteAkaGroup" :disabled="disableDeleteAkaGroup">
+          <b-icon pack="mdi" icon="delete-outline"></b-icon>
+        </button>
+      </b-tooltip>
+      <b-tooltip position="is-bottom" label="Add Cast to Aka Group" :delay="200">
+        <button class="button is-small is-outlined" @click="addToAkaGroup" :disabled="disableAddToAkaGroup">
+          <b-icon pack="mdi" icon="account-plus-outline"></b-icon>
+        </button>
+      </b-tooltip>
+      <b-tooltip position="is-bottom" label="Remove Cast from Aka Group" :delay="200">
+        <button class="button is-small is-outlined" @click="removeFromAkaGroup" :disabled="disableRemoveFromAkaGroup">
+          <b-icon pack="mdi" icon="account-minus-outline"></b-icon>
+        </button>
+      </b-tooltip>
+
+    </b-field>
   </div>
 </template>
 
 <script>
 import SavedSearch from './SavedSearch'
+import ky from 'ky'
 
 export default {
   name: 'Filters',
@@ -161,7 +186,7 @@ export default {
       this.filteredCast = this.filters.cast.filter(option => (
         option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
         !this.cast.some(entry => entry.toString() === option.toString())
-      ))
+      ))      
     },
     getFilteredSites (text) {
       this.filteredSites = this.filters.sites.filter(option => (
@@ -181,8 +206,59 @@ export default {
     },
     clearVolume () {
       this.$store.state.sceneList.filters.volume = 0
+      this.$store.dispatch('sceneList/filters')
       this.reloadList()
-    }
+    },
+    createAkaGroup () {
+      this.$store.state.sceneList.isLoading = true
+      ky.post('/api/aka/create', {json: {actorList: this.cast}}).json().then(data => {
+        this.cast.push(data.akas.aka_actor.name)
+        this.$store.dispatch('sceneList/filters')
+        this.reloadList()
+        if (data.status != '') {
+          this.$buefy.toast.open({message: `Warning:  ${data.status}`, type: 'is-warning', duration: 5000})
+        }
+        this.$store.state.sceneList.isLoading = false
+      })
+    },
+    deleteAkaGroup () {
+      this.$store.state.sceneList.isLoading = true
+      ky.post('/api/aka/delete', {json: {name: this.cast[0]}}).json().then(data => {
+        this.cast = []
+        this.$store.dispatch('sceneList/filters')
+        this.reloadList()
+        this.$store.state.sceneList.isLoading = false
+      })       
+    },
+    addToAkaGroup () {
+      this.$store.state.sceneList.isLoading = true
+      ky.post('/api/aka/add', {json: {actorList: this.cast}}).json().then(data => {        
+        // delete old aka & add new name
+        this.cast = this.cast.filter(e => !e.startsWith("aka:")) 
+        this.cast.push(data.akas.aka_actor.name) 
+        this.$store.dispatch('sceneList/filters')       
+        this.reloadList()        
+        if (data.status != '') {
+          this.$buefy.toast.open({message: `Warning:  ${data.status}`, type: 'is-warning', duration: 5000})
+        }
+        this.$store.state.sceneList.isLoading = false
+      })
+      
+    },
+    removeFromAkaGroup () {
+      this.$store.state.sceneList.isLoading = true
+      ky.post('/api/aka/remove', {json: {actorList: this.cast}}).json().then(data => {        
+        // delete old aka & add new name
+        this.cast = this.cast.filter(e => !e.startsWith("aka:")) 
+        this.cast.push(data.akas.aka_actor.name)
+        this.$store.dispatch('sceneList/filters')
+        this.reloadList()
+        if (data.status != '') {
+          this.$buefy.toast.open({message: `Warning:  ${data.status}`, type: 'is-warning', duration: 5000})
+        }
+        this.$store.state.sceneList.isLoading = false
+      })
+    },
   },
   computed: {
     filters () {
@@ -268,6 +344,66 @@ export default {
         this.$store.state.sceneList.filters.isWatched = value
         this.reloadList()
       }
+    },
+    disableNewAkaGroup() {
+      let akaCastCnt = 0
+      let actorCnt = 0       
+ 
+      for (var i = 0; i < this.cast.length; i++) {        
+        if (this.cast[i].startsWith("aka:")) {
+          akaCastCnt++
+        } else {
+          actorCnt++
+        }
+      }
+      // you can create a new group from a list of actors (more than one)
+      return akaCastCnt == 0 && actorCnt > 1 ? false : true
+    },
+    disableDeleteAkaGroup() {
+      let akaCastCnt = 0
+      let actorCnt = 0       
+ 
+      for (var i = 0; i < this.cast.length; i++) {        
+        if (this.cast[i].startsWith("aka:")) {
+          akaCastCnt++
+        } else {
+          actorCnt++
+        }
+      }
+
+      // you can only delete a group when it is the only thing selected      
+      return akaCastCnt == 1 && actorCnt == 0 > 1 ? false : true
+    },
+    disableAddToAkaGroup() {
+      let akaCastCnt = 0
+      let actorCnt = 0       
+ 
+      for (var i = 0; i < this.cast.length; i++) {        
+        if (this.cast[i].startsWith("aka:")) {
+          akaCastCnt++
+        } else {
+          actorCnt++
+        }
+      }
+
+      // you can add to a group if you select one group and one or more actors
+      return akaCastCnt == 1 && actorCnt > 0 ? false : true
+    },
+    disableRemoveFromAkaGroup() {
+      let akaCastCnt = 0
+      let actorCnt = 0       
+ 
+      for (var i = 0; i < this.cast.length; i++) {        
+        if (this.cast[i].startsWith("aka:")) {
+          akaCastCnt++
+        } else {
+          actorCnt++
+        }
+      }
+
+      // you can remove from a group if you select one group and one or more actors
+      return akaCastCnt == 1 && actorCnt > 0 ? false : true
+
     }
   }
 }
