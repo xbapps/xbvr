@@ -21,7 +21,7 @@
     "ky": "0.30.0",
     "pretty-bytes": "6.0.0",
     "videojs-hotkeys": "0.2.27",
-    "videojs-vr": "1.10.1",
+    "videojs-vr": "1.8.0",
     "vue": "2.7.10",
     "vue-debounce": "4.0.0",
     "vue-gallery": "2.0.1",
