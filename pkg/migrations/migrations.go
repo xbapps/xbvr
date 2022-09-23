@@ -947,7 +947,7 @@ func Migrate() {
 			},
 		},
 		{
-			// R18 is being permanently shut down no later than January 31, 2023 - changes images to FANZA URLs//
+			// R18 is being permanently shut down no later than January 31, 2023 - changes images to FANZA URLs
 			ID: "0042-change-R18-to-FANZA",
 			Migrate: func(tx *gorm.DB) error {
 				var scenes []models.Scene
@@ -968,11 +968,11 @@ func Migrate() {
 						scene.CoverURL = strings.ReplaceAll(scene.CoverURL, "pics.r18.com", "pics.dmm.co.jp")
 						changed = true
 					}
-					// change scene URL - will direct to a Japanese language page... - thoughts??? the r18.com links will stop working eventually
-				//	if strings.Contains(scene.SceneURL, "https://www.r18.com/videos/vod/movies/detail/-/") {
-				//		scene.SceneURL = strings.ReplaceAll(scene.SceneURL, "https://www.r18.com/videos/vod/movies/detail/-/", "https://www.dmm.co.jp/digital/videoa/-/detail/=/c")
-				//		changed = true
-				//	}
+/*					// change scene URL - will direct to a Japanese language page... - thoughts??? the r18.com links will stop working eventually
+					if strings.Contains(scene.SceneURL, "https://www.r18.com/videos/vod/movies/detail/-/") {
+						scene.SceneURL = strings.ReplaceAll(scene.SceneURL, "https://www.r18.com/videos/vod/movies/detail/-/", "https://www.dmm.co.jp/digital/videoa/-/detail/=/c")
+						changed = true
+					} */
 					if changed {
 						err = tx.Save(&scene).Error
 						if err != nil {
