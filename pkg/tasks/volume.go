@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -149,7 +150,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 					var fl models.File
 					err = db.Where(&models.File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
 
-					if err == gorm.ErrRecordNotFound || fl.VolumeID == 0 || fl.VideoDuration == 0 || fl.VideoProjection == "" || fl.Size != f.Size() {
+					if err == gorm.ErrRecordNotFound || fl.VolumeID == 0 || fl.VideoDuration == 0 || fl.VideoProjection == "" || fl.Size != f.Size() || fl.OsHash == "" {
 						videoProcList = append(videoProcList, path)
 					}
 				}
@@ -190,6 +191,11 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			fl.CreatedTime = birthtime
 			fl.UpdatedTime = fTimes.ModTime()
 			fl.VolumeID = vol.ID
+
+			hash, err := Hash(path)
+			if err == nil {
+				fl.OsHash = fmt.Sprintf("%x", hash)
+			}
 
 			ffdata, err := ffprobe.GetProbeData(path, time.Second*5)
 			if err != nil {
@@ -350,6 +356,7 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				fl.CreatedTime = files[i].CreatedAt.Time
 				fl.UpdatedTime = files[i].UpdatedAt.Time
 				fl.VolumeID = vol.ID
+				fl.OsHash = files[i].OpensubtitlesHash
 				fl.Save()
 			}
 
