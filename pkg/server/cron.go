@@ -67,7 +67,7 @@ func generatePreviewCron() {
 		if !config.Config.Cron.PreviewSchedule.UseRange {
 			tasks.GeneratePreviews(nil)
 		} else {
-			endTime := calcEndTime(config.Config.Cron.PreviewSchedule.HourStart, config.Config.Cron.PreviewSchedule.HourEnd)
+			endTime := calcEndTime(config.Config.Cron.PreviewSchedule.HourStart, config.Config.Cron.PreviewSchedule.HourEnd, config.Config.Cron.PreviewSchedule.MinuteStart)
 			log.Infof("Preview Generation will stop at %v", endTime)
 			tasks.GeneratePreviews(&endTime)
 		}
@@ -103,16 +103,16 @@ func formatCronSchedule(schedule config.CronSchedule) string {
 	}
 	return fmt.Sprintf("%v %v * * *", schedule.MinuteStart, formattedHourSchedule)
 }
-func calcEndTime(startHour int, endHour int) time.Time {
+func calcEndTime(startHour int, endHour int, minuteStart int) time.Time {
 
 	dt := time.Now()
 	if startHour > endHour {
-		if dt.Hour() > startHour {
+		if dt.Hour() > endHour {
 			return time.Date(dt.Year(), dt.Month(), dt.Day(), 23, 59, 0, 0, dt.Location())
 		} else {
-			return time.Date(dt.Year(), dt.Month(), dt.Day(), endHour, 59, 0, 0, dt.Location()).Add(time.Minute * -1)
+			return time.Date(dt.Year(), dt.Month(), dt.Day(), endHour, minuteStart, 0, 0, dt.Location())
 		}
 	} else {
-		return time.Date(dt.Year(), dt.Month(), dt.Day(), endHour, 0, 0, 0, dt.Location()).Add(time.Minute * -1)
+		return time.Date(dt.Year(), dt.Month(), dt.Day(), endHour, minuteStart, 0, 0, dt.Location())
 	}
 }
