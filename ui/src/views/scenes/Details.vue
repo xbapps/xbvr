@@ -107,8 +107,8 @@
             <div class="block-tags block" v-if="activeTab == 1">              
              <b-taglist>
                 <b-button @click="updateCuepoint(false)" class="tag is-info is-small is-warning" accesskey="a"><u>A</u>dd New</b-button>                
-                <b-button @click="vidPosition = new Date(0,0,0,0,0,player.currentTime())" class="tag is-info is-small is-warning" accesskey="t">Current <u>T</u>ime</b-button>
-                <b-button v-if="currentCuepointId > 1" @click="updateCuepoint(true)" class="tag is-info is-small is-warning" accesskey="s"><u>S</u>ave Edit</b-button>
+                <b-button @click="vidPosition = new Date(0,0,0,0,0, 0, player.currentTime() * 1000)" class="tag is-info is-small is-warning" accesskey="t">Current <u>T</u>ime</b-button>
+                <b-button v-if="currentCuepointId > 0" @click="updateCuepoint(true)" class="tag is-info is-small is-warning" accesskey="s"><u>S</u>ave Edit</b-button>
                 <b-button v-if="tagPosition!=''" @click='setCuepointPosition("")' class="tag is-info is-small is-warning" accesskey="o">Clear P<u>o</u>sition</b-button>
                 <b-button v-if="tagAct!=''" @click='setCuepointAct("")' class="tag is-info is-small is-warning" accesskey="c"><u>C</u>lear Action</b-button>                  
               </b-taglist>
@@ -189,18 +189,18 @@
                       <b-field grouped>
                         <b-autocomplete v-model="tagPosition" :data="filteredCuepointPositionList" :open-on-focus="true"></b-autocomplete>
                         <b-autocomplete v-model="tagAct"  :data="filteredCuepointActList" :open-on-focus="true"></b-autocomplete>
-                        <b-timepicker v-model="vidPosition" rounded editable placeholder="Defaults to player position" hour-format="24" enable-seconds=true :max-time="maxTime" >
+                        <b-timepicker v-model="vidPosition" rounded editable placeholder="Defaults to player position" hour-format="24" :enable-seconds="true" :max-time="maxTime" :time-formatter="timeFormatter" :time-parser="timeParser" >
                           <b-button
                             label="Current Time"
                             type="is-primary"
-                            @click="vidPosition = new Date(0,0,0,0,0,player.currentTime())" />
+                            @click="vidPosition = new Date(0,0,0,0,0, 0, player.currentTime() * 1000)" />
                         </b-timepicker>
                       </b-field>
                     </div>
                     <div class="content cuepoint-list">
                       <ul>
                         <li v-for="(c, idx) in sortedCuepoints" :key="idx">
-                          <a @click="playCuepoint(c)"><code>{{ humanizeSeconds(c.time_start) }}</code></a> -
+                          <a @click="playCuepoint(c)"><code>{{ humanizeSeconds1DP(c.time_start) }}</code></a> -
                           <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
                           <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(c.id)" title="Delete cuepoint">
                             <b-icon pack="fas" icon="trash" />
@@ -500,7 +500,7 @@ export default {
     },
     playCuepoint (cuepoint) {
       // populate the cuepoint edit fields
-      this.vidPosition = new Date(0, 0, 0, 0, 0, cuepoint.time_start)
+      this.vidPosition = new Date(0, 0, 0, 0, 0, 0, cuepoint.time_start*1000)
       this.currentCuepointId = cuepoint.id
       if (cuepoint.name.indexOf('-') > 0) {
         this.tagPosition = cuepoint.name.substr(0, cuepoint.name.indexOf('-'))
@@ -515,7 +515,7 @@ export default {
     },
     updateCuepoint (editCuepoint) {
       // if edit choosen, delete existing cuepoint before add
-      if (editCuepoint && this.currentCuepointId > 1) {
+      if (editCuepoint && this.currentCuepointId > 0) {
         this.deleteCuepoint(this.currentCuepointId)
       }
       let name = ''
@@ -529,8 +529,8 @@ export default {
         name = `${this.tagPosition}-${this.tagAct}`
       }
       let pos = this.player.currentTime()
-      if (this.vidPosition != null) {
-        pos = (this.vidPosition.getMilliseconds() / 1000) + this.vidPosition.getSeconds() + (this.vidPosition.getMinutes() * 60) + (this.vidPosition.getHours() * 60 * 60)
+      if (this.vidPosition != null) {        
+        pos = (this.vidPosition.getMilliseconds() / 1000) + this.vidPosition.getSeconds() + (this.vidPosition.getMinutes() * 60) + (this.vidPosition.getHours() * 60 * 60)        
       }
       this.currentCuepointId = 0
       ky.post(`/api/scene/${this.item.id}/cuepoint`, {
@@ -557,6 +557,9 @@ export default {
     },
     humanizeSeconds (seconds) {
       return new Date(seconds * 1000).toISOString().substr(11, 8)
+    },
+    humanizeSeconds1DP (seconds) {      
+      return new Date(seconds * 1000).toISOString().substr(11, 10)
     },
     setRating (val) {
       ky.post(`/api/scene/rate/${this.item.id}`, { json: { rating: val } })
@@ -657,6 +660,13 @@ export default {
         left: active.offsetLeft + active.offsetWidth / 2 - indicators.offsetWidth / 2,
         behavior: 'smooth'
       })
+    },
+    timeFormatter(time) {        
+       return new Intl.DateTimeFormat('en', { hourCycle: 'h23', hour: "2-digit", minute: "2-digit", second: "2-digit", fractionalSecondDigits: 1 }).format(time)
+    },
+    timeParser(inputString) {
+      let items = inputString.split(":")
+      return new Date(0, 0, 0, items[0],items[1], 0, items[2]*1000)
     },
     format,
     parseISO,
