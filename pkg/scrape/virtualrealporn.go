@@ -18,6 +18,7 @@ import (
 func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
+	page := 1
 
 	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
@@ -204,6 +205,11 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 	})
 
 	siteCollector.OnHTML(`a.w-portfolio-item-anchor`, func(e *colly.HTMLElement) {
+		if e.Request.URL.RawQuery == "videoPage="+strconv.Itoa(page) {
+			// found scenes on this page, get the next page of results
+			page++
+			siteCollector.Visit(fmt.Sprintf("%s?videoPage=%v", URL, page))
+		}
 		sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
 
 		// If scene exist in database, there's no need to scrape
@@ -212,13 +218,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		}
 	})
 
-	if scraperID == "virtualrealamateur" {
-		siteCollector.Visit(URL)
-	} else if scraperID == "virtualrealporn" {
-		siteCollector.Visit(URL + "vr-pornstars/")
-	} else {
-		siteCollector.Visit(URL + "vr-models/")
-	}
+	siteCollector.Visit(fmt.Sprintf("%s?videoPage=%v", URL, page))
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
