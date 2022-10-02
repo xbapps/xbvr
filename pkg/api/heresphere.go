@@ -436,6 +436,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	thumbnailURL := "http://" + req.Request.Host + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 
 	if scene.IsScripted {
+		title = scene.GetFunscriptTitle()
 		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
 			thumbnailURL = "http://" + req.Request.Host + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 		}
