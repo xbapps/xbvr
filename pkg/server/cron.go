@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/robfig/cron/v3"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -12,6 +13,7 @@ import (
 var cronInstance *cron.Cron
 var rescrapTask cron.EntryID
 var rescanTask cron.EntryID
+var previewTask cron.EntryID
 
 func SetupCron() {
 	cronInstance = cron.New()
@@ -25,12 +27,18 @@ func SetupCron() {
 		log.Println(fmt.Sprintf("Setup Rescan Task %v", formatCronSchedule(config.CronSchedule(config.Config.Cron.RescanSchedule))))
 		rescanTask, _ = cronInstance.AddFunc(formatCronSchedule(config.CronSchedule(config.Config.Cron.RescanSchedule)), rescanCron)
 	}
+	if config.Config.Cron.PreviewSchedule.Enabled {
+		log.Println(fmt.Sprintf("Setup Preview Generation Task %v", formatCronSchedule(config.CronSchedule(config.Config.Cron.PreviewSchedule))))
+		ps := formatCronSchedule(config.CronSchedule(config.Config.Cron.PreviewSchedule))
+		previewTask, _ = cronInstance.AddFunc(ps, generatePreviewCron)
+	}
 	cronInstance.Start()
 
 	go tasks.CalculateCacheSizes()
 
 	log.Println(fmt.Sprintf("Next Rescrape Task at %v", cronInstance.Entry(rescrapTask).Next))
 	log.Println(fmt.Sprintf("Next Rescan Task at %v", cronInstance.Entry(rescanTask).Next))
+	log.Println(fmt.Sprintf("Next Preview Generation Task at %v", cronInstance.Entry(previewTask).Next))
 }
 
 func scrapeCron() {
@@ -45,6 +53,26 @@ func rescanCron() {
 		tasks.RescanVolumes(-1)
 	}
 	log.Println(fmt.Sprintf("Next Rescan Task at %v", cronInstance.Entry(rescanTask).Next))
+}
+
+var previewGenerateInProgress = false
+
+func generatePreviewCron() {
+	if !session.HasActiveSession() || !previewGenerateInProgress {
+		previewGenerateInProgress = true
+		defer func() {
+			previewGenerateInProgress = false
+		}()
+
+		if !config.Config.Cron.PreviewSchedule.UseRange {
+			tasks.GeneratePreviews(nil)
+		} else {
+			endTime := calcEndTime(config.Config.Cron.PreviewSchedule.HourStart, config.Config.Cron.PreviewSchedule.HourEnd, config.Config.Cron.PreviewSchedule.MinuteStart)
+			log.Infof("Preview Generation will stop at %v", endTime)
+			tasks.GeneratePreviews(&endTime)
+		}
+	}
+	log.Println(fmt.Sprintf("Next Preview Generation Task at %v", cronInstance.Entry(previewTask).Next))
 }
 func formatCronSchedule(schedule config.CronSchedule) string {
 	// 	this routine will format a crontab range description, https://crontab.guru is a good tool to decode the range description generated
@@ -74,4 +102,17 @@ func formatCronSchedule(schedule config.CronSchedule) string {
 		formattedHourSchedule = fmt.Sprintf("%v-%v%v", schedule.HourStart, schedule.HourEnd, hourInterval)
 	}
 	return fmt.Sprintf("%v %v * * *", schedule.MinuteStart, formattedHourSchedule)
+}
+func calcEndTime(startHour int, endHour int, minuteStart int) time.Time {
+
+	dt := time.Now()
+	if startHour > endHour {
+		if dt.Hour() > endHour {
+			return time.Date(dt.Year(), dt.Month(), dt.Day(), 23, 59, 0, 0, dt.Location())
+		} else {
+			return time.Date(dt.Year(), dt.Month(), dt.Day(), endHour, minuteStart, 0, 0, dt.Location())
+		}
+	} else {
+		return time.Date(dt.Year(), dt.Month(), dt.Day(), endHour, minuteStart, 0, 0, dt.Location())
+	}
 }

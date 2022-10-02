@@ -84,6 +84,14 @@ type ObjectConfig struct {
 			HourStart    int  `default:"0" json:"hourStart"`
 			HourEnd      int  `default:"23" json:"hourEnd"`
 		} `json:"rescanSchedule"`
+		PreviewSchedule struct {
+			Enabled      bool `default:"false" json:"enabled"`
+			HourInterval int  `default:"2" json:"hourInterval"`
+			UseRange     bool `default:"false" json:"useRange"`
+			MinuteStart  int  `default:"0" json:"minuteStart"`
+			HourStart    int  `default:"0" json:"hourStart"`
+			HourEnd      int  `default:"23" json:"hourEnd"`
+		} `json:"previewSchedule"`
 	} `json:"cron"`
 }
 
