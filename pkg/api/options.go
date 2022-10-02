@@ -46,6 +46,7 @@ type RequestSaveOptionsWeb struct {
 	SceneWatched   bool   `json:"sceneWatched"`
 	SceneEdit      bool   `json:"sceneEdit"`
 	SceneCuepoint  bool   `json:"sceneCuepoint"`
+	ShowHspFile    bool   `json:"showHspFile"`
 	UpdateCheck    bool   `json:"updateCheck"`
 }
 
@@ -57,13 +58,20 @@ type RequestSaveOptionsDLNA struct {
 }
 
 type RequestSaveOptionsDeoVR struct {
-	Enabled        bool   `json:"enabled"`
-	AuthEnabled    bool   `json:"auth_enabled"`
-	Username       string `json:"username"`
-	Password       string `json:"password"`
-	RemoteEnabled  bool   `json:"remote_enabled"`
-	TrackWatchTime bool   `json:"track_watch_time"`
-	RenderHeatmaps bool   `json:"render_heatmaps"`
+	Enabled               bool   `json:"enabled"`
+	AuthEnabled           bool   `json:"auth_enabled"`
+	Username              string `json:"username"`
+	Password              string `json:"password"`
+	RemoteEnabled         bool   `json:"remote_enabled"`
+	TrackWatchTime        bool   `json:"track_watch_time"`
+	RenderHeatmaps        bool   `json:"render_heatmaps"`
+	AllowFileDeletes      bool   `json:"allow_file_deletes"`
+	AllowRatingUpdates    bool   `json:"allow_rating_updates"`
+	AllowFavoriteUpdates  bool   `json:"allow_favorite_updates"`
+	AllowHspData          bool   `json:"allow_hsp_data"`
+	AllowTagUpdates       bool   `json:"allow_tag_updates"`
+	AllowCuepointUpdates  bool   `json:"allow_cuepoint_updates"`
+	AllowWatchlistUpdates bool   `json:"allow_watchlist_updates"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -98,6 +106,12 @@ type RequestSaveOptionsTaskSchedule struct {
 	RescanMinuteStart    int  `json:"rescanMinuteStart"`
 	RescanHourStart      int  `json:"rescanHourStart"`
 	RescanHourEnd        int  `json:"rescanHourEnd"`
+	PreviewEnabled       bool `json:"previewEnabled"`
+	PreviewHourInterval  int  `json:"previewHourInterval"`
+	PreviewUseRange      bool `json:"previewUseRange"`
+	PreviewMinuteStart   int  `json:"previewMinuteStart"`
+	PreviewHourStart     int  `json:"previewHourStart"`
+	PreviewHourEnd       int  `json:"previewHourEnd"`
 }
 
 type RequestCuepointsResponse struct {
@@ -264,6 +278,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneWatched = r.SceneWatched
 	config.Config.Web.SceneEdit = r.SceneEdit
 	config.Config.Web.SceneCuepoint = r.SceneCuepoint
+	config.Config.Web.ShowHspFile = r.ShowHspFile
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 
@@ -284,6 +299,13 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.DeoVR.RemoteEnabled = r.RemoteEnabled
 	config.Config.Interfaces.DeoVR.TrackWatchTime = r.TrackWatchTime
 	config.Config.Interfaces.DeoVR.Username = r.Username
+	config.Config.Interfaces.Heresphere.AllowFileDeletes = r.AllowFileDeletes
+	config.Config.Interfaces.Heresphere.AllowRatingUpdates = r.AllowRatingUpdates
+	config.Config.Interfaces.Heresphere.AllowFavoriteUpdates = r.AllowFavoriteUpdates
+	config.Config.Interfaces.Heresphere.AllowHspData = r.AllowHspData
+	config.Config.Interfaces.Heresphere.AllowTagUpdates = r.AllowTagUpdates
+	config.Config.Interfaces.Heresphere.AllowCuepointUpdates = r.AllowCuepointUpdates
+	config.Config.Interfaces.Heresphere.AllowWatchlistUpdates = r.AllowWatchlistUpdates
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)
@@ -624,6 +646,9 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	if r.RescanHourEnd > 23 {
 		r.RescanHourEnd -= 24
 	}
+	if r.PreviewHourEnd > 23 {
+		r.PreviewHourEnd -= 24
+	}
 
 	config.Config.Cron.RescrapeSchedule.Enabled = r.RescrapeEnabled
 	config.Config.Cron.RescrapeSchedule.HourInterval = r.RescrapeHourInterval
@@ -638,6 +663,13 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.Config.Cron.RescanSchedule.MinuteStart = r.RescanMinuteStart
 	config.Config.Cron.RescanSchedule.HourStart = r.RescanHourStart
 	config.Config.Cron.RescanSchedule.HourEnd = r.RescanHourEnd
+
+	config.Config.Cron.PreviewSchedule.Enabled = r.PreviewEnabled
+	config.Config.Cron.PreviewSchedule.HourInterval = r.PreviewHourInterval
+	config.Config.Cron.PreviewSchedule.UseRange = r.PreviewUseRange
+	config.Config.Cron.PreviewSchedule.MinuteStart = r.PreviewMinuteStart
+	config.Config.Cron.PreviewSchedule.HourStart = r.PreviewHourStart
+	config.Config.Cron.PreviewSchedule.HourEnd = r.PreviewHourEnd
 
 	config.SaveConfig()
 

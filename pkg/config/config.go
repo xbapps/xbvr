@@ -33,6 +33,7 @@ type ObjectConfig struct {
 		SceneWatched   bool   `default:"false" json:"sceneWatched"`
 		SceneEdit      bool   `default:"false" json:"sceneEdit"`
 		SceneCuepoint  bool   `default:"true" json:"sceneCuepoint"`
+		ShowHspFile    bool   `default:"true" json:"showHspFile"`
 		UpdateCheck    bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
 	Vendor struct {
@@ -56,6 +57,15 @@ type ObjectConfig struct {
 			Username       string `default:"" json:"username"`
 			Password       string `default:"" json:"password"`
 		} `json:"deovr"`
+		Heresphere struct {
+			AllowFileDeletes      bool `default:"false" json:"allow_file_deletes"`
+			AllowRatingUpdates    bool `default:"false" json:"allow_rating_updates"`
+			AllowFavoriteUpdates  bool `default:"false" json:"allow_favorite_updates"`
+			AllowHspData          bool `default:"false" json:"allow_hsp_data"`
+			AllowTagUpdates       bool `default:"false" json:"allow_tag_updates"`
+			AllowCuepointUpdates  bool `default:"false" json:"allow_cuepoint_updates"`
+			AllowWatchlistUpdates bool `default:"false" json:"allow_watchlist_updates"`
+		} `json:"heresphere"`
 	} `json:"interfaces"`
 	Library struct {
 		Preview struct {
@@ -84,6 +94,14 @@ type ObjectConfig struct {
 			HourStart    int  `default:"0" json:"hourStart"`
 			HourEnd      int  `default:"23" json:"hourEnd"`
 		} `json:"rescanSchedule"`
+		PreviewSchedule struct {
+			Enabled      bool `default:"false" json:"enabled"`
+			HourInterval int  `default:"2" json:"hourInterval"`
+			UseRange     bool `default:"false" json:"useRange"`
+			MinuteStart  int  `default:"0" json:"minuteStart"`
+			HourStart    int  `default:"0" json:"hourStart"`
+			HourEnd      int  `default:"23" json:"hourEnd"`
+		} `json:"previewSchedule"`
 	} `json:"cron"`
 }
 

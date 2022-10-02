@@ -21,6 +21,7 @@ type File struct {
 	Path        string    `json:"path" xbvrbackup:"path"`
 	Filename    string    `json:"filename" xbvrbackup:"filename"`
 	Size        int64     `json:"size" xbvrbackup:"size"`
+	OsHash      string    `json:"oshash" xbvrbackup:"oshash"`
 	CreatedTime time.Time `json:"created_time" xbvrbackup:"created_time"`
 	UpdatedTime time.Time `json:"updated_time" xbvrbackup:"updated_time"`
 

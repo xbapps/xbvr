@@ -310,13 +310,17 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 	if err != nil {
 		return
 	}
+	scene := removeFileByFileId(uint(fileId))
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+func removeFileByFileId(fileId uint) models.Scene {
 
 	var scene models.Scene
 	var file models.File
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	err = db.Preload("Volume").Where(&models.File{ID: uint(fileId)}).First(&file).Error
+	err := db.Preload("Volume").Where(&models.File{ID: fileId}).First(&file).Error
 	if err == nil {
 
 		deleted := false
@@ -331,7 +335,7 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 		case "putio":
 			id, err := strconv.ParseInt(file.Path, 10, 64)
 			if err != nil {
-				return
+				return scene
 			}
 			client := file.Volume.GetPutIOClient()
 			err = client.Files.Delete(context.Background(), id)
@@ -352,6 +356,5 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 	} else {
 		log.Errorf("Error deleting file ", err)
 	}
-
-	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+	return scene
 }

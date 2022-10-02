@@ -1,13 +1,18 @@
 <template>
   <div class="container">
     <b-loading :is-full-page="false" :active.sync="isLoading"></b-loading>
-    <div class="content">
-      <h3>{{ $t("DeoVR interface") }}</h3>
+    <b-tabs v-model="activeTab" size="medium" type="is-boxed" style="margin-left: 0px" id="playertab">
+      <b-tab-item label="Shared Settings"/>
+      <b-tab-item label="DeoVR"/>
+      <b-tab-item label="Heresphere"/>
+    </b-tabs>
+    <div class="content" v-if="activeTab == 0">
+      <h3>Shared Player Options</h3>
       <hr/>
       <div class="columns">
         <div class="column">
           <section>
-            <b-field label="DeoVR integration">
+            <b-field label="Player integration">
               <b-switch v-model="enabled">
                 Enabled
               </b-switch>
@@ -37,25 +42,7 @@
                   </b-switch>
                 </b-field>
                 <p>
-                  If you are using funscripts, you can add a heatmap to the thumbnails of scripted scenes in the DeoVR interface.
-                </p>
-              </div>
-              <hr/>
-              <div class="block">
-                <b-field label="Watch time tracking">
-                  <b-switch v-model="watchTimeTrackingEnabled">
-                    Enabled
-                  </b-switch>
-                </b-field>
-                <b-field label="Remote mode">
-                  <b-switch v-model="remoteEnabled" :disabled="watchTimeTrackingEnabled === false">
-                    Enabled
-                  </b-switch>
-                </b-field>
-                <p>
-                  To use remote mode, which enables more precise watch time tracking, you need to turn it on in DeoVR
-                  settings too - see <a href="https://deovr.com/doc#remote-control" target="_blank" rel="noreferrer">
-                  instructions in DeoVR documentation</a>.
+                  If you are using funscripts, you can add a heatmap to the thumbnails of scripted scenes in the Player interface.
                 </p>
               </div>
             </div>
@@ -63,7 +50,7 @@
         </div>
         <div class="column content">
           <p>
-            {{ $t("DeoVR interface is available at following URLs:") }}
+            {{ $t("Player interface is available at following URLs:") }}
           </p>
           <div>
             <h4 v-for="(addr, idx) in boundIp" :key="'ip' + idx">{{ addr }}</h4>
@@ -75,7 +62,75 @@
           </p>
         </div>
       </div>
-
+    </div>
+    <div class="content" v-if="activeTab == 1">
+      <h3>DeoVR interface</h3>
+      <hr/>
+      <div class="block">
+          <b-field label="Watch time tracking">
+            <b-switch v-model="watchTimeTrackingEnabled">
+              Enabled
+            </b-switch>
+          </b-field>
+          <b-field label="Remote mode">
+            <b-switch v-model="remoteEnabled" :disabled="watchTimeTrackingEnabled === false">
+              Enabled
+            </b-switch>
+          </b-field>
+          <p>
+            To use remote mode, which enables more precise watch time tracking, you need to turn it on in DeoVR
+            settings too - see <a href="https://deovr.com/doc#remote-control" target="_blank" rel="noreferrer">
+            instructions in DeoVR documentation</a>.
+          </p>
+        </div>
+    </div>
+    <div class="content" v-if="activeTab == 2">
+      <h3>Heresphere interface</h3>
+      <hr/>
+          <b-tooltip
+            label="WANRING: file deletes from Heresphere are permanent. ALL files associated with a scene will be deleted"
+            size="is-large" type="is-danger" multilined :delay="250" >
+            <b-field label="Allow File Deletion">
+              <b-switch v-model="allowFileDeletions">
+                Enabled
+              </b-switch>
+            </b-field>
+          </b-tooltip>
+          <b-field label="Allow Ratings Updates">
+            <b-switch v-model="allowRatingUpdates">
+              Enabled
+            </b-switch>
+          </b-field>
+          <b-field label="Allow Favorite Updates">
+            <b-switch v-model="allowFavouriteUpdates">
+              Enabled
+            </b-switch>
+          </b-field>
+          <b-field label="Allow Tag Updates">
+            <b-switch v-model="allowTagUpdates">
+              Enabled
+            </b-switch>
+          </b-field>
+          <b-field label="Allow Cuepoint Updates">
+            <b-switch v-model="allowCuepointUpdates">
+              Enabled
+            </b-switch>
+          </b-field>
+          <b-tooltip
+            label="Add or delete the Feature:watchlist tag to toggle the Watchlist flag in XBVR"
+            size="is-large" type="is-primary" multilined :delay="250" >
+            <b-field label="Allow Watchlist Updates">
+              <b-switch v-model="allowWatchlistUpdates">
+                Enabled
+              </b-switch>
+            </b-field>
+          </b-tooltip>
+          <b-field label="Allow Saving Hsp Files">
+            <b-switch v-model="allowHspData">
+              Enabled
+            </b-switch>
+          </b-field>
+      </div>
       <b-field>
         <b-button type="is-primary" @click="save">Save and apply changes</b-button>
       </b-field>
@@ -88,6 +143,11 @@ export default {
   name: 'InterfaceDeoVR',
   mounted () {
     this.$store.dispatch('optionsDeoVR/load')
+  },
+  data () {
+    return {
+      activeTab: 0
+    }
   },
   methods: {
     save () {
@@ -165,6 +225,62 @@ export default {
     boundIp: {
       get () {
         return this.$store.state.optionsDeoVR.deovr.boundIp
+      }
+    },        
+    allowFileDeletions: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_file_deletes
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_file_deletes= value
+      }
+    },
+    allowRatingUpdates: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_rating_updates
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_rating_updates = value
+      }
+    },
+    allowFavouriteUpdates: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_favorite_updates
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_favorite_updates = value
+      }
+    },
+    allowTagUpdates: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_tag_updates
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_tag_updates = value
+      }
+    },
+    allowCuepointUpdates: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_cuepoint_updates
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_cuepoint_updates = value
+      }
+    },
+    allowWatchlistUpdates: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_watchlist_updates
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_watchlist_updates = value
+      }
+    },
+    allowHspData: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.allow_hsp_data
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.allow_hsp_data= value
       }
     },
     isLoading: function () {

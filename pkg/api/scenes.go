@@ -593,33 +593,7 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 			models.AddAction(scene.SceneID, "edit", "is_multipart", strconv.FormatBool(r.IsMultipart))
 		}
 
-		var diffs []string
-
-		newTags := make([]models.Tag, 0)
-		for _, v := range r.Tags {
-			nt := models.Tag{}
-			tagClean := models.ConvertTag(v)
-			if tagClean != "" {
-				db.Where(&models.Tag{Name: tagClean}).FirstOrCreate(&nt)
-				newTags = append(newTags, nt)
-			}
-		}
-
-		diffs = deep.Equal(scene.Tags, newTags)
-		if len(diffs) > 0 {
-			exactDifferences := getTagDifferences(scene.Tags, newTags)
-			for _, v := range exactDifferences {
-				models.AddAction(scene.SceneID, "edit", "tags", v)
-			}
-
-			for _, v := range scene.Tags {
-				db.Model(&scene).Association("Tags").Delete(&v)
-			}
-
-			for _, v := range newTags {
-				db.Model(&scene).Association("Tags").Append(&v)
-			}
-		}
+		ProcessTagChanges(&scene, &r.Tags, db)
 
 		newCast := make([]models.Actor, 0)
 		for _, v := range r.Cast {
@@ -628,7 +602,7 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 			newCast = append(newCast, nc)
 		}
 
-		diffs = deep.Equal(scene.Cast, newCast)
+		diffs := deep.Equal(scene.Cast, newCast)
 		if len(diffs) > 0 {
 			exactDifferences := getCastDifferences(scene.Cast, newCast)
 			for _, v := range exactDifferences {
@@ -698,4 +672,33 @@ func castContains(arr []models.Actor, val interface{}) bool {
 		}
 	}
 	return false
+}
+func ProcessTagChanges(scene *models.Scene, tags *[]string, db *gorm.DB) {
+	var diffs []string
+
+	newTags := make([]models.Tag, 0)
+	for _, v := range *tags {
+		nt := models.Tag{}
+		tagClean := models.ConvertTag(v)
+		if tagClean != "" {
+			db.Where(&models.Tag{Name: tagClean}).FirstOrCreate(&nt)
+			newTags = append(newTags, nt)
+		}
+	}
+
+	diffs = deep.Equal(scene.Tags, newTags)
+	if len(diffs) > 0 {
+		exactDifferences := getTagDifferences(scene.Tags, newTags)
+		for _, v := range exactDifferences {
+			models.AddAction(scene.SceneID, "edit", "tags", v)
+		}
+
+		for _, v := range scene.Tags {
+			db.Model(&scene).Association("Tags").Delete(&v)
+		}
+
+		for _, v := range newTags {
+			db.Model(&scene).Association("Tags").Append(&v)
+		}
+	}
 }
