@@ -46,6 +46,7 @@ type RequestSaveOptionsWeb struct {
 	SceneWatched   bool   `json:"sceneWatched"`
 	SceneEdit      bool   `json:"sceneEdit"`
 	SceneCuepoint  bool   `json:"sceneCuepoint"`
+	ShowHspFile    bool   `json:"showHspFile"`
 	UpdateCheck    bool   `json:"updateCheck"`
 }
 
@@ -57,13 +58,20 @@ type RequestSaveOptionsDLNA struct {
 }
 
 type RequestSaveOptionsDeoVR struct {
-	Enabled        bool   `json:"enabled"`
-	AuthEnabled    bool   `json:"auth_enabled"`
-	Username       string `json:"username"`
-	Password       string `json:"password"`
-	RemoteEnabled  bool   `json:"remote_enabled"`
-	TrackWatchTime bool   `json:"track_watch_time"`
-	RenderHeatmaps bool   `json:"render_heatmaps"`
+	Enabled               bool   `json:"enabled"`
+	AuthEnabled           bool   `json:"auth_enabled"`
+	Username              string `json:"username"`
+	Password              string `json:"password"`
+	RemoteEnabled         bool   `json:"remote_enabled"`
+	TrackWatchTime        bool   `json:"track_watch_time"`
+	RenderHeatmaps        bool   `json:"render_heatmaps"`
+	AllowFileDeletes      bool   `json:"allow_file_deletes"`
+	AllowRatingUpdates    bool   `json:"allow_rating_updates"`
+	AllowFavoriteUpdates  bool   `json:"allow_favorite_updates"`
+	AllowHspData          bool   `json:"allow_hsp_data"`
+	AllowTagUpdates       bool   `json:"allow_tag_updates"`
+	AllowCuepointUpdates  bool   `json:"allow_cuepoint_updates"`
+	AllowWatchlistUpdates bool   `json:"allow_watchlist_updates"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -270,6 +278,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneWatched = r.SceneWatched
 	config.Config.Web.SceneEdit = r.SceneEdit
 	config.Config.Web.SceneCuepoint = r.SceneCuepoint
+	config.Config.Web.ShowHspFile = r.ShowHspFile
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 
@@ -290,6 +299,13 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.DeoVR.RemoteEnabled = r.RemoteEnabled
 	config.Config.Interfaces.DeoVR.TrackWatchTime = r.TrackWatchTime
 	config.Config.Interfaces.DeoVR.Username = r.Username
+	config.Config.Interfaces.Heresphere.AllowFileDeletes = r.AllowFileDeletes
+	config.Config.Interfaces.Heresphere.AllowRatingUpdates = r.AllowRatingUpdates
+	config.Config.Interfaces.Heresphere.AllowFavoriteUpdates = r.AllowFavoriteUpdates
+	config.Config.Interfaces.Heresphere.AllowHspData = r.AllowHspData
+	config.Config.Interfaces.Heresphere.AllowTagUpdates = r.AllowTagUpdates
+	config.Config.Interfaces.Heresphere.AllowCuepointUpdates = r.AllowCuepointUpdates
+	config.Config.Interfaces.Heresphere.AllowWatchlistUpdates = r.AllowWatchlistUpdates
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)

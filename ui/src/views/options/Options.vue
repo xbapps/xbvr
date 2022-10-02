@@ -22,7 +22,7 @@
                          @click="setActive('data-import-export')"/>
           </b-menu-list>
           <b-menu-list :label="$t('Interfaces')">
-            <b-menu-item :label="$t('DeoVR')" :active="active==='interface_deovr'" @click="setActive('interface_deovr')"/>
+            <b-menu-item :label="$t('Players')" :active="active==='interface_deovr'" @click="setActive('interface_deovr')"/>
             <b-menu-item :label="$t('DLNA')" :active="active==='interface_dlna'" @click="setActive('interface_dlna')"/>
             <b-menu-item :label="$t('Web UI')" :active="active==='interface_web'" @click="setActive('interface_web')"/>
           </b-menu-list>

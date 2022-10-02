@@ -11,6 +11,15 @@ const state = {
     username: '',
     password: '',
     boundIp: []
+  },
+  heresphere: {
+    allow_file_deletes: false,
+    allow_rating_updates: false,
+    allow_favorite_updates: false,
+    allow_tag_updates: false,
+    allow_cuepoint_updates: false,
+    allow_watchlist_updates: false,
+    allow_hsp_data: false
   }
 }
 
@@ -30,12 +39,19 @@ const actions = {
         state.deovr.username = data.config.interfaces.deovr.username
         state.deovr.password = data.config.interfaces.deovr.password
         state.deovr.boundIp = data.currentState.server.bound_ip
-        state.loading = false
+        state.heresphere.allow_file_deletes = data.config.interfaces.heresphere.allow_file_deletes
+        state.heresphere.allow_rating_updates = data.config.interfaces.heresphere.allow_rating_updates
+        state.heresphere.allow_favorite_updates = data.config.interfaces.heresphere.allow_favorite_updates
+        state.heresphere.allow_tag_updates = data.config.interfaces.heresphere.allow_tag_updates
+        state.heresphere.allow_cuepoint_updates = data.config.interfaces.heresphere.allow_cuepoint_updates
+        state.heresphere.allow_watchlist_updates = data.config.interfaces.heresphere.allow_watchlist_updates
+        state.heresphere.allow_hsp_data = data.config.interfaces.heresphere.allow_hsp_data
+        state.loading = false        
       })
   },
   async save ({ state }, enabled) {
     state.loading = true
-    ky.put('/api/options/interface/deovr', { json: { ...state.deovr } })
+    ky.put('/api/options/interface/deovr', { json: { ...state.deovr, ...state.heresphere } })
       .json()
       .then(data => {
         state.loading = false

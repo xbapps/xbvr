@@ -286,21 +286,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		}
 
 		for _, path := range hspProcList {
-			var fl models.File
-			db.Where(&models.File{
-				Path:     filepath.Dir(path),
-				Filename: filepath.Base(path),
-				Type:     "hsp",
-			}).FirstOrCreate(&fl)
-
-			fStat, _ := os.Stat(path)
-			fTimes, _ := times.Stat(path)
-
-			fl.Size = fStat.Size()
-			fl.CreatedTime = fTimes.ModTime()
-			fl.UpdatedTime = fTimes.ModTime()
-			fl.VolumeID = vol.ID
-			fl.Save()
+			ScanLocalHspFile(path, vol.ID, 0)
 		}
 
 		vol.LastScan = time.Now()
@@ -402,4 +388,28 @@ func RefreshSceneStatuses() {
 	}
 
 	tlog.Infof("Scene status refresh complete")
+}
+func ScanLocalHspFile(path string, volID uint, sceneId uint) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var fl models.File
+	db.Where(&models.File{
+		Path:     filepath.Dir(path),
+		Filename: filepath.Base(path),
+		Type:     "hsp",
+	}).FirstOrCreate(&fl)
+
+	fStat, _ := os.Stat(path)
+	fTimes, _ := times.Stat(path)
+
+	fl.Size = fStat.Size()
+	fl.CreatedTime = fTimes.ModTime()
+	fl.UpdatedTime = fTimes.ModTime()
+	fl.VolumeID = volID
+	if sceneId > 0 {
+		fl.SceneID = sceneId
+	}
+	fl.Save()
+
 }
