@@ -177,6 +177,11 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 		return
 	}
 
+	dnt := ""
+	if !config.Config.Interfaces.DeoVR.TrackWatchTime {
+		dnt = "?dnt=true"
+	}
+
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -204,7 +209,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
-				URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v", req.Request.Host, file.ID, file.Filename),
+				URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v/%v", req.Request.Host, file.ID, file.Filename, dnt),
 			},
 		},
 	})
@@ -240,6 +245,11 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	sceneID := req.PathParameter("scene-id")
 	if sceneID == "" {
 		return
+	}
+
+	dnt := ""
+	if !config.Config.Interfaces.DeoVR.TrackWatchTime {
+		dnt = "?dnt=true"
 	}
 
 	db, _ := models.GetDB()
@@ -302,7 +312,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 					Height:     height,
 					Width:      width,
 					Size:       file.Size,
-					URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v", req.Request.Host, file.ID, scene.GetFunscriptTitle()),
+					URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v/%v", req.Request.Host, file.ID, scene.GetFunscriptTitle(), dnt),
 				},
 			},
 		}
