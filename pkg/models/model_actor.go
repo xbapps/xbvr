@@ -37,3 +37,32 @@ func (i *Actor) Save() error {
 
 	return nil
 }
+
+func (i *Actor) CountActorTags() {
+	db, _ := GetDB()
+	defer db.Close()
+
+	type CountResults struct {
+		ID          int
+		Cnt         int
+		Existingcnt int
+	}
+
+	var results []CountResults
+
+	db.Model(&Actor{}).
+		Select("actors.id, count as existingcnt, count(*) cnt").
+		Group("actors.id").
+		Joins("join scene_cast on scene_cast.actor_id = actors.id").
+		Joins("join scenes on scenes.id=scene_cast.scene_id and scenes.deleted_at is null").
+		Scan(&results)
+
+	for i := range results {
+		var actor Actor
+		if results[i].Cnt != results[i].Existingcnt {
+			db.First(&actor, results[i].ID)
+			actor.Count = results[i].Cnt
+			actor.Save()
+		}
+	}
+}

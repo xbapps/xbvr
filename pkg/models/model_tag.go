@@ -312,3 +312,35 @@ func ConvertTag(t string) string {
 
 	return t
 }
+
+func (i *Tag) CountTags() {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var tags []Tag
+	db.Model(&Tag{}).Find(&tags)
+
+	type CountResults struct {
+		ID          int
+		Cnt         int
+		Existingcnt int
+	}
+
+	var results []CountResults
+	db.Model(&Tag{}).
+		Select("tags.id, count as existingcnt, count(*) cnt").
+		Group("tags.id").
+		Joins("join scene_tags on scene_tags.tag_id = tags.id").
+		Joins("join scenes on scenes.id=scene_tags.scene_id and scenes.deleted_at is null").
+		Scan(&results)
+
+	for i := range results {
+		var tag Tag
+		if results[i].Cnt != results[i].Existingcnt {
+			db.First(&tag, results[i].ID)
+			tag.Count = results[i].Cnt
+			tag.Save()
+		}
+	}
+
+}

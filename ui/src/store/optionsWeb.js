@@ -9,6 +9,7 @@ const state = {
     sceneWatched: false,
     sceneEdit: false,
     sceneCuepoint: true,
+    showHspFile: true,
     updateCheck: true
   }
 }
@@ -27,6 +28,7 @@ const actions = {
         state.web.sceneWatched = data.config.web.sceneWatched
         state.web.sceneEdit = data.config.web.sceneEdit
         state.web.sceneCuepoint = data.config.web.sceneCuepoint
+        state.web.showHspFile = data.config.web.showHspFile
         state.web.updateCheck = data.config.web.updateCheck
         state.loading = false
       })
@@ -42,6 +44,7 @@ const actions = {
         state.web.sceneWatched = data.sceneWatched
         state.web.sceneEdit = data.sceneEdit
         state.web.sceneCuepoint = data.sceneCuepoint
+        state.web.showHspFile = data.showHspFile
         state.web.updateCheck = data.updateCheck
         state.loading = false
       })

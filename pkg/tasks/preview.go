@@ -15,7 +15,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func GeneratePreviews() {
+func GeneratePreviews(endTime *time.Time) {
 	if !models.CheckLock("previews") {
 		models.CreateLock("previews")
 		log.Infof("Generating previews")
@@ -28,6 +28,9 @@ func GeneratePreviews() {
 		for _, scene := range scenes {
 			files, _ := scene.GetFiles()
 			if len(files) > 0 {
+				if endTime != nil && time.Now().After(*endTime) {
+					return
+				}
 				i := 0
 				for i < len(files) && files[i].Exists() {
 					if files[i].Type == "video" {

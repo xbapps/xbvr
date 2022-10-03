@@ -61,6 +61,7 @@ type BackupContentBundle struct {
 	Cuepoints     []BackupSceneCuepoint `xbvrbackup:"sceneCuepoints"`
 	History       []BackupSceneHistory  `xbvrbackup:"sceneHistory"`
 	Actions       []BackupSceneAction   `xbvrbackup:"actions"`
+	Akas          []models.Aka          `xbvrbackup:"akas"`
 }
 type RequestRestore struct {
 	InclAllSites  bool   `json:"allSites"`
@@ -69,6 +70,7 @@ type RequestRestore struct {
 	InclCuepoints bool   `json:"inclCuepoints"`
 	InclHistory   bool   `json:"inclHistory"`
 	InclPlaylists bool   `json:"inclPlaylists"`
+	InclActorAkas bool   `json:"inclActorAkas"`
 	InclVolumes   bool   `json:"inclVolumes"`
 	InclSites     bool   `json:"inclSites"`
 	InclActions   bool   `json:"inclActions"`
@@ -247,8 +249,12 @@ func Scrape(toScrape string) {
 			// Send a signal to clean up the progress bars just in case
 			log.WithField("task", "scraperProgress").Info("DONE")
 
+			var dummyAka models.Aka
+			dummyAka.UpdateAkaSceneCastRecords()
+
 			tlog.Infof("Updating tag counts")
 			CountTags()
+			dummyAka.RefreshAkaActorNames()
 			SearchIndex()
 
 			tlog.Infof("Reapplying edits")
@@ -438,7 +444,7 @@ func ImportBundleV1(bundleData ContentBundle) {
 
 }
 
-func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string) string {
+func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string) string {
 	var out BackupContentBundle
 	var content []byte
 	exportCnt := 0
@@ -499,7 +505,8 @@ func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCu
 					Preload("Cuepoints").
 					Preload("History").
 					Preload("Tags").
-					Preload("Cast").
+					// do not export aka actors or they will load back as real actors not aka groups
+					Preload("Cast", "substr(name, 1, 4)<>'aka:'").
 					Where(&models.Scene{ID: scene.ID}).First(&scene).Error
 
 				if err != nil {
@@ -551,6 +558,11 @@ func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCu
 			db.Find(&sites)
 		}
 
+		var akas []models.Aka
+		if InclActorAkas {
+			db.Preload("AkaActor").Preload("Akas").Find(&akas)
+		}
+
 		var err error
 		out = BackupContentBundle{
 			Timestamp:     time.Now().UTC(),
@@ -563,6 +575,7 @@ func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCu
 			Cuepoints:     backupCupointList,
 			History:       backupHistoryList,
 			Actions:       backupActionList,
+			Akas:          akas,
 		}
 
 		var json = jsoniter.Config{
@@ -648,6 +661,9 @@ func RestoreBundle(request RequestRestore) {
 			if request.InclActions {
 				RestoreActions(bundleData.Actions, request.InclAllSites, selectedSites, request.Overwrite, db)
 			}
+			if request.InclActorAkas {
+				RestoreAkas(bundleData.Akas, request.Overwrite, db)
+			}
 
 			if request.InclScenes || request.InclFileLinks {
 				UpdateSceneStatus(db)
@@ -655,6 +671,11 @@ func RestoreBundle(request RequestRestore) {
 			if request.InclScenes {
 				CountTags()
 				SearchIndex()
+			}
+
+			if request.InclScenes || request.InclActorAkas {
+				var aka models.Aka
+				aka.UpdateAkaSceneCastRecords()
 			}
 
 			tlog.Infof("Restore complete")
@@ -988,6 +1009,55 @@ func RestoreSites(sites []models.Site, overwrite bool, db *gorm.DB) {
 	}
 	tlog.Infof("%v Sites  restored", addedCnt)
 }
+
+func RestoreAkas(akas []models.Aka, overwrite bool, db *gorm.DB) {
+	tlog := log.WithField("task", "scrape")
+	tlog.Infof("Restoring Actor Akas")
+
+	addedCnt := 0
+	for _, aka := range akas {
+		var found models.Aka
+		name := aka.AkaNameSortedAlphabetcally()
+		db.Where(&models.Aka{Name: name}).Preload("AkaActor").First(&found)
+
+		if found.ID == 0 { // id = 0 is a new record
+			CheckActors(&aka, 0, db)
+			aka.ID = 0 // dont use the id from json
+			aka.Name = name
+			models.SaveWithRetry(db, &aka)
+			addedCnt++
+		} else {
+			if overwrite {
+				CheckActors(&aka, found.AkaActorId, db)
+				aka.ID = found.ID // use the Id from the existing db record
+				models.SaveWithRetry(db, &aka)
+				addedCnt++
+			}
+		}
+	}
+	tlog.Infof("%v Actor Akas restored", addedCnt)
+}
+
+func CheckActors(aka *models.Aka, aka_actor_id uint, db *gorm.DB) {
+	// check an aka actor exists
+	if aka_actor_id == 0 {
+		models.SaveWithRetry(db, &aka.AkaActor)
+		aka.AkaActorId = aka.AkaActor.ID
+	} else {
+		aka.AkaActorId = aka_actor_id
+		aka.AkaActor.ID = aka_actor_id
+	}
+	for idx, actor := range aka.Akas {
+		var found models.Actor
+
+		db.Where(&models.Actor{Name: actor.Name}).First(&found)
+		if found.ID != 0 {
+			//models.SaveWithRetry(db, &found)
+			aka.Akas[idx].ID = found.ID
+		}
+	}
+
+}
 func RenameTags() {
 	db, _ := models.GetDB()
 	defer db.Close()
@@ -1023,51 +1093,11 @@ func RenameTags() {
 }
 
 func CountTags() {
-	db, _ := models.GetDB()
-	defer db.Close()
+	var tag models.Tag
+	tag.CountTags()
 
-	var tags []models.Tag
-	db.Model(&models.Tag{}).Find(&tags)
-
-	type CountResults struct {
-		ID          int
-		Cnt         int
-		Existingcnt int
-	}
-
-	var results []CountResults
-	db.Model(&models.Tag{}).
-		Select("tags.id, count as existingcnt, count(*) cnt").
-		Group("tags.id").
-		Joins("join scene_tags on scene_tags.tag_id = tags.id").
-		Joins("join scenes on scenes.id=scene_tags.scene_id and scenes.deleted_at is null").
-		Scan(&results)
-
-	for i := range results {
-		var tag models.Tag
-		if results[i].Cnt != results[i].Existingcnt {
-			db.First(&tag, results[i].ID)
-			tag.Count = results[i].Cnt
-			tag.Save()
-		}
-	}
-
-	db.Model(&models.Actor{}).
-		Select("actors.id, count as existingcnt, count(*) cnt").
-		Group("actors.id").
-		Joins("join scene_cast on scene_cast.actor_id = actors.id").
-		Joins("join scenes on scenes.id=scene_cast.scene_id and scenes.deleted_at is null").
-		Scan(&results)
-
-	for i := range results {
-		var actor models.Actor
-		if results[i].Cnt != results[i].Existingcnt {
-			db.First(&actor, results[i].ID)
-			actor.Count = results[i].Cnt
-			actor.Save()
-		}
-	}
-	// db.Where("count = ?", 0).Delete(&Tag{})
+	var actor models.Actor
+	actor.CountActorTags()
 }
 
 func FindSite(sites []models.Site, findSite string) int {
