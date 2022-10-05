@@ -78,6 +78,8 @@ github.com/anacrolix/envpprof v1.0.0 h1:AwZ+mBP4rQ5f7JSsrsN3h7M2xDW/xSE66IPVOqln
 github.com/anacrolix/envpprof v1.0.0/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/ffprobe v1.0.0 h1:j8fGLBsXejwdXd0pkA9iR3Dt1XwMFv5wjeYWObcue8A=
 github.com/anacrolix/ffprobe v1.0.0/go.mod h1:BIw+Bjol6CWjm/CRWrVLk2Vy+UYlkgmBZ05vpSYqZPw=
+github.com/anacrolix/ffprobe v1.0.1 h1:S/MfCrUNZvbkkykX/1mmLVRf8//M7mvlY3BcwHaK3bQ=
+github.com/anacrolix/ffprobe v1.0.1/go.mod h1:MXe+zG/RRa5OdIf5+VYYfS/CfsSqOH7RrvGIqJBzqhI=
 github.com/anacrolix/missinggo v1.1.0 h1:0lZbaNa6zTR1bELAIzCNmRGAtkHuLDPJqTiTtXoAIx8=
 github.com/anacrolix/missinggo v1.1.0/go.mod h1:MBJu3Sk/k3ZfGYcS7z18gwfu72Ey/xopPFJJbTi5yIo=
 github.com/anacrolix/tagflag v0.0.0-20180109131632-2146c8d41bf0/go.mod h1:1m2U/K6ZT+JZG0+bdMK6qauP49QT4wE5pmhJXOKKCHw=

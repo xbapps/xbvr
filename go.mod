@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-appdir v1.1.0
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/abbot/go-http-auth v0.4.0
-	github.com/anacrolix/ffprobe v1.0.0
+	github.com/anacrolix/ffprobe v1.0.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/blevesearch/bleve v1.0.14
