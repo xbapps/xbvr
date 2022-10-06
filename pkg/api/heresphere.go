@@ -335,7 +335,12 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		}
 
 		// split the name into position, action and and extras
-		cuepointNames := strings.Split(scene.Cuepoints[i].Name, "-")
+		var cuepointNames []string
+		if config.Config.Interfaces.Heresphere.MultitrackCuepoints {
+			cuepointNames = strings.Split(scene.Cuepoints[i].Name, "-")
+		} else {
+			cuepointNames = append(cuepointNames, scene.Cuepoints[i].Name)
+		}
 		for idx, cuepointName := range cuepointNames {
 			track := findTrack(idx, len(cuepointNames), cuepointName, &trackAssignments, scene)
 

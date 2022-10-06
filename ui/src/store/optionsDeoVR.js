@@ -19,7 +19,8 @@ const state = {
     allow_tag_updates: false,
     allow_cuepoint_updates: false,
     allow_watchlist_updates: false,
-    allow_hsp_data: false
+    allow_hsp_data: false,
+    multitrack_cuepoints: true
   }
 }
 
@@ -46,6 +47,7 @@ const actions = {
         state.heresphere.allow_cuepoint_updates = data.config.interfaces.heresphere.allow_cuepoint_updates
         state.heresphere.allow_watchlist_updates = data.config.interfaces.heresphere.allow_watchlist_updates
         state.heresphere.allow_hsp_data = data.config.interfaces.heresphere.allow_hsp_data
+        state.heresphere.multitrack_cuepoints = data.config.interfaces.heresphere.multitrack_cuepoints
         state.loading = false        
       })
   },

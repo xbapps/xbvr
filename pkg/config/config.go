@@ -65,6 +65,7 @@ type ObjectConfig struct {
 			AllowTagUpdates       bool `default:"false" json:"allow_tag_updates"`
 			AllowCuepointUpdates  bool `default:"false" json:"allow_cuepoint_updates"`
 			AllowWatchlistUpdates bool `default:"false" json:"allow_watchlist_updates"`
+			MultitrackCuepoints   bool `default:"true" json:"multitrack_cuepoints"`
 		} `json:"heresphere"`
 	} `json:"interfaces"`
 	Library struct {
