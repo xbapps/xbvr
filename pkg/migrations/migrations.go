@@ -962,6 +962,13 @@ func Migrate() {
 					AutoMigrate(&models.Aka{}).Error
 			},
 		},
+		{
+			ID: "0043-ActorsAvailCount",
+			Migrate: func(tx *gorm.DB) error {
+				// auto migrate actor table to add avail_count column
+				return tx.AutoMigrate(&models.Actor{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
