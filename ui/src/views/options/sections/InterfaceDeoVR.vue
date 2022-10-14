@@ -45,6 +45,14 @@
                   If you are using funscripts, you can add a heatmap to the thumbnails of scripted scenes in the Player interface.
                 </p>
               </div>
+              <hr/>
+              <div class="block">
+                <b-field label="Watch time tracking">
+                  <b-switch v-model="watchTimeTrackingEnabled">
+                    Enabled
+                  </b-switch>
+                </b-field>
+              </div>
             </div>
           </section>
         </div>
@@ -67,16 +75,14 @@
       <h3>DeoVR interface</h3>
       <hr/>
       <div class="block">
-          <b-field label="Watch time tracking">
-            <b-switch v-model="watchTimeTrackingEnabled">
-              Enabled
-            </b-switch>
-          </b-field>
           <b-field label="Remote mode">
             <b-switch v-model="remoteEnabled" :disabled="watchTimeTrackingEnabled === false">
               Enabled
             </b-switch>
           </b-field>
+          <p>
+            Requires: Watch time tracking
+          </p>
           <p>
             To use remote mode, which enables more precise watch time tracking, you need to turn it on in DeoVR
             settings too - see <a href="https://deovr.com/doc#remote-control" target="_blank" rel="noreferrer">
@@ -130,11 +136,10 @@
               Enabled
             </b-switch>
           </b-field>
-      </div>
-      <b-field>
-        <b-button type="is-primary" @click="save">Save and apply changes</b-button>
-      </b-field>
     </div>
+    <b-field>
+      <b-button type="is-primary" @click="save">Save and apply changes</b-button>
+    </b-field>
   </div>
 </template>
 
