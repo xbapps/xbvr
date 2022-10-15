@@ -173,8 +173,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 
 	var requestData HereSphereAuthRequest
 	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
-		log.Errorf("Error decoding heresphere api POST request: %v", err)
-		return
+		log.Warnf("Error decoding heresphere api POST request: %v", err)
 	}
 
 	db, _ := models.GetDB()
@@ -233,8 +232,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	var requestData HereSphereAuthRequest
 	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
-		log.Errorf("Error decoding heresphere api POST request: %v", err)
-		return
+		log.Warnf("Error decoding heresphere api POST request: %v", err)
 	}
 
 	sceneID := req.PathParameter("scene-id")
@@ -620,7 +618,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 	if requestData.Hsp != nil && config.Config.Interfaces.Heresphere.AllowHspData {
 		hspContent, err := base64.StdEncoding.DecodeString(*requestData.Hsp)
 		if err != nil {
-			log.Error("Error decoding heresphere hsp data %v", err)
+			log.Warnf("Error decoding heresphere hsp data %v", err)
 		}
 
 		fName := filepath.Join(scene.Files[0].Path, strings.TrimSuffix(scene.Files[0].Filename, filepath.Ext(videoFile.Filename))+".hsp")
