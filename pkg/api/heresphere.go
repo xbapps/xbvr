@@ -173,7 +173,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 
 	var requestData HereSphereAuthRequest
 	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
-		log.Warnf("Error decoding heresphere api POST request: %v", err)
+		log.Warnf("Error decoding heresphere api POST request: %v %s", err, req.Request.RequestURI)
 	}
 
 	db, _ := models.GetDB()
@@ -232,7 +232,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	var requestData HereSphereAuthRequest
 	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
-		log.Warnf("Error decoding heresphere api POST request: %v", err)
+		log.Warnf("Error decoding heresphere api POST request: %v %s", err, req.Request.RequestURI)
 	}
 
 	sceneID := req.PathParameter("scene-id")
@@ -261,6 +261,12 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		return
 	}
 
+	if len(videoFiles) == 0 {
+		// this may happen if the file is removed from the file system, noy via xbvr
+		// so no videos exist but the scene status is still available
+		log.Errorf("No videofiles for %s %s", scene.ID, scene.SceneID)
+		return
+	}
 	ProcessHeresphereUpdates(&scene, requestData, videoFiles[0])
 
 	features := make(map[string]bool, 30)
