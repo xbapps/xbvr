@@ -131,22 +131,22 @@
     </div>
     <div class="is-divider" data-content="Actor Also Known As groups"></div>
     <b-field>
-      <b-tooltip position="is-bottom" label="New Aka Group" :delay="200">
+      <b-tooltip position="is-right" label="New Aka Group. Select 2 or more actors in the Cast filter" multilined :delay="200">
         <button class="button is-small is-outlined" @click="createAkaGroup" :disabled="disableNewAkaGroup">
           <b-icon pack="mdi" icon="account-multiple-plus-outline"></b-icon>
         </button>
       </b-tooltip>
-      <b-tooltip position="is-bottom" label="Delete Aka Group" :delay="200">
+      <b-tooltip position="is-right" label="Select the Aka Group to delete in the Cast Filter" multilined :delay="200">
         <button class="button is-small is-outlined" @click="deleteAkaGroup" :disabled="disableDeleteAkaGroup">
           <b-icon pack="mdi" icon="delete-outline"></b-icon>
         </button>
       </b-tooltip>
-      <b-tooltip position="is-bottom" label="Add Cast to Aka Group" :delay="200">
+      <b-tooltip position="is-bottom" label="Add Cast to Aka Group. Select the Aka group and Actors to add in the Cast Filter" multilined :delay="200">
         <button class="button is-small is-outlined" @click="addToAkaGroup" :disabled="disableAddToAkaGroup">
           <b-icon pack="mdi" icon="account-plus-outline"></b-icon>
         </button>
       </b-tooltip>
-      <b-tooltip position="is-bottom" label="Remove Cast from Aka Group" :delay="200">
+      <b-tooltip position="is-bottom" label="Remove Cast from Aka Group. Select the Aka group and Actors to remove in the Cast Filter" multilined :delay="200">
         <button class="button is-small is-outlined" @click="removeFromAkaGroup" :disabled="disableRemoveFromAkaGroup">
           <b-icon pack="mdi" icon="account-minus-outline"></b-icon>
         </button>
