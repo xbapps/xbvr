@@ -29,14 +29,13 @@ func RescanVolumes(id int) {
 	if !models.CheckLock("rescan") {
 		models.CreateLock("rescan")
 
+		tlog := log.WithFields(logrus.Fields{"task": "rescan"})
+		tlog.Infof("Start scanning volumes")
+
 		models.CheckVolumes()
 
 		db, _ := models.GetDB()
 		defer db.Close()
-
-		tlog := log.WithFields(logrus.Fields{"task": "rescan"})
-
-		tlog.Infof("Start scanning volumes")
 
 		var vol []models.Volume
 		if id > 0 {
@@ -46,7 +45,7 @@ func RescanVolumes(id int) {
 		}
 
 		for i := range vol {
-			log.Infof("Scanning %v", vol[i].Path)
+			tlog.Infof("Scanning %v", vol[i].Path)
 
 			switch vol[i].Type {
 			case "local":
