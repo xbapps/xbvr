@@ -363,16 +363,17 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		Name: "Studio:" + scene.Site,
 	})
 
-	for i := range scene.Cast {
-		tags = append(tags, HeresphereTag{
-			Name: "Talent:" + scene.Cast[i].Name,
-		})
-	}
-
 	akaCnt := 0
-	for _, c := range scene.Cast {
-		if strings.HasPrefix(c.Name, "aka:") {
+	for i := range scene.Cast {
+		if strings.HasPrefix(scene.Cast[i].Name, "aka:") {
 			akaCnt++
+			tags = append(tags, HeresphereTag{
+				Name: strings.Replace(scene.Cast[i].Name, ",", "/", -1),
+			})
+		} else {
+			tags = append(tags, HeresphereTag{
+				Name: "Talent:" + scene.Cast[i].Name,
+			})
 		}
 	}
 	if (len(scene.Cast) - akaCnt) > 5 {
