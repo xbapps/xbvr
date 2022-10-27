@@ -541,14 +541,13 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	updateReqd := false
 	if requestData.IsFavorite != nil && *requestData.IsFavorite != scene.Favourite && config.Config.Interfaces.Heresphere.AllowFavoriteUpdates {
 		scene.Favourite = *requestData.IsFavorite
-		updateReqd = true
+		scene.Save()
 	}
 	if requestData.Rating != nil && *requestData.Rating != scene.StarRating && config.Config.Interfaces.Heresphere.AllowRatingUpdates {
 		scene.StarRating = *requestData.Rating
-		updateReqd = true
+		scene.Save()
 	}
 
 	if requestData.Tags != nil && (config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates || config.Config.Interfaces.Heresphere.AllowWatchlistUpdates) {
@@ -571,7 +570,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 			}
 		}
 		ProcessTagChanges(scene, &newTags, db)
-		updateReqd = true
+		scene.Save()
 	}
 
 	if requestData.Tags != nil && config.Config.Interfaces.Heresphere.AllowWatchlistUpdates {
@@ -589,7 +588,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		}
 		if scene.Watchlist != watchlist {
 			scene.Watchlist = watchlist
-			updateReqd = true
+			scene.Save()
 		}
 	}
 
@@ -621,8 +620,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 			}
 		}
 		db.Model(&scene).Association("Cuepoints").Replace(&replacementCuepoints)
-
-		updateReqd = true
+		scene.Save()
 	}
 
 	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
@@ -641,10 +639,6 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		ioutil.WriteFile(fName, hspContent, 0644)
 
 		tasks.ScanLocalHspFile(fName, videoFile.VolumeID, scene.ID)
-	}
-
-	if updateReqd {
-		scene.Save()
 	}
 }
 func findTheMainTrack(requestData HereSphereAuthRequest) int {
