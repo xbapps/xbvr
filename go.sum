@@ -135,6 +135,7 @@ github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghf
 github.com/cespare/xxhash/v2 v2.1.1 h1:6MnRN8NT7+YBpUIWxHtefFZOKTAPgGjpQSxqLNn0+qY=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
+github.com/chzyer/logex v1.2.1/go.mod h1:JLbx6lG2kDbNRFnfkgvh4eRJRPX1QCoOIWomwysCBrQ=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
@@ -535,6 +536,8 @@ github.com/robertkrimen/otto v0.0.0-20211024170158-b87d35c0b86f h1:a7clxaGmmqtdN
 github.com/robertkrimen/otto v0.0.0-20211024170158-b87d35c0b86f/go.mod h1:/mK7FZ3mFYEn9zvNPhpngTyatyehSwte5bJZ4ehL5Xw=
 github.com/robertkrimen/otto v0.0.0-20221011175642-09fc211e5ab1 h1:SQiIjmrbwsmwsf68GxOPZa3y2q98Vfo41CT6h7pOMAE=
 github.com/robertkrimen/otto v0.0.0-20221011175642-09fc211e5ab1/go.mod h1:DKHCllR988yoiVXPZrLqCjwAKhryyDPNmb9cBVtG/aQ=
+github.com/robertkrimen/otto v0.0.0-20221025135307-511d75fba9f8 h1:qD3uiYZ9HFRMIkjcmA5MnB3QxDQmf/r8TfoOx8BMtQ4=
+github.com/robertkrimen/otto v0.0.0-20221025135307-511d75fba9f8/go.mod h1:nuq0maJQz2rTj3sA9EtJleKkkP0QIihFANdtAgTvmyc=
 github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
