@@ -251,6 +251,7 @@ func init() {
 	addSLRScraper("deepinsex", "DeepInSex", "DeepInSex", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/266/logo_crop_1610126420.png")
 	addSLRScraper("emilybloom", "EmilyBloom", "Emily Bloom", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/42/logo_crop_1608166932.png")
 	addSLRScraper("ellielouisevr", "EllieLouiseVR", "EllieLouiseVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/265/logo_crop_1607603680.png")
+	addSLRScraper("footsiebay", "FootsieBay", "FootsieBay", "")
 	addSLRScraper("fuckpassvr", "FuckPassVR", "FuckPassVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/352/logo_crop_1635153994.png")
 	addSLRScraper("grannies-vr", "GranniesVR", "GranniesVR", "https://mcdn.vrporn.com/files/20180222024100/itsmorti-logo-vr-porn-studio-vrporn.com-virtual-reality.jpg")
 	addSLRScraper("herfirstvr", "HerFirstVR", "HerFirstVR", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
