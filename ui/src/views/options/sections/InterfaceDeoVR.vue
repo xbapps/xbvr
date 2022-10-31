@@ -150,10 +150,6 @@
         <b-button type="is-primary" @click="save">Save and apply changes</b-button>
       </b-field>
     </div>
-    <b-field>
-      <b-button type="is-primary" @click="save">Save and apply changes</b-button>
-    </b-field>
-  </div>
 </template>
 
 <script>
