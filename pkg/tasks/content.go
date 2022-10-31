@@ -750,7 +750,6 @@ func RestoreCuepoints(sceneCuepointList []BackupSceneCuepoint, inclAllSites bool
 		if found.ID == 0 || len(cuepoints.Cuepoints)+len(found.Cuepoints) == 0 {
 			continue
 		} else {
-			changed := false
 			for i, cp := range cuepoints.Cuepoints {
 				cp.SceneID = found.ID
 				cp.ID = 0
@@ -766,18 +765,6 @@ func RestoreCuepoints(sceneCuepointList []BackupSceneCuepoint, inclAllSites bool
 						}
 					}
 					found.Cuepoints = cuepoints.Cuepoints
-					models.SaveWithRetry(db, &found)
-					addedCnt++
-				}
-			} else {
-				for _, cuepoint := range cuepoints.Cuepoints {
-					cpIdx, _ := CheckCuepoint(found.Cuepoints, cuepoint)
-					if cpIdx < 0 {
-						found.Cuepoints = append(found.Cuepoints, cuepoint)
-						changed = true
-					}
-				}
-				if changed {
 					models.SaveWithRetry(db, &found)
 					addedCnt++
 				}

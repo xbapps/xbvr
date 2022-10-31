@@ -173,8 +173,12 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 
 	var requestData HereSphereAuthRequest
 	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
-		log.Errorf("Error decoding heresphere api POST request: %v", err)
-		return
+		log.Warnf("Error decoding heresphere api POST request: %v %s", err, req.Request.RequestURI)
+	}
+
+	dnt := ""
+	if !config.Config.Interfaces.DeoVR.TrackWatchTime {
+		dnt = "?dnt=true"
 	}
 
 	db, _ := models.GetDB()
@@ -204,7 +208,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
-				URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v", req.Request.Host, file.ID, file.Filename),
+				URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v/%v", req.Request.Host, file.ID, file.Filename, dnt),
 			},
 		},
 	})
@@ -233,13 +237,17 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	var requestData HereSphereAuthRequest
 	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
-		log.Errorf("Error decoding heresphere api POST request: %v", err)
-		return
+		log.Warnf("Error decoding heresphere api POST request: %v %s", err, req.Request.RequestURI)
 	}
 
 	sceneID := req.PathParameter("scene-id")
 	if sceneID == "" {
 		return
+	}
+
+	dnt := ""
+	if !config.Config.Interfaces.DeoVR.TrackWatchTime {
+		dnt = "?dnt=true"
 	}
 
 	db, _ := models.GetDB()
@@ -263,6 +271,12 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		return
 	}
 
+	if len(videoFiles) == 0 {
+		// this may happen if the file is removed from the file system, noy via xbvr
+		// so no videos exist but the scene status is still available
+		log.Errorf("No videofiles for %s %s", scene.ID, scene.SceneID)
+		return
+	}
 	ProcessHeresphereUpdates(&scene, requestData, videoFiles[0])
 
 	features := make(map[string]bool, 30)
@@ -302,7 +316,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 					Height:     height,
 					Width:      width,
 					Size:       file.Size,
-					URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v", req.Request.Host, file.ID, scene.GetFunscriptTitle()),
+					URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v/%v", req.Request.Host, file.ID, scene.GetFunscriptTitle(), dnt),
 				},
 			},
 		}
@@ -361,16 +375,17 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		Name: "Studio:" + scene.Site,
 	})
 
-	for i := range scene.Cast {
-		tags = append(tags, HeresphereTag{
-			Name: "Talent:" + scene.Cast[i].Name,
-		})
-	}
-
 	akaCnt := 0
-	for _, c := range scene.Cast {
-		if strings.HasPrefix(c.Name, "aka:") {
+	for i := range scene.Cast {
+		if strings.HasPrefix(scene.Cast[i].Name, "aka:") {
 			akaCnt++
+			tags = append(tags, HeresphereTag{
+				Name: strings.Replace(scene.Cast[i].Name, ",", "/", -1),
+			})
+		} else {
+			tags = append(tags, HeresphereTag{
+				Name: "Talent:" + scene.Cast[i].Name,
+			})
 		}
 	}
 	if (len(scene.Cast) - akaCnt) > 5 {
@@ -539,14 +554,13 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	updateReqd := false
 	if requestData.IsFavorite != nil && *requestData.IsFavorite != scene.Favourite && config.Config.Interfaces.Heresphere.AllowFavoriteUpdates {
 		scene.Favourite = *requestData.IsFavorite
-		updateReqd = true
+		scene.Save()
 	}
 	if requestData.Rating != nil && *requestData.Rating != scene.StarRating && config.Config.Interfaces.Heresphere.AllowRatingUpdates {
 		scene.StarRating = *requestData.Rating
-		updateReqd = true
+		scene.Save()
 	}
 
 	if requestData.Tags != nil && (config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates || config.Config.Interfaces.Heresphere.AllowWatchlistUpdates) {
@@ -569,7 +583,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 			}
 		}
 		ProcessTagChanges(scene, &newTags, db)
-		updateReqd = true
+		scene.Save()
 	}
 
 	if requestData.Tags != nil && config.Config.Interfaces.Heresphere.AllowWatchlistUpdates {
@@ -587,7 +601,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		}
 		if scene.Watchlist != watchlist {
 			scene.Watchlist = watchlist
-			updateReqd = true
+			scene.Save()
 		}
 	}
 
@@ -619,8 +633,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 			}
 		}
 		db.Model(&scene).Association("Cuepoints").Replace(&replacementCuepoints)
-
-		updateReqd = true
+		scene.Save()
 	}
 
 	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
@@ -632,17 +645,13 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 	if requestData.Hsp != nil && config.Config.Interfaces.Heresphere.AllowHspData {
 		hspContent, err := base64.StdEncoding.DecodeString(*requestData.Hsp)
 		if err != nil {
-			log.Error("Error decoding heresphere hsp data %v", err)
+			log.Warnf("Error decoding heresphere hsp data %v", err)
 		}
 
 		fName := filepath.Join(scene.Files[0].Path, strings.TrimSuffix(scene.Files[0].Filename, filepath.Ext(videoFile.Filename))+".hsp")
 		ioutil.WriteFile(fName, hspContent, 0644)
 
 		tasks.ScanLocalHspFile(fName, videoFile.VolumeID, scene.ID)
-	}
-
-	if updateReqd {
-		scene.Save()
 	}
 }
 func findTheMainTrack(requestData HereSphereAuthRequest) int {

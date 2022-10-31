@@ -28,7 +28,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Title
-		e.ForEach(`div.post div.nazev h2`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.nazev h1`, func(id int, e *colly.HTMLElement) {
 			fullTitle := strings.TrimSpace(e.Text)
 			sc.Title = strings.Split(fullTitle, " - ")[1]
 			tmp := strings.Split(strings.Split(fullTitle, " - ")[0], " ")
@@ -49,8 +49,10 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		})
 
 		// Synopsis
-		e.ForEach(`div.post div.textDetail`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text)
+		//		e.ForEach(`div.post div.textDetail`, func(id int, e *colly.HTMLElement) {
+		//			sc.Synopsis = strings.TrimSpace(e.Text)
+		e.ForEach(`meta[name="description"]`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.TrimSpace(e.Attr("content"))
 		})
 
 		// Tags
