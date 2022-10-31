@@ -93,12 +93,15 @@ type HereSphereAuthRequest struct {
 	DeleteFiles *bool            `json:"deleteFile"`
 }
 
+var RequestBody []byte
+
 func HeresphereAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	RequestBody, _ = ioutil.ReadAll(req.Request.Body)
 	if isDeoAuthEnabled() {
 		var authorized bool
 		var requestData HereSphereAuthRequest
 
-		if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
+		if err := json.Unmarshal(RequestBody, &requestData); err != nil {
 			authorized = false
 		} else {
 			err := bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(requestData.Password))
@@ -172,7 +175,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 	}
 
 	var requestData HereSphereAuthRequest
-	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
+	if err := json.Unmarshal(RequestBody, &requestData); err != nil {
 		log.Warnf("Error decoding heresphere api POST request: %v %s", err, req.Request.RequestURI)
 	}
 
@@ -236,7 +239,8 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	var requestData HereSphereAuthRequest
-	if err := json.NewDecoder(req.Request.Body).Decode(&requestData); err != nil {
+
+	if err := json.Unmarshal(RequestBody, &requestData); err != nil {
 		log.Warnf("Error decoding heresphere api POST request: %v %s", err, req.Request.RequestURI)
 	}
 
