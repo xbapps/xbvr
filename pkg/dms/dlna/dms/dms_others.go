@@ -1,4 +1,4 @@
-// +build !unix,!windows
+//go:build !unix && !windows
 
 package dms
 
