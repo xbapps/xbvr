@@ -739,7 +739,7 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		Count(&out.Results)
 
 	// Get scenes
-	tx.Debug().
+	tx.
 		Group("scenes.scene_id").
 		Limit(limit).
 		Offset(offset).
