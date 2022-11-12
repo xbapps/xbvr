@@ -104,6 +104,14 @@
         <b-taginput v-model="cast" autocomplete :data="filteredCast" @typing="getFilteredCast">
           <template slot-scope="props">{{ props.option }}</template>
           <template slot="empty">No matching cast</template>
+          <template #selected="props">
+            <b-tag v-for="(tag, index) in props.tags"
+              :key="tag+index" :tabstop="false" closable  @close="cast=cast.filter(e => e !== tag)" @click="toggle3way(tag,index,'cast')">              
+              <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="filter-remove-outline" size="is-small"></b-icon>
+              <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="filter-outline" size="is-small"></b-icon>
+              {{removeConditionPrefix(tag)}}
+            </b-tag>
+          </template>
         </b-taginput>
       </b-field>
 
@@ -111,6 +119,13 @@
         <b-taginput v-model="sites" autocomplete :data="filteredSites" @typing="getFilteredSites">
           <template slot-scope="props">{{ props.option }}</template>
           <template slot="empty">No matching sites</template>
+          <template #selected="props">
+            <b-tag v-for="(tag, index) in props.tags"
+              :key="tag+index" :tabstop="false" closable  @close="sites=sites.filter(e => e !== tag)" @click="toggle2Way(tag,index,'sites')">
+              <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="filter-remove-outline" size="is-small"></b-icon>
+              {{removeConditionPrefix(tag)}}
+            </b-tag>
+          </template>
         </b-taginput>
       </b-field>
 
@@ -118,6 +133,14 @@
         <b-taginput v-model="tags" autocomplete :data="filteredTags" @typing="getFilteredTags">
           <template slot-scope="props">{{ props.option }}</template>
           <template slot="empty">No matching tags</template>
+          <template #selected="props">
+            <b-tag v-for="(tag, index) in props.tags"
+              :key="tag+index" :tabstop="false" closable  @close="tags=tags.filter(e => e !== tag)" @click="toggle3way(tag,index,'tags')"> 
+              <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="filter-remove-outline" size="is-small"></b-icon>
+              <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="filter-outline" size="is-small"></b-icon>
+              {{removeConditionPrefix(tag)}}
+            </b-tag>
+          </template>
         </b-taginput>
       </b-field>
 
@@ -125,6 +148,14 @@
         <b-taginput v-model="cuepoint" allow-new>
           <template slot-scope="props">{{ props.option }}</template>
           <template slot="empty">No matching cuepoints</template>
+          <template #selected="props">
+            <b-tag v-for="(tag, index) in props.tags"
+              :key="tag+index" :tabstop="false" closable  @close="cuepoint=cuepoint.filter(e => e !== tag)" @click="toggle3way(tag,index,'cuepoints')"> 
+              <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="filter-remove-outline" size="is-small"></b-icon>
+              <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="filter-outline" size="is-small"></b-icon>
+              {{removeConditionPrefix(tag)}}
+            </b-tag>
+          </template>
         </b-taginput>
       </b-field>
 
@@ -185,19 +216,19 @@ export default {
     getFilteredCast (text) {
       this.filteredCast = this.filters.cast.filter(option => (
         option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
-        !this.cast.some(entry => entry.toString() === option.toString())
+        !this.cast.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
       ))      
     },
     getFilteredSites (text) {
       this.filteredSites = this.filters.sites.filter(option => (
         option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
-        !this.sites.some(entry => entry.toString() === option.toString())
+        !this.sites.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
       ))
     },
     getFilteredTags (text) {
       this.filteredTags = this.filters.tags.filter(option => (
         option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
-        !this.tags.some(entry => entry.toString() === option.toString())
+        !this.tags.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
       ))
     },
     clearReleaseMonth () {
@@ -259,6 +290,66 @@ export default {
         this.$store.state.sceneList.isLoading = false
       })
     },
+    toggle3way (text, idx, list) {      
+      let tags = []
+      switch (list) {
+        case 'cast':
+          tags=this.cast 
+          break
+        case 'tags':
+          tags=this.tags
+          break
+        case 'cuepoints':
+          tags=this.cuepoint
+          break
+      }      
+      switch(tags[idx].charAt(0)) {
+        case '!':
+          tags[idx]=this.removeConditionPrefix(tags[idx])
+          break
+        case '&':
+          tags[idx]='!' + this.removeConditionPrefix(tags[idx])
+        break
+        default:
+        tags[idx]='&'+text        
+      }      
+      switch (list) {
+        case 'cast':
+          this.cast=tags
+          break
+        case 'tags':
+          this.tags=tags
+          break
+        case 'cuepoints':
+          this.cuepoint=tags
+          break
+      }
+    },    
+    toggle2Way (text, idx, list) {      
+      let tags = []
+      switch (list) {
+        case 'sites':
+          tags=this.sites
+      }      
+      switch(tags[idx].charAt(0)) {
+        case '!':
+          tags[idx]=this.removeConditionPrefix(tags[idx])
+          break
+        default:
+        tags[idx]='!'+text        
+      }      
+      switch (list) {
+        case 'sites':
+          this.sites=tags
+          break
+      }      
+    },    
+    removeConditionPrefix(txt) {
+      if (txt.charAt(0)=='!' || txt.charAt(0)=='&') {
+        return txt.substring(1) 
+      }
+      return txt
+    }
   },
   computed: {
     filters () {
@@ -316,6 +407,7 @@ export default {
       set (value) {
         this.$store.state.sceneList.filters.tags = value
         this.reloadList()
+        console.log('reloaded',value)
       }
     },
     cuepoint: {
@@ -404,7 +496,7 @@ export default {
       // you can remove from a group if you select one group and one or more actors
       return akaCastCnt == 1 && actorCnt > 0 ? false : true
 
-    }
+    },
   }
 }
 </script>
