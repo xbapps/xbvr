@@ -136,11 +136,20 @@
               Enabled
             </b-switch>
           </b-field>
+          <b-tooltip
+            label="This option will split Cuepoint into multiple tracks, eg Standing-Doggy will split into 2 tracks in Heresphere"
+            size="is-large" type="is-primary" multilined :delay="250" >
+            <b-field label="Use Multi-Track Cuepoints">
+              <b-switch v-model="multiTrackCuepoints">
+                Enabled
+              </b-switch>
+            </b-field>
+          </b-tooltip>
+      </div>
+      <b-field>
+        <b-button type="is-primary" @click="save">Save and apply changes</b-button>
+      </b-field>
     </div>
-    <b-field>
-      <b-button type="is-primary" @click="save">Save and apply changes</b-button>
-    </b-field>
-  </div>
 </template>
 
 <script>
@@ -286,6 +295,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.heresphere.allow_hsp_data= value
+      }
+    },    
+    multiTrackCuepoints: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.multitrack_cuepoints
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.multitrack_cuepoints = value
       }
     },
     isLoading: function () {

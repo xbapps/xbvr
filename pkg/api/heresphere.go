@@ -336,8 +336,8 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		return cuepoints[i].TimeStart < cuepoints[j].TimeStart
 	})
 
-	track := 0
 	end := 0
+	var trackAssignments []string
 	for i := range cuepoints {
 		start := int(cuepoints[i].TimeStart * 1000)
 		if i+1 < len(cuepoints) {
@@ -347,12 +347,24 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		} else {
 			end = start + 1000
 		}
-		tags = append(tags, HeresphereTag{
-			Name:              scene.Cuepoints[i].Name,
-			StartMilliseconds: float64(start),
-			EndMilliseconds:   float64(end),
-			Track:             &track,
-		})
+
+		// split the name into position, action and and extras
+		var cuepointNames []string
+		if config.Config.Interfaces.Heresphere.MultitrackCuepoints {
+			cuepointNames = strings.Split(scene.Cuepoints[i].Name, "-")
+		} else {
+			cuepointNames = append(cuepointNames, scene.Cuepoints[i].Name)
+		}
+		for idx, cuepointName := range cuepointNames {
+			track := findTrack(idx, len(cuepointNames), cuepointName, &trackAssignments, scene)
+
+			tags = append(tags, HeresphereTag{
+				Name:              cuepointName,
+				StartMilliseconds: float64(start),
+				EndMilliseconds:   float64(end),
+				Track:             &track,
+			})
+		}
 	}
 
 	if len(cuepoints) > 1 {
@@ -753,4 +765,44 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 		Access:  1,
 		Library: sceneLists,
 	})
+}
+
+func findTrack(indexpos int, cuepointCount int, name string, trackAssignments *[]string, scene models.Scene) int {
+	// find the track number to use for the actor, actors get their own track
+	if isCast(name, scene) {
+		return getTrackAssignment(name, trackAssignments)
+	}
+
+	// if a position & action exist, make the action track zero, it is more likely the main cuepoint
+	if cuepointCount > 1 {
+		if indexpos == 0 {
+			return getTrackAssignment(fmt.Sprintf("group%v", indexpos), trackAssignments)
+		}
+		if indexpos == 1 {
+			return 0
+		}
+		getTrackAssignment(fmt.Sprintf("group%v", indexpos), trackAssignments)
+	}
+	return 0
+}
+
+func isCast(name string, scene models.Scene) bool {
+	// check if the cuepoint is the same as a cast members name
+	for _, cast := range scene.Cast {
+		if strings.EqualFold(cast.Name, name) {
+			return true
+		}
+	}
+	return false
+}
+
+func getTrackAssignment(name string, trackAssignments *[]string) int {
+	// find tracks allocated track or add a new one
+	for idx, track := range *trackAssignments {
+		if strings.EqualFold(track, name) {
+			return idx + 1
+		}
+	}
+	*trackAssignments = append(*trackAssignments, name)
+	return len(*trackAssignments)
 }

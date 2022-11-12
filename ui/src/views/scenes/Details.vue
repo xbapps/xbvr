@@ -126,7 +126,13 @@
                 <b-button v-for="(c, idx) in cuepointActTags.slice(1)" :key="'action' + idx" @click='setCuepointAct([c])' class="tag is-info is-small">{{c}}</b-button>
               </b-taglist>
             </div>
-            <div class="is-divider" data-content="Cuepoint Scene Tags" v-if="activeTab == 1"></div>
+            <div class="is-divider" data-content="Cast Cuepoints" v-if="activeTab == 1"></div>
+            <div class="block-tags block" v-if="activeTab == 1">              
+              <b-taglist>                  
+                <b-button v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='setCuepointPosition([c.name])' class="tag is-info is-small">{{c.name}}</b-button>
+              </b-taglist>
+            </div>
+            <div class="is-divider" data-content="Scene Tag Cuepoints" v-if="activeTab == 1"></div>
             <div class="block-tags block" v-if="activeTab == 1">    
               <b-taglist>
                 <b-button v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='setCuepointAct([tag.name])'
