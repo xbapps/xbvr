@@ -26,4 +26,4 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Check code formatting using gofmt
-      uses: Jerome1337/gofmt-action@v1.0.4
+      uses: Jerome1337/gofmt-action@v1.0.5
