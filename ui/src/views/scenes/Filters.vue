@@ -106,11 +106,12 @@
           <template slot="empty">No matching cast</template>
           <template #selected="props">
               <b-tag v-for="(tag, index) in props.tags"
+                :type="tag.charAt(0)=='!' ? 'is-danger': (tag.charAt(0)=='&' ? 'is-success' : '')"
                 :key="tag+index" :tabstop="false" closable  @close="cast=cast.filter(e => e !== tag)" @click="toggle3way(tag,index,'cast')">              
                 <b-tooltip position="is-right" :delay="200"
                   :label="tag.charAt(0)=='!' ? 'Exclude ' + removeConditionPrefix(tag) : tag.charAt(0)=='&' ? 'Must Have ' + removeConditionPrefix(tag) : 'Include ' + removeConditionPrefix(tag)">
-                  <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="filter-remove-outline" size="is-small"></b-icon>
-                  <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="filter-outline" size="is-small"></b-icon>
+                  <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+                  <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
                   {{removeConditionPrefix(tag)}}
                 </b-tooltip>
               </b-tag>
@@ -124,10 +125,11 @@
           <template slot="empty">No matching sites</template>
           <template #selected="props">
             <b-tag v-for="(tag, index) in props.tags"
+              :type="tag.charAt(0)=='!' ? 'is-danger': (tag.charAt(0)=='&' ? 'is-success' : '')"
               :key="tag+index" :tabstop="false" closable  @close="sites=sites.filter(e => e !== tag)" @click="toggle2Way(tag,index,'sites')">
                 <b-tooltip position="is-right" :delay="200"
                   :label="tag.charAt(0)=='!' ? 'Exclude ' + removeConditionPrefix(tag) : 'Include ' + removeConditionPrefix(tag)">
-                  <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="filter-remove-outline" size="is-small"></b-icon>
+                  <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
                   {{removeConditionPrefix(tag)}}
                 </b-tooltip>
             </b-tag>
@@ -141,11 +143,12 @@
           <template slot="empty">No matching tags</template>
           <template #selected="props">
             <b-tag v-for="(tag, index) in props.tags"
+              :type="tag.charAt(0)=='!' ? 'is-danger': (tag.charAt(0)=='&' ? 'is-success' : '')"
               :key="tag+index" :tabstop="false" closable  @close="tags=tags.filter(e => e !== tag)" @click="toggle3way(tag,index,'tags')"> 
               <b-tooltip position="is-right" :delay="200"
                   :label="tag.charAt(0)=='!' ? 'Exclude ' + removeConditionPrefix(tag) : tag.charAt(0)=='&' ? 'Must Have ' + removeConditionPrefix(tag) : 'Include ' + removeConditionPrefix(tag)">
-                <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="filter-remove-outline" size="is-small"></b-icon>
-                <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="filter-outline" size="is-small"></b-icon>
+                <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+                <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
                 {{removeConditionPrefix(tag)}}
               </b-tooltip>
             </b-tag>
@@ -159,11 +162,12 @@
           <template slot="empty">No matching cuepoints</template>
           <template #selected="props">
             <b-tag v-for="(tag, index) in props.tags"
+              :type="tag.charAt(0)=='!' ? 'is-danger': (tag.charAt(0)=='&' ? 'is-success' : '')"
               :key="tag+index" :tabstop="false" closable  @close="cuepoint=cuepoint.filter(e => e !== tag)" @click="toggle3way(tag,index,'cuepoints')"> 
               <b-tooltip position="is-right" :delay="200"
                   :label="tag.charAt(0)=='!' ? 'Exclude ' + removeConditionPrefix(tag) : tag.charAt(0)=='&' ? 'Must Have ' + removeConditionPrefix(tag) : 'Include ' + removeConditionPrefix(tag)">
-                <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="filter-remove-outline" size="is-small"></b-icon>
-                <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="filter-outline" size="is-small"></b-icon>
+                <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+                <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
                 {{removeConditionPrefix(tag)}}
               </b-tooltip>
             </b-tag>
@@ -526,5 +530,9 @@ export default {
 
 .field-extra {
   margin-bottom: 1.1em !important;
+}
+
+.tagicon {
+  margin-right: -0.2em !important;
 }
 </style>
