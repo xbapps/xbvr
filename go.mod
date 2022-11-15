@@ -55,7 +55,7 @@ require (
 	github.com/tidwall/gjson v1.14.3
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.12.4
-	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a
+	golang.org/x/crypto v0.2.0
 	golang.org/x/net v0.2.0
 	golang.org/x/oauth2 v0.0.0-20221006150949-b44042a4b9c1
 	golang.org/x/sys v0.2.0
