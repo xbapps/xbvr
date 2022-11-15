@@ -969,6 +969,114 @@ func Migrate() {
 				return tx.AutoMigrate(&models.Actor{}).Error
 			},
 		},
+		{
+			ID: "0044-TrailerRules",
+			Migrate: func(tx *gorm.DB) error {
+				err := tx.AutoMigrate(&models.Scene{}).Error
+				if err != nil {
+					return err
+				}
+				var scenes []models.Scene
+				//err = tx.Where("site = ?", "VirtualTaboo").Find(&scenes).Error
+				//err = tx.Where("scene_id = ?", "allvrporn-1117628").Find(&scenes).Error
+
+				//err = tx.Debug().Where("scene_url like ?", `%exlik%`).Find(&scenes).Error
+				err = tx.Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for _, scene := range scenes {
+					id := scene.SceneID[strings.LastIndex(scene.SceneID, "-")+1:]
+					var re = regexp.MustCompile(`(?m).*.(\.com|\.net)\/`)
+					baseUrl := re.FindAllString(scene.SceneURL, -1)
+
+					if len(baseUrl) > 0 {
+						if baseUrl[0] == `https://www.sexlikereal.com/` {
+							scene.TrailerType = "slr"
+							scene.TrailerSource = `https://api.sexlikereal.com/virtualreality/video/id/` + id
+						}
+						if baseUrl[0] == `https://vrporn.com/` {
+							scene.TrailerType = "scrape_html"
+							scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"dl8-video source","extract_regex":"","content_base_url":"","record_path":"","content_path":"src","encoding_path":"","quality_path":"quality"}`
+						}
+					}
+
+					switch scene.Site {
+					case "RealJam VR", "WetVR", "StasyQVR", "ZexyVR", "WankitNowVR", "SexBabesVR":
+						scene.TrailerType = "deovr"
+					case "BadoinkVR", "18VR", "BabeVR", "KinkVR", "VRCosplayX", "TmwVRnet", "SinsVR", "VirtualPorn", "Tonight's Girlfriend VR", "VRAllure",
+						"VRHush", "VRLatina", "BaberoticaVR", "RealityLovers", "GroobyVR":
+						scene.TrailerType = "scrape_html"
+					case "BrasilVR", "Czech VR", "Czech VR Casting", "Czech VR Fetish", "MilfVR", "POVR Originals", "VR Intimacy", "WankzVR", "herPOVR":
+						scene.TrailerType = "heresphere"
+					case "VirtualRealPassion", "VirtualRealPorn", "VirtualRealTrans", "VirtualRealGay", "VirtualRealAmateurPorn", "CaribbeanCom VR":
+						scene.TrailerType = "scrape_json"
+					case "NaughtyAmerica VR", "LethalHardcoreVR", "WhorecraftVR":
+						scene.TrailerType = "url"
+					case "VRBangers", "VRBTrans", "VRBGay", "DarkRoomVR", "VirtualTaboo":
+						scene.TrailerType = "load_json"
+					}
+
+					switch scene.Site {
+					case "VRBangers", "VRBTrans", "VRBGay":
+						base := strings.Split(scene.SceneURL, "/")
+						scene.TrailerSource = `{"scene_url":"https://content.` + base[2] + `/api/content/v1/videos/` + base[4] + `","html_element":"","extract_regex":"","content_base_url":"","record_path":"data.item.videoPlayerSources.trailer","content_path":"src","encoding_path":"","quality_path":"quality"}`
+					case "RealJam VR", "SexBabesVR":
+						scene.TrailerSource = baseUrl[0] + "deovr/video/id/" + id
+					case "ZexyVR", "WankitNowVR":
+						scene.TrailerSource = baseUrl[0] + "deovr/video/" + id
+					case "WetVR":
+						scene.TrailerSource = strings.Replace(scene.SceneURL, "/video/", "/deovr/", 1)
+					case "StasyQVR":
+						scene.TrailerSource = "http://stasyqvr.com/deovr_feed/json/id/" + id
+					case "TmwVRnet", "SinsVR", "VirtualPorn", "Tonight's Girlfriend VR":
+						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"dl8-video source","extract_regex":"","content_base_url":"","record_path":"","content_path":"src","encoding_path":"","quality_path":"quality"}`
+					case "VRAllure", "VRHush", "VRLatina":
+						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"deo-video source","extract_regex":"","content_base_url":"https:","record_path":"","content_path":"src","encoding_path":"","quality_path":"quality"}`
+					case "BaberoticaVR":
+						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"video source","extract_regex":"","content_base_url":"https:","record_path":"","content_path":"src","encoding_path":"","quality_path":"data-res"}`
+					case "BadoinkVR", "18VR", "BabeVR", "KinkVR", "VRCosplayX":
+						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + "trailer" + `","html_element":"dl8-video source","extract_regex":"","content_base_url":"","record_path":"","content_path":"src","encoding_path":"","quality_path":"quality"}`
+					case "DarkRoomVR":
+						scene.TrailerSource = `{"scene_url":"https://darkroomvr.com/api/vrplayer/video/detail/` + id + `","html_element":"","extract_regex":"","content_base_url":"","record_path":"sources","content_path":"url","encoding_path":"","quality_path":"title"}`
+					case "VirtualTaboo":
+						scene.TrailerSource = `{"scene_url":"https://virtualtaboo.com/gizmo/videoinfo/` + id + `","html_element":"","extract_regex":"","content_base_url":"","record_path":"sources","content_path":"url","encoding_path":"","quality_path":"title"}`
+					case "BrasilVR", "POVR Originals", "WankzVR", "herPOVR":
+						scene.TrailerSource = baseUrl[0] + "heresphere/" + id
+					case "Czech VR", "Czech VR Casting", "Czech VR Fetish", "VR Intimacy":
+						var re = regexp.MustCompile(`detail-(\d*)`)
+						internalId := re.FindStringSubmatch(scene.SceneURL)
+						scene.TrailerSource = baseUrl[0] + "heresphere/videoID" + internalId[1]
+					case "MilfVR":
+						scene.TrailerSource = "https://www.wankzvr.com/heresphere/" + id
+					case "VirtualRealPassion", "VirtualRealPorn", "VirtualRealTrans", "VirtualRealGay", "VirtualRealAmateurPorn":
+						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"script[type=\"application/ld+json\"]","content_path":"trailer.contentUrl","quality_path":"trailer.videoQuality","content_base_url":"` + baseUrl[0] + `"}`
+					case "NaughtyAmerica VR":
+						base := strings.Split(scene.CoverURL, "/")
+						scene.TrailerSource = `https://videos.naughtycdn.com/` + base[7] + `/trailers/vr/` + base[7] + base[8] + `/` + base[7] + base[8] + `teaser_vrdesktophd.mp4`
+					case "LethalHardcoreVR":
+						base := strings.Split(scene.CoverURL, "/")
+						base = strings.Split(base[4], "_")
+						scene.TrailerSource = `https://internal-video.adultempire.com/downloadopen/LethalVR_trailer_` + base[0] + `.mp4`
+					case "WhorecraftVR":
+						base := strings.Split(scene.CoverURL, "/")
+						base = strings.Split(base[4], "_")
+						scene.TrailerSource = `https://internal-video.adultempire.com/downloadopen/Whorecraft_trailer_` + base[0] + `.mp4`
+					case "CaribbeanCom VR":
+						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"script","extract_regex":"Movie = (.+?})","content_base_url":"","record_path":"","content_path":"sample_flash_url","encoding_path":"","quality_path":""}`
+					case "RealityLovers":
+						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"script","extract_regex":"trailerUrl = \"(.+?)\";","content_base_url":"","record_path":"","content_path":"","encoding_path":"","quality_path":""}`
+					case "GroobyVR":
+						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"dl8-video source","extract_regex":"","content_base_url":"https://www.groobyvr.com","record_path":"","content_path":"src","encoding_path":"","quality_path":"quality"}`
+					}
+
+					if scene.TrailerType != "" {
+						tx.Save(&scene)
+					}
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
