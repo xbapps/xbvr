@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -89,6 +90,12 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			url := e.Attr("href")
 			sc.SiteID = url[strings.LastIndex(url, "=")+1:]
 		})
+
+		// trailer details
+		sc.TrailerType = "load_json"
+		params := models.TrailerScrape{SceneUrl: `https://darkroomvr.com/api/vrplayer/video/detail/` + sc.SiteID, RecordPath: "sources", ContentPath: "url", QualityPath: "title"}
+		strParma, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParma)
 
 		if sc.SiteID != "" {
 			sc.SceneID = fmt.Sprintf("darkroomvr-%v", sc.SiteID)

@@ -65,6 +65,10 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 			}
 		})
 
+		// trailer details
+		sc.TrailerType = "url"
+		sc.TrailerSrc = e.ChildAttr(`span.link-player-action-inner a.btn`, `href`)
+
 		// Title
 		e.ForEach(`div.item-page-details h1`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {

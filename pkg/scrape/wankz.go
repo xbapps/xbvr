@@ -98,6 +98,10 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			sc.Tags = append(sc.Tags, "milf")
 		}
 
+		// trailer details
+		sc.TrailerType = "heresphere"
+		sc.TrailerSrc = "https://www.wankzvr.com/heresphere/" + sc.SiteID
+
 		// Cast
 		e.ForEach(`div.detail__models a`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))

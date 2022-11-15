@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"net/url"
 	"regexp"
 	"strings"
@@ -85,6 +86,12 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		// Duration
 		sc.Duration = 0
+
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "deo-video source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		// Filenames
 		e.ForEach(`input.stream-input-box`, func(id int, e *colly.HTMLElement) {

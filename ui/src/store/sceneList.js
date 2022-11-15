@@ -92,6 +92,9 @@ const mutations = {
         if (payload.list == 'watched') {
           obj.is_watched = !obj.is_watched
         }
+        if (payload.list === 'trailerlist') {
+          obj.trailerlist = !obj.trailerlist
+        }
         if (payload.list === 'needs_update') {
           obj.needs_update = !obj.needs_update
         }

@@ -34,6 +34,10 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		sc.SiteID = strings.Split(tmp[len(tmp)-1], "-")[0]
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
+		// trailer details
+		sc.TrailerType = "deovr"
+		sc.TrailerSrc = `https://realjamvr.com/deovr/video/id/` + sc.SiteID
+
 		// Cast
 		e.ForEach(`.featuring a`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))

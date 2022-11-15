@@ -31,6 +31,11 @@
               </b-switch>
             </b-field>
             <b-field>
+              <b-switch v-model="sceneTrailerlist" type="is-default">
+                show Add/Remove from Trailer list button
+              </b-switch>
+            </b-field>
+            <b-field>
               <b-switch v-model="sceneWatched" type="is-dark">
                 show Toggle Watched Status button
               </b-switch>
@@ -101,6 +106,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.sceneFavourite = value
+      }
+    },
+    sceneTrailerlist: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneTrailerlist
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneTrailerlist = value
       }
     },
     sceneWatched: {

@@ -6,7 +6,7 @@
            @click="showDetails(item)"
            @mouseover="preview = true"
            @mouseleave="preview = false">
-        <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
+        <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>        
         <div class="overlay align-bottom-left">
           <div style="padding: 5px">
             <b-tag v-if="item.is_watched && !this.$store.state.optionsWeb.web.sceneWatched">
@@ -41,6 +41,7 @@
       <div class="scene_title">{{item.title}}</div>
 
       <watchlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatchlist"/>
+      <trailerlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneTrailerlist"/>
       <favourite-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneFavourite"/>
       <watched-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatched"/>
       <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
@@ -61,11 +62,12 @@ import WatchlistButton from '../../components/WatchlistButton'
 import FavouriteButton from '../../components/FavouriteButton'
 import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
+import TrailerlistButton from '../../components/TrailerlistButton'
 
 export default {
   name: 'SceneCard',
   props: { item: Object },
-  components: { WatchlistButton, FavouriteButton, WatchedButton, EditButton },
+  components: { WatchlistButton, FavouriteButton, WatchedButton, EditButton, TrailerlistButton },
   data () {
     return {
       preview: false,

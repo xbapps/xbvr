@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -79,6 +80,13 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 				sc.Duration = tmpDuration
 			}
 		})
+
+		// trailer details
+		sc.TrailerType = "heresphere"
+		//  extract internal id with (\d+)
+		var re = regexp.MustCompile(`(?m)https:\/\/www.czechvrnetwork.com\/detail-(\d+)`)
+		r := re.FindStringSubmatch(sc.HomepageURL)
+		sc.TrailerSrc = "https://www.czechvrnetwork.com/heresphere/videoID" + r[1]
 
 		// Filenames
 		e.ForEach(`div.post div.download a.trailer`, func(id int, e *colly.HTMLElement) {

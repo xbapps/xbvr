@@ -75,6 +75,10 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 			sc.Tags = append(sc.Tags, e.Text)
 		})
 
+		// trailer details
+		sc.TrailerType = "heresphere"
+		sc.TrailerSrc = "https://www.povr.com/heresphere/" + sc.SiteID
+
 		// Cast
 		e.ForEach(`a.btn--eptenary`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))

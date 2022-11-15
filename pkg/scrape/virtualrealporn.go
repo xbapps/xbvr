@@ -165,6 +165,21 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 			}
 		})
 
+		// setup  trailers
+		sc.TrailerType = "scrape_json"
+		var t models.TrailerScrape
+		t.SceneUrl = sc.HomepageURL
+		t.HtmlElement = `script[type="application/ld+json"]`
+		t.ContentPath = "trailer.contentUrl"
+		t.QualityPath = "trailer.videoQuality"
+		t.ContentBaseUrl = URL
+		tmp, _ := json.Marshal(t)
+		sc.TrailerSrc = string(tmp)
+
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: `script[type="application/ld+json"]`, ContentPath: "trailer.contentUrl", QualityPath: "trailer.videoQuality", ContentBaseUrl: URL}
+		strParma, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParma)
+
 		ctx := colly.NewContext()
 		ctx.Put("scene", &sc)
 
