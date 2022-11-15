@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -542,16 +543,38 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	}
 
 	var sites []string
+	var excludedSites []string
 	for _, i := range r.Sites {
-		sites = append(sites, i.OrElse(""))
+		switch firstchar := string(i.OrElse(" ")[0]); firstchar {
+		case "!":
+			exSite, _ := i.Get()
+			excludedSites = append(excludedSites, exSite[1:])
+		default:
+			sites = append(sites, i.OrElse(""))
+		}
 	}
+
 	if len(sites) > 0 {
 		tx = tx.Where("site IN (?)", sites)
 	}
+	for _, exclude := range excludedSites {
+		tx = tx.Where("site NOT IN (?)", exclude)
+	}
 
 	var tags []string
+	var excludedTags []string
+	var mustHaveTags []string
 	for _, i := range r.Tags {
-		tags = append(tags, i.OrElse(""))
+		switch firstchar := string(i.OrElse(" ")[0]); firstchar {
+		case "&":
+			inclTag, _ := i.Get()
+			mustHaveTags = append(mustHaveTags, inclTag[1:])
+		case "!":
+			exTag, _ := i.Get()
+			excludedTags = append(excludedTags, exTag[1:])
+		default:
+			tags = append(tags, i.OrElse(""))
+		}
 	}
 	if len(tags) > 0 {
 		tx = tx.
@@ -559,10 +582,33 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			Joins("left join tags on tags.id=scene_tags.tag_id").
 			Where("tags.name IN (?)", tags)
 	}
+	for idx, musthave := range mustHaveTags {
+		stAlias := "st_i" + strconv.Itoa(idx)
+		tagAlias := "t_i" + strconv.Itoa(idx)
+		tx = tx.
+			Joins("join scene_tags "+stAlias+" on "+stAlias+".scene_id=scenes.id").
+			Joins("join tags "+tagAlias+" on "+tagAlias+".id="+stAlias+".tag_id and "+tagAlias+".name=?", musthave)
+	}
+	for idx, exclude := range excludedTags {
+		stAlias := "st_e" + strconv.Itoa(idx)
+		tagAlias := "t_e" + strconv.Itoa(idx)
+		tx = tx.Where("scenes.id not in (select "+stAlias+".scene_id  from tags "+tagAlias+" join scene_tags "+stAlias+" on "+stAlias+".scene_id =scenes.id and "+tagAlias+".id ="+stAlias+".tag_id where "+tagAlias+".name =?)", exclude)
+	}
 
 	var cast []string
+	var mustHaveCast []string
+	var excludedCast []string
 	for _, i := range r.Cast {
-		cast = append(cast, i.OrElse(""))
+		switch firstchar := string(i.OrElse(" ")[0]); firstchar {
+		case "&":
+			inclCast, _ := i.Get()
+			mustHaveCast = append(mustHaveCast, inclCast[1:])
+		case "!":
+			exCast, _ := i.Get()
+			excludedCast = append(excludedCast, exCast[1:])
+		default:
+			cast = append(cast, i.OrElse(""))
+		}
 	}
 	if len(cast) > 0 {
 		tx = tx.
@@ -570,16 +616,55 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			Joins("left join actors on actors.id=scene_cast.actor_id").
 			Where("actors.name IN (?)", cast)
 	}
+	for idx, musthave := range mustHaveCast {
+		scAlias := "sc_i" + strconv.Itoa(idx)
+		actorAlias := "a_i" + strconv.Itoa(idx)
+		tx = tx.
+			Joins("join scene_cast "+scAlias+" on "+scAlias+".scene_id=scenes.id").
+			Joins("join actors "+actorAlias+" on "+actorAlias+".id="+scAlias+".actor_id and "+actorAlias+".name=?", musthave)
+	}
+	for idx, exclude := range excludedCast {
+		scAlias := "sc_e" + strconv.Itoa(idx)
+		actorAlias := "a_e" + strconv.Itoa(idx)
+		tx = tx.Where("scenes.id not in (select "+scAlias+".scene_id  from actors "+actorAlias+" join scene_cast "+scAlias+" on "+scAlias+".scene_id =scenes.id and "+actorAlias+".id ="+scAlias+".actor_id where "+actorAlias+".name =?)", exclude)
+	}
 
 	var cuepoint []string
+	var mustHaveCuepoint []string
+	var excludedCuepoint []string
 	for _, i := range r.Cuepoint {
-		cuepoint = append(cuepoint, i.OrElse(""))
+		switch firstchar := string(i.OrElse(" ")[0]); firstchar {
+		case "&":
+			inclCp, _ := i.Get()
+			mustHaveCuepoint = append(mustHaveCuepoint, inclCp[1:])
+		case "!":
+			exCp, _ := i.Get()
+			excludedCuepoint = append(excludedCuepoint, exCp[1:])
+		default:
+			cuepoint = append(cuepoint, i.OrElse(""))
+		}
 	}
+
 	if len(cuepoint) > 0 {
 		tx = tx.Joins("left join scene_cuepoints on scene_cuepoints.scene_id=scenes.id")
-		for _, i := range cuepoint {
-			tx = tx.Where("scene_cuepoints.name LIKE ?", "%"+i+"%")
+		var where string
+		for idx, i := range cuepoint {
+			if idx == 0 {
+				where = "scene_cuepoints.name LIKE '%" + i + "%'"
+			} else {
+				where = where + " or scene_cuepoints.name LIKE '%" + i + "%'"
+			}
 		}
+		tx = tx.Where(where)
+	}
+	for idx, musthave := range mustHaveCuepoint {
+		scpAlias := "scp_i" + strconv.Itoa(idx)
+		tx = tx.
+			Joins("join scene_cuepoints "+scpAlias+" on "+scpAlias+".scene_id=scenes.id and "+scpAlias+".name like ?", "%"+musthave+"%")
+	}
+	for idx, exclude := range excludedCuepoint {
+		scpAlias := "scp_e" + strconv.Itoa(idx)
+		tx = tx.Where("scenes.id not in (select "+scpAlias+".scene_id  from scene_cuepoints "+scpAlias+" where "+scpAlias+".scene_id =scenes.id and "+scpAlias+".name like ?)", "%"+exclude+"%")
 	}
 
 	if r.Released.Present() {
