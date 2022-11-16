@@ -9,12 +9,13 @@ import (
 )
 
 type CronSchedule struct {
-	Enabled      bool `default:"true" json:"enabled"`
-	HourInterval int  `json:"hourInterval"`
-	UseRange     bool `default:"false" json:"useRange"`
-	MinuteStart  int  `default:"0" json:"minuteStart"`
-	HourStart    int  `default:"0" json:"hourStart"`
-	HourEnd      int  `default:"23" json:"hourEnd"`
+	Enabled         bool `default:"true" json:"enabled"`
+	HourInterval    int  `json:"hourInterval"`
+	UseRange        bool `default:"false" json:"useRange"`
+	MinuteStart     int  `default:"0" json:"minuteStart"`
+	HourStart       int  `default:"0" json:"hourStart"`
+	HourEnd         int  `default:"23" json:"hourEnd"`
+	RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 }
 
 type ObjectConfig struct {
@@ -80,28 +81,31 @@ type ObjectConfig struct {
 	} `json:"library"`
 	Cron struct {
 		RescrapeSchedule struct {
-			Enabled      bool `default:"true" json:"enabled"`
-			HourInterval int  `default:"12" json:"hourInterval"`
-			UseRange     bool `default:"false" json:"useRange"`
-			MinuteStart  int  `default:"0" json:"minuteStart"`
-			HourStart    int  `default:"0" json:"hourStart"`
-			HourEnd      int  `default:"23" json:"hourEnd"`
+			Enabled         bool `default:"true" json:"enabled"`
+			HourInterval    int  `default:"12" json:"hourInterval"`
+			UseRange        bool `default:"false" json:"useRange"`
+			MinuteStart     int  `default:"0" json:"minuteStart"`
+			HourStart       int  `default:"0" json:"hourStart"`
+			HourEnd         int  `default:"23" json:"hourEnd"`
+			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"rescrapeSchedule"`
 		RescanSchedule struct {
-			Enabled      bool `default:"true" json:"enabled"`
-			HourInterval int  `default:"2" json:"hourInterval"`
-			UseRange     bool `default:"false" json:"useRange"`
-			MinuteStart  int  `default:"0" json:"minuteStart"`
-			HourStart    int  `default:"0" json:"hourStart"`
-			HourEnd      int  `default:"23" json:"hourEnd"`
+			Enabled         bool `default:"true" json:"enabled"`
+			HourInterval    int  `default:"2" json:"hourInterval"`
+			UseRange        bool `default:"false" json:"useRange"`
+			MinuteStart     int  `default:"0" json:"minuteStart"`
+			HourStart       int  `default:"0" json:"hourStart"`
+			HourEnd         int  `default:"23" json:"hourEnd"`
+			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"rescanSchedule"`
 		PreviewSchedule struct {
-			Enabled      bool `default:"false" json:"enabled"`
-			HourInterval int  `default:"2" json:"hourInterval"`
-			UseRange     bool `default:"false" json:"useRange"`
-			MinuteStart  int  `default:"0" json:"minuteStart"`
-			HourStart    int  `default:"0" json:"hourStart"`
-			HourEnd      int  `default:"23" json:"hourEnd"`
+			Enabled         bool `default:"false" json:"enabled"`
+			HourInterval    int  `default:"2" json:"hourInterval"`
+			UseRange        bool `default:"false" json:"useRange"`
+			MinuteStart     int  `default:"0" json:"minuteStart"`
+			HourStart       int  `default:"0" json:"hourStart"`
+			HourEnd         int  `default:"23" json:"hourEnd"`
+			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"previewSchedule"`
 	} `json:"cron"`
 }
