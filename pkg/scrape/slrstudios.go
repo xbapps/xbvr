@@ -300,6 +300,7 @@ func init() {
 	addSLRScraper("sodcreate", "SodCreate", "SodCreate", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/216/logo_crop_1606869217.png")
 	addSLRScraper("squeeze-vr", "SqueezeVR", "SqueezeVR", "https://mcdn.vrporn.com/files/20210322150700/squeezevr_logo.png")
 	addSLRScraper("stockingsvr", "StockingsVR", "StockingsVR", "https://mcdn.vrporn.com/files/20171107092330/stockingsvr_logo_vr_porn_studio_vrporn.com_virtual_reality1-1.png")
+	addSLRScraper("strictlyglamourvr", "StrictlyGlamourVR", "StrictlyGlamourVR", "")
 	addSLRScraper("stripzvr", "StripzVR", "N1ck Inc.", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg")
 	addSLRScraper("swallowbay", "SwallowBay", "SwallowBay", "https://mcdn.vrporn.com/files/20210330092926/swallowbay-400x400.jpg")
 	addSLRScraper("sweetlonglips", "Sweetlonglips", "Sweetlonglips", "https://mcdn.vrporn.com/files/20200117105304/SLLVRlogo.png")
