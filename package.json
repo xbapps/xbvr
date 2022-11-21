@@ -42,7 +42,7 @@
     "babel-eslint": "10.1.0",
     "buffer": "6.0.3",
     "concurrently": "7.6.0",
-    "eslint": "8.27.0",
+    "eslint": "8.28.0",
     "eslint-plugin-import": "2.26.0",
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-promise": "6.1.1",
