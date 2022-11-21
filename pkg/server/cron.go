@@ -37,13 +37,13 @@ func SetupCron() {
 	go tasks.CalculateCacheSizes()
 
 	if config.Config.Cron.RescrapeSchedule.RunAtStartDelay > 0 {
-		time.AfterFunc(time.Duration(config.Config.Cron.RescrapeSchedule.RunAtStartDelay*int(time.Minute)), scrapeCron)
+		time.AfterFunc(time.Duration(config.Config.Cron.RescrapeSchedule.RunAtStartDelay)*time.Minute, scrapeCron)
 	}
 	if config.Config.Cron.RescanSchedule.RunAtStartDelay > 0 {
-		time.AfterFunc(time.Duration(config.Config.Cron.RescanSchedule.RunAtStartDelay*int(time.Minute)), rescanCron)
+		time.AfterFunc(time.Duration(config.Config.Cron.RescanSchedule.RunAtStartDelay)*time.Minute, rescanCron)
 	}
 	if config.Config.Cron.PreviewSchedule.RunAtStartDelay > 0 {
-		time.AfterFunc(time.Duration(config.Config.Cron.PreviewSchedule.RunAtStartDelay*int(time.Minute)), generatePreviewCron)
+		time.AfterFunc(time.Duration(config.Config.Cron.PreviewSchedule.RunAtStartDelay)*time.Minute, generatePreviewCron)
 	}
 
 	log.Println(fmt.Sprintf("Next Rescrape Task at %v", cronInstance.Entry(rescrapTask).Next))
