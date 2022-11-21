@@ -1006,6 +1006,13 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			// VRCONK has changed scene numbering schema, so it needs to be flushed
+			ID: "00046-fix-orphaned-cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				return db.Where("scene_id is null").Delete(&models.SceneCuepoint{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
