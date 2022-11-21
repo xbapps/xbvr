@@ -612,13 +612,13 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 	if requestData.Tags != nil && config.Config.Interfaces.Heresphere.AllowCuepointUpdates {
 		// need to reread the cuepoints, to handle muti threading issues and the scene record may have changed
 		// just preload the cuepoint, preload all associations and the scene, does not reread the cuepoint?, so just get them and update the scene
-		var tmp models.Scene
-		db.Preload("Cuepoints").Where("id = ?", scene.ID).First(&tmp)
-		scene.Cuepoints = tmp.Cuepoints
+		var existingScene models.Scene
+		db.Preload("Cuepoints").Where("id = ?", scene.ID).First(&existingScene)
 
 		var replacementCuepoints []models.SceneCuepoint
 		endpos := findEndPos(requestData)
 		firstTrack := findTheMainTrack(requestData)
+		// build new list of cuepoints
 		for _, tag := range *requestData.Tags {
 			if !strings.Contains(tag.Name, ":") {
 				if *tag.Track == firstTrack {
@@ -636,8 +636,19 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 				}
 			}
 		}
-		db.Model(&scene).Association("Cuepoints").Replace(&replacementCuepoints)
-		scene.Save()
+
+		// workout cuepoints differences and append/delete
+		// note association.replace does not work, it just changes cuepoint records and sets the sceneid to null on the existing cuepoint record, l;eaving them in the db
+		for _, newCuepoint := range replacementCuepoints {
+			if matchCuepoint(newCuepoint, existingScene.Cuepoints) == -1 {
+				db.Model(&scene).Association("Cuepoints").Append(&newCuepoint)
+			}
+		}
+		for _, existingCuepoint := range existingScene.Cuepoints {
+			if matchCuepoint(existingCuepoint, replacementCuepoints) == -1 {
+				db.Model(&existingCuepoint).Delete(&existingCuepoint)
+			}
+		}
 	}
 
 	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
@@ -705,6 +716,14 @@ func findEndPos(requestData HereSphereAuthRequest) float64 {
 		}
 	}
 	return endpos
+}
+func matchCuepoint(findCuepoint models.SceneCuepoint, cuepointList []models.SceneCuepoint) int {
+	for idx, cuepoint := range cuepointList {
+		if cuepoint.Name == findCuepoint.Name && cuepoint.TimeStart == findCuepoint.TimeStart {
+			return idx
+		}
+	}
+	return -1
 }
 
 func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *restful.Response) {
