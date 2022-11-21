@@ -44,6 +44,11 @@
                   <div class="column is-one-third" style="margin-left:.75em">{{ minutesStartMsg(rescrapeMinuteStart) }}</div>
                 </b-field>
               </div>
+              <br/>
+              <b-field label="Startup">
+                  <b-slider v-model="rescrapeStartDelay" :min="0" :max="60" :step="1" ></b-slider>
+                  <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(rescrapeStartDelay) }}</div>
+              </b-field>
             </div>
             <div v-if="activeTab == 1">            
               <h4>{{$t("Rescan Folders")}}</h4>
@@ -77,6 +82,11 @@
                   <div class="column is-one-third" style="margin-left:.75em">{{ minutesStartMsg(rescanMinuteStart) }}</div>
                 </b-field>
               </div>
+              <br/>
+              <b-field label="Startup">
+                  <b-slider v-model="rescanStartDelay" :min="0" :max="60" :step="1" ></b-slider>
+                  <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(rescanStartDelay) }}</div>
+              </b-field>
             </div>
            <div v-if="activeTab == 2">            
               <b-field>
@@ -112,9 +122,14 @@
                   Preview Generation of a scene will not start after the Time Window Ends
                 </p>
               </div>
-                <p>
-                  BETA NOTE: Please note this is CPU-heavy process, if approriate limit the Time of Day the task runs                  
-                </p>                  
+              <br/>
+              <b-field label="Startup">
+                  <b-slider v-model="previewStartDelay" :min="0" :max="60" :step="1" ></b-slider>
+                  <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(previewStartDelay) }}</div>
+              </b-field>
+              <p>
+                BETA NOTE: Please note this is CPU-heavy process, if approriate limit the Time of Day the task runs                  
+              </p>                  
             </div>
             <hr/>
               <b-field grouped>
@@ -161,6 +176,9 @@ export default {
       previewMinuteStart: 0,
       lastPreviewTimeRange: [0,23],
       usePreviewTimeRange: false,      
+      rescrapeStartDelay: 0,
+      rescanStartDelay: 0,
+      previewStartDelay: 0,
       timeRange: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
         '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00',
         '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
@@ -233,6 +251,9 @@ export default {
           } else {
             this.previewTimeRange = [data.config.cron.previewSchedule.hourStart, data.config.cron.previewSchedule.hourEnd]            
           }
+          this.rescrapeStartDelay = data.config.cron.rescrapeSchedule.runAtStartDelay
+          this.rescanStartDelay = data.config.cron.rescanSchedule.runAtStartDelay          
+          this.previewStartDelay = data.config.cron.previewSchedule.runAtStartDelay
           this.isLoading = false
         })
     },
@@ -245,6 +266,17 @@ export default {
       }
       return `Start at ${start} minutes past the hour`
     },
+    delayStartMsg (start) {
+      if (start === 0) {
+        return 'Do not run at statup'
+      }else{
+        if (start === 1) {
+          return `Run at 1 minute after startup`
+        }else{
+          return `Run at ${start} minutes after startup`
+        }
+      }
+    },
     async saveSettings () {
       this.isLoading = true
       await ky.post('/api/options/task-schedule', {
@@ -255,18 +287,21 @@ export default {
           rescrapeMinuteStart: this.rescrapeMinuteStart,
           rescrapeHourStart: this.rescrapeTimeRange[0],
           rescrapeHourEnd: this.rescrapeTimeRange[1],
+          rescrapeStartDelay: this.rescrapeStartDelay,
           rescanEnabled: this.rescanEnabled,
           rescanHourInterval: this.rescanHourInterval,
           rescanUseRange: this.useRescanTimeRange,
           rescanMinuteStart: this.rescanMinuteStart,
           rescanHourStart: this.rescanTimeRange[0],
           rescanHourEnd: this.rescanTimeRange[1],
+          rescanStartDelay: this.rescanStartDelay,
           previewEnabled: this.previewEnabled,
           previewHourInterval: this.previewHourInterval,
           previewUseRange: this.usePreviewTimeRange,
           previewMinuteStart: this.previewMinuteStart,
           previewHourStart: this.previewTimeRange[0],
-          previewHourEnd: this.previewTimeRange[1]
+          previewHourEnd: this.previewTimeRange[1],
+          previewStartDelay:this.previewStartDelay
         }
       })
         .json()
