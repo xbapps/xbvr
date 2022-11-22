@@ -109,5 +109,6 @@ func RemoveLock(lock string) {
 
 func init() {
 	common.InitPaths()
+	common.InitLogging()
 	parseDBConnString()
 }
