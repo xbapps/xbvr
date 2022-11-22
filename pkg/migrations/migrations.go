@@ -452,6 +452,40 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0042-file-oshash",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					OsHash string `json:"oshash"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
+		{
+			ID: "0043-actor-akas",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.
+					AutoMigrate(&models.Aka{}).Error
+			},
+		},
+		{
+			ID: "0043-ActorsAvailCount",
+			Migrate: func(tx *gorm.DB) error {
+				// auto migrate actor table to add avail_count column
+				return tx.AutoMigrate(&models.Actor{}).Error
+			},
+		},
+		{
+			ID: "0044-Trailers-scenes",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					TrailerType   string `json:"trailer_type" xbvrbackup:"trailer_type"`
+					TrailerSource string `gorm:"size:1000" json:"trailer_source" xbvrbackup:"trailer_source"`
+					Trailerlist   bool   `json:"trailerlist" gorm:"default:false" xbvrbackup:"trailerlist"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
@@ -947,41 +981,11 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0042-file-oshash",
+			ID: "0045-TrailerRules",
 			Migrate: func(tx *gorm.DB) error {
-				type File struct {
-					OsHash string `json:"oshash"`
-				}
-				return tx.AutoMigrate(File{}).Error
-			},
-		},
-		{
-			ID: "0043-actor-akas",
-			Migrate: func(tx *gorm.DB) error {
-				return tx.
-					AutoMigrate(&models.Aka{}).Error
-			},
-		},
-		{
-			ID: "0043-ActorsAvailCount",
-			Migrate: func(tx *gorm.DB) error {
-				// auto migrate actor table to add avail_count column
-				return tx.AutoMigrate(&models.Actor{}).Error
-			},
-		},
-		{
-			ID: "0044-TrailerRules",
-			Migrate: func(tx *gorm.DB) error {
-				err := tx.AutoMigrate(&models.Scene{}).Error
-				if err != nil {
-					return err
-				}
 				var scenes []models.Scene
-				//err = tx.Where("site = ?", "VirtualTaboo").Find(&scenes).Error
-				//err = tx.Where("scene_id = ?", "allvrporn-1117628").Find(&scenes).Error
 
-				//err = tx.Debug().Where("scene_url like ?", `%exlik%`).Find(&scenes).Error
-				err = tx.Find(&scenes).Error
+				err := tx.Find(&scenes).Error
 				if err != nil {
 					return err
 				}
@@ -990,15 +994,18 @@ func Migrate() {
 					var re = regexp.MustCompile(`(?m).*.(\.com|\.net)\/`)
 					baseUrl := re.FindAllString(scene.SceneURL, -1)
 
-					if len(baseUrl) > 0 {
-						if baseUrl[0] == `https://www.sexlikereal.com/` {
-							scene.TrailerType = "slr"
-							scene.TrailerSource = `https://api.sexlikereal.com/virtualreality/video/id/` + id
-						}
-						if baseUrl[0] == `https://vrporn.com/` {
-							scene.TrailerType = "scrape_html"
-							scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"dl8-video source","extract_regex":"","content_base_url":"","record_path":"","content_path":"src","encoding_path":"","quality_path":"quality"}`
-						}
+					if len(baseUrl) == 0 {
+						continue
+					}
+					if baseUrl[0] == `https://www.sexlikereal.com/` {
+						scene.TrailerType = "slr"
+						scene.TrailerSource = `https://api.sexlikereal.com/virtualreality/video/id/` + id
+						continue
+					}
+					if baseUrl[0] == `https://vrporn.com/` {
+						scene.TrailerType = "scrape_html"
+						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"dl8-video source","extract_regex":"","content_base_url":"","record_path":"","content_path":"src","encoding_path":"","quality_path":"quality"}`
+						continue
 					}
 
 					switch scene.Site {
@@ -1020,7 +1027,9 @@ func Migrate() {
 					switch scene.Site {
 					case "VRBangers", "VRBTrans", "VRBGay":
 						base := strings.Split(scene.SceneURL, "/")
-						scene.TrailerSource = `{"scene_url":"https://content.` + base[2] + `/api/content/v1/videos/` + base[4] + `","html_element":"","extract_regex":"","content_base_url":"","record_path":"data.item.videoPlayerSources.trailer","content_path":"src","encoding_path":"","quality_path":"quality"}`
+						if len(base) >= 5 {
+							scene.TrailerSource = `{"scene_url":"https://content.` + base[2] + `/api/content/v1/videos/` + base[4] + `","html_element":"","extract_regex":"","content_base_url":"","record_path":"data.item.videoPlayerSources.trailer","content_path":"src","encoding_path":"","quality_path":"quality"}`
+						}
 					case "RealJam VR", "SexBabesVR":
 						scene.TrailerSource = baseUrl[0] + "deovr/video/id/" + id
 					case "ZexyVR", "WankitNowVR":
@@ -1046,22 +1055,30 @@ func Migrate() {
 					case "Czech VR", "Czech VR Casting", "Czech VR Fetish", "VR Intimacy":
 						var re = regexp.MustCompile(`detail-(\d*)`)
 						internalId := re.FindStringSubmatch(scene.SceneURL)
-						scene.TrailerSource = baseUrl[0] + "heresphere/videoID" + internalId[1]
+						if internalId != nil {
+							scene.TrailerSource = baseUrl[0] + "heresphere/videoID" + internalId[1]
+						}
 					case "MilfVR":
 						scene.TrailerSource = "https://www.wankzvr.com/heresphere/" + id
 					case "VirtualRealPassion", "VirtualRealPorn", "VirtualRealTrans", "VirtualRealGay", "VirtualRealAmateurPorn":
 						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"script[type=\"application/ld+json\"]","content_path":"trailer.contentUrl","quality_path":"trailer.videoQuality","content_base_url":"` + baseUrl[0] + `"}`
 					case "NaughtyAmerica VR":
 						base := strings.Split(scene.CoverURL, "/")
-						scene.TrailerSource = `https://videos.naughtycdn.com/` + base[7] + `/trailers/vr/` + base[7] + base[8] + `/` + base[7] + base[8] + `teaser_vrdesktophd.mp4`
+						if len(base) >= 9 {
+							scene.TrailerSource = `https://videos.naughtycdn.com/` + base[7] + `/trailers/vr/` + base[7] + base[8] + `/` + base[7] + base[8] + `teaser_vrdesktophd.mp4`
+						}
 					case "LethalHardcoreVR":
 						base := strings.Split(scene.CoverURL, "/")
-						base = strings.Split(base[4], "_")
-						scene.TrailerSource = `https://internal-video.adultempire.com/downloadopen/LethalVR_trailer_` + base[0] + `.mp4`
+						if len(base) >= 5 {
+							base = strings.Split(base[4], "_")
+							scene.TrailerSource = `https://internal-video.adultempire.com/downloadopen/LethalVR_trailer_` + base[0] + `.mp4`
+						}
 					case "WhorecraftVR":
 						base := strings.Split(scene.CoverURL, "/")
-						base = strings.Split(base[4], "_")
-						scene.TrailerSource = `https://internal-video.adultempire.com/downloadopen/Whorecraft_trailer_` + base[0] + `.mp4`
+						if len(base) >= 5 {
+							base = strings.Split(base[4], "_")
+							scene.TrailerSource = `https://internal-video.adultempire.com/downloadopen/Whorecraft_trailer_` + base[0] + `.mp4`
+						}
 					case "CaribbeanCom VR":
 						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"script","extract_regex":"Movie = (.+?})","content_base_url":"","record_path":"","content_path":"sample_flash_url","encoding_path":"","quality_path":""}`
 					case "RealityLovers":
