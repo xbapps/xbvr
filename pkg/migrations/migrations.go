@@ -1031,7 +1031,7 @@ func Migrate() {
 				return nil
 			},
 		},
-		{			
+		{
 			ID: "00046-fix-orphaned-cuepoints",
 			Migrate: func(tx *gorm.DB) error {
 				return db.Where("scene_id is null").Delete(&models.SceneCuepoint{}).Error
