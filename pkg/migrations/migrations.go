@@ -981,7 +981,64 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0045-TrailerRules",
+			ID: "0043-actor-akas",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.
+					AutoMigrate(&models.Aka{}).Error
+			},
+		},
+		{
+			ID: "0044-ActorsAvailCount",
+			Migrate: func(tx *gorm.DB) error {
+				// auto migrate actor table to add avail_count column
+				return tx.AutoMigrate(&models.Actor{}).Error
+			},
+		},
+		{
+			// R18 is being permanently shut down no later than January 31, 2023 - changes images to FANZA URLs
+			ID: "0045-change-R18-to-FANZA",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				err := tx.Where("images LIKE ?", "%{\"url\":\"https://pics.r18.com%").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+
+				for _, scene := range scenes {
+					changed := false
+					// change all image URLs
+					if strings.Contains(scene.Images, "pics.r18.com") {
+						scene.Images = strings.ReplaceAll(scene.Images, "pics.r18.com", "pics.dmm.co.jp")
+						changed = true
+					}
+					// change cover image URL
+					if strings.Contains(scene.CoverURL, "pics.r18.com") {
+						scene.CoverURL = strings.ReplaceAll(scene.CoverURL, "pics.r18.com", "pics.dmm.co.jp")
+						changed = true
+					}
+					// change scene URL
+					if strings.Contains(scene.SceneURL, "https://www.r18.com/videos/vod/movies/detail/-/") {
+						scene.SceneURL = strings.ReplaceAll(scene.SceneURL, "https://www.r18.com/videos/vod/movies/detail/-/", "https://www.dmm.co.jp/digital/videoa/-/detail/=/c")
+						changed = true
+					}
+					if changed {
+						err = tx.Save(&scene).Error
+						if err != nil {
+							return err
+						}
+					}
+				}
+				return nil
+			},
+		},
+		{			
+			ID: "00046-fix-orphaned-cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				return db.Where("scene_id is null").Delete(&models.SceneCuepoint{}).Error
+			},
+		},
+		{
+			ID: "0047-TrailerRules",
 			Migrate: func(tx *gorm.DB) error {
 				var scenes []models.Scene
 

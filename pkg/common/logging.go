@@ -46,7 +46,7 @@ func (hook *WampHook) Fire(entry *logrus.Entry) error {
 	return nil
 }
 
-func init() {
+func InitLogging() {
 	//	Log.Out = os.Stdout
 	Log.SetLevel(logrus.InfoLevel)
 	if EnvConfig.Debug {
@@ -57,8 +57,8 @@ func init() {
 		ForceColors: true,
 	}
 
-	ucd, err := os.UserConfigDir()
-	lfile, err := os.OpenFile(ucd+"/xbvr/xbvr.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	//	create / open log file in AppDir folder
+	lfile, err := os.OpenFile(AppDir+"/xbvr.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err == nil {
 		//		defer lfile.Close()
 		mw := io.MultiWriter(lfile, os.Stdout)
