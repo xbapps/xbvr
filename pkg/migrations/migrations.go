@@ -1043,12 +1043,10 @@ func Migrate() {
 					if baseUrl[0] == `https://www.sexlikereal.com/` {
 						scene.TrailerType = "slr"
 						scene.TrailerSource = `https://api.sexlikereal.com/virtualreality/video/id/` + id
-						continue
 					}
 					if baseUrl[0] == `https://vrporn.com/` {
 						scene.TrailerType = "scrape_html"
 						scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"dl8-video source","extract_regex":"","content_base_url":"","record_path":"","content_path":"src","encoding_path":"","quality_path":"quality"}`
-						continue
 					}
 
 					switch scene.Site {

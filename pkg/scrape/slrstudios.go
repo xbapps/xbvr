@@ -99,8 +99,8 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// jsonStr, _ := json.Marshal(jsonRequest)
 		// sc.TrailerSrc = string(jsonStr)
 
-		// sc.TrailerType = "slr"
-		// sc.TrailerSrc = "https://api.sexlikereal.com/virtualreality/video/id/" + sc.SiteID
+		sc.TrailerType = "slr"
+		sc.TrailerSrc = "https://api.sexlikereal.com/virtualreality/video/id/" + sc.SiteID
 
 		// Extract from JSON meta data
 		// NOTE: SLR only provides certain information like duration as json metadata inside a script element
