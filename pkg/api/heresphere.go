@@ -812,6 +812,7 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 		if err := json.Unmarshal([]byte(savedPlaylists[i].SearchParams), &r); err == nil {
 			r.IsAccessible = optional.NewBool(true)
 			r.IsAvailable = optional.NewBool(true)
+			r.Limit = optional.NewInt(20000)
 
 			q := models.QueryScenes(r, false)
 
