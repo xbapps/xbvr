@@ -981,20 +981,6 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0043-actor-akas",
-			Migrate: func(tx *gorm.DB) error {
-				return tx.
-					AutoMigrate(&models.Aka{}).Error
-			},
-		},
-		{
-			ID: "0044-ActorsAvailCount",
-			Migrate: func(tx *gorm.DB) error {
-				// auto migrate actor table to add avail_count column
-				return tx.AutoMigrate(&models.Actor{}).Error
-			},
-		},
-		{
 			// R18 is being permanently shut down no later than January 31, 2023 - changes images to FANZA URLs
 			ID: "0045-change-R18-to-FANZA",
 			Migrate: func(tx *gorm.DB) error {
