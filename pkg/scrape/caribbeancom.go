@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"sync"
@@ -67,6 +68,12 @@ func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			}
 			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
 		})
+
+		// setup  trailers
+		sc.TrailerType = "scrape_json"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "script", ExtractRegex: `Movie = (.+?})`, ContentPath: "sample_flash_url"}
+		tmp, _ := json.Marshal(params)
+		sc.TrailerSrc = string(tmp)
 
 		// Cast & Tags
 		e.ForEach(`div.movie-info a.spec__tag`, func(id int, e *colly.HTMLElement) {

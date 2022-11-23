@@ -346,6 +346,10 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 		scene.Watchlist = !scene.Watchlist
 	}
 
+	if r.List == "trailerlist" {
+		scene.Trailerlist = !scene.Trailerlist
+	}
+
 	if r.List == "favourite" {
 		scene.Favourite = !scene.Favourite
 	}

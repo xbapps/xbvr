@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -88,6 +89,12 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 				sc.Tags = append(sc.Tags, tag)
 			}
 		})
+
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "deo-video source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		// Cast
 		e.ForEach(`div.scene-details p.model-name a`, func(id int, e *colly.HTMLElement) {

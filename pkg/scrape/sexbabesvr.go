@@ -66,6 +66,10 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 
+		// trailer details
+		sc.TrailerType = "deovr"
+		sc.TrailerSrc = "http://sexbabesvr.com/deovr/video/id/" + sc.SiteID
+
 		// Cast
 		e.ForEach(`div.video-actress-name a`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))

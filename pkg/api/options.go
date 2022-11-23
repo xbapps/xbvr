@@ -40,14 +40,15 @@ type VersionCheckResponse struct {
 }
 
 type RequestSaveOptionsWeb struct {
-	TagSort        string `json:"tagSort"`
-	SceneWatchlist bool   `json:"sceneWatchlist"`
-	SceneFavourite bool   `json:"sceneFavourite"`
-	SceneWatched   bool   `json:"sceneWatched"`
-	SceneEdit      bool   `json:"sceneEdit"`
-	SceneCuepoint  bool   `json:"sceneCuepoint"`
-	ShowHspFile    bool   `json:"showHspFile"`
-	UpdateCheck    bool   `json:"updateCheck"`
+	TagSort          string `json:"tagSort"`
+	SceneWatchlist   bool   `json:"sceneWatchlist"`
+	SceneFavourite   bool   `json:"sceneFavourite"`
+	SceneWatched     bool   `json:"sceneWatched"`
+	SceneEdit        bool   `json:"sceneEdit"`
+	SceneCuepoint    bool   `json:"sceneCuepoint"`
+	ShowHspFile      bool   `json:"showHspFile"`
+	SceneTrailerlist bool   `json:"sceneTrailerlist"`
+	UpdateCheck      bool   `json:"updateCheck"`
 }
 
 type RequestSaveOptionsDLNA struct {
@@ -283,6 +284,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneEdit = r.SceneEdit
 	config.Config.Web.SceneCuepoint = r.SceneCuepoint
 	config.Config.Web.ShowHspFile = r.ShowHspFile
+	config.Config.Web.SceneTrailerlist = r.SceneTrailerlist
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 

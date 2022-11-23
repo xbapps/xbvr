@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -60,6 +61,12 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 				sc.Tags = append(sc.Tags, strings.ToLower(tag))
 			}
 		})
+
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "deo-video source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		// Synposis
 		e.ForEach(`div.content-desc`, func(id int, e *colly.HTMLElement) {

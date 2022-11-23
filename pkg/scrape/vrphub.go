@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"errors"
 	"net/url"
 	"path"
@@ -70,6 +71,12 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			tmpDate, _ := goment.New(e.Text, "MMMM D, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
 		})
+
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "dl8-video source", ContentPath: "src", QualityPath: "quality"}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		// Cast
 		e.ForEach(`div.td-post-header header.td-post-title span.td-post-date2 a.ftlink`, func(id int, e *colly.HTMLElement) {

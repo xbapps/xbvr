@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"sync"
@@ -123,6 +124,12 @@ func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 				sc.Tags = append(sc.Tags, e.Text)
 			}
 		})
+
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "dl8-video source", ContentPath: "src", QualityPath: "quality"}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		// Cast
 		e.ForEach(`p.grey-performers a`, func(id int, e *colly.HTMLElement) {

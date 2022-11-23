@@ -64,6 +64,10 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		// Tags
 		// NOTE: StasyQVR doesn't provide tags
 
+		// trailer details
+		sc.TrailerType = "deovr"
+		sc.TrailerSrc = `http://stasyqvr.com/deovr_feed/json/id/` + sc.SiteID
+
 		// Cast
 		e.ForEach(`div.video-info div.model-one a h2`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))

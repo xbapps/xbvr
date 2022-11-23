@@ -10,6 +10,7 @@
       @keydown.f="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'favourite'})"
       @keydown.exact.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
       @keydown.shift.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
+      @keydown.t="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'trailerlist'})"
       @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
       @keydown.g="toggleGallery"
     />
@@ -84,7 +85,8 @@
                   </div>
                   <div class="column pt-0">
                     <div class="is-pulled-right">
-                      <watchlist-button :item="item"/>&nbsp;
+                      <watchlist-button :item="item"/>&nbsp;                      
+                      <trailerlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
                       <watched-button :item="item"/>&nbsp;
                       <edit-button :item="item"/>&nbsp;
@@ -270,10 +272,12 @@ import WatchlistButton from '../../components/WatchlistButton'
 import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import RefreshButton from '../../components/RefreshButton'
+import TrailerlistButton from '../../components/TrailerlistButton'
+
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton },
   data () {
     return {
       index: 1,

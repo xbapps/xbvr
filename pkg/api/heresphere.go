@@ -276,12 +276,10 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	if len(videoFiles) == 0 {
-		// this may happen if the file is removed from the file system, noy via xbvr
-		// so no videos exist but the scene status is still available
-		log.Errorf("No videofiles for %s %s", scene.ID, scene.SceneID)
-		return
+		ProcessHeresphereUpdates(&scene, requestData, models.File{})
+	} else {
+		ProcessHeresphereUpdates(&scene, requestData, videoFiles[0])
 	}
-	ProcessHeresphereUpdates(&scene, requestData, videoFiles[0])
 
 	features := make(map[string]bool, 30)
 	addFeatureTag := func(feature string) {
@@ -327,6 +325,45 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 		media = append(media, mediafile)
 		videoLength = file.VideoDuration
+	}
+
+	if len(videoFiles) == 0 && config.Config.Web.SceneTrailerlist {
+		switch scene.TrailerType {
+		case "heresphere":
+			heresphereScene := LoadHeresphereScene(scene.TrailerSource)
+			media = append(media, heresphereScene.Media...)
+		case "slr", "deovr":
+			deovrScene := LoadDeovrScene(scene.TrailerSource)
+			var hsp HeresphereMedia
+			for _, encoding := range deovrScene.Encodings {
+				if len(encoding.VideoSources) > 0 {
+					hsp.Name = encoding.Name
+					for _, source := range encoding.VideoSources {
+						hspSource := HeresphereSource{
+							URL:        source.URL,
+							Width:      source.Width,
+							Height:     source.Height,
+							Resolution: source.Resolution,
+							Size:       source.Size}
+						hsp.Sources = append(hsp.Sources, hspSource)
+					}
+					media = append(media, hsp)
+				}
+			}
+
+		case "url":
+			sources := LoadUrl(scene.TrailerSource)
+			media = copyVideoSourceResponse(sources, media)
+		case "scrape_html":
+			sources := ScrapeHtml(scene.TrailerSource)
+			media = copyVideoSourceResponse(sources, media)
+		case "scrape_json":
+			sources := ScrapeJson(scene.TrailerSource)
+			media = copyVideoSourceResponse(sources, media)
+		case "load_json":
+			sources := LoadJson(scene.TrailerSource)
+			media = copyVideoSourceResponse(sources, media)
+		}
 	}
 
 	if len(videoFiles) > 1 {
@@ -438,6 +475,9 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	var fov = 180.0
 	var lens = "Linear"
 
+	if len(videoFiles) == 0 {
+		videoFiles = append(videoFiles, models.File{})
+	}
 	switch videoFiles[0].VideoProjection {
 	case "flat":
 		addFeatureTag("Flat video")
@@ -509,6 +549,9 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	if scene.Watchlist {
 		addFeatureTag("Watchlist")
 	}
+	if scene.Trailerlist {
+		addFeatureTag("Trailer List")
+	}
 
 	if scene.ReleaseDate.Year() > 1900 {
 		addFeatureTag("Month: " + scene.ReleaseDate.Format("2006-01"))
@@ -541,14 +584,30 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		Media:                media,
 		WriteFavorite:        config.Config.Interfaces.Heresphere.AllowFavoriteUpdates,
 		WriteRating:          config.Config.Interfaces.Heresphere.AllowRatingUpdates,
-		WriteTags:            config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates || config.Config.Interfaces.Heresphere.AllowWatchlistUpdates,
+		WriteTags:            config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates || config.Config.Interfaces.Heresphere.AllowWatchlistUpdates || config.Config.Web.SceneTrailerlist,
 		WriteHSP:             config.Config.Interfaces.Heresphere.AllowHspData,
 	}
 
 	if scene.HasVideoPreview {
 		video.ThumbnailVideo = fmt.Sprintf("http://%v/api/dms/preview/%v", req.Request.Host, scene.SceneID)
 	}
+
 	resp.WriteHeaderAndEntity(http.StatusOK, video)
+}
+
+func copyVideoSourceResponse(sources VideoSourceResponse, media []HeresphereMedia) []HeresphereMedia {
+	if len(sources.VideoSources) > 0 {
+		for _, source := range sources.VideoSources {
+			var hsp HeresphereMedia
+			hsp.Name = source.Quality
+			hspSource := HeresphereSource{
+				URL: source.URL,
+			}
+			hsp.Sources = append(hsp.Sources, hspSource)
+			media = append(media, hsp)
+		}
+	}
+	return media
 }
 
 var lockHeresphereUpdates sync.Mutex
@@ -567,7 +626,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		scene.Save()
 	}
 
-	if requestData.Tags != nil && (config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates || config.Config.Interfaces.Heresphere.AllowWatchlistUpdates) {
+	if requestData.Tags != nil && (config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates || config.Config.Interfaces.Heresphere.AllowWatchlistUpdates || config.Config.Web.SceneTrailerlist) {
 		// need lock, heresphere can send a second post too soon
 		lockHeresphereUpdates.Lock()
 		defer lockHeresphereUpdates.Unlock()
@@ -590,7 +649,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		scene.Save()
 	}
 
-	if requestData.Tags != nil && config.Config.Interfaces.Heresphere.AllowWatchlistUpdates {
+	if requestData.Tags != nil && (config.Config.Interfaces.Heresphere.AllowWatchlistUpdates || config.Config.Web.SceneTrailerlist) {
 		// need to reread the tags, to handle muti threading issues and the scene record may have changed
 		// just preload the tags, preload all associations and the scene, does not reread the tags?, so just get them and update the scene
 		var tmp models.Scene
@@ -598,13 +657,21 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		scene.Tags = tmp.Tags
 
 		watchlist := false
+		trailerlist := false
 		for _, tag := range *requestData.Tags {
 			if strings.HasPrefix(strings.ToLower(tag.Name), "feature:watchlist") {
 				watchlist = true
 			}
+			if strings.HasPrefix(strings.ToLower(tag.Name), "feature:trailer list") {
+				trailerlist = true
+			}
 		}
-		if scene.Watchlist != watchlist {
+		if scene.Watchlist != watchlist && config.Config.Interfaces.Heresphere.AllowWatchlistUpdates {
 			scene.Watchlist = watchlist
+			scene.Save()
+		}
+		if scene.Trailerlist != trailerlist && config.Config.Web.SceneTrailerlist {
+			scene.Trailerlist = trailerlist
 			scene.Save()
 		}
 	}
@@ -660,7 +727,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 	if requestData.Hsp != nil && config.Config.Interfaces.Heresphere.AllowHspData {
 		hspContent, err := base64.StdEncoding.DecodeString(*requestData.Hsp)
 		if err != nil {
-			log.Warnf("Error decoding heresphere hsp data %v", err)
+			log.Error("Error decoding heresphere hsp data %v", err)
 		}
 
 		fName := filepath.Join(scene.Files[0].Path, strings.TrimSuffix(scene.Files[0].Filename, filepath.Ext(videoFile.Filename))+".hsp")
@@ -784,6 +851,33 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 		})
 
 	}
+
+	if config.Config.Web.SceneTrailerlist {
+		var trailerlist []models.Scene
+		db.Preload("Tags").Where("is_available = false and trailer_source != '' and (trailerlist )").Order("updated_at desc").Find(&trailerlist)
+		if len(trailerlist) > 0 {
+			var list []string
+			for i := range trailerlist {
+				downloadTag := false
+				for _, tag := range trailerlist[i].Tags {
+					if tag.Name == "download" {
+						downloadTag = true
+					}
+				}
+				if !downloadTag {
+					url := fmt.Sprintf("http://%v/heresphere/%v", req.Request.Host, trailerlist[i].ID)
+					list = append(list, url)
+				}
+			}
+
+			sceneLists = append(sceneLists, HeresphereListScenes{
+				Name: "Trailers",
+				List: list,
+			})
+
+		}
+	}
+
 	resp.WriteHeaderAndEntity(http.StatusOK, HeresphereLibrary{
 		Access:  1,
 		Library: sceneLists,

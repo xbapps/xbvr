@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
@@ -64,6 +65,12 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 			tag := strings.TrimSpace(e.Text)
 			sc.Tags = append(sc.Tags, tag)
 		})
+
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "script", ExtractRegex: `trailerUrl = "(.+?)";`}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		// Synopsis
 		e.ForEach(`p[itemprop="description"]`, func(id int, e *colly.HTMLElement) {

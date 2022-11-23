@@ -86,6 +86,10 @@ func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 			}
 		})
 
+		// trailer details
+		sc.TrailerType = "deovr"
+		sc.TrailerSrc = strings.Replace(URL, `/videos/`, ``, 1) + `/deovr/video/` + sc.SiteID
+
 		// Cast & Tags
 		// Note: Cast/Tags links are currently all inside the same div element...
 		e.ForEach(`div.container.pt-5 p.text-muted > a`, func(id int, e *colly.HTMLElement) {

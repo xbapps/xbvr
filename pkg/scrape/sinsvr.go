@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
@@ -52,6 +53,12 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 				sc.Gallery = append(sc.Gallery, e.Attr(`href`))
 			}
 		})
+
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "dl8-video source", ContentPath: "src", QualityPath: "quality"}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		//Cast and Released
 		e.ForEach(`.video-detail__specs div.cell`, func(id int, e *colly.HTMLElement) {

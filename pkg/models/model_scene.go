@@ -92,8 +92,11 @@ type Scene struct {
 	HasVideoPreview bool `json:"has_preview" gorm:"default:false" xbvrbackup:"-"`
 	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
 
-	NeedsUpdate  bool `json:"needs_update" xbvrbackup:"-"`
-	EditsApplied bool `json:"edits_applied" gorm:"default:false" xbvrbackup:"-"`
+	NeedsUpdate   bool   `json:"needs_update" xbvrbackup:"-"`
+	EditsApplied  bool   `json:"edits_applied" gorm:"default:false" xbvrbackup:"-"`
+	TrailerType   string `json:"trailer_type" xbvrbackup:"trailer_type"`
+	TrailerSource string `gorm:"size:1000" json:"trailer_source" xbvrbackup:"trailer_source"`
+	Trailerlist   bool   `json:"trailerlist" gorm:"default:false" xbvrbackup:"trailerlist"`
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
@@ -390,6 +393,10 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		o.CoverURL = ext.Covers[0]
 	}
 	o.SceneURL = ext.HomepageURL
+
+	// Trailers
+	o.TrailerType = ext.TrailerType
+	o.TrailerSource = ext.TrailerSrc
 
 	if ext.Released != "" {
 		dateParsed, err := dateparse.ParseLocal(strings.Replace(ext.Released, ",", "", -1))

@@ -91,6 +91,17 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// Duration
 		sc.Duration = e.Request.Ctx.GetAny("duration").(int)
 
+		// // trailer details
+		// sc.TrailerType = "scrape_json"
+		// jsonRequest := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "script[type=\"text/javascript\"]", ExtractRegex: "videoData:\\s*(.*}),",
+		// 	RecordPath: "src", ContentPath: "url", EncodingPath: "encoding", QualityPath: "quality", ContentBaseUrl: ""}
+		// log.Infof("%v", jsonRequest)
+		// jsonStr, _ := json.Marshal(jsonRequest)
+		// sc.TrailerSrc = string(jsonStr)
+
+		// sc.TrailerType = "slr"
+		// sc.TrailerSrc = "https://api.sexlikereal.com/virtualreality/video/id/" + sc.SiteID
+
 		// Extract from JSON meta data
 		// NOTE: SLR only provides certain information like duration as json metadata inside a script element
 		// The page code also changes often and is difficult to traverse, best to get as much as possible from metadata

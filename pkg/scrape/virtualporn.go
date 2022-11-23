@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"sync"
@@ -47,6 +48,12 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		e.ForEach(`div.player__thumbs img`, func(id int, e *colly.HTMLElement) {
 			sc.Gallery = append(sc.Gallery, e.Attr("src"))
 		})
+
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "dl8-video source", ContentPath: "src", QualityPath: "quality"}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		// Cast
 		e.ForEach(`div.player__stats p.player__stats__cast a`, func(id int, e *colly.HTMLElement) {

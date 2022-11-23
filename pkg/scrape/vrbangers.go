@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"sync"
@@ -114,6 +115,12 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		if scraperID == "vrbgay" {
 			sc.Tags = append(sc.Tags, "Gay")
 		}
+
+		// setup  trailers
+		sc.TrailerType = "load_json"
+		params := models.TrailerScrape{SceneUrl: "https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id, RecordPath: "data.item.videoPlayerSources.trailer", ContentPath: "src", QualityPath: "quality"}
+		strParma, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParma)
 
 		// Cast
 		e.ForEach(`div.video-item__info-starring div.ellipsis a`, func(id int, e *colly.HTMLElement) {
