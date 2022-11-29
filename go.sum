@@ -546,6 +546,8 @@ github.com/robertkrimen/otto v0.0.0-20221011175642-09fc211e5ab1 h1:SQiIjmrbwsmws
 github.com/robertkrimen/otto v0.0.0-20221011175642-09fc211e5ab1/go.mod h1:DKHCllR988yoiVXPZrLqCjwAKhryyDPNmb9cBVtG/aQ=
 github.com/robertkrimen/otto v0.0.0-20221025135307-511d75fba9f8 h1:qD3uiYZ9HFRMIkjcmA5MnB3QxDQmf/r8TfoOx8BMtQ4=
 github.com/robertkrimen/otto v0.0.0-20221025135307-511d75fba9f8/go.mod h1:nuq0maJQz2rTj3sA9EtJleKkkP0QIihFANdtAgTvmyc=
+github.com/robertkrimen/otto v0.0.0-20221129000910-8d121dcad17a h1:yK08tMm9D2AICbhNKuruco+hZ0obqK6fmIvqm419TWE=
+github.com/robertkrimen/otto v0.0.0-20221129000910-8d121dcad17a/go.mod h1:jsj99765dAh0q5pifRPqoqaJ2t+GIxl+foFmuqsfat8=
 github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=

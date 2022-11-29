@@ -46,7 +46,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/posthog/posthog-go v0.0.0-20221122145026-61d15c329e94
 	github.com/putdotio/go-putio v1.7.0
-	github.com/robertkrimen/otto v0.0.0-20221025135307-511d75fba9f8
+	github.com/robertkrimen/otto v0.0.0-20221129000910-8d121dcad17a
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/cors v1.8.2
 	github.com/sirupsen/logrus v1.9.0
