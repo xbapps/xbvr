@@ -538,14 +538,26 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	}
 
 	for _, i := range r.Lists {
-		if i.OrElse("") == "watchlist" {
-			tx = tx.Where("watchlist = ?", true)
-		}
-		if i.OrElse("") == "favourite" {
-			tx = tx.Where("favourite = ?", true)
-		}
-		if i.OrElse("") == "scripted" {
-			tx = tx.Where("is_scripted = ?", true)
+		truefalse := true
+		fieldName := i.OrElse("")
+
+		if fieldName != "" {
+			if strings.HasPrefix(fieldName, "!") { // ! prefix indicate NOT filtering
+				truefalse = false
+				fieldName = fieldName[1:]
+			}
+			switch fieldName {
+			case "star_rating":
+				if truefalse {
+					tx = tx.Where("star_rating > ?", 0)
+				} else {
+					tx = tx.Where("star_rating = ?", 0)
+				}
+			case "scripted":
+				tx = tx.Where("is_scripted = ?", truefalse)
+			default:
+				tx = tx.Where(fieldName+" = ?", truefalse)
+			}
 		}
 	}
 

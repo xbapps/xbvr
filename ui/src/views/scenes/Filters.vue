@@ -8,22 +8,54 @@
 
     <div class="columns is-multiline is-gapless">
       <div class="column is-half">
-        <b-checkbox-button v-model="lists" native-value="watchlist" type="is-primary">
+        <b-button expanded
+          :type="watchlistState==false ? 'is-danger': (watchlistState ? 'is-success' : '')"
+          @click.native.prevent="toggleProperty($event, 'watchlist', watchlistState)">
+          <b-icon pack="mdi" v-if="watchlistState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+          <b-icon pack="mdi" v-if="watchlistState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
           <b-icon pack="mdi" icon="calendar-check"/>
           <span>{{ $t('Watchlist') }}</span>
-        </b-checkbox-button>
+        </b-button>
       </div>
       <div class="column is-half">
-        <b-checkbox-button v-model="lists" native-value="favourite" type="is-danger">
+        <b-button expanded
+          :type="favouriteState==false ? 'is-danger': (favouriteState ? 'is-success' : '')"
+          @click.native.prevent="toggleProperty($event, 'favourite', favouriteState)">
+          <b-icon pack="mdi" v-if="favouriteState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+          <b-icon pack="mdi" v-if="favouriteState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
           <b-icon pack="mdi" icon="heart"/>
           <span>{{ $t('Favourite') }}</span>
-        </b-checkbox-button>
+        </b-button>
       </div>
       <div class="column is-half">
-        <b-checkbox-button v-model="lists" native-value="scripted" type="is-info">
+        <b-button expanded
+          :type="scriptedState==false ? 'is-danger': (scriptedState ? 'is-success' : '')"
+          @click.native.prevent="toggleProperty($event, 'scripted', scriptedState)">
+          <b-icon pack="mdi" v-if="scriptedState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+          <b-icon pack="mdi" v-if="scriptedState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
           <b-icon pack="mdi" icon="pulse"/>
           <span>{{ $t('Scripted') }}</span>
-        </b-checkbox-button>
+        </b-button>
+      </div>
+      <div class="column is-half" v-if="this.$store.state.optionsWeb.web.sceneTrailerlist">
+        <b-button expanded
+          :type="trailerlistState==false ? 'is-danger': (trailerlistState ? 'is-success' : '')"
+          @click.native.prevent="toggleProperty($event, 'trailerlist', trailerlistState)">
+          <b-icon pack="mdi" v-if="trailerlistState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+          <b-icon pack="mdi" v-if="trailerlistState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+          <b-icon pack="mdi" icon="movie-search-outline"/>
+          <span>{{ $t('Trailer List') }}</span>
+        </b-button>
+      </div>
+      <div class="column is-half">
+        <b-button expanded
+          :type="ratingState==false ? 'is-danger': (ratingState ? 'is-success' : '')"
+          @click.native.prevent="toggleProperty($event, 'star_rating', ratingState)">
+          <b-icon pack="mdi" v-if="ratingState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+          <b-icon pack="mdi" v-if="ratingState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+          <b-icon pack="mdi" icon="star"/>
+          <span>{{ $t('Rating') }}</span>
+        </b-button>
       </div>
     </div>
 
@@ -217,10 +249,76 @@ export default {
     return {
       filteredCast: [],
       filteredSites: [],
-      filteredTags: []
+      filteredTags: [],
+      watchlistState: undefined,
+      favouriteState: undefined,
+      scriptedState: undefined,
+      trailerlistState: undefined,
+      ratingState: undefined
     }
   },
+  watch: {    
+    lists(newList, oldList) {      
+      this.watchlistState= undefined
+      this.favouriteState= undefined
+      this.scriptedState= undefined
+      this.trailerlistState= undefined
+      this.ratingState= undefined 
+      newList.forEach((element) => { 
+        let truefalse = true
+        let field=element
+        if (element.startsWith("!")) {
+          truefalse=false
+          field=element.replace("!","")
+        }
+        switch (field) {
+          case "watchlist":      
+            this.watchlistState=truefalse
+            break
+          case "favourite":      
+            this.favouriteState=truefalse
+            break
+          case "scripted":      
+            this.scriptedState=truefalse
+            break
+          case "trailerlist":      
+            this.trailerlistState=truefalse
+            break
+          case "star_rating":      
+            this.ratingState=truefalse
+            break
+        }
+      })
+    }
+  },  
   methods: {
+    toggleProperty(e, propertyName, propertyValue) {      
+      let tmpList=this.lists
+      // find and replace the property in tmpList
+      let found = tmpList.findIndex((element) => element.endsWith(propertyName))
+      // toggle undefined->true->false->undefined
+      if (propertyValue==true) {
+        if (found>=0) {
+          tmpList.splice(found,1,'!'+propertyName)
+        } else {
+          tmpList.push('!'+propertyName)
+        }
+        propertyValue = false
+      } else if (propertyValue === undefined) {
+        if (found>=0) {
+          tmpList.splice(found,1,propertyName)
+        } else {
+          tmpList.push(propertyName)
+        }
+        propertyValue = true
+      } else {
+        if (found>=0) {
+          tmpList.splice(found,1)
+        } 
+        propertyValue = undefined
+      }      
+      this.lists=tmpList        
+},
     reloadList () {
       this.$router.push({
         name: 'scenes',
@@ -422,8 +520,7 @@ export default {
       },
       set (value) {
         this.$store.state.sceneList.filters.tags = value
-        this.reloadList()
-        console.log('reloaded',value)
+        this.reloadList()        
       }
     },
     cuepoint: {
