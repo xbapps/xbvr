@@ -16,7 +16,7 @@
               {{ format(parseISO(props.row.created_time), "yyyy-MM-dd hh:mm:ss") }}
             </b-table-column>
             <b-table-column field="size" :label="$t('Size')" style="white-space: nowrap;" sortable v-slot="props">
-              {{ prettyBytes(props.row.size) }}
+              {{ filesize(props.row.size, {base: 2}) }}
             </b-table-column>
             <b-table-column field="video_width" :label="$t('Width')" sortable v-slot="props">
               <span v-if="props.row.video_width !== 0">{{ props.row.video_width }}</span>
@@ -28,7 +28,7 @@
             </b-table-column>
             <b-table-column field="video_bitrate" :label="$t('Bitrate')" style="white-space: nowrap;" sortable
                             v-slot="props">
-              <span v-if="props.row.video_bitrate !== 0">{{ prettyBytes(props.row.video_bitrate) }}</span>
+              <span v-if="props.row.video_bitrate !== 0">{{ prettyBytes(props.row.video_bitrate, {bits: true}) }}</span>
               <span v-else>-</span>
             </b-table-column>
             <b-table-column field="duration" :label="$t('Duration')" style="white-space: nowrap;" sortable
@@ -77,6 +77,7 @@
 </template>
 
 <script>
+import { filesize } from 'filesize'
 import prettyBytes from 'pretty-bytes'
 import { format, parseISO } from 'date-fns'
 import ky from 'ky'
@@ -86,6 +87,7 @@ export default {
   data () {
     return {
       files: [],
+      filesize,
       prettyBytes,
       format,
       parseISO,
