@@ -486,6 +486,16 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0048-Add-Index-To-Cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type SceneCuepoint struct {
+					SceneID uint `gorm:"index" json:"-" xbvrbackup:"-"`
+				}
+				return tx.AutoMigrate(SceneCuepoint{}).Error
+
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
