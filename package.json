@@ -18,6 +18,7 @@
     "buefy": "0.9.22",
     "bulma-extensions": "6.2.7",
     "date-fns": "2.29.3",
+    "filesize": "10.0.5"
     "ky": "0.30.0",
     "pretty-bytes": "6.0.0",
     "videojs-hotkeys": "0.2.28",
