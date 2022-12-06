@@ -101,6 +101,8 @@
               <b-taglist>
                 <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])'
                    class="tag is-warning is-small">{{ c.name }} ({{ c.avail_count }}/{{ c.count }})</a>
+                <a @click='showSiteScenes([item.site])'
+                   class="tag is-primary is-small">{{ item.site }}</a>
                 <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])'
                    class="tag is-info is-small">{{ tag.name }} ({{ tag.count }})</a>
               </b-taglist>
@@ -439,6 +441,16 @@ export default {
       this.$store.state.sceneList.filters.cast = []
       this.$store.state.sceneList.filters.sites = []
       this.$store.state.sceneList.filters.tags = tag
+      this.$router.push({
+        name: 'scenes',
+        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
+      })
+      this.close()
+    },
+    showSiteScenes (site) {
+      this.$store.state.sceneList.filters.cast = []
+      this.$store.state.sceneList.filters.sites = site
+      this.$store.state.sceneList.filters.tags = []
       this.$router.push({
         name: 'scenes',
         query: { q: this.$store.getters['sceneList/filterQueryParams'] }
