@@ -44,6 +44,16 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			})
 		})
 
+		file5kExists := false
+		for _, filename := range sc.Filenames {
+			if strings.Contains(filename, "5k") {
+				file5kExists = true
+			}
+		}
+		if !file5kExists {
+			sc.Filenames = append(sc.Filenames, strings.Replace(sc.SceneID, "bvr-", "bvr", -1)+"-5k.mp4")
+		}
+
 		// Gallery
 		e.ForEach(`div.player__thumbs img`, func(id int, e *colly.HTMLElement) {
 			sc.Gallery = append(sc.Gallery, e.Attr("src"))
