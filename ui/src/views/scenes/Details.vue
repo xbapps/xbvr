@@ -13,6 +13,7 @@
       @keydown.t="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'trailerlist'})"
       @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
       @keydown.g="toggleGallery"
+      @keydown.48="setRating(0)"
     />
 
     <div class="modal-background"></div>
@@ -80,8 +81,13 @@
                 </small>
                 <div class="columns mt-0">
                   <div class="column pt-0">
-                    <star-rating :key="item.id" :rating="item.star_rating" @rating-selected="setRating"
-                                 :increment="0.5" :star-size="20"/>
+                    <b-field>
+                      <star-rating :key="item.id" v-model="item.star_rating" :rating="item.star_rating" @rating-selected="setRating"
+                                   :increment="0.5" :star-size="20"/>
+                      <b-tooltip :label="$t('Reset Rating')" position="is-right" :delay="250">
+                        <b-icon pack="mdi" icon="autorenew" size="is-small" @click.native="setRating(0)" style="padding-left: 1em;padding-top: .5em;"/>
+                      </b-tooltip>
+                    </b-field>
                   </div>
                   <div class="column pt-0">
                     <div class="is-pulled-right">
@@ -588,6 +594,7 @@ export default {
 
       const updatedScene = Object.assign({}, this.item)
       updatedScene.star_rating = val
+      this.item.star_rating = val
       this.$store.commit('sceneList/updateScene', updatedScene)
     },
     nextScene () {
