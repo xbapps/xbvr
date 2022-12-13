@@ -28,6 +28,7 @@ var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
 func RescanVolumes(id int) {
 	if !models.CheckLock("rescan") {
 		models.CreateLock("rescan")
+		defer models.RemoveLock("scrape")
 
 		tlog := log.WithFields(logrus.Fields{"task": "rescan"})
 		tlog.Infof("Start scanning volumes")
@@ -129,8 +130,6 @@ func RescanVolumes(id int) {
 		r = models.RequestSceneList{IsWatched: optional.NewBool(false), IsAvailable: optional.NewBool(true)}
 		common.AddMetricPoint("scenes_downloaded_unwatched", float64(models.QueryScenes(r, false).Results))
 	}
-
-	models.RemoveLock("rescan")
 }
 
 func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
