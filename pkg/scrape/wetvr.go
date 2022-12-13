@@ -31,6 +31,7 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		sc.Studio = "WetVR"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.MembersUrl = strings.Replace(sc.HomepageURL, "https://wetvr.com/", "https://members.wetvr.com/", 1)
 
 		// Scene ID - get from previous page
 		sc.SiteID = e.Request.Ctx.GetAny("scene-id").(string)
