@@ -69,6 +69,10 @@ type ObjectConfig struct {
 			AllowWatchlistUpdates bool `default:"false" json:"allow_watchlist_updates"`
 			MultitrackCuepoints   bool `default:"true" json:"multitrack_cuepoints"`
 		} `json:"heresphere"`
+		Players struct {
+			VideoSortSeq  string `default:"" json:"video_sort_seq"`
+			ScriptSortSeq string `default:"" json:"script_sort_seq"`
+		} `json:"players"`
 	} `json:"interfaces"`
 	Library struct {
 		Preview struct {

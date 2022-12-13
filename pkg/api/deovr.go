@@ -320,7 +320,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	var sources []DeoSceneEncoding
 	var sourcesSpatial []DeoSceneEncoding
 	var videoFiles []models.File
-	videoFiles, err = scene.GetVideoFiles()
+	videoFiles, err = scene.GetVideoFilesSorted(config.Config.Interfaces.Players.VideoSortSeq)
 	if err != nil {
 		log.Error(err)
 		return
@@ -359,7 +359,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 
 	var deoScriptFiles []DeoSceneScriptFile
 	var scriptFiles []models.File
-	scriptFiles, err = scene.GetScriptFiles()
+	scriptFiles, err = scene.GetScriptFilesSorted(config.Config.Interfaces.Players.ScriptSortSeq)
 	if err != nil {
 		log.Error(err)
 		return
