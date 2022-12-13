@@ -36,6 +36,7 @@ type ObjectConfig struct {
 		SceneCuepoint    bool   `default:"true" json:"sceneCuepoint"`
 		ShowHspFile      bool   `default:"true" json:"showHspFile"`
 		SceneTrailerlist bool   `default:"true" json:"sceneTrailerlist"`
+		HiddenScenes     bool   `default:"false" json:"hiddenScenes"`
 		UpdateCheck      bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
 	Vendor struct {

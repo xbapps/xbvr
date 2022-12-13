@@ -7,7 +7,17 @@
     <div class="is-divider" data-content="Properties"></div>
 
     <div class="columns is-multiline is-gapless">
-      <div class="column is-half">
+      <div class="column is-half" v-if="this.$store.state.optionsWeb.web.hiddenScenes">      
+        <b-button expanded
+          :type="visibleState==false ? 'is-danger': (visibleState ? 'is-success' : '')"
+          @click.native.prevent="toggleProperty($event, 'visibleOnly', visibleState)">
+          <b-icon pack="mdi" v-if="visibleState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+          <b-icon pack="mdi" v-if="visibleState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+          <b-icon pack="mdi" :icon="visibleState==false ? 'eye-off-outline' : 'eye-outline'" />
+          <span>{{ $t( visibleState==undefined ? 'Show All' : (visibleState==false ? 'Hidden Only' : 'Visible Only')) }}</span>
+        </b-button>
+      </div>
+      <div class="column is-half" v-if="this.$store.state.optionsWeb.web.sceneTrailerlist">
         <b-button expanded
           :type="watchlistState==false ? 'is-danger': (watchlistState ? 'is-success' : '')"
           @click.native.prevent="toggleProperty($event, 'watchlist', watchlistState)">
@@ -250,6 +260,7 @@ export default {
       filteredCast: [],
       filteredSites: [],
       filteredTags: [],
+      visibleState: true,
       watchlistState: undefined,
       favouriteState: undefined,
       scriptedState: undefined,
@@ -259,6 +270,7 @@ export default {
   },
   watch: {    
     lists(newList, oldList) {      
+      this.visibleState= undefined
       this.watchlistState= undefined
       this.favouriteState= undefined
       this.scriptedState= undefined
@@ -272,6 +284,9 @@ export default {
           field=element.replace("!","")
         }
         switch (field) {
+          case "visibleOnly":
+            this.visibleState=truefalse
+            break
           case "watchlist":      
             this.watchlistState=truefalse
             break

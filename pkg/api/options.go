@@ -9,11 +9,13 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
 	"github.com/jinzhu/gorm"
+	"github.com/markphelps/optional"
 	"github.com/mcuadros/go-version"
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio"
@@ -48,6 +50,7 @@ type RequestSaveOptionsWeb struct {
 	SceneCuepoint    bool   `json:"sceneCuepoint"`
 	ShowHspFile      bool   `json:"showHspFile"`
 	SceneTrailerlist bool   `json:"sceneTrailerlist"`
+	HiddenScenes     bool   `json:"hiddenScenes"`
 	UpdateCheck      bool   `json:"updateCheck"`
 }
 
@@ -285,6 +288,30 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneCuepoint = r.SceneCuepoint
 	config.Config.Web.ShowHspFile = r.ShowHspFile
 	config.Config.Web.SceneTrailerlist = r.SceneTrailerlist
+	if config.Config.Web.HiddenScenes != r.HiddenScenes {
+		// update playlist if Hidden Scenes is toggled
+		// this simplifies queries if it is turned off
+		db, _ := models.GetDB()
+		defer db.Close()
+		var playlists []models.Playlist
+		db.Find(&playlists)
+		for _, playlist := range playlists {
+			var jsonResult models.RequestSceneList
+			if !strings.Contains(playlist.SearchParams, "!visibleOnly") {
+				// remove old visbileOnly option
+				playlist.SearchParams = strings.ReplaceAll(strings.ReplaceAll(playlist.SearchParams, "\"visibleOnly\",", ""), "\"visibleOnly\"", "")
+				json.Unmarshal([]byte(playlist.SearchParams), &jsonResult)
+				if r.HiddenScenes {
+					// add hiddenOnly option
+					jsonResult.Lists = append(jsonResult.Lists, optional.NewString("visibleOnly"))
+				}
+				b, _ := json.Marshal(jsonResult)
+				playlist.SearchParams = string(b)
+				playlist.Save()
+			}
+		}
+	}
+	config.Config.Web.HiddenScenes = r.HiddenScenes
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 

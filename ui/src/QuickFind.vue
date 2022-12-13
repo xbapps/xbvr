@@ -28,7 +28,8 @@
               </vue-load-image>
             </div>
             <div class="media-content">
-              {{ props.option.site}}<br/>
+              {{ props.option.site}} 
+              <b-icon v-if="props.option.is_hidden" pack="mdi" icon="eye-off-outline" size="is-small"/><br/>
               <div class="truncate"><strong>{{ props.option.title }}</strong></div>
               <div style="margin-top:0.5em">
                 <small>

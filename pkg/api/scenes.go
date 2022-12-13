@@ -362,6 +362,9 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 		scene.IsWatched = !scene.IsWatched
 	}
 
+	if r.List == "is_hidden" {
+		scene.IsHidden = !scene.IsHidden
+	}
 	scene.Save()
 }
 
