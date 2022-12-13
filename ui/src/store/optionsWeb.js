@@ -11,6 +11,7 @@ const state = {
     sceneCuepoint: true,
     showHspFile: true,
     sceneTrailerlist: true,
+    hiddenScenes: false,
     updateCheck: true
   }
 }
@@ -31,7 +32,8 @@ const actions = {
         state.web.sceneCuepoint = data.config.web.sceneCuepoint
         state.web.showHspFile = data.config.web.showHspFile
         state.web.sceneTrailerlist = data.config.web.sceneTrailerlist
-        state.web.updateCheck = data.config.web.updateCheck
+        state.web.hiddenScenes=data.config.web.hiddenScenes
+        state.web.updateCheck = data.config.web.updateCheck        
         state.loading = false
       })
   },
@@ -48,6 +50,7 @@ const actions = {
         state.web.sceneCuepoint = data.sceneCuepoint
         state.web.showHspFile = data.showHspFile
         state.web.sceneTrailerlist = data.sceneTrailerlist
+        state.web.hiddenScenes=data.hiddenScenes
         state.web.updateCheck = data.updateCheck
         state.loading = false
       })

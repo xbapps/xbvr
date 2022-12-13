@@ -20,6 +20,7 @@ type ObjectState struct {
 		SceneCuepoint    bool   `json:"sceneCuepoint"`
 		ShowHspFile      bool   `json:"showHspFile"`
 		SceneTrailerlist bool   `json:"sceneTrailerlist"`
+		HiddenScenes     bool   `json:"hiddenScenes"`
 		UpdateCheck      bool   `json:"updateCheck"`
 	} `json:"web"`
 	DLNA struct {

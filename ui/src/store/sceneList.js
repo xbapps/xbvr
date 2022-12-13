@@ -12,7 +12,7 @@ const defaultFilterState = {
   dlState: 'available',
   cardSize: '1',
 
-  lists: [],
+  lists: ['visibleOnly'],
   isAvailable: true,
   isAccessible: true,
   isWatched: null,
@@ -97,6 +97,9 @@ const mutations = {
         }
         if (payload.list === 'needs_update') {
           obj.needs_update = !obj.needs_update
+        }
+        if (payload.list === 'is_hidden') {
+          obj.is_hidden = !obj.is_hidden
         }
       }
       return obj

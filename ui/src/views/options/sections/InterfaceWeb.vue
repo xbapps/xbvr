@@ -56,6 +56,15 @@
               </b-switch>
             </b-field>
 
+            <b-tooltip label="Enables Hidden Scenes. This will allow you to flag scenes to not be displayed in the filtered scene list, Saved Searches or Players"
+              size="is-large" type="is-primary is-light" multilined :delay="1000" >
+              <b-field label="Hidden Scenes">
+                <b-switch v-model="hiddenScenes">
+                  Enabled
+                </b-switch>
+              </b-field>
+            </b-tooltip>
+
             <b-field label="Automatically Check for Updates">
               <b-switch v-model="updateCheck">
                 Enabled
@@ -130,6 +139,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.sceneEdit = value
+      }
+    },
+    hiddenScenes: {
+      get () {
+        return this.$store.state.optionsWeb.web.hiddenScenes
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.hiddenScenes = value
       }
     },
     updateCheck: {

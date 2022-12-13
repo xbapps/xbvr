@@ -412,6 +412,10 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		addFeatureTag("Has cuepoints")
 	}
 
+	if scene.IsHidden {
+		addFeatureTag("Hidden")
+	}
+
 	tags = append(tags, HeresphereTag{
 		Name: "Studio:" + scene.Site,
 	})

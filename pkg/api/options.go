@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -48,6 +49,7 @@ type RequestSaveOptionsWeb struct {
 	SceneCuepoint    bool   `json:"sceneCuepoint"`
 	ShowHspFile      bool   `json:"showHspFile"`
 	SceneTrailerlist bool   `json:"sceneTrailerlist"`
+	HiddenScenes     bool   `json:"hiddenScenes"`
 	UpdateCheck      bool   `json:"updateCheck"`
 }
 
@@ -285,6 +287,32 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneCuepoint = r.SceneCuepoint
 	config.Config.Web.ShowHspFile = r.ShowHspFile
 	config.Config.Web.SceneTrailerlist = r.SceneTrailerlist
+	if config.Config.Web.HiddenScenes != r.HiddenScenes {
+		// update playlist if Hidden Scenes is toggled to set visibleOnly default correcetly
+		db, _ := models.GetDB()
+		defer db.Close()
+		var playlists []models.Playlist
+		db.Find(&playlists)
+		for _, playlist := range playlists {
+			// don't change !visibleOnly lists so they persist if hidden option reenabled
+			if !strings.Contains(playlist.SearchParams, "!visibleOnly") {
+				// remove existing visibleOnly list
+				playlist.SearchParams = strings.Replace(playlist.SearchParams, "\"visibleOnly\",", "", 1)
+				playlist.SearchParams = strings.Replace(playlist.SearchParams, ",\"visibleOnly\"", "", 1)
+				playlist.SearchParams = strings.Replace(playlist.SearchParams, "\"visibleOnly\"", "", 1)
+				if r.HiddenScenes {
+					// add hiddenOnly option
+					if strings.Contains(playlist.SearchParams, "lists\":[]") {
+						playlist.SearchParams = strings.Replace(playlist.SearchParams, "lists\":[]", "lists\":[\"visibleOnly\"]", 1)
+					} else {
+						playlist.SearchParams = strings.Replace(playlist.SearchParams, "lists\":[", "lists\":[\"visibleOnly\",", 1)
+					}
+				}
+				playlist.Save()
+			}
+		}
+	}
+	config.Config.Web.HiddenScenes = r.HiddenScenes
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 
