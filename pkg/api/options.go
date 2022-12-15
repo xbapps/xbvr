@@ -59,21 +59,22 @@ type RequestSaveOptionsDLNA struct {
 }
 
 type RequestSaveOptionsDeoVR struct {
-	Enabled               bool   `json:"enabled"`
-	AuthEnabled           bool   `json:"auth_enabled"`
-	Username              string `json:"username"`
-	Password              string `json:"password"`
-	RemoteEnabled         bool   `json:"remote_enabled"`
-	TrackWatchTime        bool   `json:"track_watch_time"`
-	RenderHeatmaps        bool   `json:"render_heatmaps"`
-	AllowFileDeletes      bool   `json:"allow_file_deletes"`
-	AllowRatingUpdates    bool   `json:"allow_rating_updates"`
-	AllowFavoriteUpdates  bool   `json:"allow_favorite_updates"`
-	AllowHspData          bool   `json:"allow_hsp_data"`
-	AllowTagUpdates       bool   `json:"allow_tag_updates"`
-	AllowCuepointUpdates  bool   `json:"allow_cuepoint_updates"`
-	AllowWatchlistUpdates bool   `json:"allow_watchlist_updates"`
-	MultitrackCuepoints   bool   `json:"multitrack_cuepoints"`
+	Enabled                 bool   `json:"enabled"`
+	AuthEnabled             bool   `json:"auth_enabled"`
+	Username                string `json:"username"`
+	Password                string `json:"password"`
+	RemoteEnabled           bool   `json:"remote_enabled"`
+	TrackWatchTime          bool   `json:"track_watch_time"`
+	RenderHeatmaps          bool   `json:"render_heatmaps"`
+	AllowFileDeletes        bool   `json:"allow_file_deletes"`
+	AllowRatingUpdates      bool   `json:"allow_rating_updates"`
+	AllowFavoriteUpdates    bool   `json:"allow_favorite_updates"`
+	AllowHspData            bool   `json:"allow_hsp_data"`
+	AllowTagUpdates         bool   `json:"allow_tag_updates"`
+	AllowCuepointUpdates    bool   `json:"allow_cuepoint_updates"`
+	AllowWatchlistUpdates   bool   `json:"allow_watchlist_updates"`
+	MultitrackCuepoints     bool   `json:"multitrack_cuepoints"`
+	MultitrackCastCuepoints bool   `json:"multitrack_cast_cuepoints"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -313,6 +314,7 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.Heresphere.AllowCuepointUpdates = r.AllowCuepointUpdates
 	config.Config.Interfaces.Heresphere.AllowWatchlistUpdates = r.AllowWatchlistUpdates
 	config.Config.Interfaces.Heresphere.MultitrackCuepoints = r.MultitrackCuepoints
+	config.Config.Interfaces.Heresphere.MultitrackCastCuepoints = r.MultitrackCastCuepoints
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)
