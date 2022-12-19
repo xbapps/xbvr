@@ -105,6 +105,13 @@ func LoadFunscriptData(path string) (Script, error) {
 
 	sort.SliceStable(funscript.Actions, func(i, j int) bool { return funscript.Actions[i].At < funscript.Actions[j].At })
 
+	// fix strokes with negative timestamps
+	i := 0
+	for funscript.Actions[i].At < 0 && i < len(funscript.Actions) {
+		funscript.Actions[i].At = 0
+		i += 1
+	}
+
 	return funscript, nil
 }
 
