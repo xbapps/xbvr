@@ -298,7 +298,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				log.Info(allFiles[i].GetPath())
 				db.Delete(&allFiles[i])
 				if allFiles[i].SceneID != 0 {
-		// var scene models.Scene (moved into loop. 12/2022)
+					// var scene models.Scene (moved into loop. 12/2022)
 					var scene models.Scene
 					scene.GetIfExistByPK(allFiles[i].SceneID)
 					scene.UpdateStatus()
@@ -357,7 +357,7 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			log.Info(allFiles[i].GetPath())
 			db.Delete(&allFiles[i])
 			if allFiles[i].SceneID != 0 {
-		// var scene models.Scene (moved into loop. 12/2022)
+				// var scene models.Scene (moved into loop. 12/2022)
 				var scene models.Scene
 				scene.GetIfExistByPK(allFiles[i].SceneID)
 				scene.UpdateStatus()
