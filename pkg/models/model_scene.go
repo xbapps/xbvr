@@ -100,6 +100,8 @@ type Scene struct {
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
+	// Multiple videos or multiple scripts are attached to the scene
+	Multifiles bool `json:"multifiles" gorm:"default:false" xbvrbackup:"multifiles"`
 }
 
 type Image struct {
@@ -345,6 +347,16 @@ func (o *Scene) UpdateStatus() {
 		changed = true
 	}
 
+	if (videos > 1 || scripts > 1) && !o.Multifiles {
+		o.Multifiles = true
+		changed = true
+	}
+
+	if (videos < 2 && scripts < 2) && o.Multifiles {
+		o.Multifiles = false
+		changed = true
+	}
+
 	totalWatchTime := o.GetTotalWatchTime()
 	if o.TotalWatchTime != totalWatchTime {
 		o.TotalWatchTime = totalWatchTime
@@ -546,6 +558,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		}
 		if i.OrElse("") == "scripted" {
 			tx = tx.Where("is_scripted = ?", true)
+		}
+		if i.OrElse("") == "multifiles" {
+			tx = tx.Where("multifiles = ?", true)
 		}
 	}
 

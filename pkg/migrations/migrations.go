@@ -486,6 +486,37 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0048-update-default-lists",
+			Migrate: func(tx *gorm.DB) error {
+				list := RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Lists:        []optional.String{optional.NewString("multifiles")},
+					Sort:         optional.NewString("release_date_desc"),
+				}
+				listDeoMulti := models.Playlist{
+					Name:         "Multifiles",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: true,
+					Ordering:     -46,
+					SearchParams: list.ToJSON(),
+				}
+				listDeoMulti.Save()
+
+				return nil
+			},
+		},
+		{
+			ID: "0049-multifiles",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					Multifiles bool `json:"multifiles" gorm:"false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below

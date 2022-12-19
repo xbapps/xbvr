@@ -98,6 +98,9 @@ const mutations = {
         if (payload.list === 'needs_update') {
           obj.needs_update = !obj.needs_update
         }
+        if (payload.list === "multifiles") {
+          obj.multifiles = !obj.multifiles;
+        }
       }
       return obj
     })

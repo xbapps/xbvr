@@ -25,6 +25,12 @@
           <span>{{ $t('Scripted') }}</span>
         </b-checkbox-button>
       </div>
+      <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="multifiles" type="is-danger">
+          <b-icon pack="mdi" icon="image-multiple" size="is-small"/>
+          <span>{{ $t("Multifiles") }}</span>
+        </b-checkbox-button>
+      </div>
     </div>
 
     <div class="is-divider" data-content="Sorting / Status / Release"></div>

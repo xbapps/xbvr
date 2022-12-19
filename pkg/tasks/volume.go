@@ -291,7 +291,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		vol.LastScan = time.Now()
 		vol.Save()
 
-		var scene models.Scene
+		// var scene models.Scene (moved into loop. 12/2022)
 		// Check if files are still present at the location
 		allFiles := vol.Files()
 		for i := range allFiles {
@@ -299,6 +299,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				log.Info(allFiles[i].GetPath())
 				db.Delete(&allFiles[i])
 				if allFiles[i].SceneID != 0 {
+					var scene models.Scene
 					scene.GetIfExistByPK(allFiles[i].SceneID)
 					scene.UpdateStatus()
 				}
