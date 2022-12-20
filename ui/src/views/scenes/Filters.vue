@@ -175,6 +175,24 @@
         </b-taginput>
       </b-field>
 
+      <b-field label="Features" label-position="on-border" class="field-extra">
+        <b-taginput v-model="features" autocomplete :data="filteredFeatures" @typing="getFilteredFeatures">
+          <template slot-scope="props">{{ props.option }}</template>
+          <template slot="empty">No matching features</template>
+          <template #selected="props">
+            <b-tag v-for="(tag, index) in props.tags"
+              :type="tag.charAt(0)=='!' ? 'is-danger': (tag.charAt(0)=='&' ? 'is-success' : '')"
+              :key="tag+index" :tabstop="false" closable  @close="features=features.filter(e => e !== tag)" @click="toggle3way(tag,index,'features')"> 
+              <b-tooltip position="is-right" :delay="200"
+                  :label="tag.charAt(0)=='!' ? 'Exclude ' + removeConditionPrefix(tag) : tag.charAt(0)=='&' ? 'Must Have ' + removeConditionPrefix(tag) : 'Include ' + removeConditionPrefix(tag)">
+                <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+                <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+                {{removeConditionPrefix(tag)}}
+              </b-tooltip>
+            </b-tag>
+          </template>
+        </b-taginput>
+      </b-field>
     </div>
     <div class="is-divider" data-content="Actor Also Known As groups"></div>
     <b-field>
@@ -217,7 +235,8 @@ export default {
     return {
       filteredCast: [],
       filteredSites: [],
-      filteredTags: []
+      filteredTags: [],
+      filteredFeatures: [],
     }
   },
   methods: {
@@ -243,6 +262,12 @@ export default {
     },
     getFilteredTags (text) {
       this.filteredTags = this.filters.tags.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.tags.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
+      ))
+    },
+    getFilteredFeatures (text) {
+      this.filteredFeatures = this.filters.features.filter(option => (
         option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
         !this.tags.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
       ))
@@ -318,6 +343,9 @@ export default {
         case 'cuepoints':
           tags=this.cuepoint
           break
+        case 'features':
+          tags=this.features
+          break
       }      
       switch(tags[idx].charAt(0)) {
         case '!':
@@ -338,6 +366,9 @@ export default {
           break
         case 'cuepoints':
           this.cuepoint=tags
+          break
+        case 'features':
+          this.features=tags
           break
       }
     },    
@@ -433,6 +464,15 @@ export default {
       set (value) {
         this.$store.state.sceneList.filters.cuepoint = value
         this.reloadList()
+      }
+    },
+    features: {
+      get () {
+        return this.$store.state.sceneList.filters.features
+      },
+      set (value) {
+        this.$store.state.sceneList.filters.features = value
+        this.reloadList()        
       }
     },
     sort: {

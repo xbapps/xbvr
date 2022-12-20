@@ -1135,6 +1135,19 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0049-Add features-to-playlist-searchparams",
+			Migrate: func(tx *gorm.DB) error {
+				var playlists []models.Playlist
+
+				db.Where("search_params not like '%\"features\":%'").Find(&playlists)
+				for _, playlist := range playlists {
+					playlist.SearchParams = strings.Replace(playlist.SearchParams, ",\"volume\":", ",\"features\":[],\"volume\":", 1)
+					playlist.Save()
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
