@@ -596,6 +596,18 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			} else {
 				where = "scenes.id not in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'video' group by " + fileAlias + ".scene_id having count(*) =1)"
 			}
+		case "Multiple Script Files":
+			if truefalse {
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'script' group by " + fileAlias + ".scene_id having count(*) >1)"
+			} else {
+				where = "scenes.id not in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'script' group by " + fileAlias + ".scene_id having count(*) >1)"
+			}
+		case "Single Script File":
+			if truefalse {
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'script' group by " + fileAlias + ".scene_id having count(*) =1)"
+			} else {
+				where = "scenes.id not in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'script' group by " + fileAlias + ".scene_id having count(*) =1)"
+			}
 		case "Has Hsp File":
 			if truefalse {
 				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'hsp' group by " + fileAlias + ".scene_id having count(*) >0)"

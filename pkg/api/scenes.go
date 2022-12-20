@@ -289,6 +289,8 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	var outFeatures []string
 	outFeatures = append(outFeatures, "Multiple Video Files")
 	outFeatures = append(outFeatures, "Single Video File")
+	outFeatures = append(outFeatures, "Multiple Script Files")
+	outFeatures = append(outFeatures, "Single Script File")
 	outFeatures = append(outFeatures, "Has Hsp File")
 	outFeatures = append(outFeatures, "Rating 0")
 	outFeatures = append(outFeatures, "Rating .5")
