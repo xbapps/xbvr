@@ -290,8 +290,8 @@ func ScrapeJAVR(queryString string) {
 		// Start scraping
 		var collectedScenes []models.ScrapedScene
 
-		tlog.Infof("Scraping R18")
-		scrape.ScrapeR18(knownScenes, &collectedScenes, queryString)
+		tlog.Infof("Scraping JavDB")
+		scrape.ScrapeJavDB(knownScenes, &collectedScenes, queryString)
 
 		if len(collectedScenes) > 0 {
 			db, _ := models.GetDB()
