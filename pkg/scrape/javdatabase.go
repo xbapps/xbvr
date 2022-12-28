@@ -14,20 +14,16 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
-		sc.Site = "JAVR"
-		sc.HomepageURL = e.Request.URL.String()
-
-		// Cover image
-		e.ForEach(`td.moviepostermobile img`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, e.Attr(`src`))
-		})
 
 		// Cast
-		e.ForEach(`div.idol-name`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, e.Text)
+		e.ForEach(`div.idol-name`, func(id int, elem *colly.HTMLElement) {
+			sc.Cast = append(sc.Cast, elem.Text)
 		})
 
 		// Tags
+		// Always add 'javr' as a tag
+		sc.Tags = append(sc.Tags, `javr`)
+
 		// Skipping some very generic and useless tags
 		skiptags := map[string]bool{
 			"featured actress": true,
@@ -36,46 +32,67 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 			"hi-def":           true,
 		}
 
-		e.ForEach(`div.movietable tr`, func(id int, e *colly.HTMLElement) {
-			label := e.ChildText(`td.tablelabel > h3 > b`)
+		e.ForEach(`div.movietable tr`, func(id int, tr *colly.HTMLElement) {
+			label := tr.ChildText(`td.tablelabel > h3 > b`)
 
-			// Studio
 			if label == `Studio:` {
-				sc.Studio = e.ChildText(`td.tablevalue > span`)
+				// Studio
+				sc.Studio = tr.ChildText(`td.tablevalue > span`)
 
-			// Title, SceneID and SiteID all like 'IPVR-016' format
 			} else if label == `DVD ID:` {
-				sc.Title = e.ChildText(`td.tablevalue`)
-				sc.SceneID = sc.Title
-				sc.SiteID = sc.Title
+				// Title, SceneID and SiteID all like 'VRKM-821' format
+				dvdId := tr.ChildText(`td.tablevalue`)
+				sc.Title = dvdId
+				sc.SceneID = dvdId
+				sc.SiteID = dvdId
 
-			// Release date
+				// Set 'Site' to first part of the ID (e.g. `VRKM for `vrkm-821`)
+				siteParts := strings.Split(dvdId, `-`)
+				if len(siteParts) > 0 {
+					sc.Site = strings.ToUpper(siteParts[0])
+				}
+
 			} else if label == `Release Date:` {
-				dateStr := e.ChildText(`td.tablevalue`)
+				// Release date
+				dateStr := tr.ChildText(`td.tablevalue`)
 				tmpDate, _ := goment.New(strings.TrimSpace(dateStr), "YYYY-MM-DD")
 				sc.Released = tmpDate.Format("YYYY-MM-DD")
 
-			// Tags
 			} else if label == `Genre(s):` {
-				e.ForEach(`td.tablevalue > span.tags`, func(id2 int, e2 *colly.HTMLElement) {
-					tag := strings.ToLower(e2.Text)
+				// Tags
+				/* NOTE:
+				   "Tags are technically incomplete vs. what you'd get translating dmm.co.jp
+				   tags/correlating them back to their old equivalents on r18 using something
+				   like Javinizer's tag CSV"
+				*/
+				tr.ForEach(`td.tablevalue > span.tags`, func(id2 int, span *colly.HTMLElement) {
+					tag := strings.ToLower(span.Text)
 
 					if !skiptags[tag] {
 						sc.Tags = append(sc.Tags, tag)
 					}
 				})
 
-			// Synopsis / description
 			} else if label == `Translated Title:` {
-				sc.Synopsis = e.ChildText(`td.tablevalue`)
+				// Synopsis / description
+				sc.Synopsis = tr.ChildText(`td.tablevalue`)
+
+			} else if label == `Content ID:` {
+				contentId := tr.ChildText(`td.tablevalue`)
+				sc.HomepageURL = `https://www.dmm.co.jp/digital/videoa/-/detail/=/cid=` + contentId + `/`
+				sc.Covers = append(sc.Covers, `https://pics.dmm.co.jp/digital/video/`+contentId+`/`+contentId+`pl.jpg`)
 			}
 		})
 
 		// Screenshots
-		e.ForEach(`img`, func(id int, e *colly.HTMLElement) {
-			alt := e.Attr(`alt`)
-			if strings.Contains(alt, "Screenshot") {
-				sc.Gallery = append(sc.Gallery, e.Attr(`src`))
+		e.ForEach("a", func(_ int, anchor *colly.HTMLElement) {
+			linkHref := anchor.Attr(`href`)
+			/* NOTE:
+			   it only pulls 6 gallery images, but that appears to be a limitation
+			   of how javdatabase.com is set up, they only pull 6 gallery images.
+			*/
+			if strings.HasPrefix(linkHref, "https://pics.dmm.co.jp/digital/video/") && strings.HasSuffix(linkHref, `.jpg`) {
+				sc.Gallery = append(sc.Gallery, linkHref)
 			}
 		})
 
