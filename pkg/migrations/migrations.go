@@ -1135,6 +1135,25 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0050-remove-VirtualRealPorn-from-title",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				err := tx.Where("title LIKE ?", "% | VirtualReal%").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+
+				for _, scene := range scenes {
+					scene.Title = strings.TrimSpace(strings.Split(scene.Title, "|")[0])
+					err = tx.Save(&scene).Error
+					if err != nil {
+						return err
+					}
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

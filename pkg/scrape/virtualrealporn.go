@@ -46,7 +46,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		// Title
 		e.ForEach(`title`, func(id int, e *colly.HTMLElement) {
-			sc.Title = e.Text
+			sc.Title = strings.TrimSpace(strings.Split(e.Text, "|")[0])
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, "▷ ", "", -1))
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, fmt.Sprintf(" - %v.com", sc.Site), "", -1))
 		})

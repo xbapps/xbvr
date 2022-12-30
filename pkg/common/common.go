@@ -18,7 +18,7 @@ type EnvConfigSpec struct {
 	DebugWS          bool   `envconfig:"DEBUG_WS" default:"false"`
 	UIUsername       string `envconfig:"UI_USERNAME" required:"false"`
 	UIPassword       string `envconfig:"UI_PASSWORD" required:"false"`
-	DisableAnalytics bool   `envconfig:"DISABLE_ANALYTICS" default:"false"`
+	DisableAnalytics bool   `envconfig:"DISABLE_ANALYTICS" default:"true"`
 	DatabaseURL      string `envconfig:"DATABASE_URL" required:"false" default:""`
 }
 
