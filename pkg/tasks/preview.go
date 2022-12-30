@@ -18,6 +18,7 @@ import (
 func GeneratePreviews(endTime *time.Time) {
 	if !models.CheckLock("previews") {
 		models.CreateLock("previews")
+		defer models.RemoveLock("scrape")
 		log.Infof("Generating previews")
 		db, _ := models.GetDB()
 		defer db.Close()
@@ -60,7 +61,6 @@ func GeneratePreviews(endTime *time.Time) {
 		}
 	}
 	log.Infof("Previews generated")
-	models.RemoveLock("previews")
 }
 
 func RenderPreview(inputFile string, destFile string, videoProjection string, startTime int, snippetLength float64, snippetAmount int, resolution int, extraSnippet bool) error {

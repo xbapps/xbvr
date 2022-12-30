@@ -49,6 +49,7 @@ type GradientTable []struct {
 func GenerateHeatmaps(tlog *logrus.Entry) {
 	if !models.CheckLock("heatmaps") {
 		models.CreateLock("heatmaps")
+		defer models.RemoveLock("scrape")
 
 		db, _ := models.GetDB()
 		defer db.Close()
@@ -79,8 +80,6 @@ func GenerateHeatmaps(tlog *logrus.Entry) {
 			}
 		}
 	}
-
-	models.RemoveLock("heatmaps")
 }
 
 func LoadFunscriptData(path string) (Script, error) {
