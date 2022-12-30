@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/gocolly/colly"
@@ -14,6 +15,7 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
+		contentId := ""
 
 		// Cast
 		e.ForEach(`div.idol-name`, func(id int, elem *colly.HTMLElement) {
@@ -26,10 +28,11 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 
 		// Skipping some very generic and useless tags
 		skiptags := map[string]bool{
-			"featured actress": true,
-			"vr exclusive":     true,
-			"high-quality vr":  true,
-			"hi-def":           true,
+			"featured actress":       true,
+			"vr exclusive":           true,
+			"high-quality vr":        true,
+			"hi-def":                 true,
+			"exclusive distribution": true,
 		}
 
 		e.ForEach(`div.movietable tr`, func(id int, tr *colly.HTMLElement) {
@@ -41,7 +44,7 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 
 			} else if label == `DVD ID:` {
 				// Title, SceneID and SiteID all like 'VRKM-821' format
-				dvdId := tr.ChildText(`td.tablevalue`)
+				dvdId := strings.ToUpper(tr.ChildText(`td.tablevalue`))
 				sc.Title = dvdId
 				sc.SceneID = dvdId
 				sc.SiteID = dvdId
@@ -49,7 +52,7 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 				// Set 'Site' to first part of the ID (e.g. `VRKM for `vrkm-821`)
 				siteParts := strings.Split(dvdId, `-`)
 				if len(siteParts) > 0 {
-					sc.Site = strings.ToUpper(siteParts[0])
+					sc.Site = siteParts[0]
 				}
 
 			} else if label == `Release Date:` {
@@ -78,7 +81,7 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 				sc.Synopsis = tr.ChildText(`td.tablevalue`)
 
 			} else if label == `Content ID:` {
-				contentId := tr.ChildText(`td.tablevalue`)
+				contentId = tr.ChildText(`td.tablevalue`)
 				sc.HomepageURL = `https://www.dmm.co.jp/digital/videoa/-/detail/=/cid=` + contentId + `/`
 				sc.Covers = append(sc.Covers, `https://pics.dmm.co.jp/digital/video/`+contentId+`/`+contentId+`pl.jpg`)
 			}
@@ -95,6 +98,21 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 				sc.Gallery = append(sc.Gallery, linkHref)
 			}
 		})
+
+		// Some specific postprocessing for error-correcting 3DSVR scenes
+		if len(contentId) > 0 && sc.Site == "DSVR" {
+			r := regexp.MustCompile("13dsvr0(\\d{4})")
+			match := r.FindStringSubmatch(contentId)
+			if match != nil && len(match) > 1 {
+				// Found a 3DSVR scene that is being wrongly categorized as DSVR
+				log.Println("Applying DSVR->3DSVR workaround")
+				sid := match[1]
+				sc.Site = "3DSVR"
+				sc.SceneID = "3DSVR-" + sid
+				sc.Title = sc.SceneID
+				sc.SiteID = sc.SceneID
+			}
+		}
 
 		*out = append(*out, sc)
 	})
