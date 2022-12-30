@@ -8,6 +8,7 @@
 
     <div class="columns is-multiline is-gapless">
       <div class="column is-half">
+        <b-field>
         <b-button expanded
           :type="watchlistState==false ? 'is-danger': (watchlistState ? 'is-success' : '')"
           @click.native.prevent="toggleProperty($event, 'watchlist', watchlistState)">
@@ -16,46 +17,70 @@
           <b-icon pack="mdi" icon="calendar-check"/>
           <span>{{ $t('Watchlist') }}</span>
         </b-button>
+        <button v-show="watchlistState!=undefined" type="submit" class="button is-light" @click="toggleProperty($event, 'watchlist', false)">
+          <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+        </button>
+        </b-field>
       </div>
       <div class="column is-half">
-        <b-button expanded
-          :type="favouriteState==false ? 'is-danger': (favouriteState ? 'is-success' : '')"
-          @click.native.prevent="toggleProperty($event, 'favourite', favouriteState)">
-          <b-icon pack="mdi" v-if="favouriteState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
-          <b-icon pack="mdi" v-if="favouriteState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
-          <b-icon pack="mdi" icon="heart"/>
-          <span>{{ $t('Favourite') }}</span>
-        </b-button>
+        <b-field>
+          <b-button expanded
+            :type="favouriteState==false ? 'is-danger': (favouriteState ? 'is-success' : '')"
+            @click.native.prevent="toggleProperty($event, 'favourite', favouriteState)">
+            <b-icon pack="mdi" v-if="favouriteState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+            <b-icon pack="mdi" v-if="favouriteState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+            <b-icon pack="mdi" icon="heart"/>
+            <span>{{ $t('Favourite') }}</span>
+          </b-button>
+          <button v-show="favouriteState!=undefined" type="submit" class="button is-light" @click="toggleProperty($event, 'favourite', false)">
+            <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+          </button>
+        </b-field>
       </div>
       <div class="column is-half">
-        <b-button expanded
-          :type="scriptedState==false ? 'is-danger': (scriptedState ? 'is-success' : '')"
-          @click.native.prevent="toggleProperty($event, 'scripted', scriptedState)">
-          <b-icon pack="mdi" v-if="scriptedState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
-          <b-icon pack="mdi" v-if="scriptedState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
-          <b-icon pack="mdi" icon="pulse"/>
-          <span>{{ $t('Scripted') }}</span>
-        </b-button>
+        <b-field>
+          <b-button expanded
+            :type="scriptedState==false ? 'is-danger': (scriptedState ? 'is-success' : '')"
+            @click.native.prevent="toggleProperty($event, 'scripted', scriptedState)">
+            <b-icon pack="mdi" v-if="scriptedState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+            <b-icon pack="mdi" v-if="scriptedState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+            <b-icon pack="mdi" icon="pulse"/>
+            <span>{{ $t('Scripted') }}</span>
+          </b-button>
+          <button v-show="scriptedState!=undefined" type="submit" class="button is-light" @click="toggleProperty($event, 'scripted', false)">
+            <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+          </button>
+        </b-field>
       </div>
       <div class="column is-half" v-if="this.$store.state.optionsWeb.web.sceneTrailerlist">
-        <b-button expanded
-          :type="trailerlistState==false ? 'is-danger': (trailerlistState ? 'is-success' : '')"
-          @click.native.prevent="toggleProperty($event, 'trailerlist', trailerlistState)">
-          <b-icon pack="mdi" v-if="trailerlistState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
-          <b-icon pack="mdi" v-if="trailerlistState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
-          <b-icon pack="mdi" icon="movie-search-outline"/>
-          <span>{{ $t('Trailer List') }}</span>
-        </b-button>
+        <b-field>
+          <b-button expanded
+            :type="trailerlistState==false ? 'is-danger': (trailerlistState ? 'is-success' : '')"
+            @click.native.prevent="toggleProperty($event, 'trailerlist', trailerlistState)">
+            <b-icon pack="mdi" v-if="trailerlistState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+            <b-icon pack="mdi" v-if="trailerlistState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+            <b-icon pack="mdi" icon="movie-search-outline"/>
+            <span>{{ $t('Trailer List') }}</span>
+          </b-button>
+          <button v-show="trailerlistState!=undefined" type="submit" class="button is-light" @click="toggleProperty($event, 'trailerlist', false)">
+            <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+          </button>
+        </b-field>
       </div>
       <div class="column is-half">
-        <b-button expanded
-          :type="ratingState==false ? 'is-danger': (ratingState ? 'is-success' : '')"
-          @click.native.prevent="toggleProperty($event, 'star_rating', ratingState)">
-          <b-icon pack="mdi" v-if="ratingState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
-          <b-icon pack="mdi" v-if="ratingState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
-          <b-icon pack="mdi" icon="star"/>
-          <span>{{ $t('Rating') }}</span>
-        </b-button>
+        <b-field>
+          <b-button expanded
+            :type="ratingState==false ? 'is-danger': (ratingState ? 'is-success' : '')"
+            @click.native.prevent="toggleProperty($event, 'star_rating', ratingState)">
+            <b-icon pack="mdi" v-if="ratingState==false" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+            <b-icon pack="mdi" v-if="ratingState==true" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+            <b-icon pack="mdi" icon="star"/>
+            <span>{{ $t('Rating') }}</span>
+          </b-button>
+          <button v-show="ratingState!=undefined" type="submit" class="button is-light" @click="toggleProperty($event, 'star_rating', false)">
+            <b-icon pack="fas" icon="times" size="is-small"></b-icon>
+          </button>
+        </b-field>
       </div>
     </div>
 
