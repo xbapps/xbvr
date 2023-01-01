@@ -28,7 +28,7 @@ var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
 func RescanVolumes(id int) {
 	if !models.CheckLock("rescan") {
 		models.CreateLock("rescan")
-		defer models.RemoveLock("scrape")
+		defer models.RemoveLock("rescan")
 
 		tlog := log.WithFields(logrus.Fields{"task": "rescan"})
 		tlog.Infof("Start scanning volumes")

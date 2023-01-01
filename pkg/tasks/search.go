@@ -88,7 +88,7 @@ func (i *Index) PutScene(scene models.Scene) error {
 func SearchIndex() {
 	if !models.CheckLock("index") {
 		models.CreateLock("index")
-		defer models.RemoveLock("scrape")
+		defer models.RemoveLock("index")
 
 		tlog := log.WithFields(logrus.Fields{"task": "scrape"})
 

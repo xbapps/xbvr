@@ -59,10 +59,7 @@ func StartServer(version, commit, branch, date string) {
 	analytics.Event("app-start", nil)
 
 	// Remove old locks
-	models.RemoveLock("index")
-	models.RemoveLock("scrape")
-	models.RemoveLock("update-scenes")
-	models.RemoveLock("previews")
+	models.RemoveAllLocks()
 
 	go tasks.CheckDependencies()
 	models.CheckVolumes()
