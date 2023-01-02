@@ -126,7 +126,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://vrporn.com/studio/" + scraperID)
+	siteCollector.Visit("https://vrporn.com/studio/" + scraperID + "/?sort=newest")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
