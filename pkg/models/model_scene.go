@@ -73,6 +73,7 @@ type Scene struct {
 	ReleaseDateText string    `json:"release_date_text" xbvrbackup:"release_date_text"`
 	CoverURL        string    `json:"cover_url" xbvrbackup:"cover_url"`
 	SceneURL        string    `json:"scene_url" xbvrbackup:"scene_url"`
+	MemberURL       string    `json:"members_url" xbvrbackup:"members_url"`
 	IsMultipart     bool      `json:"is_multipart" xbvrbackup:"is_multipart"`
 
 	StarRating     float64         `json:"star_rating" xbvrbackup:"star_rating"`
@@ -393,6 +394,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		o.CoverURL = ext.Covers[0]
 	}
 	o.SceneURL = ext.HomepageURL
+	o.MemberURL = ext.MembersUrl
 
 	// Trailers
 	o.TrailerType = ext.TrailerType

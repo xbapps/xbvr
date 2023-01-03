@@ -106,8 +106,15 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Synopsis = strings.TrimSpace(strings.Replace(e.ChildText(`div.video-item__description div.short-text`), `arrow_drop_up`, ``, -1))
 
 		// Tags
-		e.ForEach(`div.video-item__tags a`, func(id int, e *colly.HTMLElement) {
-			sc.Tags = append(sc.Tags, e.Text)
+		ignoreTags := []string{"180 vr", "6k vr porn", "8k vr porn", "4k vr porn"}
+		e.ForEach(`a.video-item__category`, func(id int, e *colly.HTMLElement) {
+			tag := strings.ToLower(strings.TrimSpace(e.Text))
+			for _, v := range ignoreTags {
+				if tag == v {
+					return
+				}
+			}
+			sc.Tags = append(sc.Tags, tag)
 		})
 		e.ForEach(`div.video-item__info span.video-item__position-title`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))

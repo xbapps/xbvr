@@ -493,7 +493,15 @@ func Migrate() {
 					SceneID uint `gorm:"index" json:"-" xbvrbackup:"-"`
 				}
 				return tx.AutoMigrate(SceneCuepoint{}).Error
-
+			},
+		},
+		{
+			ID: "0050-members-url",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					MemberURL string `json:"members_url" xbvrbackup:"members_url"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
 
@@ -1140,6 +1148,25 @@ func Migrate() {
 
 					if scene.TrailerType != "" {
 						tx.Save(&scene)
+					}
+				}
+				return nil
+			},
+		},
+		{
+			ID: "0050-remove-VirtualRealPorn-from-title",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				err := tx.Where("title LIKE ?", "% | VirtualReal%").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+
+				for _, scene := range scenes {
+					scene.Title = strings.TrimSpace(strings.Split(scene.Title, "|")[0])
+					err = tx.Save(&scene).Error
+					if err != nil {
+						return err
 					}
 				}
 				return nil

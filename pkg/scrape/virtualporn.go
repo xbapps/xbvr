@@ -27,6 +27,7 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.Studio = "BangBros"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.MembersUrl = "https://members.bangbros.com/product/655/movie/" + strings.Replace(strings.Split(e.Request.URL.String(), "/")[3], "video", "", 1)
 
 		// Title / Cover / ID / Filenames
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
@@ -43,6 +44,16 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				sc.Filenames = append(sc.Filenames, strings.Replace(tmpFile[len(tmpFile)-1], "trailer-", "", -1))
 			})
 		})
+
+		file5kExists := false
+		for _, filename := range sc.Filenames {
+			if strings.Contains(filename, "5k") {
+				file5kExists = true
+			}
+		}
+		if !file5kExists {
+			sc.Filenames = append(sc.Filenames, strings.Replace(sc.SceneID, "bvr-", "bvr", -1)+"-5k.mp4")
+		}
 
 		// Gallery
 		e.ForEach(`div.player__thumbs img`, func(id int, e *colly.HTMLElement) {
