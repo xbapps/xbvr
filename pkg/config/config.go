@@ -60,14 +60,15 @@ type ObjectConfig struct {
 			Password       string `default:"" json:"password"`
 		} `json:"deovr"`
 		Heresphere struct {
-			AllowFileDeletes      bool `default:"false" json:"allow_file_deletes"`
-			AllowRatingUpdates    bool `default:"false" json:"allow_rating_updates"`
-			AllowFavoriteUpdates  bool `default:"false" json:"allow_favorite_updates"`
-			AllowHspData          bool `default:"false" json:"allow_hsp_data"`
-			AllowTagUpdates       bool `default:"false" json:"allow_tag_updates"`
-			AllowCuepointUpdates  bool `default:"false" json:"allow_cuepoint_updates"`
-			AllowWatchlistUpdates bool `default:"false" json:"allow_watchlist_updates"`
-			MultitrackCuepoints   bool `default:"true" json:"multitrack_cuepoints"`
+			AllowFileDeletes        bool `default:"false" json:"allow_file_deletes"`
+			AllowRatingUpdates      bool `default:"false" json:"allow_rating_updates"`
+			AllowFavoriteUpdates    bool `default:"false" json:"allow_favorite_updates"`
+			AllowHspData            bool `default:"false" json:"allow_hsp_data"`
+			AllowTagUpdates         bool `default:"false" json:"allow_tag_updates"`
+			AllowCuepointUpdates    bool `default:"false" json:"allow_cuepoint_updates"`
+			AllowWatchlistUpdates   bool `default:"false" json:"allow_watchlist_updates"`
+			MultitrackCuepoints     bool `default:"true" json:"multitrack_cuepoints"`
+			MultitrackCastCuepoints bool `default:"true" json:"multitrack_cast_cuepoints"`
 		} `json:"heresphere"`
 	} `json:"interfaces"`
 	Library struct {
