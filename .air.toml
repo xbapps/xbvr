@@ -3,6 +3,6 @@ tmp_dir = 'dist'
 
 [build]
 cmd = 'go build -o dist/xbvr -tags="json1" main.go'
-full_bin = 'DISABLE_ANALYTICS=1 DEBUG=1 ./dist/xbvr'
+full_bin = 'DEBUG=1 ./dist/xbvr'
 include_ext = ['go']
 exclude_dir = ['node_modules', 'cache', 'dist', 'ui', 'tmp']

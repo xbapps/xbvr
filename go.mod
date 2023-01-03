@@ -23,7 +23,6 @@ require (
 	github.com/go-openapi/spec v0.20.7
 	github.com/go-test/deep v1.0.8
 	github.com/gocolly/colly v1.2.0
-	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gowww/log v1.0.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
@@ -44,7 +43,6 @@ require (
 	github.com/nleeper/goment v1.4.4
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/posthog/posthog-go v0.0.0-20221122145026-61d15c329e94
 	github.com/putdotio/go-putio v1.7.0
 	github.com/robertkrimen/otto v0.0.0-20221025135307-511d75fba9f8
 	github.com/robfig/cron/v3 v3.0.1
@@ -136,7 +134,6 @@ require (
 	github.com/ulikunitz/xz v0.5.6 // indirect
 	github.com/willf/bitset v1.1.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6 // indirect
 	golang.org/x/term v0.2.0 // indirect

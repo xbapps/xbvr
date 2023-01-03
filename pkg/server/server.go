@@ -20,7 +20,6 @@ import (
 	"github.com/koding/websocketproxy"
 	"github.com/peterbourgon/diskv"
 	"github.com/rs/cors"
-	"github.com/xbapps/xbvr/pkg/analytics"
 	"github.com/xbapps/xbvr/pkg/api"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -55,8 +54,6 @@ func StartServer(version, commit, branch, date string) {
 
 	// First setup
 	migrations.Migrate()
-	analytics.GenerateID()
-	analytics.Event("app-start", nil)
 
 	// Remove old locks
 	models.RemoveAllLocks()
