@@ -49,7 +49,7 @@ require (
 	github.com/rs/cors v1.8.3
 	github.com/sirupsen/logrus v1.9.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-	github.com/thoas/go-funk v0.9.2
+	github.com/thoas/go-funk v0.9.3
 	github.com/tidwall/gjson v1.14.4
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.13.0
