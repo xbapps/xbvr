@@ -495,6 +495,19 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0051-heresphere-cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type SceneCuepoint struct {
+					SceneID uint    `gorm:"index" json:"-" xbvrbackup:"-"`
+					TimeEnd float64 `json:"time_end" xbvrbackup:"time_end"`
+					Track   uint    `json:"track" xbvrbackup:"track"`
+					Rating  float64 `json:"rating" xbvrbackup:"rating"`
+				}
+
+				return tx.AutoMigrate(&SceneCuepoint{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below

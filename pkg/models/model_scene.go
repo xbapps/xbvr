@@ -23,9 +23,13 @@ type SceneCuepoint struct {
 	CreatedAt time.Time `json:"-" xbvrbackup:"-"`
 	UpdatedAt time.Time `json:"-" xbvrbackup:"-"`
 
-	SceneID   uint    `json:"-" xbvrbackup:"-"`
+	SceneID   uint    `gorm:"index" json:"-" xbvrbackup:"-"`
 	TimeStart float64 `json:"time_start" xbvrbackup:"time_start"`
+	TimeEnd   float64 `json:"time_end,omitempty" xbvrbackup:"time_end"`
+	Track     *uint   `json:"track,omitempty" xbvrbackup:"track"`
 	Name      string  `json:"name" xbvrbackup:"name"`
+	IsHSP     string  `gorm:"-" json:"is_hsp" xbvrbackup:"-"`
+	Rating    float64 `json:"rating" xbvrbackup:"rating"`
 }
 
 func (o *SceneCuepoint) Save() error {

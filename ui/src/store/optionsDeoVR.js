@@ -21,7 +21,8 @@ const state = {
     allow_watchlist_updates: false,
     allow_hsp_data: false,
     multitrack_cuepoints: true,
-    multitrack_cast_cuepoints: true
+    multitrack_cast_cuepoints: true,
+    retain_non_hsp_cuepoints: true
   }
 }
 
@@ -50,6 +51,7 @@ const actions = {
         state.heresphere.allow_hsp_data = data.config.interfaces.heresphere.allow_hsp_data
         state.heresphere.multitrack_cuepoints = data.config.interfaces.heresphere.multitrack_cuepoints
         state.heresphere.multitrack_cast_cuepoints = data.config.interfaces.heresphere.multitrack_cast_cuepoints
+        state.heresphere.retain_non_hsp_cuepoints = data.config.interfaces.heresphere.retain_non_hsp_cuepoints
         state.loading = false        
       })
   },

@@ -287,11 +287,18 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	var scene models.Scene
 	err := db.Preload("Cast").
 		Preload("Tags").
-		Preload("Cuepoints").
+		Preload("Cuepoints", "track is null").
 		Where("id = ?", sceneID).First(&scene).Error
 	if err != nil {
 		log.Error(err)
 		return
+	}
+	if len(scene.Cuepoints) == 0 {
+		db.Preload("Cast").
+			Preload("Tags").
+			Preload("Cuepoints", "track = 0").
+			Preload("Files").
+			Where("id = ?", sceneID).First(&scene)
 	}
 
 	var stereoMode string = ""

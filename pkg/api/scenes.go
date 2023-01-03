@@ -22,8 +22,11 @@ type RequestToggleList struct {
 }
 
 type RequestSceneCuepoint struct {
-	TimeStart float64 `json:"time_start"`
+	Track     *uint   `json:"track,omitempty"`
 	Name      string  `json:"name"`
+	TimeStart float64 `json:"time_start"`
+	TimeEnd   float64 `json:"time_end"`
+	Rating    float64 `json:"rating"`
 }
 
 type RequestSetSceneRating struct {
@@ -428,7 +431,10 @@ func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Resp
 		t := models.SceneCuepoint{
 			SceneID:   scene.ID,
 			TimeStart: r.TimeStart,
+			TimeEnd:   r.TimeEnd,
 			Name:      r.Name,
+			Track:     r.Track,
+			Rating:    r.Rating,
 		}
 		t.Save()
 

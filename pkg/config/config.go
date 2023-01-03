@@ -69,6 +69,7 @@ type ObjectConfig struct {
 			AllowWatchlistUpdates   bool `default:"false" json:"allow_watchlist_updates"`
 			MultitrackCuepoints     bool `default:"true" json:"multitrack_cuepoints"`
 			MultitrackCastCuepoints bool `default:"true" json:"multitrack_cast_cuepoints"`
+			RetainNonHSPCuepoints   bool `default:"true" json:"retain_non_hsp_cuepoints"`
 		} `json:"heresphere"`
 	} `json:"interfaces"`
 	Library struct {
