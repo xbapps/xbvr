@@ -486,6 +486,15 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0050-members-url",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					MemberURL string `json:"members_url" xbvrbackup:"members_url"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below

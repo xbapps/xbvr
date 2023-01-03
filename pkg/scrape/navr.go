@@ -30,6 +30,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 		sc.Site = siteID
 		sc.Title = ""
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.MembersUrl = strings.Replace(sc.HomepageURL, "https://www.naughtyamerica.com/", "https://members.naughtyamerica.com/", 1)
 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "-")

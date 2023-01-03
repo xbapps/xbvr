@@ -77,7 +77,9 @@
                   <small class="is-pulled-right">{{ format(parseISO(item.release_date), "yyyy-MM-dd") }}</small>
                 </h3>
                 <small>
-                  <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>
+                  <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>                  
+                  <br  v-if="item.members_url != ''"/>
+                  <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer">Members Link</a>                  
                 </small>
                 <div class="columns mt-0">
                   <div class="column pt-0">

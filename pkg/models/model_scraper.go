@@ -32,6 +32,7 @@ type ScrapedScene struct {
 	Synopsis    string   `json:"synopsis"`
 	Released    string   `json:"released"`
 	HomepageURL string   `json:"homepage_url"`
+	MembersUrl  string   `json:"members_url"`
 	TrailerType string   `json:"trailer_type"`
 	TrailerSrc  string   `json:"trailer_source"`
 }

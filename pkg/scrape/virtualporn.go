@@ -27,6 +27,7 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.Studio = "BangBros"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.MembersUrl = "https://members.bangbros.com/product/655/movie/" + strings.Replace(strings.Split(e.Request.URL.String(), "/")[3], "video", "", 1)
 
 		// Title / Cover / ID / Filenames
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
