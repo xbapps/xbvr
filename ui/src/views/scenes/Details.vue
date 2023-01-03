@@ -79,7 +79,7 @@
                 <small>
                   <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>                  
                   <br  v-if="item.members_url != ''"/>
-                  <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer">Members Link</a>                  
+                  <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer"><b-icon pack="mdi" icon="link-lock" custom-size="mdi-18px"/>Members Link</a>
                 </small>
                 <div class="columns mt-0">
                   <div class="column pt-0">
