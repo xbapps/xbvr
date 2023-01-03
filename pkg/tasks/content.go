@@ -212,6 +212,7 @@ func ReapplyEdits() {
 func Scrape(toScrape string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
+		defer models.RemoveLock("scrape")
 		t0 := time.Now()
 		tlog := log.WithField("task", "scrape")
 		tlog.Infof("Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
@@ -265,13 +266,12 @@ func Scrape(toScrape string) {
 				time.Now().Sub(t0).Round(time.Second))
 		}
 	}
-
-	models.RemoveLock("scrape")
 }
 
 func ScrapeJAVR(queryString string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
+		defer models.RemoveLock("scrape")
 		t0 := time.Now()
 		tlog := log.WithField("task", "scrape")
 		tlog.Infof("Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
@@ -312,12 +312,12 @@ func ScrapeJAVR(queryString string) {
 		}
 
 	}
-	models.RemoveLock("scrape")
 }
 
 func ScrapeTPDB(apiToken string, sceneUrl string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
+		defer models.RemoveLock("scrape")
 		t0 := time.Now()
 		tlog := log.WithField("task", "scrape")
 		tlog.Infof("Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
@@ -367,12 +367,12 @@ func ScrapeTPDB(apiToken string, sceneUrl string) {
 		}
 
 	}
-	models.RemoveLock("scrape")
 }
 
 func ExportBundle() {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
+		defer models.RemoveLock("scrape")
 		t0 := time.Now()
 
 		tlog := log.WithField("task", "scrape")
@@ -401,7 +401,6 @@ func ExportBundle() {
 			}
 		}
 	}
-	models.RemoveLock("scrape")
 }
 
 func ImportBundle(uploadData string) {
@@ -451,6 +450,7 @@ func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCu
 
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
+		defer models.RemoveLock("scrape")
 		t0 := time.Now()
 
 		tlog := log.WithField("task", "scrape")
@@ -596,7 +596,6 @@ func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCu
 			}
 		}
 	}
-	models.RemoveLock("scrape")
 	return string(content)
 }
 

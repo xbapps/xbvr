@@ -48,6 +48,7 @@
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
         <a :href="item.scene_url" target="_blank" rel="noreferrer">{{item.site}}</a><br/>
+        <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer">Members Link</a><br/>
         <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
         </span>
