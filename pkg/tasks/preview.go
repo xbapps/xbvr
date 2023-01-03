@@ -18,7 +18,7 @@ import (
 func GeneratePreviews(endTime *time.Time) {
 	if !models.CheckLock("previews") {
 		models.CreateLock("previews")
-		defer models.RemoveLock("scrape")
+		defer models.RemoveLock("previews")
 		log.Infof("Generating previews")
 		db, _ := models.GetDB()
 		defer db.Close()
