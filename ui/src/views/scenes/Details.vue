@@ -13,6 +13,7 @@
       @keydown.t="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'trailerlist'})"
       @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
       @keydown.g="toggleGallery"
+      @keydown.48="setRating(0)"
     />
 
     <div class="modal-background"></div>
@@ -76,12 +77,19 @@
                   <small class="is-pulled-right">{{ format(parseISO(item.release_date), "yyyy-MM-dd") }}</small>
                 </h3>
                 <small>
-                  <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>
+                  <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>                  
+                  <br  v-if="item.members_url != ''"/>
+                  <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer">Members Link</a>                  
                 </small>
                 <div class="columns mt-0">
                   <div class="column pt-0">
-                    <star-rating :key="item.id" :rating="item.star_rating" @rating-selected="setRating"
-                                 :increment="0.5" :star-size="20"/>
+                    <b-field>
+                      <star-rating :key="item.id" v-model="item.star_rating" :rating="item.star_rating" @rating-selected="setRating"
+                                   :increment="0.5" :star-size="20"/>
+                      <b-tooltip :label="$t('Reset Rating')" position="is-right" :delay="250">
+                        <b-icon pack="mdi" icon="autorenew" size="is-small" @click.native="setRating(0)" style="padding-left: 1em;padding-top: .5em;"/>
+                      </b-tooltip>
+                    </b-field>
                   </div>
                   <div class="column pt-0">
                     <div class="is-pulled-right">
@@ -102,6 +110,8 @@
               <b-taglist>
                 <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])'
                    class="tag is-warning is-small">{{ c.name }} ({{ c.avail_count }}/{{ c.count }})</a>
+                <a @click='showSiteScenes([item.site])'
+                   class="tag is-primary is-small">{{ item.site }}</a>
                 <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])'
                    class="tag is-info is-small">{{ tag.name }} ({{ tag.count }})</a>
               </b-taglist>
@@ -446,6 +456,16 @@ export default {
       })
       this.close()
     },
+    showSiteScenes (site) {
+      this.$store.state.sceneList.filters.cast = []
+      this.$store.state.sceneList.filters.sites = site
+      this.$store.state.sceneList.filters.tags = []
+      this.$router.push({
+        name: 'scenes',
+        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
+      })
+      this.close()
+    },
     playPreview () {
       this.activeMedia = 1
       this.updatePlayer('/api/dms/preview/' + this.item.scene_id, 'NONE')
@@ -577,6 +597,7 @@ export default {
 
       const updatedScene = Object.assign({}, this.item)
       updatedScene.star_rating = val
+      this.item.star_rating = val
       this.$store.commit('sceneList/updateScene', updatedScene)
     },
     nextScene () {

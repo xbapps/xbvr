@@ -27,6 +27,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		sc.Studio = "CzechVR"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.MembersUrl = strings.Replace(sc.HomepageURL, "https://www.czechvrnetwork.com/", "https://www.czechvrnetwork.com/members/", 1)
 
 		// Title
 		e.ForEach(`div.post div.nazev h1`, func(id int, e *colly.HTMLElement) {
