@@ -490,6 +490,7 @@ type ResponseSceneList struct {
 	CountAvailable     int     `json:"count_available"`
 	CountDownloaded    int     `json:"count_downloaded"`
 	CountNotDownloaded int     `json:"count_not_downloaded"`
+	CountHidden        int     `json:"count_hidden"`
 }
 
 func QueryScenesFull(r RequestSceneList) ResponseSceneList {
@@ -730,10 +731,11 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	}
 
 	// Count other variations
-	tx.Group("scenes.scene_id").Count(&out.CountAny)
-	tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_accessible = ?", true).Count(&out.CountAvailable)
-	tx.Group("scenes.scene_id").Where("is_available = ?", true).Count(&out.CountDownloaded)
-	tx.Group("scenes.scene_id").Where("is_available = ?", false).Count(&out.CountNotDownloaded)
+	tx.Group("scenes.scene_id").Where("is_hidden = ?", false).Count(&out.CountAny)
+	tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_accessible = ?", true).Where("is_hidden = ?", false).Count(&out.CountAvailable)
+	tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_hidden = ?", false).Count(&out.CountDownloaded)
+	tx.Group("scenes.scene_id").Where("is_available = ?", false).Where("is_hidden = ?", false).Count(&out.CountNotDownloaded)
+	tx.Group("scenes.scene_id").Where("is_hidden = ?", true).Count(&out.CountHidden)
 
 	// Apply avail/accessible after counting
 	if r.IsAvailable.Present() {
@@ -742,6 +744,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 
 	if r.IsAccessible.Present() {
 		tx = tx.Where("is_accessible = ?", r.IsAccessible.OrElse(true))
+	}
+
+	if r.DlState.OrElse("") == "hidden" {
+		tx = tx.Where("is_hidden = ?", true)
+	} else {
+		tx = tx.Where("is_hidden = ?", false)
 	}
 
 	// Count totals for selection
