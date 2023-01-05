@@ -495,7 +495,16 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0049-Add-Is_Hidden-To-Cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					IsHidden bool `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
 
+			},
+		},
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
 		// ===============================================================================================
