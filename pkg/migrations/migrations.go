@@ -495,6 +495,15 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0052-scene-index-on-files-for-feature-filters",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					SceneID uint `gorm:"index" json:"scene_id" xbvrbackup:"-"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
