@@ -487,6 +487,15 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0048-Add-Index-To-Cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type SceneCuepoint struct {
+					SceneID uint `gorm:"index" json:"-" xbvrbackup:"-"`
+				}
+				return tx.AutoMigrate(SceneCuepoint{}).Error
+			},
+		},
+		{
 			ID: "0050-members-url",
 			Migrate: func(tx *gorm.DB) error {
 				type Scene struct {
