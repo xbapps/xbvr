@@ -93,6 +93,7 @@
                   </div>
                   <div class="column pt-0">
                     <div class="is-pulled-right">
+                      <hidden-button :item="item"/>&nbsp;  
                       <watchlist-button :item="item"/>&nbsp;                      
                       <trailerlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
@@ -283,11 +284,11 @@ import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import RefreshButton from '../../components/RefreshButton'
 import TrailerlistButton from '../../components/TrailerlistButton'
-
+import HiddenButton from '../../components/HiddenButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       index: 1,
