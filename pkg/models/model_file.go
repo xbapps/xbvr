@@ -26,7 +26,7 @@ type File struct {
 	UpdatedTime time.Time `json:"updated_time" xbvrbackup:"updated_time"`
 
 	Type    string `json:"type" xbvrbackup:"type"`
-	SceneID uint   `json:"scene_id" xbvrbackup:"-"`
+	SceneID uint   `gorm:"index" json:"scene_id" xbvrbackup:"-"`
 	Scene   Scene  `json:"-" xbvrbackup:"-"`
 
 	VideoWidth           int     `json:"video_width" xbvrbackup:"video_width"`

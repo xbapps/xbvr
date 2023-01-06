@@ -69,6 +69,7 @@ type ResponseGetFilters struct {
 	Sites         []string        `json:"sites"`
 	ReleaseMonths []string        `json:"release_month"`
 	Volumes       []models.Volume `json:"volumes"`
+	Attributes    []string        `json:"attributes"`
 }
 
 type SceneResource struct{}
@@ -284,12 +285,98 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	var outVolumes []models.Volume
 	db.Model(&models.Volume{}).Find(&outVolumes)
 
+	// supported attributes
+	var outAttributes []string
+	outAttributes = append(outAttributes, "Multiple Video Files")
+	outAttributes = append(outAttributes, "Single Video File")
+	outAttributes = append(outAttributes, "Multiple Script Files")
+	outAttributes = append(outAttributes, "Single Script File")
+	outAttributes = append(outAttributes, "Has Hsp File")
+	outAttributes = append(outAttributes, "Is Favourite")
+	outAttributes = append(outAttributes, "Is Scripted")
+	outAttributes = append(outAttributes, "In Watchlist")
+	outAttributes = append(outAttributes, "Has Rating")
+	outAttributes = append(outAttributes, "In Trailer List")
+	outAttributes = append(outAttributes, "Rating 0")
+	outAttributes = append(outAttributes, "Rating .5")
+	outAttributes = append(outAttributes, "Rating 1")
+	outAttributes = append(outAttributes, "Rating 1.5")
+	outAttributes = append(outAttributes, "Rating 2")
+	outAttributes = append(outAttributes, "Rating 2.5")
+	outAttributes = append(outAttributes, "Rating 3")
+	outAttributes = append(outAttributes, "Rating 3.5")
+	outAttributes = append(outAttributes, "Rating 4")
+	outAttributes = append(outAttributes, "Rating 4.5")
+	outAttributes = append(outAttributes, "Rating 5")
+	outAttributes = append(outAttributes, "Cast 1")
+	outAttributes = append(outAttributes, "Cast 2")
+	outAttributes = append(outAttributes, "Cast 3")
+	outAttributes = append(outAttributes, "Cast 4")
+	outAttributes = append(outAttributes, "Cast 5")
+	outAttributes = append(outAttributes, "Cast 6+")
+	outAttributes = append(outAttributes, "Flat video")
+	outAttributes = append(outAttributes, "FOV: 180°")
+	outAttributes = append(outAttributes, "FOV: 190°")
+	outAttributes = append(outAttributes, "FOV: 200°")
+	outAttributes = append(outAttributes, "FOV: 220°")
+	outAttributes = append(outAttributes, "FOV: 360°")
+	outAttributes = append(outAttributes, "Projection Perspective")
+	outAttributes = append(outAttributes, "Projection Equirectangular")
+	outAttributes = append(outAttributes, "Projection Equirectangular360")
+	outAttributes = append(outAttributes, "Projection Fisheye")
+	outAttributes = append(outAttributes, "Mono")
+	outAttributes = append(outAttributes, "Top/Bottom")
+	outAttributes = append(outAttributes, "Side by Side")
+	outAttributes = append(outAttributes, "MKX200")
+	outAttributes = append(outAttributes, "MKX220")
+	outAttributes = append(outAttributes, "VRCA220")
+	type Results struct {
+		Result string
+	}
+	var results []Results
+	// resolutions
+	switch db.Dialect().GetName() {
+	case "mysql":
+		db.Table("files").Select("distinct case when  video_projection = '360_tb' then (video_width+499)*2 div 1000 else (video_width+499) div 1000 end as result").
+			Where("`type`='video'").
+			Order("case when  video_projection = '360_tb' then (video_width+499)*2 div 1000 else (video_width+499) div 1000 end").
+			Find(&results)
+
+	case "sqlite3":
+		db.Table("files").Select("distinct case when video_projection = '360_tb' then (video_width+499)*2 / 1000 else (video_width+499) / 1000 end as result").
+			Where("`type`='video'").
+			Order("case when video_projection = '360_tb' then (video_width+499)*2 / 1000 else (video_width+499) / 1000 end").
+			Find(&results)
+	}
+
+	for _, r := range results {
+		outAttributes = append(outAttributes, "Resolution "+r.Result+"K")
+	}
+
+	// frame rates
+	db.Table("files").Select("distinct video_avg_frame_rate_val as result").
+		Where("`type`='video'").
+		Order("video_avg_frame_rate_val").
+		Find(&results)
+	for _, r := range results {
+		outAttributes = append(outAttributes, "Frame Rate "+r.Result+" fps")
+	}
+
+	// codec
+	db.Table("files").Select("distinct video_codec_name as result").
+		Where("`type`='video'").
+		Order("video_codec_name").
+		Find(&results)
+	for _, r := range results {
+		outAttributes = append(outAttributes, "Codec "+r.Result)
+	}
 	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetFilters{
 		Tags:          outTags,
 		Cast:          outCast,
 		Sites:         outSites,
 		ReleaseMonths: outRelease,
 		Volumes:       outVolumes,
+		Attributes:    outAttributes,
 	})
 }
 

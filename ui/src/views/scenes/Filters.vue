@@ -175,6 +175,23 @@
         </b-taginput>
       </b-field>
 
+      <b-tooltip position="is-top" label="Allows searching a variety of attributes such as: scenes in Watchlists, Favourites, Has Video, Scripts or HSP Files, Ratings, Number of Cast, FOV, Projection, Resolution, Frame Rate and Codecs" multilined :delay="1000" style="width:100%">
+        <b-field label="Attributes" label-position="on-border" class="field-extra">        
+          <b-taginput v-model="attributes" autocomplete :data="filteredAttributes" @typing="getFilteredAttributes">
+            <template slot-scope="props">{{ props.option }}</template>
+            <template slot="empty">No matching attributes</template>
+            <template #selected="props">
+              <b-tag v-for="(tag, index) in props.tags"
+                :type="tag.charAt(0)=='!' ? 'is-danger': (tag.charAt(0)=='&' ? 'is-success' : '')"
+                :key="tag+index" :tabstop="false" closable  @close="attributes=attributes.filter(e => e !== tag)" @click="toggle3way(tag,index,'attributes')"> 
+                  <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+                  <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+                  {{removeConditionPrefix(tag)}}
+              </b-tag>
+            </template>          
+          </b-taginput>
+        </b-field>
+      </b-tooltip>
     </div>
     <div class="is-divider" data-content="Actor Also Known As groups"></div>
     <b-field>
@@ -212,12 +229,14 @@ export default {
   components: { SavedSearch },
   mounted () {
     this.$store.dispatch('sceneList/filters')
+    this.fetchFilters()
   },
   data () {
     return {
       filteredCast: [],
       filteredSites: [],
-      filteredTags: []
+      filteredTags: [],
+      filteredAttributes: [],
     }
   },
   methods: {
@@ -243,6 +262,12 @@ export default {
     },
     getFilteredTags (text) {
       this.filteredTags = this.filters.tags.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.tags.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
+      ))
+    },
+    getFilteredAttributes (text) {
+      this.filteredAttributes = this.filters.attributes.filter(option => (
         option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
         !this.tags.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
       ))
@@ -318,6 +343,9 @@ export default {
         case 'cuepoints':
           tags=this.cuepoint
           break
+        case 'attributes':
+          tags=this.attributes
+          break
       }      
       switch(tags[idx].charAt(0)) {
         case '!':
@@ -338,6 +366,9 @@ export default {
           break
         case 'cuepoints':
           this.cuepoint=tags
+          break
+        case 'attributes':
+          this.attributes=tags
           break
       }
     },    
@@ -365,6 +396,12 @@ export default {
         return txt.substring(1) 
       }
       return txt
+    },
+    async fetchFilters() {
+        this.filteredAttributes=['Loading attributes']
+        ky.get('/api/scene/filters').json().then(data => {
+          this.filteredAttributes=data.attributes          
+      })      
     }
   },
   computed: {
@@ -433,6 +470,15 @@ export default {
       set (value) {
         this.$store.state.sceneList.filters.cuepoint = value
         this.reloadList()
+      }
+    },
+    attributes: {
+      get () {
+        return this.$store.state.sceneList.filters.attributes
+      },
+      set (value) {
+        this.$store.state.sceneList.filters.attributes = value
+        this.reloadList()        
       }
     },
     sort: {
