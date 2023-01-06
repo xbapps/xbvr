@@ -522,7 +522,7 @@ func Migrate() {
 				return err
 			},
 		},
-    
+
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
 		// ===============================================================================================
