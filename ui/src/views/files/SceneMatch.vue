@@ -38,6 +38,11 @@
             </b-table-column>
             <b-table-column field="site" :label="$t('Site')" sortable v-slot="props">
               <a :href="props.row.scene_url" target="_blank" rel="noreferrer">{{ props.row.site }}</a><br>
+              <b-tooltip v-if="props.row.is_hidden" label="Flagged as Hidden"  :delay="250" >
+                <b-tag type="is-info is-light" >
+                  <b-icon pack="mdi" icon="eye-off-outline" size="is-small" style="margin-right:0.1em"/>                
+                </b-tag>&nbsp;
+              </b-tooltip>
               <b-tag type="is-info is-light" v-if="videoFilesCount(props.row)">
                 <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
                 {{videoFilesCount(props.row)}}

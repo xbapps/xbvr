@@ -40,6 +40,7 @@
     <div style="padding-top:4px;">
       <div class="scene_title">{{item.title}}</div>
 
+      <hidden-button :item="item"/>
       <watchlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatchlist"/>
       <trailerlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneTrailerlist"/>
       <favourite-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneFavourite"/>
@@ -64,11 +65,12 @@ import FavouriteButton from '../../components/FavouriteButton'
 import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import TrailerlistButton from '../../components/TrailerlistButton'
+import HiddenButton from '../../components/HiddenButton'
 
 export default {
   name: 'SceneCard',
   props: { item: Object },
-  components: { WatchlistButton, FavouriteButton, WatchedButton, EditButton, TrailerlistButton },
+  components: { WatchlistButton, FavouriteButton, WatchedButton, EditButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       preview: false,
