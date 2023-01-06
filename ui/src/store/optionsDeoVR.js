@@ -20,7 +20,8 @@ const state = {
     allow_cuepoint_updates: false,
     allow_watchlist_updates: false,
     allow_hsp_data: false,
-    multitrack_cuepoints: true
+    multitrack_cuepoints: true,
+    multitrack_cast_cuepoints: true
   },
   players: {
     video_sort_seq: '',
@@ -54,6 +55,7 @@ const actions = {
         state.heresphere.multitrack_cuepoints = data.config.interfaces.heresphere.multitrack_cuepoints
         state.players.video_sort_seq = data.config.interfaces.players.video_sort_seq
         state.players.script_sort_seq = data.config.interfaces.players.script_sort_seq
+        state.heresphere.multitrack_cast_cuepoints = data.config.interfaces.heresphere.multitrack_cast_cuepoints
         state.loading = false        
       })
   },

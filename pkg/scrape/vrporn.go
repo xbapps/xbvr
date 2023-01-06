@@ -118,7 +118,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`article.tax-studio div.tube-post a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`body.tax-studio article.post div.tube-post a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 		// If scene exists in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
@@ -126,7 +126,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://vrporn.com/studio/" + scraperID)
+	siteCollector.Visit("https://vrporn.com/studio/" + scraperID + "/?sort=newest")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -142,7 +142,7 @@ func addVRPornScraper(id string, name string, company string, avatarURL string) 
 }
 
 func init() {
-	addVRPornScraper("evileyevr", "EvilEyeVR", "EvilEyeVR", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg")
+	//addVRPornScraper("evileyevr", "EvilEyeVR", "EvilEyeVR", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg")
 	addVRPornScraper("randysroadstop", "Randy's Road Stop", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png")
 	addVRPornScraper("realteensvr", "Real Teens VR", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png")
 	addVRPornScraper("vrclubz", "VRClubz", "VixenVR", "https://mcdn.vrporn.com/files/20200421094123/vrclubz_logo_NEW-400x400_webwhite.png")

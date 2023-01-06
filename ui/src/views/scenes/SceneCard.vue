@@ -40,6 +40,7 @@
     <div style="padding-top:4px;">
       <div class="scene_title">{{item.title}}</div>
 
+      <hidden-button :item="item"/>
       <watchlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatchlist"/>
       <trailerlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneTrailerlist"/>
       <favourite-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneFavourite"/>
@@ -47,6 +48,7 @@
       <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
+        <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" title="Members Link" rel="noreferrer"><b-icon pack="mdi" icon="link-lock" custom-size="mdi-18px" style="height:0.7rem"/></a>
         <a :href="item.scene_url" target="_blank" rel="noreferrer">{{item.site}}</a><br/>
         <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
@@ -63,11 +65,12 @@ import FavouriteButton from '../../components/FavouriteButton'
 import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import TrailerlistButton from '../../components/TrailerlistButton'
+import HiddenButton from '../../components/HiddenButton'
 
 export default {
   name: 'SceneCard',
   props: { item: Object },
-  components: { WatchlistButton, FavouriteButton, WatchedButton, EditButton, TrailerlistButton },
+  components: { WatchlistButton, FavouriteButton, WatchedButton, EditButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       preview: false,

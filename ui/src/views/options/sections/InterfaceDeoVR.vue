@@ -194,15 +194,30 @@
               Enabled
             </b-switch>
           </b-field>
-          <b-tooltip
-            label="This option will split Cuepoint into multiple tracks, eg Standing-Doggy will split into 2 tracks in Heresphere"
-            size="is-large" type="is-primary" multilined :delay="250" >
-            <b-field label="Use Multi-Track Cuepoints">
-              <b-switch v-model="multiTrackCuepoints">
-                Enabled
-              </b-switch>
-            </b-field>
-          </b-tooltip>
+          <div class="columns">
+            <div class="column is-one-half"> 
+              <b-tooltip
+                label="This option will split Cuepoints into multiple tracks, eg Standing-Doggy will split into 2 tracks in Heresphere"
+                size="is-large" type="is-primary" multilined :delay="250" >
+                <b-field label="Use Multi-Track Cuepoints">
+                  <b-switch v-model="multiTrackCuepoints">
+                    Enabled
+                  </b-switch>
+                </b-field>
+              </b-tooltip>
+            </div>
+            <div class="column is-one-half"> 
+              <b-tooltip
+                label="This option will split Cuepoints matching the Actors Name into seperate tracks in Heresphere"
+                size="is-large" type="is-primary" multilined :delay="250" >
+                <b-field label="Use Multi-Track Cast Cuepoints">
+                  <b-switch v-model="multiTrackCastCuepoints">
+                    Enabled
+                  </b-switch>
+                </b-field>
+              </b-tooltip>
+            </div>
+          </div>
       </div>
       <b-field>
         <b-button type="is-primary" @click="save">Save and apply changes</b-button>
@@ -433,6 +448,13 @@ export default {
       set (value) {
         this.$store.state.optionsDeoVR.players.script_sort_seq = value
       },
+    multiTrackCastCuepoints: {
+      get () {        
+        return this.$store.state.optionsDeoVR.heresphere.multitrack_cast_cuepoints
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.multitrack_cast_cuepoints = value
+      }
     },
     isLoading: function () {
       return this.$store.state.optionsDeoVR.loading

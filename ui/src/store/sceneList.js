@@ -15,12 +15,14 @@ const defaultFilterState = {
   lists: [],
   isAvailable: true,
   isAccessible: true,
+  isHidden: false,
   isWatched: null,
   releaseMonth: '',
   cast: [],
   sites: [],
   tags: [],
   cuepoint: [],
+  attributes: [],
   volume: 0,
   sort: 'release_desc'
 }
@@ -36,7 +38,8 @@ const state = {
     any: 0,
     available: 0,
     downloaded: 0,
-    not_downloaded: 0
+    not_downloaded: 0,
+    hidden: 0
   },
   filterOpts: {
     cast: [],
@@ -98,6 +101,9 @@ const mutations = {
         if (payload.list === 'needs_update') {
           obj.needs_update = !obj.needs_update
         }
+        if (payload.list === 'is_hidden') {
+          obj.is_hidden = !obj.is_hidden
+        }        
       }
       return obj
     })
@@ -172,6 +178,7 @@ const actions = {
     state.counts.available = data.count_available
     state.counts.downloaded = data.count_downloaded
     state.counts.not_downloaded = data.count_not_downloaded
+    state.counts.hidden = data.count_hidden
   }
 }
 

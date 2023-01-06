@@ -446,12 +446,18 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		}
 	}
 
+	// set date to EPOCH in case it is missing or 0001-01-01
+	finalDate := scene.ReleaseDate.Unix()
+	if finalDate < 0 {
+		finalDate = 0
+	}
+
 	deoScene := DeoScene{
 		ID:               scene.ID,
 		Authorized:       1,
 		Title:            title,
 		Description:      scene.Synopsis,
-		Date:             scene.ReleaseDate.Unix(),
+		Date:             finalDate,
 		Actors:           actors,
 		Paysite:          DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
 		IsFavorite:       scene.Favourite,

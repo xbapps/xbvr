@@ -21,9 +21,8 @@ require (
 	github.com/gammazero/nexus/v3 v3.0.4
 	github.com/getlantern/systray v1.2.1
 	github.com/go-openapi/spec v0.20.7
-	github.com/go-test/deep v1.0.8
+	github.com/go-test/deep v1.1.0
 	github.com/gocolly/colly v1.2.0
-	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gowww/log v1.0.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
@@ -44,22 +43,21 @@ require (
 	github.com/nleeper/goment v1.4.4
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/posthog/posthog-go v0.0.0-20221122145026-61d15c329e94
 	github.com/putdotio/go-putio v1.7.0
 	github.com/robertkrimen/otto v0.0.0-20221025135307-511d75fba9f8
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/rs/cors v1.8.2
+	github.com/rs/cors v1.8.3
 	github.com/sirupsen/logrus v1.9.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-	github.com/thoas/go-funk v0.9.2
+	github.com/thoas/go-funk v0.9.3
 	github.com/tidwall/gjson v1.14.4
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	github.com/xo/dburl v0.12.4
-	golang.org/x/crypto v0.3.0
-	golang.org/x/net v0.2.0
-	golang.org/x/oauth2 v0.2.0
-	golang.org/x/sys v0.2.0
-	golang.org/x/text v0.4.0
+	github.com/xo/dburl v0.13.0
+	golang.org/x/crypto v0.5.0
+	golang.org/x/net v0.5.0
+	golang.org/x/oauth2 v0.4.0
+	golang.org/x/sys v0.4.0
+	golang.org/x/text v0.6.0
 	gopkg.in/gormigrate.v1 v1.6.0
 	gopkg.in/resty.v1 v1.12.0
 	willnorris.com/go/imageproxy v0.11.2
@@ -136,10 +134,9 @@ require (
 	github.com/ulikunitz/xz v0.5.6 // indirect
 	github.com/willf/bitset v1.1.10 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6 // indirect
-	golang.org/x/term v0.2.0 // indirect
+	golang.org/x/term v0.4.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect

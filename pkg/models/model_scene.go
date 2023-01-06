@@ -23,7 +23,7 @@ type SceneCuepoint struct {
 	CreatedAt time.Time `json:"-" xbvrbackup:"-"`
 	UpdatedAt time.Time `json:"-" xbvrbackup:"-"`
 
-	SceneID   uint    `json:"-" xbvrbackup:"-"`
+	SceneID   uint    `gorm:"index" json:"-" xbvrbackup:"-"`
 	TimeStart float64 `json:"time_start" xbvrbackup:"time_start"`
 	Name      string  `json:"name" xbvrbackup:"name"`
 }
@@ -73,6 +73,7 @@ type Scene struct {
 	ReleaseDateText string    `json:"release_date_text" xbvrbackup:"release_date_text"`
 	CoverURL        string    `json:"cover_url" xbvrbackup:"cover_url"`
 	SceneURL        string    `json:"scene_url" xbvrbackup:"scene_url"`
+	MemberURL       string    `json:"members_url" xbvrbackup:"members_url"`
 	IsMultipart     bool      `json:"is_multipart" xbvrbackup:"is_multipart"`
 
 	StarRating     float64         `json:"star_rating" xbvrbackup:"star_rating"`
@@ -97,6 +98,7 @@ type Scene struct {
 	TrailerType   string `json:"trailer_type" xbvrbackup:"trailer_type"`
 	TrailerSource string `gorm:"size:1000" json:"trailer_source" xbvrbackup:"trailer_source"`
 	Trailerlist   bool   `json:"trailerlist" gorm:"default:false" xbvrbackup:"trailerlist"`
+	IsHidden      bool   `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
@@ -409,6 +411,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		o.CoverURL = ext.Covers[0]
 	}
 	o.SceneURL = ext.HomepageURL
+	o.MemberURL = ext.MembersUrl
 
 	// Trailers
 	o.TrailerType = ext.TrailerType
@@ -480,6 +483,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 }
 
 type RequestSceneList struct {
+	DlState      optional.String   `json:"dlState"`
 	Limit        optional.Int      `json:"limit"`
 	Offset       optional.Int      `json:"offset"`
 	IsAvailable  optional.Bool     `json:"isAvailable"`
@@ -490,6 +494,7 @@ type RequestSceneList struct {
 	Tags         []optional.String `json:"tags"`
 	Cast         []optional.String `json:"cast"`
 	Cuepoint     []optional.String `json:"cuepoint"`
+	Attributes   []optional.String `json:"attributes"`
 	Volume       optional.Int      `json:"volume"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
@@ -502,6 +507,7 @@ type ResponseSceneList struct {
 	CountAvailable     int     `json:"count_available"`
 	CountDownloaded    int     `json:"count_downloaded"`
 	CountNotDownloaded int     `json:"count_not_downloaded"`
+	CountHidden        int     `json:"count_hidden"`
 }
 
 func QueryScenesFull(r RequestSceneList) ResponseSceneList {
@@ -564,6 +570,264 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			tx = tx.Where("is_scripted = ?", true)
 		}
 	}
+
+	// handle Attribute selections
+	var orAttribute []string
+	var andAttribute []string
+	combinedWhere := ""
+	for idx, attribute := range r.Attributes {
+		truefalse := true
+		fieldName := attribute.OrElse("")
+		sceneAlias := "scenes_f" + strconv.Itoa(idx)
+		fileAlias := "files_f" + strconv.Itoa(idx)
+		scenecastAlias := "scene_cast_f" + strconv.Itoa(idx)
+		actorsAlias := "actors_f" + strconv.Itoa(idx)
+
+		if strings.HasPrefix(fieldName, "!") { // ! prefix indicate NOT filtering
+			truefalse = false
+			fieldName = fieldName[1:]
+		}
+		if strings.HasPrefix(fieldName, "&") { // & prefix indicate must have filtering
+			fieldName = fieldName[1:]
+		}
+		value := ""
+		if strings.HasPrefix(fieldName, "Resolution ") {
+			value = strings.Replace(fieldName[11:], "K", "", 1)
+			fieldName = "Resolution"
+		}
+		if strings.HasPrefix(fieldName, "Frame Rate ") {
+			value = strings.Replace(fieldName[11:], "fps", "", 1)
+			fieldName = "Frame Rate"
+		}
+		if strings.HasPrefix(fieldName, "Codec ") {
+			value = fieldName[6:]
+			fieldName = "Codec"
+		}
+		where := ""
+		switch fieldName {
+		case "Multiple Video Files":
+			if truefalse {
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'video' group by " + fileAlias + ".scene_id having count(*) >1)"
+			} else {
+				where = "scenes.id not in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'video' group by " + fileAlias + ".scene_id having count(*) >1)"
+			}
+		case "Single Video File":
+			if truefalse {
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'video' group by " + fileAlias + ".scene_id having count(*) =1)"
+			} else {
+				where = "scenes.id not in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'video' group by " + fileAlias + ".scene_id having count(*) =1)"
+			}
+		case "Multiple Script Files":
+			if truefalse {
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'script' group by " + fileAlias + ".scene_id having count(*) >1)"
+			} else {
+				where = "scenes.id not in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'script' group by " + fileAlias + ".scene_id having count(*) >1)"
+			}
+		case "Single Script File":
+			if truefalse {
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'script' group by " + fileAlias + ".scene_id having count(*) =1)"
+			} else {
+				where = "scenes.id not in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'script' group by " + fileAlias + ".scene_id having count(*) =1)"
+			}
+		case "Has Hsp File":
+			if truefalse {
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'hsp' group by " + fileAlias + ".scene_id having count(*) >0)"
+			} else {
+				where = "scenes.id not in (select " + sceneAlias + ".id from scenes " + sceneAlias + " join files " + fileAlias + " on " + fileAlias + ".scene_id = " + sceneAlias + ".id and " + fileAlias + ".`type` = 'hsp' where " + sceneAlias + ".id=scenes.id group by " + sceneAlias + ".id)"
+			}
+		case "Has Rating":
+			if truefalse {
+				where = "star_rating > 0"
+			} else {
+				where = "star_rating = 0"
+			}
+		case "In Trailer List":
+			if truefalse {
+				where = "trailerlist = 1"
+			} else {
+				where = "trailerlist = 0"
+			}
+		case "Rating 0", "Rating .5", "Rating 1", "Rating 1.5", "Rating 2", "Rating 2.5", "Rating 3", "Rating 3.5", "Rating 4", "Rating 4.5", "Rating 5":
+			if truefalse {
+				where = "star_rating = " + fieldName[7:]
+			} else {
+				where = "star_rating <> " + fieldName[7:]
+			}
+		case "Cast 6+":
+			if truefalse {
+				where = "scenes.id in (select " + scenecastAlias + ".scene_id from scene_cast " + scenecastAlias + " join actors " + actorsAlias + " on " + actorsAlias + ".id =" + scenecastAlias + ".actor_id where " + scenecastAlias + ".scene_id =scenes.id and " + actorsAlias + ".name not like 'aka:%' group by " + scenecastAlias + ".scene_id having count(*)>5)"
+			} else {
+				where = "scenes.id not in (select " + scenecastAlias + ".scene_id from scene_cast " + scenecastAlias + " join actors " + actorsAlias + " on " + actorsAlias + ".id =" + scenecastAlias + ".actor_id where " + scenecastAlias + ".scene_id =scenes.id and " + actorsAlias + ".name not like 'aka:%' group by " + scenecastAlias + ".scene_id having count(*)>5)"
+			}
+		case "Cast 1", "Cast 2", "Cast 3", "Cast 4", "Cast 5":
+			if truefalse {
+				where = "scenes.id in (select " + scenecastAlias + ".scene_id from scene_cast " + scenecastAlias + " join actors " + actorsAlias + " on " + actorsAlias + ".id =" + scenecastAlias + ".actor_id where " + scenecastAlias + ".scene_id =scenes.id and " + actorsAlias + ".name not like 'aka:%' group by " + scenecastAlias + ".scene_id having count(*)=" + fieldName[5:] + ")"
+			} else {
+				where = "scenes.id not in (select " + scenecastAlias + ".scene_id from scene_cast " + scenecastAlias + " join actors " + actorsAlias + " on " + actorsAlias + ".id =" + scenecastAlias + ".actor_id where " + scenecastAlias + ".scene_id =scenes.id and " + actorsAlias + ".name not like 'aka:%' group by " + scenecastAlias + ".scene_id having count(*)=" + fieldName[5:] + ")"
+			}
+		case "Resolution":
+			switch db.Dialect().GetName() {
+			case "mysql":
+				if truefalse {
+					where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and case when " + fileAlias + ".video_projection = '360_tb' then (" + fileAlias + ".video_width+499)*2 div 1000 else (" + fileAlias + ".video_width+499) div 1000 end = " + value + ")"
+				} else {
+					where = "scenes.id not in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and case when " + fileAlias + ".video_projection = '360_tb' then (" + fileAlias + ".video_width+499)*2 div 1000 else (" + fileAlias + ".video_width+499) div 1000 end = " + value + ")"
+				}
+			default:
+				if truefalse {
+					where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and case when " + fileAlias + ".video_projection = '360_tb' then (" + fileAlias + ".video_width+499)*2 / 1000 else (" + fileAlias + ".video_width+499) / 1000 end = " + value + ")"
+				} else {
+					where = "scenes.id not in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and case when " + fileAlias + ".video_projection = '360_tb' then (" + fileAlias + ".video_width+499)*2 / 1000 else (" + fileAlias + ".video_width+499) / 1000 end = " + value + ")"
+				}
+			}
+		case "Frame Rate":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_avg_frame_rate_val = " + value + " and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id not in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_avg_frame_rate_val = " + value + " and " + fileAlias + ".`type` = 'video')"
+			}
+		case "Flat video":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='flat' and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='flat' and " + fileAlias + ".`type` = 'video')"
+			}
+		case "FOV: 180°":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('180_mono','180_sbs','fisheye') and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('180_mono','180_sbs','fisheye') and " + fileAlias + ".`type` = 'video')"
+			}
+		case "FOV: 190°":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('rf52','fisheye190') and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('rf52','fisheye190') and " + fileAlias + ".`type` = 'video')"
+			}
+		case "FOV: 200°":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='mkx200' and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='mkx200' and " + fileAlias + ".`type` = 'video')"
+			}
+		case "FOV: 220°":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('mkx220','vrca220') and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('mkx220','vrca220') and " + fileAlias + ".`type` = 'video')"
+			}
+		case "FOV: 360°":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('360_mono','360_tb') and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('360_mono','360_tb') and " + fileAlias + ".`type` = 'video')"
+			}
+		case "Projection Perspective":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='flat' and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='flat' and " + fileAlias + ".`type` = 'video')"
+			}
+		case "Projection Equirectangular":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('180_mono','180_sbs') and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('180_mono','180_sbs') and " + fileAlias + ".`type` = 'video')"
+			}
+		case "Projection Equirectangular360":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('360_tb','360_mono') and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('360_tb','360_mono') and " + fileAlias + ".`type` = 'video')"
+			}
+		case "Projection Fisheye":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('mkx200','mkx220','vrca220','rf52','fisheye190','fisheye') and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('mkx200','mkx220','vrca220','rf52','fisheye190','fisheye') and " + fileAlias + ".`type` = 'video')"
+			}
+		case "Mono":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('flat','180_mono','360_mono') and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('flat','180_mono','360_mono') and " + fileAlias + ".`type` = 'video')"
+			}
+		case "Top/Bottom":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='360_tb' and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='360_tb' and " + fileAlias + ".`type` = 'video')"
+			}
+		case "Side by Side":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection not in ('360_tb','flat','180_mono','360_mono') and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection in ('360_tb','flat','180_mono','360_mono') and " + fileAlias + ".`type` = 'video')"
+			}
+		case "MKX200":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='mkx200' and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='mkx200' and " + fileAlias + ".`type` = 'video')"
+			}
+		case "MKX220":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='mkx220' and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='mkx220' and " + fileAlias + ".`type` = 'video')"
+			}
+		case "VRCA220":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='vrca220' and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_projection ='vrca220' and " + fileAlias + ".`type` = 'video')"
+			}
+		case "Codec":
+			if truefalse {
+				where = "scenes.id in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_codec_name = '" + value + "' and " + fileAlias + ".`type` = 'video')"
+			} else {
+				where = "scenes.id not in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_codec_name = '" + value + "' and " + fileAlias + ".`type` = 'video')"
+			}
+		case "In Watchlist":
+			if truefalse {
+				where = "watchlist = 1"
+			} else {
+				where = "watchlist = 0"
+			}
+		case "Is Scripted":
+			if truefalse {
+				where = "is_scripted = 1"
+			} else {
+				where = "is_scripted = 0"
+			}
+		case "Is Favourite":
+			if truefalse {
+				where = "favourite = 1"
+			} else {
+				where = "favourite = 0"
+			}
+
+		}
+
+		switch firstchar := string(attribute.OrElse(" ")[0]); firstchar {
+		case "&", "!":
+			andAttribute = append(andAttribute, where)
+		default:
+			orAttribute = append(orAttribute, where)
+		}
+	}
+
+	if len(orAttribute) > 0 {
+		combinedWhere = "(" + strings.Join(orAttribute, " or ") + ")"
+	}
+	if len(andAttribute) > 0 {
+		if combinedWhere == "" {
+			combinedWhere = strings.Join(andAttribute, " and ")
+		} else {
+			combinedWhere = combinedWhere + " and " + strings.Join(andAttribute, " and ")
+		}
+	}
+	tx = tx.Where(combinedWhere)
 
 	var sites []string
 	var excludedSites []string
@@ -656,38 +920,44 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	var mustHaveCuepoint []string
 	var excludedCuepoint []string
 	for _, i := range r.Cuepoint {
-		switch firstchar := string(i.OrElse(" ")[0]); firstchar {
+		cp := i.OrElse(" ")
+
+		switch firstchar := cp[:1]; firstchar {
 		case "&":
-			inclCp, _ := i.Get()
-			mustHaveCuepoint = append(mustHaveCuepoint, inclCp[1:])
+			mustHaveCuepoint = append(mustHaveCuepoint, setCuepointString(cp[1:]))
 		case "!":
-			exCp, _ := i.Get()
-			excludedCuepoint = append(excludedCuepoint, exCp[1:])
+			excludedCuepoint = append(excludedCuepoint, setCuepointString(cp[1:]))
 		default:
-			cuepoint = append(cuepoint, i.OrElse(""))
+			cuepoint = append(cuepoint, setCuepointString(cp))
 		}
 	}
 
 	if len(cuepoint) > 0 {
 		tx = tx.Joins("left join scene_cuepoints on scene_cuepoints.scene_id=scenes.id")
-		var where string
-		for idx, i := range cuepoint {
-			if idx == 0 {
-				where = "scene_cuepoints.name LIKE '%" + i + "%'"
-			} else {
-				where = where + " or scene_cuepoints.name LIKE '%" + i + "%'"
-			}
+		fields := []string{}
+		values := []interface{}{}
+
+		for _, i := range cuepoint {
+			fields = append(fields, "scene_cuepoints.name LIKE ?")
+			values = append(values, i)
 		}
-		tx = tx.Where(where)
+		tx = tx.Where(strings.Join(fields, " OR "), values...)
 	}
 	for idx, musthave := range mustHaveCuepoint {
 		scpAlias := "scp_i" + strconv.Itoa(idx)
-		tx = tx.
-			Joins("join scene_cuepoints "+scpAlias+" on "+scpAlias+".scene_id=scenes.id and "+scpAlias+".name like ?", "%"+musthave+"%")
+		if musthave == "%" {
+			tx = tx.Where("scenes.id in (select case when count(*)>0 then scenes.id else null end from scene_cuepoints " + scpAlias + " where " + scpAlias + ".scene_id = scenes.id)")
+		} else {
+			tx = tx.Joins("join scene_cuepoints "+scpAlias+" on "+scpAlias+".scene_id=scenes.id and "+scpAlias+".name like ?", musthave)
+		}
 	}
 	for idx, exclude := range excludedCuepoint {
 		scpAlias := "scp_e" + strconv.Itoa(idx)
-		tx = tx.Where("scenes.id not in (select "+scpAlias+".scene_id  from scene_cuepoints "+scpAlias+" where "+scpAlias+".scene_id =scenes.id and "+scpAlias+".name like ?)", "%"+exclude+"%")
+		if exclude == "%" {
+			tx = tx.Where("scenes.id in (select case when count(*)=0 then scenes.id else null end from scene_cuepoints " + scpAlias + " where " + scpAlias + ".scene_id = scenes.id)")
+		} else {
+			tx = tx.Where("scenes.id not in (select "+scpAlias+".scene_id  from scene_cuepoints "+scpAlias+" where "+scpAlias+".scene_id =scenes.id and "+scpAlias+".name like ?)", exclude)
+		}
 	}
 
 	if r.Released.Present() {
@@ -742,10 +1012,11 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	}
 
 	// Count other variations
-	tx.Group("scenes.scene_id").Count(&out.CountAny)
-	tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_accessible = ?", true).Count(&out.CountAvailable)
-	tx.Group("scenes.scene_id").Where("is_available = ?", true).Count(&out.CountDownloaded)
-	tx.Group("scenes.scene_id").Where("is_available = ?", false).Count(&out.CountNotDownloaded)
+	tx.Group("scenes.scene_id").Where("is_hidden = ?", false).Count(&out.CountAny)
+	tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_accessible = ?", true).Where("is_hidden = ?", false).Count(&out.CountAvailable)
+	tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_hidden = ?", false).Count(&out.CountDownloaded)
+	tx.Group("scenes.scene_id").Where("is_available = ?", false).Where("is_hidden = ?", false).Count(&out.CountNotDownloaded)
+	tx.Group("scenes.scene_id").Where("is_hidden = ?", true).Count(&out.CountHidden)
 
 	// Apply avail/accessible after counting
 	if r.IsAvailable.Present() {
@@ -754,6 +1025,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 
 	if r.IsAccessible.Present() {
 		tx = tx.Where("is_accessible = ?", r.IsAccessible.OrElse(true))
+	}
+
+	if r.DlState.OrElse("") == "hidden" {
+		tx = tx.Where("is_hidden = ?", true)
+	} else {
+		tx = tx.Where("is_hidden = ?", false)
 	}
 
 	// Count totals for selection
@@ -769,4 +1046,15 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		Find(&out.Scenes)
 
 	return out
+}
+func setCuepointString(cuepoint string) string {
+	// swap * wildcard to sql wildcard %
+	cuepoint = strings.Replace(cuepoint, "*", "%", -1)
+
+	// if wrapped in quotes don't use wildcards
+	if strings.HasPrefix(cuepoint, "\"") && strings.HasSuffix(cuepoint, "\"") {
+		return cuepoint[1 : len(cuepoint)-1]
+	} else {
+		return "%" + cuepoint + "%"
+	}
 }

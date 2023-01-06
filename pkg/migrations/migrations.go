@@ -486,7 +486,42 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
-
+		{
+			ID: "0048-Add-Index-To-Cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type SceneCuepoint struct {
+					SceneID uint `gorm:"index" json:"-" xbvrbackup:"-"`
+				}
+				return tx.AutoMigrate(SceneCuepoint{}).Error
+			},
+		},
+		{
+			ID: "0050-members-url",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					MemberURL string `json:"members_url" xbvrbackup:"members_url"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
+			ID: "0049-Add-Is_Hidden-To-Cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					IsHidden bool `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
+			ID: "0052-scene-index-on-files-for-feature-filters",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					SceneID uint `gorm:"index" json:"scene_id" xbvrbackup:"-"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
 		// ===============================================================================================
@@ -1130,6 +1165,38 @@ func Migrate() {
 
 					if scene.TrailerType != "" {
 						tx.Save(&scene)
+					}
+				}
+				return nil
+			},
+		},
+		{
+			ID: "0049-Add attributes-to-playlist-searchparams",
+			Migrate: func(tx *gorm.DB) error {
+				var playlists []models.Playlist
+
+				db.Where("search_params not like '%\"attributes\":%'").Find(&playlists)
+				for _, playlist := range playlists {
+					playlist.SearchParams = strings.Replace(playlist.SearchParams, ",\"volume\":", ",\"attributes\":[],\"volume\":", 1)
+					playlist.Save()
+				}
+				return nil
+			},
+		},
+		{
+			ID: "0050-remove-VirtualRealPorn-from-title",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				err := tx.Where("title LIKE ?", "% | VirtualReal%").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+
+				for _, scene := range scenes {
+					scene.Title = strings.TrimSpace(strings.Split(scene.Title, "|")[0])
+					err = tx.Save(&scene).Error
+					if err != nil {
+						return err
 					}
 				}
 				return nil
