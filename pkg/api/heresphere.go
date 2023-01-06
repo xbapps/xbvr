@@ -389,22 +389,71 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 			end = start + 1000
 		}
 
-		// split the name into position, action and and extras
-		var cuepointNames []string
-		if config.Config.Interfaces.Heresphere.MultitrackCuepoints {
-			cuepointNames = strings.Split(scene.Cuepoints[i].Name, "-")
-		} else {
-			cuepointNames = append(cuepointNames, scene.Cuepoints[i].Name)
-		}
-		for idx, cuepointName := range cuepointNames {
-			track := findTrack(idx, len(cuepointNames), cuepointName, &trackAssignments, scene)
-
+		if !config.Config.Interfaces.Heresphere.MultitrackCuepoints && !config.Config.Interfaces.Heresphere.MultitrackCastCuepoints {
+			track := 0
 			tags = append(tags, HeresphereTag{
-				Name:              cuepointName,
+				Name:              scene.Cuepoints[i].Name,
 				StartMilliseconds: float64(start),
 				EndMilliseconds:   float64(end),
 				Track:             &track,
 			})
+		} else {
+			// determine cast ve non-cast cuepoints
+			var cast []string
+			var cuepoints []string
+			for _, cuepointName := range strings.Split(scene.Cuepoints[i].Name, "-") {
+				if isCast(cuepointName, scene) {
+					cast = append(cast, cuepointName)
+				} else {
+					cuepoints = append(cuepoints, cuepointName)
+				}
+			}
+
+			if config.Config.Interfaces.Heresphere.MultitrackCuepoints {
+				for idx, cuepoint := range cuepoints {
+					track, _ := findTrack(idx, len(cuepoints), cuepoint, &trackAssignments, scene)
+					if track == 0 && !config.Config.Interfaces.Heresphere.MultitrackCastCuepoints && len(cast) > 0 {
+						cuepoint = strings.Join(cast, "-") + "-" + cuepoint
+					}
+					tags = append(tags, HeresphereTag{
+						Name:              cuepoint,
+						StartMilliseconds: float64(start),
+						EndMilliseconds:   float64(end),
+						Track:             &track,
+					})
+				}
+			} else {
+				track := 0
+				tags = append(tags, HeresphereTag{
+					Name:              strings.Join(cuepoints, "-"),
+					StartMilliseconds: float64(start),
+					EndMilliseconds:   float64(end),
+					Track:             &track,
+				})
+			}
+			if len(cast) > 0 {
+				if config.Config.Interfaces.Heresphere.MultitrackCastCuepoints {
+					for _, actor := range cast {
+						track, _ := findTrack(0, 0, actor, &trackAssignments, scene)
+						tags = append(tags, HeresphereTag{
+							Name:              actor,
+							StartMilliseconds: float64(start),
+							EndMilliseconds:   float64(end),
+							Track:             &track,
+						})
+					}
+				} else {
+					if len(cuepoints) == 0 {
+						track := 0
+						tags = append(tags, HeresphereTag{
+							Name:              strings.Join(cast, "-"),
+							StartMilliseconds: float64(start),
+							EndMilliseconds:   float64(end),
+							Track:             &track,
+						})
+					}
+				}
+			}
 		}
 	}
 
@@ -888,23 +937,30 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 	})
 }
 
-func findTrack(indexpos int, cuepointCount int, name string, trackAssignments *[]string, scene models.Scene) int {
+func findTrack(indexpos int, cuepointCount int, name string, trackAssignments *[]string, scene models.Scene) (int, bool) {
 	// find the track number to use for the actor, actors get their own track
 	if isCast(name, scene) {
-		return getTrackAssignment(name, trackAssignments)
+		if config.Config.Interfaces.Heresphere.MultitrackCastCuepoints {
+			return getTrackAssignment(name, trackAssignments), true
+		} else {
+			return getTrackAssignment("cast", trackAssignments), true
+		}
 	}
 
+	if !config.Config.Interfaces.Heresphere.MultitrackCuepoints {
+		return -1, false
+	}
 	// if a position & action exist, make the action track zero, it is more likely the main cuepoint
 	if cuepointCount > 1 {
 		if indexpos == 0 {
-			return getTrackAssignment(fmt.Sprintf("group%v", indexpos), trackAssignments)
+			return getTrackAssignment(fmt.Sprintf("group%v", indexpos), trackAssignments), false
 		}
 		if indexpos == 1 {
-			return 0
+			return 0, false
 		}
 		getTrackAssignment(fmt.Sprintf("group%v", indexpos), trackAssignments)
 	}
-	return 0
+	return 0, false
 }
 
 func isCast(name string, scene models.Scene) bool {
