@@ -119,36 +119,45 @@
             
             <div class="block-tags block" v-if="activeTab == 1">              
              <b-taglist>
-                <b-button @click="updateCuepoint(false)" class="tag is-info is-small is-warning" accesskey="a"><u>A</u>dd New</b-button>                
+              <b-tooltip  type="is-danger" :label="disableSaveMsg()" position="is-right" :delay=250 :active="disableSaveButtons()">
+                <b-button @click="updateCuepoint(false)" class="tag is-info is-small is-warning" accesskey="a" :disabled="disableSaveButtons()" >
+                  <u>A</u>dd New
+                </b-button>                
+              </b-tooltip>
                 <b-button @click="vidPosition = new Date(0,0,0,0,0, 0, player.currentTime() * 1000)" class="tag is-info is-small is-warning" accesskey="t">Current <u>T</u>ime</b-button>
-                <b-button v-if="currentCuepointId > 0" @click="updateCuepoint(true)" class="tag is-info is-small is-warning" accesskey="s"><u>S</u>ave Edit</b-button>
-                <b-button v-if="tagPosition!=''" @click='setCuepointPosition("")' class="tag is-info is-small is-warning" accesskey="o">Clear P<u>o</u>sition</b-button>
-                <b-button v-if="tagAct!=''" @click='setCuepointAct("")' class="tag is-info is-small is-warning" accesskey="c"><u>C</u>lear Action</b-button>                  
+              <b-tooltip type="is-danger" :label="$t(disableSaveMsg())" position="is-right" :delay=250 :active="disableSaveButtons()">
+                <b-button v-if="currentCuepointId > 0" @click="updateCuepoint(true)" class="tag is-info is-small is-warning" accesskey="s"
+                  :disabled="disableSaveButtons()" >
+                  <u>S</u>ave Edit
+                </b-button>
+              </b-tooltip>                
+                <b-button v-if="cuepointName!=''" @click='cuepointName=""' class="tag is-info is-small is-warning" >Clear Cuepoint Name</b-button>
+                <b-button v-if="tagAct!=''" @click='setCuepointName("")' class="tag is-info is-small is-warning" accesskey="c"><u>C</u>lear Action</b-button>                  
               </b-taglist>
             </div>
             
             <div class="is-divider" data-content="Cuepoint Positions" v-if="activeTab == 1"></div>
             <div class="block-tags block" v-if="activeTab == 1">              
               <b-taglist>                  
-                <b-button v-for="(c, idx) in cuepointPositionTags.slice(1)" :key="'pos' + idx" @click='setCuepointPosition([c])' class="tag is-info is-small">{{c}}</b-button>
+                <b-button v-for="(c, idx) in cuepointPositionTags.slice(1)" :key="'pos' + idx" @click='setCuepointName([c])' class="tag is-info is-small">{{c}}</b-button>
               </b-taglist>
             </div>
             <div class="is-divider" data-content="Default Cuepoint Actions" v-if="activeTab == 1"></div>
             <div class="block-tags block" v-if="activeTab == 1">    
               <b-taglist>
-                <b-button v-for="(c, idx) in cuepointActTags.slice(1)" :key="'action' + idx" @click='setCuepointAct([c])' class="tag is-info is-small">{{c}}</b-button>
+                <b-button v-for="(c, idx) in cuepointActTags.slice(1)" :key="'action' + idx" @click='setCuepointName([c])' class="tag is-info is-small">{{c}}</b-button>
               </b-taglist>
             </div>
             <div class="is-divider" data-content="Cast Cuepoints" v-if="activeTab == 1"></div>
             <div class="block-tags block" v-if="activeTab == 1">              
               <b-taglist>                  
-                <b-button v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='setCuepointPosition([c.name])' class="tag is-info is-small">{{c.name}}</b-button>
+                <b-button v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='setCuepointName([c.name])' class="tag is-info is-small">{{c.name}}</b-button>
               </b-taglist>
             </div>
             <div class="is-divider" data-content="Scene Tag Cuepoints" v-if="activeTab == 1"></div>
             <div class="block-tags block" v-if="activeTab == 1">    
               <b-taglist>
-                <b-button v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='setCuepointAct([tag.name])'
+                <b-button v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='setCuepointName([tag.name])'
                    class="tag is-info is-small">{{ tag.name }}</b-button>
               </b-taglist>              
             </div>
@@ -204,28 +213,69 @@
 
                 <b-tab-item :label="`Cuepoints (${sortedCuepoints.length})`">
                   <div class="block-tab-content block">
-                    <div class="block">
-                      <b-field grouped>
-                        <b-autocomplete v-model="tagPosition" :data="filteredCuepointPositionList" :open-on-focus="true"></b-autocomplete>
-                        <b-autocomplete v-model="tagAct"  :data="filteredCuepointActList" :open-on-focus="true"></b-autocomplete>
-                        <b-timepicker v-model="vidPosition" rounded editable placeholder="Defaults to player position" hour-format="24" :enable-seconds="true" :max-time="maxTime" :time-formatter="timeFormatter" :time-parser="timeParser" >
+                    <div class="block" >
+                      <div class="columns">
+                        <div class="column is-2">
+                        <b-field label="Track" width="7.25em" label-position="on-border">
+                          <b-input v-model="track" width="7.25em"></b-input>
+                        </b-field>
+                        </div>
+                        <div class="column">
+                        <b-field label="Name" label-position="on-border">
+                          <b-autocomplete v-model="cuepointName" :data="filteredCuepointPositionList" :open-on-focus="true"></b-autocomplete>
+                        </b-field>
+                        </div>                        
+                        <div class="column is-2">
+                        <b-field label="Start" label-position="on-border">
+                          <b-timepicker v-model="vidPosition" rounded editable placeholder="Defaults to player position" hour-format="24" :enable-seconds="true" :max-time="maxTime" :time-formatter="timeFormatter" :time-parser="timeParser" >
                           <b-button
                             label="Current Time"
                             type="is-primary"
                             @click="vidPosition = new Date(0,0,0,0,0, 0, player.currentTime() * 1000)" />
-                        </b-timepicker>
-                      </b-field>
+                          </b-timepicker>
+                        </b-field>
+                        </div>
+                        <div class="column is-2">
+                          <b-field label="End" label-position="on-border">
+                          <b-timepicker v-model="endTime" rounded editable placeholder="Defaults to player position" hour-format="24" :enable-seconds="true" :max-time="maxTime" :time-formatter="timeFormatter" :time-parser="timeParser" >
+                          <b-button
+                            label="Current Time"
+                            type="is-primary"
+                            @click="endTime = new Date(0,0,0,0,0, 0, player.currentTime() * 1000)" />
+                          </b-timepicker>
+                        </b-field>
+                        </div>  
+                      </div>
                     </div>
-                    <div class="content cuepoint-list">
-                      <ul>
-                        <li v-for="(c, idx) in sortedCuepoints" :key="idx">
-                          <a @click="playCuepoint(c)"><code>{{ humanizeSeconds1DP(c.time_start) }}</code></a> -
-                          <a @click="playCuepoint(c)"><strong>{{ c.name }}</strong></a>
-                          <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(c.id)" title="Delete cuepoint">
-                            <b-icon pack="fas" icon="trash" />
-                          </button>
-                        </li>
-                      </ul>
+                    <div>
+                      <!-- :sort-multiple="sortMultiple" :sort-multiple-data="cuepointSorting" -->
+                        <b-table :data="sortedCuepoints"  :narrowed=true :per-page=7 focusable striped sticky-header                          
+                          @select="cuepointSelected">
+                          <!-- paginated  pagination-position="top" :pagination-rounded=true pagination-size="is-small" -->
+                          <b-table-column field="track" label="Track" width="7.25em" v-slot="props" >
+                            {{ props.row.track ==null ? "" :  props.row.track }}
+                          </b-table-column>
+                          <b-table-column field="name" label="Name" v-slot="props"  is-small>
+                            {{ props.row.name }}
+                          </b-table-column>
+                          <b-table-column field="time_start" label="Start" v-slot="props" width="6.5em"  >
+                            {{ humanizeSeconds1DP(props.row.time_start) }}
+                          </b-table-column>
+                          <b-table-column field="time_end" label="End" v-slot="props" width="6.5em"  >
+                            {{ props.row.time_end==null ? "" :  humanizeSeconds1DP(props.row.time_end) }}
+                          </b-table-column>
+                          <b-table-column field="rating" v-slot="props" width="7em"  >
+                            <b-field v-if="props.row.track!=null">
+                              <star-rating :key="props.row.id" v-model="props.row.rating" :rating="props.row.rating" @rating-selected="setCuepointRating(props.row)" :increment="0.5" :star-size="10" />
+                              <b-icon v-if="props.row.rating>0" pack="mdi" icon="autorenew" size="is-small" @click.native="clearCuepointRating(props.row)" style="padding-left: .25em;padding-top: .5em;"/>
+                            </b-field>
+                          </b-table-column>
+                          <b-table-column v-slot="props" width="1em" >
+                            <button class="button is-danger is-outlined is-small" @click="deleteCuepoint(props.row.id)" title="Delete cuepoint">
+                              <b-icon pack="fas" icon="trash" />
+                            </button>
+                          </b-table-column>
+                        </b-table>
                     </div>
                   </div>
                 </b-tab-item>
@@ -296,7 +346,8 @@ export default {
       activeMedia: 0,
       player: {},
       tagAct: '',
-      tagPosition: '',
+      cuepointName: '',
+      cuepointRating: 0,
       cuepointPositionTags: ['', 'standing', 'sitting', 'laying', 'kneeling'],
       cuepointActTags: ['', 'handjob', 'blowjob', 'doggy', 'cowgirl', 'revcowgirl', 'missionary', 'titfuck', 'anal', 'cumshot', '69', 'facesit'],
       carouselSlide: 0,
@@ -306,7 +357,12 @@ export default {
       lastSkipFowardInterval: 5,
       lastSkipBackInterval: -5,
       currentCuepointId: 0,
-      maxTime: new Date(0, 0, 0, 5, 0, 0)
+      maxTime: new Date(0, 0, 0, 5, 0, 0),
+      cuepointSorting: [{ field: "is_hsp", order: "asc" },{ field: "time_start", order: "desc" }, {field: "track", order: "desc"}, {field: "time_end", order: "desc"}],
+      trackInput: '',
+      track: null,
+      endTime: null,
+      sortMultiple: true,
     }
   },
   computed: {
@@ -324,7 +380,26 @@ export default {
     // Tab: cuepoints
     sortedCuepoints () {
       if (this.item.cuepoints !== null) {
-        return this.item.cuepoints.slice().sort((a, b) => (a.time_start > b.time_start) ? 1 : -1)
+        for (let i = 0; i < this.item.cuepoints.length; i++) {
+          this.item.cuepoints[i].is_hsp = this.item.cuepoints[i].track == null ? 0 : 1
+        }
+        let x=this.item.cuepoints.slice().sort((a, b) => (a.time_start > b.time_start) ? 1 : -1 || (a.is_hsp >b.is_hsp) ? 1 : -1 )        
+        x=this.item.cuepoints.slice().sort((a,b) => {
+          let compare = (a.is_hsp<b.is_hsp) ? -1 : (a.is_hsp>b.is_hsp) ? 1 : 0
+          if (compare!=0) {
+            return compare
+          }
+          compare = (a.time_start<b.time_start) ? -1 : (a.time_start>b.time_start) ? 1 : 0
+          if (compare!=0) {
+            return compare
+          }
+          compare = (a.track<b.track) ? -1 : (a.track>b.track) ? 1 : 0
+          if (compare!=0) {
+            return compare
+          }
+          return  (a.time_end<b.time_end) ? -1 : (a.time_end>b.time_end) ? 1 : 0          
+        })
+        return x
       }
       return []
     },
@@ -364,24 +439,15 @@ export default {
     },
     filteredCuepointPositionList () {
       // filter the list of positions based on what has been entered so far
-      return this.cuepointPositionTags.filter((option) => {
+      let list=this.cuepointActTags.concat(this.cuepointPositionTags)
+      return list.filter((option) => {
         return option
           .toString()
           .toLowerCase()
           .trim()
-          .indexOf(this.tagPosition.toString().toLowerCase()) >= 0
+          .indexOf(this.cuepointName.toString().toLowerCase()) >= 0
       })
     },
-    filteredCuepointActList () {
-      // filter the list of acts based on what has been entered so far
-      return this.cuepointActTags.filter((option) => {
-        return option
-          .toString()
-          .toLowerCase()
-          .trim()
-          .indexOf(this.tagAct.toString().toLowerCase()) >= 0
-      })
-    }
   },
   mounted () {
     this.setupPlayer()
@@ -532,45 +598,51 @@ export default {
     playCuepoint (cuepoint) {
       // populate the cuepoint edit fields
       this.vidPosition = new Date(0, 0, 0, 0, 0, 0, cuepoint.time_start*1000)
+      this.endTime = new Date(0, 0, 0, 0, 0, 0, cuepoint.time_end*1000)
       this.currentCuepointId = cuepoint.id
+      this.cuepointRating = cuepoint.rating
       if (cuepoint.name.indexOf('-') > 0) {
-        this.tagPosition = cuepoint.name.substr(0, cuepoint.name.indexOf('-'))
+        this.cuepointName = cuepoint.name.substr(0, cuepoint.name.indexOf('-'))
         this.tagAct = cuepoint.name.substr(cuepoint.name.indexOf('-') + 1)
       } else {
         this.tagAct = cuepoint.name
-        this.tagPosition = ''
+        this.cuepointName = ''
       }
       // now mow the player position
       this.player.currentTime(cuepoint.time_start)
       this.player.play()
     },
     updateCuepoint (editCuepoint) {
+      if (this.disableSaveButtons()) return
       // if edit choosen, delete existing cuepoint before add
       if (editCuepoint && this.currentCuepointId > 0) {
         this.deleteCuepoint(this.currentCuepointId)
       }
-      let name = ''
-      if (this.tagAct !== '') {
-        name = this.tagAct
-      }
-      if (this.tagPosition !== '') {
-        name = this.tagPosition
-      }
-      if (this.tagPosition !== '' && this.tagAct !== '') {
-        name = `${this.tagPosition}-${this.tagAct}`
-      }
+      let name =  this.cuepointName      
       let pos = this.player.currentTime()
+      let endpos=null
+      this.track=parseInt(this.track)
       if (this.vidPosition != null) {        
         pos = (this.vidPosition.getMilliseconds() / 1000) + this.vidPosition.getSeconds() + (this.vidPosition.getMinutes() * 60) + (this.vidPosition.getHours() * 60 * 60)        
       }
+      if (this.endTime != null) {        
+        endpos = (this.endTime.getMilliseconds() / 1000) + this.endTime.getSeconds() + (this.endTime.getMinutes() * 60) + (this.endTime.getHours() * 60 * 60)        
+      }
       this.currentCuepointId = 0
+      
       ky.post(`/api/scene/${this.item.id}/cuepoint`, {
         json: {
+          track: this.track,
           name: name,
-          time_start: pos
+          time_start: pos,
+          time_end: endpos,
+          rating: this.cuepointRating
         }
       }).json().then(data => {
         this.vidPosition = null
+        this.endTime = null
+        this.cuepointName=''
+        this.track = null
         this.$store.commit('sceneList/updateScene', data)
         this.$store.commit('overlay/showDetails', { scene: data })
       })
@@ -649,17 +721,14 @@ export default {
       }
       this.lastSkipFowardInterval = interval
     },
-    setCuepointAct (param) {      
-      let action = param.toString()      
+    setCuepointName (param) {
       if (this.activeTab === 1) {
-        this.tagAct = action
-      }
-    },
-    setCuepointPosition (param) {
-      let position = param.toString()      
-      if (this.activeTab === 1) {
-        this.tagPosition = position
-      }
+        if (this.cuepointName=='') {
+          this.cuepointName = param.toString()
+        }else{
+          this.cuepointName = this.cuepointName+'-'+param.toString()
+        }        
+      }      
     },
     toggleGallery () {
       if (this.activeMedia == 0) {
@@ -699,6 +768,37 @@ export default {
     timeParser(inputString) {
       let items = inputString.split(":")
       return new Date(0, 0, 0, items[0],items[1], 0, items[2]*1000)
+    },
+    cuepointSelected(cuepoint) {      
+      // populate the cuepoint edit fields
+      this.vidPosition = new Date(0, 0, 0, 0, 0, 0, cuepoint.time_start*1000)
+      this.endTime = new Date(0, 0, 0, 0, 0, 0, cuepoint.time_end*1000)
+      this.currentCuepointId = cuepoint.id      
+      this.cuepointName = cuepoint.name        
+      this.track=cuepoint.track
+      this.cuepointRating=cuepoint.rating
+      // now mow the player position
+      this.player.currentTime(cuepoint.time_start)
+      this.player.play()
+    },
+    disableSaveButtons() {
+      if (this.track!=null && this.track!="" && (isNaN(this.endTime) || this.endTime==null)) return true
+      if ((this.track==null || this.track==="") && !isNaN(this.endTime) && this.endTime!=null) return true
+      return false
+    },
+    disableSaveMsg() {      
+      if (this.track!=null && this.track!="" && (isNaN(this.endTime) || this.endTime==null)) return "Specify a End Time"
+      if ((this.track==null || this.track==="") && !isNaN(this.endTime) && this.endTime!=null) return "End Time is only valid for HSP Cuepoints"
+      return ""
+    },
+    setCuepointRating (row) {
+      this.cuepointSelected(row) 
+      this.updateCuepoint(true)
+    },
+    clearCuepointRating (row) {
+      row.rating=0
+      this.cuepointSelected(row) 
+      this.updateCuepoint(true)
     },
     format,
     parseISO,
@@ -794,10 +894,6 @@ span.is-active img {
 
 .pathDetails {
   color: #b0b0b0;
-}
-
-.cuepoint-list li > button {
-  margin-left: 7px;
 }
 
 .heatmapFunscript {

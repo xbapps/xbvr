@@ -23,9 +23,13 @@ type SceneCuepoint struct {
 	CreatedAt time.Time `json:"-" xbvrbackup:"-"`
 	UpdatedAt time.Time `json:"-" xbvrbackup:"-"`
 
-	SceneID   uint    `json:"-" xbvrbackup:"-"`
+	SceneID   uint    `gorm:"index" json:"-" xbvrbackup:"-"`
 	TimeStart float64 `json:"time_start" xbvrbackup:"time_start"`
+	TimeEnd   float64 `json:"time_end,omitempty" xbvrbackup:"time_end"`
+	Track     *uint   `json:"track,omitempty" xbvrbackup:"track"`
 	Name      string  `json:"name" xbvrbackup:"name"`
+	IsHSP     string  `gorm:"-" json:"is_hsp" xbvrbackup:"-"`
+	Rating    float64 `json:"rating" xbvrbackup:"rating"`
 }
 
 func (o *SceneCuepoint) Save() error {
@@ -572,6 +576,7 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		fileAlias := "files_f" + strconv.Itoa(idx)
 		scenecastAlias := "scene_cast_f" + strconv.Itoa(idx)
 		actorsAlias := "actors_f" + strconv.Itoa(idx)
+		scenecuepointAlias := "scene_cuepoints_f" + strconv.Itoa(idx)
 
 		if strings.HasPrefix(fieldName, "!") { // ! prefix indicate NOT filtering
 			truefalse = false
@@ -627,9 +632,27 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			}
 		case "Has Rating":
 			if truefalse {
-				where = "star_rating > 0"
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'hsp' group by " + fileAlias + ".scene_id having count(*) >0)"
 			} else {
 				where = "star_rating = 0"
+			}
+		case "Has Cuepoints":
+			if truefalse {
+				where = "scenes.id in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id)"
+			} else {
+				where = "scenes.id not in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id)"
+			}
+		case "Has Simple Cuepoints":
+			if truefalse {
+				where = "scenes.id in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id and track is null)"
+			} else {
+				where = "scenes.id not in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id and track is null)"
+			}
+		case "Has HSP Cuepoints":
+			if truefalse {
+				where = "scenes.id in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id and track is not null)"
+			} else {
+				where = "scenes.id not in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id and track is not null)"
 			}
 		case "In Trailer List":
 			if truefalse {
@@ -916,38 +939,44 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	var mustHaveCuepoint []string
 	var excludedCuepoint []string
 	for _, i := range r.Cuepoint {
-		switch firstchar := string(i.OrElse(" ")[0]); firstchar {
+		cp := i.OrElse(" ")
+
+		switch firstchar := cp[:1]; firstchar {
 		case "&":
-			inclCp, _ := i.Get()
-			mustHaveCuepoint = append(mustHaveCuepoint, inclCp[1:])
+			mustHaveCuepoint = append(mustHaveCuepoint, setCuepointString(cp[1:]))
 		case "!":
-			exCp, _ := i.Get()
-			excludedCuepoint = append(excludedCuepoint, exCp[1:])
+			excludedCuepoint = append(excludedCuepoint, setCuepointString(cp[1:]))
 		default:
-			cuepoint = append(cuepoint, i.OrElse(""))
+			cuepoint = append(cuepoint, setCuepointString(cp))
 		}
 	}
 
 	if len(cuepoint) > 0 {
 		tx = tx.Joins("left join scene_cuepoints on scene_cuepoints.scene_id=scenes.id")
-		var where string
-		for idx, i := range cuepoint {
-			if idx == 0 {
-				where = "scene_cuepoints.name LIKE '%" + i + "%'"
-			} else {
-				where = where + " or scene_cuepoints.name LIKE '%" + i + "%'"
-			}
+		fields := []string{}
+		values := []interface{}{}
+
+		for _, i := range cuepoint {
+			fields = append(fields, "scene_cuepoints.name LIKE ?")
+			values = append(values, i)
 		}
-		tx = tx.Where(where)
+		tx = tx.Where(strings.Join(fields, " OR "), values...)
 	}
 	for idx, musthave := range mustHaveCuepoint {
 		scpAlias := "scp_i" + strconv.Itoa(idx)
-		tx = tx.
-			Joins("join scene_cuepoints "+scpAlias+" on "+scpAlias+".scene_id=scenes.id and "+scpAlias+".name like ?", "%"+musthave+"%")
+		if musthave == "%" {
+			tx = tx.Where("scenes.id in (select case when count(*)>0 then scenes.id else null end from scene_cuepoints " + scpAlias + " where " + scpAlias + ".scene_id = scenes.id)")
+		} else {
+			tx = tx.Joins("join scene_cuepoints "+scpAlias+" on "+scpAlias+".scene_id=scenes.id and "+scpAlias+".name like ?", musthave)
+		}
 	}
 	for idx, exclude := range excludedCuepoint {
 		scpAlias := "scp_e" + strconv.Itoa(idx)
-		tx = tx.Where("scenes.id not in (select "+scpAlias+".scene_id  from scene_cuepoints "+scpAlias+" where "+scpAlias+".scene_id =scenes.id and "+scpAlias+".name like ?)", "%"+exclude+"%")
+		if exclude == "%" {
+			tx = tx.Where("scenes.id in (select case when count(*)=0 then scenes.id else null end from scene_cuepoints " + scpAlias + " where " + scpAlias + ".scene_id = scenes.id)")
+		} else {
+			tx = tx.Where("scenes.id not in (select "+scpAlias+".scene_id  from scene_cuepoints "+scpAlias+" where "+scpAlias+".scene_id =scenes.id and "+scpAlias+".name like ?)", exclude)
+		}
 	}
 
 	if r.Released.Present() {
@@ -1036,4 +1065,15 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		Find(&out.Scenes)
 
 	return out
+}
+func setCuepointString(cuepoint string) string {
+	// swap * wildcard to sql wildcard %
+	cuepoint = strings.Replace(cuepoint, "*", "%", -1)
+
+	// if wrapped in quotes don't use wildcards
+	if strings.HasPrefix(cuepoint, "\"") && strings.HasSuffix(cuepoint, "\"") {
+		return cuepoint[1 : len(cuepoint)-1]
+	} else {
+		return "%" + cuepoint + "%"
+	}
 }

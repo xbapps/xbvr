@@ -487,6 +487,15 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0048-Add-Index-To-Cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type SceneCuepoint struct {
+					SceneID uint `gorm:"index" json:"-" xbvrbackup:"-"`
+				}
+				return tx.AutoMigrate(SceneCuepoint{}).Error
+			},
+		},
+		{
 			ID: "0050-members-url",
 			Migrate: func(tx *gorm.DB) error {
 				type Scene struct {
@@ -505,6 +514,19 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0051-heresphere-cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type SceneCuepoint struct {
+					SceneID uint    `gorm:"index" json:"-" xbvrbackup:"-"`
+					TimeEnd float64 `json:"time_end" xbvrbackup:"time_end"`
+					Track   uint    `json:"track" xbvrbackup:"track"`
+					Rating  float64 `json:"rating" xbvrbackup:"rating"`
+				}
+
+				return tx.AutoMigrate(&SceneCuepoint{}).Error
+			},
+		},
+		{
 			ID: "0052-scene-index-on-files-for-feature-filters",
 			Migrate: func(tx *gorm.DB) error {
 				type File struct {
@@ -514,7 +536,7 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0052-Subscribed-Fields",
+			ID: "0053-Subscribed-Fields",
 			Migrate: func(tx *gorm.DB) error {
 				type Site struct {
 					Subscribed bool `json:"subscribed" xbvrbackup:"subscribed"`
