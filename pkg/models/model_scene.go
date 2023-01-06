@@ -476,7 +476,7 @@ type RequestSceneList struct {
 	Tags         []optional.String `json:"tags"`
 	Cast         []optional.String `json:"cast"`
 	Cuepoint     []optional.String `json:"cuepoint"`
-	Features     []optional.String `json:"features"`
+	Attributes   []optional.String `json:"attributes"`
 	Volume       optional.Int      `json:"volume"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
@@ -552,13 +552,13 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		}
 	}
 
-	// handle Feature selections
-	var orFeature []string
-	var andFeature []string
+	// handle Attribute selections
+	var orAttribute []string
+	var andAttribute []string
 	combinedWhere := ""
-	for idx, feature := range r.Features {
+	for idx, attribute := range r.Attributes {
 		truefalse := true
-		fieldName := feature.OrElse("")
+		fieldName := attribute.OrElse("")
 		sceneAlias := "scenes_f" + strconv.Itoa(idx)
 		fileAlias := "files_f" + strconv.Itoa(idx)
 		scenecastAlias := "scene_cast_f" + strconv.Itoa(idx)
@@ -615,6 +615,18 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'hsp' group by " + fileAlias + ".scene_id having count(*) >0)"
 			} else {
 				where = "scenes.id not in (select " + sceneAlias + ".id from scenes " + sceneAlias + " join files " + fileAlias + " on " + fileAlias + ".scene_id = " + sceneAlias + ".id and " + fileAlias + ".`type` = 'hsp' where " + sceneAlias + ".id=scenes.id group by " + sceneAlias + ".id)"
+			}
+		case "Has Rating":
+			if truefalse {
+				where = "star_rating > 0"
+			} else {
+				where = "star_rating = 0"
+			}
+		case "In Trailer List":
+			if truefalse {
+				where = "trailerlist = 1"
+			} else {
+				where = "trailerlist = 0"
 			}
 		case "Rating 0", "Rating .5", "Rating 1", "Rating 1.5", "Rating 2", "Rating 2.5", "Rating 3", "Rating 3.5", "Rating 4", "Rating 4.5", "Rating 5":
 			if truefalse {
@@ -757,24 +769,43 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			} else {
 				where = "scenes.id not in (select distinct " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".video_codec_name = '" + value + "' and " + fileAlias + ".`type` = 'video')"
 			}
+		case "In Watchlist":
+			if truefalse {
+				where = "watchlist = 1"
+			} else {
+				where = "watchlist = 0"
+			}
+		case "Is Scripted":
+			if truefalse {
+				where = "is_scripted = 1"
+			} else {
+				where = "is_scripted = 0"
+			}
+		case "Is Favourite":
+			if truefalse {
+				where = "favourite = 1"
+			} else {
+				where = "favourite = 0"
+			}
+
 		}
 
-		switch firstchar := string(feature.OrElse(" ")[0]); firstchar {
+		switch firstchar := string(attribute.OrElse(" ")[0]); firstchar {
 		case "&", "!":
-			andFeature = append(andFeature, where)
+			andAttribute = append(andAttribute, where)
 		default:
-			orFeature = append(orFeature, where)
+			orAttribute = append(orAttribute, where)
 		}
 	}
 
-	if len(orFeature) > 0 {
-		combinedWhere = "(" + strings.Join(orFeature, " or ") + ")"
+	if len(orAttribute) > 0 {
+		combinedWhere = "(" + strings.Join(orAttribute, " or ") + ")"
 	}
-	if len(andFeature) > 0 {
+	if len(andAttribute) > 0 {
 		if combinedWhere == "" {
-			combinedWhere = strings.Join(andFeature, " and ")
+			combinedWhere = strings.Join(andAttribute, " and ")
 		} else {
-			combinedWhere = combinedWhere + " and " + strings.Join(andFeature, " and ")
+			combinedWhere = combinedWhere + " and " + strings.Join(andAttribute, " and ")
 		}
 	}
 	tx = tx.Where(combinedWhere)

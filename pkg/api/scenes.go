@@ -69,7 +69,7 @@ type ResponseGetFilters struct {
 	Sites         []string        `json:"sites"`
 	ReleaseMonths []string        `json:"release_month"`
 	Volumes       []models.Volume `json:"volumes"`
-	Features      []string        `json:"features"`
+	Attributes    []string        `json:"attributes"`
 }
 
 type SceneResource struct{}
@@ -285,46 +285,51 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	var outVolumes []models.Volume
 	db.Model(&models.Volume{}).Find(&outVolumes)
 
-	// supported features
-	var outFeatures []string
-	outFeatures = append(outFeatures, "Multiple Video Files")
-	outFeatures = append(outFeatures, "Single Video File")
-	outFeatures = append(outFeatures, "Multiple Script Files")
-	outFeatures = append(outFeatures, "Single Script File")
-	outFeatures = append(outFeatures, "Has Hsp File")
-	outFeatures = append(outFeatures, "Rating 0")
-	outFeatures = append(outFeatures, "Rating .5")
-	outFeatures = append(outFeatures, "Rating 1")
-	outFeatures = append(outFeatures, "Rating 1.5")
-	outFeatures = append(outFeatures, "Rating 2")
-	outFeatures = append(outFeatures, "Rating 2.5")
-	outFeatures = append(outFeatures, "Rating 3")
-	outFeatures = append(outFeatures, "Rating 3.5")
-	outFeatures = append(outFeatures, "Rating 4")
-	outFeatures = append(outFeatures, "Rating 4.5")
-	outFeatures = append(outFeatures, "Rating 5")
-	outFeatures = append(outFeatures, "Cast 1")
-	outFeatures = append(outFeatures, "Cast 2")
-	outFeatures = append(outFeatures, "Cast 3")
-	outFeatures = append(outFeatures, "Cast 4")
-	outFeatures = append(outFeatures, "Cast 5")
-	outFeatures = append(outFeatures, "Cast 6+")
-	outFeatures = append(outFeatures, "Flat video")
-	outFeatures = append(outFeatures, "FOV: 180°")
-	outFeatures = append(outFeatures, "FOV: 190°")
-	outFeatures = append(outFeatures, "FOV: 200°")
-	outFeatures = append(outFeatures, "FOV: 220°")
-	outFeatures = append(outFeatures, "FOV: 360°")
-	outFeatures = append(outFeatures, "Projection Perspective")
-	outFeatures = append(outFeatures, "Projection Equirectangular")
-	outFeatures = append(outFeatures, "Projection Equirectangular360")
-	outFeatures = append(outFeatures, "Projection Fisheye")
-	outFeatures = append(outFeatures, "Mono")
-	outFeatures = append(outFeatures, "Top/Bottom")
-	outFeatures = append(outFeatures, "Side by Side")
-	outFeatures = append(outFeatures, "MKX200")
-	outFeatures = append(outFeatures, "MKX220")
-	outFeatures = append(outFeatures, "VRCA220")
+	// supported attributes
+	var outAttributes []string
+	outAttributes = append(outAttributes, "Multiple Video Files")
+	outAttributes = append(outAttributes, "Single Video File")
+	outAttributes = append(outAttributes, "Multiple Script Files")
+	outAttributes = append(outAttributes, "Single Script File")
+	outAttributes = append(outAttributes, "Has Hsp File")
+	outAttributes = append(outAttributes, "Is Favourite")
+	outAttributes = append(outAttributes, "Is Scripted")
+	outAttributes = append(outAttributes, "In Watchlist")
+	outAttributes = append(outAttributes, "Has Rating")
+	outAttributes = append(outAttributes, "In Trailer List")
+	outAttributes = append(outAttributes, "Rating 0")
+	outAttributes = append(outAttributes, "Rating .5")
+	outAttributes = append(outAttributes, "Rating 1")
+	outAttributes = append(outAttributes, "Rating 1.5")
+	outAttributes = append(outAttributes, "Rating 2")
+	outAttributes = append(outAttributes, "Rating 2.5")
+	outAttributes = append(outAttributes, "Rating 3")
+	outAttributes = append(outAttributes, "Rating 3.5")
+	outAttributes = append(outAttributes, "Rating 4")
+	outAttributes = append(outAttributes, "Rating 4.5")
+	outAttributes = append(outAttributes, "Rating 5")
+	outAttributes = append(outAttributes, "Cast 1")
+	outAttributes = append(outAttributes, "Cast 2")
+	outAttributes = append(outAttributes, "Cast 3")
+	outAttributes = append(outAttributes, "Cast 4")
+	outAttributes = append(outAttributes, "Cast 5")
+	outAttributes = append(outAttributes, "Cast 6+")
+	outAttributes = append(outAttributes, "Flat video")
+	outAttributes = append(outAttributes, "FOV: 180°")
+	outAttributes = append(outAttributes, "FOV: 190°")
+	outAttributes = append(outAttributes, "FOV: 200°")
+	outAttributes = append(outAttributes, "FOV: 220°")
+	outAttributes = append(outAttributes, "FOV: 360°")
+	outAttributes = append(outAttributes, "Projection Perspective")
+	outAttributes = append(outAttributes, "Projection Equirectangular")
+	outAttributes = append(outAttributes, "Projection Equirectangular360")
+	outAttributes = append(outAttributes, "Projection Fisheye")
+	outAttributes = append(outAttributes, "Mono")
+	outAttributes = append(outAttributes, "Top/Bottom")
+	outAttributes = append(outAttributes, "Side by Side")
+	outAttributes = append(outAttributes, "MKX200")
+	outAttributes = append(outAttributes, "MKX220")
+	outAttributes = append(outAttributes, "VRCA220")
 	type Results struct {
 		Result string
 	}
@@ -345,7 +350,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	}
 
 	for _, r := range results {
-		outFeatures = append(outFeatures, "Resolution "+r.Result+"K")
+		outAttributes = append(outAttributes, "Resolution "+r.Result+"K")
 	}
 
 	// frame rates
@@ -354,7 +359,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 		Order("video_avg_frame_rate_val").
 		Find(&results)
 	for _, r := range results {
-		outFeatures = append(outFeatures, "Frame Rate "+r.Result+" fps")
+		outAttributes = append(outAttributes, "Frame Rate "+r.Result+" fps")
 	}
 
 	// codec
@@ -363,7 +368,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 		Order("video_codec_name").
 		Find(&results)
 	for _, r := range results {
-		outFeatures = append(outFeatures, "Codec "+r.Result)
+		outAttributes = append(outAttributes, "Codec "+r.Result)
 	}
 	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetFilters{
 		Tags:          outTags,
@@ -371,7 +376,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 		Sites:         outSites,
 		ReleaseMonths: outRelease,
 		Volumes:       outVolumes,
-		Features:      outFeatures,
+		Attributes:    outAttributes,
 	})
 }
 

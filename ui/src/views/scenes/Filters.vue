@@ -175,24 +175,23 @@
         </b-taginput>
       </b-field>
 
-      <b-field label="Features" label-position="on-border" class="field-extra">
-        <b-taginput v-model="features" autocomplete :data="filteredFeatures" @typing="getFilteredFeatures">
-          <template slot-scope="props">{{ props.option }}</template>
-          <template slot="empty">No matching features</template>
-          <template #selected="props">
-            <b-tag v-for="(tag, index) in props.tags"
-              :type="tag.charAt(0)=='!' ? 'is-danger': (tag.charAt(0)=='&' ? 'is-success' : '')"
-              :key="tag+index" :tabstop="false" closable  @close="features=features.filter(e => e !== tag)" @click="toggle3way(tag,index,'features')"> 
-              <b-tooltip position="is-right" :delay="200"
-                  :label="tag.charAt(0)=='!' ? 'Exclude ' + removeConditionPrefix(tag) : tag.charAt(0)=='&' ? 'Must Have ' + removeConditionPrefix(tag) : 'Include ' + removeConditionPrefix(tag)">
-                <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
-                <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
-                {{removeConditionPrefix(tag)}}
-              </b-tooltip>
-            </b-tag>
-          </template>
-        </b-taginput>
-      </b-field>
+      <b-tooltip position="is-top" label="Allows searching a variety of attributes such as: scenes in Watchlists, Favourites, Has Video, Scripts or HSP Files, Ratings, Number of Cast, FOV, Projection, Resolution, Frame Rate and Codecs" multilined :delay="1000" style="width:100%">
+        <b-field label="Attributes" label-position="on-border" class="field-extra">        
+          <b-taginput v-model="attributes" autocomplete :data="filteredAttributes" @typing="getFilteredAttributes">
+            <template slot-scope="props">{{ props.option }}</template>
+            <template slot="empty">No matching attributes</template>
+            <template #selected="props">
+              <b-tag v-for="(tag, index) in props.tags"
+                :type="tag.charAt(0)=='!' ? 'is-danger': (tag.charAt(0)=='&' ? 'is-success' : '')"
+                :key="tag+index" :tabstop="false" closable  @close="attributes=attributes.filter(e => e !== tag)" @click="toggle3way(tag,index,'attributes')"> 
+                  <b-icon pack="mdi" v-if="tag.charAt(0)=='!'" icon="minus-circle-outline" size="is-small" class="tagicon"></b-icon>
+                  <b-icon pack="mdi" v-if="tag.charAt(0)=='&'" icon="plus-circle-outline" size="is-small" class="tagicon"></b-icon>
+                  {{removeConditionPrefix(tag)}}
+              </b-tag>
+            </template>          
+          </b-taginput>
+        </b-field>
+      </b-tooltip>
     </div>
     <div class="is-divider" data-content="Actor Also Known As groups"></div>
     <b-field>
@@ -230,13 +229,14 @@ export default {
   components: { SavedSearch },
   mounted () {
     this.$store.dispatch('sceneList/filters')
+    this.fetchFilters()
   },
   data () {
     return {
       filteredCast: [],
       filteredSites: [],
       filteredTags: [],
-      filteredFeatures: [],
+      filteredAttributes: [],
     }
   },
   methods: {
@@ -266,8 +266,8 @@ export default {
         !this.tags.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
       ))
     },
-    getFilteredFeatures (text) {
-      this.filteredFeatures = this.filters.features.filter(option => (
+    getFilteredAttributes (text) {
+      this.filteredAttributes = this.filters.attributes.filter(option => (
         option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
         !this.tags.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
       ))
@@ -343,8 +343,8 @@ export default {
         case 'cuepoints':
           tags=this.cuepoint
           break
-        case 'features':
-          tags=this.features
+        case 'attributes':
+          tags=this.attributes
           break
       }      
       switch(tags[idx].charAt(0)) {
@@ -367,8 +367,8 @@ export default {
         case 'cuepoints':
           this.cuepoint=tags
           break
-        case 'features':
-          this.features=tags
+        case 'attributes':
+          this.attributes=tags
           break
       }
     },    
@@ -396,6 +396,12 @@ export default {
         return txt.substring(1) 
       }
       return txt
+    },
+    async fetchFilters() {
+        this.filteredAttributes=['Loading attributes']
+        ky.get('/api/scene/filters').json().then(data => {
+          this.filteredAttributes=data.attributes          
+      })      
     }
   },
   computed: {
@@ -466,12 +472,12 @@ export default {
         this.reloadList()
       }
     },
-    features: {
+    attributes: {
       get () {
-        return this.$store.state.sceneList.filters.features
+        return this.$store.state.sceneList.filters.attributes
       },
       set (value) {
-        this.$store.state.sceneList.filters.features = value
+        this.$store.state.sceneList.filters.attributes = value
         this.reloadList()        
       }
     },
