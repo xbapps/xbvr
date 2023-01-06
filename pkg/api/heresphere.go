@@ -277,7 +277,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	var videoFiles []models.File
-	videoFiles, err = scene.GetVideoFiles()
+	videoFiles, err = scene.GetVideoFilesSorted(config.Config.Interfaces.Players.VideoSortSeq)
 	if err != nil {
 		log.Error(err)
 		return
@@ -519,7 +519,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	var heresphereScriptFiles []HeresphereScript
 	var scriptFiles []models.File
-	scriptFiles, err = scene.GetScriptFiles()
+	scriptFiles, err = scene.GetScriptFilesSorted(config.Config.Interfaces.Players.ScriptSortSeq)
 	if err != nil {
 		log.Error(err)
 		return

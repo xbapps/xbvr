@@ -327,7 +327,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	var sources []DeoSceneEncoding
 	var sourcesSpatial []DeoSceneEncoding
 	var videoFiles []models.File
-	videoFiles, err = scene.GetVideoFiles()
+	videoFiles, err = scene.GetVideoFilesSorted(config.Config.Interfaces.Players.VideoSortSeq)
 	if err != nil {
 		log.Error(err)
 		return

@@ -74,6 +74,8 @@ type RequestSaveOptionsDeoVR struct {
 	AllowCuepointUpdates    bool   `json:"allow_cuepoint_updates"`
 	AllowWatchlistUpdates   bool   `json:"allow_watchlist_updates"`
 	MultitrackCuepoints     bool   `json:"multitrack_cuepoints"`
+	VideoSortSeq            string `json:"video_sort_seq"`
+	ScriptSortSeq           string `json:"script_sort_seq"`
 	MultitrackCastCuepoints bool   `json:"multitrack_cast_cuepoints"`
 	RetainNonHSPCuepoints   bool   `json:"retain_non_hsp_cuepoints"`
 }
@@ -315,6 +317,8 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.Heresphere.AllowCuepointUpdates = r.AllowCuepointUpdates
 	config.Config.Interfaces.Heresphere.AllowWatchlistUpdates = r.AllowWatchlistUpdates
 	config.Config.Interfaces.Heresphere.MultitrackCuepoints = r.MultitrackCuepoints
+	config.Config.Interfaces.Players.VideoSortSeq = r.VideoSortSeq
+	config.Config.Interfaces.Players.ScriptSortSeq = r.ScriptSortSeq
 	config.Config.Interfaces.Heresphere.MultitrackCastCuepoints = r.MultitrackCastCuepoints
 	config.Config.Interfaces.Heresphere.RetainNonHSPCuepoints = r.RetainNonHSPCuepoints
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
