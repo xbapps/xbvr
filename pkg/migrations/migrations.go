@@ -514,6 +514,19 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0051-heresphere-cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type SceneCuepoint struct {
+					SceneID uint    `gorm:"index" json:"-" xbvrbackup:"-"`
+					TimeEnd float64 `json:"time_end" xbvrbackup:"time_end"`
+					Track   uint    `json:"track" xbvrbackup:"track"`
+					Rating  float64 `json:"rating" xbvrbackup:"rating"`
+				}
+
+				return tx.AutoMigrate(&SceneCuepoint{}).Error
+			},
+		},
+		{
 			ID: "0052-scene-index-on-files-for-feature-filters",
 			Migrate: func(tx *gorm.DB) error {
 				type File struct {
@@ -522,6 +535,7 @@ func Migrate() {
 				return tx.AutoMigrate(File{}).Error
 			},
 		},
+
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
 		// ===============================================================================================

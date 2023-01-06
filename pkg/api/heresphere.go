@@ -68,6 +68,7 @@ type HeresphereTag struct {
 	StartMilliseconds float64 `json:"start,omitempty"`
 	EndMilliseconds   float64 `json:"end,omitempty"`
 	Track             *int    `json:"track,omitempty"`
+	Rating            float64 `json:"rating,omitempty"`
 }
 
 type HeresphereMedia struct {
@@ -260,12 +261,19 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	var scene models.Scene
 	err := db.Preload("Cast").
 		Preload("Tags").
-		Preload("Cuepoints").
+		Preload("Cuepoints", "track is not null").
 		Preload("Files").
 		Where("id = ?", sceneID).First(&scene).Error
 	if err != nil {
 		log.Error(err)
 		return
+	}
+	if len(scene.Cuepoints) == 0 {
+		db.Preload("Cast").
+			Preload("Tags").
+			Preload("Cuepoints", "track is null").
+			Preload("Files").
+			Where("id = ?", sceneID).First(&scene)
 	}
 
 	var videoFiles []models.File
@@ -377,87 +385,102 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		return cuepoints[i].TimeStart < cuepoints[j].TimeStart
 	})
 
-	end := 0
-	var trackAssignments []string
-	for i := range cuepoints {
-		start := int(cuepoints[i].TimeStart * 1000)
-		if i+1 < len(cuepoints) {
-			end = int(cuepoints[i+1].TimeStart*1000) - 1
-		} else if int(videoLength*1000) > start {
-			end = int(videoLength * 1000)
-		} else {
-			end = start + 1000
-		}
-
-		if !config.Config.Interfaces.Heresphere.MultitrackCuepoints && !config.Config.Interfaces.Heresphere.MultitrackCastCuepoints {
-			track := 0
-			tags = append(tags, HeresphereTag{
-				Name:              scene.Cuepoints[i].Name,
-				StartMilliseconds: float64(start),
-				EndMilliseconds:   float64(end),
-				Track:             &track,
-			})
-		} else {
-			// determine cast ve non-cast cuepoints
-			var cast []string
-			var cuepoints []string
-			for _, cuepointName := range strings.Split(scene.Cuepoints[i].Name, "-") {
-				if isCast(cuepointName, scene) {
-					cast = append(cast, cuepointName)
+	if len(scene.Cuepoints) > 1 {
+		if scene.Cuepoints[0].Track == nil {
+			// basic cuepoint data
+			end := 0
+			var trackAssignments []string
+			for i := range cuepoints {
+				start := int(cuepoints[i].TimeStart * 1000)
+				if i+1 < len(cuepoints) {
+					end = int(cuepoints[i+1].TimeStart*1000) - 1
+				} else if int(videoLength*1000) > start {
+					end = int(videoLength * 1000)
 				} else {
-					cuepoints = append(cuepoints, cuepointName)
+					end = start + 1000
 				}
-			}
 
-			if config.Config.Interfaces.Heresphere.MultitrackCuepoints {
-				for idx, cuepoint := range cuepoints {
-					track, _ := findTrack(idx, len(cuepoints), cuepoint, &trackAssignments, scene)
-					if track == 0 && !config.Config.Interfaces.Heresphere.MultitrackCastCuepoints && len(cast) > 0 {
-						cuepoint = strings.Join(cast, "-") + "-" + cuepoint
-					}
+				if !config.Config.Interfaces.Heresphere.MultitrackCuepoints && !config.Config.Interfaces.Heresphere.MultitrackCastCuepoints {
+					track := 0
 					tags = append(tags, HeresphereTag{
-						Name:              cuepoint,
+						Name:              scene.Cuepoints[i].Name,
 						StartMilliseconds: float64(start),
 						EndMilliseconds:   float64(end),
 						Track:             &track,
 					})
-				}
-			} else {
-				track := 0
-				tags = append(tags, HeresphereTag{
-					Name:              strings.Join(cuepoints, "-"),
-					StartMilliseconds: float64(start),
-					EndMilliseconds:   float64(end),
-					Track:             &track,
-				})
-			}
-			if len(cast) > 0 {
-				if config.Config.Interfaces.Heresphere.MultitrackCastCuepoints {
-					for _, actor := range cast {
-						track, _ := findTrack(0, 0, actor, &trackAssignments, scene)
-						tags = append(tags, HeresphereTag{
-							Name:              actor,
-							StartMilliseconds: float64(start),
-							EndMilliseconds:   float64(end),
-							Track:             &track,
-						})
-					}
 				} else {
-					if len(cuepoints) == 0 {
+					// determine cast ve non-cast cuepoints
+					var cast []string
+					var cuepoints []string
+					for _, cuepointName := range strings.Split(scene.Cuepoints[i].Name, "-") {
+						if isCast(cuepointName, scene) {
+							cast = append(cast, cuepointName)
+						} else {
+							cuepoints = append(cuepoints, cuepointName)
+						}
+					}
+
+					if config.Config.Interfaces.Heresphere.MultitrackCuepoints {
+						for idx, cuepoint := range cuepoints {
+							track, _ := findTrack(idx, len(cuepoints), cuepoint, &trackAssignments, scene)
+							if track == 0 && !config.Config.Interfaces.Heresphere.MultitrackCastCuepoints && len(cast) > 0 {
+								cuepoint = strings.Join(cast, "-") + "-" + cuepoint
+							}
+							tags = append(tags, HeresphereTag{
+								Name:              cuepoint,
+								StartMilliseconds: float64(start),
+								EndMilliseconds:   float64(end),
+								Track:             &track,
+							})
+						}
+					} else {
 						track := 0
 						tags = append(tags, HeresphereTag{
-							Name:              strings.Join(cast, "-"),
+							Name:              strings.Join(cuepoints, "-"),
 							StartMilliseconds: float64(start),
 							EndMilliseconds:   float64(end),
 							Track:             &track,
 						})
 					}
+					if len(cast) > 0 {
+						if config.Config.Interfaces.Heresphere.MultitrackCastCuepoints {
+							for _, actor := range cast {
+								track, _ := findTrack(0, 0, actor, &trackAssignments, scene)
+								tags = append(tags, HeresphereTag{
+									Name:              actor,
+									StartMilliseconds: float64(start),
+									EndMilliseconds:   float64(end),
+									Track:             &track,
+								})
+							}
+						} else {
+							if len(cuepoints) == 0 {
+								track := 0
+								tags = append(tags, HeresphereTag{
+									Name:              strings.Join(cast, "-"),
+									StartMilliseconds: float64(start),
+									EndMilliseconds:   float64(end),
+									Track:             &track,
+								})
+							}
+						}
+					}
 				}
 			}
-		}
-	}
+		} else {
+			// extra heresphere cuepoint attributes
+			for _, cuepoint := range cuepoints {
+				trackNo := int(*cuepoint.Track)
+				tags = append(tags, HeresphereTag{
+					Name:              cuepoint.Name,
+					StartMilliseconds: cuepoint.TimeStart * 1000,
+					EndMilliseconds:   cuepoint.TimeEnd * 1000,
+					Track:             &trackNo,
+					Rating:            cuepoint.Rating,
+				})
 
-	if len(cuepoints) > 1 {
+			}
+		}
 		addFeatureTag("Has cuepoints")
 	}
 
@@ -733,16 +756,32 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		// need to reread the cuepoints, to handle muti threading issues and the scene record may have changed
 		// just preload the cuepoint, preload all associations and the scene, does not reread the cuepoint?, so just get them and update the scene
 		var existingScene models.Scene
-		db.Preload("Cuepoints").Where("id = ?", scene.ID).First(&existingScene)
+		db.Preload("Cuepoints", "track is not null").Where("id = ?", scene.ID).First(&existingScene)
 
 		var replacementCuepoints []models.SceneCuepoint
 		endpos := findEndPos(requestData)
 		firstTrack := findTheMainTrack(requestData)
 		// build new list of cuepoints
+		newTrack := -1
+		lastTrack := -1
 		for _, tag := range *requestData.Tags {
-			if !strings.Contains(tag.Name, ":") {
-				if *tag.Track == firstTrack {
-					replacementCuepoints = append(replacementCuepoints, models.SceneCuepoint{SceneID: scene.ID, TimeStart: float64(tag.StartMilliseconds) / 1000, Name: tag.Name})
+			if !strings.Contains(tag.Name, ":") || (strings.HasPrefix(tag.Name, "Talent:") && tag.StartMilliseconds != 0 && tag.EndMilliseconds != endpos) {
+				if lastTrack != int(*tag.Track) {
+					// adjust track numbers, starting at track 0
+					lastTrack = int(*tag.Track)
+					newTrack += 1
+				}
+				*tag.Track = newTrack
+				if strings.HasPrefix(tag.Name, "Talent:") {
+					// allows users to create a Cuepoint with the Talent: tags, but remove the prefix
+					tag.Name = strings.Replace(tag.Name, "Talent:", "", 1)
+				}
+				if *tag.Track <= firstTrack+1000 {
+					var trackNo uint
+					if tag.Track != nil {
+						trackNo = uint(*tag.Track)
+					}
+					replacementCuepoints = append(replacementCuepoints, models.SceneCuepoint{SceneID: scene.ID, TimeStart: float64(tag.StartMilliseconds) / 1000, Name: tag.Name, Track: &trackNo, TimeEnd: float64(tag.EndMilliseconds) / 1000, Rating: tag.Rating})
 				} else {
 					//allow for multi track, merge into the main cuepoint name
 					if tag.StartMilliseconds > 0 || tag.EndMilliseconds < endpos {
@@ -757,17 +796,19 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 			}
 		}
 
-		// workout cuepoints differences and append/delete
-		// note association.replace does not work, it just changes cuepoint records and sets the sceneid to null on the existing cuepoint record, l;eaving them in the db
+		// delete existing HSP cuepoints (track not null)
+		var emptyList []models.SceneCuepoint
+		scene.Cuepoints = emptyList
+		db.Where("scene_id = ? and track is not null", scene.ID).Delete(&models.SceneCuepoint{})
+
+		// readd new set
 		for _, newCuepoint := range replacementCuepoints {
-			if matchCuepoint(newCuepoint, existingScene.Cuepoints) == -1 {
-				db.Model(&scene).Association("Cuepoints").Append(&newCuepoint)
-			}
+			db.Model(&scene).Association("Cuepoints").Append(&newCuepoint)
 		}
-		for _, existingCuepoint := range existingScene.Cuepoints {
-			if matchCuepoint(existingCuepoint, replacementCuepoints) == -1 {
-				db.Model(&existingCuepoint).Delete(&existingCuepoint)
-			}
+
+		// delete non-HSP cuepoints (track is null) if the option is set
+		if len(scene.Cuepoints) > 0 && !config.Config.Interfaces.Heresphere.RetainNonHSPCuepoints {
+			db.Where("scene_id = ? and track is null", scene.ID).Delete(&models.SceneCuepoint{})
 		}
 	}
 
@@ -838,8 +879,9 @@ func findEndPos(requestData HereSphereAuthRequest) float64 {
 	return endpos
 }
 func matchCuepoint(findCuepoint models.SceneCuepoint, cuepointList []models.SceneCuepoint) int {
+
 	for idx, cuepoint := range cuepointList {
-		if cuepoint.Name == findCuepoint.Name && cuepoint.TimeStart == findCuepoint.TimeStart {
+		if cuepoint.Name == findCuepoint.Name && cuepoint.TimeStart == findCuepoint.TimeStart && *cuepoint.Track == *findCuepoint.Track && cuepoint.TimeEnd == findCuepoint.TimeEnd {
 			return idx
 		}
 	}

@@ -22,8 +22,11 @@ type RequestToggleList struct {
 }
 
 type RequestSceneCuepoint struct {
-	TimeStart float64 `json:"time_start"`
+	Track     *uint   `json:"track,omitempty"`
 	Name      string  `json:"name"`
+	TimeStart float64 `json:"time_start"`
+	TimeEnd   float64 `json:"time_end"`
+	Rating    float64 `json:"rating"`
 }
 
 type RequestSetSceneRating struct {
@@ -296,6 +299,9 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Is Scripted")
 	outAttributes = append(outAttributes, "In Watchlist")
 	outAttributes = append(outAttributes, "Has Rating")
+	outAttributes = append(outAttributes, "Has Cuepoints")
+	outAttributes = append(outAttributes, "Has Simple Cuepoints")
+	outAttributes = append(outAttributes, "Has HSP Cuepoints")
 	outAttributes = append(outAttributes, "In Trailer List")
 	outAttributes = append(outAttributes, "Rating 0")
 	outAttributes = append(outAttributes, "Rating .5")
@@ -518,7 +524,10 @@ func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Resp
 		t := models.SceneCuepoint{
 			SceneID:   scene.ID,
 			TimeStart: r.TimeStart,
+			TimeEnd:   r.TimeEnd,
 			Name:      r.Name,
+			Track:     r.Track,
+			Rating:    r.Rating,
 		}
 		t.Save()
 
