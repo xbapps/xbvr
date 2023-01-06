@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly"
 	"github.com/nleeper/goment"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -12,17 +13,11 @@ import (
 func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString string) {
 	sceneCollector := createCollector("www.javdatabase.com")
 
-	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+	sceneCollector.OnHTML(`html`, func(html *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 		contentId := ""
 
-		// Cast
-		e.ForEach(`div.idol-name`, func(id int, elem *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, elem.Text)
-		})
-
-		// Tags
 		// Always add 'javr' as a tag
 		sc.Tags = append(sc.Tags, `javr`)
 
@@ -35,8 +30,23 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 			"exclusive distribution": true,
 		}
 
-		e.ForEach(`div.movietable tr`, func(id int, tr *colly.HTMLElement) {
-			label := tr.ChildText(`td.tablelabel > h3 > b`)
+		// Cast
+		html.ForEach("h2.subhead", func(id int, h2 *colly.HTMLElement) {
+			if h2.Text == "Featured Idols" {
+				dom := h2.DOM
+				parent := dom.Parent()
+				if parent != nil {
+					parent.Find("a").Each(func(i int, anchor *goquery.Selection) {
+						if anchor.Text() != "" {
+							sc.Cast = append(sc.Cast, anchor.Text())
+						}
+					})
+				}
+			}
+		})
+
+		html.ForEach(`div.movietable tr`, func(id int, tr *colly.HTMLElement) {
+			label := tr.ChildText(`td.tablelabel`)
 
 			if label == `Studio:` {
 				// Studio
@@ -68,11 +78,15 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 				   tags/correlating them back to their old equivalents on r18 using something
 				   like Javinizer's tag CSV"
 				*/
-				tr.ForEach(`td.tablevalue > span.tags`, func(id2 int, span *colly.HTMLElement) {
-					tag := strings.ToLower(span.Text)
+				tr.ForEach("a", func(id int, anchor *colly.HTMLElement) {
+					href := anchor.Attr("href")
+					if strings.Contains(href, "javdatabase.com/genres/") {
+						// Tags
+						tag := strings.ToLower(anchor.Text)
 
-					if !skiptags[tag] {
-						sc.Tags = append(sc.Tags, tag)
+						if !skiptags[tag] {
+							sc.Tags = append(sc.Tags, tag)
+						}
 					}
 				})
 
@@ -88,7 +102,7 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 		})
 
 		// Screenshots
-		e.ForEach("a", func(_ int, anchor *colly.HTMLElement) {
+		html.ForEach("a[href]", func(_ int, anchor *colly.HTMLElement) {
 			linkHref := anchor.Attr(`href`)
 			/* NOTE:
 			   it only pulls 6 gallery images, but that appears to be a limitation
