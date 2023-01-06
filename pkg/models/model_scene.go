@@ -637,6 +637,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			} else {
 				where = "trailerlist = 0"
 			}
+		case "Has Subscription":
+			if truefalse {
+				where = "is_subscribed = 1"
+			} else {
+				where = "is_subscribed = 0"
+			}
 		case "Rating 0", "Rating .5", "Rating 1", "Rating 1.5", "Rating 2", "Rating 2.5", "Rating 3", "Rating 3.5", "Rating 4", "Rating 4.5", "Rating 5":
 			if truefalse {
 				where = "star_rating = " + fieldName[7:]
