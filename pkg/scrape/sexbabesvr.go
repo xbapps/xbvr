@@ -24,6 +24,7 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
+		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "SexBabesVR"
 		sc.Site = siteID

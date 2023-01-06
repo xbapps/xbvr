@@ -21,6 +21,7 @@ func VRTeenrs(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 	sceneCollector.OnHTML(`.list_item`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
+		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "International Media Company BV"
 		sc.Site = siteID

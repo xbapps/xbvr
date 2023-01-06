@@ -30,6 +30,7 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 	sceneCollector.OnHTML(`article.project`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
+		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "Little Caprice Media"
 		sc.Site = siteID

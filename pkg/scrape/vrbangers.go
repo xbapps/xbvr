@@ -26,6 +26,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
+		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "VRBangers"
 		sc.Site = siteID
