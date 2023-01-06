@@ -1154,13 +1154,13 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0049-Add attibutes-to-playlist-searchparams",
+			ID: "0049-Add attributes-to-playlist-searchparams",
 			Migrate: func(tx *gorm.DB) error {
 				var playlists []models.Playlist
 
-				db.Where("search_params not like '%\"attibutes\":%'").Find(&playlists)
+				db.Where("search_params not like '%\"attributes\":%'").Find(&playlists)
 				for _, playlist := range playlists {
-					playlist.SearchParams = strings.Replace(playlist.SearchParams, ",\"volume\":", ",\"attibutes\":[],\"volume\":", 1)
+					playlist.SearchParams = strings.Replace(playlist.SearchParams, ",\"volume\":", ",\"attributes\":[],\"volume\":", 1)
 					playlist.Save()
 				}
 				return nil
