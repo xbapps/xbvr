@@ -535,6 +535,23 @@ func Migrate() {
 				return tx.AutoMigrate(File{}).Error
 			},
 		},
+		{
+			ID: "0053-Subscribed-Fields",
+			Migrate: func(tx *gorm.DB) error {
+				type Site struct {
+					Subscribed bool `json:"subscribed" xbvrbackup:"subscribed"`
+				}
+				type Scene struct {
+					IsSubscribed bool   `json:"is_subscribed" gorm:"default:false"`
+					ScraperId    string `json:"scraper_id" xbvrbackup:"scraper_id"`
+				}
+				err := tx.AutoMigrate(Site{}).Error
+				if err == nil {
+					err = tx.AutoMigrate(Scene{}).Error
+				}
+				return err
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
@@ -1214,6 +1231,46 @@ func Migrate() {
 					}
 				}
 				return nil
+			},
+		},
+		{
+			ID: "0053-Update-New-Scraper-Id",
+			Migrate: func(tx *gorm.DB) error {
+				var sites []models.Site
+				tx.Model(&sites).Find(&sites)
+
+				// create a scene type without deleted_at and updated_at columns
+				// this means deleted records are updated as well and does not change the updated_at column
+				type Scene struct {
+					ID        uint   `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+					SceneID   string `json:"scene_id" xbvrbackup:"scene_id"`
+					ScraperId string `json:"scraper_id" xbvrbackup:"scraper_id"`
+				}
+				type match struct {
+					siteId         string
+					sceneIdPattern string
+				}
+				var manualSites []match
+				manualSites = append(manualSites, match{"tonightsgirlfriend", "tonight-s-girlfriend-vr%"})
+				manualSites = append(manualSites, match{"littlecaprice", "little-caprice-dreams%"})
+
+				var returnErr error
+				for _, site := range sites {
+					common.Log.Infof("Setting scraper_id for %s", site.Name)
+					err := tx.Model(&Scene{}).Where("replace(scene_id,'-','') like ?", strings.Replace(site.ID, "-", "", -1)+"%").Update("scraper_id", site.ID).Error
+					if err != nil {
+						returnErr = err
+					}
+				}
+				for _, site := range manualSites {
+					common.Log.Infof("Setting scraper_id for %s", site.siteId)
+					err := tx.Model(Scene{}).Where("scene_id like ?", site.sceneIdPattern).Update("scraper_id", site.siteId).Error
+					if err != nil {
+						returnErr = err
+					}
+				}
+
+				return returnErr
 			},
 		},
 	})
