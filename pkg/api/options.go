@@ -151,9 +151,6 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.PUT("/sites/{site}").To(i.toggleSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.PUT("/sites/subsrcibed/{site}").To(i.toggleSubscribed).
-		Metadata(restfulspec.KeyOpenAPITags, tags))
-
 	ws.Route(ws.POST("/scraper/force-site-update").To(i.forceSiteUpdate).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -248,13 +245,6 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 }
 
 func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {
-	i.toggleSiteField(req, resp, "IsEnabled")
-}
-func (i ConfigResource) toggleSubscribed(req *restful.Request, resp *restful.Response) {
-	i.toggleSiteField(req, resp, "Subscribed")
-}
-
-func (i ConfigResource) toggleSiteField(req *restful.Request, resp *restful.Response, field string) {
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -269,13 +259,7 @@ func (i ConfigResource) toggleSiteField(req *restful.Request, resp *restful.Resp
 		log.Error(err)
 		return
 	}
-	switch field {
-	case "IsEnabled":
-		site.IsEnabled = !site.IsEnabled
-	case "Subscribed":
-		site.Subscribed = !site.Subscribed
-		log.Infof("Toggling %s %v", id, site.Subscribed)
-	}
+	site.IsEnabled = !site.IsEnabled
 	site.Save()
 
 	var sites []models.Site
@@ -286,9 +270,6 @@ func (i ConfigResource) toggleSiteField(req *restful.Request, resp *restful.Resp
 		db.Order("name COLLATE NOCASE asc").Find(&sites)
 	}
 
-	if field == "Subscribed" {
-		db.Model(&models.Scene{}).Where("scraper_id = ?", site.ID).Update("is_subscribed", site.Subscribed)
-	}
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 

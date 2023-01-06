@@ -12,7 +12,6 @@ import (
 
 func ScrapeTPDB(knownScenes []string, out *[]models.ScrapedScene, apiToken string, sceneUrl string) error {
 	sc := models.ScrapedScene{}
-	sc.ScraperID = "tpdb"
 	sc.SceneType = "VR"
 
 	// We accept 2 scene URL syntaxes:

@@ -18,7 +18,6 @@ type Scraper struct {
 
 type ScrapedScene struct {
 	SceneID     string   `json:"_id"`
-	ScraperID   string   `json:"xbvr_site"`
 	SiteID      string   `json:"scene_id"`
 	SceneType   string   `json:"scene_type"`
 	Title       string   `json:"title"`

@@ -19,7 +19,6 @@ func ScrapeR18(knownScenes []string, out *[]models.ScrapedScene, queryString str
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
-		sc.ScraperID = "r18"
 		sc.SceneType = "VR"
 		sc.Studio = "JAVR"
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]

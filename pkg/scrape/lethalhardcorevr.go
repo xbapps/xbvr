@@ -35,7 +35,6 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
-		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "Celestial Productions"
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]

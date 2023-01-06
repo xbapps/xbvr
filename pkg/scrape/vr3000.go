@@ -24,7 +24,6 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	siteCollector.OnHTML(`.row.no-gutter`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
-		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "VR3000"
 		sc.Site = siteID

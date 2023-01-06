@@ -23,7 +23,6 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
-		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "RealityLovers"
 		sc.Site = siteID

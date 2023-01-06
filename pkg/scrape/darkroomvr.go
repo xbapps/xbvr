@@ -24,7 +24,6 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
-		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "VirtualTaboo"
 		sc.Site = siteID
