@@ -137,7 +137,7 @@
             </b-switch>
           </b-field>
           <div class="columns">
-            <div class="column is-one-half"> 
+            <div class="column is-one-thrid">
               <b-tooltip
                 label="This option will split Cuepoints into multiple tracks, eg Standing-Doggy will split into 2 tracks in Heresphere"
                 size="is-large" type="is-primary" multilined :delay="250" >
@@ -148,12 +148,23 @@
                 </b-field>
               </b-tooltip>
             </div>
-            <div class="column is-one-half"> 
+            <div class="column is-one-thrid">
               <b-tooltip
                 label="This option will split Cuepoints matching the Actors Name into seperate tracks in Heresphere"
                 size="is-large" type="is-primary" multilined :delay="250" >
                 <b-field label="Use Multi-Track Cast Cuepoints">
                   <b-switch v-model="multiTrackCastCuepoints">
+                    Enabled
+                  </b-switch>
+                </b-field>
+              </b-tooltip>
+            </div>
+            <div class="column is-one-thrid"> 
+              <b-tooltip
+                label="This option controls whether you use wish to keep existing non-HSP Cuepoints when you sync cuepoints changes. Syncing changes to Cuepoints in HSP will be saved with extended fields"
+                size="is-large" type="is-primary" multilined :delay="250" >
+                <b-field label="Retain Non-HSP Cuepoints">
+                  <b-switch v-model="retainNonHSPCuepoints">
                     Enabled
                   </b-switch>
                 </b-field>
@@ -326,6 +337,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.heresphere.multitrack_cast_cuepoints = value
+      }
+    },
+    retainNonHSPCuepoints: {
+      get () {        
+        return this.$store.state.optionsDeoVR.heresphere.retain_non_hsp_cuepoints
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.retain_non_hsp_cuepoints = value
       }
     },
     isLoading: function () {

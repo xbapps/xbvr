@@ -25,7 +25,11 @@ type SceneCuepoint struct {
 
 	SceneID   uint    `gorm:"index" json:"-" xbvrbackup:"-"`
 	TimeStart float64 `json:"time_start" xbvrbackup:"time_start"`
+	TimeEnd   float64 `json:"time_end,omitempty" xbvrbackup:"time_end"`
+	Track     *uint   `json:"track,omitempty" xbvrbackup:"track"`
 	Name      string  `json:"name" xbvrbackup:"name"`
+	IsHSP     string  `gorm:"-" json:"is_hsp" xbvrbackup:"-"`
+	Rating    float64 `json:"rating" xbvrbackup:"rating"`
 }
 
 func (o *SceneCuepoint) Save() error {
@@ -566,6 +570,7 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		fileAlias := "files_f" + strconv.Itoa(idx)
 		scenecastAlias := "scene_cast_f" + strconv.Itoa(idx)
 		actorsAlias := "actors_f" + strconv.Itoa(idx)
+		scenecuepointAlias := "scene_cuepoints_f" + strconv.Itoa(idx)
 
 		if strings.HasPrefix(fieldName, "!") { // ! prefix indicate NOT filtering
 			truefalse = false
@@ -621,9 +626,27 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			}
 		case "Has Rating":
 			if truefalse {
-				where = "star_rating > 0"
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'hsp' group by " + fileAlias + ".scene_id having count(*) >0)"
 			} else {
 				where = "star_rating = 0"
+			}
+		case "Has Cuepoints":
+			if truefalse {
+				where = "scenes.id in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id)"
+			} else {
+				where = "scenes.id not in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id)"
+			}
+		case "Has Simple Cuepoints":
+			if truefalse {
+				where = "scenes.id in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id and track is null)"
+			} else {
+				where = "scenes.id not in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id and track is null)"
+			}
+		case "Has HSP Cuepoints":
+			if truefalse {
+				where = "scenes.id in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id and track is not null)"
+			} else {
+				where = "scenes.id not in (select " + scenecuepointAlias + ".scene_id from scene_cuepoints " + scenecuepointAlias + " where " + scenecuepointAlias + ".scene_id =scenes.id and track is not null)"
 			}
 		case "In Trailer List":
 			if truefalse {

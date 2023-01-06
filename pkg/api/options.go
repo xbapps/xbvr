@@ -75,6 +75,7 @@ type RequestSaveOptionsDeoVR struct {
 	AllowWatchlistUpdates   bool   `json:"allow_watchlist_updates"`
 	MultitrackCuepoints     bool   `json:"multitrack_cuepoints"`
 	MultitrackCastCuepoints bool   `json:"multitrack_cast_cuepoints"`
+	RetainNonHSPCuepoints   bool   `json:"retain_non_hsp_cuepoints"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -315,6 +316,7 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.Heresphere.AllowWatchlistUpdates = r.AllowWatchlistUpdates
 	config.Config.Interfaces.Heresphere.MultitrackCuepoints = r.MultitrackCuepoints
 	config.Config.Interfaces.Heresphere.MultitrackCastCuepoints = r.MultitrackCastCuepoints
+	config.Config.Interfaces.Heresphere.RetainNonHSPCuepoints = r.RetainNonHSPCuepoints
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)
