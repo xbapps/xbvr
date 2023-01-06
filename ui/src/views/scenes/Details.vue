@@ -79,7 +79,7 @@
                 <small>
                   <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>                  
                   <br  v-if="item.members_url != ''"/>
-                  <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer">Members Link</a>                  
+                  <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer"><b-icon pack="mdi" icon="link-lock" custom-size="mdi-18px"/>Members Link</a>
                 </small>
                 <div class="columns mt-0">
                   <div class="column pt-0">
@@ -93,6 +93,7 @@
                   </div>
                   <div class="column pt-0">
                     <div class="is-pulled-right">
+                      <hidden-button :item="item"/>&nbsp;  
                       <watchlist-button :item="item"/>&nbsp;                      
                       <trailerlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
@@ -333,11 +334,11 @@ import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import RefreshButton from '../../components/RefreshButton'
 import TrailerlistButton from '../../components/TrailerlistButton'
-
+import HiddenButton from '../../components/HiddenButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       index: 1,

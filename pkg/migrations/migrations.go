@@ -496,6 +496,15 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0049-Add-Is_Hidden-To-Cuepoints",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					IsHidden bool `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
 			ID: "0051-heresphere-cuepoints",
 			Migrate: func(tx *gorm.DB) error {
 				type SceneCuepoint struct {

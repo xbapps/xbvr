@@ -25,6 +25,11 @@ func WankzVRSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.Studio = "Wankz"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		if strings.Contains(sc.HomepageURL, "https://www.wankzvr.com/") {
+			sc.MembersUrl = strings.Replace(sc.HomepageURL, "https://www.wankzvr.com/", "https://povr.com/wankzvr/", 1)
+		} else if strings.Contains(sc.HomepageURL, "https://www.milfvr.com/") {
+			sc.MembersUrl = strings.Replace(sc.HomepageURL, "https://www.milfvr.com/", "https://povr.com/milfvr/", 1)
+		}
 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "-")
