@@ -459,6 +459,7 @@ export default {
       set (value) {
         this.$store.state.optionsDeoVR.players.script_sort_seq = value
       },
+    },
     multiTrackCastCuepoints: {
       get () {        
         return this.$store.state.optionsDeoVR.heresphere.multitrack_cast_cuepoints
