@@ -1,5 +1,16 @@
 <template>
   <div class="content">
+    <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
+    <div class="columns">
+      <div class="column">
+      </div>
+        <div class="column buttons" align="right">
+          <b-tooltip
+            label="Toogles the Subscription status of Sites Visible" :delay="500" >
+            <a class="button is-primary" v-on:click="toggleAllSubscriptions()">{{$t('Toggle Subscriptions')}}</a>
+          </b-tooltip>
+        </div>
+    </div>
     <div class="columns">
       <div class="column">
         <h3 class="title">{{$t('Scrape scenes from studios')}}</h3>
@@ -8,7 +19,7 @@
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
     </div>
-    <b-table :data="scraperList">
+    <b-table :data="scraperList" ref="scraperTable">
       <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="60" sortable>
           <span><b-switch v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
       </b-table-column>
@@ -36,6 +47,9 @@
             <span :class="[runningScrapers.includes(props.row.id) ? '' : 'invisible']">
               <span class="pulsate is-info">{{$t('Scraping now...')}}</span>
             </span>
+      </b-table-column>
+      <b-table-column field="subscribed" :label="$t('Subscribed')" v-slot="props" width="60" sortable>
+          <span><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
       </b-table-column>
       <b-table-column field="options" :label="opt" v-slot="props" width="30">
         <div class="menu">
@@ -70,7 +84,8 @@ export default {
   data () {
     return {
       javrQuery: '',
-      tpdbSceneUrl: ''
+      tpdbSceneUrl: '',
+      isLoading: false
     }
   },
   mounted () {
@@ -110,6 +125,15 @@ export default {
     },
     sanitizeSiteName(site) {
       return site.split('(')[0].trim();
+    },
+    async toggleAllSubscriptions(){
+      const table = this.$refs.scraperTable;
+      this.isLoading=true
+      for (let i=0; i<table.newData.length; i++) {
+        await ky.put(`/api/options/sites/subsrcibed/${table.newData[i].id}`, { json: {} }).json()
+        this.$store.dispatch('optionsSites/load')
+      }
+      this.isLoading=false
     },
     parseISO,
     formatDistanceToNow
