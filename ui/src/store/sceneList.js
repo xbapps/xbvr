@@ -22,6 +22,7 @@ const defaultFilterState = {
   sites: [],
   tags: [],
   cuepoint: [],
+  attributes: [],
   volume: 0,
   sort: 'release_desc'
 }

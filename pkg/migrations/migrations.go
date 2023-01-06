@@ -517,6 +517,15 @@ func Migrate() {
 				return tx.AutoMigrate(&SceneCuepoint{}).Error
 			},
 		},
+		{
+			ID: "0052-scene-index-on-files-for-feature-filters",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					SceneID uint `gorm:"index" json:"scene_id" xbvrbackup:"-"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
@@ -1162,6 +1171,19 @@ func Migrate() {
 					if scene.TrailerType != "" {
 						tx.Save(&scene)
 					}
+				}
+				return nil
+			},
+		},
+		{
+			ID: "0049-Add attributes-to-playlist-searchparams",
+			Migrate: func(tx *gorm.DB) error {
+				var playlists []models.Playlist
+
+				db.Where("search_params not like '%\"attributes\":%'").Find(&playlists)
+				for _, playlist := range playlists {
+					playlist.SearchParams = strings.Replace(playlist.SearchParams, ",\"volume\":", ",\"attributes\":[],\"volume\":", 1)
+					playlist.Save()
 				}
 				return nil
 			},
