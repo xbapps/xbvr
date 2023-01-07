@@ -246,6 +246,8 @@ func addSLRScraper(id string, name string, company string, avatarURL string) {
 func init() {
 	addSLRScraper("slr-originals", "SLR Originals", "SexLikeReal", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
 	addSLRScraper("slr-originals-bts", "SLR Originals BTS", "SexLikeReal", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
+	addSLRScraper("slr-labs", "SLR Labs", "SexLikeReal", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
+	addSLRScraper("slr-jav-originals", "SLR JAV Originals", "SexLikeReal", "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png")
 
 	addSLRScraper("ad4x", "AD4X", "AD4X", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/230/logo_crop_1606755231.png")
 	addSLRScraper("altporn4u-vr", "AltPorn4uVR", "AltPorn4uVR", "https://www.altporn4u.com/wp-content/uploads/2020/08/altporn4u-150x150.jpg")
@@ -254,6 +256,7 @@ func init() {
 	addSLRScraper("amorevr", "AmoreVR", "AmoreVR", "")
 	addSLRScraper("anal-delight", "Anal Delight", "AnalDelight", "https://mcdn.vrporn.com/files/20200907184611/AnalDelight_Logo.jpg")
 	addSLRScraper("astrodomina", "AstroDomina", "AstroDomina", "")
+	addSLRScraper("babykxtten", "Babykxtten", "Babykxtten", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/321/logo_crop_1624979737.png")
 	addSLRScraper("blondehexe", "BlondeHexe", "BlondeHexe", "")
 	addSLRScraper("blush-erotica", "Blush Erotica", "Blush Erotica", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/385/logo_crop_1649724830.png")
 	addSLRScraper("bravomodelsmedia", "BravoModelsMedia", "Bravo Models", "https://mcdn.vrporn.com/files/20181015142403/ohNFa81Q_400x400.png")
@@ -295,6 +298,7 @@ func init() {
 	addSLRScraper("maturesvr", "MaturesVR", "MaturesVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/314/logo_crop_1620737406.png")
 	addSLRScraper("mmm100", "MMM100", "MMM100", "https://mmm100.com/MMM100.png")
 	addSLRScraper("mongercash", "AsiansexdiaryVR", "AsiansexdiaryVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/219/logo_crop_1628500033.png")
+	addSLRScraper("mugur-porn-vr", "Mugur Porn VR", "MugurPornVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/375/logo_crop_1649424076.png")
 	addSLRScraper("mutiny-vr", "Mutiny VR", "Mutiny VR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/401/logo_crop_1656550572.png")
 	addSLRScraper("net69vr", "Net69VR", "Net69VR", "")
 	addSLRScraper("no2studiovr", "No2StudioVR", "No2StudioVR", "https://mcdn.vrporn.com/files/20201021145654/No2StudioVR_400x400-1.jpg")
@@ -317,6 +321,7 @@ func init() {
 	addSLRScraper("stockingsvr", "StockingsVR", "StockingsVR", "https://mcdn.vrporn.com/files/20171107092330/stockingsvr_logo_vr_porn_studio_vrporn.com_virtual_reality1-1.png")
 	addSLRScraper("strictlyglamourvr", "StrictlyGlamourVR", "StrictlyGlamourVR", "")
 	addSLRScraper("stripzvr", "StripzVR", "N1ck Inc.", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg")
+	addSLRScraper("suckmevr", "SuckMeVR", "SuckMeVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/403/logo_crop_1657112082.png")
 	addSLRScraper("swallowbay", "SwallowBay", "SwallowBay", "https://mcdn.vrporn.com/files/20210330092926/swallowbay-400x400.jpg")
 	addSLRScraper("sweetlonglips", "Sweetlonglips", "Sweetlonglips", "https://mcdn.vrporn.com/files/20200117105304/SLLVRlogo.png")
 	addSLRScraper("taboo-vr-porn", "Taboo VR Porn", "Taboo VR Porn", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/354/logo_crop_1643894389.png")
