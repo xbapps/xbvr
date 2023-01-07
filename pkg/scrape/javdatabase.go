@@ -10,7 +10,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString string) {
+func ScrapeJavDB(out *[]models.ScrapedScene, queryString string) {
 	sceneCollector := createCollector("www.javdatabase.com")
 
 	sceneCollector.OnHTML(`html`, func(html *colly.HTMLElement) {
@@ -21,15 +21,6 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 		// Always add 'javr' as a tag
 		sc.Tags = append(sc.Tags, `javr`)
 
-		// Skipping some very generic and useless tags
-		skiptags := map[string]bool{
-			"featured actress":       true,
-			"vr exclusive":           true,
-			"high-quality vr":        true,
-			"hi-def":                 true,
-			"exclusive distribution": true,
-		}
-
 		// Cast
 		html.ForEach("h2.subhead", func(id int, h2 *colly.HTMLElement) {
 			if h2.Text == "Featured Idols" {
@@ -37,7 +28,8 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 				parent := dom.Parent()
 				if parent != nil {
 					parent.Find("a").Each(func(i int, anchor *goquery.Selection) {
-						if anchor.Text() != "" {
+						href, exists := anchor.Attr("href")
+						if exists && strings.Contains(href, "javdatabase.com/idols/") && anchor.Text() != "" {
 							sc.Cast = append(sc.Cast, anchor.Text())
 						}
 					})
@@ -82,9 +74,9 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 					href := anchor.Attr("href")
 					if strings.Contains(href, "javdatabase.com/genres/") {
 						// Tags
-						tag := strings.ToLower(anchor.Text)
+						tag := ProcessJavrTag(anchor.Text)
 
-						if !skiptags[tag] {
+						if tag != "" {
 							sc.Tags = append(sc.Tags, tag)
 						}
 					}

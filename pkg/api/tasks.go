@@ -11,7 +11,8 @@ import (
 )
 
 type RequestScrapeJAVR struct {
-	Query string `json:"q"`
+	Scraper string `json:"s"`
+	Query   string `json:"q"`
 }
 
 type RequestScrapeTPDB struct {
@@ -165,7 +166,7 @@ func (i TaskResource) scrapeJAVR(req *restful.Request, resp *restful.Response) {
 	}
 
 	if r.Query != "" {
-		go tasks.ScrapeJAVR(r.Query)
+		go tasks.ScrapeJAVR(r.Query, r.Scraper)
 	}
 }
 
