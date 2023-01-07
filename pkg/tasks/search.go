@@ -136,3 +136,58 @@ func SearchIndex() {
 		tlog.Infof("Search index built!")
 	}
 }
+
+/**
+ * Add newly scraped scenes to the search index. There are two differences between
+ * this and SearchIndex:
+ * 1. This only adds the specified scraped scenes, instead of searching all
+ *    existing scenes in the database. This means this method is much faster.
+ * 2. This will replace the index for the specified scene, in case the scraper
+ *    now has updated data (either remote site changed content, or you're using
+ *    a different JAVR scraper source for example).
+ */
+func IndexScrapedScenes(scrapedScenes *[]models.ScrapedScene) {
+	if !models.CheckLock("index") {
+		models.CreateLock("index")
+		defer models.RemoveLock("index")
+
+		tlog := log.WithFields(logrus.Fields{"task": "scrape"})
+
+		idx, err := NewIndex("scenes")
+		if err != nil {
+			log.Error(err)
+			models.RemoveLock("index")
+			return
+		}
+
+		tlog.Infof("Adding scraped scenes to search index...")
+
+		total := 0
+
+		for i := range *scrapedScenes {
+			var scene models.Scene
+			scrapedScene := (*scrapedScenes)[i]
+			err = scene.GetIfExist(scrapedScene.SceneID)
+			if err == nil {
+				if idx.Exist(scene.SceneID) {
+					// Remove old index, as data may have been updated
+					idx.Bleve.Delete(scene.SceneID)
+				}
+
+				err := idx.PutScene(scene)
+				if err != nil {
+					log.Error(err)
+				} else {
+					log.Println("Indexed " + scene.SceneID)
+					total += 1
+				}
+			}
+		}
+
+		tlog.Infof("Indexed %v new scenes", total)
+
+		idx.Bleve.Close()
+
+		tlog.Infof("Search index built!")
+	}
+}
