@@ -219,21 +219,37 @@ func (o *Scene) GetTotalWatchTime() int {
 }
 
 func (o *Scene) GetVideoFiles() ([]File, error) {
+	files, err := o.GetVideoFilesSorted("")
+	return files, err
+}
+func (o *Scene) GetVideoFilesSorted(sort string) ([]File, error) {
 	db, _ := GetDB()
 	defer db.Close()
 
 	var files []File
-	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "video").Find(&files)
+	if sort == "" {
+		db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "video").Find(&files)
+	} else {
+		db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "video").Order(sort).Find(&files)
+	}
 
 	return files, nil
 }
 
 func (o *Scene) GetScriptFiles() ([]File, error) {
+	var files, err = o.GetScriptFilesSorted("is_selected_script DESC, created_time DESC")
+	return files, err
+}
+func (o *Scene) GetScriptFilesSorted(sort string) ([]File, error) {
 	db, _ := GetDB()
 	defer db.Close()
 
 	var files []File
-	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "script").Order("is_selected_script DESC, created_time DESC").Find(&files)
+	if sort == "" {
+		db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "script").Find(&files)
+	} else {
+		db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "script").Order(sort).Find(&files)
+	}
 
 	return files, nil
 }
