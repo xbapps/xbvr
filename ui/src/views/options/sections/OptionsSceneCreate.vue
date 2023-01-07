@@ -8,6 +8,7 @@
             <option value="javdatabase">javdatabase.com</option>
             <option value="javlibrary">javlibrary.com</option>
             <option value="javbus">javbus.com</option>
+            <option value="javland">jav.land</option>
           </b-select>
           <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
           <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>

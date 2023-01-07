@@ -18,6 +18,7 @@ func ProcessJavrTag(tag string) string {
 		"high quality vr":        true,
 		"high-quality vr":        true,
 		"vr":                     true,
+		"vr only":                true,
 		"hi-def":                 true,
 		"exclusive distribution": true,
 		"dmm exclusive":          true,
@@ -32,8 +33,10 @@ func ProcessJavrTag(tag string) string {
 		"blow":        "blowjob",
 		"blow job":    "blowjob",
 		"kiss kiss":   "kiss",
+		"kiss / kiss": "kiss",
 		"prostitute":  "club hostess & sex worker",
 		"prostitutes": "club hostess & sex worker",
+		"single work": "solo work",
 		"suntan":      "sun tan",
 	}
 	if maptags[taglower] != "" {

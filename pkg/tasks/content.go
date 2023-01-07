@@ -285,6 +285,9 @@ func ScrapeJAVR(queryString string, scraper string) {
 		} else if scraper == "javbus" {
 			tlog.Infof("Scraping JavBus")
 			scrape.ScrapeJavBus(&collectedScenes, queryString)
+		} else if scraper == "javland" {
+			tlog.Infof("Scraping JavLand")
+			scrape.ScrapeJavLand(&collectedScenes, queryString)
 		} else {
 			tlog.Infof("Scraping JavDB")
 			scrape.ScrapeJavDB(&collectedScenes, queryString)
