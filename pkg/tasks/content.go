@@ -669,7 +669,7 @@ func RestoreBundle(request RequestRestore) {
 			}
 			if request.InclScenes {
 				CountTags()
-				SearchIndex()
+				IndexScenes(&(bundleData.Scenes))
 			}
 
 			if request.InclScenes || request.InclActorAkas {

@@ -138,15 +138,9 @@ func SearchIndex() {
 }
 
 /**
- * Add newly scraped scenes to the search index. There are two differences between
- * this and SearchIndex:
- * 1. This only adds the specified scraped scenes, instead of searching all
- *    existing scenes in the database. This means this method is much faster.
- * 2. This will replace the index for the specified scene, in case the scraper
- *    now has updated data (either remote site changed content, or you're using
- *    a different JAVR scraper source for example).
+ * Update search index for all of the specified scenes.
  */
-func IndexScrapedScenes(scrapedScenes *[]models.ScrapedScene) {
+func IndexScenes(scenes *[]models.Scene) {
 	if !models.CheckLock("index") {
 		models.CreateLock("index")
 		defer models.RemoveLock("index")
@@ -164,23 +158,19 @@ func IndexScrapedScenes(scrapedScenes *[]models.ScrapedScene) {
 
 		total := 0
 
-		for i := range *scrapedScenes {
-			var scene models.Scene
-			scrapedScene := (*scrapedScenes)[i]
-			err = scene.GetIfExist(scrapedScene.SceneID)
-			if err == nil {
-				if idx.Exist(scene.SceneID) {
-					// Remove old index, as data may have been updated
-					idx.Bleve.Delete(scene.SceneID)
-				}
+		for i := range *scenes {
+			scene := (*scenes)[i]
+			if idx.Exist(scene.SceneID) {
+				// Remove old index, as data may have been updated
+				idx.Bleve.Delete(scene.SceneID)
+			}
 
-				err := idx.PutScene(scene)
-				if err != nil {
-					log.Error(err)
-				} else {
-					log.Println("Indexed " + scene.SceneID)
-					total += 1
-				}
+			err := idx.PutScene(scene)
+			if err != nil {
+				log.Error(err)
+			} else {
+				// log.Debugln("Indexed " + scene.SceneID)
+				total += 1
 			}
 		}
 
@@ -190,4 +180,27 @@ func IndexScrapedScenes(scrapedScenes *[]models.ScrapedScene) {
 
 		tlog.Infof("Search index built!")
 	}
+}
+
+/**
+ * Update search index for all of the specified scrapedScenes.
+ * This method will first read the scraped scenes from the DB, after
+ * which it calls IndexScenes.
+ */
+func IndexScrapedScenes(scrapedScenes *[]models.ScrapedScene) {
+	// Map scrapedScenes to Scenes
+	var scenes []models.Scene
+	for i := range *scrapedScenes {
+		var scene models.Scene
+		scrapedScene := (*scrapedScenes)[i]
+		// Read scraped scene from db, as we don't want to index it
+		// if it doesn't exist in there
+		err := scene.GetIfExist(scrapedScene.SceneID)
+		if err == nil {
+			scenes = append(scenes, scene)
+		}
+	}
+
+	// Now update search index
+	IndexScenes(&scenes)
 }
