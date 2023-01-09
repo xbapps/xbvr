@@ -23,6 +23,9 @@ func ScrapeJavBus(out *[]models.ScrapedScene, queryString string) {
 		// Always add 'javr' as a tag
 		sc.Tags = append(sc.Tags, `javr`)
 
+		// Always add 'javbus' as a tag
+		sc.Tags = append(sc.Tags, `javbus`)
+		
 		html.ForEach(`div.row.movie div.info > p`, func(id int, p *colly.HTMLElement) {
 			label := p.ChildText(`span.header`)
 
