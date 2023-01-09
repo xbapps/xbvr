@@ -18,6 +18,9 @@ func ScrapeJavLand(out *[]models.ScrapedScene, queryString string) {
 
 		// Always add 'javr' as a tag
 		sc.Tags = append(sc.Tags, `javr`)
+		
+		// Always add 'jav.land' as a tag
+		sc.Tags = append(sc.Tags, `jav.land`)
 
 		html.ForEach(`table.videotextlist tr`, func(id int, tr *colly.HTMLElement) {
 			tds := tr.DOM.Children()
