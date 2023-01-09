@@ -723,6 +723,10 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 
 		scene.Save()
 
+		// Update search index with new data
+		scenes := []models.Scene{scene}
+		tasks.IndexScenes(&scenes)
+
 		resp.WriteHeaderAndEntity(http.StatusOK, scene)
 	}
 }

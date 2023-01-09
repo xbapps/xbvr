@@ -174,11 +174,9 @@ func IndexScenes(scenes *[]models.Scene) {
 			}
 		}
 
-		tlog.Infof("Indexed %v new scenes", total)
-
 		idx.Bleve.Close()
 
-		tlog.Infof("Search index built!")
+		tlog.Infof("Indexed %v scenes", total)
 	}
 }
 
