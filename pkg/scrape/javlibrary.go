@@ -57,6 +57,9 @@ func ScrapeJavLibrary(out *[]models.ScrapedScene, queryString string) {
 		// Tags
 		// Always add 'javr' as a tag
 		sc.Tags = append(sc.Tags, `javr`)
+		
+		// Always add 'javlibrary' as a tag
+		sc.Tags = append(sc.Tags, `javlibrary`)
 
 		// ID
 		videoIdSel := e.DOM.Find("div#video_id td.text")
