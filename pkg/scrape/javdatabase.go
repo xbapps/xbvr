@@ -20,6 +20,9 @@ func ScrapeJavDB(out *[]models.ScrapedScene, queryString string) {
 
 		// Always add 'javr' as a tag
 		sc.Tags = append(sc.Tags, `javr`)
+		
+		// Always add 'javdatabase' as a tag
+		sc.Tags = append(sc.Tags, `javdatabase`)
 
 		// Cast
 		html.ForEach("h2.subhead", func(id int, h2 *colly.HTMLElement) {
