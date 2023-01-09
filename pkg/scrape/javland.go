@@ -18,7 +18,7 @@ func ScrapeJavLand(out *[]models.ScrapedScene, queryString string) {
 
 		// Always add 'javr' as a tag
 		sc.Tags = append(sc.Tags, `javr`)
-		
+
 		// Always add 'jav.land' as a tag
 		sc.Tags = append(sc.Tags, `jav.land`)
 
@@ -77,8 +77,6 @@ func ScrapeJavLand(out *[]models.ScrapedScene, queryString string) {
 
 			} else if label == `Content ID:` {
 				contentId = value
-				sc.HomepageURL = `https://www.dmm.co.jp/digital/videoa/-/detail/=/cid=` + contentId + `/`
-				sc.Covers = append(sc.Covers, `https://pics.dmm.co.jp/digital/video/`+contentId+`/`+contentId+`pl.jpg`)
 			}
 		})
 
@@ -101,7 +99,12 @@ func ScrapeJavLand(out *[]models.ScrapedScene, queryString string) {
 			sc.Synopsis = descr
 		}
 
-		*out = append(*out, sc)
+		// Apply post-processing for error-correcting code
+		PostProcessJavScene(&sc, contentId)
+
+		if sc.SceneID != "" {
+			*out = append(*out, sc)
+		}
 	})
 
 	// Allow comma-separated scene id's

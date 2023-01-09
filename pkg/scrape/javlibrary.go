@@ -57,7 +57,7 @@ func ScrapeJavLibrary(out *[]models.ScrapedScene, queryString string) {
 		// Tags
 		// Always add 'javr' as a tag
 		sc.Tags = append(sc.Tags, `javr`)
-		
+
 		// Always add 'javlibrary' as a tag
 		sc.Tags = append(sc.Tags, `javlibrary`)
 
@@ -76,9 +76,6 @@ func ScrapeJavLibrary(out *[]models.ScrapedScene, queryString string) {
 			}
 		}
 
-		contentIdRegex := regexp.MustCompile("//pics.dmm.co.jp/digital/video/([^/]+)/")
-		contentId := ""
-
 		// Cover image
 		coverImg := e.DOM.Find("img#video_jacket_img")
 		if coverImg != nil {
@@ -89,12 +86,6 @@ func ScrapeJavLibrary(out *[]models.ScrapedScene, queryString string) {
 					src = "https:" + src
 				}
 				sc.Covers = append(sc.Covers, src)
-
-				// Extract the content ID from the image url
-				match := contentIdRegex.FindStringSubmatch(src)
-				if match != nil && len(match) > 1 {
-					contentId = match[1]
-				}
 			}
 		}
 
@@ -114,20 +105,8 @@ func ScrapeJavLibrary(out *[]models.ScrapedScene, queryString string) {
 					m := regexp.MustCompile("//pics.dmm.co.jp/digital/video/([^/]+)/(.+[0-9])-([0-9]+).jpg")
 					res := m.ReplaceAllString(src, "//pics.dmm.co.jp/digital/video/${1}/${2}jp-${3}.jpg")
 					sc.Gallery = append(sc.Gallery, res)
-
-					// Extract the content ID from the image url
-					if len(contentId) == 0 {
-						match := contentIdRegex.FindStringSubmatch(src)
-						if match != nil && len(match) > 1 {
-							contentId = match[1]
-						}
-					}
 				}
 			})
-		}
-
-		if len(contentId) != 0 {
-			sc.HomepageURL = `https://www.dmm.co.jp/digital/videoa/-/detail/=/cid=` + contentId + `/`
 		}
 
 		// Release date
@@ -141,7 +120,7 @@ func ScrapeJavLibrary(out *[]models.ScrapedScene, queryString string) {
 		// Cast
 		videoCastSel := e.DOM.Find("span.star")
 		videoCastSel.Each(func(_ int, s *goquery.Selection) {
-			sc.Cast = append(sc.Cast, s.Text())
+			sc.Cast = append(sc.Cast, strings.TrimSpace(s.Text()))
 		})
 
 		// Genre
@@ -165,7 +144,12 @@ func ScrapeJavLibrary(out *[]models.ScrapedScene, queryString string) {
 			sc.Studio = videoStudioSel.Text()
 		}
 
-		*out = append(*out, sc)
+		// Apply post-processing for error-correcting code
+		PostProcessJavScene(&sc, "")
+
+		if sc.SceneID != "" {
+			*out = append(*out, sc)
+		}
 	})
 
 	// Allow comma-separated scene id's
