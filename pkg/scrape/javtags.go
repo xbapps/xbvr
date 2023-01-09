@@ -13,15 +13,17 @@ func ProcessJavrTag(tag string) string {
 
 	// Skipping some very generic and useless tags
 	skiptags := map[string]bool{
-		"featured actress":       true,
-		"vr exclusive":           true,
-		"high quality vr":        true,
-		"high-quality vr":        true,
-		"vr":                     true,
-		"vr only":                true,
-		"hi-def":                 true,
-		"exclusive distribution": true,
-		"dmm exclusive":          true,
+		"featured actress":			true,
+		"vr exclusive":				true,
+		"high quality vr":			true,
+		"high-quality vr":			true,
+		"vr":						true,
+		"vr only":					true,
+		"hi-def":					true,
+		"exclusive distribution":	true,
+		"single work":				true,
+		"solo work":				true,
+		"solowork":					true,
 	}
 	if skiptags[taglower] {
 		return ""
@@ -30,14 +32,13 @@ func ProcessJavrTag(tag string) string {
 	// Map some tags to normalize so different sources match
 	// TODO: this mapping is totally incomplete and needs help from community to fill
 	maptags := map[string]string{
-		"blow":        "blowjob",
-		"blow job":    "blowjob",
-		"kiss kiss":   "kiss",
-		"kiss / kiss": "kiss",
-		"prostitute":  "club hostess & sex worker",
-		"prostitutes": "club hostess & sex worker",
-		"single work": "solo work",
-		"suntan":      "sun tan",
+		"blow":						"blowjob",
+		"blow job":					"blowjob",
+		"kiss":						"kiss kiss",
+		"kiss / kiss":				"kiss kiss",
+		"prostitute":				"club hostess & sex worker",
+		"prostitutes":				"club hostess & sex worker",
+		"suntan":					"sun tan",
 	}
 	if maptags[taglower] != "" {
 		return maptags[taglower]
