@@ -31,9 +31,9 @@ jobs:
         run: |-
           echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
           echo 'GITHUB_USER=${{github.event.repository.owner.login}}' >> .release-env
-          echo 'GITHUB_PROJECT=${{github.event.repository.name}}' >> .release-env
+          echo GITHUB_PROJECT=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> .release-env
           echo 'DOCKER_CREDS_FILE=.docker-creds' >> .release-env
-          echo '${{github.event.repository.owner.login}}:${{secrets.GORELEASER_ACCESS_TOKEN}}:ghcr.io' >> .docker-creds
+          echo '${{github.event.repository.owner.login}}:${{ secrets.GITHUB_TOKEN }}:ghcr.io' >> .docker-creds
 
       - name: Release publish
         run: make release
