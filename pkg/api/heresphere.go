@@ -385,7 +385,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		return cuepoints[i].TimeStart < cuepoints[j].TimeStart
 	})
 
-	if len(scene.Cuepoints) > 1 {
+	if len(scene.Cuepoints) > 0 {
 		if scene.Cuepoints[0].Track == nil {
 			// basic cuepoint data
 			end := 0
