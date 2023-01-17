@@ -302,7 +302,7 @@ func ScrapeJAVR(queryString string, scraper string) {
 
 			tlog.Infof("Updating tag counts")
 			CountTags()
-			SearchIndex()
+			IndexScrapedScenes(&collectedScenes)
 
 			tlog.Infof("Scraped %v new scenes in %s",
 				len(collectedScenes),
@@ -669,7 +669,7 @@ func RestoreBundle(request RequestRestore) {
 			}
 			if request.InclScenes {
 				CountTags()
-				SearchIndex()
+				IndexScenes(&(bundleData.Scenes))
 			}
 
 			if request.InclScenes || request.InclActorAkas {
