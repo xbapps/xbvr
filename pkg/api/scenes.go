@@ -181,6 +181,10 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 		return
 	}
 
+    // Update search index with new scene
+	scenes := []models.Scene{resultingScene}
+	tasks.IndexScenes(&scenes)
+
 	resp.WriteHeaderAndEntity(http.StatusOK, resultingScene)
 }
 
