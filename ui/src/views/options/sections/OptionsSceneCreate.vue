@@ -1,9 +1,15 @@
 <template>
   <div class="content">
-    <h3 class="title">{{$t('Import JAVR scene from javdatabase.com')}}</h3>
+    <h3 class="title">{{$t('Import Japanese Adult VR (JAVR) Scene')}}</h3>
     <div class="card">
       <div class="card-content content">
         <b-field grouped>
+          <b-select placeholder="Select scraper" v-model="javrScraper">
+            <option value="javdatabase">javdatabase.com</option>
+            <option value="javlibrary">javlibrary.com</option>
+            <option value="javbus">javbus.com</option>
+            <option value="javland">jav.land</option>
+          </b-select>
           <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
           <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
         </b-field>
@@ -47,6 +53,7 @@ export default {
   name: 'OptionsCreateScene',
   data () {
     return {
+      javrScraper: 'javdatabase',
       javrQuery: '',
       tpdbSceneUrl: ''
     }
@@ -61,7 +68,7 @@ export default {
       }
     },
     scrapeJAVR () {
-      ky.post('/api/task/scrape-javr', { json: { q: this.javrQuery } })
+      ky.post('/api/task/scrape-javr', { json: { s: this.javrScraper, q: this.javrQuery } })
     },
     scrapeTPDB () {
       ky.post('/api/task/scrape-tpdb', {

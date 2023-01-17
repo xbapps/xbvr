@@ -268,7 +268,7 @@ func Scrape(toScrape string) {
 	}
 }
 
-func ScrapeJAVR(queryString string) {
+func ScrapeJAVR(queryString string, scraper string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
 		defer models.RemoveLock("scrape")
@@ -276,22 +276,22 @@ func ScrapeJAVR(queryString string) {
 		tlog := log.WithField("task", "scrape")
 		tlog.Infof("Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
 
-		// Get all known scenes
-		var scenes []models.Scene
-		db, _ := models.GetDB()
-		db.Find(&scenes)
-		db.Close()
-
-		var knownScenes []string
-		for i := range scenes {
-			knownScenes = append(knownScenes, scenes[i].SceneURL)
-		}
-
 		// Start scraping
 		var collectedScenes []models.ScrapedScene
 
-		tlog.Infof("Scraping JavDB")
-		scrape.ScrapeJavDB(knownScenes, &collectedScenes, queryString)
+		if scraper == "javlibrary" {
+			tlog.Infof("Scraping JavLibrary")
+			scrape.ScrapeJavLibrary(&collectedScenes, queryString)
+		} else if scraper == "javbus" {
+			tlog.Infof("Scraping JavBus")
+			scrape.ScrapeJavBus(&collectedScenes, queryString)
+		} else if scraper == "javland" {
+			tlog.Infof("Scraping JavLand")
+			scrape.ScrapeJavLand(&collectedScenes, queryString)
+		} else {
+			tlog.Infof("Scraping JavDB")
+			scrape.ScrapeJavDB(&collectedScenes, queryString)
+		}
 
 		if len(collectedScenes) > 0 {
 			db, _ := models.GetDB()
