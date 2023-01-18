@@ -200,7 +200,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	})
 
 	siteCollector.OnHTML(`div.c-grid--scenes article`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a", "href"))
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a[data-qa=scenes-grid-item-link-title]", "href"))
 		if strings.Contains(sceneURL, "scene") {
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {

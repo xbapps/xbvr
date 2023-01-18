@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -10,7 +9,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString string) {
+func ScrapeJavDB(out *[]models.ScrapedScene, queryString string) {
 	sceneCollector := createCollector("www.javdatabase.com")
 
 	sceneCollector.OnHTML(`html`, func(html *colly.HTMLElement) {
@@ -21,14 +20,8 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 		// Always add 'javr' as a tag
 		sc.Tags = append(sc.Tags, `javr`)
 
-		// Skipping some very generic and useless tags
-		skiptags := map[string]bool{
-			"featured actress":       true,
-			"vr exclusive":           true,
-			"high-quality vr":        true,
-			"hi-def":                 true,
-			"exclusive distribution": true,
-		}
+		// Always add 'javdatabase' as a tag
+		sc.Tags = append(sc.Tags, `javdatabase`)
 
 		// Cast
 		html.ForEach("h2.subhead", func(id int, h2 *colly.HTMLElement) {
@@ -37,8 +30,9 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 				parent := dom.Parent()
 				if parent != nil {
 					parent.Find("a").Each(func(i int, anchor *goquery.Selection) {
-						if anchor.Text() != "" {
-							sc.Cast = append(sc.Cast, anchor.Text())
+						href, exists := anchor.Attr("href")
+						if exists && strings.Contains(href, "javdatabase.com/idols/") && anchor.Text() != "" {
+							sc.Cast = append(sc.Cast, strings.TrimSpace(anchor.Text()))
 						}
 					})
 				}
@@ -82,9 +76,9 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 					href := anchor.Attr("href")
 					if strings.Contains(href, "javdatabase.com/genres/") {
 						// Tags
-						tag := strings.ToLower(anchor.Text)
+						tag := ProcessJavrTag(anchor.Text)
 
-						if !skiptags[tag] {
+						if tag != "" {
 							sc.Tags = append(sc.Tags, tag)
 						}
 					}
@@ -96,8 +90,6 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 
 			} else if label == `Content ID:` {
 				contentId = tr.ChildText(`td.tablevalue`)
-				sc.HomepageURL = `https://www.dmm.co.jp/digital/videoa/-/detail/=/cid=` + contentId + `/`
-				sc.Covers = append(sc.Covers, `https://pics.dmm.co.jp/digital/video/`+contentId+`/`+contentId+`pl.jpg`)
 			}
 		})
 
@@ -113,22 +105,12 @@ func ScrapeJavDB(knownScenes []string, out *[]models.ScrapedScene, queryString s
 			}
 		})
 
-		// Some specific postprocessing for error-correcting 3DSVR scenes
-		if len(contentId) > 0 && sc.Site == "DSVR" {
-			r := regexp.MustCompile("13dsvr0(\\d{4})")
-			match := r.FindStringSubmatch(contentId)
-			if match != nil && len(match) > 1 {
-				// Found a 3DSVR scene that is being wrongly categorized as DSVR
-				log.Println("Applying DSVR->3DSVR workaround")
-				sid := match[1]
-				sc.Site = "3DSVR"
-				sc.SceneID = "3DSVR-" + sid
-				sc.Title = sc.SceneID
-				sc.SiteID = sc.SceneID
-			}
-		}
+		// Apply post-processing for error-correcting code
+		PostProcessJavScene(&sc, contentId)
 
-		*out = append(*out, sc)
+		if sc.SceneID != "" {
+			*out = append(*out, sc)
+		}
 	})
 
 	// Allow comma-separated scene id's

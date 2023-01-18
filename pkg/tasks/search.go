@@ -136,3 +136,69 @@ func SearchIndex() {
 		tlog.Infof("Search index built!")
 	}
 }
+
+/**
+ * Update search index for all of the specified scenes.
+ */
+func IndexScenes(scenes *[]models.Scene) {
+	if !models.CheckLock("index") {
+		models.CreateLock("index")
+		defer models.RemoveLock("index")
+
+		tlog := log.WithFields(logrus.Fields{"task": "scrape"})
+
+		idx, err := NewIndex("scenes")
+		if err != nil {
+			log.Error(err)
+			models.RemoveLock("index")
+			return
+		}
+
+		tlog.Infof("Adding scraped scenes to search index...")
+
+		total := 0
+
+		for i := range *scenes {
+			scene := (*scenes)[i]
+			if idx.Exist(scene.SceneID) {
+				// Remove old index, as data may have been updated
+				idx.Bleve.Delete(scene.SceneID)
+			}
+
+			err := idx.PutScene(scene)
+			if err != nil {
+				log.Error(err)
+			} else {
+				// log.Debugln("Indexed " + scene.SceneID)
+				total += 1
+			}
+		}
+
+		idx.Bleve.Close()
+
+		tlog.Infof("Indexed %v scenes", total)
+	}
+}
+
+/**
+ * Update search index for all of the specified scrapedScenes.
+ * This method will first read the scraped scenes from the DB, after
+ * which it calls IndexScenes.
+ */
+func IndexScrapedScenes(scrapedScenes *[]models.ScrapedScene) {
+	// Map scrapedScenes to Scenes
+	var scenes []models.Scene
+	for i := range *scrapedScenes {
+		var scene models.Scene
+		scrapedScene := (*scrapedScenes)[i]
+		// Read scraped scene from db, as we don't want to index it
+		// if it doesn't exist in there
+		err := scene.GetIfExist(scrapedScene.SceneID)
+		if err == nil {
+			scenes = append(scenes, scene)
+		}
+	}
+
+	// Now update search index
+	IndexScenes(&scenes)
+}

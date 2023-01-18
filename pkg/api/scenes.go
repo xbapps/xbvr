@@ -181,6 +181,10 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 		return
 	}
 
+	// Update search index with new scene
+	scenes := []models.Scene{resultingScene}
+	tasks.IndexScenes(&scenes)
+
 	resp.WriteHeaderAndEntity(http.StatusOK, resultingScene)
 }
 
@@ -722,6 +726,10 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 		}
 
 		scene.Save()
+
+		// Update search index with new data
+		scenes := []models.Scene{scene}
+		tasks.IndexScenes(&scenes)
 
 		resp.WriteHeaderAndEntity(http.StatusOK, scene)
 	}
