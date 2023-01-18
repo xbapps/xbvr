@@ -28,6 +28,7 @@ func ProcessJavrTag(tag string) string {
 		"single work":            true,
 		"solo work":              true,
 		"solowork":               true,
+		"dmm exclusive":          true,
 	}
 	if skiptags[taglower] {
 		return ""
