@@ -44,6 +44,7 @@ func ProcessJavrTag(tag string) string {
 		"prostitute":  "club hostess & sex worker",
 		"prostitutes": "club hostess & sex worker",
 		"sun tan":     "suntan",
+		"huge cock":   "huge dick - large dick",
 	}
 	if maptags[taglower] != "" {
 		return maptags[taglower]
