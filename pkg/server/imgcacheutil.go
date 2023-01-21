@@ -6,6 +6,7 @@ import (
 	"github.com/fcjr/aia-transport-go"
 )
 
+// Change INCOMING response header's Cache-Control for persistent disk cache
 type ForceCacheTransport struct {
 	Transport http.RoundTripper
 }
@@ -23,6 +24,7 @@ func (s *ForceCacheTransport) RoundTrip(r *http.Request) (*http.Response, error)
 
 	// Overwrite cache behavior on 2xx responses
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		// Force cache duration in the diskCache to 5 years
 		resp.Header.Set("Cache-Control", "public, max-age=157680000")
 	}
 
@@ -37,4 +39,25 @@ func NewForceCacheTransport() *ForceCacheTransport {
 	fct.Transport, _ = aia.NewTransport()
 
 	return fct
+}
+
+// Change OUTGOING response header cache control, so that VR client
+// will not cache as long as we do. This helps refresh the data in the
+// VR client after a user has wiped the disk cache in xbvr.
+type CacheHeaderResponseWriter struct {
+	http.ResponseWriter
+}
+
+func (w *CacheHeaderResponseWriter) WriteHeader(statusCode int) {
+	if statusCode >= 200 && statusCode < 300 {
+		// Force cache duration for VR client to 1 day
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+	}
+	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func ForceShortCacheHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(&CacheHeaderResponseWriter{w}, r)
+	})
 }
