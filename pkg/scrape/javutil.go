@@ -38,15 +38,16 @@ func ProcessJavrTag(tag string) string {
 	// Map some tags to normalize so different sources match
 	// TODO: this mapping is totally incomplete and needs help from community to fill
 	maptags := map[string]string{
-		"blow":         "blowjob",
-		"blow job":     "blowjob",
-		"kiss":         "kiss kiss",
-		"kiss / kiss":  "kiss kiss",
-		"prostitute":   "club hostess & sex worker",
-		"prostitutes":  "club hostess & sex worker",
-		"sun tan":      "suntan",
-		"huge cock":    "huge dick - large dick",
-		"other fetish": "other fetishes",
+		"blow":               "blowjob",
+		"blow job":           "blowjob",
+		"kiss":               "kiss kiss",
+		"kiss / kiss":        "kiss kiss",
+		"prostitute":         "club hostess & sex worker",
+		"prostitutes":        "club hostess & sex worker",
+		"sun tan":            "suntan",
+		"huge cock":          "huge dick - large dick",
+		"other fetish":       "other fetishes",
+		"threesome/foursome": "threesome / foursome",
 	}
 	if maptags[taglower] != "" {
 		return maptags[taglower]
