@@ -146,4 +146,5 @@ func init() {
 	addVRPornScraper("randysroadstop", "Randy's Road Stop", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png")
 	addVRPornScraper("realteensvr", "Real Teens VR", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png")
 	addVRPornScraper("vrclubz", "VRClubz", "VixenVR", "https://mcdn.vrporn.com/files/20200421094123/vrclubz_logo_NEW-400x400_webwhite.png")
+	addVRPornScraper("darkdreams", "Dark Dreams VR", "Dark Dreams VR", "https://mcdn.vrporn.com/files/20190722080022/Dark-Dreams-profile-picture.jpg")
 }
