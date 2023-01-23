@@ -48,6 +48,7 @@ func ProcessJavrTag(tag string) string {
 		"huge cock":          "huge dick - large dick",
 		"other fetish":       "other fetishes",
 		"threesome/foursome": "threesome / foursome",
+		"3P, 4P":             "threesome / foursome",
 	}
 	if maptags[taglower] != "" {
 		return maptags[taglower]
