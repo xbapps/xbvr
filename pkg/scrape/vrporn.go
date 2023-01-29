@@ -11,6 +11,7 @@ import (
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -135,15 +136,25 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	return nil
 }
 
-func addVRPornScraper(id string, name string, company string, avatarURL string) {
-	registerScraper(id, name+" (VRPorn)", avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func addVRPornScraper(id string, name string, company string, avatarURL string, custom bool) {
+	suffixedName := name
+	if custom {
+		suffixedName += " (Custom VRPorn)"
+	} else {
+		suffixedName += " (VRPorn)"
+	}
+	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 		return VRPorn(wg, updateSite, knownScenes, out, id, name, company)
 	})
 }
 
 func init() {
-	//addVRPornScraper("evileyevr", "EvilEyeVR", "EvilEyeVR", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg")
-	addVRPornScraper("randysroadstop", "Randy's Road Stop", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png")
-	addVRPornScraper("realteensvr", "Real Teens VR", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png")
-	addVRPornScraper("vrclubz", "VRClubz", "VixenVR", "https://mcdn.vrporn.com/files/20200421094123/vrclubz_logo_NEW-400x400_webwhite.png")
+	var scrapers config.ScraperList
+	scrapers.Load()
+	for _, scraper := range scrapers.XbvrScrapers.VrpornScrapers {
+		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false)
+	}
+	for _, scraper := range scrapers.CusomtScrapers.VrpornScrapers {
+		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true)
+	}
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -214,8 +215,11 @@ func stripzvrCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 	}
 }
 
-func addVRPHubScraper(id string, name string, company string, vrpCategory string, avatarURL string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) {
+func addVRPHubScraper(id string, name string, company string, vrpCategory string, avatarURL string, custom bool, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) {
 	suffixedName := name + " (VRP Hub)"
+	if custom {
+		suffixedName = name + " (Custom VRP Hub)"
+	}
 
 	if avatarURL == "" {
 		avatarURL = "https://cdn.vrphub.com/wp-content/uploads/2016/08/vrphubnew.png"
@@ -227,6 +231,18 @@ func addVRPHubScraper(id string, name string, company string, vrpCategory string
 }
 
 func init() {
-	addVRPHubScraper("vrphub-vrhush", "VRHush", "VRHush", "vr-hush", "https://z5w6x5a4.ssl.hwcdn.net/sites/vrh/favicon/apple-touch-icon-180x180.png", vrhushCallback)
-	addVRPHubScraper("vrphub-stripzvr", "StripzVR - VRP Hub", "StripzVR", "stripzvr", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", stripzvrCallback)
+	var scrapers config.ScraperList
+	scrapers.Load()
+	for _, scraper := range scrapers.XbvrScrapers.VrphubScrapers {
+		switch scraper.ID {
+		case "vrphub-vrhush":
+			addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, "vr-hush", scraper.AvatarUrl, false, vrhushCallback)
+		case "vrphub-stripzvr":
+			addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, "stripzvr", scraper.AvatarUrl, false, stripzvrCallback)
+		}
+		addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.ID, scraper.AvatarUrl, false, noop)
+	}
+	for _, scraper := range scrapers.CusomtScrapers.VrphubScrapers {
+		addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.ID, scraper.AvatarUrl, true, noop)
+	}
 }

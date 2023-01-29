@@ -9,6 +9,7 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -110,8 +111,11 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 	return nil
 }
 
-func addPOVRScraper(id string, name string, company string, avatarURL string) {
+func addPOVRScraper(id string, name string, company string, avatarURL string, custom bool) {
 	suffixedName := name
+	if custom {
+		suffixedName += " (Custom POVR)"
+	}
 	if company != "POVR.COM" {
 		suffixedName += " (POVR)"
 	}
@@ -121,7 +125,12 @@ func addPOVRScraper(id string, name string, company string, avatarURL string) {
 }
 
 func init() {
-	addPOVRScraper("povr-originals", "POVR Originals", "POVR.COM", "https://images.povr.com/img/povr/android-icon-192x192.png")
-	addPOVRScraper("herpovr", "herPOVR", "POVR.COM", "https://images.povr.com/img/povr/android-icon-192x192.png")
-	addPOVRScraper("brasilvr", "BrasilVR", "BrasilVR", "https://images.povr.com/assets/logos/channels/0/4/4145/200.svg")
+	var scrapers config.ScraperList
+	scrapers.Load()
+	for _, scraper := range scrapers.XbvrScrapers.PovrScrapers {
+		addPOVRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false)
+	}
+	for _, scraper := range scrapers.CusomtScrapers.PovrScrapers {
+		addPOVRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true)
+	}
 }

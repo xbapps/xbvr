@@ -111,5 +111,7 @@
   "Reset Rating": "Reset Rating",
   "Attributes": "Attributes",
   "Hidden": "Hidden",
+  "Only include offical studios": "Only include offical studios",
+  "You should exclude Studios from your Custom list (scrapers.json) if sharing data with others": "You should exclude Studios from your Custom list (scrapers.json) if sharing data with others",
   "Go": "Go"
 }

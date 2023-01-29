@@ -64,18 +64,19 @@ type BackupContentBundle struct {
 	Akas          []models.Aka          `xbvrbackup:"akas"`
 }
 type RequestRestore struct {
-	InclAllSites  bool   `json:"allSites"`
-	InclScenes    bool   `json:"inclScenes"`
-	InclFileLinks bool   `json:"inclLinks"`
-	InclCuepoints bool   `json:"inclCuepoints"`
-	InclHistory   bool   `json:"inclHistory"`
-	InclPlaylists bool   `json:"inclPlaylists"`
-	InclActorAkas bool   `json:"inclActorAkas"`
-	InclVolumes   bool   `json:"inclVolumes"`
-	InclSites     bool   `json:"inclSites"`
-	InclActions   bool   `json:"inclActions"`
-	Overwrite     bool   `json:"overwrite"`
-	UploadData    string `json:"uploadData"`
+	InclAllSites     bool   `json:"allSites"`
+	OfficalSitesOnly bool   `json:"onlyIncludeOfficalSites"`
+	InclScenes       bool   `json:"inclScenes"`
+	InclFileLinks    bool   `json:"inclLinks"`
+	InclCuepoints    bool   `json:"inclCuepoints"`
+	InclHistory      bool   `json:"inclHistory"`
+	InclPlaylists    bool   `json:"inclPlaylists"`
+	InclActorAkas    bool   `json:"inclActorAkas"`
+	InclVolumes      bool   `json:"inclVolumes"`
+	InclSites        bool   `json:"inclSites"`
+	InclActions      bool   `json:"inclActions"`
+	Overwrite        bool   `json:"overwrite"`
+	UploadData       string `json:"uploadData"`
 }
 
 func CleanTags() {
@@ -443,7 +444,7 @@ func ImportBundleV1(bundleData ContentBundle) {
 
 }
 
-func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string) string {
+func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string) string {
 	var out BackupContentBundle
 	var content []byte
 	exportCnt := 0
@@ -468,8 +469,15 @@ func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCu
 
 		if inclScenes || inclFileLinks || inclCuepoints || inclHistory || inclActions {
 			var selectedSites []models.Site
-			if !inclAllSites {
-				db.Where(&models.Site{IsEnabled: true}).Find(&selectedSites)
+			if !inclAllSites || onlyIncludeOfficalSites {
+				tx := db.Model(&selectedSites)
+				if !inclAllSites {
+					tx = tx.Where(&models.Site{IsEnabled: true})
+				}
+				if onlyIncludeOfficalSites {
+					tx = tx.Where("name not like ?", "%(Custom %)")
+				}
+				tx.Find(&selectedSites)
 			}
 
 			if playlistId != "0" {
@@ -494,7 +502,7 @@ func BackupBundle(inclAllSites bool, inclScenes bool, inclFileLinks bool, inclCu
 				}
 
 				// check if the scene is for a site we want
-				if !inclAllSites {
+				if !inclAllSites || onlyIncludeOfficalSites {
 					idx := FindSite(selectedSites, scene.SceneID)
 					if idx < 0 {
 						continue
@@ -632,8 +640,15 @@ func RestoreBundle(request RequestRestore) {
 			defer db.Close()
 
 			var selectedSites []models.Site
-			if !request.InclAllSites {
-				db.Where(&models.Site{IsEnabled: true}).Find(&selectedSites)
+			if !request.InclAllSites || request.OfficalSitesOnly {
+				tx := db.Model(&selectedSites)
+				if !request.InclAllSites {
+					tx = tx.Where(&models.Site{IsEnabled: true})
+				}
+				if request.OfficalSitesOnly {
+					tx = tx.Where("name not like ?", "%(Custom %)")
+				}
+				tx.Find(&selectedSites)
 			}
 
 			if request.InclVolumes {
