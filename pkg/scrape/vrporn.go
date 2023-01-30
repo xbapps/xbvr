@@ -154,7 +154,7 @@ func init() {
 	for _, scraper := range scrapers.XbvrScrapers.VrpornScrapers {
 		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false)
 	}
-	for _, scraper := range scrapers.CusomtScrapers.VrpornScrapers {
+	for _, scraper := range scrapers.CustomScrapers.VrpornScrapers {
 		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true)
 	}
 }

@@ -130,7 +130,7 @@ func init() {
 	for _, scraper := range scrapers.XbvrScrapers.PovrScrapers {
 		addPOVRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false)
 	}
-	for _, scraper := range scrapers.CusomtScrapers.PovrScrapers {
+	for _, scraper := range scrapers.CustomScrapers.PovrScrapers {
 		addPOVRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true)
 	}
 }

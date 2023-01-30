@@ -254,7 +254,7 @@ func init() {
 	for _, scraper := range scrapers.XbvrScrapers.SlrScrapers {
 		addSLRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false)
 	}
-	for _, scraper := range scrapers.CusomtScrapers.SlrScrapers {
+	for _, scraper := range scrapers.CustomScrapers.SlrScrapers {
 		addSLRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true)
 	}
 

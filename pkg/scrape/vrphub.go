@@ -242,7 +242,7 @@ func init() {
 		}
 		addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.ID, scraper.AvatarUrl, false, noop)
 	}
-	for _, scraper := range scrapers.CusomtScrapers.VrphubScrapers {
+	for _, scraper := range scrapers.CustomScrapers.VrphubScrapers {
 		addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.ID, scraper.AvatarUrl, true, noop)
 	}
 }

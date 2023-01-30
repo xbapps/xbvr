@@ -17,7 +17,7 @@ var officalList []byte
 
 type ScraperList struct {
 	Warnings       []string       `json:"warning"`
-	CusomtScrapers CusomtScrapers `json:"custom"`
+	CustomScrapers CustomScrapers `json:"custom"`
 	XbvrScrapers   XbvrScrapers   `json:"xbvr"`
 }
 type XbvrScrapers struct {
@@ -26,7 +26,7 @@ type XbvrScrapers struct {
 	VrpornScrapers []ScraperConfig `json:"vrporn"`
 	VrphubScrapers []ScraperConfig `json:"vrphub"`
 }
-type CusomtScrapers struct {
+type CustomScrapers struct {
 	PovrScrapers   []ScraperConfig `json:"povr"`
 	SlrScrapers    []ScraperConfig `json:"slr"`
 	VrpornScrapers []ScraperConfig `json:"vrporn"`
@@ -68,16 +68,16 @@ func (o *ScraperList) Load() error {
 	o.Warnings = officalScrapers.Warnings
 
 	// remove custom sites that are now offical for the same aggregation site
-	o.CusomtScrapers.PovrScrapers = RemoveCustomListNowOffical(o.CusomtScrapers.PovrScrapers, o.XbvrScrapers.PovrScrapers)
-	o.CusomtScrapers.SlrScrapers = RemoveCustomListNowOffical(o.CusomtScrapers.SlrScrapers, o.XbvrScrapers.SlrScrapers)
-	o.CusomtScrapers.VrphubScrapers = RemoveCustomListNowOffical(o.CusomtScrapers.VrphubScrapers, o.XbvrScrapers.VrphubScrapers)
-	o.CusomtScrapers.VrpornScrapers = RemoveCustomListNowOffical(o.CusomtScrapers.VrpornScrapers, o.XbvrScrapers.VrpornScrapers)
+	o.CustomScrapers.PovrScrapers = RemoveCustomListNowOffical(o.CustomScrapers.PovrScrapers, o.XbvrScrapers.PovrScrapers)
+	o.CustomScrapers.SlrScrapers = RemoveCustomListNowOffical(o.CustomScrapers.SlrScrapers, o.XbvrScrapers.SlrScrapers)
+	o.CustomScrapers.VrphubScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrphubScrapers, o.XbvrScrapers.VrphubScrapers)
+	o.CustomScrapers.VrpornScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrpornScrapers, o.XbvrScrapers.VrpornScrapers)
 
 	// remove custom sites with no scenes and now offical for a different aggregation site
-	o.CusomtScrapers.PovrScrapers = RemoveCustomListNowOfficalIfEmpty(o.CusomtScrapers.PovrScrapers, o.XbvrScrapers)
-	o.CusomtScrapers.SlrScrapers = RemoveCustomListNowOfficalIfEmpty(o.CusomtScrapers.SlrScrapers, o.XbvrScrapers)
-	o.CusomtScrapers.VrphubScrapers = RemoveCustomListNowOfficalIfEmpty(o.CusomtScrapers.VrphubScrapers, o.XbvrScrapers)
-	o.CusomtScrapers.VrpornScrapers = RemoveCustomListNowOfficalIfEmpty(o.CusomtScrapers.VrpornScrapers, o.XbvrScrapers)
+	o.CustomScrapers.PovrScrapers = RemoveCustomListNowOfficalIfEmpty(o.CustomScrapers.PovrScrapers, o.XbvrScrapers)
+	o.CustomScrapers.SlrScrapers = RemoveCustomListNowOfficalIfEmpty(o.CustomScrapers.SlrScrapers, o.XbvrScrapers)
+	o.CustomScrapers.VrphubScrapers = RemoveCustomListNowOfficalIfEmpty(o.CustomScrapers.VrphubScrapers, o.XbvrScrapers)
+	o.CustomScrapers.VrpornScrapers = RemoveCustomListNowOfficalIfEmpty(o.CustomScrapers.VrpornScrapers, o.XbvrScrapers)
 
 	list, err := json.MarshalIndent(o, "", "  ")
 	if err == nil {
@@ -85,10 +85,10 @@ func (o *ScraperList) Load() error {
 	}
 
 	// check for offical/custom duplicates across aggregation sites (leaves them in the local file already written)
-	o.XbvrScrapers.PovrScrapers = RemoveDuplicateOfficalSite(o.XbvrScrapers.PovrScrapers, o.CusomtScrapers)
-	o.XbvrScrapers.SlrScrapers = RemoveDuplicateOfficalSite(o.XbvrScrapers.SlrScrapers, o.CusomtScrapers)
-	o.XbvrScrapers.VrphubScrapers = RemoveDuplicateOfficalSite(o.XbvrScrapers.VrphubScrapers, o.CusomtScrapers)
-	o.XbvrScrapers.VrpornScrapers = RemoveDuplicateOfficalSite(o.XbvrScrapers.VrpornScrapers, o.CusomtScrapers)
+	o.XbvrScrapers.PovrScrapers = RemoveDuplicateOfficalSite(o.XbvrScrapers.PovrScrapers, o.CustomScrapers)
+	o.XbvrScrapers.SlrScrapers = RemoveDuplicateOfficalSite(o.XbvrScrapers.SlrScrapers, o.CustomScrapers)
+	o.XbvrScrapers.VrphubScrapers = RemoveDuplicateOfficalSite(o.XbvrScrapers.VrphubScrapers, o.CustomScrapers)
+	o.XbvrScrapers.VrpornScrapers = RemoveDuplicateOfficalSite(o.XbvrScrapers.VrpornScrapers, o.CustomScrapers)
 
 	return nil
 }
@@ -132,7 +132,7 @@ func RemoveCustomListNowOfficalIfEmpty(customSiteList []ScraperConfig, officalSc
 	return newList
 }
 
-func RemoveDuplicateOfficalSite(officalSiteList []ScraperConfig, customScrapers CusomtScrapers) []ScraperConfig {
+func RemoveDuplicateOfficalSite(officalSiteList []ScraperConfig, customScrapers CustomScrapers) []ScraperConfig {
 	newList := []ScraperConfig{}
 	for _, officalSite := range officalSiteList {
 		if !CheckMatchingSite(officalSite, customScrapers.PovrScrapers) && !CheckMatchingSite(officalSite, customScrapers.SlrScrapers) && !CheckMatchingSite(officalSite, customScrapers.VrphubScrapers) && !CheckMatchingSite(officalSite, customScrapers.VrpornScrapers) {
