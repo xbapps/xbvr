@@ -540,6 +540,7 @@ func Migrate() {
 			Migrate: func(tx *gorm.DB) error {
 				type Scene struct {
 					LegacySceneID string `json:"legacy_scene_id" xbvrbackup:"legacy_scene_id"`
+					ScraperId     string `json:"scraper_id" xbvrbackup:"scraper_id"`
 				}
 				return tx.AutoMigrate(Scene{}).Error
 			},
@@ -1225,7 +1226,47 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0054-update-aggregator-scene-ids",
+			ID: "0054-Update-New-Scraper-Id-in-Scene-Record",
+			Migrate: func(tx *gorm.DB) error {
+				var sites []models.Site
+				tx.Model(&sites).Find(&sites)
+
+				// create a scene type without deleted_at and updated_at columns
+				// this means deleted records are updated as well and does not change the updated_at column
+				type Scene struct {
+					ID        uint   `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+					SceneID   string `json:"scene_id" xbvrbackup:"scene_id"`
+					ScraperId string `json:"scraper_id" xbvrbackup:"scraper_id"`
+				}
+				type match struct {
+					siteId         string
+					sceneIdPattern string
+				}
+				var manualSites []match
+				manualSites = append(manualSites, match{"tonightsgirlfriend", "tonight-s-girlfriend-vr%"})
+				manualSites = append(manualSites, match{"littlecaprice", "little-caprice-dreams%"})
+
+				var returnErr error
+				for _, site := range sites {
+					common.Log.Infof("Setting scraper_id for %s", site.Name)
+					err := tx.Model(&Scene{}).Where("replace(scene_id,'-','') like ?", strings.Replace(site.ID, "-", "", -1)+"%").Update("scraper_id", site.ID).Error
+					if err != nil {
+						returnErr = err
+					}
+				}
+				for _, site := range manualSites {
+					common.Log.Infof("Setting scraper_id for %s", site.siteId)
+					err := tx.Model(Scene{}).Where("scene_id like ?", site.sceneIdPattern).Update("scraper_id", site.siteId).Error
+					if err != nil {
+						returnErr = err
+					}
+				}
+
+				return returnErr
+			},
+		},
+		{
+			ID: "0055-update-aggregator-scene-ids",
 			Migrate: func(tx *gorm.DB) error {
 				type SiteChange struct {
 					SiteId    string

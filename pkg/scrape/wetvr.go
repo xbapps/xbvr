@@ -27,6 +27,7 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 
 	sceneCollector.OnHTML(`div#t2019`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
+		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "WetVR"
 		sc.Site = siteID

@@ -152,6 +152,7 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sc := models.ScrapedScene{}
+			sc.ScraperID = scraperID
 
 			e.ForEach(`img.entry-thumb-main`, func(id int, e *colly.HTMLElement) {
 				cover := e.Attr("src")

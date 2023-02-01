@@ -64,6 +64,7 @@ type Scene struct {
 	SceneID         string    `json:"scene_id" xbvrbackup:"scene_id"`
 	Title           string    `json:"title" sql:"type:varchar(1024);" xbvrbackup:"title"`
 	SceneType       string    `json:"scene_type" xbvrbackup:"scene_type"`
+	ScraperId       string    `json:"scraper_id" xbvrbackup:"scraper_id"`
 	Studio          string    `json:"studio" xbvrbackup:"studio"`
 	Site            string    `json:"site" xbvrbackup:"site"`
 	Tags            []Tag     `gorm:"many2many:scene_tags;" json:"tags" xbvrbackup:"tags"`
@@ -390,6 +391,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	o.NeedsUpdate = false
 	o.EditsApplied = false
 	o.SceneID = ext.SceneID
+	o.ScraperId = ext.ScraperID
 
 	if o.Title != ext.Title {
 		o.Title = ext.Title
