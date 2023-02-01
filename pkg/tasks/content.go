@@ -143,6 +143,8 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 }
 
 func ReapplyEdits() {
+	tlog := log.WithField("task", "scrape")
+
 	var actions []models.Action
 	db, _ := models.GetDB()
 	defer db.Close()
@@ -160,7 +162,14 @@ func ReapplyEdits() {
 			Find(&actions)
 	}
 
+	actionCnt := 0
+
 	for _, a := range actions {
+		if actionCnt%100 == 0 {
+			tlog.Infof("Processing %v of %v edits", actionCnt+1, len(actions))
+		}
+		actionCnt += 1
+
 		var scene models.Scene
 		err := scene.GetIfExist(a.SceneID)
 		if err != nil {

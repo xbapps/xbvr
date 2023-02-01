@@ -8,14 +8,13 @@ import (
 	"sync"
 
 	"github.com/gocolly/colly"
-	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string) error {
+func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, siteURL string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -38,7 +37,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "-")
 		sc.SiteID = tmp[len(tmp)-1]
-		sc.SceneID = slugify.Slugify(scraperID) + "-" + sc.SiteID
+		sc.SceneID = "slr-" + sc.SiteID
 
 		// Cover
 		coverURL := e.ChildAttr(`.splash-screen > img`, "src")
@@ -220,16 +219,16 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.Visit("https://www.sexlikereal.com/studios/" + scraperID + "?sort=most_recent")
+	siteCollector.Visit(siteURL + "?sort=most_recent")
 
 	if updateSite {
-		updateSiteLastUpdate(strings.Replace(scraperID, "custom-slr-", "", 1))
+		updateSiteLastUpdate(scraperID)
 	}
 	logScrapeFinished(scraperID, siteID)
 	return nil
 }
 
-func addSLRScraper(id string, name string, company string, avatarURL string, custom bool) {
+func addSLRScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string) {
 	suffixedName := name
 	if custom {
 		suffixedName += " (Custom SLR)"
@@ -244,7 +243,7 @@ func addSLRScraper(id string, name string, company string, avatarURL string, cus
 	}
 
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return SexLikeReal(wg, updateSite, knownScenes, out, id, name, company)
+		return SexLikeReal(wg, updateSite, knownScenes, out, id, name, company, siteURL)
 	})
 }
 
@@ -252,10 +251,10 @@ func init() {
 	var scrapers config.ScraperList
 	scrapers.Load()
 	for _, scraper := range scrapers.XbvrScrapers.SlrScrapers {
-		addSLRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false)
+		addSLRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL)
 	}
 	for _, scraper := range scrapers.CustomScrapers.SlrScrapers {
-		addSLRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true)
+		addSLRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true, scraper.URL)
 	}
 
 }

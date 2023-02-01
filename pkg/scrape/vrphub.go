@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/gocolly/colly"
-	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -30,7 +29,7 @@ func getVideoName(fileUrl string) (string, error) {
 	return filename, nil
 }
 
-func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, vrpCategory string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
+func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, siteURL string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -56,7 +55,7 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			}
 			isPost = true
 			sc.SiteID = u.Query()["p"][0]
-			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+			sc.SceneID = "vrphub-" + sc.SiteID
 		})
 		if !isPost {
 			return
@@ -170,7 +169,7 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://vrphub.com/category/" + vrpCategory + "/")
+	siteCollector.Visit(siteURL)
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -202,7 +201,7 @@ func vrhushCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 		matches := vrhIdRegEx.FindStringSubmatch(tmpVideoUrls[i])
 		if len(matches) > 0 && len(matches[1]) > 0 {
 			sc.SiteID = matches[1]
-			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+			sc.SceneID = "vrphub-" + sc.SiteID
 			sceneIdFound = true
 		}
 	}
@@ -215,7 +214,7 @@ func stripzvrCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 	}
 }
 
-func addVRPHubScraper(id string, name string, company string, vrpCategory string, avatarURL string, custom bool, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) {
+func addVRPHubScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) {
 	suffixedName := name + " (VRP Hub)"
 	if custom {
 		suffixedName = name + " (Custom VRP Hub)"
@@ -226,7 +225,7 @@ func addVRPHubScraper(id string, name string, company string, vrpCategory string
 	}
 
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return VRPHub(wg, updateSite, knownScenes, out, id, name, company, vrpCategory, callback)
+		return VRPHub(wg, updateSite, knownScenes, out, id, name, company, siteURL, callback)
 	})
 }
 
@@ -236,13 +235,13 @@ func init() {
 	for _, scraper := range scrapers.XbvrScrapers.VrphubScrapers {
 		switch scraper.ID {
 		case "vrphub-vrhush":
-			addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, "vr-hush", scraper.AvatarUrl, false, vrhushCallback)
+			addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL, vrhushCallback)
 		case "vrphub-stripzvr":
-			addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, "stripzvr", scraper.AvatarUrl, false, stripzvrCallback)
+			addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL, stripzvrCallback)
 		}
-		addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.ID, scraper.AvatarUrl, false, noop)
+		addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL, noop)
 	}
 	for _, scraper := range scrapers.CustomScrapers.VrphubScrapers {
-		addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.ID, scraper.AvatarUrl, true, noop)
+		addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true, scraper.URL, noop)
 	}
 }
