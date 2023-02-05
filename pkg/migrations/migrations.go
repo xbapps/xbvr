@@ -1242,7 +1242,6 @@ func Migrate() {
 				manualSites = append(manualSites, match{"littlecaprice", "little-caprice-dreams%"})
 				manualSites = append(manualSites, match{"slr-originals-bts", "slr-originals-bts%"})
 				manualSites = append(manualSites, match{"taboo-vr-porn", "taboo-vr-porn%"})
-				manualSites = append(manualSites, match{"taboovr", "taboovr%"})
 
 				var returnErr error
 				for _, site := range manualSites {
