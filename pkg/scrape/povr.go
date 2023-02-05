@@ -113,14 +113,16 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 
 func addPOVRScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string) {
 	suffixedName := name
+	siteNameSuffix := name
 	if custom {
 		suffixedName += " (Custom POVR)"
+		siteNameSuffix += " (POVR)"
 	}
 	if company != "POVR.COM" {
 		suffixedName += " (POVR)"
 	}
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return POVR(wg, updateSite, knownScenes, out, id, name, company, siteURL)
+		return POVR(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL)
 	})
 }
 

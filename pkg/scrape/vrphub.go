@@ -217,8 +217,10 @@ func stripzvrCallback(e *colly.HTMLElement, sc *models.ScrapedScene) {
 
 func addVRPHubScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) {
 	suffixedName := name + " (VRP Hub)"
+	siteNameSuffix := name
 	if custom {
 		suffixedName = name + " (Custom VRP Hub)"
+		siteNameSuffix += " (VRP Hub)"
 	}
 
 	if avatarURL == "" {
@@ -226,7 +228,7 @@ func addVRPHubScraper(id string, name string, company string, avatarURL string, 
 	}
 
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return VRPHub(wg, updateSite, knownScenes, out, id, name, company, siteURL, callback)
+		return VRPHub(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL, callback)
 	})
 }
 

@@ -138,13 +138,15 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 func addVRPornScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string) {
 	suffixedName := name
+	siteNameSuffix := name
 	if custom {
 		suffixedName += " (Custom VRPorn)"
+		siteNameSuffix += " (VRPorn)"
 	} else {
 		suffixedName += " (VRPorn)"
 	}
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return VRPorn(wg, updateSite, knownScenes, out, id, name, company, siteURL)
+		return VRPorn(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL)
 	})
 }
 

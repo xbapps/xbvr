@@ -453,7 +453,7 @@ func ImportBundleV1(bundleData ContentBundle) {
 
 }
 
-func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string) string {
+func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string, outputBundleFilename string, version string) string {
 	var out BackupContentBundle
 	var content []byte
 	exportCnt := 0
@@ -465,6 +465,13 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 
 		tlog := log.WithField("task", "scrape")
 		tlog.Info("Backing up content bundle...")
+
+		if outputBundleFilename == "" {
+			outputBundleFilename = "xbvr-content-bundle.json"
+		}
+		if version == "" {
+			version = "2.1"
+		}
 
 		db, _ := models.GetDB()
 		defer db.Close()
@@ -512,7 +519,7 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 
 				// check if the scene is for a site we want
 				if !inclAllSites || onlyIncludeOfficalSites {
-					idx := FindSite(selectedSites, scene.SceneID)
+					idx := FindSite(selectedSites, GetScraperId(scene.SceneID, db))
 					if idx < 0 {
 						continue
 					}
@@ -583,7 +590,7 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 		var err error
 		out = BackupContentBundle{
 			Timestamp:     time.Now().UTC(),
-			BundleVersion: "2",
+			BundleVersion: version,
 			Volumne:       volumes,
 			Playlists:     playlists,
 			Sites:         sites,
@@ -604,7 +611,7 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 		content, err = json.MarshalIndent(out, "", " ")
 
 		if err == nil {
-			fName := filepath.Join(common.DownloadDir, "xbvr-content-bundle.json")
+			fName := filepath.Join(common.DownloadDir, outputBundleFilename)
 			err = ioutil.WriteFile(fName, content, 0644)
 			if err == nil {
 				tlog.Infof("Backup file generated in %v, %v scenes selected, ready to download", time.Since(t0), exportCnt)
@@ -641,8 +648,8 @@ func RestoreBundle(request RequestRestore) {
 		json.UnmarshalFromString(request.UploadData, &bundleData)
 
 		if err == nil {
-			if bundleData.BundleVersion != "2" {
-				tlog.Infof("Restore Failed! Bundle file is version %v, version %v expected", bundleData.BundleVersion, 2)
+			if bundleData.BundleVersion != "2.1" {
+				tlog.Infof("Restore Failed! Bundle file is version %v, version %v expected", bundleData.BundleVersion, "2.1")
 				return
 			}
 			db, _ := models.GetDB()
@@ -719,7 +726,7 @@ func RestoreScenes(scenes []models.Scene, inclAllSites bool, selectedSites []mod
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
-			idx := FindSite(selectedSites, scene.SceneID)
+			idx := FindSite(selectedSites, scene.ScraperId)
 			if idx < 0 {
 				continue
 			}
@@ -763,7 +770,7 @@ func RestoreCuepoints(sceneCuepointList []BackupSceneCuepoint, inclAllSites bool
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
-			idx := FindSite(selectedSites, cuepoints.SceneID)
+			idx := FindSite(selectedSites, GetScraperId(cuepoints.SceneID, db))
 			if idx < 0 {
 				continue
 			}
@@ -812,7 +819,7 @@ func RestoreSceneFileLinks(backupFileList []BackupFileLink, inclAllSites bool, s
 
 		// check if the scene is for a site we want
 		if !inclAllSites {
-			idx := FindSite(selectedSites, backupSceneFiles.SceneID)
+			idx := FindSite(selectedSites, GetScraperId(backupSceneFiles.SceneID, db))
 			if idx < 0 {
 				continue
 			}
@@ -862,7 +869,7 @@ func RestoreHistory(sceneHistoryList []BackupSceneHistory, inclAllSites bool, se
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
-			idx := FindSite(selectedSites, histories.SceneID)
+			idx := FindSite(selectedSites, GetScraperId(histories.SceneID, db))
 			if idx < 0 {
 				continue
 			}
@@ -919,7 +926,7 @@ func RestoreActions(sceneActionList []BackupSceneAction, inclAllSites bool, sele
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
-			idx := FindSite(selectedSites, actions.SceneID)
+			idx := FindSite(selectedSites, GetScraperId(actions.SceneID, db))
 			if idx < 0 {
 				continue
 			}
@@ -1110,17 +1117,19 @@ func CountTags() {
 	actor.CountActorTags()
 }
 
-func FindSite(sites []models.Site, findSite string) int {
-	findSite = strings.Replace(findSite, "-", "", -1)
-	findSite = strings.Replace(findSite, " ", "", -1)
+func FindSite(sites []models.Site, scraperId string) int {
 	for i, site := range sites {
-		id := strings.Replace(site.ID, "-", "", -1)
-		id = strings.Replace(id, " ", "", -1)
-		if strings.HasPrefix(findSite, id) {
+		if scraperId == site.ID {
 			return i
 		}
 	}
 	return -1
+}
+
+func GetScraperId(sceneId string, db *gorm.DB) string {
+	var scene models.Scene
+	db.Where(models.Scene{SceneID: sceneId}).First(&scene)
+	return scene.ScraperId
 }
 
 func CheckCuepoint(cuepoints []models.SceneCuepoint, findCuepoint models.SceneCuepoint) (int, bool) {

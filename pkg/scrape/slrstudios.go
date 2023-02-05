@@ -231,8 +231,10 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 func addSLRScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string) {
 	suffixedName := name
+	siteNameSuffix := name
 	if custom {
 		suffixedName += " (Custom SLR)"
+		siteNameSuffix += " (SLR)"
 	} else {
 		if company != "SexLikeReal" {
 			suffixedName += " (SLR)"
@@ -244,7 +246,7 @@ func addSLRScraper(id string, name string, company string, avatarURL string, cus
 	}
 
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return SexLikeReal(wg, updateSite, knownScenes, out, id, name, company, siteURL)
+		return SexLikeReal(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL)
 	})
 }
 

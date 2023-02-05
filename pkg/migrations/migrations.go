@@ -1233,11 +1233,6 @@ func Migrate() {
 
 				// create a scene type without deleted_at and updated_at columns
 				// this means deleted records are updated as well and does not change the updated_at column
-				type Scene struct {
-					ID        uint   `gorm:"primary_key" json:"id" xbvrbackup:"-"`
-					SceneID   string `json:"scene_id" xbvrbackup:"scene_id"`
-					ScraperId string `json:"scraper_id" xbvrbackup:"scraper_id"`
-				}
 				type match struct {
 					siteId         string
 					sceneIdPattern string
@@ -1245,18 +1240,21 @@ func Migrate() {
 				var manualSites []match
 				manualSites = append(manualSites, match{"tonightsgirlfriend", "tonight-s-girlfriend-vr%"})
 				manualSites = append(manualSites, match{"littlecaprice", "little-caprice-dreams%"})
+				manualSites = append(manualSites, match{"slr-originals-bts", "slr-originals-bts%"})
+				manualSites = append(manualSites, match{"taboo-vr-porn", "taboo-vr-porn%"})
+				manualSites = append(manualSites, match{"taboovr", "taboovr%"})
 
 				var returnErr error
-				for _, site := range sites {
-					common.Log.Infof("Setting scraper_id for %s", site.Name)
-					err := tx.Model(&Scene{}).Where("replace(scene_id,'-','') like ?", strings.Replace(site.ID, "-", "", -1)+"%").Update("scraper_id", site.ID).Error
+				for _, site := range manualSites {
+					common.Log.Infof("Setting scraper_id for %s", site.siteId)
+					err := tx.Model(models.Scene{}).Where("scene_id like ? and scraper_id is null", site.sceneIdPattern).Update("scraper_id", strings.ToLower(site.siteId)).Error
 					if err != nil {
 						returnErr = err
 					}
 				}
-				for _, site := range manualSites {
-					common.Log.Infof("Setting scraper_id for %s", site.siteId)
-					err := tx.Model(Scene{}).Where("scene_id like ?", site.sceneIdPattern).Update("scraper_id", site.siteId).Error
+				for _, site := range sites {
+					common.Log.Infof("Setting scraper_id for %s", site.Name)
+					err := tx.Model(&models.Scene{}).Where("replace(scene_id,'-','') like ? and scraper_id is null", strings.Replace(site.ID, "-", "", -1)+"%").Update("scraper_id", strings.ToLower(site.ID)).Error
 					if err != nil {
 						returnErr = err
 					}
@@ -1272,22 +1270,85 @@ func Migrate() {
 					SiteId    string
 					NewPrefix string
 				}
-				siteChanges := []SiteChange{
+				//backup bundle
+				common.Log.Infof("Creating pre-migration backup, please waiit, backups can take some time on a system with a large number of scenes ")
+				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, "0", "xbvr-premigration-bundle.json", "2")
+				common.Log.Infof("Go to download/xbvr-premigration-bundle.json, or http://xxx.xxx.xxx.xxx:9999/download/xbvr-premigration-bundle.json if you need access to the backup")
+				var sites []models.Site
+				officalSiteChanges := []SiteChange{
 					{"povr-originals", "povr"}, {"herpovr", "povr"}, {"brasilvr", "povr"},
-					{"slr-originals-bts", "slr"}, {"slr-originals", "slr"}, {"slr-labs", "slr"}, {"slr-jav-originals", "slr"}, {"ad4x", "slr"}, {"altporn4u-vr", "slr"}, {"amateurcouplesvr", "slr"}, {"amateurvr3d", "slr"}, {"amorevr", "slr"}, {"anal-delight", "slr"}, {"astrodomina", "slr"}, {"babykxtten", "slr"}, {"blondehexe", "slr"}, {"blush-erotica", "slr"}, {"bravomodelsmedia", "slr"}, {"burningangelvr", "slr"}, {"casanova", "slr"}, {"covert-japan", "slr"}, {"cumtoon", "slr"}, {"cuties-vr", "slr"}, {"dandy", "slr"}, {"ddfnetworkvr", "slr"}, {"deepinsex", "slr"}, {"deviantsvr", "slr"}, {"ellielouisevr", "slr"}, {"emilybloom", "slr"}, {"erotic-sinners", "slr"}, {"fatp", "slr"}, {"footsiebay", "slr"}, {"fuckpassvr", "slr"}, {"grannies-vr", "slr"}, {"heathering", "slr"}, {"hentaivr", "slr"}, {"herfirstvr", "slr"}, {"holivr", "slr"}, {"hookfer", "slr"}, {"istripper", "slr"}, {"jackandjillvr", "slr"}, {"jimmydraws", "slr"}, {"justvr", "slr"}, {"jvrporn", "slr"}, {"kinkygirlsberlin", "slr"}, {"kmpvr", "slr"}, {"koalavr", "slr"}, {"leninacrowne", "slr"}, {"lezvr", "slr"}, {"lustreality", "slr"}, {"lustyvr", "slr"}, {"manny-s", "slr"}, {"marrionvr", "slr"}, {"maturesvr", "slr"}, {"mmm100", "slr"}, {"mongercash", "slr"}, {"mugur-porn-vr", "slr"}, {"mutiny-vr", "slr"}, {"net69vr", "slr"}, {"no2studiovr", "slr"}, {"noir", "slr"}, {"only3xvr", "slr"}, {"onlytease", "slr"}, {"peeping-thom", "slr"}, {"pervrt", "slr"}, {"petersmax", "slr"}, {"pip-vr", "slr"}, {"plushiesvr", "slr"}, {"pornbcn", "slr"}, {"povcentralvr", "slr"}, {"ps-porn", "slr"}, {"pvrstudio", "slr"}, {"realhotvr", "slr"}, {"screwboxvr", "slr"}, {"sodcreate", "slr"}, {"squeeze-vr", "slr"}, {"stockingsvr", "slr"}, {"strictlyglamourvr", "slr"}, {"stripzvr", "slr"}, {"suckmevr", "slr"}, {"swallowbay", "slr"}, {"sweetlonglips", "slr"}, {"taboo-vr-porn", "slr"}, {"tadpolexxxstudio", "slr"}, {"thatrandomeditor", "slr"}, {"tmavr", "slr"}, {"v1vr", "slr"}, {"virtualpee", "slr"}, {"virtualxporn", "slr"}, {"vr-fan-service", "slr"}, {"vr-pornnow", "slr"}, {"vredging", "slr"}, {"vrextasy", "slr"}, {"vrfirsttimer", "slr"}, {"vrixxens", "slr"}, {"vrlab9division", "slr"}, {"vrmodels", "slr"}, {"vroomed", "slr"}, {"vrpfilms", "slr"}, {"vrpornjack", "slr"}, {"vrpussyvision", "slr"}, {"vrsexperts", "slr"}, {"vrsolos", "slr"}, {"vrstars", "slr"}, {"vrvids", "slr"}, {"waapvr", "slr"}, {"xvirtual", "slr"},
+					{"slr-originals", "slr"}, {"slr-labs", "slr"}, {"slr-jav-originals", "slr"}, {"amateurcouplesvr", "slr"}, {"amateurvr3d", "slr"}, {"amorevr", "slr"}, {"astrodomina", "slr"}, {"blondehexe", "slr"}, {"blush-erotica", "slr"}, {"bravomodelsmedia", "slr"}, {"casanova", "slr"}, {"covert-japan", "slr"}, {"cuties-vr", "slr"}, {"dandy", "slr"}, {"deepinsex", "slr"}, {"deviantsvr", "slr"}, {"ellielouisevr", "slr"}, {"emilybloom", "slr"}, {"erotic-sinners", "slr"}, {"fatp", "slr"}, {"footsiebay", "slr"}, {"fuckpassvr", "slr"}, {"heathering", "slr"}, {"istripper", "slr"}, {"jackandjillvr", "slr"}, {"jimmydraws", "slr"}, {"kinkygirlsberlin", "slr"}, {"kmpvr", "slr"}, {"koalavr", "slr"}, {"lustreality", "slr"}, {"lustyvr", "slr"}, {"manny-s", "slr"}, {"mongercash", "slr"}, {"mugur-porn-vr", "slr"}, {"mutiny-vr", "slr"}, {"no2studiovr", "slr"}, {"noir", "slr"}, {"only3xvr", "slr"}, {"onlytease", "slr"}, {"peeping-thom", "slr"}, {"pervrt", "slr"}, {"petersmax", "slr"}, {"pip-vr", "slr"}, {"plushiesvr", "slr"}, {"povcentralvr", "slr"}, {"ps-porn", "slr"}, {"realhotvr", "slr"}, {"sodcreate", "slr"}, {"squeeze-vr", "slr"}, {"stockingsvr", "slr"}, {"strictlyglamourvr", "slr"}, {"stripzvr", "slr"}, {"suckmevr", "slr"}, {"swallowbay", "slr"}, {"sweetlonglips", "slr"}, {"taboo-vr-porn", "slr"}, {"tadpolexxxstudio", "slr"}, {"thatrandomeditor", "slr"}, {"tmavr", "slr"}, {"v1vr", "slr"}, {"virtualxporn", "slr"}, {"vr-pornnow", "slr"}, {"vredging", "slr"}, {"vrixxens", "slr"}, {"vrlab9division", "slr"}, {"vrmodels", "slr"}, {"vroomed", "slr"}, {"vrpfilms", "slr"}, {"vrpornjack", "slr"}, {"vrsexperts", "slr"}, {"vrsolos", "slr"}, {"vrstars", "slr"}, {"vrvids", "slr"},
 					{"vrphub-vrhush", "vrphub"}, {"vrphub-stripzvr", "vrphub"},
 					{"randysroadstop", "vrporn"}, {"realteensvr", "vrporn"}, {"vrclubz", "vrporn"},
 				}
-				for _, siteChange := range siteChanges {
+
+				isOfficalSite := func(siteList []SiteChange, siteID string) bool {
+					for _, s := range siteList {
+						if s.SiteId == siteID {
+							return true
+						}
+					}
+					return false
+				}
+
+				// add aggregator sites not already in officalSiteChanges
+				unofficalSiteChanges := []SiteChange{{"slr-originals-bts", "slr"}}
+				db.Where("name like '%)'").Find(&sites)
+				for _, site := range sites {
+					if !isOfficalSite(officalSiteChanges, site.ID) {
+						// get (SLR), (VRPORN), etc
+						re := regexp.MustCompile(`\(([^)]+)\)`)
+						result := re.FindStringSubmatch(site.Name)
+						newSuffix := ""
+						if len(result) > 1 {
+							switch result[0] {
+							case "(POVR)":
+								newSuffix = "povr"
+							case "(SLR)":
+								newSuffix = "slr"
+							case "(VRP Hub)":
+								newSuffix = "vrphub"
+							case "(VRPorn)":
+								newSuffix = "vrporn"
+							default:
+								common.Log.Warnf("Unknown aggregator site (%s)", site.Name)
+							}
+							unofficalSiteChanges = append(unofficalSiteChanges, SiteChange{site.ID, newSuffix})
+						} else {
+							common.Log.Warnf("Unknown aggregator site (%s)", site.Name)
+						}
+					}
+				}
+
+				for _, siteChange := range append(unofficalSiteChanges, officalSiteChanges...) {
 					common.Log.Infof("Migrating scene_ids for %s to %s", siteChange.SiteId, siteChange.NewPrefix)
-					sql := `update actions set scene_id = replace(scene_id, "` + siteChange.SiteId + `-", "` + siteChange.NewPrefix + `-") where scene_id like "` + siteChange.SiteId + `-%"`
+					sql := `update actions set scene_id = replace(scene_id, LOWER("` + siteChange.SiteId + `-"), "` + siteChange.NewPrefix + `-") where scene_id like "` + siteChange.SiteId + `-%"`
 					tx.Exec(sql)
-					sql = `update scenes set legacy_scene_id=scene_id, scene_id = replace(scene_id, "` + siteChange.SiteId + `-", "` + siteChange.NewPrefix + `-") where scene_id like "` + siteChange.SiteId + `-%"`
+					sql = `update actions set scene_id = replace(replace(scene_id, '-',''), LOWER("` + siteChange.SiteId + `"), "` + siteChange.NewPrefix + `-") where scene_id not like "` + siteChange.NewPrefix + `-%" and scraper_id = "` + strings.ToLower(siteChange.SiteId) + `"`
+					tx.Exec(sql)
+					// set new scene_id
+					sql = `update scenes set legacy_scene_id=scene_id, scene_id = replace(scene_id, LOWER("` + siteChange.SiteId + `-"), "` + siteChange.NewPrefix + `-") where scene_id like "` + siteChange.SiteId + `-%"`
+					tx.Exec(sql)
+					sql = `update scenes set legacy_scene_id=scene_id, scene_id = replace(replace(scene_id, '-',''), LOWER("` + siteChange.SiteId + `"), "` + siteChange.NewPrefix + `-") where  scene_id not like "` + siteChange.NewPrefix + `-%" and scraper_id = "` + strings.ToLower(siteChange.SiteId) + `"`
 					tx.Exec(sql)
 				}
-				// clear sites table pf sites removed from slr scraper
-				sql := `delete from sites where name in ('MaturesVR (SLR)','HentaiVR (SLR)','LeninaCrowne (SLR)','VRFanService (SLR)','WAAPVR (SLR)','AD4X (SLR)','AltPorn4uVR (SLR)','Anal Delight (SLR)','Babykxtten (SLR)','BurningAngelVR (SLR)','Cumtoon (SLR)','DDFNetworkVR (SLR)','GranniesVR (SLR)','HerFirstVR (SLR)','HoliVR (SLR)','Hookfer (SLR)','JustVR (SLR)','JVRPorn (SLR)','LezVR (SLR)','MarrionVR (SLR)','MMM100 (SLR)','Net69VR (SLR)','Pornbcn (SLR)','PVRStudio (SLR)','ScrewBoxVR (SLR)','SLR Originals BTS','VirtualPee (SLR)','VReXtasy (SLR)','VRFirstTimer (SLR)','VRpussyVision (SLR)','xVirtual (SLR)')`
-				tx.Exec(sql)
+
+				common.Log.Infof("Removing old sites")
+				for _, site := range unofficalSiteChanges {
+					// update scene scraper_id with new suffix, in case they are added back as a Custom site in scraper.json.  Needs_update to refresh new site name
+					sql := fmt.Sprintf(`update scenes set scraper_id="%s", needs_update = 1 where scraper_id = "%s"`, strings.ToLower(site.SiteId+"-"+site.NewPrefix), strings.ToLower(site.SiteId))
+					tx.Exec(sql)
+
+					// delete unoffical sites from site table
+					tx.Delete(&models.Site{ID: site.SiteId})
+				}
+
+				common.Log.Infof("Migrating Video Previews")
+				var scenes []models.Scene
+				tx.Where("legacy_scene_id is not null").Where(&models.Scene{HasVideoPreview: true}).Find(&scenes)
+				for _, scene := range scenes {
+					os.Rename(filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", scene.LegacySceneID)), filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", scene.SceneID)))
+				}
 
 				common.Log.Infof("Migration needs to Reindex scenes.. please wait")
 				tasks.SearchIndex()

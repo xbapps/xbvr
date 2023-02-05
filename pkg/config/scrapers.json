@@ -6,7 +6,6 @@
     "Do Not Share,Export,Import Scenes data from Custom Studios with others","",
     "To change the name in a custom list, first flag all scenes to be updated (do not rescan yet), change the name, restart xbvr, rescan studio","",
     "If a studio in the custom list becomes offical, it will be removed from the custom list, if it is for the same agrregator.  If it is different, you can continue to your preferred site or delete all scenes to change to the offical one","","",
-    "The id field is optional and will default based on the url. You should not need the id unless you want a differnt setup to the offical lists or to scrape a studio from multiple sites (lots of duplicates though)",
     "Company is optional","",
     "Did you remember to make a backup of scrapers.json before making changes"
   ],

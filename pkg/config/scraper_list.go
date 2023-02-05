@@ -70,26 +70,20 @@ func (o *ScraperList) Load() error {
 	o.XbvrScrapers = officalScrapers.XbvrScrapers
 	o.Warnings = officalScrapers.Warnings
 
-	SetSiteId(&o.XbvrScrapers.PovrScrapers)
-	SetSiteId(&o.XbvrScrapers.SlrScrapers)
-	SetSiteId(&o.XbvrScrapers.VrphubScrapers)
-	SetSiteId(&o.XbvrScrapers.VrpornScrapers)
-	SetSiteId(&o.CustomScrapers.PovrScrapers)
-	SetSiteId(&o.CustomScrapers.SlrScrapers)
-	SetSiteId(&o.CustomScrapers.VrphubScrapers)
-	SetSiteId(&o.CustomScrapers.VrpornScrapers)
+	SetSiteId(&o.XbvrScrapers.PovrScrapers, "")
+	SetSiteId(&o.XbvrScrapers.SlrScrapers, "")
+	SetSiteId(&o.XbvrScrapers.VrphubScrapers, "")
+	SetSiteId(&o.XbvrScrapers.VrpornScrapers, "")
+	SetSiteId(&o.CustomScrapers.PovrScrapers, "povr")
+	SetSiteId(&o.CustomScrapers.SlrScrapers, "slr")
+	SetSiteId(&o.CustomScrapers.VrphubScrapers, "vrphub")
+	SetSiteId(&o.CustomScrapers.VrpornScrapers, "vrporn")
 
 	// remove custom sites that are now offical for the same aggregation site
 	o.CustomScrapers.PovrScrapers = RemoveCustomListNowOffical(o.CustomScrapers.PovrScrapers, o.XbvrScrapers.PovrScrapers)
 	o.CustomScrapers.SlrScrapers = RemoveCustomListNowOffical(o.CustomScrapers.SlrScrapers, o.XbvrScrapers.SlrScrapers)
 	o.CustomScrapers.VrphubScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrphubScrapers, o.XbvrScrapers.VrphubScrapers)
 	o.CustomScrapers.VrpornScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrpornScrapers, o.XbvrScrapers.VrpornScrapers)
-
-	// if a custom site has the same Site Id as an offical one, we need to change it
-	o.CustomScrapers.PovrScrapers = RenameDuplicateIds(o.CustomScrapers.PovrScrapers, o.XbvrScrapers, "-povr")
-	o.CustomScrapers.SlrScrapers = RenameDuplicateIds(o.CustomScrapers.SlrScrapers, o.XbvrScrapers, "-slr")
-	o.CustomScrapers.VrphubScrapers = RenameDuplicateIds(o.CustomScrapers.VrphubScrapers, o.XbvrScrapers, "-vrphub")
-	o.CustomScrapers.VrpornScrapers = RenameDuplicateIds(o.CustomScrapers.VrpornScrapers, o.XbvrScrapers, "-vrporn")
 
 	list, err := json.MarshalIndent(o, "", "  ")
 	if err == nil {
@@ -107,38 +101,25 @@ func RemoveCustomListNowOffical(customSiteList []ScraperConfig, officalSiteList 
 		} else {
 			db, _ := models.GetDB()
 			defer db.Close()
-			officialSite := GetMatchingSite(customSite, officalSiteList)
-			if officialSite.Name != customSite.Name || officialSite.Company != customSite.Company {
-				db.Model(&models.Scene{}).Where("site = ?", customSite.Name).Update("needs_update", true)
-			}
-			if customSite.FileID != "" {
-				// the user specied a different  site id, delete the old site record
-				db.Delete(&models.Site{}, customSite.ID)
-			}
+			db.Model(&models.Scene{}).Where("scraper_id = ?", customSite.ID).Update("needs_update", true)
+			db.Delete(&models.Site{ID: customSite.ID})
+			common.Log.Infof("Studio %s is now an offical Studio and has been shifted from your custom list.  Enable the offical scraper and run it to update existing scenes", customSite.Name)
 		}
-	}
-	return newList
-}
-
-func RenameDuplicateIds(customSiteList []ScraperConfig, officalScrapers XbvrScrapers, newSuffix string) []ScraperConfig {
-	db, _ := models.GetDB()
-	defer db.Close()
-	newList := []ScraperConfig{}
-	for _, customSite := range customSiteList {
-		if CheckMatchingSiteID(customSite, officalScrapers.PovrScrapers) || CheckMatchingSiteID(customSite, officalScrapers.SlrScrapers) || CheckMatchingSiteID(customSite, officalScrapers.VrphubScrapers) || CheckMatchingSiteID(customSite, officalScrapers.VrpornScrapers) {
-			oldId := customSite.ID
-			customSite.ID = customSite.ID + newSuffix
-			customSite.FileID = customSite.ID
-			db.Model(models.Site{}).Where("id = ?", oldId).Update("id", customSite.ID)
-		}
-		newList = append(newList, customSite)
 	}
 	return newList
 }
 
 func CheckMatchingSite(findSite ScraperConfig, searchList []ScraperConfig) bool {
 	for _, customSite := range searchList {
-		if findSite.URL == customSite.URL {
+		s1 := strings.ToLower(customSite.URL)
+		s2 := strings.ToLower(findSite.URL)
+		if !strings.HasSuffix(s1, "/") {
+			s1 += "/"
+		}
+		if !strings.HasSuffix(s2, "/") {
+			s2 += "/"
+		}
+		if s1 == s2 {
 			return true
 		}
 	}
@@ -161,13 +142,16 @@ func CheckMatchingSiteID(findSite ScraperConfig, searchList []ScraperConfig) boo
 	return false
 }
 
-func SetSiteId(configList *[]ScraperConfig) {
+func SetSiteId(configList *[]ScraperConfig, customId string) {
 	for idx, siteconfig := range *configList {
-		if siteconfig.FileID == "" {
+		if siteconfig.FileID == "" || customId != "" {
 			id := strings.TrimRight(siteconfig.URL, "/")
-			siteconfig.ID = id[strings.LastIndex(id, "/")+1:]
+			siteconfig.ID = strings.ToLower(id[strings.LastIndex(id, "/")+1:])
 		} else {
-			siteconfig.ID = siteconfig.FileID
+			siteconfig.ID = strings.ToLower(siteconfig.FileID)
+		}
+		if customId != "" {
+			siteconfig.ID = strings.ToLower(siteconfig.ID + "-" + customId)
 		}
 		(*configList)[idx] = siteconfig
 	}

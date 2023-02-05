@@ -95,7 +95,7 @@ export default {
       this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`)
     },
     deleteScenes (site) {
-      site = this.sanitizeSiteName(site);
+      site = this.sanitizeSiteName(site);      
       this.$buefy.dialog.confirm({
         title: this.$t('Delete scraped scenes'),
         message: `You're about to delete scraped scenes for <strong>${site}</strong>. Previously matched files will return to unmatched state.`,
@@ -109,6 +109,9 @@ export default {
       })
     },
     sanitizeSiteName(site) {
+      if (site.includes('(Custom ')) {
+        return site.replace('(Custom ','(') 
+      }      
       return site.split('(')[0].trim();
     },
     parseISO,
