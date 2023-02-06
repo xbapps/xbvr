@@ -11,7 +11,8 @@ import (
 )
 
 type RequestScrapeJAVR struct {
-	Query string `json:"q"`
+	Scraper string `json:"s"`
+	Query   string `json:"q"`
 }
 
 type RequestScrapeTPDB struct {
@@ -119,6 +120,7 @@ func (i TaskResource) exportNewFunscripts(req *restful.Request, resp *restful.Re
 
 func (i TaskResource) backupBundle(req *restful.Request, resp *restful.Response) {
 	inclAllSites, _ := strconv.ParseBool(req.QueryParameter("allSites"))
+	onlyIncludeOfficalSites, _ := strconv.ParseBool(req.QueryParameter("onlyIncludeOfficalSites"))
 	inclScenes, _ := strconv.ParseBool(req.QueryParameter("inclScenes"))
 	inclFileLinks, _ := strconv.ParseBool(req.QueryParameter("inclLinks"))
 	inclCuepoints, _ := strconv.ParseBool(req.QueryParameter("inclCuepoints"))
@@ -131,7 +133,7 @@ func (i TaskResource) backupBundle(req *restful.Request, resp *restful.Response)
 	playlistId := req.QueryParameter("playlistId")
 	download := req.QueryParameter("download")
 
-	bundle := tasks.BackupBundle(inclAllSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclActorAkas, inclVolumes, inclSites, inclActions, playlistId)
+	bundle := tasks.BackupBundle(inclAllSites, onlyIncludeOfficalSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclActorAkas, inclVolumes, inclSites, inclActions, playlistId, "", "")
 	if download == "true" {
 		resp.WriteHeaderAndEntity(http.StatusOK, ResponseBackupBundle{Response: "Ready to Download from http://xxx.xxx.xxx.xxx:9999/download/xbvr-content-bundle.json"})
 	} else {
@@ -165,7 +167,7 @@ func (i TaskResource) scrapeJAVR(req *restful.Request, resp *restful.Response) {
 	}
 
 	if r.Query != "" {
-		go tasks.ScrapeJAVR(r.Query)
+		go tasks.ScrapeJAVR(r.Query, r.Scraper)
 	}
 }
 

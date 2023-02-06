@@ -181,6 +181,10 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 		return
 	}
 
+	// Update search index with new scene
+	scenes := []models.Scene{resultingScene}
+	tasks.IndexScenes(&scenes)
+
 	resp.WriteHeaderAndEntity(http.StatusOK, resultingScene)
 }
 
@@ -337,6 +341,10 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "MKX200")
 	outAttributes = append(outAttributes, "MKX220")
 	outAttributes = append(outAttributes, "VRCA220")
+	outAttributes = append(outAttributes, "POVR Scraper")
+	outAttributes = append(outAttributes, "SLR Scraper")
+	outAttributes = append(outAttributes, "VRPHub Scraper")
+	outAttributes = append(outAttributes, "VRPorn Scraper")
 	type Results struct {
 		Result string
 	}
@@ -723,6 +731,10 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 		}
 
 		scene.Save()
+
+		// Update search index with new data
+		scenes := []models.Scene{scene}
+		tasks.IndexScenes(&scenes)
 
 		resp.WriteHeaderAndEntity(http.StatusOK, scene)
 	}

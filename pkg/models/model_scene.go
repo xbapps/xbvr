@@ -105,6 +105,7 @@ type Scene struct {
 	Trailerlist   bool   `json:"trailerlist" gorm:"default:false" xbvrbackup:"trailerlist"`
 	IsSubscribed  bool   `json:"is_subscribed" gorm:"default:false"`
 	IsHidden      bool   `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
+	LegacySceneID string `json:"legacy_scene_id" xbvrbackup:"legacy_scene_id"`
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
@@ -221,21 +222,37 @@ func (o *Scene) GetTotalWatchTime() int {
 }
 
 func (o *Scene) GetVideoFiles() ([]File, error) {
+	files, err := o.GetVideoFilesSorted("")
+	return files, err
+}
+func (o *Scene) GetVideoFilesSorted(sort string) ([]File, error) {
 	db, _ := GetDB()
 	defer db.Close()
 
 	var files []File
-	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "video").Find(&files)
+	if sort == "" {
+		db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "video").Find(&files)
+	} else {
+		db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "video").Order(sort).Find(&files)
+	}
 
 	return files, nil
 }
 
 func (o *Scene) GetScriptFiles() ([]File, error) {
+	var files, err = o.GetScriptFilesSorted("is_selected_script DESC, created_time DESC")
+	return files, err
+}
+func (o *Scene) GetScriptFilesSorted(sort string) ([]File, error) {
 	db, _ := GetDB()
 	defer db.Close()
 
 	var files []File
-	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "script").Order("is_selected_script DESC, created_time DESC").Find(&files)
+	if sort == "" {
+		db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "script").Find(&files)
+	} else {
+		db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "script").Order(sort).Find(&files)
+	}
 
 	return files, nil
 }
@@ -632,7 +649,7 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			}
 		case "Has Rating":
 			if truefalse {
-				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'hsp' group by " + fileAlias + ".scene_id having count(*) >0)"
+				where = "star_rating > 0"
 			} else {
 				where = "star_rating = 0"
 			}
@@ -825,7 +842,30 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			} else {
 				where = "favourite = 0"
 			}
-
+		case "POVR Scraper":
+			if truefalse {
+				where = `scenes.scene_id like "povr-%"`
+			} else {
+				where = `scenes.scene_id not like "povr-%"`
+			}
+		case "SLR Scraper":
+			if truefalse {
+				where = `scenes.scene_id like "slr-%"`
+			} else {
+				where = `scenes.scene_id not like "slr-%"`
+			}
+		case "VRPHub Scraper":
+			if truefalse {
+				where = `scenes.scene_id like "vrphub-%"`
+			} else {
+				where = `scenes.scene_id not like "vrphub-%"`
+			}
+		case "VRPorn Scraper":
+			if truefalse {
+				where = `scenes.scene_id like "vrporn-%"`
+			} else {
+				where = `scenes.scene_id not like "vrporn-%"`
+			}
 		}
 
 		switch firstchar := string(attribute.OrElse(" ")[0]); firstchar {

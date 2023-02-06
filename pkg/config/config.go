@@ -71,6 +71,10 @@ type ObjectConfig struct {
 			MultitrackCastCuepoints bool `default:"true" json:"multitrack_cast_cuepoints"`
 			RetainNonHSPCuepoints   bool `default:"true" json:"retain_non_hsp_cuepoints"`
 		} `json:"heresphere"`
+		Players struct {
+			VideoSortSeq  string `default:"" json:"video_sort_seq"`
+			ScriptSortSeq string `default:"" json:"script_sort_seq"`
+		} `json:"players"`
 	} `json:"interfaces"`
 	Library struct {
 		Preview struct {
