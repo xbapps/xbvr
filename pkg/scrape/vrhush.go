@@ -39,19 +39,13 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.SiteID = strings.Replace(tmp2, "vrh", "", -1)
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
-		// Title
-		e.ForEach(`h1.latest-scene-title`, func(id int, e *colly.HTMLElement) {
-			sc.Title = strings.TrimSpace(e.Text)
-		})
-
-		// Regex for original resolution of both covers and gallery
+		// Regex for original resolution of gallery
 		reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vrh\/)(?:largethumbs|hugethumbs|rollover_large|rollover_huge)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
 
-		// Cover URLs
-		// note 'largethumbs' could be changed to 'hugethumbs' for HQ original but those are easily 5Mb+
+		// Title / Cover
 		e.ForEach(`deo-video`, func(id int, e *colly.HTMLElement) {
-			tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("cover-image")))
-			sc.Covers = append(sc.Covers, tmpParts[1]+"largethumbs"+tmpParts[2]+tmpParts[3])
+			sc.Title = strings.TrimSpace(e.Attr("title"))
+			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("cover-image")))
 		})
 
 		// Gallery
