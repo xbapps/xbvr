@@ -6,13 +6,13 @@ import (
 	"sync"
 
 	"github.com/gocolly/colly"
-	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string) error {
+func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, siteURL string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -21,6 +21,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
+		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = company
 		sc.Site = siteID
@@ -29,7 +30,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "-")
 		sc.SiteID = tmp[len(tmp)-1]
-		sc.SceneID = slugify.Slugify(scraperID) + "-" + sc.SiteID
+		sc.SceneID = "povr-" + sc.SiteID
 
 		// Title
 		e.ForEach(`h1.heading-title`, func(id int, e *colly.HTMLElement) {
@@ -101,7 +102,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.Visit("https://povr.com/" + scraperID)
+	siteCollector.Visit(siteURL)
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -110,18 +111,28 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 	return nil
 }
 
-func addPOVRScraper(id string, name string, company string, avatarURL string) {
+func addPOVRScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string) {
 	suffixedName := name
+	siteNameSuffix := name
+	if custom {
+		suffixedName += " (Custom POVR)"
+		siteNameSuffix += " (POVR)"
+	}
 	if company != "POVR.COM" {
 		suffixedName += " (POVR)"
 	}
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return POVR(wg, updateSite, knownScenes, out, id, name, company)
+		return POVR(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL)
 	})
 }
 
 func init() {
-	addPOVRScraper("povr-originals", "POVR Originals", "POVR.COM", "https://images.povr.com/img/povr/android-icon-192x192.png")
-	addPOVRScraper("herpovr", "herPOVR", "POVR.COM", "https://images.povr.com/img/povr/android-icon-192x192.png")
-	addPOVRScraper("brasilvr", "BrasilVR", "BrasilVR", "https://images.povr.com/assets/logos/channels/0/4/4145/200.svg")
+	var scrapers config.ScraperList
+	scrapers.Load()
+	for _, scraper := range scrapers.XbvrScrapers.PovrScrapers {
+		addPOVRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL)
+	}
+	for _, scraper := range scrapers.CustomScrapers.PovrScrapers {
+		addPOVRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true, scraper.URL)
+	}
 }

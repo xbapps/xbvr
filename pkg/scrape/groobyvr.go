@@ -27,6 +27,7 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
+		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "GroobyVR"
 		sc.Site = siteID
@@ -126,5 +127,5 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("groobyvr", "GroobyVR", "https://pbs.twimg.com/profile_images/981677396695773184/-kKaWumY_200x200.jpg", GroobyVR)
+	registerScraper("groobyvr", "GroobyVR", "https://www.groobyvr.com/tour/custom_assets/favicon/apple-touch-icon.png", GroobyVR)
 }
