@@ -24,6 +24,18 @@
           "avatar_url": "https://images.povr.com/img/povr/android-icon-192x192.png"
         },
         {
+          "url": "https://povr.com/wankzvr",
+          "name": "WankzVR",
+          "company": "POVR.COM",
+          "avatar_url": "https://images.povr.com/assets/logos/channels/0/2/2627/200.svg"
+        },
+        {
+          "url": "https://povr.com/milfvr",
+          "name": "MilfVR",
+          "company": "POVR.COM",
+          "avatar_url": "https://images.povr.com/assets/logos/channels/0/2/2965/200.svg"
+        },
+        {
           "url": "https://povr.com/herpovr",
           "name": "herPOVR",
           "company": "POVR.COM",
@@ -34,18 +46,18 @@
           "name": "BrasilVR",
           "company": "BrasilVR",
           "avatar_url": "https://images.povr.com/assets/logos/channels/0/4/4145/200.svg"
+        },
+        {
+          "url": "https://povr.com/tranzvr",
+          "name": "TranzVR",
+          "company": "POVR.COM",
+          "avatar_url": "https://images.povr.com/assets/logos/channels/0/3/3245/200.svg"
         }
       ],
       "slr": [
         {
           "url": "https://www.sexlikereal.com/studios/slr-originals",
           "name": "SLR Originals",
-          "company": "SexLikeReal",
-          "avatar_url": "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png"
-        },
-        {
-          "url": "https://www.sexlikereal.com/studios/slr-labs",
-          "name": "SLR Labs",
           "company": "SexLikeReal",
           "avatar_url": "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png"
         },
