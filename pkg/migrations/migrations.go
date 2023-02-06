@@ -1216,6 +1216,68 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0056-update-realjamvr-scene-id",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				err := tx.Preload("Files").Where("site = ?", "RealJam VR").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+
+				for _, scene := range scenes {
+					newId := ""
+					switch scene.SceneID {
+					// hardcode one off cases
+					case "realjam-vr-82":
+						newId = "realjamswing-friendly-neighborhood"
+					case "realjam-vr-111":
+						newId = "hot-robbery-3-mistake-of-skylar-vox"
+					case "realjam-vr-189":
+						newId = "yes-boss-skylar-vox-on-the-mic"
+					default:
+						tmp := strings.Split(scene.SceneURL, "/")
+						newId = tmp[len(tmp)-1]
+					}
+
+					scene.LegacySceneID = scene.SceneID
+					scene.SceneID = "realjam-vr-" + newId
+					actionUpdateCnt := 0
+
+					// update action records with the new scene id
+					var lastAction models.Action
+					tx.Model(&lastAction).Where("scene_id = ?", scene.LegacySceneID).Updates(map[string]interface{}{"scene_id": scene.SceneID}).Count(&actionUpdateCnt)
+
+					scene.NeedsUpdate = true
+					err = tx.Save(&scene).Error
+					if err != nil {
+						return err
+					}
+
+					// If a scene has a file and it was not manually matched, there will be no action with type match
+					// Since filnames changef, we should create a match record for them in case it becomes unlinked in the future
+					tx.Where("scene_id = ? and action_type = ?", scene.SceneID, "match").Order("id desc").First(&lastAction)
+					if lastAction.ID == 0 && len(scene.Files) > 0 {
+						lastAction.SceneID = scene.SceneID
+						lastAction.ActionType = "match"
+						lastAction.ChangedColumn = "filenames_arr"
+						var files []string
+						for _, file := range scene.Files {
+							files = append(files, file.Filename)
+						}
+						tmp, err := json.Marshal(files)
+						if err == nil {
+							lastAction.NewValue = string(tmp)
+						}
+						lastAction.Save()
+					}
+					if scene.HasVideoPreview {
+						os.Rename(filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", scene.LegacySceneID)), filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", scene.SceneID)))
+					}
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

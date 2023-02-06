@@ -3,8 +3,6 @@ package scrape
 import (
 	"encoding/json"
 	"net/http"
-	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -43,26 +41,10 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 			sc.HomepageURL = sc.HomepageURL[0 : len(sc.HomepageURL)-1]
 		}
 
-		// source the scene_id from the trailer filename.  This is not the best appraoch but the only id source we have
-		trailerId := ""
-		e.ForEach(`dl8-video source[src]`, func(id int, e *colly.HTMLElement) {
-			re := regexp.MustCompile(`/([0-9]+)_[0-9]+p.mp4.`)
-			match := re.FindStringSubmatch(e.Attr("src"))
-			if len(match) > 0 {
-				if trailerId != "" {
-					if trailerId != match[1] {
-						// don't trust trailer files, make sure they all return the same id
-						trailerId = "mismatch"
-					}
-				}
-				_, err := strconv.Atoi(match[1])
-				if err == nil {
-					// only assign the id if it's a valid number
-					trailerId = match[1]
-				}
-			}
-		})
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + trailerId
+		// Scene ID - get from URL
+		tmp := strings.Split(sc.HomepageURL, "/")
+		sc.SiteID = tmp[len(tmp)-1]
+		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// trailer details
 		sc.TrailerType = "scrape_html"
@@ -164,14 +146,7 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 			}
 		})
 
-		switch trailerId {
-		case "":
-			log.Errorf("Could not determine Scene Id for %, Id not found", sc.HomepageURL)
-		case "mismatch":
-			log.Errorf("Could not determine Scene Id for %, inconsistent trailer filenames", sc.HomepageURL)
-		default:
-			out <- sc
-		}
+		out <- sc
 	})
 
 	siteCollector.OnHTML(`a.page-link`, func(e *colly.HTMLElement) {
