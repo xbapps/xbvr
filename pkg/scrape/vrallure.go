@@ -27,11 +27,12 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	sceneCollector := createCollector("vrallure.com")
 	siteCollector := createCollector("vrallure.com")
 
-	// Regex for original resolution of both covers and gallery
+	// Regex for original resolution of gallery
 	reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vra\/)(?:largethumbs|hugethumbs|rollover_large|rollover_huge)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
+		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "VRAllure"
 		sc.Site = siteID
@@ -52,9 +53,7 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		// Title / Cover
 		e.ForEach(`deo-video`, func(id int, e *colly.HTMLElement) {
 			sc.Title = strings.TrimSpace(e.Attr("title"))
-
-			tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("cover-image")))
-			sc.Covers = append(sc.Covers, tmpParts[1]+"largethumbs"+tmpParts[2]+tmpParts[3])
+			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("cover-image")))
 		})
 
 		// Gallery
@@ -158,5 +157,5 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("vrallure", "VRAllure", "https://z5w6x5a4.ssl.hwcdn.net/sites/vra/favicon/apple-touch-icon-180x180.png", VRAllure)
+	registerScraper("vrallure", "VRAllure", "https://cdn-nexpectation.secure.yourpornpartner.com/sites/vra/favicon/apple-touch-icon-180x180.png", VRAllure)
 }
