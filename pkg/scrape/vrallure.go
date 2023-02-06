@@ -159,5 +159,5 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("vrallure", "VRAllure", "https://z5w6x5a4.ssl.hwcdn.net/sites/vra/favicon/apple-touch-icon-180x180.png", VRAllure)
+	registerScraper("vrallure", "VRAllure", "https://cdn-nexpectation.secure.yourpornpartner.com/sites/vra/favicon/apple-touch-icon-180x180.png", VRAllure)
 }
