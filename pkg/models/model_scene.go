@@ -64,6 +64,7 @@ type Scene struct {
 	SceneID         string    `json:"scene_id" xbvrbackup:"scene_id"`
 	Title           string    `json:"title" sql:"type:varchar(1024);" xbvrbackup:"title"`
 	SceneType       string    `json:"scene_type" xbvrbackup:"scene_type"`
+	ScraperId       string    `json:"scraper_id" xbvrbackup:"scraper_id"`
 	Studio          string    `json:"studio" xbvrbackup:"studio"`
 	Site            string    `json:"site" xbvrbackup:"site"`
 	Tags            []Tag     `gorm:"many2many:scene_tags;" json:"tags" xbvrbackup:"tags"`
@@ -103,6 +104,7 @@ type Scene struct {
 	TrailerSource string `gorm:"size:1000" json:"trailer_source" xbvrbackup:"trailer_source"`
 	Trailerlist   bool   `json:"trailerlist" gorm:"default:false" xbvrbackup:"trailerlist"`
 	IsHidden      bool   `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
+	LegacySceneID string `json:"legacy_scene_id" xbvrbackup:"legacy_scene_id"`
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
@@ -389,6 +391,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	o.NeedsUpdate = false
 	o.EditsApplied = false
 	o.SceneID = ext.SceneID
+	o.ScraperId = ext.ScraperID
 
 	if o.Title != ext.Title {
 		o.Title = ext.Title
@@ -829,7 +832,30 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			} else {
 				where = "favourite = 0"
 			}
-
+		case "POVR Scraper":
+			if truefalse {
+				where = `scenes.scene_id like "povr-%"`
+			} else {
+				where = `scenes.scene_id not like "povr-%"`
+			}
+		case "SLR Scraper":
+			if truefalse {
+				where = `scenes.scene_id like "slr-%"`
+			} else {
+				where = `scenes.scene_id not like "slr-%"`
+			}
+		case "VRPHub Scraper":
+			if truefalse {
+				where = `scenes.scene_id like "vrphub-%"`
+			} else {
+				where = `scenes.scene_id not like "vrphub-%"`
+			}
+		case "VRPorn Scraper":
+			if truefalse {
+				where = `scenes.scene_id like "vrporn-%"`
+			} else {
+				where = `scenes.scene_id not like "vrporn-%"`
+			}
 		}
 
 		switch firstchar := string(attribute.OrElse(" ")[0]); firstchar {

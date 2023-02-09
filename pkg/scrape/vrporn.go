@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/gocolly/colly"
-	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string) error {
+func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, siteURL string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -33,6 +33,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 
 		sc := models.ScrapedScene{}
+		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = company
 		sc.Site = siteID
@@ -41,7 +42,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		// Scene ID - get from page HTML
 		id := sceneIDRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`article.post`, "class")))[1]
 		sc.SiteID = id
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		sc.SceneID = "vrporn-" + sc.SiteID
 
 		// Title
 		e.ForEach(`h1.content-title`, func(id int, e *colly.HTMLElement) {
@@ -126,7 +127,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://vrporn.com/studio/" + scraperID + "/?sort=newest")
+	siteCollector.Visit(siteURL + "/?sort=newest")
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -135,15 +136,27 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	return nil
 }
 
-func addVRPornScraper(id string, name string, company string, avatarURL string) {
-	registerScraper(id, name+" (VRPorn)", avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return VRPorn(wg, updateSite, knownScenes, out, id, name, company)
+func addVRPornScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string) {
+	suffixedName := name
+	siteNameSuffix := name
+	if custom {
+		suffixedName += " (Custom VRPorn)"
+		siteNameSuffix += " (VRPorn)"
+	} else {
+		suffixedName += " (VRPorn)"
+	}
+	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+		return VRPorn(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL)
 	})
 }
 
 func init() {
-	//addVRPornScraper("evileyevr", "EvilEyeVR", "EvilEyeVR", "https://mcdn.vrporn.com/files/20190605151715/evileyevr-logo.jpg")
-	addVRPornScraper("randysroadstop", "Randy's Road Stop", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20170718073527/randysroadstop-vr-porn-studio-vrporn.com-virtual-reality.png")
-	addVRPornScraper("realteensvr", "Real Teens VR", "NaughtyAmerica", "https://mcdn.vrporn.com/files/20170718063811/realteensvr-vr-porn-studio-vrporn.com-virtual-reality.png")
-	addVRPornScraper("vrclubz", "VRClubz", "VixenVR", "https://mcdn.vrporn.com/files/20200421094123/vrclubz_logo_NEW-400x400_webwhite.png")
+	var scrapers config.ScraperList
+	scrapers.Load()
+	for _, scraper := range scrapers.XbvrScrapers.VrpornScrapers {
+		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL)
+	}
+	for _, scraper := range scrapers.CustomScrapers.VrpornScrapers {
+		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true, scraper.URL)
+	}
 }
