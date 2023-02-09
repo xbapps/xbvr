@@ -117,8 +117,7 @@ func addPOVRScraper(id string, name string, company string, avatarURL string, cu
 	if custom {
 		suffixedName += " (Custom POVR)"
 		siteNameSuffix += " (POVR)"
-	}
-	if company != "POVR.COM" {
+	} else {
 		suffixedName += " (POVR)"
 	}
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
