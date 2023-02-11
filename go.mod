@@ -10,6 +10,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/blevesearch/bleve v1.0.14
+	github.com/blevesearch/bleve/v2 v2.3.6
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
 	github.com/creasty/defaults v1.6.0
 	github.com/darwayne/go-timecode v1.1.0
@@ -63,15 +64,17 @@ require (
 	willnorris.com/go/imageproxy v0.11.2
 )
 
+require github.com/bits-and-blooms/bitset v1.2.0 // indirect
+
 require (
-	github.com/RoaringBitmap/roaring v0.4.23 // indirect
+	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/antchfx/htmlquery v1.0.0 // indirect
 	github.com/antchfx/xmlquery v1.0.0 // indirect
 	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
-	github.com/blevesearch/mmap-go v1.0.2 // indirect
+	github.com/blevesearch/mmap-go v1.0.4 // indirect
 	github.com/blevesearch/segment v0.9.0 // indirect
 	github.com/blevesearch/snowballstem v0.9.0 // indirect
 	github.com/blevesearch/zap/v11 v11.0.14 // indirect
