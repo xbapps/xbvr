@@ -23,6 +23,15 @@ A Docker XBVR run with a MariaDB database will be something like this:
 Adapt it according to your needs.
 
 
+## Can I:
+
+### Use a VR video player in my VR headset?
+Besides using a browser, the DeoVR and Heresphere video players use a http API to create a VR-focused UI with many features.
+
+### Add my 2D video collection to XBVR?
+You can, but XBVR is made to be a VR video library. You might want to take a look at [stash](https://github.com/stashapp/stash) and [stash-vr](https://github.com/o-fl0w/stash-vr) for your 2D video collection, and leave the VR videos to XBVR. 
+
+
 ## Help:
 
 ### XBVR is not working after a update
