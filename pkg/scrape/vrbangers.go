@@ -19,9 +19,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com")
-	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com")
-	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com")
+	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com")
+	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com")
+	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com")
 	ajaxCollector.CacheDir = ""
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -171,9 +171,13 @@ func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 func VRBGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbgay", "VRBGay", "https://vrbgay.com/")
 }
+func VRConk(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, "vrconk", "VRCONK", "https://vrconk.com/")
+}
 
 func init() {
-	registerScraper("vrbangers", "VRBangers", "https://pbs.twimg.com/profile_images/1115746243320246272/Tiaofu5P_200x200.png", VRBangers)
-	registerScraper("vrbtrans", "VRBTrans", "https://pbs.twimg.com/profile_images/980851177557340160/eTnu1ZzO_200x200.jpg", VRBTrans)
-	registerScraper("vrbgay", "VRBGay", "https://pbs.twimg.com/profile_images/916453413344313344/8pT50i9j_200x200.jpg", VRBGay)
+	registerScraper("vrbangers", "VRBangers", "https://vrbangers.com/favicon/apple-touch-icon-144x144.png", VRBangers)
+	registerScraper("vrbtrans", "VRBTrans", "https://vrbtrans.com/favicon/apple-touch-icon-144x144.png", VRBTrans)
+	registerScraper("vrbgay", "VRBGay", "https://vrbgay.com/favicon/apple-touch-icon-144x144.png", VRBGay)
+	registerScraper("vrconk", "VRCONK", "https://vrconk.com/favicon/apple-touch-icon-144x144.png", VRConk)
 }
