@@ -16,8 +16,9 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/djherbis/times v1.5.0
 	github.com/dustin/go-humanize v1.0.0
-	github.com/emicklei/go-restful v2.16.0+incompatible
+	github.com/emicklei/go-restful v2.9.6+incompatible
 	github.com/emicklei/go-restful-openapi v1.4.1
+	github.com/emicklei/go-restful/v3 v3.10.1
 	github.com/gammazero/nexus/v3 v3.0.4
 	github.com/getlantern/systray v1.2.1
 	github.com/go-openapi/spec v0.20.7
