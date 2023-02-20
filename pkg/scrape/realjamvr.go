@@ -104,8 +104,8 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		})
 
 		// Gallery
-		e.ForEach(`.img-wrapper img`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, strings.TrimSpace(e.Attr("src")))
+		e.ForEach(`.img-wrapper`, func(id int, e *colly.HTMLElement) {
+			sc.Gallery = append(sc.Gallery, strings.TrimSpace(e.Attr("data-src")))
 		})
 
 		// Synopsis
@@ -121,19 +121,22 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		})
 
 		// Filenames
-		cnt := 0
 		fileMask := ""
 		// any "download/" links on the public site will be for trailers, use one trailer to get the basis of the scenes filenames
-		e.ForEach(`a[href^='download/']`, func(id int, e *colly.HTMLElement) {
-			if cnt == 0 {
-				trailerurl := sc.HomepageURL + "/" + e.Attr("href")
-				// url does not point directly to a file, need to resolve redirects with http.Head
-				resp, _ := http.Head(trailerurl)
-				fileMask = strings.Split(strings.Split(resp.Request.URL.String(), "attachment%3B%20filename%3D")[1], "&")[0]
-				tmp := strings.Split(fileMask, "_")
-				fileMask = strings.TrimSuffix(tmp[0], "-Trailer") + "-Full_$res_$fps_" + tmp[3] + "_" + tmp[4]
-				cnt += 1
+		e.ForEachWithBreak(`a[href^='download/']`, func(id int, e *colly.HTMLElement) bool {
+			trailerurl := sc.HomepageURL + "/" + e.Attr("href")
+			// url does not point directly to a file, need to resolve redirects with http.Head
+			resp, _ := http.Head(trailerurl)
+			parts := strings.Split(resp.Request.URL.String(), "attachment%3Bfilename%3D")
+			if len(parts) > 1 {
+				fileMaskTmp := strings.Split(parts[1], "&")[0]
+				tmp := strings.Split(fileMaskTmp, "_")
+				if len(tmp) > 4 {
+					fileMask = strings.TrimSuffix(tmp[0], "-Trailer") + "-Full_$res_$fps_" + tmp[3] + "_" + tmp[4]
+					return false
+				}
 			}
+			return true
 		})
 
 		// any "/join/" links on the public site will be for for the full movie
@@ -157,7 +160,7 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 			if resolution != "" && fps != "" {
 				filename := strings.Replace(fileMask, "$res", resolution, 1)
 				filename = strings.Replace(filename, "$fps", fps, 1)
-				if !uniqueFilenames[filename] {
+				if filename != "" && !uniqueFilenames[filename] {
 					uniqueFilenames[filename] = true
 					sc.Filenames = append(sc.Filenames, filename)
 				}
