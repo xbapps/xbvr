@@ -126,14 +126,16 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		e.ForEachWithBreak(`a[href^='download/']`, func(id int, e *colly.HTMLElement) bool {
 			trailerurl := sc.HomepageURL + "/" + e.Attr("href")
 			// url does not point directly to a file, need to resolve redirects with http.Head
-			resp, _ := http.Head(trailerurl)
-			parts := strings.Split(resp.Request.URL.String(), "attachment%3Bfilename%3D")
-			if len(parts) > 1 {
-				fileMaskTmp := strings.Split(parts[1], "&")[0]
-				tmp := strings.Split(fileMaskTmp, "_")
-				if len(tmp) > 4 {
-					fileMask = strings.TrimSuffix(tmp[0], "-Trailer") + "-Full_$res_$fps_" + tmp[3] + "_" + tmp[4]
-					return false
+			resp, err := http.Head(trailerurl)
+			if err == nil {
+				parts := strings.Split(resp.Request.URL.String(), "attachment%3Bfilename%3D")
+				if len(parts) > 1 {
+					fileMaskTmp := strings.Split(parts[1], "&")[0]
+					tmp := strings.Split(fileMaskTmp, "_")
+					if len(tmp) > 4 {
+						fileMask = strings.TrimSuffix(tmp[0], "-Trailer") + "-Full_$res_$fps_" + tmp[3] + "_" + tmp[4]
+						return false
+					}
 				}
 			}
 			return true
