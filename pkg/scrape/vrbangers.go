@@ -19,9 +19,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com")
-	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com")
-	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com")
+	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com")
+	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com")
+	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com")
 	ajaxCollector.CacheDir = ""
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -68,7 +68,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 
 		var durationParts []string
 		// Date & Duration
-		e.ForEach(`div.video-item__info-item`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.single-video-info__list-item`, func(id int, e *colly.HTMLElement) {
 			parts := strings.Split(e.Text, ":")
 			if len(parts) > 1 {
 				switch strings.TrimSpace(parts[0]) {
@@ -94,8 +94,8 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 			}
 		})
 
-		sc.Covers = append(sc.Covers, e.ChildAttr(`section.banner picture img`, "src"))
-		sc.Covers = append(sc.Covers, e.ChildAttr(`section.base-content__bg img[class="object-fit-cover base-border overflow-hidden hero-img"]`, "src"))
+		sc.Covers = append(sc.Covers, e.ChildAttr(`section.static-banner__wrap picture img`, "src"))
+		sc.Covers = append(sc.Covers, e.ChildAttr(`div.single-video-poster__preview img`, "src"))
 
 		// Gallery - https://content.vrbangers.com/uploads/2021/08/611b4e0ca5c54351494706_XL.jpg
 		gallerytmp := gjson.Get(JsonMetadata, "data.item.galleryImages.#.previews.#(sizeAlias==XL).permalink")
@@ -104,11 +104,11 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		}
 
 		// Synopsis
-		sc.Synopsis = strings.TrimSpace(strings.Replace(e.ChildText(`div.video-item__description div.short-text`), `arrow_drop_up`, ``, -1))
+		sc.Synopsis = strings.TrimSpace(strings.Replace(e.ChildText(`div.single-video-description div.toggle-content__text`), `arrow_drop_up`, ``, -1))
 
 		// Tags
 		ignoreTags := []string{"180 vr", "6k vr porn", "8k vr porn", "4k vr porn"}
-		e.ForEach(`a.video-item__category`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`a.single-video-categories__item`, func(id int, e *colly.HTMLElement) {
 			tag := strings.ToLower(strings.TrimSpace(e.Text))
 			for _, v := range ignoreTags {
 				if tag == v {
@@ -117,7 +117,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 			}
 			sc.Tags = append(sc.Tags, tag)
 		})
-		e.ForEach(`div.video-item__info span.video-item__position-title`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.single-video-info__positions span.video-positions__name`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 		if scraperID == "vrbgay" {
@@ -131,14 +131,14 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.TrailerSrc = string(strParma)
 
 		// Cast
-		e.ForEach(`div.video-item__info-starring div.ellipsis a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`a.single-video-info__starring-link`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(strings.Replace(e.Text, ",", "", -1)))
 		})
 
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`div.video-item-info-title a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.grid-video-item__title a`, func(e *colly.HTMLElement) {
 		url := strings.Split(e.Attr("href"), "?")[0]
 		sceneURL := e.Request.AbsoluteURL(url)
 
@@ -147,7 +147,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		}
 	})
 
-	siteCollector.OnHTML(`.pagination-next a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`a.page-pagination__next`, func(e *colly.HTMLElement) {
 		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		siteCollector.Visit(pageURL)
@@ -171,9 +171,13 @@ func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 func VRBGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbgay", "VRBGay", "https://vrbgay.com/")
 }
+func VRConk(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, "vrconk", "VRCONK", "https://vrconk.com/")
+}
 
 func init() {
-	registerScraper("vrbangers", "VRBangers", "https://pbs.twimg.com/profile_images/1115746243320246272/Tiaofu5P_200x200.png", VRBangers)
-	registerScraper("vrbtrans", "VRBTrans", "https://pbs.twimg.com/profile_images/980851177557340160/eTnu1ZzO_200x200.jpg", VRBTrans)
-	registerScraper("vrbgay", "VRBGay", "https://pbs.twimg.com/profile_images/916453413344313344/8pT50i9j_200x200.jpg", VRBGay)
+	registerScraper("vrbangers", "VRBangers", "https://vrbangers.com/favicon/apple-touch-icon-144x144.png", VRBangers)
+	registerScraper("vrbtrans", "VRBTrans", "https://vrbtrans.com/favicon/apple-touch-icon-144x144.png", VRBTrans)
+	registerScraper("vrbgay", "VRBGay", "https://vrbgay.com/favicon/apple-touch-icon-144x144.png", VRBGay)
+	registerScraper("vrconk", "VRCONK", "https://vrconk.com/favicon/apple-touch-icon-144x144.png", VRConk)
 }
