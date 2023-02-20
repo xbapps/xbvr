@@ -3,7 +3,7 @@ package models
 import (
 	"strings"
 
-	"github.com/avast/retry-go/v3"
+	"github.com/avast/retry-go/v4"
 	"github.com/thoas/go-funk"
 )
 

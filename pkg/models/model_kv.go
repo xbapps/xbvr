@@ -1,6 +1,6 @@
 package models
 
-import "github.com/avast/retry-go/v3"
+import "github.com/avast/retry-go/v4"
 
 type KV struct {
 	Key   string `json:"key" gorm:"primary_key" gorm:"unique_index"`
