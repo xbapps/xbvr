@@ -7,12 +7,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
-	"gopkg.in/resty.v1"
 )
 
 func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
@@ -87,7 +87,7 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 	})
 
 	// Request scenes via REST API
-	r, err := resty.R().
+	r, err := resty.New().R().
 		SetHeader("User-Agent", UserAgent).
 		SetHeader("content-type", "application/json;charset=UTF-8").
 		SetHeader("accept", "application/json, text/plain, */*").

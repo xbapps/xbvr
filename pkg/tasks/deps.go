@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/mholt/archiver"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/ffprobe"
-	"gopkg.in/resty.v1"
 )
 
 func CheckDependencies() {
@@ -78,7 +78,7 @@ func downloadFfbinaries(tool string) error {
 		return errors.Errorf("Unknown architecture: %v/%v", runtime.GOOS, runtime.GOARCH)
 	}
 
-	resp, err := resty.R().Get("https://ffbinaries.com/api/v1/version/4.2.1")
+	resp, err := resty.New().R().Get("https://ffbinaries.com/api/v1/version/4.2.1")
 	if err != nil {
 		return err
 	}
