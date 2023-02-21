@@ -10,9 +10,9 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/xbapps/xbvr/pkg/tasks"
 
-	"github.com/blevesearch/bleve"
-	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/blevesearch/bleve/v2"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 

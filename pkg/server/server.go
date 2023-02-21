@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	auth "github.com/abbot/go-http-auth"
-	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/gammazero/nexus/v3/router"
 	"github.com/gammazero/nexus/v3/wamp"
 	"github.com/go-openapi/spec"

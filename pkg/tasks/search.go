@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzer/simple"
-	"github.com/blevesearch/bleve/index/scorch"
+	"github.com/blevesearch/bleve/v2"
+	"github.com/blevesearch/bleve/v2/analysis/analyzer/simple"
+	"github.com/blevesearch/bleve/v2/index/scorch"
 	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"

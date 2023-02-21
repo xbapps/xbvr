@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/jinzhu/gorm"
 	"github.com/mcuadros/go-version"
 	"github.com/pkg/errors"

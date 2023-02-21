@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/jinzhu/gorm"
 	"github.com/xbapps/xbvr/pkg/models"
 )
