@@ -6,13 +6,13 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
-	"gopkg.in/resty.v1"
 )
 
 func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
@@ -37,7 +37,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		//https://content.vrbangers.com
 		contentURL := strings.Replace(URL, "//", "//content.", 1)
 
-		r, _ := resty.R().
+		r, _ := resty.New().R().
 			SetHeader("User-Agent", UserAgent).
 			Get("https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id)
 

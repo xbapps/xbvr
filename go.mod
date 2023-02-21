@@ -18,9 +18,10 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/emicklei/go-restful-openapi/v2 v2.9.1
 	github.com/emicklei/go-restful/v3 v3.10.1
-	github.com/gammazero/nexus/v3 v3.0.4
+	github.com/gammazero/nexus/v3 v3.2.0
 	github.com/getlantern/systray v1.2.1
 	github.com/go-openapi/spec v0.20.7
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-test/deep v1.1.0
 	github.com/gocolly/colly v1.2.0
 	github.com/gorilla/mux v1.8.0
@@ -59,7 +60,6 @@ require (
 	golang.org/x/sys v0.5.0
 	golang.org/x/text v0.7.0
 	gopkg.in/gormigrate.v1 v1.6.0
-	gopkg.in/resty.v1 v1.12.0
 	willnorris.com/go/imageproxy v0.11.3-0.20230217221409-3815eb832be7
 )
 
@@ -106,7 +106,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
@@ -137,8 +137,8 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
-	github.com/ugorji/go/codec v1.2.5 // indirect
-	github.com/ulikunitz/xz v0.5.6 // indirect
+	github.com/ugorji/go/codec v1.2.7 // indirect
+	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/image v0.5.0 // indirect
