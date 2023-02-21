@@ -55,7 +55,9 @@ export default {
     return {
       javrScraper: 'javdatabase',
       javrQuery: '',
-      tpdbSceneUrl: ''
+      tpdbSceneUrl: '',
+      customSceneTitle: '',
+      customSceneID: ''
     }
   },
   mounted () {
