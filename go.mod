@@ -23,7 +23,6 @@ require (
 	github.com/go-openapi/spec v0.20.8
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-test/deep v1.1.0
-	github.com/gocolly/colly v1.2.0
 	github.com/gocolly/colly/v2 v2.1.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gowww/log v1.0.0
