@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
 	"github.com/xbapps/xbvr/pkg/models"
 )
