@@ -1,6 +1,6 @@
 package models
 
-import "github.com/avast/retry-go/v3"
+import "github.com/avast/retry-go/v4"
 
 type Action struct {
 	ID uint `gorm:"primary_key" json:"id"  xbvrbackup:"-"`

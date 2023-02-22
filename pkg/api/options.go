@@ -11,8 +11,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
+	"github.com/go-resty/resty/v2"
 	"github.com/jinzhu/gorm"
 	"github.com/mcuadros/go-version"
 	"github.com/pkg/errors"
@@ -24,7 +25,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/tasks"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
-	"gopkg.in/resty.v1"
 )
 
 type NewVolumeRequest struct {
@@ -209,7 +209,7 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 	out := VersionCheckResponse{LatestVersion: common.CurrentVersion, CurrentVersion: common.CurrentVersion, UpdateNotify: false}
 
 	if config.Config.Web.UpdateCheck && common.CurrentVersion != "CURRENT" {
-		r, err := resty.R().
+		r, err := resty.New().R().
 			SetHeader("User-Agent", "XBVR/"+common.CurrentVersion).
 			SetHeader("Accept", "application/vnd.github.v3+json").
 			Get("https://api.github.com/repos/xbapps/xbvr/releases/latest")

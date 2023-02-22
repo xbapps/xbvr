@@ -4,30 +4,31 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
-	github.com/PuerkitoBio/goquery v1.8.0
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/ffprobe v1.0.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
-	github.com/avast/retry-go/v3 v3.1.1
-	github.com/blevesearch/bleve v1.0.14
+	github.com/avast/retry-go/v4 v4.3.3
+	github.com/blevesearch/bleve/v2 v2.3.6
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
 	github.com/creasty/defaults v1.6.0
 	github.com/darwayne/go-timecode v1.1.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/djherbis/times v1.5.0
-	github.com/dustin/go-humanize v1.0.0
-	github.com/emicklei/go-restful v2.16.0+incompatible
-	github.com/emicklei/go-restful-openapi v1.4.1
-	github.com/gammazero/nexus/v3 v3.0.4
+	github.com/dustin/go-humanize v1.0.1
+	github.com/emicklei/go-restful-openapi/v2 v2.9.1
+	github.com/emicklei/go-restful/v3 v3.10.1
+	github.com/gammazero/nexus/v3 v3.2.0
 	github.com/getlantern/systray v1.2.1
-	github.com/go-openapi/spec v0.20.7
+	github.com/go-openapi/spec v0.20.8
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-test/deep v1.1.0
 	github.com/gocolly/colly v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gowww/log v1.0.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/jinzhu/gorm v1.9.16
-	github.com/joho/godotenv v1.4.0
+	github.com/joho/godotenv v1.5.1
 	github.com/json-iterator/go v1.1.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
@@ -44,7 +45,7 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/putdotio/go-putio v1.7.0
-	github.com/robertkrimen/otto v0.0.0-20221025135307-511d75fba9f8
+	github.com/robertkrimen/otto v0.2.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/cors v1.8.3
 	github.com/sirupsen/logrus v1.9.0
@@ -53,34 +54,39 @@ require (
 	github.com/tidwall/gjson v1.14.4
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.13.0
-	golang.org/x/crypto v0.5.0
-	golang.org/x/net v0.5.0
-	golang.org/x/oauth2 v0.4.0
-	golang.org/x/sys v0.4.0
-	golang.org/x/text v0.6.0
+	golang.org/x/crypto v0.6.0
+	golang.org/x/net v0.7.0
+	golang.org/x/oauth2 v0.5.0
+	golang.org/x/sys v0.5.0
+	golang.org/x/text v0.7.0
 	gopkg.in/gormigrate.v1 v1.6.0
-	gopkg.in/resty.v1 v1.12.0
-	willnorris.com/go/imageproxy v0.11.2
+	willnorris.com/go/imageproxy v0.11.3-0.20230217221409-3815eb832be7
 )
 
 require (
-	github.com/RoaringBitmap/roaring v0.4.23 // indirect
+	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/antchfx/htmlquery v1.0.0 // indirect
-	github.com/antchfx/xmlquery v1.0.0 // indirect
-	github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e // indirect
+	github.com/antchfx/xmlquery v1.3.1 // indirect
+	github.com/antchfx/xpath v1.1.10 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bits-and-blooms/bitset v1.2.0 // indirect
+	github.com/blevesearch/bleve_index_api v1.0.5 // indirect
+	github.com/blevesearch/geo v0.1.16 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
-	github.com/blevesearch/mmap-go v1.0.2 // indirect
+	github.com/blevesearch/gtreap v0.1.1 // indirect
+	github.com/blevesearch/mmap-go v1.0.4 // indirect
+	github.com/blevesearch/scorch_segment_api/v2 v2.1.4 // indirect
 	github.com/blevesearch/segment v0.9.0 // indirect
 	github.com/blevesearch/snowballstem v0.9.0 // indirect
-	github.com/blevesearch/zap/v11 v11.0.14 // indirect
-	github.com/blevesearch/zap/v12 v12.0.14 // indirect
-	github.com/blevesearch/zap/v13 v13.0.6 // indirect
-	github.com/blevesearch/zap/v14 v14.0.5 // indirect
-	github.com/blevesearch/zap/v15 v15.0.3 // indirect
-	github.com/cespare/xxhash/v2 v2.1.1 // indirect
-	github.com/couchbase/vellum v1.0.2 // indirect
+	github.com/blevesearch/upsidedown_store_api v1.0.1 // indirect
+	github.com/blevesearch/vellum v1.0.9 // indirect
+	github.com/blevesearch/zapx/v11 v11.3.7 // indirect
+	github.com/blevesearch/zapx/v12 v12.3.7 // indirect
+	github.com/blevesearch/zapx/v13 v13.3.7 // indirect
+	github.com/blevesearch/zapx/v14 v14.3.7 // indirect
+	github.com/blevesearch/zapx/v15 v15.3.8 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/fcjr/aia-transport-go v1.2.2 // indirect
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
@@ -89,24 +95,25 @@ require (
 	github.com/getlantern/hex v0.0.0-20190417191902-c6586a6fe0b7 // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55 // indirect
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f // indirect
-	github.com/glycerine/go-unsnap-stream v0.0.0-20181221182339-f9677308dec2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
+	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
-	github.com/google/btree v1.0.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/google/btree v1.1.2 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -114,31 +121,30 @@ require (
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/muesli/smartcrop v0.3.0 // indirect
 	github.com/nwaples/rardecode v1.0.0 // indirect
+	github.com/onsi/ginkgo v1.7.0 // indirect
+	github.com/onsi/gomega v1.4.3 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
-	github.com/philhofer/fwd v1.0.0 // indirect
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
-	github.com/prometheus/client_golang v1.11.0 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.26.0 // indirect
-	github.com/prometheus/procfs v0.6.0 // indirect
+	github.com/prometheus/client_golang v1.14.0 // indirect
+	github.com/prometheus/client_model v0.3.0 // indirect
+	github.com/prometheus/common v0.39.0 // indirect
+	github.com/prometheus/procfs v0.9.0 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
-	github.com/steveyen/gtreap v0.1.0 // indirect
 	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
-	github.com/tinylib/msgp v1.1.0 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
-	github.com/ugorji/go/codec v1.2.5 // indirect
-	github.com/ulikunitz/xz v0.5.6 // indirect
-	github.com/willf/bitset v1.1.10 // indirect
+	github.com/ugorji/go/codec v1.2.7 // indirect
+	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
-	golang.org/x/image v0.0.0-20201208152932-35266b937fa6 // indirect
-	golang.org/x/term v0.4.0 // indirect
+	golang.org/x/image v0.5.0 // indirect
+	golang.org/x/term v0.5.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	willnorris.com/go/gifresize v1.0.0 // indirect

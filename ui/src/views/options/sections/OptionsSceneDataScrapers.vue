@@ -37,7 +37,7 @@
               <span class="pulsate is-info">{{$t('Scraping now...')}}</span>
             </span>
       </b-table-column>
-      <b-table-column field="options" :label="opt" v-slot="props" width="30">
+      <b-table-column field="options" v-slot="props" width="30">
         <div class="menu">
           <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">
             <template slot="trigger">

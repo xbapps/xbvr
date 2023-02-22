@@ -14,8 +14,8 @@ import (
 	"sync"
 
 	"github.com/dustin/go-humanize"
-	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -140,17 +140,17 @@ func (i HeresphereResource) WebService() *restful.WebService {
 
 	ws := new(restful.WebService)
 
-	ws.Path("/heresphere/").
+	ws.Path("/heresphere").
 		Filter(HeresphereResponseFilter).
 		Consumes(restful.MIME_JSON, "application/x-www-form-urlencoded").
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.HEAD("").To(i.getHeresphereLibrary))
+	ws.Route(ws.HEAD("/").To(i.getHeresphereLibrary))
 
-	ws.Route(ws.GET("").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
+	ws.Route(ws.GET("/").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
-	ws.Route(ws.POST("").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
+	ws.Route(ws.POST("/").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
 

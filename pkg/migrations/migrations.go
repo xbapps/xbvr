@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/jinzhu/gorm"
 	"github.com/markphelps/optional"
 	"github.com/mozillazg/go-slugify"
@@ -22,7 +23,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/tasks"
 	"gopkg.in/gormigrate.v1"
-	"gopkg.in/resty.v1"
 )
 
 type RequestSceneList struct {
@@ -620,7 +620,8 @@ func Migrate() {
 						mapping = map[string]string{}
 						queryParams := "page=1&type=videos&sort=latest&show_custom_video=1&bonus-video=1&limit=1000"
 						url := fmt.Sprintf("https://content.%s.com/api/content/v1/videos?%s", strings.ToLower(site), queryParams)
-						r, err := resty.R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
+
+						r, err := resty.New().R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
 						if err != nil {
 							return "", err
 						}
@@ -723,7 +724,7 @@ func Migrate() {
 						mapping = map[string]string{}
 						queryParams := "page=1&type=videos&sort=latest&show_custom_video=1&bonus-video=1&limit=1000"
 						url := fmt.Sprintf("https://content.%s.com/api/content/v1/videos?%s", strings.ToLower(site), queryParams)
-						r, err := resty.R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
+						r, err := resty.New().R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
 						if err != nil {
 							return "", err
 						}
