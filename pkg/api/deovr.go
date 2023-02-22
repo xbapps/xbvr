@@ -179,16 +179,16 @@ func (i DeoVRResource) WebService() *restful.WebService {
 
 	ws := new(restful.WebService)
 
-	ws.Path("/deovr/").
+	ws.Path("/deovr").
 		Consumes(restful.MIME_JSON, "application/x-www-form-urlencoded").
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.HEAD("").To(i.getDeoLibrary))
+	ws.Route(ws.HEAD("/").To(i.getDeoLibrary))
 
-	ws.Route(ws.GET("").Filter(restfulAuthFilter).To(i.getDeoLibrary).
+	ws.Route(ws.GET("/").Filter(restfulAuthFilter).To(i.getDeoLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
-	ws.Route(ws.POST("").Filter(restfulAuthFilter).To(i.getDeoLibrary).
+	ws.Route(ws.POST("/").Filter(restfulAuthFilter).To(i.getDeoLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
 

@@ -140,17 +140,17 @@ func (i HeresphereResource) WebService() *restful.WebService {
 
 	ws := new(restful.WebService)
 
-	ws.Path("/heresphere/").
+	ws.Path("/heresphere").
 		Filter(HeresphereResponseFilter).
 		Consumes(restful.MIME_JSON, "application/x-www-form-urlencoded").
 		Produces(restful.MIME_JSON)
 
-	ws.Route(ws.HEAD("").To(i.getHeresphereLibrary))
+	ws.Route(ws.HEAD("/").To(i.getHeresphereLibrary))
 
-	ws.Route(ws.GET("").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
+	ws.Route(ws.GET("/").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
-	ws.Route(ws.POST("").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
+	ws.Route(ws.POST("/").Filter(HeresphereAuthFilter).To(i.getHeresphereLibrary).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(DeoLibrary{}))
 
