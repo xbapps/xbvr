@@ -68,29 +68,31 @@ func (o *Aka) UpdateAkaSceneCastRecords() {
 	where sc2.actor_id is NULL 
 	`)
 
-	// make a list of scene_cast records for aka actors that have been removed
+	// delete scene_cast records for aka actors that have been removed
 	type DeleteList struct {
 		AkaActorId uint
 		SceneId    uint
 	}
-	var deleteList []DeleteList
 
-	db.Raw(`
+	db.Exec(`
 		with SceneIds as (
 			select distinct a.id, sc.scene_id
 			from akas a 
 			join actor_akas aa on aa.aka_id =a.id 
 			join scene_cast sc on sc.actor_id=aa.actor_id
-			)
+			),
+		DeleteRows as (
 			select distinct a.aka_actor_id, sc.scene_id  from akas a
 			join scene_cast sc on sc.actor_id=a.aka_actor_id 
 			left join SceneIds si on si.id=a.id and sc.scene_id= si.scene_id
-			where si.scene_id is null	
-			`).Scan(&deleteList)
-
-	for _, scenecast := range deleteList {
-		db.Exec(` delete from scene_cast where scene_id = ? and actor_id = ?`, scenecast.SceneId, scenecast.AkaActorId)
-	}
+			where si.scene_id is null
+			)
+		delete from scene_cast
+		where EXISTS (
+		Select 1 from DeleteRows
+		WHERE DeleteRows.scene_id=scene_cast.scene_id  
+			AND DeleteRows.aka_actor_id=scene_cast.actor_id
+			`)
 
 	var actor Actor
 	actor.CountActorTags()

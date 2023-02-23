@@ -80,6 +80,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(api.HeresphereResource{}.WebService())
 	restful.Add(api.PlaylistResource{}.WebService())
 	restful.Add(api.AkaResource{}.WebService())
+	restful.Add(api.TagGroupResource{}.WebService())
 
 	restConfig := restfulspec.Config{
 		WebServices: restful.RegisteredWebServices(),
