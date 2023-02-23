@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -117,8 +117,7 @@ func addPOVRScraper(id string, name string, company string, avatarURL string, cu
 	if custom {
 		suffixedName += " (Custom POVR)"
 		siteNameSuffix += " (POVR)"
-	}
-	if company != "POVR.COM" {
+	} else {
 		suffixedName += " (POVR)"
 	}
 	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {

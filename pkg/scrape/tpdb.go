@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
-	"gopkg.in/resty.v1"
 )
 
 func ScrapeTPDB(knownScenes []string, out *[]models.ScrapedScene, apiToken string, sceneUrl string) error {
@@ -25,7 +25,7 @@ func ScrapeTPDB(knownScenes []string, out *[]models.ScrapedScene, apiToken strin
 		return errors.New("TPDB Url is malformed")
 	}
 
-	r, _ := resty.R().
+	r, _ := resty.New().R().
 		SetAuthToken(apiToken).
 		Get(fmt.Sprintf("https://api.metadataapi.net/scenes/%v", subMatches[1]))
 

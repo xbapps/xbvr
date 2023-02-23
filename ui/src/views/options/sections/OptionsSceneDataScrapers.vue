@@ -51,7 +51,7 @@
       <b-table-column field="subscribed" :label="$t('Subscribed')" v-slot="props" width="60" sortable>
           <span><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
       </b-table-column>
-      <b-table-column field="options" :label="opt" v-slot="props" width="30">
+      <b-table-column field="options" v-slot="props" width="30">
         <div class="menu">
           <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">
             <template slot="trigger">

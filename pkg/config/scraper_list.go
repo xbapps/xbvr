@@ -56,7 +56,6 @@ func (o *ScraperList) Load() error {
 	if _, err := os.Stat(fName); os.IsNotExist(err) {
 		list, _ := json.MarshalIndent(officalScrapers, "", "  ")
 		ioutil.WriteFile(fName, list, 0644)
-		return nil
 	} else {
 		b, err := ioutil.ReadFile(fName)
 		if err != nil {

@@ -3,7 +3,6 @@ package tasks
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -92,7 +91,7 @@ func RenderPreview(inputFile string, destFile string, videoProjection string, st
 	for i := 1; i <= snippetAmount; i++ {
 		start := time.Duration(float64(i)*interval+float64(startTime)) * time.Second
 		snippetFile := filepath.Join(tmpPath, fmt.Sprintf("%v.mp4", i))
-		cmd := []string{
+		args := []string{
 			"-y",
 			"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
 			"-i", inputFile,
@@ -101,8 +100,8 @@ func RenderPreview(inputFile string, destFile string, videoProjection string, st
 			"-t", fmt.Sprintf("%v", snippetLength),
 			"-an", snippetFile,
 		}
-
-		err := exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
+		cmd := buildCmd(GetBinPath("ffmpeg"), args...)
+		err := cmd.Run()
 		if err != nil {
 			return err
 		}
@@ -114,7 +113,7 @@ func RenderPreview(inputFile string, destFile string, videoProjection string, st
 
 		start := time.Duration(dur-float64(150)) * time.Second
 		snippetFile := filepath.Join(tmpPath, fmt.Sprintf("%v.mp4", snippetAmount))
-		cmd := []string{
+		args := []string{
 			"-y",
 			"-ss", strings.TrimSuffix(timecode.New(start, timecode.IdentityRate).String(), ":00"),
 			"-i", inputFile,
@@ -123,7 +122,8 @@ func RenderPreview(inputFile string, destFile string, videoProjection string, st
 			"-an", snippetFile,
 		}
 
-		err = exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
+		cmd := buildCmd(GetBinPath("ffmpeg"), args...)
+		err := cmd.Run()
 		if err != nil {
 			return err
 		}
@@ -141,7 +141,7 @@ func RenderPreview(inputFile string, destFile string, videoProjection string, st
 	f.Close()
 
 	// Save result
-	cmd := []string{
+	args := []string{
 		"-y",
 		"-f", "concat",
 		"-safe", "0",
@@ -149,7 +149,8 @@ func RenderPreview(inputFile string, destFile string, videoProjection string, st
 		"-c", "copy",
 		filepath.ToSlash(destFile),
 	}
-	err = exec.Command(GetBinPath("ffmpeg"), cmd...).Run()
+	cmd := buildCmd(GetBinPath("ffmpeg"), args...)
+	err = cmd.Run()
 	if err != nil {
 		return err
 	}

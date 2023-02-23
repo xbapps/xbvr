@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/avast/retry-go/v3"
+	"github.com/avast/retry-go/v4"
 )
 
 type History struct {
