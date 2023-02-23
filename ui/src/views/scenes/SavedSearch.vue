@@ -119,7 +119,7 @@ export default {
 
       let p
       if (action === 'create') {
-        p = await ky.post('/api/playlist/', { json: payload }).json()
+        p = await ky.post('/api/playlist', { json: payload }).json()
       } else {
         p = await ky.put(`/api/playlist/${this.currentPlaylistObj.id}`, { json: payload }).json()
       }
