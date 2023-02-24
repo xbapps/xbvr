@@ -74,6 +74,7 @@ func RescanVolumes(id int) {
 			filename := escape(unescapedFilename)
 			filename2 := strings.Replace(filename, ".funscript", ".mp4", -1)
 			filename3 := strings.Replace(filename, ".hsp", ".mp4", -1)
+			filename3 = strings.Replace(filename3, ".srt", ".mp4", -1)
 			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ? OR filenames_arr LIKE ?", `%"`+filename+`"%`, `%"`+filename2+`"%`, `%"`+filename3+`"%`).Find(&scenes).Error
 			if err != nil {
 				log.Error(err, " when matching "+unescapedFilename)
@@ -138,6 +139,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 		var videoProcList []string
 		var scriptProcList []string
 		var hspProcList []string
+		var subtitlesProcList []string
 		_ = filepath.Walk(vol.Path, func(path string, f os.FileInfo, err error) error {
 			if err != nil {
 				return nil
@@ -158,6 +160,9 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 				}
 				if !strings.HasPrefix(filepath.Base(path), ".") && filepath.Ext(path) == ".hsp" {
 					hspProcList = append(hspProcList, path)
+				}
+				if !strings.HasPrefix(filepath.Base(path), ".") && (filepath.Ext(path) == ".srt" || filepath.Ext(path) == ".ssa" || filepath.Ext(path) == ".ass") {
+					subtitlesProcList = append(subtitlesProcList, path)
 				}
 			}
 			return nil
@@ -287,6 +292,10 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			ScanLocalHspFile(path, vol.ID, 0)
 		}
 
+		for _, path := range subtitlesProcList {
+			ScanLocalSubtitlesFile(path, vol.ID, 0)
+		}
+
 		vol.LastScan = time.Now()
 		vol.Save()
 
@@ -410,4 +419,28 @@ func ScanLocalHspFile(path string, volID uint, sceneId uint) {
 	}
 	fl.Save()
 
+}
+
+func ScanLocalSubtitlesFile(path string, volID uint, sceneId uint) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var fl models.File
+	db.Where(&models.File{
+		Path:     filepath.Dir(path),
+		Filename: filepath.Base(path),
+		Type:     "subtitles",
+	}).FirstOrCreate(&fl)
+
+	fStat, _ := os.Stat(path)
+	fTimes, _ := times.Stat(path)
+
+	fl.Size = fStat.Size()
+	fl.CreatedTime = fTimes.ModTime()
+	fl.UpdatedTime = fTimes.ModTime()
+	fl.VolumeID = volID
+	if sceneId > 0 {
+		fl.SceneID = sceneId
+	}
+	fl.Save()
 }
