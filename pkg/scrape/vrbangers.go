@@ -125,10 +125,12 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		}
 
 		// setup  trailers
-		sc.TrailerType = "load_json"
-		params := models.TrailerScrape{SceneUrl: "https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id, RecordPath: "data.item.videoPlayerSources.trailer", ContentPath: "src", QualityPath: "quality"}
-		strParma, _ := json.Marshal(params)
-		sc.TrailerSrc = string(strParma)
+		if scraperID != "vrconk" {
+			sc.TrailerType = "load_json"
+			params := models.TrailerScrape{SceneUrl: "https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id, RecordPath: "data.item.videoPlayerSources.trailer", ContentPath: "src", QualityPath: "quality"}
+			strParma, _ := json.Marshal(params)
+			sc.TrailerSrc = string(strParma)
+		}
 
 		// Cast
 		e.ForEach(`a.single-video-info__starring-link`, func(id int, e *colly.HTMLElement) {
