@@ -157,7 +157,7 @@
       </b-field>
 
       <b-field label="Cuepoint" label-position="on-border" class="field-extra">
-        <b-taginput v-model="cuepoint" allow-new>
+        <b-taginput v-model="cuepoint" autocomplete :data="filteredCuepoints" @typing="getFilteredCuepoints">
           <template slot-scope="props">{{ props.option }}</template>
           <template slot="empty">No matching cuepoints</template>
           <template #selected="props">
@@ -236,6 +236,7 @@ export default {
       filteredCast: [],
       filteredSites: [],
       filteredTags: [],
+      filteredCuepoints: [],
       filteredAttributes: [],
     }
   },
@@ -264,6 +265,12 @@ export default {
       this.filteredTags = this.filters.tags.filter(option => (
         option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
         !this.tags.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
+      ))
+    },
+    getFilteredCuepoints (text) {
+      this.filteredCuepoints = this.filters.cuepoints.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.cuepoint.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
       ))
     },
     getFilteredAttributes (text) {

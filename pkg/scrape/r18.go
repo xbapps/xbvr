@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"

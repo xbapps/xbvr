@@ -11,7 +11,7 @@ import (
 	"golang.org/x/net/html"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"

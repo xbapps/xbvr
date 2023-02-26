@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
