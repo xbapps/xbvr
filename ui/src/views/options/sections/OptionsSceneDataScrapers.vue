@@ -3,16 +3,6 @@
     <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
     <div class="columns">
       <div class="column">
-      </div>
-        <div class="column buttons" align="right">
-          <b-tooltip
-            label="Toogles the Subscription status of Sites Visible" :delay="500" >
-            <a class="button is-primary" v-on:click="toggleAllSubscriptions()">{{$t('Toggle Subscriptions')}}</a>
-          </b-tooltip>
-        </div>
-    </div>
-    <div class="columns">
-      <div class="column">
         <h3 class="title">{{$t('Scrape scenes from studios')}}</h3>
       </div>
       <div class="column buttons" align="right">
@@ -70,6 +60,13 @@
         </div>
       </b-table-column>
     </b-table>
+    <div class="columns">
+      <div class="column">
+      </div>
+        <div class="column buttons" align="right">
+          <a class="button is-small" v-on:click="toggleAllSubscriptions()">{{$t('Toggle Subscriptions of all visible sites')}}</a>
+        </div>
+    </div>
   </div>
 </template>
 
