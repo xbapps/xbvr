@@ -103,6 +103,7 @@ type Scene struct {
 	TrailerType   string `json:"trailer_type" xbvrbackup:"trailer_type"`
 	TrailerSource string `gorm:"size:1000" json:"trailer_source" xbvrbackup:"trailer_source"`
 	Trailerlist   bool   `json:"trailerlist" gorm:"default:false" xbvrbackup:"trailerlist"`
+	IsSubscribed  bool   `json:"is_subscribed" gorm:"default:false"`
 	IsHidden      bool   `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
 	LegacySceneID string `json:"legacy_scene_id" xbvrbackup:"legacy_scene_id"`
 
@@ -463,6 +464,9 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		o.Images = string(imgTxt)
 	}
 
+	var site Site
+	db.Where("id = ?", o.ScraperId).FirstOrInit(&site)
+	o.IsSubscribed = site.Subscribed
 	SaveWithRetry(db, &o)
 
 	// Clean & Associate Tags
@@ -672,6 +676,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 				where = "trailerlist = 1"
 			} else {
 				where = "trailerlist = 0"
+			}
+		case "Has Subscription":
+			if truefalse {
+				where = "is_subscribed = 1"
+			} else {
+				where = "is_subscribed = 0"
 			}
 		case "Rating 0", "Rating .5", "Rating 1", "Rating 1.5", "Rating 2", "Rating 2.5", "Rating 3", "Rating 3.5", "Rating 4", "Rating 4.5", "Rating 5":
 			if truefalse {
