@@ -157,7 +157,7 @@
       </b-field>
 
       <b-field label="Cuepoint" label-position="on-border" class="field-extra">
-        <b-taginput v-model="cuepoint" allow-new>
+        <b-taginput v-model="cuepoint" autocomplete :data="filteredCuepoints" @typing="getFilteredCuepoints">
           <template slot-scope="props">{{ props.option }}</template>
           <template slot="empty">No matching cuepoints</template>
           <template #selected="props">
@@ -175,7 +175,7 @@
         </b-taginput>
       </b-field>
 
-      <b-tooltip position="is-top" label="Allows searching a variety of attributes such as: scenes in Watchlists, Favourites, Has Video, Scripts or HSP Files, Ratings, Cuepoint Types, Number of Cast, FOV, Projection, Resolution, Frame Rate and Codecs" multilined :delay="1000" style="width:100%">
+      <b-tooltip position="is-top" label="Allows searching a variety of attributes such as: scenes in Watchlists, Favourites, Has Video, Scripts or HSP Files, Subscriptions, Ratings, Cuepoint Types, Number of Cast, FOV, Projection, Resolution, Frame Rate and Codecs" multilined :delay="1000" style="width:100%">
         <b-field label="Attributes" label-position="on-border" class="field-extra">        
           <b-taginput v-model="attributes" autocomplete :data="filteredAttributes" @typing="getFilteredAttributes">
             <template slot-scope="props">{{ props.option }}</template>
@@ -236,6 +236,7 @@ export default {
       filteredCast: [],
       filteredSites: [],
       filteredTags: [],
+      filteredCuepoints: [],
       filteredAttributes: [],
     }
   },
@@ -264,6 +265,12 @@ export default {
       this.filteredTags = this.filters.tags.filter(option => (
         option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
         !this.tags.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
+      ))
+    },
+    getFilteredCuepoints (text) {
+      this.filteredCuepoints = this.filters.cuepoints.filter(option => (
+        option.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0 &&
+        !this.cuepoint.some(entry => this.removeConditionPrefix(entry.toString()) === option.toString())
       ))
     },
     getFilteredAttributes (text) {

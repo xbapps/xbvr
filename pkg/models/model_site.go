@@ -13,6 +13,7 @@ type Site struct {
 	IsBuiltin  bool      `json:"is_builtin" xbvrbackup:"-"`
 	IsEnabled  bool      `json:"is_enabled" xbvrbackup:"is_enabled"`
 	LastUpdate time.Time `json:"last_update" xbvrbackup:"-"`
+	Subscribed bool      `json:"subscribed" xbvrbackup:"subscribed"`
 }
 
 func (i *Site) Save() error {

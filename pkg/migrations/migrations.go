@@ -545,6 +545,23 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0056-Subscribed-Fields",
+			Migrate: func(tx *gorm.DB) error {
+				type Site struct {
+					Subscribed bool `json:"subscribed" xbvrbackup:"subscribed"`
+				}
+				type Scene struct {
+					IsSubscribed bool `json:"is_subscribed" gorm:"default:false"`
+				}
+				err := tx.AutoMigrate(Site{}).Error
+				if err == nil {
+					err = tx.AutoMigrate(Scene{}).Error
+				}
+				return err
+			},
+		},
+
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
 		// ===============================================================================================

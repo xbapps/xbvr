@@ -12,9 +12,12 @@ export default {
       wsStatus: ''
     }
   },
-  async mounted () {
+  mounted () {
     const ws = new Wampy('/ws/', {
       realm: 'default',
+      onConnect: () => {
+        this.wsStatus = 'connected'
+      },
       onClose: () => {
         this.wsStatus = 'disconnected'
       },
@@ -29,16 +32,7 @@ export default {
       }
     })
 
-    try {
-      this.wsStatus = 'connecting'
-      await ws.connect();
-      this.wsStatus = 'connected'
-    } catch (e) {
-      this.wsStatus = 'disconnected'
-      console.log('web socket connection failed', e);
-    }
-
-    await ws.subscribe('service.log', (dataArr, dataObj) => {
+    ws.subscribe('service.log', (dataArr, dataObj) => {
       if (dataArr.argsDict.level == 'debug') {
         console.debug(dataArr.argsDict.message)
       }
@@ -72,7 +66,7 @@ export default {
       }
     })
 
-    await ws.subscribe('lock.change', (dataArr, dataObj) => {
+    ws.subscribe('lock.change', (dataArr, dataObj) => {
       if (dataArr.argsDict.name === 'scrape') {
         this.$store.state.messages.lockScrape = dataArr.argsDict.locked
       }
@@ -81,16 +75,16 @@ export default {
       }
     })
 
-    await ws.subscribe('state.change.optionsStorage', (arr, obj) => {
+    ws.subscribe('state.change.optionsStorage', (arr, obj) => {
       this.$store.dispatch('optionsStorage/load')
     })
 
-    await ws.subscribe('options.previews.previewReady', (arr, obj) => {
+    ws.subscribe('options.previews.previewReady', (arr, obj) => {
       this.$store.commit('optionsPreviews/showPreview', { previewFn: arr.argsDict.previewFn })
     })
 
     // Remote
-    await ws.subscribe('remote.state', (arr, obj) => {
+    ws.subscribe('remote.state', (arr, obj) => {
       this.$store.dispatch('remote/processMessage', arr.argsDict)
     })
   }

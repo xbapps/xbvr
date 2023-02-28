@@ -73,6 +73,7 @@ type ResponseGetFilters struct {
 	ReleaseMonths []string        `json:"release_month"`
 	Volumes       []models.Volume `json:"volumes"`
 	Attributes    []string        `json:"attributes"`
+	Cuepoints     []string        `json:"cuepoints"`
 }
 
 type SceneResource struct{}
@@ -308,6 +309,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Has Simple Cuepoints")
 	outAttributes = append(outAttributes, "Has HSP Cuepoints")
 	outAttributes = append(outAttributes, "In Trailer List")
+	outAttributes = append(outAttributes, "Has Subscription")
 	outAttributes = append(outAttributes, "Rating 0")
 	outAttributes = append(outAttributes, "Rating .5")
 	outAttributes = append(outAttributes, "Rating 1")
@@ -385,6 +387,16 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	for _, r := range results {
 		outAttributes = append(outAttributes, "Codec "+r.Result)
 	}
+
+	// cuepoints
+	var outCuepoints []string
+	db.Table("scene_cuepoints").Select("distinct name as result").
+		Order("name").
+		Find(&results)
+	for _, r := range results {
+		outCuepoints = append(outCuepoints, r.Result)
+	}
+
 	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetFilters{
 		Tags:          outTags,
 		Cast:          outCast,
@@ -392,6 +404,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 		ReleaseMonths: outRelease,
 		Volumes:       outVolumes,
 		Attributes:    outAttributes,
+		Cuepoints:     outCuepoints,
 	})
 }
 
