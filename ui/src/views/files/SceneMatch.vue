@@ -50,6 +50,10 @@
               <b-tag type="is-info is-light" v-if="props.row.is_scripted">
                 <b-icon pack="mdi" icon="pulse" size="is-small"/>
                 <span v-if="scriptFilesCount(props.row) > 1">{{scriptFilesCount(props.row)}}</span>
+              </b-tag>&nbsp;
+              <b-tag type="is-info is-light" v-if="subtitlesFilesCount(props.row)">
+                <b-icon pack="mdi" icon="subtitles" size="is-small" style="margin-right:0.1em"/>
+                {{subtitlesFilesCount(props.row)}}
               </b-tag>
             </b-table-column>
             <b-table-column field="title" :label="$t('Title')" sortable v-slot="props">
@@ -207,6 +211,15 @@ export default {
       let count = 0
       scene.file.forEach(obj => {
         if (obj.type === 'script') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    subtitlesFilesCount (scene) {
+      let count = 0
+      scene.file.forEach(obj => {
+        if (obj.type === 'subtitles') {
           count = count + 1
         }
       })

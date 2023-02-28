@@ -21,6 +21,8 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/tasks"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/text/language"
+	"golang.org/x/text/language/display"
 )
 
 type HeresphereLibrary struct {
@@ -548,11 +550,31 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		return
 	}
 
+	getLanguage := func(path string) string {
+		path = path[:len(path)-4]
+		index := strings.LastIndex(path, ".")
+		if index > -1 {
+			languageCode := path[index+1:]
+			languageTag, err := language.Parse(languageCode)
+			if err != nil {
+				log.Error(err)
+				languageTag = language.MustParse("en")
+			}
+			en := display.English.Languages()
+			return en.Name(languageTag)
+		} else {
+			languageTag := language.MustParse("en")
+			en := display.English.Languages()
+			return en.Name(languageTag)
+		}
+	}
+
 	for _, file := range subtitlesFiles {
 		addFeatureTag("Has subtitles")
 		heresphereSubtitlesFiles = append(heresphereSubtitlesFiles, HeresphereSubtitles{
-			Name: file.Filename,
-			URL:  fmt.Sprintf("http://%v/api/dms/file/%v", req.Request.Host, file.ID),
+			Name:     file.Filename,
+			Language: getLanguage(file.Filename),
+			URL:      fmt.Sprintf("http://%v/api/dms/file/%v", req.Request.Host, file.ID),
 		})
 	}
 
