@@ -184,6 +184,10 @@
                                 v-show="f.type === 'hsp'">
                           <b-icon pack="mdi" icon="safety-goggles"></b-icon>
                         </button>
+                        <button rounded class="button is-info is-small is-outlined" disabled
+                                v-show="f.type === 'subtitles'">
+                          <b-icon pack="mdi" icon="subtitles"></b-icon>
+                        </button>                        
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
                         <strong>{{ f.filename }}</strong><br/>

@@ -10,6 +10,7 @@ const state = {
     sceneEdit: false,
     sceneCuepoint: true,
     showHspFile: true,
+    showSubtitlesFile: true,
     sceneTrailerlist: true,
     updateCheck: true
   }
@@ -30,6 +31,7 @@ const actions = {
         state.web.sceneEdit = data.config.web.sceneEdit
         state.web.sceneCuepoint = data.config.web.sceneCuepoint
         state.web.showHspFile = data.config.web.showHspFile
+        state.web.showSubtitlesFile = data.config.web.showSubtitlesFile
         state.web.sceneTrailerlist = data.config.web.sceneTrailerlist
         state.web.updateCheck = data.config.web.updateCheck
         state.loading = false
@@ -47,6 +49,7 @@ const actions = {
         state.web.sceneEdit = data.sceneEdit
         state.web.sceneCuepoint = data.sceneCuepoint
         state.web.showHspFile = data.showHspFile
+        state.web.showSubtitlesFile = data.showSubtitlesFile        
         state.web.sceneTrailerlist = data.sceneTrailerlist
         state.web.updateCheck = data.updateCheck
         state.loading = false

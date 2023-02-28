@@ -267,6 +267,16 @@ func (o *Scene) GetHSPFiles() ([]File, error) {
 	return files, nil
 }
 
+func (o *Scene) GetSubtitlesFiles() ([]File, error) {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var files []File
+	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "subtitles").Find(&files)
+
+	return files, nil
+}
+
 func (o *Scene) PreviewExists() bool {
 	if _, err := os.Stat(filepath.Join(common.VideoPreviewDir, fmt.Sprintf("%v.mp4", o.SceneID))); os.IsNotExist(err) {
 		return false
@@ -646,6 +656,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'hsp' group by " + fileAlias + ".scene_id having count(*) >0)"
 			} else {
 				where = "scenes.id not in (select " + sceneAlias + ".id from scenes " + sceneAlias + " join files " + fileAlias + " on " + fileAlias + ".scene_id = " + sceneAlias + ".id and " + fileAlias + ".`type` = 'hsp' where " + sceneAlias + ".id=scenes.id group by " + sceneAlias + ".id)"
+			}
+		case "Has Subtitles File":
+			if truefalse {
+				where = "scenes.id in (select " + fileAlias + ".scene_id  from files " + fileAlias + " where " + fileAlias + ".scene_id = scenes.id and " + fileAlias + ".`type` = 'subtitles' group by " + fileAlias + ".scene_id having count(*) >0)"
+			} else {
+				where = "scenes.id not in (select " + sceneAlias + ".id from scenes " + sceneAlias + " join files " + fileAlias + " on " + fileAlias + ".scene_id = " + sceneAlias + ".id and " + fileAlias + ".`type` = 'subtitles' where " + sceneAlias + ".id=scenes.id group by " + sceneAlias + ".id)"
 			}
 		case "Has Rating":
 			if truefalse {

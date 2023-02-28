@@ -21,6 +21,8 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/tasks"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/text/language"
+	"golang.org/x/text/language/display"
 )
 
 type HeresphereLibrary struct {
@@ -34,33 +36,40 @@ type HeresphereListScenes struct {
 }
 
 type HeresphereVideo struct {
-	Access               int                `json:"access"`
-	Title                string             `json:"title"`
-	Description          string             `json:"description"`
-	ThumbnailImage       string             `json:"thumbnailImage"`
-	ThumbnailVideo       string             `json:"thumbnailVideo,omitempty"`
-	DateReleased         string             `json:"dateReleased"`
-	DateAdded            string             `json:"dateAdded"`
-	DurationMilliseconds uint               `json:"duration"`
-	Rating               float64            `json:"rating,omitempty"`
-	IsFavorite           bool               `json:"isFavorite"`
-	Projection           string             `json:"projection"`
-	Stereo               string             `json:"stereo"`
-	FOV                  float64            `json:"fov"`
-	Lens                 string             `json:"lens"`
-	HspUrl               string             `json:"hsp,omitempty"`
-	Scripts              []HeresphereScript `json:"scripts,omitempty"`
-	Tags                 []HeresphereTag    `json:"tags,omitempty"`
-	Media                []HeresphereMedia  `json:"media"`
-	WriteFavorite        bool               `json:"writeFavorite"`
-	WriteRating          bool               `json:"writeRating"`
-	WriteTags            bool               `json:"writeTags"`
-	WriteHSP             bool               `json:"writeHSP"`
+	Access               int                   `json:"access"`
+	Title                string                `json:"title"`
+	Description          string                `json:"description"`
+	ThumbnailImage       string                `json:"thumbnailImage"`
+	ThumbnailVideo       string                `json:"thumbnailVideo,omitempty"`
+	DateReleased         string                `json:"dateReleased"`
+	DateAdded            string                `json:"dateAdded"`
+	DurationMilliseconds uint                  `json:"duration"`
+	Rating               float64               `json:"rating,omitempty"`
+	IsFavorite           bool                  `json:"isFavorite"`
+	Projection           string                `json:"projection"`
+	Stereo               string                `json:"stereo"`
+	FOV                  float64               `json:"fov"`
+	Lens                 string                `json:"lens"`
+	HspUrl               string                `json:"hsp,omitempty"`
+	Scripts              []HeresphereScript    `json:"scripts,omitempty"`
+	Subtitles            []HeresphereSubtitles `json:"subtitles,omitempty"`
+	Tags                 []HeresphereTag       `json:"tags,omitempty"`
+	Media                []HeresphereMedia     `json:"media"`
+	WriteFavorite        bool                  `json:"writeFavorite"`
+	WriteRating          bool                  `json:"writeRating"`
+	WriteTags            bool                  `json:"writeTags"`
+	WriteHSP             bool                  `json:"writeHSP"`
 }
 
 type HeresphereScript struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
+}
+
+type HeresphereSubtitles struct {
+	Name     string `json:"name"`
+	Language string `json:"language"`
+	URL      string `json:"url"`
 }
 
 type HeresphereTag struct {
@@ -533,6 +542,42 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		})
 	}
 
+	var heresphereSubtitlesFiles []HeresphereSubtitles
+	var subtitlesFiles []models.File
+	subtitlesFiles, err = scene.GetSubtitlesFiles()
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	getLanguage := func(path string) string {
+		path = path[:len(path)-4]
+		index := strings.LastIndex(path, ".")
+		if index > -1 {
+			languageCode := path[index+1:]
+			languageTag, err := language.Parse(languageCode)
+			if err != nil {
+				log.Error(err)
+				languageTag = language.MustParse("en")
+			}
+			en := display.English.Languages()
+			return en.Name(languageTag)
+		} else {
+			languageTag := language.MustParse("en")
+			en := display.English.Languages()
+			return en.Name(languageTag)
+		}
+	}
+
+	for _, file := range subtitlesFiles {
+		addFeatureTag("Has subtitles")
+		heresphereSubtitlesFiles = append(heresphereSubtitlesFiles, HeresphereSubtitles{
+			Name:     file.Filename,
+			Language: getLanguage(file.Filename),
+			URL:      fmt.Sprintf("http://%v/api/dms/file/%v", req.Request.Host, file.ID),
+		})
+	}
+
 	hspUrl := ""
 	var hspFiles []models.File
 	hspFiles, err = scene.GetHSPFiles()
@@ -656,6 +701,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		Lens:                 lens,
 		HspUrl:               hspUrl,
 		Scripts:              heresphereScriptFiles,
+		Subtitles:            heresphereSubtitlesFiles,
 		Tags:                 tags,
 		Media:                media,
 		WriteFavorite:        config.Config.Interfaces.Heresphere.AllowFavoriteUpdates,
