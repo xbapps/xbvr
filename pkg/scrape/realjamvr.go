@@ -3,6 +3,7 @@ package scrape
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -128,13 +129,14 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 			// url does not point directly to a file, need to resolve redirects with http.Head
 			resp, err := http.Head(trailerurl)
 			if err == nil {
-				parts := strings.Split(resp.Request.URL.String(), "attachment%3Bfilename%3D")
-				if len(parts) > 1 {
-					fileMaskTmp := strings.Split(parts[1], "&")[0]
-					tmp := strings.Split(fileMaskTmp, "_")
-					if len(tmp) > 4 {
-						fileMask = strings.TrimSuffix(tmp[0], "-Trailer") + "-Full_$res_$fps_" + tmp[3] + "_" + tmp[4]
-						return false
+				params, err := url.ParseQuery(resp.Request.URL.RawQuery)
+				if err == nil {
+					if fileMaskTmp, ok := params["bcdn_filename"]; ok {
+						tmp := strings.Split(fileMaskTmp[0], "_")
+						if len(tmp) > 4 {
+							fileMask = strings.TrimSuffix(tmp[0], "-Trailer") + "-Full_$res_$fps_" + tmp[3] + "_" + tmp[4]
+							return false
+						}
 					}
 				}
 			}
