@@ -744,6 +744,12 @@ func RestoreScenes(scenes []models.Scene, inclAllSites bool, selectedSites []mod
 			db.Where(&models.Tag{Name: scene.Tags[i].Name}).FirstOrCreate(&tmpTag)
 			scene.Tags[i] = tmpTag
 		}
+		var site models.Site
+		siteErr := site.GetIfExist(scene.ScraperId)
+		if siteErr != nil {
+			scene.IsSubscribed = site.Subscribed
+		}
+
 		if found.ID == 0 { // id = 0 is a new record
 			scene.ID = 0 // dont use the id from json
 			models.SaveWithRetry(db, &scene)
@@ -1023,6 +1029,7 @@ func RestoreSites(sites []models.Site, overwrite bool, db *gorm.DB) {
 			models.SaveWithRetry(db, &site)
 			addedCnt++
 		}
+		db.Model(&models.Scene{}).Where("scraper_id = ?", site.ID).Update("is_subscribed", site.Subscribed)
 	}
 	tlog.Infof("%v Sites  restored", addedCnt)
 }
