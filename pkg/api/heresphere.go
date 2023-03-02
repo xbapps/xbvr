@@ -335,7 +335,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 					Height:     height,
 					Width:      width,
 					Size:       file.Size,
-					URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v/%v", req.Request.Host, file.ID, scene.GetFunscriptTitle(), dnt),
+					URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v/%v", req.Request.Host, file.ID, scene.GetFunscriptTitle(config.Config.Interfaces.DeoVR.TitleFormat), dnt),
 				},
 			},
 		}
@@ -661,7 +661,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	thumbnailURL := "http://" + req.Request.Host + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 
 	if scene.IsScripted {
-		title = scene.GetFunscriptTitle()
+		title = scene.GetFunscriptTitle(config.Config.Interfaces.DeoVR.TitleFormat)
 		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
 			thumbnailURL = "http://" + req.Request.Host + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 		}
