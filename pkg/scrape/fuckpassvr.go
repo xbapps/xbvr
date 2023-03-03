@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -33,16 +34,21 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		sc.HomepageURL = "https://www.fuckpassvr.com/video/" + slug
 
 		sc.SiteID = scenedata.Get("cms_id").String()
-		if sc.SiteID == "" {
+		if sc.SiteID == "" || !strings.HasPrefix(sc.SiteID, "FPVR") {
 			return
 		}
 		sc.SceneID = "fpvr-" + strings.Replace(sc.SiteID, "FPVR", "", 1)
 
 		sc.Released = scenedata.Get("active_schedule").String()[:10]
 		sc.Title = scenedata.Get("name").String()
-		sc.Synopsis = scenedata.Get("description").String()
 		sc.Duration = int(scenedata.Get("duration").Int())
 		sc.Covers = append(sc.Covers, scenedata.Get("thumbnail_url").String())
+
+		desc := scenedata.Get("description").String()
+		desc = strings.ReplaceAll(desc, "<p>", "")
+		desc = strings.ReplaceAll(desc, "</p>", "\n\n")
+		re := regexp.MustCompile(`<(.|\n)*?>`) // strip_tags
+		sc.Synopsis = re.ReplaceAllString(desc, "")
 
 		scenedata.Get("porn_star_lead.#.name").ForEach(func(_, name gjson.Result) bool {
 			sc.Cast = append(sc.Cast, name.String())
@@ -59,13 +65,13 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		fileNameBase := path.Base(scenedata.Get("preview_video").String())
-		if strings.Contains(fileNameBase, "_rollover.mp4") {
+		if strings.HasSuffix(strings.ToLower(fileNameBase), "_rollover.mp4") {
 			scenedata.Get("videos.#.resolution").ForEach(func(_, resolution gjson.Result) bool {
-				sc.Filenames = append(sc.Filenames, strings.Replace(fileNameBase, "_rollover.mp4", "-FULL_"+resolution.String()+".mp4", 1))
+				fn := fileNameBase[:len(fileNameBase)-len("_rollover.mp4")] + "-FULL_" + resolution.String() + ".mp4"
+				sc.Filenames = append(sc.Filenames, fn)
 				return true
 			})
 		}
-		sc.Filenames = append(sc.Filenames, fileNameBase)
 
 		if r.StatusCode == 200 {
 			res := gjson.ParseBytes(r.Body)
