@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"

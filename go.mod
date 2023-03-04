@@ -23,7 +23,7 @@ require (
 	github.com/go-openapi/spec v0.20.8
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-test/deep v1.1.0
-	github.com/gocolly/colly v1.2.0
+	github.com/gocolly/colly/v2 v2.1.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gowww/log v1.0.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
@@ -66,7 +66,7 @@ require (
 require (
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
-	github.com/antchfx/htmlquery v1.0.0 // indirect
+	github.com/antchfx/htmlquery v1.2.3 // indirect
 	github.com/antchfx/xmlquery v1.3.1 // indirect
 	github.com/antchfx/xpath v1.1.10 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -133,7 +133,7 @@ require (
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
-	github.com/temoto/robotstxt v0.0.0-20180810133444-97ee4a9ee6ea // indirect
+	github.com/temoto/robotstxt v1.1.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect

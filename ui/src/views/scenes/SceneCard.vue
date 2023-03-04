@@ -24,6 +24,10 @@
               <b-icon pack="mdi" icon="safety-goggles" size="is-small"/>
               <span v-if="hspFilesCount > 1">{{hspFilesCount}}</span>
             </b-tag>
+            <b-tag type="is-info" v-if="subtitlesFilesCount > 0 && this.$store.state.optionsWeb.web.showSubtitlesFile">
+              <b-icon pack="mdi" icon="subtitles" size="is-small"/>
+              <span v-if="subtitlesFilesCount > 1">{{subtitlesFilesCount}}</span>
+            </b-tag>
             <b-tag type="is-info" v-if="item.cuepoints.length>0 && this.$store.state.optionsWeb.web.sceneCuepoint">
               <b-icon pack="mdi" icon="skip-next-outline" size="is-small"/>
               <span v-if="item.cuepoints.length > 1">{{item.cuepoints.length}}</span>
@@ -49,7 +53,7 @@
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
         <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" title="Members Link" rel="noreferrer"><b-icon pack="mdi" icon="link-lock" custom-size="mdi-18px" style="height:0.7rem"/></a>
-        <a :href="item.scene_url" target="_blank" rel="noreferrer">{{item.site}}</a><br/>
+        <a :href="item.scene_url" :class="{'has-text-white has-background-primary-dark': item.is_subscribed }" target="_blank" rel="noreferrer" style="padding:2px">{{item.site}}</a><br/>
         <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
         </span>
@@ -101,6 +105,15 @@ export default {
       let count = 0
       this.item.file.forEach(obj => {
         if (obj.type === 'hsp') {
+          count = count + 1
+        }
+      })
+      return count
+    },
+    subtitlesFilesCount () {
+      let count = 0
+      this.item.file.forEach(obj => {
+        if (obj.type === 'subtitles') {
           count = count + 1
         }
       })
