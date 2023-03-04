@@ -545,6 +545,7 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
 			ID: "0056-Subscribed-Fields",
 			Migrate: func(tx *gorm.DB) error {
 				type Site struct {
@@ -561,7 +562,7 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0056-tag-groups",
+			ID: "0057-tag-groups",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.AutoMigrate(&models.TagGroup{}).Error
 			},
