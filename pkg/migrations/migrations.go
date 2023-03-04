@@ -562,7 +562,7 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0057-tag-groups",
+			ID: "0057-Tag-groups",
 			Migrate: func(tx *gorm.DB) error {
 				return tx.AutoMigrate(&models.TagGroup{}).Error
 			},
