@@ -221,7 +221,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
-				URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v/%v", req.Request.Host, file.ID, file.Filename, dnt),
+				URL:        fmt.Sprintf("%v://%v/api/dms/file/%v/%v/%v", getProto(req), req.Request.Host, file.ID, file.Filename, dnt),
 			},
 		},
 	})
@@ -230,7 +230,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 		Access:               1,
 		Title:                file.Filename,
 		Description:          file.Filename,
-		ThumbnailImage:       "http://" + req.Request.Host + "/ui/images/blank.png",
+		ThumbnailImage:       getProto(req) + "://" + req.Request.Host + "/ui/images/blank.png",
 		DateReleased:         file.CreatedTime.Format("2006-01-02"),
 		DateAdded:            file.CreatedTime.Format("2006-01-02"),
 		DurationMilliseconds: uint(file.VideoDuration * 1000),
@@ -335,7 +335,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 					Height:     height,
 					Width:      width,
 					Size:       file.Size,
-					URL:        fmt.Sprintf("http://%v/api/dms/file/%v/%v/%v", req.Request.Host, file.ID, scene.GetFunscriptTitle(), dnt),
+					URL:        fmt.Sprintf("%v://%v/api/dms/file/%v/%v/%v", getProto(req), req.Request.Host, file.ID, scene.GetFunscriptTitle(), dnt),
 				},
 			},
 		}
@@ -538,7 +538,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		addFeatureTag("Is scripted")
 		heresphereScriptFiles = append(heresphereScriptFiles, HeresphereScript{
 			Name: file.Filename,
-			URL:  fmt.Sprintf("http://%v/api/dms/file/%v", req.Request.Host, file.ID),
+			URL:  fmt.Sprintf("%v://%v/api/dms/file/%v", getProto(req), req.Request.Host, file.ID),
 		})
 	}
 
@@ -574,7 +574,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		heresphereSubtitlesFiles = append(heresphereSubtitlesFiles, HeresphereSubtitles{
 			Name:     file.Filename,
 			Language: getLanguage(file.Filename),
-			URL:      fmt.Sprintf("http://%v/api/dms/file/%v", req.Request.Host, file.ID),
+			URL:      fmt.Sprintf("%v://%v/api/dms/file/%v", getProto(req), req.Request.Host, file.ID),
 		})
 	}
 
@@ -588,7 +588,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	if len(hspFiles) > 0 {
 		addFeatureTag("Has HSP file")
-		hspUrl = fmt.Sprintf("http://%v/api/dms/file/%v", req.Request.Host, hspFiles[0].ID)
+		hspUrl = fmt.Sprintf("%v://%v/api/dms/file/%v", getProto(req), req.Request.Host, hspFiles[0].ID)
 	}
 
 	var projection string = "equirectangular"
@@ -658,12 +658,12 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	title := scene.Title
-	thumbnailURL := "http://" + req.Request.Host + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
+	thumbnailURL := getProto(req) + "://" + req.Request.Host + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 
 	if scene.IsScripted {
 		title = scene.GetFunscriptTitle()
 		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
-			thumbnailURL = "http://" + req.Request.Host + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
+			thumbnailURL = getProto(req) + "://" + req.Request.Host + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 		}
 	}
 
@@ -711,7 +711,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	if scene.HasVideoPreview {
-		video.ThumbnailVideo = fmt.Sprintf("http://%v/api/dms/preview/%v", req.Request.Host, scene.SceneID)
+		video.ThumbnailVideo = fmt.Sprintf("%v://%v/api/dms/preview/%v", getProto(req), req.Request.Host, scene.SceneID)
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, video)
@@ -959,7 +959,7 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 
 			list := make([]string, len(q.Scenes))
 			for i := range q.Scenes {
-				url := fmt.Sprintf("http://%v/heresphere/%v", req.Request.Host, q.Scenes[i].ID)
+				url := fmt.Sprintf("%v://%v/heresphere/%v", getProto(req), req.Request.Host, q.Scenes[i].ID)
 				list[i] = url
 			}
 
@@ -982,7 +982,7 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 	if len(unmatched) > 0 {
 		list := make([]string, len(unmatched))
 		for i := range unmatched {
-			url := fmt.Sprintf("http://%v/heresphere/file/%v", req.Request.Host, unmatched[i].ID)
+			url := fmt.Sprintf("%v://%v/heresphere/file/%v", getProto(req), req.Request.Host, unmatched[i].ID)
 			list[i] = url
 		}
 
@@ -1006,7 +1006,7 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 					}
 				}
 				if !downloadTag {
-					url := fmt.Sprintf("http://%v/heresphere/%v", req.Request.Host, trailerlist[i].ID)
+					url := fmt.Sprintf("%v://%v/heresphere/%v", getProto(req), req.Request.Host, trailerlist[i].ID)
 					list = append(list, url)
 				}
 			}

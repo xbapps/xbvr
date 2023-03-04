@@ -123,16 +123,28 @@ func isDeoAuthEnabled() bool {
 	}
 }
 
+func getProto(req *restful.Request) string {
+	// If XBVR is being run behind a reverse proxy, we will use the industry
+	// standard header X-Forwarded-Proto to set the correct protocol (HTTP or HTTPS)
+	// for the generated links.
+	proto := req.Request.Header.Get("X-Forwarded-Proto")
+	if proto == "" {
+		proto = "http"
+	}
+	return proto
+}
+
 func setDeoPlayerHost(req *restful.Request) {
 	deoIP := req.Request.RemoteAddr
 	lastColon := strings.LastIndex(deoIP, ":")
+
 	if lastColon != -1 {
 		deoIP = deoIP[:lastColon]
 	}
 	if deoIP != session.DeoPlayerHost {
 		common.Log.Infof("DeoVR Player connecting from %v", deoIP)
 		session.DeoPlayerHost = deoIP
-		session.DeoRequestHost = "http://" + req.Request.Host
+		session.DeoRequestHost = getProto(req) + "://" + req.Request.Host
 	}
 }
 
