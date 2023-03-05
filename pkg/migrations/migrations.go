@@ -1373,6 +1373,28 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			// Fixes the filenames of scenes for Custom SLR Sites, which have a (SLR) prefix enbedded in the filename
+			ID: "0057-fix-slr-filenames-for-custom-studios",
+			Migrate: func(tx *gorm.DB) error {
+				common.Log.Infof("Migration updating filenames for Custom SLR Sites")
+				var scenes []models.Scene
+				err := tx.Where("site like ?", "% (SLR)").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+
+				for _, scene := range scenes {
+					scene.FilenamesArr = strings.ReplaceAll(scene.FilenamesArr, "SLR_"+scene.Site, "SLR_"+strings.TrimSuffix(scene.Site, " (SLR)"))
+					err = tx.Save(&scene).Error
+					if err != nil {
+						return err
+					}
+				}
+				common.Log.Infof("Migration update for Custom SLR Site filenames completed")
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
