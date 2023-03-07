@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"path"
 	"regexp"
 	"strconv"
@@ -63,6 +64,12 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			sc.Tags = append(sc.Tags, tag.String())
 			return true
 		})
+
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "web-vr-video-player source", ContentPath: "src", QualityPath: "data-quality"}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		fileNameBase := path.Base(scenedata.Get("preview_video").String())
 		if strings.HasSuffix(strings.ToLower(fileNameBase), "_rollover.mp4") {
