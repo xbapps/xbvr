@@ -15,7 +15,7 @@
     "@fortawesome/fontawesome-free": "5.15.4",
     "@fortawesome/fontawesome-svg-core": "1.2.36",
     "@mdi/font": "7.1.96",
-    "buefy": "0.9.22",
+    "buefy": "0.9.23",
     "bulma-extensions": "6.2.7",
     "date-fns": "2.29.3",
     "ky": "0.30.0",
