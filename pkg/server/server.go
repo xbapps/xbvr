@@ -129,9 +129,8 @@ func StartServer(version, commit, branch, date string) {
 	p := imageproxy.NewProxy(NewForceCacheTransport(), diskCache(filepath.Join(common.AppDir, "imageproxy")))
 	p.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
 	// If the client request has a cache-control header (such as 'no-cache'), pass them
-	// onto the imageproxy so that this can be respected. Not yet suppored in imageproxy v0.11.2 that XBVR
-	// is using... need commit d94e5610d66dee4e841be83576a3f9f229928aac from imageproxy to be included.
-	//p.PassRequestHeaders = append(p.PassRequestHeaders, "Cache-Control")
+	// onto the imageproxy so that this can be respected.
+	p.PassRequestHeaders = append(p.PassRequestHeaders, "Cache-Control")
 	r.PathPrefix("/img/").Handler(ForceShortCacheHandler(http.StripPrefix("/img", p)))
 	hmp := NewHeatmapThumbnailProxy(p, diskCache(filepath.Join(common.AppDir, "heatmapthumbnailproxy")))
 	r.PathPrefix("/imghm/").Handler(http.StripPrefix("/imghm", hmp))
