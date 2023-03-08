@@ -127,7 +127,7 @@ func (i TagGroupResource) createTagGroup(req *restful.Request, resp *restful.Res
 			TagGroup: tagGroup,
 		}
 		RefreshTagGroup(&tagGroup)
-		resp.WriteHeaderAndEntity(ret, createResp)
+		resp.WriteHeaderAndEntity(http.StatusOK, createResp)
 		return
 	}
 
@@ -234,7 +234,6 @@ func (i TagGroupResource) removeFromTagGroup(req *restful.Request, resp *restful
 
 	var tagGroup models.TagGroup
 	var errors []string
-	ret := http.StatusOK
 
 	tagGroupName := ""
 	for _, t := range r.Tags {
@@ -263,7 +262,7 @@ func (i TagGroupResource) removeFromTagGroup(req *restful.Request, resp *restful
 			Status:   "A Group needs at least 2 tags. Delete the group instead",
 			TagGroup: tagGroup,
 		}
-		resp.WriteHeaderAndEntity(ret, createResp)
+		resp.WriteHeaderAndEntity(http.StatusOK, createResp)
 		return
 	}
 
@@ -290,7 +289,7 @@ func (i TagGroupResource) removeFromTagGroup(req *restful.Request, resp *restful
 			Status:   strings.Join(errors, ","),
 			TagGroup: tagGroup,
 		}
-		resp.WriteHeaderAndEntity(ret, createResp)
+		resp.WriteHeaderAndEntity(http.StatusOK, createResp)
 		return
 	}
 
@@ -317,7 +316,6 @@ func (i TagGroupResource) addToTagGroup(req *restful.Request, resp *restful.Resp
 	var tagGroup models.TagGroup
 	var tmpTag models.Tag
 	var errors []string
-	ret := http.StatusOK
 
 	tagGroupName := ""
 	tagCnt := 0
@@ -363,7 +361,7 @@ func (i TagGroupResource) addToTagGroup(req *restful.Request, resp *restful.Resp
 			Status:   strings.Join(errors, ","),
 			TagGroup: tagGroup,
 		}
-		resp.WriteHeaderAndEntity(ret, createResp)
+		resp.WriteHeaderAndEntity(http.StatusOK, createResp)
 		return
 	}
 
