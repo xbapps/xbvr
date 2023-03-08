@@ -416,7 +416,9 @@ export default {
       this.isGroupTagNameModalActive = false
       this.$store.state.sceneList.isLoading = true
       ky.post('/api/tag_group/create', {json: {name: this.tagGroupName, tagList: this.tags}}).json().then(data => {
-        this.tags.push(data.tag_group.tag_group_tag.name)
+        if (data.tag_group.tag_group_tag.name != "") {
+          this.tags.push(data.tag_group.tag_group_tag.name)
+        }
         this.$store.dispatch('sceneList/filters')
         this.reloadList()
         if (data.status != '') {
