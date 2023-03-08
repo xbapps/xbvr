@@ -521,9 +521,16 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	for i := range scene.Tags {
-		tags = append(tags, HeresphereTag{
-			Name: "Category:" + scene.Tags[i].Name,
-		})
+		if strings.HasPrefix(scene.Tags[i].Name, "tag group:") {
+			akaCnt++
+			tags = append(tags, HeresphereTag{
+				Name: strings.Replace(strings.Replace(scene.Tags[i].Name, ",", "/", -1), "tag group:", "Tag Group:", 1),
+			})
+		} else {
+			tags = append(tags, HeresphereTag{
+				Name: "Category:" + scene.Tags[i].Name,
+			})
+		}
 	}
 
 	var heresphereScriptFiles []HeresphereScript

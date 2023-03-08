@@ -175,6 +175,7 @@ func (i AkaResource) deleteAka(req *restful.Request, resp *restful.Response) {
 		return
 	}
 
+	db.Model(&aka).Association("Akas").Clear() // delete aka links with actors
 	db.Delete(&aka)
 	defer resp.WriteHeaderAndEntity(http.StatusOK, aka)
 

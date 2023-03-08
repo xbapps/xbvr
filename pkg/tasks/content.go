@@ -62,6 +62,7 @@ type BackupContentBundle struct {
 	History       []BackupSceneHistory  `xbvrbackup:"sceneHistory"`
 	Actions       []BackupSceneAction   `xbvrbackup:"actions"`
 	Akas          []models.Aka          `xbvrbackup:"akas"`
+	TagGroups     []models.TagGroup     `xbvrbackup:"tagGroups"`
 }
 type RequestRestore struct {
 	InclAllSites     bool   `json:"allSites"`
@@ -72,6 +73,7 @@ type RequestRestore struct {
 	InclHistory      bool   `json:"inclHistory"`
 	InclPlaylists    bool   `json:"inclPlaylists"`
 	InclActorAkas    bool   `json:"inclActorAkas"`
+	InclTagGroups    bool   `json:"inclTagGroups"`
 	InclVolumes      bool   `json:"inclVolumes"`
 	InclSites        bool   `json:"inclSites"`
 	InclActions      bool   `json:"inclActions"`
@@ -263,6 +265,9 @@ func Scrape(toScrape string) {
 			var dummyAka models.Aka
 			dummyAka.UpdateAkaSceneCastRecords()
 
+			var dummyTagGroup models.TagGroup
+			dummyTagGroup.UpdateSceneTagRecords()
+
 			tlog.Infof("Updating tag counts")
 			CountTags()
 			dummyAka.RefreshAkaActorNames()
@@ -453,7 +458,7 @@ func ImportBundleV1(bundleData ContentBundle) {
 
 }
 
-func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string, outputBundleFilename string, version string) string {
+func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclTagGroups bool, inclVolumes bool, inclSites bool, inclActions bool, playlistId string, outputBundleFilename string, version string) string {
 	var out BackupContentBundle
 	var content []byte
 	exportCnt := 0
@@ -528,7 +533,8 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 				err = db.Preload("Files").
 					Preload("Cuepoints").
 					Preload("History").
-					Preload("Tags").
+					// do not export tag groups  or they will load back as real tags not tag groups
+					Preload("Tags", "substr(name, 1, 10)<>'tag group:'").
 					// do not export aka actors or they will load back as real actors not aka groups
 					Preload("Cast", "substr(name, 1, 4)<>'aka:'").
 					Where(&models.Scene{ID: scene.ID}).First(&scene).Error
@@ -587,6 +593,11 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 			db.Preload("AkaActor").Preload("Akas").Find(&akas)
 		}
 
+		var tagGroups []models.TagGroup
+		if inclTagGroups {
+			db.Preload("TagGroupTag").Preload("Tags").Find(&tagGroups)
+		}
+
 		var err error
 		out = BackupContentBundle{
 			Timestamp:     time.Now().UTC(),
@@ -600,6 +611,7 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 			History:       backupHistoryList,
 			Actions:       backupActionList,
 			Akas:          akas,
+			TagGroups:     tagGroups,
 		}
 
 		var json = jsoniter.Config{
@@ -694,6 +706,9 @@ func RestoreBundle(request RequestRestore) {
 			if request.InclActorAkas {
 				RestoreAkas(bundleData.Akas, request.Overwrite, db)
 			}
+			if request.InclTagGroups {
+				RestoreTagGroups(bundleData.TagGroups, request.Overwrite, db)
+			}
 
 			if request.InclScenes || request.InclFileLinks {
 				UpdateSceneStatus(db)
@@ -706,6 +721,10 @@ func RestoreBundle(request RequestRestore) {
 			if request.InclScenes || request.InclActorAkas {
 				var aka models.Aka
 				aka.UpdateAkaSceneCastRecords()
+			}
+			if request.InclScenes || request.InclTagGroups {
+				var tagGroup models.TagGroup
+				tagGroup.UpdateSceneTagRecords()
 			}
 
 			tlog.Infof("Restore complete")
@@ -1082,6 +1101,52 @@ func CheckActors(aka *models.Aka, aka_actor_id uint, db *gorm.DB) {
 	}
 
 }
+
+func RestoreTagGroups(tagGroups []models.TagGroup, overwrite bool, db *gorm.DB) {
+	tlog := log.WithField("task", "scrape")
+	tlog.Infof("Restoring Tag Groups")
+
+	addedCnt := 0
+	for _, tagGroup := range tagGroups {
+		var found models.TagGroup
+		db.Where(&models.TagGroup{Name: tagGroup.Name}).Preload("TagGrou").First(&found)
+
+		if found.ID == 0 { // id = 0 is a new record
+			CheckTagGroup(&tagGroup, 0, db)
+			tagGroup.ID = 0 // dont use the id from json
+			models.SaveWithRetry(db, &tagGroup)
+			addedCnt++
+		} else {
+			if overwrite {
+				CheckTagGroup(&tagGroup, found.TagGroupTagId, db)
+				tagGroup.ID = found.ID // use the Id from the existing db record
+				models.SaveWithRetry(db, &tagGroup)
+				addedCnt++
+			}
+		}
+	}
+	tlog.Infof("%v Tag Groups restored", addedCnt)
+}
+
+func CheckTagGroup(tagGroup *models.TagGroup, tag_group_tag_id uint, db *gorm.DB) {
+	// check an tag grouup exists
+	if tag_group_tag_id == 0 {
+		models.SaveWithRetry(db, &tagGroup.TagGroupTag)
+		tagGroup.TagGroupTagId = tagGroup.TagGroupTag.ID
+	} else {
+		tagGroup.TagGroupTagId = tag_group_tag_id
+		tagGroup.TagGroupTag.ID = tag_group_tag_id
+	}
+	for idx, tag := range tagGroup.Tags {
+		var found models.Tag
+
+		db.Where(&models.Tag{Name: tag.Name}).First(&found)
+		if found.ID != 0 {
+			tagGroup.Tags[idx].ID = found.ID
+		}
+	}
+}
+
 func RenameTags() {
 	db, _ := models.GetDB()
 	defer db.Close()

@@ -217,6 +217,65 @@
       </b-tooltip>
 
     </b-field>
+    <div class="is-divider" data-content="Tag Groups"></div>
+    <b-field>
+      <b-tooltip position="is-right" label="New Tag Group. Select 2 or more tags in the Tag filter" multilined :delay="200">
+        <button class="button is-small is-outlined" @click="showGroupTagNameDialog('create')" :disabled="disableNewTagGroup">
+          <b-icon pack="mdi" icon="tag-multiple-outline"></b-icon>
+        </button>
+      </b-tooltip>
+      <b-tooltip position="is-right" label="Select the Tag Group to delete in the Tag Filter" multilined :delay="200">
+        <button class="button is-small is-outlined" @click="deleteTagGroup" :disabled="disableDeleteRenameTagGroup">
+          <b-icon pack="mdi" icon="delete-outline"></b-icon>
+        </button>
+      </b-tooltip>
+      <b-tooltip position="is-bottom" label="Add Tag to Tag Group. Select the Tag  group and Tag to add in the Tag Filter" multilined :delay="200">
+        <button class="button is-small is-outlined" @click="addToTagGroup" :disabled="disableAddToTagGroup">
+          <b-icon pack="mdi" icon="tag-plus-outline"></b-icon>
+        </button>
+      </b-tooltip>
+      <b-tooltip position="is-bottom" label="Remove Tag from Tag Group. Select the Tag group and Tags to remove in the Tag Filter" multilined :delay="200">
+        <button class="button is-small is-outlined" @click="removeFromTagGroup" :disabled="disableRemoveFromTagGroup">
+          <b-icon pack="mdi" icon="tag-minus-outline"></b-icon>
+        </button>
+      </b-tooltip>
+      <b-tooltip position="is-bottom" label="Rename Tag Group. Select the Tag group in the Tag Filter" multilined :delay="200">
+        <button class="button is-small is-outlined" @click="showGroupTagNameDialog('rename')" :disabled="disableDeleteRenameTagGroup">
+          <b-icon pack="mdi" icon="rename-outline"></b-icon>
+        </button>
+      </b-tooltip>
+      <b-tooltip position="is-bottom" label="List Tags in Group" multilined :delay="200">
+        <button class="button is-small is-outlined" @click="getTagGroup" :disabled="disableGetTagGroup">
+          <b-icon pack="mdi" icon="tag-search-outline"></b-icon>
+        </button>
+      </b-tooltip>
+
+    <b-modal :active.sync="isGroupTagNameModalActive"
+             has-modal-card
+             trap-focus
+             aria-role="dialog"
+             aria-modal>
+      <div class="modal-card" style="width: auto">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Tag Group</p>
+        </header>
+        <section class="modal-card-body">
+          <b-field label="Name">
+            <b-input
+              type="name"
+              v-model="tagGroupName"
+              required>
+            </b-input>
+          </b-field>          
+        </section>
+        <footer class="modal-card-foot">
+          <button class="button is-primary" :disabled="tagGroupName===''" @click="tagGroupModalClicked()">Save
+          </button>
+        </footer>
+      </div>
+    </b-modal>
+
+    </b-field>
   </div>
 </template>
 
@@ -238,6 +297,9 @@ export default {
       filteredTags: [],
       filteredCuepoints: [],
       filteredAttributes: [],
+      isGroupTagNameModalActive: false,
+      tagGroupName: '',
+      groupNameDialogAction: 'create',
     }
   },
   methods: {
@@ -337,6 +399,102 @@ export default {
         }
         this.$store.state.sceneList.isLoading = false
       })
+    },
+    showGroupTagNameDialog (action) {
+      this.groupTagName = ''
+      this.isGroupTagNameModalActive = true
+      this.groupNameDialogAction = action
+    },
+    tagGroupModalClicked () {
+      if (this.groupNameDialogAction == 'create') {
+        this.createTagGroup()
+      } else {
+        this.renameTagGroup()
+      }
+    },
+    createTagGroup () {
+      this.isGroupTagNameModalActive = false
+      this.$store.state.sceneList.isLoading = true
+      ky.post('/api/tag_group/create', {json: {name: this.tagGroupName, tagList: this.tags}}).json().then(data => {
+        this.tags.push(data.tag_group.tag_group_tag.name)
+        this.$store.dispatch('sceneList/filters')
+        this.reloadList()
+        if (data.status != '') {
+          this.$buefy.toast.open({message: `Warning:  ${data.status}`, type: 'is-warning', duration: 5000})
+        }
+        this.$store.state.sceneList.isLoading = false
+      })
+    },
+    deleteTagGroup () {
+      this.$store.state.sceneList.isLoading = true
+      ky.post('/api/tag_group/delete', {json: {name: this.tags[0]}}).json().then(data => {
+        this.tags = []
+        this.$store.dispatch('sceneList/filters')
+        this.reloadList()
+        this.$store.state.sceneList.isLoading = false
+      })       
+    },
+    addToTagGroup () {      
+      this.$store.state.sceneList.isLoading = true
+      ky.post('/api/tag_group/add', {json: {tagList: this.tags}}).json().then(data => {
+        this.$store.dispatch('sceneList/filters')       
+        this.reloadList()        
+        if (data.status != '') {
+          this.$buefy.toast.open({message: `Warning:  ${data.status}`, type: 'is-warning', duration: 5000})
+        }
+        this.$store.state.sceneList.isLoading = false
+      })
+      
+    },
+    removeFromTagGroup () {
+      this.$store.state.sceneList.isLoading = true
+      ky.post('/api/tag_group/remove', {timeout: 60000, json: {tagList: this.tags}}).json().then(data => {        
+        this.$store.dispatch('sceneList/filters')
+        this.reloadList()
+        if (data.status != '') {
+          this.$buefy.toast.open({message: `Warning:  ${data.status}`, type: 'is-warning', duration: 5000})
+        }
+        this.$store.state.sceneList.isLoading = false
+      })
+    },
+    renameTagGroup () {
+      this.isGroupTagNameModalActive = false
+      this.$store.state.sceneList.isLoading = true
+      ky.post('/api/tag_group/rename', {json: {name: this.tagGroupName, tagList: this.tags}}).json().then(data => {
+        if (data.status != '') {
+          this.$buefy.toast.open({message: `${data.status}`, type: 'is-danger', duration: 5000})
+        } else {
+          this.reloadList()
+          this.tags = []
+          this.tags.push(data.tag_group.tag_group_tag.name)
+          this.$store.dispatch('sceneList/filters')
+        }
+        this.$store.state.sceneList.isLoading = false
+        })
+    },
+    getTagGroup () {
+      this.$store.state.sceneList.isLoading = true
+      let name = ""
+      for (var i = 0; i < this.tags.length; i++) {        
+        if (this.tags[i].startsWith("tag group:")) {
+           name = this.tags[i]
+        }
+      }
+
+      ky.get('/api/tag_group/' + name, {timeout: 60000}).json().then(data => {        
+        if (data.status != '') {
+          this.$buefy.toast.open({message: `${data.status}`, type: 'is-danger', duration: 5000})
+        } else {
+          let newTagList = []
+          newTagList.push("tag group:" + data.tag_group.name)
+          for (var i = 0; i < data.tag_group.tags.length; i++) {
+            newTagList.push(data.tag_group.tags[i].name)
+          }
+          this.tags = newTagList
+          this.$store.dispatch('sceneList/filters')
+        }
+      })
+      this.$store.state.sceneList.isLoading = false
     },
     toggle3way (text, idx, list) {      
       let tags = []
@@ -467,7 +625,6 @@ export default {
       set (value) {
         this.$store.state.sceneList.filters.tags = value
         this.reloadList()
-        console.log('reloaded',value)
       }
     },
     cuepoint: {
@@ -566,7 +723,80 @@ export default {
       return akaCastCnt == 1 && actorCnt > 0 ? false : true
 
     },
-  }
+    disableNewTagGroup() {
+      let akaTagCnt = 0
+      let tagCnt = 0       
+ 
+      for (var i = 0; i < this.tags.length; i++) {        
+        if (this.tags[i].startsWith("tag group:")) {
+          akaTagCnt++
+        } else {
+          tagCnt++
+        }
+      }
+      // you can create a new group from a list of tags (more than one)
+      return akaTagCnt == 0 && tagCnt > 1 ? false : true
+    },
+    disableDeleteRenameTagGroup() {
+      let tagGroupCnt = 0
+      let tagCnt = 0       
+ 
+      for (var i = 0; i < this.tags.length; i++) {        
+        if (this.tags[i].startsWith("tag group:")) {
+          tagGroupCnt++
+        } else {
+          tagCnt++
+        }
+      }
+
+      // you can only delete a group when it is the only thing selected      
+      return tagGroupCnt == 1 && tagCnt == 0 > 1 ? false : true
+    },
+    disableAddToTagGroup() {
+      let tagGroupCnt = 0
+      let tagCnt = 0       
+ 
+      for (var i = 0; i < this.tags.length; i++) {        
+        if (this.tags[i].startsWith("tag group:")) {
+          tagGroupCnt++
+        } else {
+          tagCnt++
+        }
+      }
+
+      // you can add to a group if you select one group and one or more tags
+      return tagGroupCnt == 1 && tagCnt > 0 ? false : true
+    },
+    disableRemoveFromTagGroup() {
+      let tagGroupCnt = 0
+      let tagCnt = 0       
+ 
+      for (var i = 0; i < this.tags.length; i++) {        
+        if (this.tags[i].startsWith("tag group:")) {
+          tagGroupCnt++
+        } else {
+          tagCnt++
+        }
+      }
+
+      // you can remove from a group if you select one group and one or more tag
+      return tagGroupCnt == 1 && tagCnt > 0 ? false : true
+
+    },
+    disableGetTagGroup() {
+      let tagGroupCnt = 0
+ 
+      for (var i = 0; i < this.tags.length; i++) {        
+        if (this.tags[i].startsWith("tag group:")) {
+          tagGroupCnt++
+        }
+      }
+
+      // you can list a group if you select one 
+      return tagGroupCnt == 1 ? false : true
+
+    },
+}
 }
 </script>
 
