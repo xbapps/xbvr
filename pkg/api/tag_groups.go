@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
@@ -56,7 +55,7 @@ func (i TagGroupResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/delete").To(i.deleteTagGroup).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.GET("/{tag-group-id}").To(i.getTagGroup).
+	ws.Route(ws.GET("/{tag-group-name}").To(i.getTagGroup).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
 
@@ -194,18 +193,31 @@ func (i TagGroupResource) getTagGroups(req *restful.Request, resp *restful.Respo
 }
 
 func (i TagGroupResource) getTagGroup(req *restful.Request, resp *restful.Response) {
-	tagGroupId, err := strconv.Atoi(req.PathParameter("tag-group-id"))
-	if err != nil {
-		log.Error(err)
+	tagGroupName := strings.TrimPrefix(req.PathParameter("tag-group-name"), "tag group:")
+	var tagGroup models.TagGroup
+	if tagGroupName == "" {
+		resp.WriteHeaderAndEntity(http.StatusOK, &ResponseTagGroup{
+			Status:   "Specify a Tag Group Name",
+			TagGroup: tagGroup,
+		})
 		return
 	}
 
-	var tagGroup models.TagGroup
 	db, _ := models.GetDB()
-	err = tagGroup.GetIfExistByPK(uint(tagGroupId))
+	err := tagGroup.GetIfExistByName(tagGroupName)
 	db.Close()
 
-	resp.WriteHeaderAndEntity(http.StatusOK, tagGroup)
+	if err != nil || tagGroup.ID == 0 {
+		resp.WriteHeaderAndEntity(http.StatusOK, &ResponseTagGroup{
+			Status:   "Tag Group Not Found",
+			TagGroup: tagGroup,
+		})
+	} else {
+		resp.WriteHeaderAndEntity(http.StatusOK, &ResponseTagGroup{
+			Status:   "",
+			TagGroup: tagGroup,
+		})
+	}
 }
 
 func (i TagGroupResource) removeFromTagGroup(req *restful.Request, resp *restful.Response) {

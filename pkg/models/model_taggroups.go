@@ -47,6 +47,15 @@ func (o *TagGroup) GetIfExistByPK(id uint) error {
 		Where(&TagGroup{ID: id}).First(o).Error
 }
 
+func (o *TagGroup) GetIfExistByName(name string) error {
+	db, _ := GetDB()
+	defer db.Close()
+
+	return db.
+		Preload("Tags").
+		Where(&TagGroup{Name: name}).First(o).Error
+}
+
 func (o *TagGroup) UpdateSceneTagRecords() {
 	db, _ := GetDB()
 	defer db.Close()

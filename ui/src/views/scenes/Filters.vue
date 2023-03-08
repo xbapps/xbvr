@@ -244,6 +244,11 @@
           <b-icon pack="mdi" icon="rename-outline"></b-icon>
         </button>
       </b-tooltip>
+      <b-tooltip position="is-bottom" label="List Tags in Group" multilined :delay="200">
+        <button class="button is-small is-outlined" @click="getTagGroup" :disabled="disableGetTagGroup">
+          <b-icon pack="mdi" icon="tag-search-outline"></b-icon>
+        </button>
+      </b-tooltip>
 
     <b-modal :active.sync="isGroupTagNameModalActive"
              has-modal-card
@@ -466,6 +471,30 @@ export default {
         }
         this.$store.state.sceneList.isLoading = false
         })
+    },
+    getTagGroup () {
+      this.$store.state.sceneList.isLoading = true
+      let name = ""
+      for (var i = 0; i < this.tags.length; i++) {        
+        if (this.tags[i].startsWith("tag group:")) {
+           name = this.tags[i]
+        }
+      }
+
+      ky.get('/api/tag_group/' + name, {timeout: 60000}).json().then(data => {        
+        if (data.status != '') {
+          this.$buefy.toast.open({message: `${data.status}`, type: 'is-danger', duration: 5000})
+        } else {
+          let newTagList = []
+          newTagList.push("tag group:" + data.tag_group.name)
+          for (var i = 0; i < data.tag_group.tags.length; i++) {
+            newTagList.push(data.tag_group.tags[i].name)
+          }
+          this.tags = newTagList
+          this.$store.dispatch('sceneList/filters')
+        }
+      })
+      this.$store.state.sceneList.isLoading = false
     },
     toggle3way (text, idx, list) {      
       let tags = []
@@ -752,6 +781,19 @@ export default {
 
       // you can remove from a group if you select one group and one or more tag
       return tagGroupCnt == 1 && tagCnt > 0 ? false : true
+
+    },
+    disableGetTagGroup() {
+      let tagGroupCnt = 0
+ 
+      for (var i = 0; i < this.tags.length; i++) {        
+        if (this.tags[i].startsWith("tag group:")) {
+          tagGroupCnt++
+        }
+      }
+
+      // you can list a group if you select one 
+      return tagGroupCnt == 1 ? false : true
 
     },
 }
