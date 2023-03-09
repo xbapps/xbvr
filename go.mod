@@ -9,7 +9,7 @@ require (
 	github.com/anacrolix/ffprobe v1.0.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/avast/retry-go/v4 v4.3.3
-	github.com/blevesearch/bleve/v2 v2.3.6
+	github.com/blevesearch/bleve/v2 v2.3.7-0.20230302211543-cde19675871a
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
 	github.com/creasty/defaults v1.6.0
 	github.com/darwayne/go-timecode v1.1.0
@@ -54,11 +54,11 @@ require (
 	github.com/tidwall/gjson v1.14.4
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.13.0
-	golang.org/x/crypto v0.6.0
-	golang.org/x/net v0.7.0
-	golang.org/x/oauth2 v0.5.0
-	golang.org/x/sys v0.5.0
-	golang.org/x/text v0.7.0
+	golang.org/x/crypto v0.7.0
+	golang.org/x/net v0.8.0
+	golang.org/x/oauth2 v0.6.0
+	golang.org/x/sys v0.6.0
+	golang.org/x/text v0.8.0
 	gopkg.in/gormigrate.v1 v1.6.0
 	willnorris.com/go/imageproxy v0.11.3-0.20230217221409-3815eb832be7
 )
@@ -72,23 +72,23 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
 	github.com/blevesearch/bleve_index_api v1.0.5 // indirect
-	github.com/blevesearch/geo v0.1.16 // indirect
+	github.com/blevesearch/geo v0.1.17 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
 	github.com/blevesearch/gtreap v0.1.1 // indirect
 	github.com/blevesearch/mmap-go v1.0.4 // indirect
 	github.com/blevesearch/scorch_segment_api/v2 v2.1.4 // indirect
-	github.com/blevesearch/segment v0.9.0 // indirect
+	github.com/blevesearch/segment v0.9.1 // indirect
 	github.com/blevesearch/snowballstem v0.9.0 // indirect
-	github.com/blevesearch/upsidedown_store_api v1.0.1 // indirect
+	github.com/blevesearch/upsidedown_store_api v1.0.2 // indirect
 	github.com/blevesearch/vellum v1.0.9 // indirect
 	github.com/blevesearch/zapx/v11 v11.3.7 // indirect
 	github.com/blevesearch/zapx/v12 v12.3.7 // indirect
 	github.com/blevesearch/zapx/v13 v13.3.7 // indirect
 	github.com/blevesearch/zapx/v14 v14.3.7 // indirect
-	github.com/blevesearch/zapx/v15 v15.3.8 // indirect
+	github.com/blevesearch/zapx/v15 v15.3.9 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
-	github.com/fcjr/aia-transport-go v1.2.2 // indirect
+	github.com/fcjr/aia-transport-go v1.2.2
 	github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 // indirect
 	github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7 // indirect
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7 // indirect
@@ -142,7 +142,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/image v0.5.0 // indirect
-	golang.org/x/term v0.5.0 // indirect
+	golang.org/x/term v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect

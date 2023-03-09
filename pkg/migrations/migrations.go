@@ -561,6 +561,12 @@ func Migrate() {
 				return err
 			},
 		},
+		{
+			ID: "0057-Tag-groups",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(&models.TagGroup{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
@@ -1289,7 +1295,7 @@ func Migrate() {
 				}
 				//backup bundle
 				common.Log.Infof("Creating pre-migration backup, please waiit, backups can take some time on a system with a large number of scenes ")
-				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, "0", "xbvr-premigration-bundle.json", "2")
+				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, true, "0", "xbvr-premigration-bundle.json", "2")
 				common.Log.Infof("Go to download/xbvr-premigration-bundle.json, or http://xxx.xxx.xxx.xxx:9999/download/xbvr-premigration-bundle.json if you need access to the backup")
 				var sites []models.Site
 				officalSiteChanges := []SiteChange{

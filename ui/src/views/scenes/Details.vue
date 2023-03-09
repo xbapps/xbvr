@@ -510,6 +510,7 @@ export default {
       this.$store.state.sceneList.filters.cast = actor
       this.$store.state.sceneList.filters.sites = []
       this.$store.state.sceneList.filters.tags = []
+      this.$store.state.sceneList.filters.attributes = []
       this.$router.push({
         name: 'scenes',
         query: { q: this.$store.getters['sceneList/filterQueryParams'] }
@@ -520,6 +521,7 @@ export default {
       this.$store.state.sceneList.filters.cast = []
       this.$store.state.sceneList.filters.sites = []
       this.$store.state.sceneList.filters.tags = tag
+      this.$store.state.sceneList.filters.attributes = []
       this.$router.push({
         name: 'scenes',
         query: { q: this.$store.getters['sceneList/filterQueryParams'] }
@@ -530,6 +532,7 @@ export default {
       this.$store.state.sceneList.filters.cast = []
       this.$store.state.sceneList.filters.sites = site
       this.$store.state.sceneList.filters.tags = []
+      this.$store.state.sceneList.filters.attributes = []
       this.$router.push({
         name: 'scenes',
         query: { q: this.$store.getters['sceneList/filterQueryParams'] }
