@@ -39,7 +39,7 @@
     "@vue/cli-plugin-eslint": "5.0.8",
     "@vue/cli-service": "5.0.8",
     "@vue/eslint-config-standard": "8.0.1",
-    "@babel/eslint-parser": "7.11.0",
+    "@babel/eslint-parser": "7.21.3",
     "buffer": "6.0.3",
     "concurrently": "7.6.0",
     "eslint": "8.36.0",
