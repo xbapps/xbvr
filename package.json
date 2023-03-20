@@ -14,7 +14,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "5.15.4",
     "@fortawesome/fontawesome-svg-core": "1.2.36",
-    "@mdi/font": "7.1.96",
+    "@mdi/font": "7.2.96",
     "buefy": "0.9.23",
     "bulma-extensions": "6.2.7",
     "date-fns": "2.29.3",
