@@ -9,15 +9,15 @@ require (
 	github.com/anacrolix/ffprobe v1.0.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/avast/retry-go/v4 v4.3.3
-	github.com/blevesearch/bleve/v2 v2.3.7-0.20230302211543-cde19675871a
+	github.com/blevesearch/bleve/v2 v2.3.7
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
-	github.com/creasty/defaults v1.6.0
+	github.com/creasty/defaults v1.7.0
 	github.com/darwayne/go-timecode v1.1.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/djherbis/times v1.5.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/emicklei/go-restful-openapi/v2 v2.9.1
-	github.com/emicklei/go-restful/v3 v3.10.1
+	github.com/emicklei/go-restful/v3 v3.10.2
 	github.com/gammazero/nexus/v3 v3.2.0
 	github.com/getlantern/systray v1.2.1
 	github.com/go-openapi/spec v0.20.8
