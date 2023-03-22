@@ -42,7 +42,7 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		})
 
 		// Cover URL
-		coverURL := "https:" + e.Request.AbsoluteURL(e.ChildAttr("div.player-thumb img", "src"))
+		coverURL := e.Request.AbsoluteURL(e.ChildAttr("div.player-thumb img", "src"))
 		sc.Covers = append(sc.Covers, coverURL)
 
 		// Scene ID - get from URL
@@ -105,7 +105,7 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	})
 
 	siteCollector.OnHTML(`div.videohere a`, func(e *colly.HTMLElement) {
-		sceneURL := "https:" + e.Request.AbsoluteURL(e.Attr("href"))
+		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
