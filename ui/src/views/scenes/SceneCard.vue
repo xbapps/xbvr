@@ -60,7 +60,7 @@
         <span>
           {{item.id}}
           <a :href="`/heresphere/${item.id}`" target="_blank" rel="noreferrer">Heresphere</a>
-        </span>
+        </span><br/>
       </span>
     </div>
   </div>
