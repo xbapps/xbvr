@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-test/deep"
 	"github.com/jinzhu/gorm"
+	"github.com/mozillazg/go-slugify"
 	"github.com/xbapps/xbvr/pkg/tasks"
 
 	"github.com/blevesearch/bleve/v2"
@@ -40,6 +41,7 @@ type RequestSelectScript struct {
 type RequestCustomScene struct {
 	SceneTitle string `json:"title"`
 	SceneID    string `json:"id"`
+	Filename   string `json:"filename"`
 }
 
 type RequestDeleteScene struct {
@@ -156,6 +158,7 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 		log.Info("SceneID missing from request!")
 		r.SceneID = "Custom-" + currentTime.Format("2006010215040506")
 	}
+	r.SceneID = slugify.Slugify(r.SceneID)
 
 	//Construct custom scene
 	var scene models.ScrapedScene
@@ -167,12 +170,14 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	scene.HomepageURL = "http://localhost/" + scene.SceneID
 	scene.Covers = append(scene.Covers, "http://localhost/dont_cause_errors")
 	scene.Released = currentTime.Format("2006-01-02")
+	if r.Filename != "" {
+		scene.Filenames = append(scene.Filenames, r.Filename)
+	}
 
 	log.Infof("Creating custom scene: \"%v\" \"%v\"", scene.SceneID, scene.Title)
 
 	//Create custom scene
 	models.SceneCreateUpdateFromExternal(db, scene)
-	tasks.SearchIndex()
 
 	//Return resulting scene
 	var resultingScene models.Scene
