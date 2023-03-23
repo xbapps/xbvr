@@ -57,6 +57,10 @@
         <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
         </span>
+        <span>
+          {{item.id}}
+          <a :href="`/heresphere/${item.id}`" target="_blank" rel="noreferrer">Heresphere</a>
+        </span>
       </span>
     </div>
   </div>
