@@ -6,6 +6,17 @@
            aria-role="dialog"
            aria-modal
            can-cancel>
+    <b-field grouped>
+      <b-tooltip :label="$t('Optional: select one or more words to target searching to a specific field')" :delay="500" position="is-right">
+        <b-taglist>
+          <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
+          <b-button @click='searchPrefix("title:")' class="tag is-info is-small is-light">title:</b-button>
+          <b-button @click='searchPrefix("cast:")' class="tag is-info is-small is-light">cast:</b-button>
+          <b-button @click='searchPrefix("site:")' class="tag is-info is-small is-light">site:</b-button>
+          <b-button @click='searchPrefix("id:")' class="tag is-info is-small is-light">id:</b-button>
+        </b-taglist>
+      </b-tooltip>
+    </b-field>
     <b-field style="width:600px">
       <b-autocomplete
         ref="autocompleteInput"
@@ -13,6 +24,7 @@
         placeholder="Find scene..."
         field="query"
         :loading="isFetching"
+        v-model="queryString"
         @typing="getAsyncData"
         @select="option => showSceneDetails(option)"
         custom-class="is-large"
@@ -84,7 +96,8 @@ export default {
       dataNumRequests: 0,
       dataNumResponses: 0,
       selected: null,
-      isFetching: false
+      isFetching: false,
+      queryString: ""
     }
   },
   methods: {
@@ -136,6 +149,19 @@ export default {
       }
       this.$store.commit('overlay/hideQuickFind')
       this.$store.commit('overlay/showDetails', { scene })
+    },
+    searchPrefix(prefix) {      
+      let textbox = this.$refs.autocompleteInput.$refs.input.$refs.input
+      if (textbox.selectionStart != textbox.selectionEnd) {
+        let selected = textbox.value.substring(textbox.selectionStart, textbox.selectionEnd)
+        selected=selected.replace(/_/g," ").replace(/-/g," ").trim()
+        if (selected.indexOf(' ') >= 0) {
+          selected='"' + selected + '"'
+        }
+        this.queryString = textbox.value.substring(0,textbox.selectionStart) + " " + prefix + selected + " " + textbox.value.substr(textbox.selectionEnd)
+        this.getAsyncData(this.queryString)
+        this.$refs.autocompleteInput.focus()
+      }
     }
   }
 }

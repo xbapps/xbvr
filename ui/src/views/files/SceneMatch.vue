@@ -23,11 +23,24 @@
             {{ prettyBytes(file.size) }}, {{ file.video_width }}x{{ file.video_height }},
             {{ format(parseISO(file.created_time), "yyyy-MM-dd") }}
           </small>
-          <b-field :label="$t('Search')">
+
+          <b-field grouped>
+            <b-tooltip :label="$t('Optional: select one or more words to target searching to a specific field')" :delay="500" position="is-right">
+              <b-taglist>                  
+                <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
+                <b-button @click='searchPrefix("title:")' class="tag is-info is-small is-light">title:</b-button>
+                <b-button @click='searchPrefix("cast:")' class="tag is-info is-small is-light">cast:</b-button>
+                <b-button @click='searchPrefix("site:")' class="tag is-info is-small is-light">site:</b-button>
+                <b-button @click='searchPrefix("id:")' class="tag is-info is-small is-light">id:</b-button>
+              </b-taglist>
+            </b-tooltip>
+          </b-field>
+          <b-field :label="$t('Search')" label-position="on-border">
             <div class="control">
-              <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
+              <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus ref="searchInput">
             </div>
           </b-field>
+          
           <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5">
             <b-table-column field="cover_url" :label="$t('Image')" width="120" v-slot="props">
               <vue-load-image>
@@ -239,6 +252,20 @@ export default {
       } else {
         this.currentPage = this.currentPage - 1
       }
+    },
+    searchPrefix(prefix) {
+      let textbox = this.$refs.searchInput
+      if (textbox.selectionStart != textbox.selectionEnd) {
+        let selected = textbox.value.substring(textbox.selectionStart, textbox.selectionEnd)
+        selected=selected.replace(/_/g," ").replace(/-/g," ").trim()
+        if (selected.indexOf(' ') >= 0)
+        {
+          selected='"' + selected + '"'
+        }        
+        this.queryString = textbox.value.substring(0,textbox.selectionStart) + " " + prefix + selected + " " + textbox.value.substr(textbox.selectionEnd)
+        this.loadData()
+      }
+      
     },
     prettyBytes
   }
