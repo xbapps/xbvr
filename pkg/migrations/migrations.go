@@ -1401,6 +1401,16 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0058-add-scraper-id-to-vr-intimacy-scenes",
+			Migrate: func(tx *gorm.DB) error {
+				err := tx.Model(&models.Scene{}).Where("site = 'VR Intimacy'").Update("scraper_id", "czechvrintimacy").Error
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
