@@ -152,7 +152,7 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.PUT("/sites/{site}").To(i.toggleSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.PUT("/sites/subsrcibed/{site}").To(i.toggleSubscribed).
+	ws.Route(ws.PUT("/sites/subscribed/{site}").To(i.toggleSubscribed).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/scraper/force-site-update").To(i.forceSiteUpdate).
@@ -469,7 +469,7 @@ func (i ConfigResource) removeStorage(req *restful.Request, resp *restful.Respon
 
 func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Response) {
 	var r struct {
-		SiteName string `json:"site_name"`
+		ScraperId string `json:"scraper_id"`
 	}
 
 	if err := req.ReadEntity(&r); err != nil {
@@ -480,12 +480,12 @@ func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Resp
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	db.Model(&models.Scene{}).Where("site = ?", r.SiteName).Update("needs_update", true)
+	db.Model(&models.Scene{}).Where("scraper_id = ?", r.ScraperId).Update("needs_update", true)
 }
 
 func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Response) {
 	var r struct {
-		SiteName string `json:"site_name"`
+		ScraperId string `json:"scraper_id"`
 	}
 
 	if err := req.ReadEntity(&r); err != nil {
@@ -497,7 +497,7 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 	defer db.Close()
 
 	var scenes []models.Scene
-	db.Where("site = ?", r.SiteName).Find(&scenes)
+	db.Where("scraper_id = ?", r.ScraperId).Find(&scenes)
 
 	for _, obj := range scenes {
 		files, _ := obj.GetFiles()
@@ -507,7 +507,7 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 		}
 	}
 
-	db.Where("site = ?", r.SiteName).Delete(&models.Scene{})
+	db.Where("scraper_id = ?", r.ScraperId).Delete(&models.Scene{})
 }
 
 func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
