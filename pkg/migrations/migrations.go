@@ -573,19 +573,19 @@ func Migrate() {
 				var err error
 				switch tx.Dialect().GetName() {
 				case "sqlite3":
-					err = tx.Model(&models.Action{}).Exec("ALTER TABLE actions RENAME TO actions_old").Error
+					err = tx.Model(&models.Action{}).Exec("ALTER TABLE actions RENAME TO actions_old2").Error
 				case "mysql":
-					err = tx.Model(&models.Action{}).Exec("RENAME TABLE actions TO actions_old").Error
+					err = tx.Model(&models.Action{}).Exec("RENAME TABLE actions TO actions_old2").Error
 				}
 				if err != nil {
 					return err
 				}
 				tx.AutoMigrate(&models.Action{})
-				err = tx.Model(&models.Action{}).Exec("INSERT INTO actions SELECT * FROM actions_old").Error
+				err = tx.Model(&models.Action{}).Exec("INSERT INTO actions SELECT * FROM actions_old2").Error
 				if err != nil {
 					return err
 				}
-				return tx.Exec("DROP TABLE IF EXISTS actions_old").Error
+				return tx.Exec("DROP TABLE IF EXISTS actions_old2").Error
 			},
 		},
 
