@@ -1411,6 +1411,20 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0059-fix-czech-vr-scenes-scraper-id",
+			Migrate: func(tx *gorm.DB) error {
+				sites := []string{"Czech VR Casting", "Czech VR Fetish"}
+				for _, site := range sites {
+					scraperId := strings.ReplaceAll(strings.ToLower(site), " ", "")
+					err := tx.Model(&models.Scene{}).Where("site = ? and scraper_id = 'czechvr'", site).Update("scraper_id", scraperId).Error
+					if err != nil {
+						return err
+					}
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
