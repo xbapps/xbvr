@@ -14,6 +14,10 @@
           <b-button @click='searchPrefix("cast:")' class="tag is-info is-small is-light">cast:</b-button>
           <b-button @click='searchPrefix("site:")' class="tag is-info is-small is-light">site:</b-button>
           <b-button @click='searchPrefix("id:")' class="tag is-info is-small is-light">id:</b-button>
+          <b-tooltip :label="$t('Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros')" :delay="500" position="is-top">
+            <b-button @click='searchDatePrefix("released:")' class="tag is-info is-small is-light">released:</b-button>
+            <b-button @click='searchDatePrefix("added:")' class="tag is-info is-small is-light">added:</b-button>
+          </b-tooltip>
         </b-taglist>
       </b-tooltip>
     </b-field>
@@ -27,6 +31,7 @@
         v-model="queryString"
         @typing="getAsyncData"
         @select="option => showSceneDetails(option)"
+        :open-on-focus="true"
         custom-class="is-large"
         max-height="450">
 
@@ -122,7 +127,6 @@ export default {
         }
       }).json()
 
-
       if (requestIndex >= this.dataNumResponses) {
         this.dataNumResponses = requestIndex + 1
         if (this.dataNumResponses === this.dataNumRequests) {
@@ -148,6 +152,7 @@ export default {
         this.$router.push({ name: 'scenes' })
       }
       this.$store.commit('overlay/hideQuickFind')
+      this.data = []
       this.$store.commit('overlay/showDetails', { scene })
     },
     searchPrefix(prefix) {      
@@ -162,6 +167,17 @@ export default {
         this.getAsyncData(this.queryString)
         this.$refs.autocompleteInput.focus()
       }
+    },
+    searchDatePrefix(prefix) {      
+        let today = new Date().toISOString().slice(0, 10)
+        let weekago = new Date(Date.now() - 604800000).toISOString().slice(0, 10)
+        if (this.queryString == undefined) {
+          this.queryString = prefix + '>="' + weekago + '" ' +  prefix + '<="' + today + '"'          
+        } else {
+        this.queryString = this.queryString.trim() + ' ' + prefix + '>="' + weekago + '" ' +  prefix + '<="' + today + '"'        
+        }
+        this.getAsyncData(this.queryString)
+        this.$refs.autocompleteInput.focus()
     }
   }
 }
