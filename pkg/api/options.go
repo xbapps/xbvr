@@ -45,6 +45,7 @@ type RequestSaveOptionsWeb struct {
 	SceneFavourite    bool   `json:"sceneFavourite"`
 	SceneWatched      bool   `json:"sceneWatched"`
 	SceneEdit         bool   `json:"sceneEdit"`
+	SceneDuration     bool   `json:"sceneDuration"`
 	SceneCuepoint     bool   `json:"sceneCuepoint"`
 	ShowHspFile       bool   `json:"showHspFile"`
 	ShowSubtitlesFile bool   `json:"showSubtitlesFile"`
@@ -306,6 +307,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneFavourite = r.SceneFavourite
 	config.Config.Web.SceneWatched = r.SceneWatched
 	config.Config.Web.SceneEdit = r.SceneEdit
+	config.Config.Web.SceneDuration = r.SceneDuration
 	config.Config.Web.SceneCuepoint = r.SceneCuepoint
 	config.Config.Web.ShowHspFile = r.ShowHspFile
 	config.Config.Web.ShowSubtitlesFile = r.ShowSubtitlesFile

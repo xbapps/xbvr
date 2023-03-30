@@ -20,7 +20,9 @@
           <small>
             <span class="pathDetails">{{ file.path }}</span>
             <br/>
-            {{ prettyBytes(file.size) }}, {{ file.video_width }}x{{ file.video_height }},
+            {{ prettyBytes(file.size) }},
+            <span v-if="file.type == 'video'">{{ file.video_width }}x{{ file.video_height }}, </span>
+            <span v-if="file.duration > 0">{{ Math.floor(file.duration / 60) }} min,</span>
             {{ format(parseISO(file.created_time), "yyyy-MM-dd") }}
           </small>
 
@@ -60,6 +62,10 @@
                   <b-icon pack="mdi" icon="eye-off-outline" size="is-small" style="margin-right:0.1em"/>                
                 </b-tag>&nbsp;
               </b-tooltip>
+              <b-tag type="is-info is-light" v-if="props.row.duration">
+                <b-icon pack="mdi" icon="clock" size="is-small" style="margin-right:0.1em"/>
+                {{props.row.duration}}
+              </b-tag>&nbsp;
               <b-tag type="is-info is-light" v-if="videoFilesCount(props.row)">
                 <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
                 {{videoFilesCount(props.row)}}
