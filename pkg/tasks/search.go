@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/simple"
@@ -18,11 +19,13 @@ type Index struct {
 }
 
 type SceneIndexed struct {
-	Description string `json:"description"`
-	Title       string `json:"title"`
-	Cast        string `json:"cast"`
-	Site        string `json:"site"`
-	Id          string `json:"id"`
+	Description string    `json:"description"`
+	Title       string    `json:"title"`
+	Cast        string    `json:"cast"`
+	Site        string    `json:"site"`
+	Id          string    `json:"id"`
+	Released    time.Time `json:"released"`
+	Added       time.Time `json:"added"`
 }
 
 func NewIndex(name string) (*Index, error) {
@@ -36,9 +39,13 @@ func NewIndex(name string) (*Index, error) {
 	titleFieldMapping.Analyzer = simple.Name
 	castFieldMapping := bleve.NewTextFieldMapping()
 	castFieldMapping.Analyzer = simple.Name
+	releaseFieldMapping := bleve.NewDateTimeFieldMapping()
+	addedFieldMapping := bleve.NewDateTimeFieldMapping()
 	sceneMapping := bleve.NewDocumentMapping()
 	sceneMapping.AddFieldMappingsAt("title", titleFieldMapping)
 	sceneMapping.AddFieldMappingsAt("cast", castFieldMapping)
+	sceneMapping.AddFieldMappingsAt("released", releaseFieldMapping)
+	sceneMapping.AddFieldMappingsAt("added", addedFieldMapping)
 
 	mapping := bleve.NewIndexMapping()
 	mapping.AddDocumentMapping("_default", sceneMapping)
@@ -71,13 +78,17 @@ func (i *Index) PutScene(scene models.Scene) error {
 		castConcat = castConcat + " " + strings.Replace(c.Name, " ", "", -1)
 	}
 
+	rd := time.Date(scene.ReleaseDate.Year(), scene.ReleaseDate.Month(), scene.ReleaseDate.Day(), 0, 0, 0, 0, &time.Location{})
 	si := SceneIndexed{
 		Title:       fmt.Sprintf("%v", scene.Title),
 		Description: fmt.Sprintf("%v", scene.Synopsis),
 		Cast:        fmt.Sprintf("%v %v", cast, castConcat),
 		Site:        fmt.Sprintf("%v", scene.Site),
 		Id:          fmt.Sprintf("%v", scene.SceneID),
+		Released:    rd,                                       // only index the date, not the time
+		Added:       scene.CreatedAt.Truncate(24 * time.Hour), // only index the date, not the time
 	}
+
 	if err := i.Bleve.Index(scene.SceneID, si); err != nil {
 		return err
 	}
@@ -107,6 +118,7 @@ func SearchIndex() {
 		current := 0
 		var scenes []models.Scene
 		tx := db.Model(models.Scene{}).Preload("Cast").Preload("Tags")
+		// tx := db.Model(models.Scene{}).Preload("Cast").Preload("Tags").Where("scene_id = ?", "realjam-vr-32575")
 		tx.Count(&total)
 
 		tlog.Infof("Building search index...")

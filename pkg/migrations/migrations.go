@@ -1446,6 +1446,20 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			// rebuild search indexes with new fields
+			ID: "0060-rebuild-new-indexes",
+			Migrate: func(d *gorm.DB) error {
+				os.RemoveAll(common.IndexDirV2)
+				os.MkdirAll(common.IndexDirV2, os.ModePerm)
+				// rebuild asynchronously, no need to hold up startup, blocking the UI
+				go func() {
+					tasks.SearchIndex()
+					tasks.CalculateCacheSizes()
+				}()
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
