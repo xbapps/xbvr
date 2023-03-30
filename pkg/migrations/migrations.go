@@ -567,6 +567,27 @@ func Migrate() {
 				return tx.AutoMigrate(&models.TagGroup{}).Error
 			},
 		},
+		{
+			ID: "0058-Change-NewValue-Column-To-Text",
+			Migrate: func(tx *gorm.DB) error {
+				var err error
+				switch tx.Dialect().GetName() {
+				case "sqlite3":
+					err = tx.Model(&models.Action{}).Exec("ALTER TABLE actions RENAME TO actions_old2").Error
+				case "mysql":
+					err = tx.Model(&models.Action{}).Exec("RENAME TABLE actions TO actions_old2").Error
+				}
+				if err != nil {
+					return err
+				}
+				tx.AutoMigrate(&models.Action{})
+				err = tx.Model(&models.Action{}).Exec("INSERT INTO actions SELECT * FROM actions_old2").Error
+				if err != nil {
+					return err
+				}
+				return tx.Exec("DROP TABLE IF EXISTS actions_old2").Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
