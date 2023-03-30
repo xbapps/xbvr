@@ -567,6 +567,27 @@ func Migrate() {
 				return tx.AutoMigrate(&models.TagGroup{}).Error
 			},
 		},
+		{
+			ID: "0058-Change-NewValue-Column-To-Text",
+			Migrate: func(tx *gorm.DB) error {
+				var err error
+				switch tx.Dialect().GetName() {
+				case "sqlite3":
+					err = tx.Model(&models.Action{}).Exec("ALTER TABLE actions RENAME TO actions_old2").Error
+				case "mysql":
+					err = tx.Model(&models.Action{}).Exec("RENAME TABLE actions TO actions_old2").Error
+				}
+				if err != nil {
+					return err
+				}
+				tx.AutoMigrate(&models.Action{})
+				err = tx.Model(&models.Action{}).Exec("INSERT INTO actions SELECT * FROM actions_old2").Error
+				if err != nil {
+					return err
+				}
+				return tx.Exec("DROP TABLE IF EXISTS actions_old2").Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
@@ -1398,6 +1419,44 @@ func Migrate() {
 					}
 				}
 				common.Log.Infof("Migration update for Custom SLR Site filenames completed")
+				return nil
+			},
+		},
+		{
+			ID: "0058-add-scraper-id-to-vr-intimacy-scenes",
+			Migrate: func(tx *gorm.DB) error {
+				err := tx.Model(&models.Scene{}).Where("site = 'VR Intimacy'").Update("scraper_id", "czechvrintimacy").Error
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+		},
+		{
+			ID: "0059-fix-czech-vr-scenes-scraper-id",
+			Migrate: func(tx *gorm.DB) error {
+				sites := []string{"Czech VR Casting", "Czech VR Fetish"}
+				for _, site := range sites {
+					scraperId := strings.ReplaceAll(strings.ToLower(site), " ", "")
+					err := tx.Model(&models.Scene{}).Where("site = ? and scraper_id = 'czechvr'", site).Update("scraper_id", scraperId).Error
+					if err != nil {
+						return err
+					}
+				}
+				return nil
+			},
+		},
+		{
+			// rebuild search indexes with new fields
+			ID: "0060-rebuild-new-indexes",
+			Migrate: func(d *gorm.DB) error {
+				os.RemoveAll(common.IndexDirV2)
+				os.MkdirAll(common.IndexDirV2, os.ModePerm)
+				// rebuild asynchronously, no need to hold up startup, blocking the UI
+				go func() {
+					tasks.SearchIndex()
+					tasks.CalculateCacheSizes()
+				}()
 				return nil
 			},
 		},

@@ -17,6 +17,7 @@ type ObjectState struct {
 		SceneFavourite    bool   `json:"sceneFavourite"`
 		SceneWatched      bool   `json:"sceneWatched"`
 		SceneEdit         bool   `json:"sceneEdit"`
+		SceneDuration     bool   `json:"sceneDuration"`
 		SceneCuepoint     bool   `json:"sceneCuepoint"`
 		ShowHspFile       bool   `json:"showHspFile"`
 		ShowSubtitlesFile bool   `json:"showSubtitlesFile"`

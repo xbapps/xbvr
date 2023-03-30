@@ -46,8 +46,13 @@
               </b-switch>
             </b-field>
             <b-field>
+              <b-switch v-model="sceneDuration" type="is-dark">
+                show Duration button
+              </b-switch>
+            </b-field>
+            <b-field>
               <b-switch v-model="sceneCuepoint" type="is-dark">
-                show Cuepoints  button
+                show Cuepoints button
               </b-switch>
             </b-field>
             <b-field>
@@ -143,6 +148,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.updateCheck = value
+      }
+    },
+    sceneDuration: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneDuration
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneDuration = value
       }
     },
     sceneCuepoint: {
