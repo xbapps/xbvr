@@ -50,10 +50,10 @@
             <b-dropdown-item aria-role="listitem" @click="taskScrape(props.row.id)">
               {{$t('Run this scraper')}}
             </b-dropdown-item>
-            <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(props.row.name)">
+            <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(props.row.name, props.row.id)">
               {{$t('Force update scenes')}}
             </b-dropdown-item>
-            <b-dropdown-item aria-role="listitem" @click="deleteScenes(props.row.name)">
+            <b-dropdown-item aria-role="listitem" @click="deleteScenes(props.row.name, props.row.id)">
               {{$t('Delete scraped scenes')}}
             </b-dropdown-item>
           </b-dropdown>
@@ -96,18 +96,16 @@ export default {
         return u
       }
     },
-    taskScrape (site) {
-      ky.get(`/api/task/scrape?site=${site}`)
+    taskScrape (scraper) {
+      ky.get(`/api/task/scrape?site=${scraper}`)
     },
-    forceSiteUpdate (site) {
-      site = this.sanitizeSiteName(site);
+    forceSiteUpdate (site, scraper) {
       ky.post('/api/options/scraper/force-site-update', {
-        json: { site_name: site }
+        json: { scraper_id: scraper }
       })
       this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`)
     },
-    deleteScenes (site) {
-      site = this.sanitizeSiteName(site);      
+    deleteScenes (site, scraper) {
       this.$buefy.dialog.confirm({
         title: this.$t('Delete scraped scenes'),
         message: `You're about to delete scraped scenes for <strong>${site}</strong>. Previously matched files will return to unmatched state.`,
@@ -115,22 +113,16 @@ export default {
         hasIcon: true,
         onConfirm: function () {
           ky.post('/api/options/scraper/delete-scenes', {
-            json: { site_name: site }
+            json: { scraper_id: scraper }
           })
         }
       })
-    },
-    sanitizeSiteName(site) {
-      if (site.includes('(Custom ')) {
-        return site.replace('(Custom ','(') 
-      }      
-      return site.split('(')[0].trim();
     },
     async toggleAllSubscriptions(){
       const table = this.$refs.scraperTable;
       this.isLoading=true
       for (let i=0; i<table.newData.length; i++) {
-        await ky.put(`/api/options/sites/subsrcibed/${table.newData[i].id}`, { json: {} }).json()
+        await ky.put(`/api/options/sites/subscribed/${table.newData[i].id}`, { json: {} }).json()
         this.$store.dispatch('optionsSites/load')
       }
       this.isLoading=false
