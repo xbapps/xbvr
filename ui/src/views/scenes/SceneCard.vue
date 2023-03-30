@@ -57,13 +57,6 @@
         <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
         </span>
-        <br/>
-        <b-field>        
-          <span  v-if="this.$store.state.optionsAdvanced.advanced.showInternalSceneId">ID: {{item.id}}</span>
-          <a v-if="this.$store.state.optionsAdvanced.advanced.showHSPApiLink" :href="`/heresphere/${item.id}`" target="_blank" rel="noreferrer" style="margin-left:0.5em">
-           <img src="/ui/icons/heresphere_24.png" style="height:15px;"/>
-          </a>          
-        </b-field>
       </span>
     </div>
   </div>
