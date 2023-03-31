@@ -15,6 +15,10 @@ const state = {
     show: false,
     file: null
   },
+  createScene: {
+    show: false,
+    file: null
+  },
   showQuickFind: false
 }
 
@@ -50,6 +54,14 @@ const mutations = {
   hideMatch (state, payload) {
     state.match.file = null
     state.match.show = false
+  },
+  createCustomScene (state, payload) {
+    state.createScene.file = payload.file
+    state.createScene.show = true
+  },
+  hideCreateCustomScene (state, payload) {
+    state.createScene.file = null
+    state.createScene.show = false    
   },
   showQuickFind (state, payload) {
     state.showQuickFind = true

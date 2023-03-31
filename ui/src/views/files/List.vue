@@ -46,6 +46,9 @@
                 <b-button @click="play(props.row)" v-if="props.row.type === 'video'">{{ $t('Play') }}</b-button>
                 <b-button v-if="props.row.scene_id === 0" class="is-primary is-outlined" @click="match(props.row)">{{ $t('Match') }}</b-button>
                 <b-button v-else class="is-outlined" @click="unmatch(props.row)">{{ $t('Unmatch') }}</b-button>
+                <b-tooltip v-if="props.row.scene_id === 0" :label="$t('Create a custom scene')"  :delay="250" >
+                  <b-button class="is-primary is-outlined" @click="createScene(props.row)">{{ $t('Create') }}</b-button>
+                </b-tooltip>
               </div>
             </b-table-column>
             <b-table-column style="white-space: nowrap;" v-slot="props">
@@ -127,6 +130,9 @@ export default {
             this.$store.dispatch('files/load')
       })
     },    
+    createScene (file) {
+      this.$store.commit('overlay/createCustomScene', { file: file })
+    },
     humanizeSeconds (seconds) {
       return new Date(seconds * 1000).toISOString().substr(11, 8)
     },
