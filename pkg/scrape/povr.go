@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -52,9 +53,11 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		})
 
 		// Filenames
-		base := e.Request.URL.Path
-		base = strings.Split(strings.Replace(base, "/", "-", -1), sc.SiteID)[0]
-		base = strings.TrimPrefix(base, "-")
+		studioBase := path.Base(strings.TrimSuffix(siteURL, "/"))
+		sceneBase := path.Base(strings.TrimSuffix(e.Request.URL.Path, "/"))
+		sceneBase = strings.Split(sceneBase, sc.SiteID)[0]
+
+		base := studioBase + "-" + sceneBase
 		sc.Filenames = append(sc.Filenames, base+"180_180x180_3dh_LR.mp4")
 		sc.Filenames = append(sc.Filenames, base+"gearvr-180_180x180_3dh_LR.mp4")
 		sc.Filenames = append(sc.Filenames, base+"smartphone-180_180x180_3dh_LR.mp4")

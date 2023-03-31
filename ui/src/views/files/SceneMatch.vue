@@ -20,14 +20,33 @@
           <small>
             <span class="pathDetails">{{ file.path }}</span>
             <br/>
-            {{ prettyBytes(file.size) }}, {{ file.video_width }}x{{ file.video_height }},
+            {{ prettyBytes(file.size) }},
+            <span v-if="file.type == 'video'">{{ file.video_width }}x{{ file.video_height }}, </span>
+            <span v-if="file.duration > 0">{{ Math.floor(file.duration / 60) }} min,</span>
             {{ format(parseISO(file.created_time), "yyyy-MM-dd") }}
           </small>
-          <b-field :label="$t('Search')">
+
+          <b-field grouped>
+            <b-tooltip :label="$t('Optional: select one or more words to target searching to a specific field')" :delay="500" position="is-right">
+              <b-taglist>
+                <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
+                <b-button @click='searchPrefix("title:")' class="tag is-info is-small is-light">title:</b-button>
+                <b-button @click='searchPrefix("cast:")' class="tag is-info is-small is-light">cast:</b-button>
+                <b-button @click='searchPrefix("site:")' class="tag is-info is-small is-light">site:</b-button>
+                <b-button @click='searchPrefix("id:")' class="tag is-info is-small is-light">id:</b-button>
+                <b-tooltip :label="$t('Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros')" :delay="500" position="is-top">
+                  <b-button @click='searchDatePrefix("released:")' class="tag is-info is-small is-light">released:</b-button>
+                  <b-button @click='searchDatePrefix("added:")' class="tag is-info is-small is-light">added:</b-button>
+                </b-tooltip>
+              </b-taglist>          
+            </b-tooltip>
+          </b-field>
+          <b-field :label="$t('Search')" label-position="on-border">
             <div class="control">
-              <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus>
+              <input class="input" type="text" v-model='queryString' v-debounce:200ms="loadData" autofocus ref="searchInput">
             </div>
           </b-field>
+          
           <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5">
             <b-table-column field="cover_url" :label="$t('Image')" width="120" v-slot="props">
               <vue-load-image>
@@ -43,6 +62,10 @@
                   <b-icon pack="mdi" icon="eye-off-outline" size="is-small" style="margin-right:0.1em"/>                
                 </b-tag>&nbsp;
               </b-tooltip>
+              <b-tag type="is-info is-light" v-if="props.row.duration">
+                <b-icon pack="mdi" icon="clock" size="is-small" style="margin-right:0.1em"/>
+                {{props.row.duration}}
+              </b-tag>&nbsp;
               <b-tag type="is-info is-light" v-if="videoFilesCount(props.row)">
                 <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
                 {{videoFilesCount(props.row)}}
@@ -239,6 +262,26 @@ export default {
       } else {
         this.currentPage = this.currentPage - 1
       }
+    },
+    searchPrefix(prefix) {
+      let textbox = this.$refs.searchInput
+      if (textbox.selectionStart != textbox.selectionEnd) {
+        let selected = textbox.value.substring(textbox.selectionStart, textbox.selectionEnd)
+        selected=selected.replace(/_/g," ").replace(/-/g," ").trim()
+        if (selected.indexOf(' ') >= 0)
+        {
+          selected='"' + selected + '"'
+        }        
+        this.queryString = textbox.value.substring(0,textbox.selectionStart) + " " + prefix + selected + " " + textbox.value.substr(textbox.selectionEnd)
+        this.loadData()
+      }
+      
+    },
+    searchDatePrefix(prefix) {      
+        let today = new Date().toISOString().slice(0, 10)
+        let weekago = new Date(Date.now() - 604800000).toISOString().slice(0, 10)        
+          this.queryString = this.queryString.trim() + ' ' + prefix + '>="' + weekago + '" ' +  prefix + '<="' + today + '"'        
+        this.loadData()
     },
     prettyBytes
   }
