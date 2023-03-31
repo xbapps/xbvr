@@ -322,7 +322,13 @@
           </div>
         </div>
       </section>
-      <div class="scene-id">{{ item.scene_id }}</div>
+      <div class="scene-id">
+        {{ item.scene_id }}
+        <span  v-if="this.$store.state.optionsAdvanced.advanced.showInternalSceneId">{{ $t('Internal ID') }}: {{item.id}}</span>
+        <a v-if="this.$store.state.optionsAdvanced.advanced.showHSPApiLink" :href="`/heresphere/${item.id}`" target="_blank" rel="noreferrer" style="margin-left:0.5em">
+          <img src="/ui/icons/heresphere_24.png" style="height:15px;"/>
+        </a>
+      </div>      
     </div>
     <button class="modal-close is-large" aria-label="close" @click="close()"></button>
     <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"

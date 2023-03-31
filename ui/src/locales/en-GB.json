@@ -120,6 +120,7 @@
   "Can be empty": "Can be empty",
   "Create/Edit": "Create/Edit",
   "If blank a Scene Id will be generated but cannot be changed later": "If blank a Scene Id will be generated but cannot be changed later",
+  "Internal ID": "Internal ID:",
   "Optional: select one or more words to target searching to a specific field": "Optional: select one or more words to target searching to a specific field",
   "Search Fields": "Search Fields",
   "Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros": "Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros",

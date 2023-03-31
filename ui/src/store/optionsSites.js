@@ -15,7 +15,7 @@ const actions = {
     state.items = await ky.put(`/api/options/sites/${params.id}`, { json: {} }).json()
   },
   async toggleSubscribed ({ state }, params) {
-    state.items = await ky.put(`/api/options/sites/subsrcibed/${params.id}`, { json: {} }).json()
+    state.items = await ky.put(`/api/options/sites/subscribed/${params.id}`, { json: {} }).json()
     console.log('calling',params.id)
   }
 }

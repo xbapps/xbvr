@@ -40,6 +40,10 @@ type ObjectConfig struct {
 		SceneTrailerlist  bool   `default:"true" json:"sceneTrailerlist"`
 		UpdateCheck       bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
+	Advanced struct {
+		ShowInternalSceneId bool `default:"false" json:"showInternalSceneId"`
+		ShowHSPApiLink      bool `default:"false" json:"showHSPApiLink"`
+	} `json:"advanced"`
 	Vendor struct {
 		TPDB struct {
 			ApiToken string `default:"" json:"apiToken"`
