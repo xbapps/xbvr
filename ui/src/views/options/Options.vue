@@ -25,6 +25,7 @@
             <b-menu-item :label="$t('Players')" :active="active==='interface_deovr'" @click="setActive('interface_deovr')"/>
             <b-menu-item :label="$t('DLNA')" :active="active==='interface_dlna'" @click="setActive('interface_dlna')"/>
             <b-menu-item :label="$t('Web UI')" :active="active==='interface_web'" @click="setActive('interface_web')"/>
+            <b-menu-item :label="$t('Advanced')" :active="active==='interface_advanced'" @click="setActive('interface_advanced')"/>
           </b-menu-list>
         </b-menu>
       </div>
@@ -42,6 +43,7 @@
           <InterfaceWeb v-show="active==='interface_web'"/>
           <InterfaceDLNA v-show="active==='interface_dlna'"/>
           <InterfaceDeoVR v-show="active==='interface_deovr'"/>
+          <InterfaceAdvanced v-show="active==='interface_advanced'"/>
         </div>
       </div>
 
@@ -61,9 +63,10 @@ import Cache from './sections/Cache.vue'
 import Previews from './sections/Previews.vue'
 import Schedules from './sections/Schedules.vue'
 import InterfaceDeoVR from './sections/InterfaceDeoVR.vue'
+import InterfaceAdvanced from './sections/InterfaceAdvanced.vue'
 
 export default {
-  components: { Storage, SceneDataScrapers, SceneCreate, Funscripts, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews, Schedules },
+  components: { Storage, SceneDataScrapers, SceneCreate, Funscripts, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews, Schedules, InterfaceAdvanced },
   data: function () {
     return {
       active: 'storage'

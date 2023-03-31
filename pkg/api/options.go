@@ -53,6 +53,11 @@ type RequestSaveOptionsWeb struct {
 	UpdateCheck       bool   `json:"updateCheck"`
 }
 
+type RequestSaveOptionsAdvanced struct {
+	ShowInternalSceneId bool `json:"showInternalSceneId"`
+	ShowHSPApiLink      bool `json:"showHSPApiLink"`
+}
+
 type RequestSaveOptionsDLNA struct {
 	Enabled      bool     `json:"enabled"`
 	ServiceName  string   `json:"name"`
@@ -185,6 +190,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.PUT("/interface/web").To(i.saveOptionsWeb).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	// "Web Advanced UI options" section endpoints
+	ws.Route(ws.PUT("/interface/advanced").To(i.saveOptionsAdvanced).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	// "Cache" section endpoints
 	ws.Route(ws.DELETE("/cache/reset/{cache}").To(i.resetCache).
 		Param(ws.PathParameter("cache", "Cache to reset - possible choices are `images`, `previews`, and `searchIndex`").DataType("string")).
@@ -313,6 +322,20 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.ShowSubtitlesFile = r.ShowSubtitlesFile
 	config.Config.Web.SceneTrailerlist = r.SceneTrailerlist
 	config.Config.Web.UpdateCheck = r.UpdateCheck
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsAdvanced
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Advanced.ShowInternalSceneId = r.ShowInternalSceneId
+	config.Config.Advanced.ShowHSPApiLink = r.ShowHSPApiLink
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
