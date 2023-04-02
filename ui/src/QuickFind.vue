@@ -175,13 +175,17 @@ export default {
         if (this.queryString == undefined) {
           this.queryString = prefix + '>="' + weekago + '" ' +  prefix + '<="' + today + '"'          
         } else {
-        this.queryString = this.queryString.trim() + ' ' + prefix + '>="' + weekago + '" ' +  prefix + '<="' + today + '"'        
+          this.queryString = this.queryString.trim() + ' ' + prefix + '>="' + weekago + '" ' +  prefix + '<="' + today + '"'        
         }
         this.getAsyncData(this.queryString)
         this.$refs.autocompleteInput.focus()
     },
     searchDurationPrefix(prefix) {
-      this.queryString = this.queryString.trim() + ' ' + prefix + '>=0'        
+      if (this.queryString == undefined) {
+        this.queryString = prefix + '>=0'
+      } else {
+        this.queryString = this.queryString.trim() + ' ' + prefix + '>=0'
+      }
       this.getAsyncData(this.queryString)
       this.$refs.autocompleteInput.focus()
     }
