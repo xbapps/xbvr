@@ -34,6 +34,7 @@
                 <b-button @click='searchPrefix("cast:")' class="tag is-info is-small is-light">cast:</b-button>
                 <b-button @click='searchPrefix("site:")' class="tag is-info is-small is-light">site:</b-button>
                 <b-button @click='searchPrefix("id:")' class="tag is-info is-small is-light">id:</b-button>
+                <b-button @click='searchDurationPrefix("duration:")' class="tag is-info is-small is-light">duration:</b-button>
                 <b-tooltip :label="$t('Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros')" :delay="500" position="is-top">
                   <b-button @click='searchDatePrefix("released:")' class="tag is-info is-small is-light">released:</b-button>
                   <b-button @click='searchDatePrefix("added:")' class="tag is-info is-small is-light">added:</b-button>
@@ -281,6 +282,14 @@ export default {
         let today = new Date().toISOString().slice(0, 10)
         let weekago = new Date(Date.now() - 604800000).toISOString().slice(0, 10)        
           this.queryString = this.queryString.trim() + ' ' + prefix + '>="' + weekago + '" ' +  prefix + '<="' + today + '"'        
+        this.loadData()
+    },
+    searchDurationPrefix(prefix) {        
+        if (this.file.duration==0) {
+          this.queryString = this.queryString.trim() + ' ' + prefix + '>=0 '
+        } else {
+          this.queryString = this.queryString.trim() + ' ' + prefix + '>=' + (Math.floor(this.file.duration / 60)-1) + ' ' +  prefix + '<=' + (Math.floor(this.file.duration / 60)+1) + ''        
+        }
         this.loadData()
     },
     prettyBytes
