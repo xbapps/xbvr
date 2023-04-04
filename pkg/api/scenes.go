@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-test/deep"
@@ -414,15 +415,19 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 }
 
 func (i SceneResource) getScene(req *restful.Request, resp *restful.Response) {
-	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
 	var scene models.Scene
 	db, _ := models.GetDB()
-	err = scene.GetIfExistByPK(uint(sceneId))
+
+	if strings.Contains(req.PathParameter("scene-id"), "-") {
+		scene.GetIfExist(req.PathParameter("scene-id"))
+	} else {
+		id, err := strconv.Atoi(req.PathParameter("scene-id"))
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		_ = scene.GetIfExistByPK(uint(id))
+	}
 	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
