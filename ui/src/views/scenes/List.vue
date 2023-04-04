@@ -142,9 +142,11 @@ export default {
       if (this.$store.state.sceneList.show_scene_id != undefined && this.$store.state.sceneList.show_scene_id !='')
       {
         ky.get('/api/scene/'+this.$store.state.sceneList.show_scene_id).json().then(data => {
-        this.$store.commit('overlay/showDetails', { scene: data })
-        this.$store.state.sceneList.show_scene_id = ''
+          if (data.id != 0){
+            this.$store.commit('overlay/showDetails', { scene: data })
+          }          
         })
+        this.$store.state.sceneList.show_scene_id = ''
       }
       
       return this.$store.state.sceneList.show_scene_id
