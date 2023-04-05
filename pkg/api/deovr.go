@@ -506,6 +506,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 }
 
 func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Response) {
+	common.Log.Infof("getDeoLibrary called, enabled %v", config.Config.Interfaces.DeoVR.Enabled)
 	if !config.Config.Interfaces.DeoVR.Enabled {
 		return
 	}

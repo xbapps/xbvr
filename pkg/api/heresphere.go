@@ -942,6 +942,7 @@ func matchCuepoint(findCuepoint models.SceneCuepoint, cuepointList []models.Scen
 }
 
 func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *restful.Response) {
+	log.Infof("getHeresphereLibrary called, enabled %v", config.Config.Interfaces.DeoVR.Enabled)
 	if !config.Config.Interfaces.DeoVR.Enabled {
 		return
 	}
