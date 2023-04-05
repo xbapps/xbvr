@@ -41,6 +41,7 @@ const state = {
     not_downloaded: 0,
     hidden: 0
   },
+  show_scene_id: '',
   filterOpts: {
     cast: [],
     sites: [],
@@ -134,6 +135,7 @@ const mutations = {
   },
   stateFromQuery (state, payload) {
     try {
+      state.show_scene_id=payload.scene_id
       const obj = JSON.parse(Buffer.from(payload.q, 'base64').toString('utf-8'))
       for (const [k, v] of Object.entries(obj)) {
         Vue.set(state.filters, k, v)
