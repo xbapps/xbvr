@@ -588,23 +588,6 @@ func Migrate() {
 				return tx.Exec("DROP TABLE IF EXISTS actions_old2").Error
 			},
 		},
-		{
-			ID: "0061-Create-Scene-View",
-			Migrate: func(tx *gorm.DB) error {
-				sql := ""
-				switch tx.Dialect().GetName() {
-				case "sqlite3":
-					sql = `
-					CREATE VIEW IF NOT EXISTS view_scenes AS
-					select "http://localhost:9999/ui/#/?scene_id="||scene_id as xbvr_url, s.* from scenes s`
-				case "mysql":
-					sql = `
-					CREATE OR REPLACE VIEW view_scenes AS
-					select concat('http://localhost:9999/ui/#/?scene_id=',scene_id) as xbvr_url, s.* from scenes s`
-				}
-				return tx.Model(&models.Action{}).Exec(sql).Error
-			},
-		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
