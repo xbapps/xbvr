@@ -7,20 +7,22 @@
            aria-modal
            can-cancel>
     <b-field grouped>
-      <b-tooltip :label="$t('Optional: select one or more words to target searching to a specific field')" :delay="500" position="is-right">
-        <b-taglist>
-          <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
+      <b-taglist>
+        <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
+        <b-tooltip :label="$t('Optional: select one or more words to target searching to a specific field')" :delay="500" position="is-top">
           <b-button @click='searchPrefix("title:")' class="tag is-info is-small is-light">title:</b-button>
           <b-button @click='searchPrefix("cast:")' class="tag is-info is-small is-light">cast:</b-button>
           <b-button @click='searchPrefix("site:")' class="tag is-info is-small is-light">site:</b-button>
           <b-button @click='searchPrefix("id:")' class="tag is-info is-small is-light">id:</b-button>
+        </b-tooltip>&nbsp;
+        <b-tooltip :label="$t('Add file duration to search')" :delay="500" position="is-top">
           <b-button @click='searchDurationPrefix("duration:")' class="tag is-info is-small is-light">duration:</b-button>
-          <b-tooltip :label="$t('Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros')" :delay="500" position="is-top">
-            <b-button @click='searchDatePrefix("released:")' class="tag is-info is-small is-light">released:</b-button>
-            <b-button @click='searchDatePrefix("added:")' class="tag is-info is-small is-light">added:</b-button>
-          </b-tooltip>
-        </b-taglist>
-      </b-tooltip>
+        </b-tooltip>&nbsp;
+        <b-tooltip :label="$t('Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros')" :delay="500" position="is-top">
+          <b-button @click='searchDatePrefix("released:")' class="tag is-info is-small is-light">released:</b-button>
+          <b-button @click='searchDatePrefix("added:")' class="tag is-info is-small is-light">added:</b-button>
+        </b-tooltip>
+      </b-taglist>
     </b-field>
     <b-field style="width:600px">
       <b-autocomplete

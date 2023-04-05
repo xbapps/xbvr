@@ -24,7 +24,7 @@
             <b-input v-model='title' ></b-input>            
           </b-field>
           <b-button class="button is-primary" style="margin-right:1em" v-on:click="addScene(false)">{{$t('Create')}}</b-button>            
-          <b-button class="button is-primary" v-on:click="addScene(true)">{{$t('Create/Edit')}} </b-button>            
+          <b-button class="button is-primary" v-on:click="addScene(true)">{{$t('Create and Edit')}} </b-button>            
         </div>
       </section>
     </div>
