@@ -27,20 +27,22 @@
           </small>
 
           <b-field grouped>
-            <b-tooltip :label="$t('Optional: select one or more words to target searching to a specific field')" :delay="500" position="is-right">
-              <b-taglist>
-                <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
+            <b-taglist>
+              <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
+              <b-tooltip :label="$t('Optional: select one or more words to target searching to a specific field')" :delay="500" position="is-top">
                 <b-button @click='searchPrefix("title:")' class="tag is-info is-small is-light">title:</b-button>
                 <b-button @click='searchPrefix("cast:")' class="tag is-info is-small is-light">cast:</b-button>
                 <b-button @click='searchPrefix("site:")' class="tag is-info is-small is-light">site:</b-button>
                 <b-button @click='searchPrefix("id:")' class="tag is-info is-small is-light">id:</b-button>
+              </b-tooltip>&nbsp;
+              <b-tooltip :label="$t('Add file duration to search')" :delay="500" position="is-top">
                 <b-button @click='searchDurationPrefix("duration:")' class="tag is-info is-small is-light">duration:</b-button>
-                <b-tooltip :label="$t('Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros')" :delay="500" position="is-top">
-                  <b-button @click='searchDatePrefix("released:")' class="tag is-info is-small is-light">released:</b-button>
-                  <b-button @click='searchDatePrefix("added:")' class="tag is-info is-small is-light">added:</b-button>
-                </b-tooltip>
-              </b-taglist>          
-            </b-tooltip>
+              </b-tooltip>&nbsp;
+              <b-tooltip :label="$t('Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros')" :delay="500" position="is-top">
+                <b-button @click='searchDatePrefix("released:")' class="tag is-info is-small is-light">released:</b-button>
+                <b-button @click='searchDatePrefix("added:")' class="tag is-info is-small is-light">added:</b-button>
+              </b-tooltip>
+            </b-taglist>          
           </b-field>
           <b-field :label="$t('Search')" label-position="on-border">
             <div class="control">
@@ -63,10 +65,6 @@
                   <b-icon pack="mdi" icon="eye-off-outline" size="is-small" style="margin-right:0.1em"/>                
                 </b-tag>&nbsp;
               </b-tooltip>
-              <b-tag type="is-info is-light" v-if="props.row.duration">
-                <b-icon pack="mdi" icon="clock" size="is-small" style="margin-right:0.1em"/>
-                {{props.row.duration}}
-              </b-tag>&nbsp;
               <b-tag type="is-info is-light" v-if="videoFilesCount(props.row)">
                 <b-icon pack="mdi" icon="file" size="is-small" style="margin-right:0.1em"/>
                 {{videoFilesCount(props.row)}}
@@ -88,6 +86,9 @@
             </b-table-column>
             <b-table-column field="release_date" :label="$t('Release date')" sortable nowrap v-slot="props">
               {{ format(parseISO(props.row.release_date), "yyyy-MM-dd") }}
+            </b-table-column>
+            <b-table-column field="duration" :label="$t('Duration')" sortable nowrap v-slot="props">
+              {{ props.row.duration > 0 ? props.row.duration + " min" : ""}}
             </b-table-column>
             <b-table-column field="scene_id" :label="$t('ID')" sortable nowrap v-slot="props">
               {{ props.row.scene_id }}
