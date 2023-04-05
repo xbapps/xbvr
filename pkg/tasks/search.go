@@ -26,6 +26,7 @@ type SceneIndexed struct {
 	Id          string    `json:"id"`
 	Released    time.Time `json:"released"`
 	Added       time.Time `json:"added"`
+	Duration    int       `json:"duration"`
 }
 
 func NewIndex(name string) (*Index, error) {
@@ -41,11 +42,13 @@ func NewIndex(name string) (*Index, error) {
 	castFieldMapping.Analyzer = simple.Name
 	releaseFieldMapping := bleve.NewDateTimeFieldMapping()
 	addedFieldMapping := bleve.NewDateTimeFieldMapping()
+	durationFieldMapping := bleve.NewNumericFieldMapping()
 	sceneMapping := bleve.NewDocumentMapping()
 	sceneMapping.AddFieldMappingsAt("title", titleFieldMapping)
 	sceneMapping.AddFieldMappingsAt("cast", castFieldMapping)
 	sceneMapping.AddFieldMappingsAt("released", releaseFieldMapping)
 	sceneMapping.AddFieldMappingsAt("added", addedFieldMapping)
+	sceneMapping.AddFieldMappingsAt("duration", durationFieldMapping)
 
 	mapping := bleve.NewIndexMapping()
 	mapping.AddDocumentMapping("_default", sceneMapping)
@@ -87,6 +90,7 @@ func (i *Index) PutScene(scene models.Scene) error {
 		Id:          fmt.Sprintf("%v", scene.SceneID),
 		Released:    rd,                                       // only index the date, not the time
 		Added:       scene.CreatedAt.Truncate(24 * time.Hour), // only index the date, not the time
+		Duration:    scene.Duration,
 	}
 
 	if err := i.Bleve.Index(scene.SceneID, si); err != nil {
@@ -118,7 +122,6 @@ func SearchIndex() {
 		current := 0
 		var scenes []models.Scene
 		tx := db.Model(models.Scene{}).Preload("Cast").Preload("Tags")
-		// tx := db.Model(models.Scene{}).Preload("Cast").Preload("Tags").Where("scene_id = ?", "realjam-vr-32575")
 		tx.Count(&total)
 
 		tlog.Infof("Building search index...")
