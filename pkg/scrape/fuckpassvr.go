@@ -33,7 +33,6 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		}
 		res := gjson.ParseBytes(r.Body)
 		previewVideoURL := r.Ctx.Get("preview_video_url")
-		videos := r.Ctx.GetAny("videos").(gjson.Result)
 		scenedata := res.Get("data.scene")
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
@@ -81,15 +80,15 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 
+		resolutions := []string{"8kUHD", "8kHD", "4k", "2k", "1k"}
 		parsedFileNameURL, err := url.Parse(previewVideoURL)
 		if err == nil {
 			fileNameBase := path.Base(parsedFileNameURL.Path)
 			if strings.HasSuffix(strings.ToLower(fileNameBase), "_rollover.mp4") {
-				videos.Get("#.resolution").ForEach(func(_, resolution gjson.Result) bool {
-					fn := fileNameBase[:len(fileNameBase)-len("_rollover.mp4")] + "-FULL_" + resolution.String() + ".mp4"
+				for i := range resolutions {
+					fn := fileNameBase[:len(fileNameBase)-len("_rollover.mp4")] + "-FULL_" + resolutions[i] + ".mp4"
 					sc.Filenames = append(sc.Filenames, fn)
-					return true
-				})
+				}
 			}
 		} else {
 			log.Error(err)
@@ -131,7 +130,6 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			res.Get("data.scenes.data").ForEach(func(_, scenedata gjson.Result) bool {
 				ctx := colly.NewContext()
 				ctx.Put("preview_video_url", scenedata.Get("preview_video_url").String())
-				ctx.Put("videos", scenedata.Get("videos"))
 
 				sceneURL := "https://www.fuckpassvr.com/video/" + scenedata.Get("slug").String()
 				sceneDetail := "https://www.fuckpassvr.com/api/api/scene/show?slug=" + scenedata.Get("slug").String()
