@@ -14,6 +14,7 @@ type Site struct {
 	IsEnabled  bool      `json:"is_enabled" xbvrbackup:"is_enabled"`
 	LastUpdate time.Time `json:"last_update" xbvrbackup:"-"`
 	Subscribed bool      `json:"subscribed" xbvrbackup:"subscribed"`
+	HasScraper bool      `gorm:"-" json:"has_scraper" xbvrbackup:"-"`
 }
 
 func (i *Site) Save() error {

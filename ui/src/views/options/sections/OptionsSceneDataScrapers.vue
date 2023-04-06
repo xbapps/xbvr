@@ -22,8 +22,10 @@
               </vue-load-image>
             </span>
       </b-table-column>
-      <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">
-        {{ props.row.sitename }}
+      <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">        
+        <b-tooltip class="is-warning" :active="props.row.has_scraper == false" :label="$t('Scraper does not exist')"  :delay="250" >
+          <span :class="[props.row.has_scraper ? '' : 'has-text-danger']">{{ props.row.sitename }}</span>
+        </b-tooltip>
       </b-table-column>
       <b-table-column field="source" :label="$t('Source')" sortable searchable v-slot="props">
         {{ props.row.source }}
@@ -47,10 +49,10 @@
             <template slot="trigger">
               <b-icon icon="dots-vertical mdi-18px"></b-icon>
             </template>
-            <b-dropdown-item aria-role="listitem" @click="taskScrape(props.row.id)">
+            <b-dropdown-item v-if="props.row.has_scraper" aria-role="listitem" @click="taskScrape(props.row.id)">
               {{$t('Run this scraper')}}
             </b-dropdown-item>
-            <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(props.row.name, props.row.id)">
+            <b-dropdown-item v-if="props.row.has_scraper" aria-role="listitem" @click="forceSiteUpdate(props.row.name, props.row.id)">
               {{$t('Force update scenes')}}
             </b-dropdown-item>
             <b-dropdown-item aria-role="listitem" @click="deleteScenes(props.row.name, props.row.id)">
