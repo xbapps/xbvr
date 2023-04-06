@@ -78,7 +78,7 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 
 		// Released
 		e.ForEach(`.bi-calendar3`, func(id int, e *colly.HTMLElement) {
-			p := e.DOM.Parent()
+			p := e.DOM.Parent().Next()
 			d, err := goment.New(p.Text(), "MMM DD, YYYY")
 			if err != nil {
 				log.Infof("%v", err)
