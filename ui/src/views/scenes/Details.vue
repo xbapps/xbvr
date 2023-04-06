@@ -74,18 +74,27 @@
                 <h3>
                   <span v-if="item.title">{{ item.title }}</span>
                   <span v-else class="missing">(no title)</span>
-                  <small class="is-pulled-right">{{ format(parseISO(item.release_date), "yyyy-MM-dd") }}</small>
+                  <small class="is-pulled-right">
+                    {{ format(parseISO(item.release_date), "yyyy-MM-dd") }}
+                  </small>
                 </h3>
-                <small>
-                  <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>                  
-                  <br  v-if="item.members_url != ''"/>
-                  <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer"><b-icon pack="mdi" icon="link-lock" custom-size="mdi-18px"/>Members Link</a>
-                </small>
-                <div class="columns mt-0">
+                <div class="columns">
+                  <div class="column pb-0">
+                    <small>
+                      <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>                  
+                      <br v-if="item.members_url != ''"/>
+                      <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer"><b-icon pack="mdi" icon="link-lock" custom-size="mdi-18px"/>Members Link</a>
+                    </small>
+                  </div>
+                  <div class="column pb-0">
+                    <small v-if="item.duration" class="is-pulled-right">{{ item.duration }} minutes</small>
+                  </div>
+                </div>
+                <div class="columns is-vcentered">
                   <div class="column pt-0">
                     <b-field>
                       <star-rating :key="item.id" v-model="item.star_rating" :rating="item.star_rating" @rating-selected="setRating"
-                                   :increment="0.5" :star-size="20"/>
+                                   :increment="0.5" :star-size="20" :show-rating="false" />
                       <b-tooltip :label="$t('Reset Rating')" position="is-right" :delay="250">
                         <b-icon pack="mdi" icon="autorenew" size="is-small" @click.native="setRating(0)" style="padding-left: 1em;padding-top: .5em;"/>
                       </b-tooltip>
@@ -313,7 +322,13 @@
           </div>
         </div>
       </section>
-      <div class="scene-id">{{ item.scene_id }}</div>
+      <div class="scene-id">
+        {{ item.scene_id }}
+        <span  v-if="this.$store.state.optionsAdvanced.advanced.showInternalSceneId">{{ $t('Internal ID') }}: {{item.id}}</span>
+        <a v-if="this.$store.state.optionsAdvanced.advanced.showHSPApiLink" :href="`/heresphere/${item.id}`" target="_blank" rel="noreferrer" style="margin-left:0.5em">
+          <img src="/ui/icons/heresphere_24.png" style="height:15px;"/>
+        </a>
+      </div>      
     </div>
     <button class="modal-close is-large" aria-label="close" @click="close()"></button>
     <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"
@@ -860,6 +875,10 @@ export default {
 }
 
 .block-opts {
+}
+
+.vue-star-rating {
+    line-height: 0;
 }
 
 .scene-id {

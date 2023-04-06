@@ -28,13 +28,17 @@
               <b-icon pack="mdi" icon="subtitles" size="is-small"/>
               <span v-if="subtitlesFilesCount > 1">{{subtitlesFilesCount}}</span>
             </b-tag>
-            <b-tag type="is-info" v-if="item.cuepoints.length>0 && this.$store.state.optionsWeb.web.sceneCuepoint">
+            <b-tag type="is-info" v-if="item.cuepoints.length > 0 && this.$store.state.optionsWeb.web.sceneCuepoint">
               <b-icon pack="mdi" icon="skip-next-outline" size="is-small"/>
               <span v-if="item.cuepoints.length > 1">{{item.cuepoints.length}}</span>
             </b-tag>
             <b-tag type="is-warning" v-if="item.star_rating > 0">
               <b-icon pack="mdi" icon="star" size="is-small"/>
               {{item.star_rating}}
+            </b-tag>
+            <b-tag type="is-info" v-if="item.duration > 0 && this.$store.state.optionsWeb.web.sceneDuration">
+              <b-icon pack="mdi" icon="clock" size="is-small"/>
+              {{item.duration}}m
             </b-tag>
           </div>
         </div>

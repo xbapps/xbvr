@@ -6,6 +6,24 @@
            aria-role="dialog"
            aria-modal
            can-cancel>
+    <b-field grouped>
+      <b-taglist>
+        <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
+        <b-tooltip :label="$t('Optional: select one or more words to target searching to a specific field')" :delay="500" position="is-top">
+          <b-button @click='searchPrefix("title:")' class="tag is-info is-small is-light">title:</b-button>
+          <b-button @click='searchPrefix("cast:")' class="tag is-info is-small is-light">cast:</b-button>
+          <b-button @click='searchPrefix("site:")' class="tag is-info is-small is-light">site:</b-button>
+          <b-button @click='searchPrefix("id:")' class="tag is-info is-small is-light">id:</b-button>
+        </b-tooltip>&nbsp;
+        <b-tooltip :label="$t('Add file duration to search')" :delay="500" position="is-top">
+          <b-button @click='searchDurationPrefix("duration:")' class="tag is-info is-small is-light">duration:</b-button>
+        </b-tooltip>&nbsp;
+        <b-tooltip :label="$t('Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros')" :delay="500" position="is-top">
+          <b-button @click='searchDatePrefix("released:")' class="tag is-info is-small is-light">released:</b-button>
+          <b-button @click='searchDatePrefix("added:")' class="tag is-info is-small is-light">added:</b-button>
+        </b-tooltip>
+      </b-taglist>
+    </b-field>
     <b-field style="width:600px">
       <b-autocomplete
         ref="autocompleteInput"
@@ -13,8 +31,10 @@
         placeholder="Find scene..."
         field="query"
         :loading="isFetching"
+        v-model="queryString"
         @typing="getAsyncData"
         @select="option => showSceneDetails(option)"
+        :open-on-focus="true"
         custom-class="is-large"
         max-height="450">
 
@@ -84,7 +104,8 @@ export default {
       dataNumRequests: 0,
       dataNumResponses: 0,
       selected: null,
-      isFetching: false
+      isFetching: false,
+      queryString: ""
     }
   },
   methods: {
@@ -108,7 +129,6 @@ export default {
           q: query
         }
       }).json()
-
 
       if (requestIndex >= this.dataNumResponses) {
         this.dataNumResponses = requestIndex + 1
@@ -135,7 +155,41 @@ export default {
         this.$router.push({ name: 'scenes' })
       }
       this.$store.commit('overlay/hideQuickFind')
+      this.data = []
       this.$store.commit('overlay/showDetails', { scene })
+    },
+    searchPrefix(prefix) {      
+      let textbox = this.$refs.autocompleteInput.$refs.input.$refs.input
+      if (textbox.selectionStart != textbox.selectionEnd) {
+        let selected = textbox.value.substring(textbox.selectionStart, textbox.selectionEnd)
+        selected=selected.replace(/_/g," ").replace(/-/g," ").trim()
+        if (selected.indexOf(' ') >= 0) {
+          selected='"' + selected + '"'
+        }
+        this.queryString = textbox.value.substring(0,textbox.selectionStart) + " " + prefix + selected + " " + textbox.value.substr(textbox.selectionEnd)
+        this.getAsyncData(this.queryString)
+        this.$refs.autocompleteInput.focus()
+      }
+    },
+    searchDatePrefix(prefix) {      
+        let today = new Date().toISOString().slice(0, 10)
+        let weekago = new Date(Date.now() - 604800000).toISOString().slice(0, 10)
+        if (this.queryString == undefined) {
+          this.queryString = prefix + '>="' + weekago + '" ' +  prefix + '<="' + today + '"'          
+        } else {
+          this.queryString = this.queryString.trim() + ' ' + prefix + '>="' + weekago + '" ' +  prefix + '<="' + today + '"'        
+        }
+        this.getAsyncData(this.queryString)
+        this.$refs.autocompleteInput.focus()
+    },
+    searchDurationPrefix(prefix) {
+      if (this.queryString == undefined) {
+        this.queryString = prefix + '>=0'
+      } else {
+        this.queryString = this.queryString.trim() + ' ' + prefix + '>=0'
+      }
+      this.getAsyncData(this.queryString)
+      this.$refs.autocompleteInput.focus()
     }
   }
 }

@@ -19,9 +19,9 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com")
-	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com")
-	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com")
+	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com")
+	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com")
+	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com")
 	ajaxCollector.CacheDir = ""
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -176,10 +176,14 @@ func VRBGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 func VRConk(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, "vrconk", "VRCONK", "https://vrconk.com/")
 }
+func BlowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, "blowvr", "BlowVR", "https://blowvr.com/")
+}
 
 func init() {
 	registerScraper("vrbangers", "VRBangers", "https://vrbangers.com/favicon/apple-touch-icon-144x144.png", VRBangers)
 	registerScraper("vrbtrans", "VRBTrans", "https://vrbtrans.com/favicon/apple-touch-icon-144x144.png", VRBTrans)
 	registerScraper("vrbgay", "VRBGay", "https://vrbgay.com/favicon/apple-touch-icon-144x144.png", VRBGay)
 	registerScraper("vrconk", "VRCONK", "https://vrconk.com/favicon/apple-touch-icon-144x144.png", VRConk)
+	registerScraper("blowvr", "BlowVR", "https://blowvr.com/favicon/apple-touch-icon-144x144.png", BlowVR)
 }

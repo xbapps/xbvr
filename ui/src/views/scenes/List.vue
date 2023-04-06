@@ -24,6 +24,7 @@
             {{$t("Hidden")}} ({{counts.hidden}})
           </b-radio-button>
         </div>
+        <span v-show="show_scene_id==='never show, just need the computed show_scene_id to trigger '">{{show_scene_id}}</span>
       </div>
       <div class="column">
         <div class="is-pulled-right">
@@ -61,6 +62,7 @@
 
 <script>
 import SceneCard from './SceneCard'
+import ky from 'ky'
 
 export default {
   name: 'List',
@@ -135,6 +137,19 @@ export default {
     },
     counts () {
       return this.$store.state.sceneList.counts
+    },
+    show_scene_id() {
+      if (this.$store.state.sceneList.show_scene_id != undefined && this.$store.state.sceneList.show_scene_id !='')
+      {
+        ky.get('/api/scene/'+this.$store.state.sceneList.show_scene_id).json().then(data => {
+          if (data.id != 0){
+            this.$store.commit('overlay/showDetails', { scene: data })
+          }          
+        })
+        this.$store.state.sceneList.show_scene_id = ''
+      }
+      
+      return this.$store.state.sceneList.show_scene_id
     }
   },
   methods: {

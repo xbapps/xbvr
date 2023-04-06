@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-test/deep"
 	"github.com/jinzhu/gorm"
+	"github.com/mozillazg/go-slugify"
 	"github.com/xbapps/xbvr/pkg/tasks"
 
 	"github.com/blevesearch/bleve/v2"
@@ -40,6 +42,7 @@ type RequestSelectScript struct {
 type RequestCustomScene struct {
 	SceneTitle string `json:"title"`
 	SceneID    string `json:"id"`
+	Filename   string `json:"filename"`
 }
 
 type RequestDeleteScene struct {
@@ -156,6 +159,7 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 		log.Info("SceneID missing from request!")
 		r.SceneID = "Custom-" + currentTime.Format("2006010215040506")
 	}
+	r.SceneID = slugify.Slugify(r.SceneID)
 
 	//Construct custom scene
 	var scene models.ScrapedScene
@@ -167,12 +171,14 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	scene.HomepageURL = "http://localhost/" + scene.SceneID
 	scene.Covers = append(scene.Covers, "http://localhost/dont_cause_errors")
 	scene.Released = currentTime.Format("2006-01-02")
+	if r.Filename != "" {
+		scene.Filenames = append(scene.Filenames, r.Filename)
+	}
 
 	log.Infof("Creating custom scene: \"%v\" \"%v\"", scene.SceneID, scene.Title)
 
 	//Create custom scene
 	models.SceneCreateUpdateFromExternal(db, scene)
-	tasks.SearchIndex()
 
 	//Return resulting scene
 	var resultingScene models.Scene
@@ -409,15 +415,19 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 }
 
 func (i SceneResource) getScene(req *restful.Request, resp *restful.Response) {
-	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
 	var scene models.Scene
 	db, _ := models.GetDB()
-	err = scene.GetIfExistByPK(uint(sceneId))
+
+	if strings.Contains(req.PathParameter("scene-id"), "-") {
+		scene.GetIfExist(req.PathParameter("scene-id"))
+	} else {
+		id, err := strconv.Atoi(req.PathParameter("scene-id"))
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		_ = scene.GetIfExistByPK(uint(id))
+	}
 	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)

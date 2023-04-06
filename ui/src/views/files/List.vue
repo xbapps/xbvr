@@ -49,6 +49,9 @@
               </div>
             </b-table-column>
             <b-table-column style="white-space: nowrap;" v-slot="props">
+              <button class="button is-success is-outlined" @click="createScene(props.row)" :title="$t('Create a custom scene for this file')" style="margin-right: 3px;">
+                <b-icon pack="fas" icon="plus-square"></b-icon>
+              </button>
               <button class="button is-danger is-outlined" @click='removeFile(props.row)' title='Delete file from disk'>
                 <b-icon pack="fas" icon="trash"></b-icon>
               </button>
@@ -127,6 +130,9 @@ export default {
             this.$store.dispatch('files/load')
       })
     },    
+    createScene (file) {
+      this.$store.commit('overlay/createCustomScene', { file: file })
+    },
     humanizeSeconds (seconds) {
       return new Date(seconds * 1000).toISOString().substr(11, 8)
     },

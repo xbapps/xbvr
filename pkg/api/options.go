@@ -45,11 +45,17 @@ type RequestSaveOptionsWeb struct {
 	SceneFavourite    bool   `json:"sceneFavourite"`
 	SceneWatched      bool   `json:"sceneWatched"`
 	SceneEdit         bool   `json:"sceneEdit"`
+	SceneDuration     bool   `json:"sceneDuration"`
 	SceneCuepoint     bool   `json:"sceneCuepoint"`
 	ShowHspFile       bool   `json:"showHspFile"`
 	ShowSubtitlesFile bool   `json:"showSubtitlesFile"`
 	SceneTrailerlist  bool   `json:"sceneTrailerlist"`
 	UpdateCheck       bool   `json:"updateCheck"`
+}
+
+type RequestSaveOptionsAdvanced struct {
+	ShowInternalSceneId bool `json:"showInternalSceneId"`
+	ShowHSPApiLink      bool `json:"showHSPApiLink"`
 }
 
 type RequestSaveOptionsDLNA struct {
@@ -152,7 +158,7 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.PUT("/sites/{site}").To(i.toggleSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
-	ws.Route(ws.PUT("/sites/subsrcibed/{site}").To(i.toggleSubscribed).
+	ws.Route(ws.PUT("/sites/subscribed/{site}").To(i.toggleSubscribed).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/scraper/force-site-update").To(i.forceSiteUpdate).
@@ -182,6 +188,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 
 	// "Web UI" section endpoints
 	ws.Route(ws.PUT("/interface/web").To(i.saveOptionsWeb).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Web Advanced UI options" section endpoints
+	ws.Route(ws.PUT("/interface/advanced").To(i.saveOptionsAdvanced).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Cache" section endpoints
@@ -245,6 +255,14 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 		db.Order("name COLLATE NOCASE asc").Find(&sites)
 	}
 
+	scrapers := models.GetScrapers()
+	for idx, site := range sites {
+		for _, scraper := range scrapers {
+			if site.ID == scraper.ID {
+				sites[idx].HasScraper = true
+			}
+		}
+	}
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
@@ -306,11 +324,26 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneFavourite = r.SceneFavourite
 	config.Config.Web.SceneWatched = r.SceneWatched
 	config.Config.Web.SceneEdit = r.SceneEdit
+	config.Config.Web.SceneDuration = r.SceneDuration
 	config.Config.Web.SceneCuepoint = r.SceneCuepoint
 	config.Config.Web.ShowHspFile = r.ShowHspFile
 	config.Config.Web.ShowSubtitlesFile = r.ShowSubtitlesFile
 	config.Config.Web.SceneTrailerlist = r.SceneTrailerlist
 	config.Config.Web.UpdateCheck = r.UpdateCheck
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsAdvanced
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Advanced.ShowInternalSceneId = r.ShowInternalSceneId
+	config.Config.Advanced.ShowHSPApiLink = r.ShowHSPApiLink
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -469,7 +502,7 @@ func (i ConfigResource) removeStorage(req *restful.Request, resp *restful.Respon
 
 func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Response) {
 	var r struct {
-		SiteName string `json:"site_name"`
+		ScraperId string `json:"scraper_id"`
 	}
 
 	if err := req.ReadEntity(&r); err != nil {
@@ -480,12 +513,12 @@ func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Resp
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	db.Model(&models.Scene{}).Where("site = ?", r.SiteName).Update("needs_update", true)
+	db.Model(&models.Scene{}).Where("scraper_id = ?", r.ScraperId).Update("needs_update", true)
 }
 
 func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Response) {
 	var r struct {
-		SiteName string `json:"site_name"`
+		ScraperId string `json:"scraper_id"`
 	}
 
 	if err := req.ReadEntity(&r); err != nil {
@@ -497,7 +530,7 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 	defer db.Close()
 
 	var scenes []models.Scene
-	db.Where("site = ?", r.SiteName).Find(&scenes)
+	db.Where("scraper_id = ?", r.ScraperId).Find(&scenes)
 
 	for _, obj := range scenes {
 		files, _ := obj.GetFiles()
@@ -507,7 +540,7 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 		}
 	}
 
-	db.Where("site = ?", r.SiteName).Delete(&models.Scene{})
+	db.Where("scraper_id = ?", r.ScraperId).Delete(&models.Scene{})
 }
 
 func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {

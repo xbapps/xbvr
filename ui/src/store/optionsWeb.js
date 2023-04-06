@@ -8,6 +8,7 @@ const state = {
     sceneFavourite: true,
     sceneWatched: false,
     sceneEdit: false,
+    sceneDuration: false,
     sceneCuepoint: true,
     showHspFile: true,
     showSubtitlesFile: true,
@@ -29,6 +30,7 @@ const actions = {
         state.web.sceneFavourite = data.config.web.sceneFavourite
         state.web.sceneWatched = data.config.web.sceneWatched
         state.web.sceneEdit = data.config.web.sceneEdit
+        state.web.sceneDuration = data.config.web.sceneDuration
         state.web.sceneCuepoint = data.config.web.sceneCuepoint
         state.web.showHspFile = data.config.web.showHspFile
         state.web.showSubtitlesFile = data.config.web.showSubtitlesFile
@@ -47,6 +49,7 @@ const actions = {
         state.web.sceneFavourite = data.sceneFavourite
         state.web.sceneWatched = data.sceneWatched
         state.web.sceneEdit = data.sceneEdit
+        state.web.sceneDuration = data.sceneDuration
         state.web.sceneCuepoint = data.sceneCuepoint
         state.web.showHspFile = data.showHspFile
         state.web.showSubtitlesFile = data.showSubtitlesFile        

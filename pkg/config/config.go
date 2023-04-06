@@ -33,12 +33,17 @@ type ObjectConfig struct {
 		SceneFavourite    bool   `default:"true" json:"sceneFavourite"`
 		SceneWatched      bool   `default:"false" json:"sceneWatched"`
 		SceneEdit         bool   `default:"false" json:"sceneEdit"`
+		SceneDuration     bool   `default:"false" json:"sceneDuration"`
 		SceneCuepoint     bool   `default:"true" json:"sceneCuepoint"`
 		ShowHspFile       bool   `default:"true" json:"showHspFile"`
 		ShowSubtitlesFile bool   `default:"true" json:"showSubtitlesFile"`
 		SceneTrailerlist  bool   `default:"true" json:"sceneTrailerlist"`
 		UpdateCheck       bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
+	Advanced struct {
+		ShowInternalSceneId bool `default:"false" json:"showInternalSceneId"`
+		ShowHSPApiLink      bool `default:"false" json:"showHSPApiLink"`
+	} `json:"advanced"`
 	Vendor struct {
 		TPDB struct {
 			ApiToken string `default:"" json:"apiToken"`
