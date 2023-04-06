@@ -255,6 +255,14 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 		db.Order("name COLLATE NOCASE asc").Find(&sites)
 	}
 
+	scrapers := models.GetScrapers()
+	for idx, site := range sites {
+		for _, scraper := range scrapers {
+			if site.ID == scraper.ID {
+				sites[idx].HasScraper = true
+			}
+		}
+	}
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
