@@ -75,7 +75,7 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		})
 
 		// Tags
-		e.ForEach(`a.btn--default`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`a.btn[href^="/tags/"]`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, e.Text)
 		})
 
