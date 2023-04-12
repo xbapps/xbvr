@@ -246,24 +246,7 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
 	defer db.Close()
-
-	var sites []models.Site
-	switch db.Dialect().GetName() {
-	case "mysql":
-		db.Order("name asc").Find(&sites)
-	case "sqlite3":
-		db.Order("name COLLATE NOCASE asc").Find(&sites)
-	}
-
-	scrapers := models.GetScrapers()
-	for idx, site := range sites {
-		for _, scraper := range scrapers {
-			if site.ID == scraper.ID {
-				sites[idx].HasScraper = true
-			}
-		}
-	}
-	resp.WriteHeaderAndEntity(http.StatusOK, sites)
+	i.listSitesWithDB(req, resp, db)
 }
 
 func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {
@@ -294,9 +277,14 @@ func (i ConfigResource) toggleSiteField(req *restful.Request, resp *restful.Resp
 	case "Subscribed":
 		site.Subscribed = !site.Subscribed
 		log.Infof("Toggling %s %v", id, site.Subscribed)
+		db.Model(&models.Scene{}).Where("scraper_id = ?", site.ID).Update("is_subscribed", site.Subscribed)
 	}
 	site.Save()
 
+	i.listSitesWithDB(req, resp, db)
+}
+
+func (i ConfigResource) listSitesWithDB(req *restful.Request, resp *restful.Response, db *gorm.DB) {
 	var sites []models.Site
 	switch db.Dialect().GetName() {
 	case "mysql":
@@ -305,8 +293,13 @@ func (i ConfigResource) toggleSiteField(req *restful.Request, resp *restful.Resp
 		db.Order("name COLLATE NOCASE asc").Find(&sites)
 	}
 
-	if field == "Subscribed" {
-		db.Model(&models.Scene{}).Where("scraper_id = ?", site.ID).Update("is_subscribed", site.Subscribed)
+	scrapers := models.GetScrapers()
+	for idx, site := range sites {
+		for _, scraper := range scrapers {
+			if site.ID == scraper.ID {
+				sites[idx].HasScraper = true
+			}
+		}
 	}
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
