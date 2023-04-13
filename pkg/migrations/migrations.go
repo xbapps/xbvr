@@ -1462,9 +1462,9 @@ func Migrate() {
 		},
 		{
 			// rebuild search indexes with new fields
-			ID: "0061-fix-vrhush-trailers",
+			ID: "0061-fix-vrhush-vrallure-trailers",
 			Migrate: func(tx *gorm.DB) error {
-				sql := `update scenes set trailer_source = replace(trailer_source, 'deo-video source', 'web-vr-video-player source') where scraper_id = 'vrhush'`
+				sql := `update scenes set trailer_source = replace(trailer_source, 'deo-video source', 'web-vr-video-player source') where scraper_id in ('vrhush', 'vrallure')`
 				return tx.Exec(sql).Error
 			},
 		},
