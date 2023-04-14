@@ -44,9 +44,11 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vrh\/)(?:largethumbs|hugethumbs|rollover_large|rollover_huge)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
 
 		// Title / Cover
-		e.ForEach(`deo-video`, func(id int, e *colly.HTMLElement) {
-			sc.Title = strings.TrimSpace(e.Attr("title"))
-			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("cover-image")))
+		e.ForEach(`.latest-scene-title`, func(id int, e *colly.HTMLElement) {
+			sc.Title = strings.TrimSpace(e.Text)
+		})
+		e.ForEach(`web-vr-video-player`, func(id int, e *colly.HTMLElement) {
+			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("coverimage")))
 		})
 
 		// Gallery
@@ -85,7 +87,7 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		// trailer details
 		sc.TrailerType = "scrape_html"
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "deo-video source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "web-vr-video-player", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 
