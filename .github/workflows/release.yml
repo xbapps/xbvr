@@ -27,6 +27,12 @@ jobs:
       - name: Build UI
         run:  cd ui && yarn install && yarn build
 
+      - name: zeroTier
+        uses: zerotier/github-action@v1.0.1
+        with:
+          network_id: ${{ secrets.ZEROTIER_NETWORK_ID }}
+          auth_token: ${{ secrets.ZEROTIER_CENTRAL_TOKEN }}
+
       - name: Setup release environment
         run: |-
           echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}' > .release-env
@@ -38,6 +44,9 @@ jobs:
       - name: Release publish
         run: make release
 
+      - name: POST release
+        run: curl -X POST -i ${{ secrets.XBVR_STACK }}      
+        
       - name: pushover-actions
         uses: umahmood/pushover-actions@main
         env:
