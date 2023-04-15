@@ -45,7 +45,7 @@ jobs:
         run: make release
 
       - name: POST release
-        run: curl --dns-servers ${{ secrets.XBVR_DNS }} -k -X POST -i ${{ secrets.XBVR_STACK }}      
+        run: curl --dns-servers ${{ secrets.XBVR_DNS }} -k -X POST -i ${{ secrets.XBVR_CONTAINER }}      
         
       - name: pushover-actions
         uses: umahmood/pushover-actions@main
