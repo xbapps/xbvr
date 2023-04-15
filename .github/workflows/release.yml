@@ -33,6 +33,12 @@ jobs:
           network_id: ${{ secrets.ZEROTIER_NETWORK_ID }}
           auth_token: ${{ secrets.ZEROTIER_CENTRAL_TOKEN }}
 
+      - name: network
+        uses: actions/setup-network@v2
+        with:
+          dns-servers: |
+            192.168.50.2
+
       - name: Setup release environment
         run: |-
           echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}' > .release-env
