@@ -131,6 +131,7 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				}
 
 				sc.Filenames = filenames
+				sc.Filenames = append(sc.Filenames, baseName+".funscript")
 			}
 		})
 
