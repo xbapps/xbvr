@@ -51,9 +51,11 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		})
 
 		// Title / Cover
-		e.ForEach(`deo-video`, func(id int, e *colly.HTMLElement) {
-			sc.Title = strings.TrimSpace(e.Attr("title"))
-			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("cover-image")))
+		e.ForEach(`.latest-scene-title`, func(id int, e *colly.HTMLElement) {
+			sc.Title = strings.TrimSpace(e.Text)
+		})
+		e.ForEach(`web-vr-video-player`, func(id int, e *colly.HTMLElement) {
+			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("coverimage")))
 		})
 
 		// Gallery
@@ -91,7 +93,7 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 		// trailer details
 		sc.TrailerType = "scrape_html"
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "deo-video source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "web-vr-video-player source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 
