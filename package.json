@@ -56,7 +56,7 @@
     "vue-cli-plugin-i18n": "2.3.2",
     "vue-i18n-extract": "2.0.7",
     "vue-template-compiler": "2.7.14",
-    "webpack": "5.78.0"
+    "webpack": "5.79.0"
   },
   "eslintConfig": {
     "root": true,
