@@ -5,10 +5,13 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
@@ -134,6 +137,13 @@ type RequestCuepointsResponse struct {
 	Positions []string `json:"positions"`
 	Actions   []string `json:"actions"`
 }
+type RequestSCustomSiteCreate struct {
+	Url     string `json:"scraperUrl"`
+	Name    string `json:"scraperName"`
+	Avatar  string `json:"scraperAvatar"`
+	Company string `json:"scraperCompany"`
+}
+
 type ConfigResource struct{}
 
 func (i ConfigResource) WebService() *restful.WebService {
@@ -216,6 +226,11 @@ func (i ConfigResource) WebService() *restful.WebService {
 	// "Cuepoints section endpoints"
 	ws.Route(ws.GET("/cuepoints").To(i.getDefaultCuepoints).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Cuepoints section endpoints"
+	ws.Route(ws.PUT("/custom-sites/create").To(i.createCustomSite).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	return ws
 }
 
@@ -753,4 +768,77 @@ func (i ConfigResource) getDefaultCuepoints(req *restful.Request, resp *restful.
 	var cp RequestCuepointsResponse
 	json.Unmarshal([]byte(kv.Value), &cp)
 	resp.WriteHeaderAndEntity(http.StatusOK, &cp)
+}
+func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var r RequestSCustomSiteCreate
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	if r.Url == "" || r.Name == "" {
+		return
+	}
+	r.Url = strings.TrimSpace(r.Url)
+	r.Name = strings.TrimSpace(r.Name)
+	r.Company = strings.TrimSpace(r.Company)
+	r.Avatar = strings.TrimSpace(r.Avatar)
+	if r.Company == "" {
+		r.Company = r.Name
+	}
+
+	var scraperConfig config.ScraperList
+	scraperConfig.Load()
+
+	re := regexp.MustCompile(`^(https?://)?(www\.)?([^./]+)\.`)
+	match := re.FindStringSubmatch(r.Url)
+	if len(match) < 3 {
+		return
+	}
+
+	r.Url = strings.TrimSuffix(r.Url, "/")
+
+	scrapers := make(map[string][]config.ScraperConfig)
+	scrapers["povr"] = scraperConfig.CustomScrapers.PovrScrapers
+	scrapers["slr"] = scraperConfig.CustomScrapers.SlrScrapers
+	scrapers["vrphub"] = scraperConfig.CustomScrapers.VrphubScrapers
+	scrapers["vrporn"] = scraperConfig.CustomScrapers.VrpornScrapers
+
+	exists := false
+	for key, group := range scrapers {
+		for idx, site := range group {
+			if site.URL == r.Url {
+				exists = true
+				scrapers[key][idx].Name = r.Name
+				scrapers[key][idx].Company = r.Company
+				scrapers[key][idx].AvatarUrl = r.Avatar
+			}
+		}
+	}
+
+	if !exists {
+		scraper := config.ScraperConfig{URL: r.Url, Name: r.Name, Company: r.Company, AvatarUrl: r.Avatar}
+		switch match[3] {
+		case "povr":
+			scrapers["povr"] = append(scrapers["povrr"], scraper)
+		case "sexlikereal":
+			scrapers["slr"] = append(scrapers["slr"], scraper)
+		case "vrphub":
+			scrapers["vrphub"] = append(scrapers["vrphub"], scraper)
+		case "vrporn":
+			scrapers["vrporn"] = append(scrapers["vrporn"], scraper)
+		}
+	}
+	scraperConfig.CustomScrapers.PovrScrapers = scrapers["povr"]
+	scraperConfig.CustomScrapers.SlrScrapers = scrapers["slr"]
+	scraperConfig.CustomScrapers.VrphubScrapers = scrapers["vrphub"]
+	scraperConfig.CustomScrapers.VrpornScrapers = scrapers["vrporn"]
+	fName := filepath.Join(common.AppDir, "scrapers.json")
+	list, _ := json.MarshalIndent(scraperConfig, "", "  ")
+	ioutil.WriteFile(fName, list, 0644)
+
+	resp.WriteHeader(http.StatusOK)
 }
