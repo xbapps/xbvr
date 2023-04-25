@@ -1,7 +1,9 @@
 package scrape
 
 import (
+	"fmt"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -62,10 +64,19 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		sc.Filenames = append(sc.Filenames, base+"gearvr-180_180x180_3dh_LR.mp4")
 		sc.Filenames = append(sc.Filenames, base+"smartphone-180_180x180_3dh_LR.mp4")
 
-		// Cover URLs
+		// Cover URLs, and gallery for MilfVR & WankzVR
 		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				sc.Covers = append(sc.Covers, strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0])
+				thumbSizes := map[string]int{"MilfVR": 1280, "WankzVR": 1024}
+				if thumbSize, found := thumbSizes[siteID]; found {
+					re := regexp.MustCompile(`/[^/]*/[^/]*$`)
+					galleryBaseUrl := re.ReplaceAllString(sc.Covers[0], "/thumbs")
+					sc.Gallery = make([]string, 6)
+					for i := 0; i < 6; i++ {
+						sc.Gallery[i] = fmt.Sprintf("%s/%d_%d.jpg", galleryBaseUrl, thumbSize, i+1)
+					}
+				}
 			}
 		})
 
