@@ -47,7 +47,7 @@
             <b-field :label="$t('Avatar Url')" label-position="on-border">
               <b-input v-model="scraperAvatar" :placeholder="$t('Optional')"></b-input>
             </b-field>  
-            <b-tooltip :label="$t('Restart XBR to load new Sties')" :delay="500" type="is-warning">
+            <b-tooltip :label="$t('Restart XBR to load new Sites')" :delay="500" type="is-warning">
               <b-field>
                 <b-button type="is-primary" :disabled="!scraperFieldsValid" @click="saveScraper">Save</b-button>
               </b-field>
