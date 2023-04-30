@@ -17,7 +17,7 @@
     "@mdi/font": "7.2.96",
     "buefy": "0.9.23",
     "bulma-extensions": "6.2.7",
-    "date-fns": "2.29.3",
+    "date-fns": "2.30.0",
     "ky": "0.30.0",
     "pretty-bytes": "6.1.0",
     "videojs-hotkeys": "0.2.28",
