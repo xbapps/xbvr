@@ -7653,10 +7653,10 @@ vue-eslint-parser@^9.0.1:
     lodash "^4.17.21"
     semver "^7.3.6"
 
-vue-gallery@2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/vue-gallery/-/vue-gallery-2.0.2.tgz#fedf2ae234a8ce68069aacc66d058cd2d9b4482d"
-  integrity sha512-NHPSQUWjdZE3Wl2EVwtHtXXZ9TzKcNO8uAHhjwWF1mPO9IXE6plPEhc6PIVFc3IPIv/1/1stIOT7JVPI7LPCwQ==
+vue-gallery@2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/vue-gallery/-/vue-gallery-2.0.3.tgz#e55f8ce1fef93ce4e2b9da1478173e5cece51159"
+  integrity sha512-hUk/BPLNEjog3zHnylKun/DzkpwjdT3wiYB1kyXzSqOf3MrPpzGjyWhv6bi9NxuiA7TDHJF+w/TP+5SJmv5BwQ==
   dependencies:
     blueimp-gallery "^2.33.0"
     opencollective-postinstall "^2.0.2"
