@@ -9,7 +9,7 @@ require (
 	github.com/anacrolix/ffprobe v1.0.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/avast/retry-go/v4 v4.3.4
-	github.com/blevesearch/bleve/v2 v2.3.7
+	github.com/blevesearch/bleve/v2 v2.3.8
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
 	github.com/creasty/defaults v1.7.0
 	github.com/darwayne/go-timecode v1.1.0
@@ -85,7 +85,7 @@ require (
 	github.com/blevesearch/zapx/v12 v12.3.7 // indirect
 	github.com/blevesearch/zapx/v13 v13.3.7 // indirect
 	github.com/blevesearch/zapx/v14 v14.3.7 // indirect
-	github.com/blevesearch/zapx/v15 v15.3.9 // indirect
+	github.com/blevesearch/zapx/v15 v15.3.10 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/fcjr/aia-transport-go v1.2.2
