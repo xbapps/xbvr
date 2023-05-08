@@ -1468,6 +1468,13 @@ func Migrate() {
 				return tx.Exec(sql).Error
 			},
 		},
+		{
+			ID: "0062-fix-vrhush-trailers",
+			Migrate: func(tx *gorm.DB) error {
+				sql := `update scenes set trailer_source = replace(trailer_source, '"html_element":"web-vr-video-player"', '"html_element":"web-vr-video-player source"') where scene_id like 'vrhush%' and trailer_source like '%"html_element":"web-vr-video-player"%'`
+				return tx.Exec(sql).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
