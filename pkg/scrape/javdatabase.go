@@ -25,7 +25,7 @@ func ScrapeJavDB(out *[]models.ScrapedScene, queryString string) {
 
 		// Cast
 		html.ForEach("h2.subhead", func(id int, h2 *colly.HTMLElement) {
-			if h2.Text == "Featured Idols" {
+			if strings.HasSuffix(h2.Text, "Actress/Idols") {
 				dom := h2.DOM
 				parent := dom.Parent()
 				if parent != nil {
