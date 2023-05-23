@@ -46,6 +46,7 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			base = strings.Split(base, "background-image: url(")[1]
 			base = strings.Split(base, ");")[0]
 			base = strings.Split(base, "?")[0]
+			base = strings.Replace(base, "videoDetail2x", "videoDetail", 1)
 			sc.Covers = append(sc.Covers, base)
 		})
 
