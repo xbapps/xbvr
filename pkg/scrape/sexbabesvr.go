@@ -3,8 +3,10 @@ package scrape
 import (
 	"encoding/json"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -33,6 +35,7 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
 			sc.SiteID = e.Attr("data-scene")
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+			sc.Covers = append(sc.Covers, e.Attr("poster"))
 		})
 
 		// Title
@@ -40,19 +43,9 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			sc.Title = strings.TrimSpace(e.Text)
 		})
 
-		// Cover URLs
-		e.ForEach(`dl8-embed-container`, func(id int, e *colly.HTMLElement) {
-			base := e.Attr("style")
-			base = strings.Split(base, "background-image: url(")[1]
-			base = strings.Split(base, ");")[0]
-			base = strings.Split(base, "?")[0]
-			base = strings.Replace(base, "videoDetail2x", "videoDetail", 1)
-			sc.Covers = append(sc.Covers, base)
-		})
-
 		// Gallery
-		e.ForEach(`figure[itemprop=associatedMedia] > a`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
+		e.ForEach(`.gallery-slider img`, func(id int, e *colly.HTMLElement) {
+			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("src")))
 		})
 
 		// Synopsis
@@ -80,10 +73,22 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Date
+		e.ForEach(`div.video-detail__description--container div`, func(id int, e *colly.HTMLElement) {
+			// no good selector, loop through divs for a pattern match
+			var re = regexp.MustCompile(`(?m)^\d{2}\/\d{2}\/\d{4}$`)
+			match := re.FindAllString(e.Text, -1)
+			if len(match) > 0 {
+				tmpDate, err := time.Parse("01/02/2006", e.Text)
+				if err == nil {
+					sc.Released = tmpDate.Format("2006-01-02")
+				}
+			}
+		})
 
 		// Duration
 
 		// Filenames
+		// old site,  needs update
 		e.ForEach(`div.modal a.vd-row`, func(id int, e *colly.HTMLElement) {
 			origURL, _ := url.Parse(e.Attr("href"))
 			base := origURL.Query().Get("response-content-disposition")
@@ -122,5 +127,5 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 }
 
 func init() {
-	registerScraper("sexbabesvr", "SexBabesVR", "https://sexbabesvr.com/s/images/favicons/apple-touch-icon.png", SexBabesVR)
+	registerScraper("sexbabesvr", "SexBabesVR", "https://sexbabesvr.com/assets/front/assets/logo.png", SexBabesVR)
 }
