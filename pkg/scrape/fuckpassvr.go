@@ -60,12 +60,17 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		re := regexp.MustCompile(`<(.|\n)*?>`) // strip_tags
 		sc.Synopsis = re.ReplaceAllString(desc, "")
 
-		scenedata.Get("porn_star_lead.#.name").ForEach(func(_, name gjson.Result) bool {
-			sc.Cast = append(sc.Cast, name.String())
+		sc.ActorDetails = make(map[string]models.ActorDetails)
+		scenedata.Get("porn_star_lead").ForEach(func(_, star gjson.Result) bool {
+			name := star.Get("name").String()
+			sc.Cast = append(sc.Cast, name)
+			sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: "https://www.fuckpassvr.com/api/api/seo?porn_star_slug=" + star.Get("slug").String()}
 			return true
 		})
-		scenedata.Get("porn_star.#.name").ForEach(func(_, name gjson.Result) bool {
-			sc.Cast = append(sc.Cast, name.String())
+		scenedata.Get("porn_star").ForEach(func(_, star gjson.Result) bool {
+			name := star.Get("name").String()
+			sc.Cast = append(sc.Cast, name)
+			sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: "https://www.fuckpassvr.com/api/api/seo?porn_star_slug=" + star.Get("slug").String()}
 			return true
 		})
 

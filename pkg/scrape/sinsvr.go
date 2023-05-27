@@ -62,6 +62,7 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.TrailerSrc = string(strParams)
 
 		//Cast and Released
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`.video-detail__specs div.cell`, func(id int, e *colly.HTMLElement) {
 			c := strings.TrimSpace(e.Text)
 			// Cast
@@ -69,6 +70,10 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 				e.ForEach(`.cell a`, func(id int, e *colly.HTMLElement) {
 					cast := strings.Split(e.Text, ",")
 					sc.Cast = append(sc.Cast, cast...)
+					if len(cast) > 1 {
+						sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+					}
+					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 				})
 			} else {
 				// Released - Date Oct 19, 2019

@@ -28,9 +28,9 @@
               <b-icon pack="mdi" icon="subtitles" size="is-small"/>
               <span v-if="subtitlesFilesCount > 1">{{subtitlesFilesCount}}</span>
             </b-tag>
-            <b-tag type="is-info" v-if="item.cuepoints.length > 0 && this.$store.state.optionsWeb.web.sceneCuepoint">
+            <b-tag type="is-info" v-if="item.cuepoints != null && item.cuepoints.length > 0 && this.$store.state.optionsWeb.web.sceneCuepoint">
               <b-icon pack="mdi" icon="skip-next-outline" size="is-small"/>
-              <span v-if="item.cuepoints.length > 1">{{item.cuepoints.length}}</span>
+              <span v-if="item.cuepoints != null && item.cuepoints.length > 1">{{item.cuepoints.length}}</span>
             </b-tag>
             <b-tag type="is-warning" v-if="item.star_rating > 0">
               <b-icon pack="mdi" icon="star" size="is-small"/>
@@ -74,10 +74,11 @@ import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import TrailerlistButton from '../../components/TrailerlistButton'
 import HiddenButton from '../../components/HiddenButton'
+import ky from 'ky'
 
 export default {
   name: 'SceneCard',
-  props: { item: Object },
+  props: { item: Object, reRead: Boolean },
   components: { WatchlistButton, FavouriteButton, WatchedButton, EditButton, TrailerlistButton, HiddenButton },
   data () {
     return {
@@ -87,7 +88,8 @@ export default {
     }
   },
   computed: {
-    videoFilesCount () {
+    videoFilesCount () {      
+      if (this.item.file == null) { return 0 }      
       let count = 0
       this.item.file.forEach(obj => {
         if (obj.type === 'video') {
@@ -98,6 +100,7 @@ export default {
     },
     scriptFilesCount () {
       let count = 0
+      if (this.item.file == null) { return 0 }
       this.item.file.forEach(obj => {
         if (obj.type === 'script') {
           count = count + 1
@@ -107,6 +110,7 @@ export default {
     },
     hspFilesCount () {
       let count = 0
+      if (this.item.file == null) { return 0 }
       this.item.file.forEach(obj => {
         if (obj.type === 'hsp') {
           count = count + 1
@@ -115,6 +119,7 @@ export default {
       return count
     },
     subtitlesFilesCount () {
+      if (this.item.file == null) { return 0 }
       let count = 0
       this.item.file.forEach(obj => {
         if (obj.type === 'subtitles') {
@@ -133,7 +138,19 @@ export default {
       }
     },
     showDetails (scene) {
-      this.$store.commit('overlay/showDetails', { scene: scene })
+      // reRead is required when the SceneCard is clicked from the ActorDetails
+      // the Scenes associated Tables such as Tags, Cast arwon't be Preloaded and 
+      // will cause errors when the Details Overlay loads
+      if (this.reRead) {
+        ky.get('/api/scene/'+scene.id).json().then(data => {
+          if (data.id != 0){
+            this.$store.commit('overlay/showDetails', { scene: data })
+          }          
+        })
+      } else {
+        this.$store.commit('overlay/showDetails', { scene: scene })
+      }
+      this.$store.commit('overlay/hideActorDetails')
     }
   }
 }

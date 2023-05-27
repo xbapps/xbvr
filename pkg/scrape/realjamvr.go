@@ -72,8 +72,10 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		sc.TrailerSrc = string(strParams)
 
 		// Cast
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`div.scene-view a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 		})
 
 		// Released

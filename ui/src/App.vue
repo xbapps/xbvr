@@ -11,6 +11,8 @@
 
     <Details v-if="showOverlay"/>
     <EditScene v-if="showEdit" />
+    <ActorDetails v-if="showActorDetails"/>
+    <EditActor v-if="showActorEdit" />
 
     <QuickFind/>
 
@@ -26,16 +28,24 @@ import Socket from './Socket.vue'
 import QuickFind from './QuickFind'
 import Details from './views/scenes/Details'
 import EditScene from './views/scenes/EditScene'
+import ActorDetails from './views/actors/ActorDetails'
+import EditActor from './views/actors/EditActor'
 
 export default {
-  components: { Navbar, Socket, QuickFind, GlobalEvents, Details, EditScene },
+  components: { Navbar, Socket, QuickFind, GlobalEvents, Details, EditScene, ActorDetails, EditActor },
   computed: {
     showOverlay () {
       return this.$store.state.overlay.details.show
     },
     showEdit () {
       return this.$store.state.overlay.edit.show
-    }
+    },
+    showActorDetails() {
+      return this.$store.state.overlay.actordetails.show
+    },
+    showActorEdit() {
+      return this.$store.state.overlay.actoredit.show
+    },
   }
 }
 </script>

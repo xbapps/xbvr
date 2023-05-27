@@ -6,8 +6,13 @@
             <b-tab-item label="Import" icon="upload"/>
             <b-tab-item label="Export" icon="download"/>
         </b-tabs>
-      <h4>{{ isImport ? "Import Scene Data" : "Export Scene Data"}}</h4>
-      <b-field grouped>
+      <b-tabs v-model="activeSubTab" size="medium" type="is-boxed" style="margin-left: 0px" id="importexporttab">
+            <b-tab-item label="Scene Data"/>
+            <b-tab-item label="Actor Data"/>
+            <b-tab-item label="Settings/Misc Data"/>
+        </b-tabs>
+      <h4 v-if="activeSubTab==0">{{ isImport ? "Import Scene Data" : "Export Scene Data"}}</h4>
+      <b-field grouped v-if="activeSubTab == 0">
           <b-tooltip
             label="Select which studios are considered"
             size="is-large" type="is-primary is-light" multilined :delay="1000" >
@@ -23,14 +28,14 @@
             </b-radio>
           </b-tooltip>
       </b-field>
-      <b-field>
+      <b-field v-if="activeSubTab == 0">
           <b-tooltip
             :label="$t('You should exclude Studios from your Custom list (scrapers.json) if sharing data with others')"
             size="is-large" type="is-danger is-light" multilined :delay="100" >
             <b-switch v-model="onlyIncludeOfficalSites">{{$t("Only include offical studios")}}</b-switch>
           </b-tooltip>
       </b-field>
-      <b-field v-if="isExport">
+      <b-field v-if="isExport && activeSubTab == 0">
           <b-tooltip
             label="Only includes scenes matching the Saved Search criteria."
             size="is-large" type="is-primary is-light" multilined :delay="1000">
@@ -44,7 +49,7 @@
             </b-field>
           </b-tooltip>
         </b-field>
-      <div class="block" style="margin-top:20px">
+      <div class="block" style="margin-top:20px" v-if="activeSubTab == 0">
         <b-field>
           <b-tooltip
             label="Include the main scene data, eg title, site, cast, tags, filenames, images, favorites, star ratings, etc"
@@ -80,10 +85,18 @@
             <b-switch v-model="includeFileLinks"><p>Include Matched Files</p></b-switch>
           </b-tooltip>
         </b-field>
+        <b-button type="is-info is-small" style="margin-bottom: 1em;"  @click="toggleSceneIncludes()">Toggle Includes</b-button>
       </div>
       <hr />
-      <h4>{{ isImport ? "Import Settings" : "Export Settings"}}</h4>
-      <div class="block">
+      <div v-if="activeSubTab==1">
+        <h4>{{ isImport ? "Import Actor Data" : "Export Actor Data"}}</h4>
+        <b-field>
+          <b-tooltip
+            label="Includes Actors (note new actors are not created, New/Existing will apply to the fields on an existing actor record.)"
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
+            <b-switch v-model="includeActors">Include Actors</b-switch>
+          </b-tooltip>
+        </b-field>
         <b-field>
           <b-tooltip
             label="Includes your Actor Aka Groups"
@@ -91,6 +104,24 @@
             <b-switch v-model="includeActorAkas">Include Actor Aka Groups</b-switch>
           </b-tooltip>
         </b-field>
+        <b-field>
+          <b-tooltip
+            label="Includes your Actor Edits"
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
+            <b-switch v-model="inclActorActions">Include Actor Edits</b-switch>
+          </b-tooltip>
+        </b-field>
+        <b-field>
+          <b-tooltip
+            label="Includes your External References"
+            size="is-large" type="is-primary is-light" multilined :delay="1000" >
+            <b-switch v-model="includeExternalReferences">Include External References</b-switch>
+          </b-tooltip>
+        </b-field>
+        <b-button type="is-info is-small" style="margin-bottom: 1em;"  @click="toggleActorIncludes()">Toggle Includes</b-button>
+      </div>
+      <h4 v-if="activeSubTab==2">{{ isImport ? "Import Settings" : "Export Settings"}}</h4>
+      <div class="block" v-if="activeSubTab == 2">
         <b-field>
           <b-tooltip
             label="Includes your Tag Groups"
@@ -119,6 +150,7 @@
             <b-switch v-model="includeSites">Include Scraper Settings</b-switch>
           </b-tooltip>
         </b-field>
+        <b-button type="is-info is-small" style="margin-bottom: 1em;"  @click="toggleSettingsIncludes()">Toggle Includes</b-button>
       </div>
       <hr />
       <b-field v-if="isImport">
@@ -175,7 +207,10 @@ export default {
       includeVolumes: true,
       includeSites: true,
       includeActorAkas: true,
+      includeExternalReferences: true,
       includeTagGroups: true,
+      includeActors: true,
+      inclActorActions: true,
       overwrite: true,
       allSites: "true",
       onlyIncludeOfficalSites: false,
@@ -183,7 +218,8 @@ export default {
       myUrl: '/download/xbvr-content-bundle.json',
       file: null,
       uploadData: '',
-      activeTab: 0
+      activeTab: 0,
+      activeSubTab: 0
     }
   },
   computed: {
@@ -216,18 +252,37 @@ export default {
         // put up a starting msg, as large files can cause it to appear to hang
         this.$store.state.messages.lastScrapeMessage = 'Starting restore'
         ky.post('/api/task/bundle/restore', {
-          json: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclSites: this.includeSites, overwrite: this.overwrite, uploadData: this.uploadData }
+          json: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, overwrite: this.overwrite, uploadData: this.uploadData }
         })
         this.file = null
       }
     },
-    backupContent () {
-      ky.get('/api/task/bundle/backup', { timeout: false, searchParams: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclSites: this.includeSites, playlistId: this.currentPlaylist, download: true } }).json().then(data => {
+    backupContent () {      
+      ky.get('/api/task/bundle/backup', { timeout: false, searchParams: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, playlistId: this.currentPlaylist, download: true } }).json().then(data => {      
         const link = document.createElement('a')
         link.href = this.myUrl
         link.click()
       })
-    }
+    },
+    toggleSceneIncludes () {
+      this.includeScenes = !this.includeScenes
+      this.includeCuepoints  = !this.includeCuepoints
+      this.includeHistory = !this.includeHistory
+      this.includeActions=!this.includeActions
+      this.includeFileLinks=!this.includeFileLinks
+    },
+    toggleActorIncludes () {
+      this.includeActors = !this.includeActors
+      this.includeActorAkas = !this.includeActorAkas
+      this.inclActorActions = !this.inclActorActions
+      this.includeExternalReferences = !this.includeExternalReferences
+    },
+    toggleSettingsIncludes () {
+      this.includeTagGroups = !this.includeTagGroups
+      this.includePlaylists = !this.includePlaylists
+      this.includeVolumes=!this.includeVolumes
+      this.includeSites=!this.includeSites
+    },
   }
 }
 

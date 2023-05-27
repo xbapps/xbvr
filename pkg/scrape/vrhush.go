@@ -71,9 +71,11 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		})
 
 		// Cast
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		var tmpCast []string
 		e.ForEach(`h5.latest-scene-subtitle a`, func(id int, e *colly.HTMLElement) {
 			tmpCast = append(tmpCast, e.Attr("href"))
+			sc.ActorDetails[e.Text] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Attr("href")}
 		})
 
 		// Date

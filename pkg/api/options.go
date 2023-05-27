@@ -57,8 +57,11 @@ type RequestSaveOptionsWeb struct {
 }
 
 type RequestSaveOptionsAdvanced struct {
-	ShowInternalSceneId bool `json:"showInternalSceneId"`
-	ShowHSPApiLink      bool `json:"showHSPApiLink"`
+	ShowInternalSceneId   bool   `json:"showInternalSceneId"`
+	ShowHSPApiLink        bool   `json:"showHSPApiLink"`
+	StashApiKey           string `json:"stashApiKey"`
+	ScrapeActorAfterScene bool   `json:"scrapeActorAfterScene"`
+	UseImperialEntry      bool   `json:"useImperialEntry"`
 }
 
 type RequestSaveOptionsDLNA struct {
@@ -131,6 +134,22 @@ type RequestSaveOptionsTaskSchedule struct {
 	PreviewHourStart     int  `json:"previewHourStart"`
 	PreviewHourEnd       int  `json:"previewHourEnd"`
 	PreviewStartDelay    int  `json:"previewStartDelay"`
+
+	ActorRescrapeEnabled      bool `json:"actorRescrapeEnabled"`
+	ActorRescrapeHourInterval int  `json:"actorRescrapeHourInterval"`
+	ActorRescrapeUseRange     bool `json:"actorRescrapeUseRange"`
+	ActorRescrapeMinuteStart  int  `json:"actorRescrapeMinuteStart"`
+	ActorRescrapeHourStart    int  `json:"actorRescrapeHourStart"`
+	ActorRescrapeHourEnd      int  `json:"actorRescrapeHourEnd"`
+	ActorRescrapeStartDelay   int  `json:"actorRescrapeStartDelay"`
+
+	StashdbRescrapeEnabled      bool `json:"stashdbRescrapeEnabled"`
+	StashdbRescrapeHourInterval int  `json:"stashdbRescrapeHourInterval"`
+	StashdbRescrapeUseRange     bool `json:"stashdbRescrapeUseRange"`
+	StashdbRescrapeMinuteStart  int  `json:"stashdbRescrapeMinuteStart"`
+	StashdbRescrapeHourStart    int  `json:"stashdbRescrapeHourStart"`
+	StashdbRescrapeHourEnd      int  `json:"stashdbRescrapeHourEnd"`
+	StashdbRescrapeStartDelay   int  `json:"stashdbRescrapeStartDelay"`
 }
 
 type RequestCuepointsResponse struct {
@@ -352,6 +371,9 @@ func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.
 
 	config.Config.Advanced.ShowInternalSceneId = r.ShowInternalSceneId
 	config.Config.Advanced.ShowHSPApiLink = r.ShowHSPApiLink
+	config.Config.Advanced.StashApiKey = r.StashApiKey
+	config.Config.Advanced.ScrapeActorAfterScene = r.ScrapeActorAfterScene
+	config.Config.Advanced.UseImperialEntry = r.UseImperialEntry
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -750,6 +772,22 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.Config.Cron.PreviewSchedule.HourStart = r.PreviewHourStart
 	config.Config.Cron.PreviewSchedule.HourEnd = r.PreviewHourEnd
 	config.Config.Cron.PreviewSchedule.RunAtStartDelay = r.PreviewStartDelay
+
+	config.Config.Cron.ActorRescrapeSchedule.Enabled = r.ActorRescrapeEnabled
+	config.Config.Cron.ActorRescrapeSchedule.HourInterval = r.ActorRescrapeHourInterval
+	config.Config.Cron.ActorRescrapeSchedule.UseRange = r.ActorRescrapeUseRange
+	config.Config.Cron.ActorRescrapeSchedule.MinuteStart = r.ActorRescrapeMinuteStart
+	config.Config.Cron.ActorRescrapeSchedule.HourStart = r.ActorRescrapeHourStart
+	config.Config.Cron.ActorRescrapeSchedule.HourEnd = r.ActorRescrapeHourEnd
+	config.Config.Cron.ActorRescrapeSchedule.RunAtStartDelay = r.ActorRescrapeStartDelay
+
+	config.Config.Cron.StashdbRescrapeSchedule.Enabled = r.StashdbRescrapeEnabled
+	config.Config.Cron.StashdbRescrapeSchedule.HourInterval = r.StashdbRescrapeHourInterval
+	config.Config.Cron.StashdbRescrapeSchedule.UseRange = r.StashdbRescrapeUseRange
+	config.Config.Cron.StashdbRescrapeSchedule.MinuteStart = r.StashdbRescrapeMinuteStart
+	config.Config.Cron.StashdbRescrapeSchedule.HourStart = r.StashdbRescrapeHourStart
+	config.Config.Cron.StashdbRescrapeSchedule.HourEnd = r.StashdbRescrapeHourEnd
+	config.Config.Cron.StashdbRescrapeSchedule.RunAtStartDelay = r.StashdbRescrapeStartDelay
 
 	config.SaveConfig()
 

@@ -17,6 +17,7 @@ type Playlist struct {
 	IsSystem     bool   `json:"is_system" xbvrbackup:"is_system"`
 	IsDeoEnabled bool   `json:"is_deo_enabled" xbvrbackup:"is_deo_enabled"`
 	IsSmart      bool   `json:"is_smart" xbvrbackup:"is_smart"`
+	PlaylistType string `json:"playlist_type" xbvrbackup:"playlist_type"`
 	SearchParams string `json:"search_params" sql:"type:text;" xbvrbackup:"search_params"`
 }
 

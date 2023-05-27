@@ -52,6 +52,7 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 
 		// there are some weird categories like cup size or eye color, which don't make much sense without context
 		ignoreTags := []string{"brown", "hazel", "blue", "black", "grey", "auburn", "categories", "green"}
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`div.video-info`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 
@@ -60,6 +61,19 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 					if strings.TrimSpace(e.Text) != "" {
 						sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 					}
+				})
+
+				// Link to Cast page
+				e.ForEach(`span[itemprop=actor]`, func(id int, e *colly.HTMLElement) {
+					url := ""
+					name := ""
+					e.ForEach(`span[itemprop=name]`, func(id int, e *colly.HTMLElement) {
+						name = strings.TrimSpace(e.Text)
+					})
+					e.ForEach(`span[itemprop=actor] a[itemprop=url]`, func(id int, e *colly.HTMLElement) {
+						url = e.Attr("href")
+					})
+					sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: url}
 				})
 
 				// Tags

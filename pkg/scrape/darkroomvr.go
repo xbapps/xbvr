@@ -48,9 +48,11 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Cast
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`div.video-detail__desktop-sidebar div.video-info__text a`, func(id int, e *colly.HTMLElement) {
 			if strings.TrimSpace(e.Text) != "" {
 				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+				sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Attr("href")}
 			}
 		})
 

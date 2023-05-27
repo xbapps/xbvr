@@ -95,8 +95,10 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		sc.TrailerSrc = "https://www.povr.com/heresphere/" + sc.SiteID
 
 		// Cast
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`a.btn[href^="/pornstars/"]`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: "povr scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 		})
 
 		out <- sc

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
+	"github.com/xbapps/xbvr/pkg/api"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/session"
 	"github.com/xbapps/xbvr/pkg/tasks"
@@ -14,6 +15,8 @@ var cronInstance *cron.Cron
 var rescrapTask cron.EntryID
 var rescanTask cron.EntryID
 var previewTask cron.EntryID
+var actorScrapeTask cron.EntryID
+var stashdbScrapeTask cron.EntryID
 
 func SetupCron() {
 	cronInstance = cron.New()
@@ -32,6 +35,14 @@ func SetupCron() {
 		ps := formatCronSchedule(config.CronSchedule(config.Config.Cron.PreviewSchedule))
 		previewTask, _ = cronInstance.AddFunc(ps, generatePreviewCron)
 	}
+	if config.Config.Cron.ActorRescrapeSchedule.Enabled {
+		log.Println(fmt.Sprintf("Setup Actor Rescrape Task %v", formatCronSchedule(config.CronSchedule(config.Config.Cron.ActorRescrapeSchedule))))
+		actorScrapeTask, _ = cronInstance.AddFunc(formatCronSchedule(config.CronSchedule(config.Config.Cron.ActorRescrapeSchedule)), actorRescrapeCron)
+	}
+	if config.Config.Cron.StashdbRescrapeSchedule.Enabled {
+		log.Println(fmt.Sprintf("Setup Stashdb Rescrape Task %v", formatCronSchedule(config.CronSchedule(config.Config.Cron.StashdbRescrapeSchedule))))
+		stashdbScrapeTask, _ = cronInstance.AddFunc(formatCronSchedule(config.CronSchedule(config.Config.Cron.StashdbRescrapeSchedule)), stashdbRescrapeCron)
+	}
 	cronInstance.Start()
 
 	go tasks.CalculateCacheSizes()
@@ -45,10 +56,18 @@ func SetupCron() {
 	if config.Config.Cron.PreviewSchedule.RunAtStartDelay > 0 {
 		time.AfterFunc(time.Duration(config.Config.Cron.PreviewSchedule.RunAtStartDelay)*time.Minute, generatePreviewCron)
 	}
+	if config.Config.Cron.ActorRescrapeSchedule.RunAtStartDelay > 0 {
+		time.AfterFunc(time.Duration(config.Config.Cron.ActorRescrapeSchedule.RunAtStartDelay)*time.Minute, actorRescrapeCron)
+	}
+	if config.Config.Cron.StashdbRescrapeSchedule.RunAtStartDelay > 0 {
+		time.AfterFunc(time.Duration(config.Config.Cron.StashdbRescrapeSchedule.RunAtStartDelay)*time.Minute, stashdbRescrapeCron)
+	}
 
 	log.Println(fmt.Sprintf("Next Rescrape Task at %v", cronInstance.Entry(rescrapTask).Next))
 	log.Println(fmt.Sprintf("Next Rescan Task at %v", cronInstance.Entry(rescanTask).Next))
 	log.Println(fmt.Sprintf("Next Preview Generation Task at %v", cronInstance.Entry(previewTask).Next))
+	log.Println(fmt.Sprintf("Next Actor Rescripe Task at %v", cronInstance.Entry(actorScrapeTask).Next))
+	log.Println(fmt.Sprintf("Next Stashdb Rescrape Task at %v", cronInstance.Entry(stashdbScrapeTask).Next))
 }
 
 func scrapeCron() {
@@ -63,6 +82,18 @@ func rescanCron() {
 		tasks.RescanVolumes(-1)
 	}
 	log.Println(fmt.Sprintf("Next Rescan Task at %v", cronInstance.Entry(rescanTask).Next))
+}
+func actorRescrapeCron() {
+	if !session.HasActiveSession() {
+		tasks.ScrapeActors()
+	}
+	log.Println(fmt.Sprintf("Next Rescrape Task at %v", cronInstance.Entry(rescrapTask).Next))
+}
+func stashdbRescrapeCron() {
+	if !session.HasActiveSession() {
+		api.StashdbRunAll()
+	}
+	log.Println(fmt.Sprintf("Next Stashdb Rescrape Task at %v", cronInstance.Entry(rescrapTask).Next))
 }
 
 var previewGenerateInProgress = false

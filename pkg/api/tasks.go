@@ -131,10 +131,13 @@ func (i TaskResource) backupBundle(req *restful.Request, resp *restful.Response)
 	inclVolumes, _ := strconv.ParseBool(req.QueryParameter("inclVolumes"))
 	inclSites, _ := strconv.ParseBool(req.QueryParameter("inclSites"))
 	inclActions, _ := strconv.ParseBool(req.QueryParameter("inclActions"))
+	inclExtRefs, _ := strconv.ParseBool(req.QueryParameter("inclExtRefs"))
+	inclActors, _ := strconv.ParseBool(req.QueryParameter("inclActors"))
+	inclActorActions, _ := strconv.ParseBool(req.QueryParameter("inclActorActions"))
 	playlistId := req.QueryParameter("playlistId")
 	download := req.QueryParameter("download")
 
-	bundle := tasks.BackupBundle(inclAllSites, onlyIncludeOfficalSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclActorAkas, inclTagGroups, inclVolumes, inclSites, inclActions, playlistId, "", "")
+	bundle := tasks.BackupBundle(inclAllSites, onlyIncludeOfficalSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclActorAkas, inclTagGroups, inclVolumes, inclSites, inclActions, inclExtRefs, inclActors, inclActorActions, playlistId, "", "")
 	if download == "true" {
 		resp.WriteHeaderAndEntity(http.StatusOK, ResponseBackupBundle{Response: "Ready to Download from http://xxx.xxx.xxx.xxx:9999/download/xbvr-content-bundle.json"})
 	} else {
