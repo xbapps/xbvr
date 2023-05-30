@@ -274,7 +274,6 @@ export default {
       index: 1,
       activeTab: 0,
       activeMedia: 0,
-      tagAct: '',
       carouselSlide: 0,
       sortMultiple: true,
       countries: [],
@@ -286,24 +285,21 @@ export default {
   computed: {
     actor () {      
       const actor = this.$store.state.overlay.actordetails.actor
-      if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
-        actor.tags.sort((a, b) => a.name < b.name ? -1 : 1)
-      }
-        ky.get(`/api/actor/akas/${actor.id}`)
-        .json()
-        .then(list => {          
-          this.akas = list
-        })
-        ky.get(`/api/actor/colleagues/${actor.id}`)
-        .json()
-        .then(list => {          
-          this.colleagues = list
-        })
-        ky.get(`/api/actor/extrefs/${actor.id}`)
-        .json()
-        .then(list => {          
-          this.extrefs = list          
-        })
+      ky.get(`/api/actor/akas/${actor.id}`)
+      .json()
+      .then(list => {          
+        this.akas = list
+      })
+      ky.get(`/api/actor/colleagues/${actor.id}`)
+      .json()
+      .then(list => {          
+        this.colleagues = list
+      })
+      ky.get(`/api/actor/extrefs/${actor.id}`)
+      .json()
+      .then(list => {          
+        this.extrefs = list          
+      })
       return actor
     },
     // Properties for gallery
