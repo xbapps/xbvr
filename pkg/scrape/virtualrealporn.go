@@ -74,7 +74,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		}
 
 		// Duration / Release date / Synopsis
-		e.ForEach(`script[type='application/ld+json'][class!='yoast-schema-graph']`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div script[type='application/ld+json']`, func(id int, e *colly.HTMLElement) {
 			var jsonResult map[string]interface{}
 			json.Unmarshal([]byte(e.Text), &jsonResult)
 
