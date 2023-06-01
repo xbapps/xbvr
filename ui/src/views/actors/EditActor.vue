@@ -149,7 +149,7 @@ export default {
     } catch {
       actor.piercingArray = []
     }
-    actor.measurements = actor.band_size + actor.cup_size + '-' + actor.waist_size + '-' + actor.hip_size
+    actor.measurements = Math.round(actor.band_size / 2.54) + actor.cup_size + '-' + Math.round(actor.waist_size / 2.54) + '-' + Math.round(actor.hip_size / 2.54)
     this.convertCountryCodeToName()
     let urls;
     try {

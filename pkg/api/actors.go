@@ -389,6 +389,10 @@ func (i ActorResource) editActor(req *restful.Request, resp *restful.Response) {
 		r.WaistSize, _ = strconv.Atoi(match[4])
 		r.HipSize, _ = strconv.Atoi(match[5])
 	}
+	r.BandSize = r.BandSize * 254 / 100
+	r.WaistSize = r.WaistSize * 254 / 100
+	r.HipSize = r.HipSize * 254 / 100
+
 	checkIntFieldChanged("band_size", &r.BandSize, &actor.BandSize, actor.ID)
 	checkStringFieldChanged("cup_size", &r.CupSize, &actor.CupSize, actor.ID)
 	checkIntFieldChanged("waist_size", &r.WaistSize, &actor.WaistSize, actor.ID)
