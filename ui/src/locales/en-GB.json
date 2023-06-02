@@ -125,5 +125,14 @@
   "Search Fields": "Search Fields",
   "Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros": "Defaults date range to the last week. Note:must match yyyy-mm-dd, include leading zeros",
   "Scraper does not exist": "Scraper does not exist",
+  "Restart XBR to load new Sties": "Restart XBR to load new Sties",
+  "Scraper Url": "Scraper Url",
+  "Name": "Name",
+  "Company": "Company",
+  "Avatar Url": "Avatar Url",
+  "Enter the Url to Studio Scene List": "Enter the Url to Studio Scene List",
+  "Enter Studio Name": "Enter Studio Name",
+  "Optional: defaults to Name": "Optional: defaults to Name",
+  "Optional": "Optional",
   "Go": "Go"
 }

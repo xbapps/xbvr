@@ -8,7 +8,7 @@ require (
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/ffprobe v1.0.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
-	github.com/avast/retry-go/v4 v4.3.3
+	github.com/avast/retry-go/v4 v4.3.4
 	github.com/blevesearch/bleve/v2 v2.3.7
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
 	github.com/creasty/defaults v1.7.0
@@ -20,7 +20,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.10.2
 	github.com/gammazero/nexus/v3 v3.2.0
 	github.com/getlantern/systray v1.2.1
-	github.com/go-openapi/spec v0.20.8
+	github.com/go-openapi/spec v0.20.9
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/go-test/deep v1.1.0
 	github.com/gocolly/colly/v2 v2.1.0
@@ -47,17 +47,17 @@ require (
 	github.com/putdotio/go-putio v1.7.0
 	github.com/robertkrimen/otto v0.2.1
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/rs/cors v1.8.3
+	github.com/rs/cors v1.9.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/thoas/go-funk v0.9.3
 	github.com/tidwall/gjson v1.14.4
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	github.com/xo/dburl v0.13.1
+	github.com/xo/dburl v0.14.2
 	golang.org/x/crypto v0.8.0
 	golang.org/x/net v0.9.0
 	golang.org/x/oauth2 v0.7.0
-	golang.org/x/sys v0.7.0
+	golang.org/x/sys v0.8.0
 	golang.org/x/text v0.9.0
 	gopkg.in/gormigrate.v1 v1.6.0
 	willnorris.com/go/imageproxy v0.11.3-0.20230217221409-3815eb832be7

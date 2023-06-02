@@ -87,7 +87,7 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 		// trailer details
 		sc.TrailerType = "scrape_html"
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "web-vr-video-player", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "web-vr-video-player source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 

@@ -124,7 +124,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 			sc.Tags = append(sc.Tags, "Gay")
 		}
 
-		// setup  trailers
+		// setup trailers
 		if scraperID != "vrconk" {
 			sc.TrailerType = "load_json"
 			params := models.TrailerScrape{SceneUrl: "https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id, RecordPath: "data.item.videoPlayerSources.trailer", ContentPath: "src", QualityPath: "quality"}
@@ -133,7 +133,7 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		}
 
 		// Cast
-		e.ForEach(`a.single-video-info__starring-link`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.single-video-info__content a[href^="/model/"]`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(strings.Replace(e.Text, ",", "", -1)))
 		})
 
