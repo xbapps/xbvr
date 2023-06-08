@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/url"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -13,6 +15,9 @@ import (
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
+
+var currentYear int
+var lastMonth int
 
 func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
 	defer wg.Done()
@@ -73,17 +78,7 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Date
-		e.ForEach(`div.video-detail__description--container div`, func(id int, e *colly.HTMLElement) {
-			// no good selector, loop through divs for a pattern match
-			var re = regexp.MustCompile(`(?m)^\d{2}\/\d{2}\/\d{4}$`)
-			match := re.FindAllString(e.Text, -1)
-			if len(match) > 0 {
-				tmpDate, err := time.Parse("01/02/2006", e.Text)
-				if err == nil {
-					sc.Released = tmpDate.Format("2006-01-02")
-				}
-			}
-		})
+		sc.Released = e.Request.Ctx.Get("released")
 
 		// Duration
 
@@ -108,16 +103,54 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`a.video-container__description--title`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	type video struct {
+		url      string
+		released string
+	}
+	videoList := make(map[int]video)
 
-		// If scene exist in database, there's no need to scrape
-		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
-		}
+	siteCollector.OnHTML(`div.videos__content`, func(e *colly.HTMLElement) {
+		e.ForEach(`a.video-container__description--information`, func(cnt int, e *colly.HTMLElement) {
+			sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+			var re = regexp.MustCompile(`(?m)(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}`)
+			match := re.FindAllString(e.Text, -1)
+
+			if len(match) > 0 {
+				// If scene exist in database, there's no need to scrape
+				page, _ := strconv.Atoi(strings.ReplaceAll(e.Request.URL.String(), "https://sexbabesvr.com/videos/", ""))
+				videoList[page*1000+cnt] = video{url: sceneURL, released: match[0]}
+			}
+		})
 	})
 
+	currentYear = time.Now().Year()
+	lastMonth = int(time.Now().Month())
+
 	siteCollector.Visit("https://sexbabesvr.com/videos")
+
+	// Sort the videoList as page visits may not return in the same speed and be out of order
+	var sortedVideos []int
+	for key := range videoList {
+		sortedVideos = append(sortedVideos, key)
+	}
+	sort.Ints(sortedVideos)
+
+	for _, seq := range sortedVideos {
+		ctx := colly.NewContext()
+		tmpDate, _ := time.Parse("Jan 02", videoList[seq].released)
+		if tmpDate.Month() == 12 && lastMonth == 1 {
+			currentYear -= 1
+		} else if tmpDate.Month() == 1 && lastMonth == 12 {
+			currentYear += 1
+		}
+		tmpDate = tmpDate.AddDate(currentYear-tmpDate.Year(), 0, 0)
+		lastMonth = int(tmpDate.Month())
+		ctx.Put("released", tmpDate.Format("2006-01-02"))
+
+		if !funk.ContainsString(knownScenes, videoList[seq].url) {
+			sceneCollector.Request("GET", videoList[seq].url, nil, ctx, nil)
+		}
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
