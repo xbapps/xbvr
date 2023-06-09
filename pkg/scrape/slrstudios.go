@@ -103,94 +103,94 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.TrailerType = "slr"
 		sc.TrailerSrc = "https://api.sexlikereal.com/virtualreality/video/id/" + sc.SiteID
 
-		// Extract from JSON meta data
-		// NOTE: SLR only provides certain information like duration as json metadata inside a script element
-		// The page code also changes often and is difficult to traverse, best to get as much as possible from metadata
-		e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
-			JsonMetadata := strings.TrimSpace(e.Text)
+		isTransScene := e.Request.Ctx.GetAny("isTransScene").(bool)
 
-			// skip non video Metadata
-			if gjson.Get(JsonMetadata, "@type").String() == "VideoObject" {
+		// straight and trans videos use a different page structure
+		if !isTransScene {
+			// Extract from JSON meta data
+			// NOTE: SLR only provides certain information like duration as json metadata inside a script element
+			// The page code also changes often and is difficult to traverse, best to get as much as possible from metadata
+			e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
+				JsonMetadata := strings.TrimSpace(e.Text)
 
-				// Title
-				if gjson.Get(JsonMetadata, "name").Exists() {
-					sc.Title = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "name").String()))
-				}
+				// skip non video Metadata
+				if gjson.Get(JsonMetadata, "@type").String() == "VideoObject" {
 
-				// Date
-				if gjson.Get(JsonMetadata, "datePublished").Exists() {
-					sc.Released = gjson.Get(JsonMetadata, "datePublished").String()
-				}
+					// Title
+					if gjson.Get(JsonMetadata, "name").Exists() {
+						sc.Title = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "name").String()))
+					}
 
-				// Cast
-				actornames := gjson.Get(JsonMetadata, "actor.#.name")
-				for _, name := range actornames.Array() {
-					sc.Cast = append(sc.Cast, strings.TrimSpace(html.UnescapeString(name.String())))
-				}
+					// Date
+					if gjson.Get(JsonMetadata, "datePublished").Exists() {
+						sc.Released = gjson.Get(JsonMetadata, "datePublished").String()
+					}
 
-				// Duration
-				// NOTE: We should already have the duration from the scene list, but if we don't (happens for at least
-				// one scene where SLR fails to include it), we try to get it from here
-				// We don't always get it from here, because SLR fails to include hours (1h55m30s shows up as T55M30S)
-				// ...but this is ready for the format of T01H55M30S should SLR fix that
-				if sc.Duration == 0 {
-					duration := 0
-					if gjson.Get(JsonMetadata, "duration").Exists() {
-						tmpParts := durationRegExForScenePage.FindStringSubmatch(gjson.Get(JsonMetadata, "duration").String())
-						if len(tmpParts[1]) > 0 {
-							if h, err := strconv.Atoi(tmpParts[1]); err == nil {
-								hrs := h
+					// Cast
+					actornames := gjson.Get(JsonMetadata, "actor.#.name")
+					for _, name := range actornames.Array() {
+						sc.Cast = append(sc.Cast, strings.TrimSpace(html.UnescapeString(name.String())))
+					}
+
+					// Duration
+					// NOTE: We should already have the duration from the scene list, but if we don't (happens for at least
+					// one scene where SLR fails to include it), we try to get it from here
+					// We don't always get it from here, because SLR fails to include hours (1h55m30s shows up as T55M30S)
+					// ...but this is ready for the format of T01H55M30S should SLR fix that
+					if sc.Duration == 0 {
+						duration := 0
+						if gjson.Get(JsonMetadata, "duration").Exists() {
+							tmpParts := durationRegExForScenePage.FindStringSubmatch(gjson.Get(JsonMetadata, "duration").String())
+							if len(tmpParts[1]) > 0 {
+								if h, err := strconv.Atoi(tmpParts[1]); err == nil {
+									hrs := h
+									if m, err := strconv.Atoi(tmpParts[2]); err == nil {
+										mins := m
+										duration = (hrs * 60) + mins
+									}
+								}
+							} else {
 								if m, err := strconv.Atoi(tmpParts[2]); err == nil {
-									mins := m
-									duration = (hrs * 60) + mins
+									duration = m
 								}
 							}
-						} else {
-							if m, err := strconv.Atoi(tmpParts[2]); err == nil {
-								duration = m
-							}
+							sc.Duration = duration
 						}
-						sc.Duration = duration
 					}
+
+					// Filenames
+					appendFilenames(&sc, siteID, filenameRegEx, videotype, FB360)
 				}
 
-				// Filenames
-				// Only shown for logged in users so need to generate them
-				// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
-				resolutions := []string{"_6400p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
-				baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
-				switch videotype {
-				case "360°": // Sadly can't determine if TB or MONO so have to add both
-					for i := range resolutions {
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MONO_360.mp4")
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_TB_360.mp4")
-					}
-				case "Fisheye": // 200° videos named with MKX200
-					for i := range resolutions {
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220.mp4")
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_RF52.mp4")
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_FISHEYE190.mp4")
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220.mp4")
-					}
-				default: // Assuming everything else is 180 and LR, yet to find a TB_180
-					for i := range resolutions {
-						sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_LR_180.mp4")
-					}
-				}
-				if FB360 != "" {
-					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_LR_180"+FB360)
-					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX200"+FB360)
-					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX220"+FB360)
-					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_RF52"+FB360)
-					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"FISHEYE190"+FB360)
-					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_VRCA220"+FB360)
-					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MONO_360"+FB360)
-					sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_TB_360"+FB360)
-				}
-			}
+			})
+		} else { // isTransScene
+			e.ForEach("script[type=\"text/javascript\"]", func(id int, e *colly.HTMLElement) {
+				var re = regexp.MustCompile("videoData:\\s*(.*}),")
+				r := re.FindStringSubmatch(e.Text)
+				if len(r) > 0 {
+					JsonMetadata := strings.TrimSpace(r[1])
 
-		})
+					// Title
+					sc.Title = gjson.Get(JsonMetadata, "title").String()
+
+					// Duration - Not Available
+
+					// Filenames
+					// trans videos don't appear to follow video type naming conventions
+					appendFilenames(&sc, siteID, filenameRegEx, "", "")
+				}
+			})
+
+			// Date
+			e.ForEach("time[data-qa=\"page-scene-studio-date\"]", func(id int, e *colly.HTMLElement) {
+				sc.Released = e.Attr("datetime")
+			})
+
+			// Cast
+			e.ForEach("a[data-qa=\"scene-model-list-item-name\"]", func(id int, e *colly.HTMLElement) {
+				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			})
+		}
 
 		out <- sc
 	})
@@ -202,7 +202,11 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 	siteCollector.OnHTML(`div.c-grid--scenes article`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a[data-qa=scenes-grid-item-link-title]", "href"))
-		if strings.Contains(sceneURL, "scene") {
+
+		isStraightScene := strings.Contains(sceneURL, "/scene")
+		isTransScene := strings.Contains(sceneURL, "/trans")
+
+		if isStraightScene || isTransScene {
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {
 				durationText := e.ChildText("div.c-grid-ratio-bottom.u-z--two")
@@ -215,6 +219,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				}
 				ctx := colly.NewContext()
 				ctx.Put("duration", duration)
+				ctx.Put("isTransScene", isTransScene)
 				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 			}
 		}
@@ -227,6 +232,42 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	}
 	logScrapeFinished(scraperID, siteID)
 	return nil
+}
+
+func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *regexp.Regexp, videotype string, FB360 string) {
+	// Only shown for logged in users so need to generate them
+	// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
+	resolutions := []string{"_6400p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
+	baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
+	switch videotype {
+	case "360°": // Sadly can't determine if TB or MONO so have to add both
+		for i := range resolutions {
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MONO_360.mp4")
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_TB_360.mp4")
+		}
+	case "Fisheye": // 200° videos named with MKX200
+		for i := range resolutions {
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220.mp4")
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_RF52.mp4")
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_FISHEYE190.mp4")
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220.mp4")
+		}
+	default: // Assuming everything else is 180 and LR, yet to find a TB_180
+		for i := range resolutions {
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_LR_180.mp4")
+		}
+	}
+	if FB360 != "" {
+		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_LR_180"+FB360)
+		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX200"+FB360)
+		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX220"+FB360)
+		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_RF52"+FB360)
+		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"FISHEYE190"+FB360)
+		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_VRCA220"+FB360)
+		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MONO_360"+FB360)
+		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_TB_360"+FB360)
+	}
 }
 
 func addSLRScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string) {
