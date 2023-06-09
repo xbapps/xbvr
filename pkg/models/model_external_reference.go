@@ -731,6 +731,19 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `p.bio_about_text`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `img.performer-pic`, ResultType: "attr", Attribute: "data-src", PostProcessing: []PostProcessing{{Function: "AbsoluteUrl"}}})
 	scrapeRules.GenericActorScrapingConfig["naughtyamericavr scrape"] = siteDetails
+
+	siteDetails = GenericScraperRuleSet{}
+	siteDetails.Domain = "sexbabesvr.com"
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `img.cover-picture`, ResultType: "attr", Attribute: "src"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "nationality", Selector: `h3:contains("Country") + span`, PostProcessing: []PostProcessing{{Function: "Lookup Country"}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "weight", Selector: `h3:contains("Weight / Height") + span`, PostProcessing: []PostProcessing{
+		{Function: "RegexString", Params: []string{`^(\d{2,3}) ?\/`, "1"}}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "height", Selector: `h3:contains("Weight / Height") + span`, PostProcessing: []PostProcessing{
+		{Function: "RegexString", Params: []string{`\/ ?(\d{2,3})$`, "1"}}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `div.model-detail__box`, ResultType: "html", PostProcessing: []PostProcessing{
+		{Function: "RegexString", Params: []string{`<\/div>\s*([^<]+)$`, "1"}}, // get everything after the last div
+		{Function: "UnescapeString"}}})
+	scrapeRules.GenericActorScrapingConfig["sexbabesvr scrape"] = siteDetails
 }
 
 // Loads custom rules from actor_scrapers_examples.json

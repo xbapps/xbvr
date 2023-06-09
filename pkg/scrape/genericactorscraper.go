@@ -529,6 +529,8 @@ func postProcessing(rule models.GenericActorScraperRule, value string, htmlEleme
 			value = getSubRuleResult(postprocessing.SubRule, htmlElement)
 		case "DOMNext":
 			value = strings.TrimSpace(htmlElement.DOM.Next().Text())
+		case "UnescapeString":
+			value = html.UnescapeString(value)
 		}
 	}
 	return value
