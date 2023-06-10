@@ -50,6 +50,15 @@ func ScrapeJavBus(out *[]models.ScrapedScene, queryString string) {
 				if match != nil && len(match) > 1 {
 					sc.Released = match[1]
 				}
+
+			} else if label == `Length:` {
+				// Duration
+				durationStr := p.Text
+				durationRegex := regexp.MustCompile("(\\d+)")
+				match := durationRegex.FindStringSubmatch(durationStr)
+				if match != nil {
+					sc.Duration = match[1]
+				}
 			}
 		})
 
