@@ -497,6 +497,26 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	for _, name := range ext.Cast {
 		tmpActor = Actor{}
 		db.Where(&Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&tmpActor)
+		saveActor := false
+		if ext.ActorDetails[name].ImageUrl != "" {
+			if tmpActor.ImageUrl == "" {
+				tmpActor.ImageUrl = ext.ActorDetails[name].ImageUrl
+				saveActor = true
+			}
+			if tmpActor.AddToImageArray(ext.ActorDetails[name].ImageUrl) {
+				saveActor = true
+			}
+			//AddActionActor(name, ext.ActorDetails[name].Source, "add", "image_url", ext.ActorDetails[name].ImageUrl)
+		}
+		if ext.ActorDetails[name].ProfileUrl != "" {
+			if tmpActor.AddToActorUrlArray(ActorLink{Url: ext.ActorDetails[name].ProfileUrl, Type: ext.ActorDetails[name].Source}) {
+				saveActor = true
+			}
+			//AddActionActor(name, ext.ActorDetails[name].Source, "add", "image_url", ext.ActorDetails[name].ImageUrl)
+		}
+		if saveActor {
+			tmpActor.Save()
+		}
 		db.Model(&o).Association("Cast").Append(tmpActor)
 	}
 
@@ -604,6 +624,7 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		scenecastAlias := "scene_cast_f" + strconv.Itoa(idx)
 		actorsAlias := "actors_f" + strconv.Itoa(idx)
 		scenecuepointAlias := "scene_cuepoints_f" + strconv.Itoa(idx)
+		erlAlias := "external_reference_links_f" + strconv.Itoa(idx)
 
 		if strings.HasPrefix(fieldName, "!") { // ! prefix indicate NOT filtering
 			truefalse = false
@@ -858,6 +879,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			} else {
 				where = "favourite = 0"
 			}
+		case "Stashdb Linked":
+			if truefalse {
+				where = "(select count(*) from external_reference_links " + erlAlias + " where " + erlAlias + ".internal_db_id = scenes.id and " + erlAlias + ".`external_source` = 'stashdb scene') > 0"
+			} else {
+				where = "(select count(*) from external_reference_links " + erlAlias + " where " + erlAlias + ".internal_db_id = scenes.id and " + erlAlias + ".`external_source` = 'stashdb scene') = 0"
+			}
 		case "POVR Scraper":
 			if truefalse {
 				where = `scenes.scene_id like "povr-%"`
@@ -1048,6 +1075,20 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("release_date desc")
 	case "release_asc":
 		tx = tx.Order("release_date asc")
+	case "title_desc":
+		switch db.Dialect().GetName() {
+		case "mysql":
+			tx = tx.Order("title desc")
+		case "sqlite3":
+			tx = tx.Order("title COLLATE NOCASE desc")
+		}
+	case "title_asc":
+		switch db.Dialect().GetName() {
+		case "mysql":
+			tx = tx.Order("title asc")
+		case "sqlite3":
+			tx = tx.Order("title COLLATE NOCASE asc")
+		}
 	case "total_file_size_desc":
 		tx = tx.Order("total_file_size desc")
 	case "total_file_size_asc":

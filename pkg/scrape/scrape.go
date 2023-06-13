@@ -159,3 +159,6 @@ func getTextFromHTMLWithSelector(data string, sel string) string {
 	}
 	return strings.TrimSpace(doc.Find(sel).Text())
 }
+func CreateCollector(domains ...string) *colly.Collector {
+	return createCollector(domains...)
+}

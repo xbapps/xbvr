@@ -192,6 +192,16 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			})
 		}
 
+		// actor details
+		sc.ActorDetails = make(map[string]models.ActorDetails)
+		e.ForEach(`a[data-qa="scene-model-list-item-photo-link-to-profile"]`, func(id int, e_a *colly.HTMLElement) {
+			e_a.ForEach(`img[data-qa="scene-model-list-item-photo-img"]`, func(id int, e_img *colly.HTMLElement) {
+				name := e_img.Attr("alt")
+				if e_img.Attr("data-src") != "" && name != "" {
+					sc.ActorDetails[name] = models.ActorDetails{ImageUrl: e_img.Attr("data-src"), Source: "slr scrape", ProfileUrl: e_a.Request.AbsoluteURL(e_a.Attr("href"))}
+				}
+			})
+		})
 		out <- sc
 	})
 

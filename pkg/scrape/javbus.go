@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
@@ -49,6 +50,15 @@ func ScrapeJavBus(out *[]models.ScrapedScene, queryString string) {
 				match := dateRegex.FindStringSubmatch(dateStr)
 				if match != nil && len(match) > 1 {
 					sc.Released = match[1]
+				}
+
+			} else if label == `Length:` {
+				// Duration
+				durationStr := p.Text
+				durationRegex := regexp.MustCompile("(\\d+)")
+				match := durationRegex.FindStringSubmatch(durationStr)
+				if match != nil && len(match) > 1 {
+					sc.Duration, _ = strconv.Atoi(match[1])
 				}
 			}
 		})

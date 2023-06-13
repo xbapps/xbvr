@@ -61,14 +61,6 @@ export default {
     this.$store.dispatch('sceneList/load', { offset: 0 })
     next()
   },
-  computed: {
-    showOverlay () {
-      return this.$store.state.overlay.details.show
-    },
-    showEdit () {
-      return this.$store.state.overlay.edit.show
-    }
-  }
 }
 </script>
 

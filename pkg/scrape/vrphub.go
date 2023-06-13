@@ -79,8 +79,10 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.TrailerSrc = string(strParams)
 
 		// Cast
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`div.td-post-header header.td-post-title span.td-post-date2 a.ftlink`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, e.Text)
+			sc.ActorDetails[e.Text] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Attr("href")}
 		})
 
 		// Gallery

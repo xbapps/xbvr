@@ -126,3 +126,12 @@ p - next file
 left arrow - next page of search results  
 right arrow - previous  page of search results  
 esc - closes matching pane  
+* Actor List  
+o or left arrow - previous page of actors  
+p or right arrow - next page of actors  
+* Actor Details  
+o - previous actor  
+p - next actor  
+left arrow - cycles backwards in gallery  
+right arrow - cycles forward in gallery  
+esc - closes details pane    

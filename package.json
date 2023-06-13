@@ -24,7 +24,7 @@
     "videojs-vr": "1.8.0",
     "vue": "2.7.14",
     "vue-debounce": "4.0.0",
-    "vue-gallery": "2.0.3",
+    "vue-gallery": "2.0.4",
     "vue-global-events": "1.2.1",
     "vue-i18n": "8.28.2",
     "vue-load-image": "0.2.0",
@@ -39,7 +39,7 @@
     "@vue/cli-plugin-eslint": "5.0.8",
     "@vue/cli-service": "5.0.8",
     "@vue/eslint-config-standard": "8.0.1",
-    "@babel/eslint-parser": "7.21.3",
+    "@babel/eslint-parser": "7.22.5",
     "buffer": "6.0.3",
     "concurrently": "7.6.0",
     "eslint": "8.40.0",
@@ -47,7 +47,7 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-promise": "6.1.1",
     "eslint-plugin-standard": "4.1.0",
-    "eslint-plugin-vue": "9.11.0",
+    "eslint-plugin-vue": "9.14.1",
     "less": "4.1.3",
     "less-loader": "11.1.0",
     "sass": "1.62.1",
@@ -56,7 +56,7 @@
     "vue-cli-plugin-i18n": "2.3.2",
     "vue-i18n-extract": "2.0.7",
     "vue-template-compiler": "2.7.14",
-    "webpack": "5.81.0"
+    "webpack": "5.86.0"
   },
   "eslintConfig": {
     "root": true,

@@ -67,6 +67,22 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		e.ForEach(`div.vidpage-featuring span`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
+		sc.ActorDetails = make(map[string]models.ActorDetails)
+		e.ForEach(`div.vidpage-mobilePad`, func(id int, e *colly.HTMLElement) {
+			ad := models.ActorDetails{Source: sc.ScraperID + " scrape"}
+			e.ForEach(`a`, func(id int, e *colly.HTMLElement) {
+				ad.ProfileUrl = e.Response.Request.AbsoluteURL(e.Attr("href"))
+			})
+			e.ForEach(`img.img-responsive`, func(id int, e *colly.HTMLElement) {
+				if !strings.HasSuffix(e.Attr("src"), "/missing.jpg") {
+					ad.ImageUrl = e.Response.Request.AbsoluteURL(e.Attr("src"))
+				}
+			})
+			e.ForEach(`strong`, func(id int, e *colly.HTMLElement) {
+				sc.ActorDetails[strings.TrimSpace(e.Text)] = ad
+			})
+
+		})
 
 		// Tags
 		e.ForEach(`div.videopage-tags em`, func(id int, e *colly.HTMLElement) {

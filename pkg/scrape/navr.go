@@ -150,6 +150,14 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 				sc.Cast = strings.Split(html.UnescapeString(outs), ",")
 			}
 		})
+		sc.ActorDetails = make(map[string]models.ActorDetails)
+		e.ForEach(`a.scene-title`, func(id int, e *colly.HTMLElement) {
+			for _, actor := range sc.Cast {
+				if strings.EqualFold(actor, e.Text) {
+					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: strings.SplitN(e.Request.AbsoluteURL(e.Attr("href")), "?", 2)[0]}
+				}
+			}
+		})
 
 		out <- sc
 	})

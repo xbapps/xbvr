@@ -58,6 +58,9 @@
             <b-dropdown-item aria-role="listitem" @click="deleteScenes(props.row.name, props.row.id)">
               {{$t('Delete scraped scenes')}}
             </b-dropdown-item>
+            <b-dropdown-item aria-role="listitem" @click="scrapeActors(props.row.name, props.row.id)">
+              {{$t('Scrape Actor Details from Site')}}
+            </b-dropdown-item>
           </b-dropdown>
         </div>
       </b-table-column>
@@ -119,6 +122,10 @@ export default {
           })
         }
       })
+    },
+    scrapeActors(site, scraper) {      
+      ky.get('/api/extref/generic/scrape_by_site/' + scraper)
+      this.$buefy.toast.open(`Scraping Actor Details from ${site}`)
     },
     async toggleAllSubscriptions(){
       const table = this.$refs.scraperTable;

@@ -14,6 +14,7 @@ type CreateUpdatePlaylistRequest struct {
 	Name         string `json:"name"`
 	IsSmart      bool   `json:"is_smart"`
 	IsDeoEnabled bool   `json:"is_deo_enabled"`
+	PlaylistType string `json:"playlist_type"`
 	SearchParams string `json:"search_params"`
 }
 
@@ -29,6 +30,10 @@ func (i PlaylistResource) WebService() *restful.WebService {
 		Produces(restful.MIME_JSON)
 
 	ws.Route(ws.GET("").To(i.listPlaylists).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes([]models.Playlist{}))
+
+	ws.Route(ws.GET("/{playlist_type}").To(i.listPlaylists).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes([]models.Playlist{}))
 
@@ -51,9 +56,13 @@ func (i PlaylistResource) WebService() *restful.WebService {
 func (i PlaylistResource) listPlaylists(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
 	defer db.Close()
+	playlistType := req.PathParameter("playlist_type")
+	if playlistType == "" {
+		playlistType = "scene"
+	}
 
 	var playlists []models.Playlist
-	db.Order("ordering asc").Find(&playlists)
+	db.Where("playlist_type = ?", playlistType).Order("ordering asc").Find(&playlists)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, playlists)
 }
@@ -69,7 +78,10 @@ func (i PlaylistResource) createPlaylist(req *restful.Request, resp *restful.Res
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	nv := models.Playlist{Name: r.Name, IsDeoEnabled: r.IsDeoEnabled, IsSmart: r.IsSmart, SearchParams: r.SearchParams}
+	if r.PlaylistType == "" {
+		r.PlaylistType = "scene"
+	}
+	nv := models.Playlist{Name: r.Name, IsDeoEnabled: r.IsDeoEnabled, IsSmart: r.IsSmart, PlaylistType: r.PlaylistType, SearchParams: r.SearchParams}
 	nv.Save()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, nv)

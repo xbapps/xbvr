@@ -51,8 +51,10 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 		})
 
 		// Cast
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`a[itemprop="actor"]`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 		})
 
 		// Gallery

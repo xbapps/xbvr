@@ -85,6 +85,25 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
+		// Actor Images
+		sc.ActorDetails = make(map[string]models.ActorDetails)
+		e.ForEach(`.lav_item_pornstar a`, func(id int, e *colly.HTMLElement) {
+			var src string
+			e.ForEach(`.avatar_pornstar img`, func(id int, e *colly.HTMLElement) {
+				src = e.Attr("src")
+				if strings.HasSuffix(src, "black1.gif") {
+					src = e.Attr("data-wpfc-original-src")
+				}
+			})
+			name := e.Attr("title")
+			profileUrl := e.Attr("href")
+			if name != "" && src != "" {
+				sc.ActorDetails[name] = models.ActorDetails{Source: "vrporn scrape", ImageUrl: src, ProfileUrl: profileUrl}
+			} else {
+				sc.ActorDetails[name] = models.ActorDetails{Source: "vrporn scrape", ProfileUrl: profileUrl}
+			}
+		})
+
 		// trailer details
 		sc.TrailerType = "scrape_html"
 		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "dl8-video source", ContentPath: "src", QualityPath: "quality"}

@@ -19,6 +19,14 @@ const state = {
     show: false,
     file: null
   },
+  actordetails: {
+    show: false,
+    actor: null
+  },
+  actoredit: {
+    show: false,
+    actor: null
+  },
   showQuickFind: false
 }
 
@@ -38,6 +46,22 @@ const mutations = {
   hideEditDetails (state) {
     state.edit.scene = null
     state.edit.show = false
+  },
+  showActorDetails (state, payload) {
+    state.actordetails.actor = payload.actor
+    state.actordetails.show = true    
+  },
+  hideActorDetails (state, payload) {
+    state.actordetails.actor = null
+    state.actordetails.show = false
+  },
+  editActorDetails (state, payload) {
+    state.actoredit.actor = payload.actor
+    state.actoredit.show = true
+  },
+  hideActorEditDetails (state) {
+    state.actoredit.scene = null
+    state.actoredit.show = false
   },
   showPlayer (state, payload) {
     state.player.file = payload.file
