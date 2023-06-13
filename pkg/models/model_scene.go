@@ -1075,6 +1075,10 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("release_date desc")
 	case "release_asc":
 		tx = tx.Order("release_date asc")
+	case "title_desc":
+		tx = tx.Order("title desc")
+	case "title_asc":
+		tx = tx.Order("title asc")
 	case "total_file_size_desc":
 		tx = tx.Order("total_file_size desc")
 	case "total_file_size_asc":

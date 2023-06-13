@@ -37,6 +37,8 @@
             <option value="release_asc">↑ {{ $t("Release date") }}</option>
             <option value="added_desc">↓ {{ $t("File added date") }}</option>
             <option value="added_asc">↑ {{ $t("File added date") }}</option>
+            <option value="title_desc">↓ {{ $t("Title") }}</option>
+            <option value="title_asc">↑ {{ $t("Title") }}</option>
             <option value="total_file_size_desc">↓ {{ $t("File size") }}</option>
             <option value="total_file_size_asc">↑ {{ $t("File size") }}</option>
             <option value="rating_desc">↓ {{ $t("Rating") }}</option>
