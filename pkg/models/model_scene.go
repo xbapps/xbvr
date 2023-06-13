@@ -1076,9 +1076,19 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	case "release_asc":
 		tx = tx.Order("release_date asc")
 	case "title_desc":
-		tx = tx.Order("title desc")
+		switch db.Dialect().GetName() {
+		case "mysql":
+			tx = tx.Order("title desc")
+		case "sqlite3":
+			tx = tx.Order("title COLLATE NOCASE desc")
+		}
 	case "title_asc":
-		tx = tx.Order("title asc")
+		switch db.Dialect().GetName() {
+		case "mysql":
+			tx = tx.Order("title asc")
+		case "sqlite3":
+			tx = tx.Order("title COLLATE NOCASE asc")
+		}
 	case "total_file_size_desc":
 		tx = tx.Order("total_file_size desc")
 	case "total_file_size_asc":
