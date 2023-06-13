@@ -185,6 +185,7 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		ctx := colly.NewContext()
 		ctx.Put("scene", &sc)
 
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		for i := range tmpCast {
 			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
 		}
@@ -209,8 +210,10 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 				if gender == "Female" || gender == "Transgender" || gender == "Female Trans" {
 					sc.Cast = append(sc.Cast, name)
+					sc.ActorDetails[name] = models.ActorDetails{Source: scraperID + " scrape", ImageUrl: strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "image").String())), ProfileUrl: e.Request.URL.String()}
 				} else if sc.Site == "VirtualRealGay" || sc.Site == "VirtualRealPassion" {
 					sc.Cast = append(sc.Cast, name)
+					sc.ActorDetails[name] = models.ActorDetails{Source: scraperID + " scrape", ImageUrl: strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "image").String())), ProfileUrl: e.Request.URL.String()}
 				}
 			}
 		})

@@ -37,6 +37,7 @@ type RequestSceneList struct {
 	Tags         []optional.String `json:"tags"`
 	Cast         []optional.String `json:"cast"`
 	Cuepoint     []optional.String `json:"cuepoint"`
+	Attributes   []optional.String `json:"attributes"`
 	Volume       optional.Int      `json:"volume"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
@@ -169,6 +170,7 @@ func Migrate() {
 					IsDeoEnabled bool
 					IsSmart      bool
 					SearchParams string `sql:"type:text;"`
+					PlaylistType string `json:"playlist_type" xbvrbackup:"playlist_type"`
 				}
 				return tx.AutoMigrate(Playlist{}).Error
 			},
@@ -586,6 +588,121 @@ func Migrate() {
 					return err
 				}
 				return tx.Exec("DROP TABLE IF EXISTS actions_old2").Error
+			},
+		},
+		{
+			ID: "0063-actors",
+			Migrate: func(tx *gorm.DB) error {
+				err := tx.AutoMigrate(models.Actor{}).Error
+				if err != nil {
+					return err
+				}
+				err = tx.AutoMigrate(models.ActionActor{}).Error
+				if err != nil {
+					return err
+				}
+
+				// create an index on the actor to support querying Actors by Studio
+				db.Table("scene_cast").AddIndex("scene_cast_actor_id_IDX", "actor_id")
+
+				err = tx.AutoMigrate(&models.ExternalReference{}).Error
+				if err != nil {
+					return err
+				}
+				err = tx.AutoMigrate(&models.ExternalReferenceLink{}).Error
+				if err != nil {
+					return err
+				}
+
+				// add a new playlist_type to distinguish between scene and actor playlists
+				err = tx.AutoMigrate(models.Playlist{}).Error
+				if err != nil {
+					return err
+				}
+				// set existing playlists to type scene
+				err = tx.Model(&models.Playlist{}).Where("playlist_type is null or playlist_type = ?", "").Update("playlist_type", "scene").Error
+				if err != nil {
+					return err
+				}
+
+				// create default actor playlists
+				var playlist models.Playlist
+				tx.Model(&models.Playlist{}).Where("playlist_type = ? and name = ?", "actor", "Default").First(&playlist)
+				if playlist.ID == 0 {
+					list := models.RequestActorList{
+						DlState:        optional.NewString("Any"),
+						Lists:          []optional.String{},
+						Cast:           []optional.String{},
+						Sites:          []optional.String{},
+						Tags:           []optional.String{},
+						Attributes:     []optional.String{},
+						JumpTo:         optional.NewString(""),
+						MinAge:         optional.NewInt(0),
+						MaxAge:         optional.NewInt(100),
+						MinHeight:      optional.NewInt(120),
+						MaxHeight:      optional.NewInt(220),
+						MinCount:       optional.NewInt(0),
+						MaxCount:       optional.NewInt(150),
+						MinAvail:       optional.NewInt(0),
+						MaxAvail:       optional.NewInt(150),
+						MinRating:      optional.NewFloat64(0),
+						MaxRating:      optional.NewFloat64(5),
+						MinSceneRating: optional.NewFloat64(0),
+						MaxSceneRating: optional.NewFloat64(5),
+						Sort:           optional.NewString("name_asc"),
+					}
+					b, _ := json.Marshal(list)
+
+					playlist := models.Playlist{
+						Name:         "Default",
+						IsSystem:     true,
+						IsSmart:      true,
+						IsDeoEnabled: false,
+						Ordering:     -100,
+						PlaylistType: "actor",
+						SearchParams: string(b),
+					}
+					playlist.Save()
+				}
+				tx.Model(&models.Playlist{}).Where("playlist_type = ? and name = ?", "actor", "Possible Aka").First(&playlist)
+				if playlist.ID == 0 {
+					list := models.RequestActorList{
+						DlState:        optional.NewString("Any"),
+						Lists:          []optional.String{},
+						Cast:           []optional.String{},
+						Sites:          []optional.String{},
+						Tags:           []optional.String{},
+						Attributes:     []optional.String{},
+						JumpTo:         optional.NewString(""),
+						MinAge:         optional.NewInt(0),
+						MaxAge:         optional.NewInt(100),
+						MinHeight:      optional.NewInt(120),
+						MaxHeight:      optional.NewInt(220),
+						MinCount:       optional.NewInt(0),
+						MaxCount:       optional.NewInt(150),
+						MinAvail:       optional.NewInt(0),
+						MaxAvail:       optional.NewInt(150),
+						MinRating:      optional.NewFloat64(0),
+						MaxRating:      optional.NewFloat64(5),
+						MinSceneRating: optional.NewFloat64(0),
+						MaxSceneRating: optional.NewFloat64(5),
+						Sort:           optional.NewString("birthday_desc"),
+					}
+					list.Attributes = append(list.Attributes, optional.NewString("Possible Aka"))
+					b, _ := json.Marshal(list)
+
+					playlist = models.Playlist{
+						Name:         "Possible Aka",
+						IsSystem:     false,
+						IsSmart:      true,
+						IsDeoEnabled: false,
+						Ordering:     -1,
+						PlaylistType: "actor",
+						SearchParams: string(b),
+					}
+					playlist.Save()
+				}
+				return nil
 			},
 		},
 
@@ -1316,7 +1433,7 @@ func Migrate() {
 				}
 				//backup bundle
 				common.Log.Infof("Creating pre-migration backup, please waiit, backups can take some time on a system with a large number of scenes ")
-				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, true, "0", "xbvr-premigration-bundle.json", "2")
+				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, "0", "xbvr-premigration-bundle.json", "2")
 				common.Log.Infof("Go to download/xbvr-premigration-bundle.json, or http://xxx.xxx.xxx.xxx:9999/download/xbvr-premigration-bundle.json if you need access to the backup")
 				var sites []models.Site
 				officalSiteChanges := []SiteChange{

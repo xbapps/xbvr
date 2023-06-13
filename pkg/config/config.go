@@ -41,8 +41,12 @@ type ObjectConfig struct {
 		UpdateCheck       bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
 	Advanced struct {
-		ShowInternalSceneId bool `default:"false" json:"showInternalSceneId"`
-		ShowHSPApiLink      bool `default:"false" json:"showHSPApiLink"`
+		ShowInternalSceneId   bool   `default:"false" json:"showInternalSceneId"`
+		ShowHSPApiLink        bool   `default:"false" json:"showHSPApiLink"`
+		StashApiKey           string `default:"" json:"stashApiKey"`
+		ScrapeActorAfterScene bool   `default:"true" json:"scrapeActorAfterScene"`
+		UseImperialEntry      bool   `default:"false" json:"useImperialEntry"`
+		ProgressTimeInterval  int    `default:"15" json:"progressTimeInterval"`
 	} `json:"advanced"`
 	Vendor struct {
 		TPDB struct {
@@ -120,6 +124,24 @@ type ObjectConfig struct {
 			HourEnd         int  `default:"23" json:"hourEnd"`
 			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"previewSchedule"`
+		ActorRescrapeSchedule struct {
+			Enabled         bool `default:"false" json:"enabled"`
+			HourInterval    int  `default:"12" json:"hourInterval"`
+			UseRange        bool `default:"false" json:"useRange"`
+			MinuteStart     int  `default:"0" json:"minuteStart"`
+			HourStart       int  `default:"0" json:"hourStart"`
+			HourEnd         int  `default:"23" json:"hourEnd"`
+			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
+		} `json:"actorRescrapeSchedule"`
+		StashdbRescrapeSchedule struct {
+			Enabled         bool `default:"false" json:"enabled"`
+			HourInterval    int  `default:"12" json:"hourInterval"`
+			UseRange        bool `default:"false" json:"useRange"`
+			MinuteStart     int  `default:"0" json:"minuteStart"`
+			HourStart       int  `default:"0" json:"hourStart"`
+			HourEnd         int  `default:"23" json:"hourEnd"`
+			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
+		} `json:"stashdbRescrapeSchedule"`
 	} `json:"cron"`
 }
 

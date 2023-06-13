@@ -93,12 +93,14 @@ func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 
 		// Cast & Tags
 		// Note: Cast/Tags links are currently all inside the same div element...
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`div.container.pt-5 p.text-muted > a`, func(id int, e *colly.HTMLElement) {
 			tmpURLParts := reCastTags.FindStringSubmatch(e.Attr("href"))
 			if len(tmpURLParts[1]) > 0 {
 				if tmpURLParts[1] == "models" {
 					// Cast
 					sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Attr("href")}
 				} else if tmpURLParts[1] == "videos" {
 					// Tags
 					tmpTagParts := reTagCat.FindStringSubmatch(e.Text)

@@ -7,6 +7,7 @@ import (
 
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
+	"github.com/xbapps/xbvr/pkg/externalreference"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -141,6 +142,7 @@ func (i AkaResource) createAkaGroup(req *restful.Request, resp *restful.Response
 		Aka:    aka,
 	}
 
+	externalreference.LinkOnXbvrAkaGroups()
 	resp.WriteHeaderAndEntity(http.StatusOK, createResp)
 }
 

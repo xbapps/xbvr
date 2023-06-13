@@ -36,8 +36,15 @@ type ScrapedScene struct {
 	MembersUrl  string   `json:"members_url"`
 	TrailerType string   `json:"trailer_type"`
 	TrailerSrc  string   `json:"trailer_source"`
+
+	ActorDetails map[string]ActorDetails `json:"actor_details"`
 }
 
+type ActorDetails struct {
+	ImageUrl   string
+	ProfileUrl string
+	Source     string
+}
 type TrailerScrape struct {
 	SceneUrl       string `json:"scene_url"`        // url of the page to be scrapped
 	HtmlElement    string `json:"html_element"`     // path to section of html (using colly)

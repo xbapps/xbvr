@@ -133,8 +133,10 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		}
 
 		// Cast
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`.single-video-info__content a[href^="/model/"]`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(strings.Replace(e.Text, ",", "", -1)))
+			sc.ActorDetails[strings.TrimSpace(strings.Replace(e.Text, ",", "", -1))] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 		})
 
 		out <- sc
