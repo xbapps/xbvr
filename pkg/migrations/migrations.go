@@ -1592,6 +1592,22 @@ func Migrate() {
 				return tx.Exec(sql).Error
 			},
 		},
+		{
+			ID: "0064-migrate-sexbabes_filenames",
+			Migrate: func(tx *gorm.DB) error {
+				// new sexbabes scraper does not have filenames, this creates an edit record (if there is not already one)
+				// to reapply the filenames after scraping, so they are not lost
+				sql := `insert into actions (scene_id, action_type, changed_column, new_value) 
+				select s.scene_id, 'edit', 'filenames_arr', filenames_arr
+				from scenes s 
+				left join actions a on a.scene_id = s.scene_id and a.changed_column = 'filenames_arr'
+				where s.scene_id like 'sexbab%' 
+				and a.scene_id is null  
+				and filenames_arr <> 'null'
+				`
+				return tx.Exec(sql).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
