@@ -43,17 +43,18 @@ type VersionCheckResponse struct {
 }
 
 type RequestSaveOptionsWeb struct {
-	TagSort           string `json:"tagSort"`
-	SceneWatchlist    bool   `json:"sceneWatchlist"`
-	SceneFavourite    bool   `json:"sceneFavourite"`
-	SceneWatched      bool   `json:"sceneWatched"`
-	SceneEdit         bool   `json:"sceneEdit"`
-	SceneDuration     bool   `json:"sceneDuration"`
-	SceneCuepoint     bool   `json:"sceneCuepoint"`
-	ShowHspFile       bool   `json:"showHspFile"`
-	ShowSubtitlesFile bool   `json:"showSubtitlesFile"`
-	SceneTrailerlist  bool   `json:"sceneTrailerlist"`
-	UpdateCheck       bool   `json:"updateCheck"`
+	TagSort                string `json:"tagSort"`
+	SceneWatchlist         bool   `json:"sceneWatchlist"`
+	SceneFavourite         bool   `json:"sceneFavourite"`
+	SceneWatched           bool   `json:"sceneWatched"`
+	SceneEdit              bool   `json:"sceneEdit"`
+	SceneDuration          bool   `json:"sceneDuration"`
+	SceneCuepoint          bool   `json:"sceneCuepoint"`
+	ShowHspFile            bool   `json:"showHspFile"`
+	ShowSubtitlesFile      bool   `json:"showSubtitlesFile"`
+	SceneTrailerlist       bool   `json:"sceneTrailerlist"`
+	ShowSceneCountForActor bool   `json:"showSceneCountForActor"`
+	UpdateCheck            bool   `json:"updateCheck"`
 }
 
 type RequestSaveOptionsAdvanced struct {
@@ -356,6 +357,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.ShowHspFile = r.ShowHspFile
 	config.Config.Web.ShowSubtitlesFile = r.ShowSubtitlesFile
 	config.Config.Web.SceneTrailerlist = r.SceneTrailerlist
+	config.Config.Web.ShowSceneCountForActor = r.ShowSceneCountForActor
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.SaveConfig()
 

@@ -65,6 +65,11 @@
                 show subtitles File button
               </b-switch>
             </b-field>
+            <b-field>
+              <b-switch v-model="sceneCountForActor" type="is-dark">
+                show scene counts rather than ratings in Actors cards
+              </b-switch>
+            </b-field>
 
             <b-field label="Automatically Check for Updates">
               <b-switch v-model="updateCheck">
@@ -180,6 +185,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.showSubtitlesFile = value
+      }
+    },
+    sceneCountForActor: {
+      get () {
+        return this.$store.state.optionsWeb.web.showSceneCountForActor
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.showSceneCountForActor = value
       }
     },
     isLoading: function () {

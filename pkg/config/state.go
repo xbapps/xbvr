@@ -12,17 +12,18 @@ type ObjectState struct {
 		BoundIP []string `json:"bound_ip"`
 	} `json:"server"`
 	Web struct {
-		TagSort           string `json:"tagSort"`
-		SceneWatchlist    bool   `json:"sceneWatchlist"`
-		SceneFavourite    bool   `json:"sceneFavourite"`
-		SceneWatched      bool   `json:"sceneWatched"`
-		SceneEdit         bool   `json:"sceneEdit"`
-		SceneDuration     bool   `json:"sceneDuration"`
-		SceneCuepoint     bool   `json:"sceneCuepoint"`
-		ShowHspFile       bool   `json:"showHspFile"`
-		ShowSubtitlesFile bool   `json:"showSubtitlesFile"`
-		SceneTrailerlist  bool   `json:"sceneTrailerlist"`
-		UpdateCheck       bool   `json:"updateCheck"`
+		TagSort                string `json:"tagSort"`
+		SceneWatchlist         bool   `json:"sceneWatchlist"`
+		SceneFavourite         bool   `json:"sceneFavourite"`
+		SceneWatched           bool   `json:"sceneWatched"`
+		SceneEdit              bool   `json:"sceneEdit"`
+		SceneDuration          bool   `json:"sceneDuration"`
+		SceneCuepoint          bool   `json:"sceneCuepoint"`
+		ShowHspFile            bool   `json:"showHspFile"`
+		ShowSubtitlesFile      bool   `json:"showSubtitlesFile"`
+		SceneTrailerlist       bool   `json:"sceneTrailerlist"`
+		ShowSceneCountForActor bool   `json:"showSceneCountForActor"`
+		UpdateCheck            bool   `json:"updateCheck"`
 	} `json:"web"`
 	DLNA struct {
 		Running  bool     `json:"running"`

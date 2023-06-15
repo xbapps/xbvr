@@ -22,15 +22,27 @@
       <actor-watchlist-button :actor="actor" v-if="this.$store.state.optionsWeb.web.sceneWatchlist"/>
       <actor-edit-button :actor="actor"/>&nbsp;
       <b-tooltip :label="$t('Your rating')" :delay="500">
-      <b-tag type="is-warning" v-if="actor.star_rating != 0 " size="is-small" style="height:30px;">
+      <b-tag type="is-warning" v-if="actor.star_rating != 0 && !this.$store.state.optionsWeb.web.showSceneCountForActor" size="is-small" style="height:30px;">
         <b-icon pack="mdi" icon="star" size="is-small"/>
         {{actor.star_rating}}
       </b-tag>
       </b-tooltip>
       <b-tooltip :label="$t('Average rating of scenes')" :delay="500">
-      <b-tag type="is-primary" v-if="actor.scene_rating_average != 0 " style="height:30px;">
+      <b-tag type="is-primary" v-if="actor.scene_rating_average != 0 && !this.$store.state.optionsWeb.web.showSceneCountForActor" style="height:30px;">
         <b-icon pack="mdi" icon="star" size="is-small"/>
         {{Math.round(actor.scene_rating_average * 4) / 4}}
+      </b-tag>
+      </b-tooltip>
+      <b-tooltip :label="$t('Number of scenes')" :delay="500">
+      <b-tag type="is-warning" v-if="this.$store.state.optionsWeb.web.showSceneCountForActor" size="is-small" style="height:30px;">
+        <b-icon pack="mdi" icon="movie-open" size="is-small"/>
+        {{actor.scenes.length}}
+      </b-tag>
+      </b-tooltip>
+      <b-tooltip :label="$t('Number of available scenes')" :delay="500">
+      <b-tag type="is-primary" v-if="this.$store.state.optionsWeb.web.showSceneCountForActor" size="is-small" style="height:30px;">
+        <b-icon pack="mdi" icon="movie-open" size="is-small"/>
+        {{actor.avail_count}}
       </b-tag>
       </b-tooltip>
 

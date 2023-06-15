@@ -28,17 +28,18 @@ type ObjectConfig struct {
 		Password string `default:"" json:"password"`
 	} `json:"security"`
 	Web struct {
-		TagSort           string `default:"by-tag-count" json:"tagSort"`
-		SceneWatchlist    bool   `default:"true" json:"sceneWatchlist"`
-		SceneFavourite    bool   `default:"true" json:"sceneFavourite"`
-		SceneWatched      bool   `default:"false" json:"sceneWatched"`
-		SceneEdit         bool   `default:"false" json:"sceneEdit"`
-		SceneDuration     bool   `default:"false" json:"sceneDuration"`
-		SceneCuepoint     bool   `default:"true" json:"sceneCuepoint"`
-		ShowHspFile       bool   `default:"true" json:"showHspFile"`
-		ShowSubtitlesFile bool   `default:"true" json:"showSubtitlesFile"`
-		SceneTrailerlist  bool   `default:"true" json:"sceneTrailerlist"`
-		UpdateCheck       bool   `default:"true" json:"updateCheck"`
+		TagSort                string `default:"by-tag-count" json:"tagSort"`
+		SceneWatchlist         bool   `default:"true" json:"sceneWatchlist"`
+		SceneFavourite         bool   `default:"true" json:"sceneFavourite"`
+		SceneWatched           bool   `default:"false" json:"sceneWatched"`
+		SceneEdit              bool   `default:"false" json:"sceneEdit"`
+		SceneDuration          bool   `default:"false" json:"sceneDuration"`
+		SceneCuepoint          bool   `default:"true" json:"sceneCuepoint"`
+		ShowHspFile            bool   `default:"true" json:"showHspFile"`
+		ShowSubtitlesFile      bool   `default:"true" json:"showSubtitlesFile"`
+		SceneTrailerlist       bool   `default:"true" json:"sceneTrailerlist"`
+		ShowSceneCountForActor bool   `default:"false" json:"showSceneCountForActor"`
+		UpdateCheck            bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
 	Advanced struct {
 		ShowInternalSceneId   bool   `default:"false" json:"showInternalSceneId"`
