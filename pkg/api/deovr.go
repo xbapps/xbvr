@@ -12,6 +12,7 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/markphelps/optional"
+	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -54,6 +55,7 @@ type DeoScene struct {
 	Is3D             bool                 `json:"is3d"`
 	ThumbnailURL     string               `json:"thumbnailUrl"`
 	RatingAvg        float64              `json:"rating_avg"`
+	ChromaKey        DeoSceneChromaKey    `json:"chromakey,omitempty"`
 	ScreenType       string               `json:"screenType"`
 	StereoMode       string               `json:"stereoMode"`
 	VideoLength      int                  `json:"videoLength"`
@@ -111,6 +113,16 @@ type DeoSceneScriptFile struct {
 type DeoSceneHSPFile struct {
 	Title string `json:"title"`
 	URL   string `json:"url"`
+}
+
+type DeoSceneChromaKey struct {
+	Enabled   string  `json:"enabled"`
+	HasAlpha  string  `json:"hasAlpha"`
+	H         float64 `json:"h"`
+	Opacity   float64 `json:"opacity"`
+	S         float64 `json:"s"`
+	Threshold float64 `json:"threshold"`
+	V         float64 `json:"v"`
 }
 
 func isDeoAuthEnabled() bool {
@@ -458,6 +470,30 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	title := scene.Title
 	thumbnailURL := session.DeoRequestHost + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 
+	//Passthrough
+	var ckdata map[string]interface{}
+	//	nochromaKey := `{"enabled":false,"hasAlpha":false,"h":0,"opacity":0,"s":0,"threshold":0,"v":0}`
+	chromaKey := gjson.Parse(scene.ChromaKey)
+	_ = chromaKey
+	if gjson.Valid(scene.ChromaKey) {
+		if err := json.Unmarshal([]byte(scene.ChromaKey), &ckdata); err != nil {
+			fmt.Println("Error:", err)
+		}
+		result := gjson.Get(scene.ChromaKey, "hasAlpha")
+		if !result.Exists() || ckdata["hasAlpha"] == "" {
+			//			if ckdata["."].(map[string]interface{})["hasAlpha"] = "false" || ckdata["."].(map[string]interface{})["hasAlpha"] = "" {
+
+			//setting hasAlpha to false
+			ckdata["hasAlpha"] = "false"
+		}
+		// Convert back to JSON string
+		ckup, err := json.Marshal(ckdata)
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+		chromaKey = gjson.ParseBytes(ckup)
+	}
+
 	if scene.IsScripted {
 		title = scene.GetFunscriptTitle()
 		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
@@ -496,10 +532,15 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Categories:       categories,
 		Fleshlight:       deoScriptFiles,
 		HSProfile:        deoHSPFiles,
+		ChromaKey:        DeoSceneChromaKey{Enabled: chromaKey.Get("enabled").String(), HasAlpha: chromaKey.Get("hasAlpha").String(), H: chromaKey.Get("h").Float(), Opacity: chromaKey.Get("opacity").Float(), S: chromaKey.Get("s").Float(), Threshold: chromaKey.Get("threshold").Float(), V: chromaKey.Get("v").Float()},
 	}
 
 	if scene.HasVideoPreview {
 		deoScene.VideoPreview = fmt.Sprintf("%v/api/dms/preview/%v", session.DeoRequestHost, scene.SceneID)
+	}
+
+	if !gjson.Valid(scene.ChromaKey) {
+		deoScene.ChromaKey = DeoSceneChromaKey{Enabled: "false", HasAlpha: "false", H: 0, Opacity: 0, S: 0, Threshold: 0, V: 0}
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, deoScene)

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
@@ -74,6 +75,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// Could split by / but would run into issues with "f/f/m" and "shorts / skirts"
 		var videotype string
 		var FB360 string
+		alphA := "false"
 		e.ForEach(`ul.c-meta--scene-tags li a`, func(id int, e *colly.HTMLElement) {
 			if !skiptags[e.Attr("title")] {
 				sc.Tags = append(sc.Tags, e.Attr("title"))
@@ -85,6 +87,11 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			}
 			if e.Attr("title") == "Spatial audio" {
 				FB360 = "_FB360.MKV"
+			}
+
+			// Passthrough?
+			if e.Attr("title") == "Passthrough" || e.Attr("title") == "Passthrough hack" || e.Attr("title") == "Passthrough AR" {
+				alphA = "PT"
 			}
 
 		})
@@ -158,8 +165,6 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 						}
 					}
 
-					// Filenames
-					appendFilenames(&sc, siteID, filenameRegEx, videotype, FB360)
 				}
 
 			})
@@ -177,7 +182,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 					// Filenames
 					// trans videos don't appear to follow video type naming conventions
-					appendFilenames(&sc, siteID, filenameRegEx, "", "")
+					//					appendFilenames(&sc, siteID, filenameRegEx, "", "", alphA)
 				}
 			})
 
@@ -191,6 +196,21 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 			})
 		}
+
+		// Passthrough "chromaKey":{"enabled":false,"hasAlpha":true,"h":0,"opacity":1,"s":0,"threshold":0,"v":0}
+		if alphA == "PT" {
+			s, _ := resty.New().R().
+				SetHeader("User-Agent", UserAgent).
+				Get(sc.TrailerSrc)
+			JsonMetadataA := s.String()
+			if gjson.Get(JsonMetadataA, "chromaKey").Exists() {
+				sc.ChromaKey = gjson.Get(JsonMetadataA, "chromaKey").String()
+			}
+			alphA = gjson.Get(JsonMetadataA, "chromaKey.hasAlpha").String()
+		}
+
+		// Filenames
+		appendFilenames(&sc, siteID, filenameRegEx, videotype, FB360, alphA)
 
 		// actor details
 		sc.ActorDetails = make(map[string]models.ActorDetails)
@@ -244,10 +264,10 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	return nil
 }
 
-func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *regexp.Regexp, videotype string, FB360 string) {
+func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *regexp.Regexp, videotype string, FB360 string, AlphA string) {
 	// Only shown for logged in users so need to generate them
 	// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
-	resolutions := []string{"_6400p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
+	resolutions := []string{"_6400p_", "_4096p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_3000p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
 	baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
 	switch videotype {
 	case "360°": // Sadly can't determine if TB or MONO so have to add both
@@ -257,11 +277,19 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 		}
 	case "Fisheye": // 200° videos named with MKX200
 		for i := range resolutions {
-			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
-			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220.mp4")
-			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_RF52.mp4")
-			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_FISHEYE190.mp4")
-			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220.mp4")
+			if AlphA == "true" {
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200_alpha.mp4")
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220_alpha.mp4")
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_RF52_alpha.mp4")
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_FISHEYE190_alpha.mp4")
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220_alpha.mp4")
+			} else {
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220.mp4")
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_RF52.mp4")
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_FISHEYE190.mp4")
+				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220.mp4")
+			}
 		}
 	default: // Assuming everything else is 180 and LR, yet to find a TB_180
 		for i := range resolutions {
