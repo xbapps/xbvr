@@ -102,6 +102,7 @@ type Scene struct {
 	EditsApplied  bool   `json:"edits_applied" gorm:"default:false" xbvrbackup:"-"`
 	TrailerType   string `json:"trailer_type" xbvrbackup:"trailer_type"`
 	TrailerSource string `gorm:"size:1000" json:"trailer_source" xbvrbackup:"trailer_source"`
+	ChromaKey     string `json:"passthrough" xbvrbackup:"passthrough"`
 	Trailerlist   bool   `json:"trailerlist" gorm:"default:false" xbvrbackup:"trailerlist"`
 	IsSubscribed  bool   `json:"is_subscribed" gorm:"default:false"`
 	IsHidden      bool   `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
@@ -430,6 +431,8 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	}
 	o.SceneURL = ext.HomepageURL
 	o.MemberURL = ext.MembersUrl
+
+	o.ChromaKey = ext.ChromaKey
 
 	// Trailers
 	o.TrailerType = ext.TrailerType

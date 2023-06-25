@@ -705,6 +705,15 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0065-scenes-add-chromakey-for-passthrough",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					ChromaKey string `json:"chromakey" xbvrbackup:"chromakey"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
