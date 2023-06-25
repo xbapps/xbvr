@@ -55,7 +55,6 @@ type DeoScene struct {
 	Is3D             bool                 `json:"is3d"`
 	ThumbnailURL     string               `json:"thumbnailUrl"`
 	RatingAvg        float64              `json:"rating_avg"`
-	ChromaKey        DeoSceneChromaKey    `json:"chromakey,omitempty"`
 	ScreenType       string               `json:"screenType"`
 	StereoMode       string               `json:"stereoMode"`
 	VideoLength      int                  `json:"videoLength"`
@@ -123,6 +122,36 @@ type DeoSceneChromaKey struct {
 	S         float64 `json:"s"`
 	Threshold float64 `json:"threshold"`
 	V         float64 `json:"v"`
+}
+
+type DeoScenePassthrough struct {
+	ID               uint                 `json:"id"`
+	Title            string               `json:"title"`
+	Authorized       uint                 `json:"authorized"`
+	Description      string               `json:"description"`
+	Date             int64                `json:"date"`
+	Paysite          DeoScenePaysite      `json:"paysite"`
+	IsFavorite       bool                 `json:"isFavorite"`
+	IsScripted       bool                 `json:"isScripted"`
+	IsWatchlist      bool                 `json:"isWatchlist"`
+	Is3D             bool                 `json:"is3d"`
+	ThumbnailURL     string               `json:"thumbnailUrl"`
+	RatingAvg        float64              `json:"rating_avg"`
+	ScreenType       string               `json:"screenType"`
+	StereoMode       string               `json:"stereoMode"`
+	VideoLength      int                  `json:"videoLength"`
+	VideoThumbnail   string               `json:"videoThumbnail"`
+	VideoPreview     string               `json:"videoPreview,omitempty"`
+	Encodings        []DeoSceneEncoding   `json:"encodings"`
+	EncodingsSpatial []DeoSceneEncoding   `json:"encodings_spatial"`
+	Timestamps       []DeoSceneTimestamp  `json:"timeStamps"`
+	Actors           []DeoSceneActor      `json:"actors"`
+	Categories       []DeoSceneCategory   `json:"categories,omitempty"`
+	Fleshlight       []DeoSceneScriptFile `json:"fleshlight,omitempty"`
+	HSProfile        []DeoSceneHSPFile    `json:"hsp,omitempty"`
+	FullVideoReady   bool                 `json:"fullVideoReady"`
+	FullAccess       bool                 `json:"fullAccess"`
+	ChromaKey        DeoSceneChromaKey    `json:"chromakey"`
 }
 
 func isDeoAuthEnabled() bool {
@@ -532,18 +561,45 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		Categories:       categories,
 		Fleshlight:       deoScriptFiles,
 		HSProfile:        deoHSPFiles,
-		ChromaKey:        DeoSceneChromaKey{Enabled: chromaKey.Get("enabled").String(), HasAlpha: chromaKey.Get("hasAlpha").String(), H: chromaKey.Get("h").Float(), Opacity: chromaKey.Get("opacity").Float(), S: chromaKey.Get("s").Float(), Threshold: chromaKey.Get("threshold").Float(), V: chromaKey.Get("v").Float()},
 	}
 
 	if scene.HasVideoPreview {
 		deoScene.VideoPreview = fmt.Sprintf("%v/api/dms/preview/%v", session.DeoRequestHost, scene.SceneID)
 	}
 
-	if !gjson.Valid(scene.ChromaKey) {
-		deoScene.ChromaKey = DeoSceneChromaKey{Enabled: "false", HasAlpha: "false", H: 0, Opacity: 0, S: 0, Threshold: 0, V: 0}
+	if gjson.Valid(scene.ChromaKey) {
+		deoPtScene := DeoScenePassthrough{
+			ID:               scene.ID,
+			Authorized:       1,
+			Title:            title,
+			Description:      scene.Synopsis,
+			Date:             finalDate,
+			Actors:           actors,
+			Paysite:          DeoScenePaysite{ID: 1, Name: scene.Site, Is3rdParty: true},
+			IsFavorite:       scene.Favourite,
+			IsScripted:       scene.IsScripted,
+			IsWatchlist:      scene.Watchlist,
+			RatingAvg:        scene.StarRating,
+			FullVideoReady:   true,
+			FullAccess:       true,
+			ThumbnailURL:     thumbnailURL,
+			StereoMode:       stereoMode,
+			Is3D:             true,
+			ScreenType:       screenType,
+			Encodings:        sources,
+			EncodingsSpatial: sourcesSpatial,
+			VideoLength:      int(videoLength),
+			Timestamps:       cuepoints,
+			Categories:       categories,
+			Fleshlight:       deoScriptFiles,
+			HSProfile:        deoHSPFiles,
+			ChromaKey:        DeoSceneChromaKey{Enabled: chromaKey.Get("enabled").String(), HasAlpha: chromaKey.Get("hasAlpha").String(), H: chromaKey.Get("h").Float(), Opacity: chromaKey.Get("opacity").Float(), S: chromaKey.Get("s").Float(), Threshold: chromaKey.Get("threshold").Float(), V: chromaKey.Get("v").Float()},
+			VideoPreview:     deoScene.VideoPreview,
+		}
+		resp.WriteHeaderAndEntity(http.StatusOK, deoPtScene)
+	} else {
+		resp.WriteHeaderAndEntity(http.StatusOK, deoScene)
 	}
-
-	resp.WriteHeaderAndEntity(http.StatusOK, deoScene)
 }
 
 func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Response) {
