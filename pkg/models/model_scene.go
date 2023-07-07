@@ -602,10 +602,10 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 
 	for _, i := range r.Lists {
 		if i.OrElse("") == "watchlist" {
-			tx = tx.Where("watchlist = ?", true)
+			tx = tx.Where("scenes.watchlist = ?", true)
 		}
 		if i.OrElse("") == "favourite" {
-			tx = tx.Where("favourite = ?", true)
+			tx = tx.Where("scenes.favourite = ?", true)
 		}
 		if i.OrElse("") == "scripted" {
 			tx = tx.Where("is_scripted = ?", true)
@@ -686,9 +686,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			}
 		case "Has Rating":
 			if truefalse {
-				where = "star_rating > 0"
+				where = "scenes.star_rating > 0"
 			} else {
-				where = "star_rating = 0"
+				where = "scenes.star_rating = 0"
 			}
 		case "Has Cuepoints":
 			if truefalse {
@@ -722,9 +722,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			}
 		case "Rating 0", "Rating .5", "Rating 1", "Rating 1.5", "Rating 2", "Rating 2.5", "Rating 3", "Rating 3.5", "Rating 4", "Rating 4.5", "Rating 5":
 			if truefalse {
-				where = "star_rating = " + fieldName[7:]
+				where = "scenes.star_rating = " + fieldName[7:]
 			} else {
-				where = "star_rating <> " + fieldName[7:]
+				where = "scenes.star_rating <> " + fieldName[7:]
 			}
 		case "Cast 6+":
 			if truefalse {
@@ -863,9 +863,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			}
 		case "In Watchlist":
 			if truefalse {
-				where = "watchlist = 1"
+				where = "scenes.watchlist = 1"
 			} else {
-				where = "watchlist = 0"
+				where = "scenes.watchlist = 0"
 			}
 		case "Is Scripted":
 			if truefalse {
@@ -875,9 +875,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			}
 		case "Is Favourite":
 			if truefalse {
-				where = "favourite = 1"
+				where = "scenes.favourite = 1"
 			} else {
-				where = "favourite = 0"
+				where = "scenes.favourite = 0"
 			}
 		case "Stashdb Linked":
 			if truefalse {
@@ -1099,12 +1099,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("total_watch_time asc")
 	case "rating_desc":
 		tx = tx.
-			Where("star_rating > ?", 0).
-			Order("star_rating desc")
+			Where("scenes.star_rating > ?", 0).
+			Order("scenes.star_rating desc")
 	case "rating_asc":
 		tx = tx.
-			Where("star_rating > ?", 0).
-			Order("star_rating asc")
+			Where("scenes.star_rating > ?", 0).
+			Order("scenes.star_rating asc")
 	case "last_opened_desc":
 		tx = tx.
 			Where("last_opened > ?", "0001-01-01 00:00:00+00:00").
