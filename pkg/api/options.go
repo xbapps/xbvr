@@ -107,6 +107,11 @@ type GetStateResponse struct {
 	Config       config.ObjectConfig `json:"config"`
 }
 
+type GetSearchStateResponse struct {
+	DocumentCount uint64 `json:"documentCount"`
+	InProgress    bool   `json:"inProgress"`
+}
+
 type GetFunscriptCountResponse struct {
 	Total   int64 `json:"total"`
 	Updated int64 `json:"updated"`
@@ -178,6 +183,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.GET("/state").To(i.getState).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/state/search").To(i.getSearchState).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Sites" section endpoints
@@ -580,6 +588,22 @@ func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 
 	out.Config = config.Config
 	out.CurrentState = config.State
+
+	resp.WriteHeaderAndEntity(http.StatusOK, out)
+}
+
+func (i ConfigResource) getSearchState(req *restful.Request, resp *restful.Response) {
+	var out GetSearchStateResponse
+
+	out.InProgress = models.CheckLock("index")
+	out.DocumentCount = 0
+	if !out.InProgress { // don't open if in progress, bleve open will hang
+		idx, err := tasks.NewIndex("scenes")
+		if err == nil {
+			defer idx.Bleve.Close()
+			out.DocumentCount, _ = idx.Bleve.DocCount()
+		}
+	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
 }
