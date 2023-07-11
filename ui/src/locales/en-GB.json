@@ -198,5 +198,6 @@
   "No Matching Cast":"No Matching Cast",
   "No matching sites":"No matching sites",
   "No matching attributes":"No matching attributes",
+  "Only required when troubleshooting search issues, this will enable a Tab in the Scene Details to display what search fields exist and their values for a scene":"Only required when troubleshooting search issues, this will enable a Tab in the Scene Details to display what search fields exist and their values for a scene",
   "Go": "Go"
 }

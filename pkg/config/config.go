@@ -43,6 +43,7 @@ type ObjectConfig struct {
 	Advanced struct {
 		ShowInternalSceneId   bool   `default:"false" json:"showInternalSceneId"`
 		ShowHSPApiLink        bool   `default:"false" json:"showHSPApiLink"`
+		ShowSceneSearchField  bool   `default:"false" json:"showSceneSearchField"`
 		StashApiKey           string `default:"" json:"stashApiKey"`
 		ScrapeActorAfterScene bool   `default:"true" json:"scrapeActorAfterScene"`
 		UseImperialEntry      bool   `default:"false" json:"useImperialEntry"`

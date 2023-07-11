@@ -331,6 +331,15 @@
                     </b-message>
                   </div>
                 </b-tab-item>
+                <b-tab-item v-if="this.$store.state.optionsAdvanced.advanced.showSceneSearchField" label="Search fields">
+                  <div class="block-tab-content block">
+                    <div class="content is-small">
+                      <div class="block" v-for="(field, idx) in searchfields" :key="idx">
+                        <strong>{{ field.FieldName }} - </strong> {{ field.FieldValue }}                        
+                      </div>
+                    </div>
+                  </div>
+                </b-tab-item>
 
               </b-tabs>
             </div>
@@ -399,6 +408,7 @@ export default {
       endTime: null,
       sortMultiple: true,
       castimages: [],
+      searchfields: [],
     }
   },
   computed: {
@@ -406,9 +416,7 @@ export default {
       const item = this.$store.state.overlay.details.scene
       if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
         item.tags.sort((a, b) => a.name < b.name ? -1 : 1)
-      }
-
-      console.log(item.cast)
+      }      
       let imgs = item.cast.map((actor) => {
         let img = actor.image_url
         if (img == "" ){
@@ -510,7 +518,8 @@ export default {
       this.cuepointPositionTags = data.positions
       this.cuepointActTags.unshift("")
       this.cuepointPositionTags.unshift("")      
-      })  
+      }) 
+    this.getSearchFields() 
 },
   methods: {
     setupPlayer () {
@@ -743,6 +752,7 @@ export default {
         this.carouselSlide = 0
         this.updatePlayer(undefined, '180')
       }
+      this.getSearchFields()
     },
     prevScene () {
       const data = this.$store.getters['sceneList/prevScene'](this.item)
@@ -752,6 +762,7 @@ export default {
         this.carouselSlide = 0
         this.updatePlayer(undefined, '180')
       }
+      this.getSearchFields()
     },
     playerStepBack (interval) {
       const wasPlaying = !this.player.paused()
@@ -868,6 +879,18 @@ export default {
     },
     hideTooltip(idx) {
       this.castimages[idx].visible = false;      
+    },
+    getSearchFields() {
+      // load search fields
+      if (this.$store.state.optionsAdvanced.advanced.showSceneSearchField) {
+        ky.get('/api/scene/searchfields', {
+          searchParams: {
+            q: this.item.id
+          },
+          }).json().then(data => { 
+            this.searchfields = data
+          })
+      }
     },
     format,
     parseISO,
