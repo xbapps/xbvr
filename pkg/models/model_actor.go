@@ -180,10 +180,10 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 
 	for _, i := range r.Lists {
 		if i.OrElse("") == "watchlist" {
-			tx = tx.Where("watchlist = ?", true)
+			tx = tx.Where("actors.watchlist = ?", true)
 		}
 		if i.OrElse("") == "favourite" {
-			tx = tx.Where("favourite = ?", true)
+			tx = tx.Where("actors.favourite = ?", true)
 		}
 	}
 
@@ -230,9 +230,9 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 		switch fieldName {
 		case "In Watchlist":
 			if truefalse {
-				where = "watchlist = 1"
+				where = "actors.watchlist = 1"
 			} else {
-				where = "watchlist = 0"
+				where = "actors.watchlist = 0"
 			}
 		case "Is Scripted":
 			if truefalse {
@@ -242,15 +242,15 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 			}
 		case "Is Favourite":
 			if truefalse {
-				where = "favourite = 1"
+				where = "actors.favourite = 1"
 			} else {
-				where = "favourite = 0"
+				where = "actors.favourite = 0"
 			}
 		case "Has Rating":
 			if truefalse {
-				where = "star_rating > 0"
+				where = "actors.star_rating > 0"
 			} else {
-				where = "star_rating = 0"
+				where = "actors.star_rating = 0"
 			}
 		case "Aka Group":
 			if truefalse {
@@ -286,9 +286,9 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 			}
 		case "Rating 0", "Rating .5", "Rating 1", "Rating 1.5", "Rating 2", "Rating 2.5", "Rating 3", "Rating 3.5", "Rating 4", "Rating 4.5", "Rating 5":
 			if truefalse {
-				where = "star_rating = " + fieldName[7:]
+				where = "actors.star_rating = " + fieldName[7:]
 			} else {
-				where = "star_rating <> " + fieldName[7:]
+				where = "actors.star_rating <> " + fieldName[7:]
 			}
 		case "Has Tattoo":
 			if truefalse {
@@ -423,12 +423,12 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 		tx = tx.Order("name desc")
 	case "rating_desc":
 		tx = tx.
-			Where("star_rating > ?", 0).
-			Order("star_rating desc")
+			Where("actors.star_rating > ?", 0).
+			Order("actors.star_rating desc")
 	case "rating_asc":
 		tx = tx.
-			Where("star_rating > ?", 0).
-			Order("star_rating asc")
+			Where("actors.star_rating > ?", 0).
+			Order("actors.star_rating asc")
 	case "scene_rating_desc":
 		tx = tx.
 			Order("(select AVG(s.star_rating) from scene_cast sc join scenes s on s.id=sc.scene_id where sc.actor_id =actors.id and s.star_rating > 0 ) desc, (select count(*) from scene_cast sc join scenes s on s.id=sc.scene_id where sc.actor_id =actors.id and s.star_rating > 0 ) desc, (select count(*) from scene_cast sc join scenes s on s.id=sc.scene_id where sc.actor_id =actors.id) desc")
