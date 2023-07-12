@@ -159,25 +159,27 @@ archives:
     - xbvr-linux-amd64
     - xbvr-linux-arm64
     - xbvr-linux-armv7
-  replacements:
-    linux: Linux
-    windows: Windows
-    amd64: x86_64
+  name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_Linux_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else }}{{ .Arch }}{{ end }}
 - id: archive-win
   builds:
     - xbvr-windows
   format: zip
-  replacements:
-    windows: Windows
+  name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_Windows_{{ .Arch }}
 - id: archive-mac
   builds:
     - xbvr-mac-intel
     - xbvr-mac-m1
   format: zip
-  replacements:
-    darwin: macOS
-    amd64: intel
-    arm64: m1
+  name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_macOS_
+      {{- if eq .Arch "amd64" }}intel
+      {{- else if eq .Arch "arm64" }}m1
+      {{- else }}{{ .Arch }}{{ end }}
+
 #  files:
 #    - XBVR.app/Contents/Resources/XBVR.icns
 #    - XBVR.app/Contents/Info.plist
@@ -207,6 +209,9 @@ changelog:
     exclude:
     - "^docs:"
     - "^minor:"
+    - "^chore:"
+    - "^chore\(deps\):"
+    - "^fix\(deps\):"
     - "^test:"
 
 release:
