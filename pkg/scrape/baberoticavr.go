@@ -1,15 +1,16 @@
 package scrape
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
-	"github.com/gocolly/colly/v2"
+	"github.com/go-resty/resty/v2"
+	"github.com/gosimple/slug"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -20,125 +21,117 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	siteID := "BaberoticaVR"
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("baberoticavr.com")
-	siteCollector := createCollector("baberoticavr.com")
+	resp, err := resty.New().R().
+		SetHeader("User-Agent", UserAgent).
+		SetDoNotParseResponse(true).
+		Get("https://baberoticavr.com/feed/csv/")
 
-	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+	if err != nil {
+		log.Errorf("Error fetching BaberoticaVR feed: %s", err)
+		logScrapeFinished(scraperID, siteID)
+		return nil
+	}
+
+	csvreader := csv.NewReader(resp.RawBody())
+	data, err := csvreader.ReadAll()
+	if err != nil {
+		log.Errorf("Error reading BaberoticaVR feed: %s", err)
+		logScrapeFinished(scraperID, siteID)
+		return nil
+	}
+
+	// Fields:
+	// 0 Unique Item ID
+	// 1 Username
+	// 2 Publishing date
+	// 3 Video URL
+	// 4 Duration
+	// 5 Title
+	// 6 Categories
+	// 7 Default thumbnail URL
+	// 8 Preview image url
+	// 9 Preview thumbnail URLs
+	// 10 Tags/Channels
+	// 11 Models
+	// 12 Description
+	// 13 HD
+	// 14 4K
+	// 15 VR
+	// 16 UGC
+	// 17 Premium
+	// 18 PayPerClip
+	// 19 PayPerView
+	// 20 Fan subscription
+	// 21 Studio Name
+	// 22 Pay Site Name
+	// 23 Preview available
+	// 24 Preview duration
+	// 25 Banned countries
+	// 26 Under review
+	// 27 Price
+
+	// there are some weird categories like cup size or eye color, which don't make much sense without context
+	ignoreTags := []string{"brown", "hazel", "blue", "black", "grey", "auburn", "categories", "green"}
+	siteIdRegex := regexp.MustCompile(`baberoticavr-(\d+)`)
+	for _, row := range data {
 		sc := models.ScrapedScene{}
+		sceneURL := row[3]
+		if funk.ContainsString(knownScenes, sceneURL) {
+			continue
+		}
+
+		match := siteIdRegex.FindStringSubmatch(row[0])
+		if match != nil {
+			sc.SiteID = match[1]
+		} else {
+			continue
+		}
+
 		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "Baberotica"
 		sc.Site = siteID
-		sc.SiteID = ""
-		sc.HomepageURL = e.Request.URL.String()
+		sc.HomepageURL = sceneURL
+		sc.Title = row[5]
+		sc.Synopsis = row[12]
+		sc.Covers = append(sc.Covers, row[7])
+		sc.Gallery = strings.Split(row[9], ",")
+		sc.Released = row[2]
+		duration, err := strconv.Atoi(row[4])
+		if err == nil {
+			sc.Duration = duration / 60
+		}
 
-		// Title
-		e.ForEach(`h1[itemprop=name]`, func(id int, e *colly.HTMLElement) {
-			sc.Title = strings.TrimSpace(e.Text)
-		})
-
-		// Cover URLs
-		e.ForEach(`div[itemprop=video] meta[itemprop=thumbnailUrl]`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				coverUrl := "https:" + e.Attr("content")
-				sc.Covers = append(sc.Covers, coverUrl)
+		tags := strings.Split(row[6], ",")
+		for _, tag := range tags {
+			tag = strings.TrimSpace(tag)
+			if len(tag) > 3 {
+				ignore := false
+				for i := range ignoreTags {
+					if tag == ignoreTags[i] {
+						ignore = true
+						break
+					}
+				}
+				if !ignore {
+					sc.Tags = append(sc.Tags, tag)
+				}
 			}
-		})
+		}
 
-		// Gallery
-		e.ForEach(`ul.caroussel li img`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, "https:"+e.Attr("src"))
-		})
-
-		// there are some weird categories like cup size or eye color, which don't make much sense without context
-		ignoreTags := []string{"brown", "hazel", "blue", "black", "grey", "auburn", "categories", "green"}
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`div.video-info`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
+		actors := strings.Split(row[11], ",")
+		for _, actor := range actors {
+			actor := strings.TrimSpace(actor)
 
-				// Cast
-				e.ForEach(`span[itemprop=actor] span[itemprop=name]`, func(id int, e *colly.HTMLElement) {
-					if strings.TrimSpace(e.Text) != "" {
-						sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-					}
-				})
-
-				// Link to Cast page
-				e.ForEach(`span[itemprop=actor]`, func(id int, e *colly.HTMLElement) {
-					url := ""
-					name := ""
-					e.ForEach(`span[itemprop=name]`, func(id int, e *colly.HTMLElement) {
-						name = strings.TrimSpace(e.Text)
-					})
-					e.ForEach(`span[itemprop=actor] a[itemprop=url]`, func(id int, e *colly.HTMLElement) {
-						url = e.Attr("href")
-					})
-					sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: url}
-				})
-
-				// Tags
-				e.ForEach(`a[itemprop=genre]`, func(id int, e *colly.HTMLElement) {
-					tag := strings.ToLower(strings.TrimSpace(e.Text))
-					if len(tag) > 3 {
-						ignore := false
-						for i := range ignoreTags {
-							if tag == ignoreTags[i] {
-								ignore = true
-								break
-							}
-						}
-						if !ignore {
-							sc.Tags = append(sc.Tags, tag)
-						}
-					}
-				})
-
+			if actor != "" {
+				sc.Cast = append(sc.Cast, actor)
+				url := "https://baberoticavr.com/model/" + slug.Make(actor) + "/"
+				sc.ActorDetails[actor] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: url}
 			}
-		})
-
-		// Synposis
-		e.ForEach(`div.video-description`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text)
-		})
-
-		// Release date
-		e.ForEach(`meta[itemprop=datePublished]`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				tmpDate, err := time.Parse(time.RFC3339, e.Attr("content"))
-				if err == nil {
-					sc.Released = tmpDate.Format("2006-01-02")
-					sc.SiteID = tmpDate.Format("2006-01-02")
-				}
-			}
-		})
-
-		// Release date / Duration
-		e.ForEach(`meta[itemprop=duration]`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				r := regexp.MustCompile("T(\\d+)M")
-				match := r.FindStringSubmatch(e.Attr("content"))
-				if match != nil {
-					tmpDuration, err := strconv.Atoi(match[1])
-					if err == nil {
-						sc.Duration = tmpDuration
-					}
-				}
-			}
-		})
-
-		// Filenames (only a guess for now)
-		suffixes := []string{"5k", "4k", "gear", "hd", "oculus"}
-		e.ForEach(`div.video-downloads a`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				parts := strings.Split(e.Attr("href"), "/")
-				basename := parts[len(parts)-1]
-				parts = strings.Split(basename, "_trailer_")
-				base := parts[0]
-				for _, suffix := range suffixes {
-					sc.Filenames = append(sc.Filenames, base+"_"+suffix+"_180x180_3dh.mp4")
-				}
-			}
-		})
+			sc.Studio = actor
+			break
+		}
 
 		// trailer details
 		sc.TrailerType = "scrape_html"
@@ -148,27 +141,10 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 
 		if sc.SiteID != "" {
 			sc.SceneID = fmt.Sprintf("baberoticavr-%v", sc.SiteID)
-
-			// save only if we got a SceneID
-			out <- sc
 		}
-	})
 
-	siteCollector.OnHTML(`div.pagination a.page-numbers`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		siteCollector.Visit(pageURL)
-	})
-
-	siteCollector.OnHTML(`div.container-wide li div.rel a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-
-		// If scene exist in database, there's no need to scrape
-		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
-		}
-	})
-
-	siteCollector.Visit("https://baberoticavr.com/solo-vr-porn/")
+		out <- sc
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
