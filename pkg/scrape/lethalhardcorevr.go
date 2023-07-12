@@ -1,9 +1,11 @@
 package scrape
 
 import (
+	"encoding/json"
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -26,7 +28,7 @@ func isGoodTag(lookup string) bool {
 	return true
 }
 
-func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -43,6 +45,19 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		// Site ID
 		sc.Site = siteID
 
+		if singleSceneURL != "" {
+			// client := resty.New()
+			// client.SetHeader("User-Agent", UserAgent)
+			// resp, err := client.R().Get("https://www.fuckpassvr.com/api/api/scene/detail")
+			// searchCollector.Response = resp
+			// if err == nil {
+
+			// } else {
+			// 	log.Error(err)
+
+			// }
+
+		}
 		// Release Date
 		tmpDate, _ := goment.New(e.Request.Ctx.Get("date"), "MM/DD/YYYY")
 		sc.Released = tmpDate.Format("YYYY-MM-DD")
@@ -160,7 +175,22 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		}
 	})
 
-	siteCollector.Visit(URL)
+	if singleSceneURL != "" {
+		type extraInfo struct {
+			FieldName  string `json:"fieldName"`
+			FieldValue string `json:"fieldValue"`
+		}
+		var extrainfo []extraInfo
+		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
+		ctx := colly.NewContext()
+		parsedDate, _ := time.Parse("2006-01-02", extrainfo[1].FieldValue)
+		formattedDate := parsedDate.Format("01/02/2006")
+		ctx.Put("date", formattedDate)
+
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit(URL)
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -169,12 +199,12 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 	return nil
 }
 
-func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "lethalhardcorevr", "LethalHardcoreVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95595")
+func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, singleSceneURL, "lethalhardcorevr", "LethalHardcoreVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95595", singeScrapeAdditionalInfo)
 }
 
-func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return LethalHardcoreSite(wg, updateSite, knownScenes, out, "whorecraftvr", "WhorecraftVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95347")
+func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, singleSceneURL, "whorecraftvr", "WhorecraftVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95347", singeScrapeAdditionalInfo)
 }
 
 func init() {

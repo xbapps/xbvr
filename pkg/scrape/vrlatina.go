@@ -14,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "vrlatina"
 	siteID := "VRLatina"
@@ -122,7 +122,11 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		}
 	})
 
-	siteCollector.Visit("https://vrlatina.com/most-recent/")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://vrlatina.com/most-recent/")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

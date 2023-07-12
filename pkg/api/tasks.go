@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,6 +21,20 @@ type RequestScrapeTPDB struct {
 	SceneUrl string `json:"sceneUrl"`
 }
 
+type RequestSingleScrape struct {
+	Site           string                            `json:"site"`
+	SceneUrl       string                            `json:"sceneurl"`
+	AdditionalInfo []RequestSingleScrapeAdditionInfo `json:"additionalinfo"`
+}
+
+type RequestSingleScrapeAdditionInfo struct {
+	FieldName   string `json:"fieldName"`
+	FieldPrompt string `json:"fieldPrompt"`
+	Placeholder string `json:"placeholder"`
+	FieldValue  string `json:"fieldValue"`
+	Required    bool   `json:"required"`
+	Type        string `json:"type"`
+}
 type ResponseBackupBundle struct {
 	Response string `json:"status"`
 }
@@ -48,6 +63,9 @@ func (i TaskResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.GET("/scrape").To(i.scrape).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.POST("/singlescrape").To(i.singleScrape).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.GET("/index").To(i.index).
@@ -107,7 +125,17 @@ func (i TaskResource) scrape(req *restful.Request, resp *restful.Response) {
 	if qSiteID == "" {
 		qSiteID = "_enabled"
 	}
-	go tasks.Scrape(qSiteID)
+	go tasks.Scrape(qSiteID, "", "")
+}
+func (i TaskResource) singleScrape(req *restful.Request, resp *restful.Response) {
+	//body, _ := ioutil.ReadAll(req.Request.Body)
+	//json.Unmarshal(body, &scrapeParams)
+
+	var scrapeParams RequestSingleScrape
+	req.ReadEntity(&scrapeParams)
+	additionalInfo, _ := json.Marshal(scrapeParams.AdditionalInfo)
+
+	go tasks.Scrape(scrapeParams.Site, scrapeParams.SceneUrl, string(additionalInfo))
 }
 
 func (i TaskResource) exportAllFunscripts(req *restful.Request, resp *restful.Response) {

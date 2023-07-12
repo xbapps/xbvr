@@ -29,7 +29,7 @@ func getVideoName(fileUrl string) (string, error) {
 	return filename, nil
 }
 
-func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, siteURL string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
+func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -172,7 +172,11 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit(siteURL)
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit(siteURL)
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -229,8 +233,8 @@ func addVRPHubScraper(id string, name string, company string, avatarURL string, 
 		avatarURL = "https://cdn.vrphub.com/wp-content/uploads/2016/08/vrphubnew.png"
 	}
 
-	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return VRPHub(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL, callback)
+	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+		return VRPHub(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, callback)
 	})
 }
 

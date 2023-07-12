@@ -13,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, nwID string) error {
+func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, nwID string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -141,7 +141,11 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		}
 	})
 
-	siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos&sites=" + nwID)
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos&sites=" + nwID)
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -151,8 +155,8 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 }
 
 func addCZVRScraper(id string, name string, nwid string, avatarURL string) {
-	registerScraper(id, name, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return CzechVR(wg, updateSite, knownScenes, out, id, name, nwid)
+	registerScraper(id, name, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+		return CzechVR(wg, updateSite, knownScenes, out, singleSceneURL, id, name, nwid, singeScrapeAdditionalInfo)
 	})
 }
 

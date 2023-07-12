@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"net/url"
 	"strconv"
 	"strings"
@@ -13,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "stasyqvr"
 	siteID := "StasyQVR"
@@ -128,7 +129,20 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		}
 	})
 
-	siteCollector.Visit("https://stasyqvr.com/virtualreality/list")
+	if singleSceneURL != "" {
+		type extraInfo struct {
+			FieldName  string `json:"fieldName"`
+			FieldValue string `json:"fieldValue"`
+		}
+		var extrainfo []extraInfo
+		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
+		ctx := colly.NewContext()
+		duration, _ := strconv.Atoi(extrainfo[0].FieldValue)
+		ctx.Put("duration", duration)
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+	} else {
+		siteCollector.Visit("https://stasyqvr.com/virtualreality/list")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

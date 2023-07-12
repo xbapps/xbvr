@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
@@ -12,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "bvr"
 	siteID := "VirtualPorn"
@@ -136,7 +137,23 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
+	if singleSceneURL != "" {
+		type extraInfo struct {
+			FieldName  string `json:"fieldName"`
+			FieldValue string `json:"fieldValue"`
+		}
+		var extrainfo []extraInfo
+		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
+		ctx := colly.NewContext()
+		ctx.Put("dur", extrainfo[0].FieldValue+"mins")
+		parsedDate, _ := time.Parse("2006-01-02", extrainfo[1].FieldValue)
+		formattedDate := parsedDate.Format("Jan 02, 2006")
+		ctx.Put("date", formattedDate)
+
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+	} else {
+		siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -13,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "tonightsgirlfriend"
 	siteID := "Tonight's Girlfriend VR"
@@ -158,7 +159,23 @@ func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://www.tonightsgirlfriend.com/scenes/vr")
+	if singleSceneURL != "" {
+		type extraInfo struct {
+			FieldName  string `json:"fieldName"`
+			FieldValue string `json:"fieldValue"`
+		}
+		var extrainfo []extraInfo
+		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
+		ctx := colly.NewContext()
+		parsedDate, _ := time.Parse("2006-01-02", extrainfo[0].FieldValue)
+		formattedDate := parsedDate.Format("Jan 2, 2006")
+		ctx.Put("date", formattedDate)
+
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+
+	} else {
+		siteCollector.Visit("https://www.tonightsgirlfriend.com/scenes/vr")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

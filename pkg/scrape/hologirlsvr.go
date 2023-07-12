@@ -11,7 +11,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "hologirlsvr"
 	siteID := "HoloGirlsVR"
@@ -111,7 +111,11 @@ func HoloGirlsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.Visit("https://www.hologirlsvr.com/Models")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://www.hologirlsvr.com/Models")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

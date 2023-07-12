@@ -18,7 +18,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "vrallure"
 	siteID := "VRAllure"
@@ -151,7 +151,11 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		}
 	})
 
-	siteCollector.Visit("https://vrallure.com/scenes")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://vrallure.com/scenes")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

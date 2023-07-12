@@ -15,7 +15,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "caribbeancomvr"
 	siteID := "CaribbeanCom VR"
@@ -130,7 +130,11 @@ func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.Visit("https://en.caribbeancom.com/eng/listpages/vr1.htm")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://en.caribbeancom.com/eng/listpages/vr1.htm")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

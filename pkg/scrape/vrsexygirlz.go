@@ -12,7 +12,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRSexygirlz(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VRSexygirlz(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 
 	scraperID := "vrsexygirlz"
@@ -103,7 +103,12 @@ func VRSexygirlz(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			sceneCollector.Visit(sceneURL)
 		}
 	})
-	siteCollector.Visit("https://www.vrsexygirlz.com")
+
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://www.vrsexygirlz.com")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)

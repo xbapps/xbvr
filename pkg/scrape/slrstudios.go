@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"html"
 	"regexp"
 	"strconv"
@@ -15,7 +16,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, siteURL string) error {
+func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -255,7 +256,23 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.Visit(siteURL + "?sort=most_recent")
+	if singleSceneURL != "" {
+		isTransScene := strings.Contains(singleSceneURL, ".com/trans")
+		type extraInfo struct {
+			FieldName  string `json:"fieldName"`
+			FieldValue string `json:"fieldValue"`
+		}
+		var extrainfo []extraInfo
+		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
+		ctx := colly.NewContext()
+		duration, _ := strconv.Atoi(extrainfo[0].FieldValue)
+		ctx.Put("duration", duration)
+		ctx.Put("isTransScene", isTransScene)
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+
+	} else {
+		siteCollector.Visit(siteURL + "?sort=most_recent")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -324,8 +341,8 @@ func addSLRScraper(id string, name string, company string, avatarURL string, cus
 		avatarURL = "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png"
 	}
 
-	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return SexLikeReal(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL)
+	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+		return SexLikeReal(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo)
 	})
 }
 
