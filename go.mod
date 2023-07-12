@@ -55,7 +55,7 @@ require (
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.14.2
 	golang.org/x/crypto v0.11.0
-	golang.org/x/net v0.11.0
+	golang.org/x/net v0.12.0
 	golang.org/x/oauth2 v0.9.0
 	golang.org/x/sys v0.10.0
 	golang.org/x/text v0.11.0
