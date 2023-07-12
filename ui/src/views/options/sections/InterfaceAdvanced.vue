@@ -25,6 +25,13 @@
               </b-switch>
             </b-field>
             <b-field>
+              <b-tooltip :label="$t('Only required when troubleshooting search issues, this will enable a Tab in the Scene Details to display what search fields exist and their values for a scene')" :delay="500" type="is-warning">
+              <b-switch v-model="showSceneSearchField" type="is-default">
+                show Scene Search Fields
+              </b-switch>
+              </b-tooltip>
+            </b-field>
+            <b-field>
               <b-button type="is-primary" @click="save">Save</b-button>
             </b-field>
           </section>
@@ -152,11 +159,19 @@ export default {
       }
     },
     showHSPApiLink: {
-      get () {
+      get () {        
         return this.$store.state.optionsAdvanced.advanced.showHSPApiLink
       },
       set (value) {
         this.$store.state.optionsAdvanced.advanced.showHSPApiLink = value
+      },
+    },
+    showSceneSearchField: {
+      get () {
+        return this.$store.state.optionsAdvanced.advanced.showSceneSearchField
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.showSceneSearchField = value
       },
     },
     stashApiKey: {
