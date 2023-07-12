@@ -1,9 +1,6 @@
 package scrape
 
 import (
-	"encoding/json"
-	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -15,75 +12,72 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, domain string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("realitylovers.com", "tsvirtuallovers.com")
+	sceneCollector := createCollector("realitylovers.com", "engine.realitylovers.com", "tsvirtuallovers.com", "engine.tsvirtuallovers.com")
 
-	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+	sceneCollector.OnResponse(func(r *colly.Response) {
+		if r.StatusCode != 200 {
+			return
+		}
+		json := gjson.ParseBytes(r.Body)
+
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "RealityLovers"
 		sc.Site = siteID
-		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.HomepageURL = r.Request.Ctx.Get("sceneURL")
 
 		// Scene ID
-		sc.SiteID = e.Request.Ctx.Get("id")
+		sc.SiteID = json.Get("contentId").String()
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
-		// Cover
-		sc.Covers = append(sc.Covers, strings.Replace(e.Request.Ctx.Get("cover"), "-Small", "-Large", 1))
+		sc.Title = json.Get("title").String()
+		sc.Synopsis = json.Get("description").String()
 
-		// Title
-		sc.Title = e.Request.Ctx.Get("title")
+		covers := json.Get("mainImages.0.imgSrcSet").String()
+		sc.Covers = append(sc.Covers, strings.Fields(covers)[0])
 
-		// Release date
-		sc.Released = e.Request.Ctx.Get("released")
-
-		// Duration
-		e.ForEach(`.table-plain td:contains("Duration:") ~ td`, func(id int, e *colly.HTMLElement) {
-			tmpDuration, err := strconv.Atoi(strings.Split(e.Text, ":")[0])
-			if err == nil {
-				sc.Duration = tmpDuration
-			}
-		})
+		sc.Released = json.Get("releaseDate").String()
 
 		// Cast
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`a[itemprop="actor"]`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+		json.Get("starring").ForEach(func(_, star gjson.Result) bool {
+			name := star.Get("name").String()
+			sc.Cast = append(sc.Cast, name)
+			sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: "https://" + domain + "/" + star.Get("uri").String()}
+			return true
 		})
 
 		// Gallery
-		e.ForEach(`img.videoClip__Details--galleryItem`, func(id int, e *colly.HTMLElement) {
-			imageURL := strings.Replace(strings.Fields(e.Attr("data-big"))[0], "_small", "_large", 1)
-			sc.Gallery = append(sc.Gallery, strings.Replace(imageURL, "https:", "http:", 1))
+		json.Get("screenshots").ForEach(func(_, screenshot gjson.Result) bool {
+			imgset := screenshot.Get("galleryImgSrcSet").String()
+			images := strings.Split(imgset, ",")
+			selectedImage := ""
+			for _, image := range images {
+				parts := strings.Fields(image)
+				if selectedImage == "" {
+					selectedImage = parts[0]
+				}
+				if parts[1] == "1920w" {
+					selectedImage = parts[0]
+				}
+			}
+			sc.Gallery = append(sc.Gallery, selectedImage)
+			return true
 		})
 
 		// Tags
-		e.ForEach(`.videoClip__Details__categoryTag`, func(id int, e *colly.HTMLElement) {
-			tag := strings.TrimSpace(e.Text)
-			sc.Tags = append(sc.Tags, tag)
+		json.Get("categories").ForEach(func(_, category gjson.Result) bool {
+			sc.Tags = append(sc.Tags, category.Get("name").String())
+			return true
 		})
 
-		// trailer details
-		sc.TrailerType = "scrape_html"
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "script", ExtractRegex: `trailerUrl = "(.+?)";`}
-		strParams, _ := json.Marshal(params)
-		sc.TrailerSrc = string(strParams)
-
-		// Synopsis
-		e.ForEach(`p[itemprop="description"]`, func(id int, e *colly.HTMLElement) {
-			reLeadcloseWhtsp := regexp.MustCompile(`^[\s\p{Zs}]+|[\s\p{Zs}]+$`)
-			reInsideWhtsp := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
-			synopsis := reLeadcloseWhtsp.ReplaceAllString(e.Text, "")
-			synopsis = reInsideWhtsp.ReplaceAllString(synopsis, " ")
-			synopsis = strings.TrimSuffix(synopsis, " … Read more")
-			sc.Synopsis = synopsis
-		})
+		sc.TrailerType = "url"
+		sc.TrailerSrc = json.Get("trailerUrl").String()
 
 		out <- sc
 	})
@@ -91,25 +85,23 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 	// Request scenes via REST API
 	r, err := resty.New().R().
 		SetHeader("User-Agent", UserAgent).
-		SetHeader("content-type", "application/json;charset=UTF-8").
-		SetHeader("accept", "application/json, text/plain, */*").
-		SetHeader("referer", URL+"videos").
-		SetHeader("origin", URL).
-		SetHeader("authority", siteID+".com").
-		SetBody(`{"searchQuery":"","categoryId":null,"perspective":null,"actorId":null,"offset":"5000","isInitialLoad":true,"sortBy":"NEWEST","videoView":"MEDIUM","device":"DESKTOP"}`).
-		Post(URL + "videos/search?hl=1")
+		Get("https://engine." + domain + "/content/videos?max=3000&page=0&pornstar=&category=&perspective=&sort=NEWEST")
+
+	if err != nil {
+		log.Errorf("Error fetching BaberoticaVR feed: %s", err)
+		logScrapeFinished(scraperID, siteID)
+		return nil
+	}
+
 	if err == nil || r.StatusCode() == 200 {
 		result := gjson.Get(r.String(), "contents")
 		result.ForEach(func(key, value gjson.Result) bool {
-			sceneURL := URL + value.Get("videoUri").String()
+			sceneURL := "https://" + domain + "/" + value.Get("videoUri").String()
+			sceneID := value.Get("id").String()
 			if !funk.ContainsString(knownScenes, sceneURL) {
 				ctx := colly.NewContext()
-				cover := strings.Fields(value.Get("mainImageSrcset").String())[0]
-				ctx.Put("cover", strings.Replace(cover, "https:", "http:", 1))
-				ctx.Put("id", value.Get("id").String())
-				ctx.Put("released", value.Get("released").String())
-				ctx.Put("title", value.Get("title").String())
-				sceneCollector.Request("GET", sceneURL+"?hl=1", nil, ctx, nil)
+				ctx.Put("sceneURL", sceneURL)
+				sceneCollector.Request("GET", "https://engine."+domain+"/content/videoDetail?contentId="+sceneID, nil, ctx, nil)
 			}
 			return true
 		})
@@ -123,11 +115,11 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 }
 
 func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return RealityLoversSite(wg, updateSite, knownScenes, out, "realitylovers", "RealityLovers", "https://realitylovers.com/")
+	return RealityLoversSite(wg, updateSite, knownScenes, out, "realitylovers", "RealityLovers", "realitylovers.com")
 }
 
 func TSVirtualLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return RealityLoversSite(wg, updateSite, knownScenes, out, "tsvirtuallovers", "TSVirtualLovers", "https://tsvirtuallovers.com/")
+	return RealityLoversSite(wg, updateSite, knownScenes, out, "tsvirtuallovers", "TSVirtualLovers", "tsvirtuallovers.com")
 }
 
 func init() {
