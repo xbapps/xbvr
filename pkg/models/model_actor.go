@@ -344,7 +344,7 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 		tx = tx.Where("actors.name > ?", r.JumpTo.OrElse(""))
 	}
 
-	if r.MinAge.OrElse(0) > 0 || r.MaxAge.OrElse(100) < 100 {
+	if r.MinAge.OrElse(0) > 18 || r.MaxAge.OrElse(100) < 100 {
 		startRange := time.Now().AddDate(r.MinAge.OrElse(0)*-1, 0, 0)
 		endRange := time.Now().AddDate(r.MaxAge.OrElse(0)*-1, 0, 0)
 		tx = tx.Where("actors.birth_date <= ? and actors.birth_date >= ?", startRange, endRange)
