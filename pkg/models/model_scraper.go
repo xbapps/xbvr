@@ -36,6 +36,7 @@ type ScrapedScene struct {
 	MembersUrl  string   `json:"members_url"`
 	TrailerType string   `json:"trailer_type"`
 	TrailerSrc  string   `json:"trailer_source"`
+	ChromaKey   string   `json:"chromakey"`
 
 	ActorDetails map[string]ActorDetails `json:"actor_details"`
 }
