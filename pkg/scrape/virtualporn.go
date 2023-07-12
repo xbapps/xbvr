@@ -20,6 +20,7 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 	sceneCollector := createCollector("virtualporn.com")
 	siteCollector := createCollector("virtualporn.com")
+	pageCnt := 1
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -100,10 +101,15 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`div.pagination a[class="pagination__link "]`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		if !strings.Contains(pageURL, "s=billing.payment") {
-			siteCollector.Visit(pageURL)
+	siteCollector.OnHTML(`body`, func(e *colly.HTMLElement) {
+		sceneCnt := 0
+		e.ForEach(`div.recommended__item`, func(id int, e *colly.HTMLElement) {
+			sceneCnt += 1
+		})
+
+		if sceneCnt > 0 {
+			pageCnt += 1
+			siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
 		}
 	})
 
@@ -130,7 +136,7 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.Visit("https://virtualporn.com/videos")
+	siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
