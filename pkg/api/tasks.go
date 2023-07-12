@@ -128,9 +128,6 @@ func (i TaskResource) scrape(req *restful.Request, resp *restful.Response) {
 	go tasks.Scrape(qSiteID, "", "")
 }
 func (i TaskResource) singleScrape(req *restful.Request, resp *restful.Response) {
-	//body, _ := ioutil.ReadAll(req.Request.Body)
-	//json.Unmarshal(body, &scrapeParams)
-
 	var scrapeParams RequestSingleScrape
 	req.ReadEntity(&scrapeParams)
 	additionalInfo, _ := json.Marshal(scrapeParams.AdditionalInfo)

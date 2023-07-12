@@ -148,8 +148,7 @@ export default {
       ky.get(`/api/task/scrape?site=${scraper}`)
     },
     taskScrapeScene (scraper) {
-      this.currentScraper=scraper
-      console.log("taskScrapeScene",this.sceneUrl)
+      this.currentScraper=scraper      
       this.additionalInfo = [{fieldName: "scene_url", fieldPrompt: "Scene Url", placeholder: "Enter the url for a VR Scene", fieldValue: '', required: true, type: 'url'}]      
       this.scraperwarning = "Take care to only use scene urls for the " + scraper + " Scraper"
       this.scraperwarning2 = ""
@@ -171,10 +170,7 @@ export default {
       this.isSingleScrapeModalActive = true      
     },
     taskScrapeSceneInfoEntered () {      
-      console.log("taskScrapeSceneinfoentered",this.sceneUrl, this.additionalInfoIdx, this.additionalInfo, this.currentScraper)      
       const inputElement = this.$refs.additionInfoInput
-      console.log("input ele", inputElement)
-      console.log(inputElement.isValid)
       if (!inputElement.isValid) {
         // get the field again
         this.isSingleScrapeModalActive = true
@@ -218,8 +214,7 @@ export default {
       if (this.additionalInfoIdx + 1 < this.additionalInfo.length) {          
         this.additionalInfoIdx = this.additionalInfoIdx +1
         this.isSingleScrapeModalActive = true      
-      } else {
-        console.log("sending",{json: { site: this.currentScraper, sceneurl: this.additionalInfo[0].fieldValue, additionalinfo: this.additionalInfo.slice(1) }})
+      } else {        
         ky.post(`/api/task/singlescrape`, {json: { site: this.currentScraper, sceneurl: this.additionalInfo[0].fieldValue, additionalinfo: this.additionalInfo.slice(1)}})
       }
     },
