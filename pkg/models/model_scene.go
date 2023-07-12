@@ -882,6 +882,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			} else {
 				where = "scenes.favourite = 0"
 			}
+		case "Is Passthrough":
+			if truefalse {
+				where = "chroma_key != ''"
+			} else {
+				where = "chroma_key = ''"
+			}
 		case "Stashdb Linked":
 			if truefalse {
 				where = "(select count(*) from external_reference_links " + erlAlias + " where " + erlAlias + ".internal_db_id = scenes.id and " + erlAlias + ".`external_source` = 'stashdb scene') > 0"
