@@ -25,6 +25,7 @@ require (
 	github.com/go-test/deep v1.1.0
 	github.com/gocolly/colly/v2 v2.1.0
 	github.com/gorilla/mux v1.8.0
+	github.com/gosimple/slug v1.13.1
 	github.com/gowww/log v1.0.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/jinzhu/gorm v1.9.16
@@ -107,6 +108,7 @@ require (
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
