@@ -110,7 +110,8 @@
 
       <footer class="modal-card-foot">
         <b-field>
-          <b-button type="is-primary" @click="save">{{ $t('Save Details') }}</b-button>          
+          <b-button type="is-primary" @click="save">{{ $t('Save Details') }}</b-button>
+          <b-button v-if="actor.scenes.length == 0 && !actor.name.startsWith('aka:')" type="is-danger" outlined @click="deleteactor">{{ $t('Delete Actor') }}</b-button>
         </b-field>
       </footer>
     </div>
@@ -291,6 +292,22 @@ export default {
       this.extrefsChangesMade = false
       this.$store.state.actorList.isLoading = false
       this.close()
+    },
+    deleteactor () {
+      this.$buefy.dialog.confirm({
+        title: 'Delete actor',
+        message: `Do you really want to delete <strong>${this.actor.name}</strong>`,
+        type: 'is-info is-wide',
+        hasIcon: true,
+        id: 'heh',
+        onConfirm: () => {
+          ky.delete(`/api/actor/delete/${this.actor.id}`).json().then(data => {
+            this.$store.dispatch('actorList/load', { offset: this.$store.state.actorList.offset - this.$store.state.actorList.limit })
+            this.$store.commit('overlay/hideActorEditDetails')
+            this.$store.commit('overlay/hideActorDetails')
+          })
+        }
+      })
     },
     blur (field) {
       if (this.changesMade) return // Changes have already been made. No point to check any further   
