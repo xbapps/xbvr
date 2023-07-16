@@ -152,7 +152,7 @@
                     </b-message>
                 </b-tab-item>
                 <b-tab-item :label="`Scenes (${actor.scenes.length})`">
-                  <div v-show="activeTab == 1" class="columns is-multiline scroll">
+                  <div v-show="activeTab == 1" :class="['columns', 'is-multiline', actor.scenes.length > 6 ? 'scroll' : '']">
                     <div :class="['column', 'is-multiline', 'is-one-third']"
                       v-for="(scene, idx) in actor.scenes" :key="idx" class="image-wrapper">
                       <SceneCard :item="scene" :reRead=true />

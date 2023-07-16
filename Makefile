@@ -22,7 +22,7 @@ release-dry-run-snapshot:
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src \
 		ghcr.io/goreleaser/goreleaser-cross:${GORELEASER_CROSS_VERSION} \
-		--rm-dist --skip-validate --skip-publish --snapshot
+		--clean --skip-validate --skip-publish --snapshot
 
 .PHONY: release-dry-run
 release-dry-run:
@@ -35,7 +35,7 @@ release-dry-run:
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src \
 		ghcr.io/goreleaser/goreleaser-cross:${GORELEASER_CROSS_VERSION} \
-		--rm-dist --skip-validate --skip-publish
+		--clean --skip-validate --skip-publish
 
 .PHONY: release-snapshot
 release-snapshot:
@@ -53,7 +53,7 @@ release-snapshot:
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src \
 		ghcr.io/goreleaser/goreleaser-cross:${GORELEASER_CROSS_VERSION} \
-		release --rm-dist --snapshot
+		release --clean --snapshot
 
 .PHONY: release
 release:
@@ -71,4 +71,4 @@ release:
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src \
 		ghcr.io/goreleaser/goreleaser-cross:${GORELEASER_CROSS_VERSION} \
-		release --rm-dist
+		release --clean

@@ -36,14 +36,17 @@
               </tr>
               <tr>
                 <td>
-                  <p><strong>Search index</strong></p>
+                  <p><strong>Search index</strong> <small> - <span v-if="searchInprogress">Indexing In Progress</span> <span v-if="!searchInprogress">{{indexSceneCount}} scenes indexed</span></small></p>
                   <p>
                     Remove search index when facing issues with finding/matching files.
                   </p>
                 </td>
                 <td nowrap>{{prettyBytes(sizes.searchIndex)}}</td>
                 <td>
-                  <b-button size="is-small" @click="resetCache('searchIndex')">Reset</b-button>
+                  <b-field>
+                    <b-button size="is-small" @click="resetCache('searchIndex')">Reset</b-button>
+                    <b-button size="is-small" @click="indexRescan" style="margin-left: .25em;">Rescan</b-button>
+                  </b-field>
                 </td>
               </tr>
               <tr>
@@ -77,11 +80,14 @@ export default {
   data () {
     return {
       isLoading: true,
-      sizes: {}
+      sizes: {},
+      indexSceneCount: 0,
+      searchInprogress: false,
     }
   },
   async mounted () {
     await this.loadState()
+    this.loadSearchState()
   },
   methods: {
     async loadState () {
@@ -97,9 +103,26 @@ export default {
       this.isLoading = true
       await ky.delete(`/api/options/cache/reset/${kind}`, { timeout: 30000 })
       await this.loadState()
+      await this.loadSearchState()
     },
     taskRefresh: function () {
       ky.get('/api/task/scene-refresh')
+    },
+    async loadSearchState () {
+      this.isLoading = true
+      await ky.get('/api/options/state/search')
+        .json()
+        .then(data => {
+          this.indexSceneCount = data.documentCount
+          this.searchInprogress = data.inProgress
+          this.isLoading = false
+        })
+    },
+    async indexRescan () {
+      this.isLoading = true
+      await ky.get('/api/task/index')
+      this.searchInprogress = true
+      this.isLoading = false
     },
     prettyBytes
   }

@@ -69,7 +69,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		})
 
 		// Date
-		e.ForEach(`div.post div.nazev div.datum`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div.nazev div.datumDetail`, func(id int, e *colly.HTMLElement) {
 			tmpDate, _ := goment.New(e.Text, "MMM DD, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
 		})

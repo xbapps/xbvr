@@ -53,6 +53,10 @@ func (i ActorResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Actor{}))
 
+	ws.Route(ws.DELETE("/delete/{id}").To(i.deleteActor).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Actor{}))
+
 	ws.Route(ws.POST("/setimage").To(i.setActorImage).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Actor{}))
@@ -407,6 +411,25 @@ func (i ActorResource) editActor(req *restful.Request, resp *restful.Response) {
 	checkStringArrayChanged("urls", &r.URLs, &actor.URLs, actor.ID)
 
 	actor.Save()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, actor)
+}
+
+func (i ActorResource) deleteActor(req *restful.Request, resp *restful.Response) {
+	id, err := strconv.Atoi(req.PathParameter("id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var actor models.Actor
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	db.Exec(`delete from actor_akas where actor_id=?`, id)
+	db.Where("actor_id = ?", uint(id)).Delete(&models.ActionActor{})
+	db.Where("internal_table = 'actors' and internal_db_id = ?", uint(id)).Delete(&models.ExternalReferenceLink{})
+	db.Where("id = ?", uint(id)).Delete(&models.Actor{})
 
 	resp.WriteHeaderAndEntity(http.StatusOK, actor)
 }

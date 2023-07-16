@@ -108,7 +108,7 @@
       <table width="100%">
         <tr>
           <td class="slider-title"><strong><small>{{ $t("Age") }}:</small></strong></td>
-          <td ><b-slider :min="0" :max="100" :step="1" :tooltip="true" v-model="ages" lazy class="slider"></b-slider></td>
+          <td ><b-slider :min="18" :max="100" :step="1" :tooltip="true" v-model="ages" lazy class="slider"></b-slider></td>
         </tr>
         <tr>
           <td class="slider-title"><strong><small>{{ $t("Height") }}:</small></strong></td>
