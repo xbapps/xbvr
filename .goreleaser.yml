@@ -210,8 +210,8 @@ changelog:
     - "^docs:"
     - "^minor:"
     - "^chore:"
-    - "^chore\(deps\):"
-    - "^fix\(deps\):"
+    - '^chore\(deps\):'
+    - '^fix\(deps\):'
     - "^test:"
 
 release:
