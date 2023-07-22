@@ -175,5 +175,5 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 }
 
 func init() {
-	registerScraper("sexbabesvr", "SexBabesVR", "https://sexbabesvr.com/assets/front/assets/logo.png", SexBabesVR)
+	registerScraper("sexbabesvr", "SexBabesVR", "https://sexbabesvr.com/assets/front/assets/logo.png", "sexbabesvr.com", SexBabesVR)
 }

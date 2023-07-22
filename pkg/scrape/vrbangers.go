@@ -187,9 +187,9 @@ func BlowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("vrbangers", "VRBangers", "https://vrbangers.com/favicon/apple-touch-icon-144x144.png", VRBangers)
-	registerScraper("vrbtrans", "VRBTrans", "https://vrbtrans.com/favicon/apple-touch-icon-144x144.png", VRBTrans)
-	registerScraper("vrbgay", "VRBGay", "https://vrbgay.com/favicon/apple-touch-icon-144x144.png", VRBGay)
-	registerScraper("vrconk", "VRCONK", "https://vrconk.com/favicon/apple-touch-icon-144x144.png", VRConk)
-	registerScraper("blowvr", "BlowVR", "https://blowvr.com/favicon/apple-touch-icon-144x144.png", BlowVR)
+	registerScraper("vrbangers", "VRBangers", "https://vrbangers.com/favicon/apple-touch-icon-144x144.png", "vrbangers.com", VRBangers)
+	registerScraper("vrbtrans", "VRBTrans", "https://vrbtrans.com/favicon/apple-touch-icon-144x144.png", "vrbtrans.com", VRBTrans)
+	registerScraper("vrbgay", "VRBGay", "https://vrbgay.com/favicon/apple-touch-icon-144x144.png", "vrbgay.com", VRBGay)
+	registerScraper("vrconk", "VRCONK", "https://vrconk.com/favicon/apple-touch-icon-144x144.png", "vrconk.com", VRConk)
+	registerScraper("blowvr", "BlowVR", "https://blowvr.com/favicon/apple-touch-icon-144x144.png", "blowvr.com", BlowVR)
 }

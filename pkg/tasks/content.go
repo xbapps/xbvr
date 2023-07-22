@@ -125,7 +125,16 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 			}
 		}
 	} else {
-		return errors.New("no sites enabled")
+		if singleSceneURL != "" {
+			for _, scraper := range scrapers {
+				if toScrape == scraper.ID {
+					wg.Add(1)
+					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo)
+				}
+			}
+		} else {
+			return errors.New("no sites enabled")
+		}
 	}
 
 	wg.Wait()
@@ -232,6 +241,24 @@ func ReapplyEdits() {
 	db.Model(&models.Scene{}).UpdateColumn("edits_applied", true)
 }
 
+func ScrapeSingleScene(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo string) models.Scene {
+	var newScene models.Scene
+	Scrape(toScrape, singleSceneURL, singeScrapeAdditionalInfo)
+	db, _ := models.GetDB()
+	defer db.Close()
+	db.
+		Preload("Tags").
+		Preload("Cast").
+		Preload("Files").
+		Preload("History").
+		Preload("Cuepoints").
+		Where("scene_url like ?", strings.TrimSuffix(singleSceneURL, "/")+"%").First(&newScene)
+	if newScene.ID != 0 {
+		return newScene
+	}
+	return models.Scene{}
+
+}
 func Scrape(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")

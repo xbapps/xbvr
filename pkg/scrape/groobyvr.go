@@ -133,5 +133,5 @@ func GroobyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("groobyvr", "GroobyVR", "https://www.groobyvr.com/tour/custom_assets/favicon/apple-touch-icon.png", GroobyVR)
+	registerScraper("groobyvr", "GroobyVR", "https://www.groobyvr.com/tour/custom_assets/favicon/apple-touch-icon.png", "groobyvr.com", GroobyVR)
 }

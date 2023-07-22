@@ -8,6 +8,7 @@ import (
 
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
+	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/tasks"
 )
 
@@ -39,6 +40,11 @@ type ResponseBackupBundle struct {
 	Response string `json:"status"`
 }
 
+type ResponseSceneScrape struct {
+	Response string       `json:"status"`
+	Scene    models.Scene `json:"scene"`
+}
+
 type TaskResource struct{}
 
 func (i TaskResource) WebService() *restful.WebService {
@@ -66,7 +72,8 @@ func (i TaskResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/singlescrape").To(i.singleScrape).
-		Metadata(restfulspec.KeyOpenAPITags, tags))
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseSceneScrape{}))
 
 	ws.Route(ws.GET("/index").To(i.index).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
@@ -132,7 +139,13 @@ func (i TaskResource) singleScrape(req *restful.Request, resp *restful.Response)
 	req.ReadEntity(&scrapeParams)
 	additionalInfo, _ := json.Marshal(scrapeParams.AdditionalInfo)
 
-	go tasks.Scrape(scrapeParams.Site, scrapeParams.SceneUrl, string(additionalInfo))
+	newScene := tasks.ScrapeSingleScene(scrapeParams.Site, scrapeParams.SceneUrl, string(additionalInfo))
+
+	createResp := &ResponseSceneScrape{
+		Response: "OK",
+		Scene:    newScene,
+	}
+	resp.WriteHeaderAndEntity(http.StatusOK, createResp)
 }
 
 func (i TaskResource) exportAllFunscripts(req *restful.Request, resp *restful.Response) {

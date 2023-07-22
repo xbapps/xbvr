@@ -155,5 +155,5 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("sinsvr", "SinsVR", "https://assets.xsinsvr.com/logo.black.svg", SinsVR)
+	registerScraper("sinsvr", "SinsVR", "https://assets.xsinsvr.com/logo.black.svg", "xsinsvr.com", SinsVR)
 }

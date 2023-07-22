@@ -185,5 +185,5 @@ func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend VR", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TNGFVR)
+	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend VR", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", "tonightsgirlfriend.com", TNGFVR)
 }

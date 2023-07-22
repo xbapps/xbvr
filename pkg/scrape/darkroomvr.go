@@ -136,5 +136,5 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 }
 
 func init() {
-	registerScraper("darkroomvr", "DarkRoomVR", "https://static.darkroomvr.com/img/favicon/apple-touch-180.png", DarkRoomVR)
+	registerScraper("darkroomvr", "DarkRoomVR", "https://static.darkroomvr.com/img/favicon/apple-touch-180.png", "darkroomvr.com", DarkRoomVR)
 }

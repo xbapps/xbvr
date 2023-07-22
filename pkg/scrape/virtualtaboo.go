@@ -138,5 +138,5 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 }
 
 func init() {
-	registerScraper("virtualtaboo", "VirtualTaboo", "https://static-src.virtualtaboo.com/img/mobile-logo.png", VirtualTaboo)
+	registerScraper("virtualtaboo", "VirtualTaboo", "https://static-src.virtualtaboo.com/img/mobile-logo.png", "virtualtaboo.com", VirtualTaboo)
 }

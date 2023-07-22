@@ -142,5 +142,5 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 }
 
 func init() {
-	registerScraper("littlecaprice", "Little Caprice Dreams", "https://littlecaprice-dreams.com/wp-content/uploads/2019/03/cropped-lcd-heart-180x180.png", LittleCaprice)
+	registerScraper("littlecaprice", "Little Caprice Dreams", "https://littlecaprice-dreams.com/wp-content/uploads/2019/03/cropped-lcd-heart-180x180.png", "littlecaprice-dreams.com", LittleCaprice)
 }

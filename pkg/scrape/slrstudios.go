@@ -35,6 +35,27 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.SceneType = "VR"
 		sc.Studio = company
 		sc.Site = siteID
+		if scraperID == "" {
+			// there maybe no site/studio if user is jusy scraping a scene url
+			e.ForEach(`div[data-qa="page-scene-studio-name"]`, func(id int, e *colly.HTMLElement) {
+				sc.Studio = strings.TrimSpace(e.Text)
+				sc.Site = strings.TrimSpace(e.Text)
+				studioId := ""
+				p := e.DOM.Parent()
+				studioId, _ = p.Attr("href")
+				studioId = strings.TrimSuffix(strings.ReplaceAll(studioId, "/studios/", ""), "/")
+
+				// see if we can find the site record, there may not be
+				db, _ := models.GetDB()
+				defer db.Close()
+				var site models.Site
+				db.Where("id = ? or name like ? or (name = ? and name like 'SLR%')", studioId, sc.Studio+"%SLR)", sc.Studio).First(&site)
+				if site.ID != "" {
+					sc.ScraperID = site.ID
+				}
+			})
+		}
+
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
@@ -265,7 +286,10 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		var extrainfo []extraInfo
 		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
-		duration, _ := strconv.Atoi(extrainfo[0].FieldValue)
+		duration := 0
+		if len(extrainfo) > 1 {
+			duration, _ = strconv.Atoi(extrainfo[0].FieldValue)
+		}
 		ctx.Put("duration", duration)
 		ctx.Put("isTransScene", isTransScene)
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
@@ -341,13 +365,18 @@ func addSLRScraper(id string, name string, company string, avatarURL string, cus
 		avatarURL = "https://www.sexlikereal.com/s/refactor/images/favicons/android-icon-192x192.png"
 	}
 
-	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	registerScraper(id, suffixedName, avatarURL, "sexlikereal.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 		return SexLikeReal(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo)
 	})
 }
 
 func init() {
 	var scrapers config.ScraperList
+	// scraper for single scenes with no existing scraper for the studio
+	registerScraper("slr-single_scene", "SLR - Other Studios", "", "sexlikereal.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+		return SexLikeReal(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "", singeScrapeAdditionalInfo)
+	})
+
 	scrapers.Load()
 	for _, scraper := range scrapers.XbvrScrapers.SlrScrapers {
 		addSLRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL)
@@ -355,5 +384,4 @@ func init() {
 	for _, scraper := range scrapers.CustomScrapers.SlrScrapers {
 		addSLRScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true, scraper.URL)
 	}
-
 }

@@ -154,5 +154,5 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 }
 
 func init() {
-	registerScraper("baberoticavr", "BaberoticaVR", "https://baberoticavr.com/wp-content/themes/baberoticavr/images/fav/android-chrome-192x192.png", BaberoticaVR)
+	registerScraper("baberoticavr", "BaberoticaVR", "https://baberoticavr.com/wp-content/themes/baberoticavr/images/fav/android-chrome-192x192.png", "baberoticavr.com", BaberoticaVR)
 }

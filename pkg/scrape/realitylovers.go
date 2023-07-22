@@ -135,6 +135,6 @@ func TSVirtualLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 }
 
 func init() {
-	registerScraper("realitylovers", "RealityLovers", "http://static.rlcontent.com/shared/VR/common/favicons/apple-icon-180x180.png", RealityLovers)
-	registerScraper("tsvirtuallovers", "TSVirtualLovers", "http://static.rlcontent.com/shared/TS/common/favicons/apple-icon-180x180.png", TSVirtualLovers)
+	registerScraper("realitylovers", "RealityLovers", "http://static.rlcontent.com/shared/VR/common/favicons/apple-icon-180x180.png", "realitylovers.com", RealityLovers)
+	registerScraper("tsvirtuallovers", "TSVirtualLovers", "http://static.rlcontent.com/shared/TS/common/favicons/apple-icon-180x180.png", "tsvirtuallovers.com", TSVirtualLovers)
 }

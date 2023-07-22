@@ -44,6 +44,43 @@
         </b-field>
       </div>
     </div>
+    
+    <h3 class="title">{{$t('Scrape a scene')}}</h3>
+    <div class="card">
+      <div class="card-content content">
+        <b-field label="Scene URL" label-position="on-border">
+          <b-input v-model="scrapeUrl" placeholder="" type="url"></b-input>
+        </b-field>
+        <b-tooltip :label="$t('Warning: Ensure you are entering a link to a scene. Links to something like a Category or Studio list may result in a corrupt scene you cannot delete. Use with caution')" :delay="50" multilined type="is-danger">
+          <b-button class="button is-primary" v-on:click="scrapeSingleScene()">{{$t('Scrape')}}</b-button>
+        </b-tooltip>
+      </div>
+    </div>    
+
+    <b-modal :active.sync="isSingleScrapeModalActive"
+             has-modal-card
+             trap-focus
+             aria-role="dialog"
+             aria-modal>
+      <div class="modal-card" style="width: auto">
+        <header class="modal-card-head">
+          <p class="modal-card-title">{{$t('Scene Id Required')}}</p>
+        </header>
+        <section class="modal-card-body">          
+          <b-field label="Scene Id">
+            <b-input 
+              v-model='singleScrapeId'              
+              placeholder="eg wetvr-12345"              
+              >
+            </b-input>            
+          </b-field>
+        </section>
+        <footer class="modal-card-foot">
+          <button class="button is-primary" :disabled="this.singleScrapeId == ''" @click="scrapeSingleScene()">Continue</button>
+        </footer>
+      </div>
+    </b-modal>
+    
   </div>
 </template>
 
@@ -58,7 +95,11 @@ export default {
       javrQuery: '',
       tpdbSceneUrl: '',
       customSceneTitle: '',
-      customSceneID: ''
+      customSceneID: '',
+      scrapeUrl: '',
+      isSingleScrapeModalActive: false,
+      singleScrapeId: '',
+      additionalinfo: [],
     }
   },
   mounted () {
@@ -82,6 +123,53 @@ export default {
     scrapeTPDB () {
       ky.post('/api/task/scrape-tpdb', {
         json: { apiToken: this.tpdbApiToken, sceneUrl: this.tpdbSceneUrl }
+      })
+    },
+    scrapeSingleScene () {
+      this.additionalinfo = []
+      if (this.scrapeUrl.toLowerCase().includes("wetvr.com")) {
+        // we need a scene id for wetvr
+        if (this.singleScrapeId=="") {
+          this.isSingleScrapeModalActive = true
+          return
+        } else {
+          this.isSingleScrapeModalActive = false
+          this.additionalinfo = [{scene_id: this.singleScrapeId}]
+        }
+      }      
+
+      let site = ""
+      this.$store.state.optionsVendor.scrapers.forEach((element) => {
+        if (this.scrapeUrl.toLowerCase().includes(element.domain)) {
+          site = element.id
+        }
+      });
+      if (this.scrapeUrl.toLowerCase().includes("sexlikereal.com")) {
+        site = "slr-single_scene"
+      }
+      if (this.scrapeUrl.toLowerCase().includes("czechvrnetwork.com")) {
+        site = "czechvr-single_scene"
+      }
+      if (this.scrapeUrl.toLowerCase().includes("povr.com")) {
+        site = "povr-single_scene"
+      }
+      if (this.scrapeUrl.toLowerCase().includes("vrporn.com")) {
+        site = "vrporn-single_scene"
+      }
+      if (this.scrapeUrl.toLowerCase().includes("vrphub.com")) {
+        site = "vrphub-single_scene"
+      }
+      if (site == "") {
+        this.$buefy.toast.open({message: `No scrapers exist for this domain`, type: 'is-danger', duration: 5000})      
+        return
+      }
+      this.$buefy.toast.open({message: `Scene scraping in progress, please wait for the Scene Detail popup`, type: 'is-warning', duration: 5000})      
+      ky.post(`/api/task/singlescrape`, {timeout: false, json: { site: site, sceneurl: this.scrapeUrl, additionalinfo: this.additionalinfo}})
+      .json()
+      .then(data => { 
+        if (data.status == 'OK') {          
+          this.$store.commit('overlay/editDetails', { scene: data.scene })
+        }
       })
     },
   },

@@ -435,6 +435,9 @@ export default {
     },
     // Properties for gallery
     images () {
+      if (this.item.images=="null") {
+        return "[]"
+      }      
       return JSON.parse(this.item.images).filter(im => im && im.url)
     },
     // Tab: cuepoints
@@ -650,10 +653,17 @@ export default {
           this.$store.commit('overlay/showDetails', { scene: data })
       })
     },
-    getImageURL (u, size) {
-      if (u.startsWith('http') || u.startsWith('https')) {
-        return '/img/' + size + '/' + u.replace('://', ':/')
-      } else {
+    getImageURL (u, size) {      
+      if (u==undefined) {
+        return u
+      }
+      try {
+        if (u.startsWith('http') || u.startsWith('https')) {
+          return '/img/' + size + '/' + u.replace('://', ':/')
+        } else {
+          return u
+        }
+      } catch {
         return u
       }
     },

@@ -175,5 +175,5 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 }
 
 func init() {
-	registerScraper("fuckpassvr-native", "FuckPassVR", "https://www.fuckpassvr.com/_nuxt/img/logo_bw.1fac7d1.png", FuckPassVR)
+	registerScraper("fuckpassvr-native", "FuckPassVR", "https://www.fuckpassvr.com/_nuxt/img/logo_bw.1fac7d1.png", "fuckpassvr.com", FuckPassVR)
 }

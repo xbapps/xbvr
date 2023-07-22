@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -52,11 +53,13 @@ func InitSites() {
 
 	scrapers := GetScrapers()
 	for i := range scrapers {
-		var st Site
-		db.Where(&Site{ID: scrapers[i].ID}).FirstOrCreate(&st)
-		st.Name = scrapers[i].Name
-		st.AvatarURL = scrapers[i].AvatarURL
-		st.IsBuiltin = true
-		st.Save()
+		if strings.HasSuffix(scrapers[i].ID, "-single_scene") == false {
+			var st Site
+			db.Where(&Site{ID: scrapers[i].ID}).FirstOrCreate(&st)
+			st.Name = scrapers[i].Name
+			st.AvatarURL = scrapers[i].AvatarURL
+			st.IsBuiltin = true
+			st.Save()
+		}
 	}
 }
