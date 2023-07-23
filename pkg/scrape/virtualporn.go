@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
@@ -138,17 +137,9 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	})
 
 	if singleSceneURL != "" {
-		type extraInfo struct {
-			FieldName  string `json:"fieldName"`
-			FieldValue string `json:"fieldValue"`
-		}
-		var extrainfo []extraInfo
-		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
-		ctx.Put("dur", extrainfo[0].FieldValue+"mins")
-		parsedDate, _ := time.Parse("2006-01-02", extrainfo[1].FieldValue)
-		formattedDate := parsedDate.Format("Jan 02, 2006")
-		ctx.Put("date", formattedDate)
+		ctx.Put("dur", "")
+		ctx.Put("date", "")
 
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {

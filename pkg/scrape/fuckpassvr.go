@@ -123,14 +123,8 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	var lastPage int64 = 1
 
 	if singleSceneURL != "" {
-		type extraInfo struct {
-			FieldName  string `json:"fieldName"`
-			FieldValue string `json:"fieldValue"`
-		}
-		var extrainfo []extraInfo
-		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
-		ctx.Put("preview_video_url", extrainfo[0].FieldValue)
+		ctx.Put("preview_video_url", "")
 		slug := strings.Replace(singleSceneURL, "https://www.fuckpassvr.com/video/", "", 1)
 		sceneDetail := "https://www.fuckpassvr.com/api/api/scene/show?slug=" + slug
 		sceneCollector.Request("GET", sceneDetail, nil, ctx, nil)

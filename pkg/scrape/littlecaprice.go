@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
@@ -111,14 +110,8 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	})
 
 	if singleSceneURL != "" {
-		type extraInfo struct {
-			FieldName  string `json:"fieldName"`
-			FieldValue string `json:"fieldValue"`
-		}
-		var extrainfo []extraInfo
-		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
-		ctx.Put("cover", extrainfo[0].FieldValue)
+		ctx.Put("cover", "")
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {
 		siteCollector.Visit("https://www.littlecaprice-dreams.com/virtual-reality-little-caprice-dreams/")

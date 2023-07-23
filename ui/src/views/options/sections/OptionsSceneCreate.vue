@@ -49,9 +49,9 @@
     <div class="card">
       <div class="card-content content">
         <b-field label="Scene URL" label-position="on-border">
-          <b-input v-model="scrapeUrl" placeholder="" type="url"></b-input>
+          <b-input v-model="scrapeUrl" placeholder="Scene Url - do not use links requiring a login" type="url"></b-input>
         </b-field>
-        <b-tooltip :label="$t('Warning: Ensure you are entering a link to a scene. Links to something like a Category or Studio list may result in a corrupt scene you cannot delete. Use with caution')" :delay="50" multilined type="is-danger">
+        <b-tooltip :label="$t(`Warning: Ensure you are entering a link to a scene (best taken from viewing the scene). Links to something like a Category or Studio list may result in a corrupt scene you cannot delete. DO NOT USE links requiring logons. Use with caution`)" :delay="50" multilined type="is-danger">
           <b-button class="button is-primary" v-on:click="scrapeSingleScene()">{{$t('Scrape')}}</b-button>
         </b-tooltip>
       </div>
@@ -70,7 +70,7 @@
           <b-field label="Scene Id">
             <b-input 
               v-model='singleScrapeId'              
-              placeholder="eg wetvr-12345"              
+              placeholder="eg 12345 (excl site prefix)"
               >
             </b-input>            
           </b-field>
@@ -99,7 +99,7 @@ export default {
       scrapeUrl: '',
       isSingleScrapeModalActive: false,
       singleScrapeId: '',
-      additionalinfo: [],
+      additionalInfo: [],
     }
   },
   mounted () {
@@ -126,15 +126,15 @@ export default {
       })
     },
     scrapeSingleScene () {
-      this.additionalinfo = []
+      this.additionalInfo = []
       if (this.scrapeUrl.toLowerCase().includes("wetvr.com")) {
         // we need a scene id for wetvr
         if (this.singleScrapeId=="") {
           this.isSingleScrapeModalActive = true
           return
         } else {
-          this.isSingleScrapeModalActive = false
-          this.additionalinfo = [{scene_id: this.singleScrapeId}]
+          this.isSingleScrapeModalActive = false          
+          this.additionalInfo = [{fieldName: "scene_id", fieldPrompt: "Scene Id", placeholder: "eg 69037", fieldValue: this.singleScrapeId, required: true, type: 'number'}]
         }
       }      
 
@@ -162,13 +162,46 @@ export default {
       if (site == "") {
         this.$buefy.toast.open({message: `No scrapers exist for this domain`, type: 'is-danger', duration: 5000})      
         return
+      }    
+      
+      switch (site) {
+            case "wetvr":
+            case "sexbabesvr":
+            case "tonightsgirlfriend":
+              var fieldCheckMsg="Please check the Release Date"
+              break
+            case "fuckpassvr-native":
+              var fieldCheckMsg="Note: Video Previews are not available when scraping single scenes from FuckpassVR"
+              break
+            case "lethalhardcorevr":
+              var fieldCheckMsg=`Please check the Site if the scene was for WhorecraftVR. Please check the Release Date`
+              break
+            case "littlecaprice":
+              var fieldCheckMsg=`Please specify a URL for the cover image`
+              break            
+            case "stasyqvr":
+              var fieldCheckMsg=`Please specify a Duration if required`
+              break
+            case "bvr ":
+              var fieldCheckMsg=`Please check the Release Date and specify a Duration if required`
+              break
+            default:
+                var fieldCheckMsg=""                
+          }
+
+      if (fieldCheckMsg != "") {
+        this.$buefy.toast.open({message: `Scene scraping in progress, please wait for the Scene Detail popup`, type: 'is-warning', duration: 5000})
+      } else {
+        this.$buefy.toast.open({message: `Scene scraping in progress`, type: 'is-warning', duration: 5000})
       }
-      this.$buefy.toast.open({message: `Scene scraping in progress, please wait for the Scene Detail popup`, type: 'is-warning', duration: 5000})      
-      ky.post(`/api/task/singlescrape`, {timeout: false, json: { site: site, sceneurl: this.scrapeUrl, additionalinfo: this.additionalinfo}})
+      ky.post(`/api/task/singlescrape`, {timeout: false, json: { site: site, sceneurl: this.scrapeUrl, additionalinfo: this.additionalInfo}})
       .json()
       .then(data => { 
         if (data.status == 'OK') {          
           this.$store.commit('overlay/editDetails', { scene: data.scene })
+          if (fieldCheckMsg != "") {
+            this.$buefy.toast.open({message: fieldCheckMsg, type: 'is-warning', duration: 10000})
+          }
         }
       })
     },

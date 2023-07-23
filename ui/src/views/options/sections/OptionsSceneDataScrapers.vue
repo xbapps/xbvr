@@ -177,36 +177,36 @@ export default {
         return
       }
 
-      this.isSingleScrapeModalActive = false
+      this.isSingleScrapeModalActive = false      
+      var fieldCheckMsg = ""
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('fuckpassvr.com')) {
+        var fieldCheckMsg="Note: Video Previews are not available when scraping single scenes from FuckpassVR"
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('lethalhardcorevr.com')) {
+        var fieldCheckMsg=`Please check the Site if the scene was for WhorecraftVR. Please check the Release Date`
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('littlecaprice-dreams.com')) {
+        var fieldCheckMsg=`Please specify a URL for the cover image`
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('sexbabesvr.com')) {
+        var fieldCheckMsg="Please check the Release Date"
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('stasyqvr.com')) {
+        var fieldCheckMsg=`Please specify a Duration if required`
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('tonightsgirlfriend.com')) {
+        var fieldCheckMsg="Please check the Release Date"
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('virtualporn.com')) {
+        var fieldCheckMsg=`Please check the Release Date and specify a Duration if required`
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('wetvr.com')) {        
+        var fieldCheckMsg="Please check the Release Date"
+      }
+
       if (this.additionalInfoIdx == 0) {
-        if (this.additionalInfo[0].fieldValue.toLowerCase().includes('fuckpassvr.com')) {
-          this.additionalInfo.push({fieldName: "preview_video_url", fieldPrompt: "Preview Video Url", placeholder: "Optional", fieldValue: '', required: false, type: 'url'})
-        }
-        if (this.additionalInfo[0].fieldValue.toLowerCase().includes('lethalhardcorevr.com')) {
-          this.additionalInfo.push({fieldName: "date", fieldPrompt: "Release Date", placeholder: "", fieldValue: '', required: true, type: 'date' })
-        }
-        if (this.additionalInfo[0].fieldValue.toLowerCase().includes('littlecaprice-dreams.com')) {
-          this.additionalInfo.push({fieldName: "cover", fieldPrompt: "Cover Url", placeholder: "Optional", fieldValue: '', required: false, type: 'url'})
-        }
-        if (this.additionalInfo[0].fieldValue.toLowerCase().includes('sexbabesvr.com')) {
-          this.additionalInfo.push({fieldName: "date", fieldPrompt: "Release Date", placeholder: "", fieldValue: '', required: true, type: 'date' })
-        }
-        if (this.additionalInfo[0].fieldValue.toLowerCase().includes('sexlikereal.com')) {
-          this.additionalInfo.push({fieldName: "duration", fieldPrompt: "Duration", placeholder: "duration in minutes (optional)", fieldValue: '', required: false, type: 'number'})
-        }
-        if (this.additionalInfo[0].fieldValue.toLowerCase().includes('stasyqvr.com')) {
-          this.additionalInfo.push({fieldName: "duration", fieldPrompt: "Duration", placeholder: "duration in minutes (optional)", fieldValue: '', required: false, type: 'number'})
-        }
-        if (this.additionalInfo[0].fieldValue.toLowerCase().includes('tonightsgirlfriend.com')) {
-          this.additionalInfo.push({fieldName: "date", fieldPrompt: "Release Date", placeholder: "", fieldValue: '', required: true, type: 'date' })
-        }
-        if (this.additionalInfo[0].fieldValue.toLowerCase().includes('virtualporn.com')) {
-          this.additionalInfo.push({fieldName: "dur", fieldPrompt: "Duration", placeholder: "duration in minutes (optional)", fieldValue: '', required: false, type: 'number'})
-          this.additionalInfo.push({fieldName: "date", fieldPrompt: "Release Date", placeholder: "", fieldValue: '', required: true, type: 'date' })
-        }
         if (this.additionalInfo[0].fieldValue.toLowerCase().includes('wetvr.com')) {
-          this.additionalInfo.push({fieldName: "scene_id", fieldPrompt: "Scene Id", placeholder: "eg 69037", fieldValue: '', required: true, type: 'number'})
-          this.additionalInfo.push({fieldName: "scene-date", fieldPrompt: "Release Date", placeholder: "", fieldValue: '', required: true, type: 'date' })
+          this.additionalInfo.push({fieldName: "scene_id", fieldPrompt: "Scene Id", placeholder: "eg 69037 (excl site prefix)", fieldValue: '', required: true, type: 'number'})
         }
       }
       
@@ -214,8 +214,22 @@ export default {
       if (this.additionalInfoIdx + 1 < this.additionalInfo.length) {          
         this.additionalInfoIdx = this.additionalInfoIdx +1
         this.isSingleScrapeModalActive = true      
-      } else {        
-        ky.post(`/api/task/singlescrape`, {json: { site: this.currentScraper, sceneurl: this.additionalInfo[0].fieldValue, additionalinfo: this.additionalInfo.slice(1)}})
+      } else {
+        if (fieldCheckMsg != "") {
+          this.$buefy.toast.open({message: `Scene scraping in progress, please wait for the Scene Detail popup`, type: 'is-warning', duration: 5000})
+        } else {
+          this.$buefy.toast.open({message: `Scene scraping in progress`, type: 'is-warning', duration: 5000})
+        }
+        ky.post(`/api/task/singlescrape`, {timeout: false, json: { site: this.currentScraper, sceneurl: this.additionalInfo[0].fieldValue, additionalinfo: this.additionalInfo.slice(1)}})
+        .json()
+        .then(data => { 
+          if (data.status == 'OK') {          
+            this.$store.commit('overlay/editDetails', { scene: data.scene })
+            if (fieldCheckMsg != "") {
+              this.$buefy.toast.open({message: fieldCheckMsg, type: 'is-warning', duration: 10000})
+            }
+          }
+        })
       }
     },
     forceSiteUpdate (site, scraper) {

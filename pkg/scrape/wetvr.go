@@ -45,8 +45,10 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 
 		// Date
 		scenedate := e.Request.Ctx.GetAny("scene-date").(string)
-		tmpDate, _ := goment.New(scenedate, "MMMM DD, YYYY")
-		sc.Released = tmpDate.Format("YYYY-MM-DD")
+		if scenedate != "" {
+			tmpDate, _ := goment.New(scenedate, "MMMM DD, YYYY")
+			sc.Released = tmpDate.Format("YYYY-MM-DD")
+		}
 
 		// Duration
 		tmpDuration := durationRegEx.FindStringSubmatch(e.ChildText(`div#t2019-stime`))[1]
@@ -118,9 +120,13 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
 		ctx.Put("scene-id", extrainfo[0].FieldValue)
-		parsedDate, _ := time.Parse("2006-01-02", extrainfo[1].FieldValue)
-		formattedDate := parsedDate.Format("January 02, 2006")
-		ctx.Put("scene-date", formattedDate)
+		if len(extrainfo) > 1 {
+			parsedDate, _ := time.Parse("2006-01-02", extrainfo[1].FieldValue)
+			formattedDate := parsedDate.Format("January 02, 2006")
+			ctx.Put("scene-date", formattedDate)
+		} else {
+			ctx.Put("scene-date", "")
+		}
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {
 		siteCollector.Visit("https://wetvr.com/")

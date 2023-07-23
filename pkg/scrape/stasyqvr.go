@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"encoding/json"
 	"net/url"
 	"strconv"
 	"strings"
@@ -130,15 +129,8 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	})
 
 	if singleSceneURL != "" {
-		type extraInfo struct {
-			FieldName  string `json:"fieldName"`
-			FieldValue string `json:"fieldValue"`
-		}
-		var extrainfo []extraInfo
-		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
-		duration, _ := strconv.Atoi(extrainfo[0].FieldValue)
-		ctx.Put("duration", duration)
+		ctx.Put("duration", 0)
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {
 		siteCollector.Visit("https://stasyqvr.com/virtualreality/list")

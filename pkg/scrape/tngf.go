@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -160,16 +159,8 @@ func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	})
 
 	if singleSceneURL != "" {
-		type extraInfo struct {
-			FieldName  string `json:"fieldName"`
-			FieldValue string `json:"fieldValue"`
-		}
-		var extrainfo []extraInfo
-		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
-		parsedDate, _ := time.Parse("2006-01-02", extrainfo[0].FieldValue)
-		formattedDate := parsedDate.Format("Jan 2, 2006")
-		ctx.Put("date", formattedDate)
+		ctx.Put("date", "")
 
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 

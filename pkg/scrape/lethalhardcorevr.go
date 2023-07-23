@@ -1,11 +1,9 @@
 package scrape
 
 import (
-	"encoding/json"
 	"regexp"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -176,16 +174,8 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 	})
 
 	if singleSceneURL != "" {
-		type extraInfo struct {
-			FieldName  string `json:"fieldName"`
-			FieldValue string `json:"fieldValue"`
-		}
-		var extrainfo []extraInfo
-		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
-		parsedDate, _ := time.Parse("2006-01-02", extrainfo[1].FieldValue)
-		formattedDate := parsedDate.Format("01/02/2006")
-		ctx.Put("date", formattedDate)
+		ctx.Put("date", "")
 
 		sceneCollector.Visit(singleSceneURL)
 	} else {

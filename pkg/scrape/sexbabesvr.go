@@ -129,14 +129,8 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	lastMonth = int(time.Now().Month())
 
 	if singleSceneURL != "" {
-		type extraInfo struct {
-			FieldName  string `json:"fieldName"`
-			FieldValue string `json:"fieldValue"`
-		}
-		var extrainfo []extraInfo
-		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
-		ctx.Put("released", extrainfo[0].FieldValue)
+		ctx.Put("released", "")
 
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {

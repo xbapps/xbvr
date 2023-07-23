@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"encoding/json"
 	"html"
 	"regexp"
 	"strconv"
@@ -279,18 +278,8 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 	if singleSceneURL != "" {
 		isTransScene := strings.Contains(singleSceneURL, ".com/trans")
-		type extraInfo struct {
-			FieldName  string `json:"fieldName"`
-			FieldValue string `json:"fieldValue"`
-		}
-		var extrainfo []extraInfo
-		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
 		ctx := colly.NewContext()
-		duration := 0
-		if len(extrainfo) > 1 {
-			duration, _ = strconv.Atoi(extrainfo[0].FieldValue)
-		}
-		ctx.Put("duration", duration)
+		ctx.Put("duration", 0)
 		ctx.Put("isTransScene", isTransScene)
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 
