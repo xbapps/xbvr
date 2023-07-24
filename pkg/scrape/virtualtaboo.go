@@ -14,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "virtualtaboo"
 	siteID := "VirtualTaboo"
@@ -115,7 +115,7 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.video-card__container a[class=image-container]`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.video-card__item a[class=image-container]`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
@@ -124,7 +124,11 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		}
 	})
 
-	siteCollector.Visit("https://virtualtaboo.com/videos")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://virtualtaboo.com/videos")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -134,5 +138,5 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 }
 
 func init() {
-	registerScraper("virtualtaboo", "VirtualTaboo", "https://static-src.virtualtaboo.com/img/mobile-logo.png", VirtualTaboo)
+	registerScraper("virtualtaboo", "VirtualTaboo", "https://static-src.virtualtaboo.com/img/mobile-logo.png", "virtualtaboo.com", VirtualTaboo)
 }

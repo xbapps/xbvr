@@ -14,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -154,7 +154,11 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.Visit(URL)
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit(URL)
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -163,30 +167,30 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	return nil
 }
 
-func BadoinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "badoinkvr", "BadoinkVR", "https://badoinkvr.com/vrpornvideos")
+func BadoinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, "badoinkvr", "BadoinkVR", "https://badoinkvr.com/vrpornvideos", singeScrapeAdditionalInfo)
 }
 
-func B18VR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "18vr", "18VR", "https://18vr.com/vrpornvideos")
+func B18VR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, "18vr", "18VR", "https://18vr.com/vrpornvideos", singeScrapeAdditionalInfo)
 }
 
-func VRCosplayX(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "vrcosplayx", "VRCosplayX", "https://vrcosplayx.com/cosplaypornvideos")
+func VRCosplayX(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, "vrcosplayx", "VRCosplayX", "https://vrcosplayx.com/cosplaypornvideos", singeScrapeAdditionalInfo)
 }
 
-func BabeVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "babevr", "BabeVR", "https://babevr.com/vrpornvideos")
+func BabeVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, "babevr", "BabeVR", "https://babevr.com/vrpornvideos", singeScrapeAdditionalInfo)
 }
 
-func KinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, "kinkvr", "KinkVR", "https://kinkvr.com/bdsm-vr-videos")
+func KinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, "kinkvr", "KinkVR", "https://kinkvr.com/bdsm-vr-videos", singeScrapeAdditionalInfo)
 }
 
 func init() {
-	registerScraper("badoinkvr", "BadoinkVR", "https://pbs.twimg.com/profile_images/618071358933610497/QaMV81nF_200x200.png", BadoinkVR)
-	registerScraper("18vr", "18VR", "https://pbs.twimg.com/profile_images/989481761783545856/w-iKqgqV_200x200.jpg", B18VR)
-	registerScraper("vrcosplayx", "VRCosplayX", "https://pbs.twimg.com/profile_images/900675974039298049/ofMytpkQ_200x200.jpg", VRCosplayX)
-	registerScraper("babevr", "BabeVR", "https://babevr.com/babevr_icons/apple-touch-icon.png", BabeVR)
-	registerScraper("kinkvr", "KinkVR", "https://kinkvr.com/kinkvr_icons/apple-touch-icon.png", KinkVR)
+	registerScraper("badoinkvr", "BadoinkVR", "https://pbs.twimg.com/profile_images/618071358933610497/QaMV81nF_200x200.png", "badoinkvr.com", BadoinkVR)
+	registerScraper("18vr", "18VR", "https://pbs.twimg.com/profile_images/989481761783545856/w-iKqgqV_200x200.jpg", "18vr.com", B18VR)
+	registerScraper("vrcosplayx", "VRCosplayX", "https://pbs.twimg.com/profile_images/900675974039298049/ofMytpkQ_200x200.jpg", "vrcosplayx.com", VRCosplayX)
+	registerScraper("babevr", "BabeVR", "https://babevr.com/babevr_icons/apple-touch-icon.png", "babevr.com", BabeVR)
+	registerScraper("kinkvr", "KinkVR", "https://kinkvr.com/kinkvr_icons/apple-touch-icon.png", "kinkvr.com", KinkVR)
 }

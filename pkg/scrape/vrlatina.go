@@ -14,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "vrlatina"
 	siteID := "VRLatina"
@@ -122,7 +122,11 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		}
 	})
 
-	siteCollector.Visit("https://vrlatina.com/most-recent/")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://vrlatina.com/most-recent/")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -132,5 +136,5 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("vrlatina", "VRLatina", "https://pbs.twimg.com/profile_images/979329978750898176/074YPl3H_200x200.jpg", VRLatina)
+	registerScraper("vrlatina", "VRLatina", "https://pbs.twimg.com/profile_images/979329978750898176/074YPl3H_200x200.jpg", "vrlatina.com", VRLatina)
 }

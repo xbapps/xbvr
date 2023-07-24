@@ -17,7 +17,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "realjamvr"
 	siteID := "RealJam VR"
@@ -201,7 +201,11 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		}
 	})
 
-	siteCollector.Visit("https://realjamvr.com/scenes")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://realjamvr.com/scenes")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -211,5 +215,5 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 }
 
 func init() {
-	registerScraper("realjamvr", "RealJam VR", "https://styles.redditmedia.com/t5_3iym1/styles/communityIcon_kqzp15xw0r361.png", RealJamVR)
+	registerScraper("realjamvr", "RealJam VR", "https://styles.redditmedia.com/t5_3iym1/styles/communityIcon_kqzp15xw0r361.png", "realjamvr.com", RealJamVR)
 }

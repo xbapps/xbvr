@@ -15,7 +15,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "caribbeancomvr"
 	siteID := "CaribbeanCom VR"
@@ -130,7 +130,11 @@ func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.Visit("https://en.caribbeancom.com/eng/listpages/vr1.htm")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://en.caribbeancom.com/eng/listpages/vr1.htm")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -140,5 +144,5 @@ func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("caribbeancomvr", "CaribbeanCom VR", "https://mcdn.vrporn.com/files/20191217194900/baimudan-vr-porn-studio-logo-vrporn.com-virtual-reality-porn.jpg", CariVR)
+	registerScraper("caribbeancomvr", "CaribbeanCom VR", "https://mcdn.vrporn.com/files/20191217194900/baimudan-vr-porn-studio-logo-vrporn.com-virtual-reality-porn.jpg", "en.caribbeancom.com", CariVR)
 }

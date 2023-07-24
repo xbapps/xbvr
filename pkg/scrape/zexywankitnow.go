@@ -13,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -175,7 +175,11 @@ func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 		}
 	})
 
-	siteCollector.Visit(URL)
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit(URL)
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -184,15 +188,15 @@ func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 	return nil
 }
 
-func WankitNowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return TwoWebMediaSite(wg, updateSite, knownScenes, out, "wankitnowvr", "WankitNowVR", "https://wankitnowvr.com/videos/")
+func WankitNowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return TwoWebMediaSite(wg, updateSite, knownScenes, out, singleSceneURL, "wankitnowvr", "WankitNowVR", "https://wankitnowvr.com/videos/")
 }
 
-func ZexyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return TwoWebMediaSite(wg, updateSite, knownScenes, out, "zexyvr", "ZexyVR", "https://zexyvr.com/videos/")
+func ZexyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return TwoWebMediaSite(wg, updateSite, knownScenes, out, singleSceneURL, "zexyvr", "ZexyVR", "https://zexyvr.com/videos/")
 }
 
 func init() {
-	registerScraper("wankitnowvr", "WankitNowVR", "https://mcdn.vrporn.com/files/20190103150250/wankitnow-profile.jpg", WankitNowVR)
-	registerScraper("zexyvr", "ZexyVR", "https://mcdn.vrporn.com/files/20210617065837/zexyvr-profile-400x400.jpg", ZexyVR)
+	registerScraper("wankitnowvr", "WankitNowVR", "https://mcdn.vrporn.com/files/20190103150250/wankitnow-profile.jpg", "wankitnowvr.com", WankitNowVR)
+	registerScraper("zexyvr", "ZexyVR", "https://mcdn.vrporn.com/files/20210617065837/zexyvr-profile-400x400.jpg", "wankitnowvr.com", ZexyVR)
 }

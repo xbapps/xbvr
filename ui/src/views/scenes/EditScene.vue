@@ -44,6 +44,10 @@
                          @blur="blur('release_date_text')"/>
                 </div>
               </b-field>
+
+              <b-field :label="$t('Duration')">
+                <b-input type="number" v-model="scene.duration" @blur="blur('duration')"/>
+              </b-field>
             </b-field>
 
             <b-field :label="$t('Cast')">
@@ -132,9 +136,15 @@ export default {
       images = JSON.parse(scene.images)
     } catch {
       images = []
+    }    
+    try {
+      scene.covers = images.filter(i => i.type === 'cover').map(i => i.url)
+      scene.gallery = images.filter(i => i.type === 'gallery').map(i => i.url)
     }
-    scene.covers = images.filter(i => i.type === 'cover').map(i => i.url)
-    scene.gallery = images.filter(i => i.type === 'gallery').map(i => i.url)
+    catch {
+      scene.covers = []
+      scene.gallery = []
+    }    
     try {
       scene.files = JSON.parse(scene.filenames_arr)
     } catch {

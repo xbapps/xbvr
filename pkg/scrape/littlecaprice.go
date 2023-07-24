@@ -13,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "littlecaprice"
 	siteID := "Little Caprice Dreams"
@@ -109,7 +109,13 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		}
 	})
 
-	siteCollector.Visit("https://www.littlecaprice-dreams.com/virtual-reality-little-caprice-dreams/")
+	if singleSceneURL != "" {
+		ctx := colly.NewContext()
+		ctx.Put("cover", "")
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+	} else {
+		siteCollector.Visit("https://www.littlecaprice-dreams.com/virtual-reality-little-caprice-dreams/")
+	}
 
 	// Missing "Me and You" (my-first-time) scene
 	sceneURL := "https://www.littlecaprice-dreams.com/project/vr-180-little-caprice-my-first-time/"
@@ -129,5 +135,5 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 }
 
 func init() {
-	registerScraper("littlecaprice", "Little Caprice Dreams", "https://littlecaprice-dreams.com/wp-content/uploads/2019/03/cropped-lcd-heart-180x180.png", LittleCaprice)
+	registerScraper("littlecaprice", "Little Caprice Dreams", "https://littlecaprice-dreams.com/wp-content/uploads/2019/03/cropped-lcd-heart-180x180.png", "littlecaprice-dreams.com", LittleCaprice)
 }

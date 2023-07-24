@@ -7,13 +7,14 @@ import (
 
 var scrapers []Scraper
 
-type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene) error
+type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene, string, string) error
 
 type Scraper struct {
-	ID        string
-	Name      string
-	AvatarURL string
-	Scrape    ScraperFunc
+	ID        string      `json:"id"`
+	Name      string      `json:"name"`
+	AvatarURL string      `json:"avaatarurl"`
+	Domain    string      `json:"domain"`
+	Scrape    ScraperFunc `json:"-"`
 }
 
 type ScrapedScene struct {
@@ -71,11 +72,12 @@ func GetScrapers() []Scraper {
 	return scrapers
 }
 
-func RegisterScraper(id string, name string, avatarURL string, f ScraperFunc) {
+func RegisterScraper(id string, name string, avatarURL string, domain string, f ScraperFunc) {
 	s := Scraper{}
 	s.ID = id
 	s.Name = name
 	s.AvatarURL = avatarURL
+	s.Domain = domain
 	s.Scrape = f
 	scrapers = append(scrapers, s)
 }
