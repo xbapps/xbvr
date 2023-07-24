@@ -15,7 +15,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, URL string) error {
+func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -157,7 +157,11 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.Visit(URL + "videos/?sort=latest")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit(URL + "videos/?sort=latest")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -166,26 +170,26 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	return nil
 }
 
-func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbangers", "VRBangers", "https://vrbangers.com/")
+func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "vrbangers", "VRBangers", "https://vrbangers.com/")
 }
-func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbtrans", "VRBTrans", "https://vrbtrans.com/")
+func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "vrbtrans", "VRBTrans", "https://vrbtrans.com/")
 }
-func VRBGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRBangersSite(wg, updateSite, knownScenes, out, "vrbgay", "VRBGay", "https://vrbgay.com/")
+func VRBGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "vrbgay", "VRBGay", "https://vrbgay.com/")
 }
-func VRConk(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRBangersSite(wg, updateSite, knownScenes, out, "vrconk", "VRCONK", "https://vrconk.com/")
+func VRConk(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "vrconk", "VRCONK", "https://vrconk.com/")
 }
-func BlowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return VRBangersSite(wg, updateSite, knownScenes, out, "blowvr", "BlowVR", "https://blowvr.com/")
+func BlowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "blowvr", "BlowVR", "https://blowvr.com/")
 }
 
 func init() {
-	registerScraper("vrbangers", "VRBangers", "https://vrbangers.com/favicon/apple-touch-icon-144x144.png", VRBangers)
-	registerScraper("vrbtrans", "VRBTrans", "https://vrbtrans.com/favicon/apple-touch-icon-144x144.png", VRBTrans)
-	registerScraper("vrbgay", "VRBGay", "https://vrbgay.com/favicon/apple-touch-icon-144x144.png", VRBGay)
-	registerScraper("vrconk", "VRCONK", "https://vrconk.com/favicon/apple-touch-icon-144x144.png", VRConk)
-	registerScraper("blowvr", "BlowVR", "https://blowvr.com/favicon/apple-touch-icon-144x144.png", BlowVR)
+	registerScraper("vrbangers", "VRBangers", "https://vrbangers.com/favicon/apple-touch-icon-144x144.png", "vrbangers.com", VRBangers)
+	registerScraper("vrbtrans", "VRBTrans", "https://vrbtrans.com/favicon/apple-touch-icon-144x144.png", "vrbtrans.com", VRBTrans)
+	registerScraper("vrbgay", "VRBGay", "https://vrbgay.com/favicon/apple-touch-icon-144x144.png", "vrbgay.com", VRBGay)
+	registerScraper("vrconk", "VRCONK", "https://vrconk.com/favicon/apple-touch-icon-144x144.png", "vrconk.com", VRConk)
+	registerScraper("blowvr", "BlowVR", "https://blowvr.com/favicon/apple-touch-icon-144x144.png", "blowvr.com", BlowVR)
 }

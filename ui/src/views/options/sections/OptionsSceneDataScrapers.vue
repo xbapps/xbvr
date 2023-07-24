@@ -52,6 +52,9 @@
             <b-dropdown-item v-if="props.row.has_scraper" aria-role="listitem" @click="taskScrape(props.row.id)">
               {{$t('Run this scraper')}}
             </b-dropdown-item>
+            <b-dropdown-item v-if="props.row.has_scraper && props.row.id != 'baberoticavr'" aria-role="listitem" @click="taskScrapeScene(props.row.id)">
+              {{$t('Scrape Single Scene')}}
+            </b-dropdown-item>
             <b-dropdown-item v-if="props.row.has_scraper" aria-role="listitem" @click="forceSiteUpdate(props.row.name, props.row.id)">
               {{$t('Force update scenes')}}
             </b-dropdown-item>
@@ -72,7 +75,40 @@
           <a class="button is-small" v-on:click="toggleAllSubscriptions()">{{$t('Toggle Subscriptions of all visible sites')}}</a>
         </div>
     </div>
+
+    <b-modal :active.sync="isSingleScrapeModalActive"
+             has-modal-card
+             trap-focus
+             aria-role="dialog"
+             aria-modal>
+      <div class="modal-card" style="width: auto">
+        <header class="modal-card-head">
+          <p class="modal-card-title">{{$t('Additional Details Required')}}</p>
+        </header>
+        <section class="modal-card-body">
+          <b-field v-if="additionalInfoIdx == 0 && this.scraperwarning != ''"><span>{{this.scraperwarning}}</span></b-field>
+          <b-field v-if="additionalInfoIdx == 0 && this.scraperwarning2 != ''"><span>{{this.scraperwarning2}}</span></b-field>          
+          <b-field :label=this.additionalInfo[additionalInfoIdx].fieldPrompt>
+            <b-input v-if="additionalInfo[additionalInfoIdx].type != 'checkbox'"
+              :type=additionalInfo[additionalInfoIdx].type
+              v-model='additionalInfo[additionalInfoIdx].fieldValue'
+              :required=additionalInfo[additionalInfoIdx].required
+              :placeholder=additionalInfo[additionalInfoIdx].placeholder                            
+              ref="additionInfoInput"
+              >
+            </b-input>
+            <b-checkbox v-if="additionalInfo[additionalInfoIdx].type == 'checkbox'" v-model="additionalInfo[additionalInfoIdx].fieldValue">{{this.additionalInfo[additionalInfoIdx].fieldPrompt}}</b-checkbox>
+          </b-field>
+        </section>
+        <footer class="modal-card-foot">
+          <button class="button is-primary" :disabled="this.additionalInfo[additionalInfoIdx].required && this.additionalInfo[additionalInfoIdx].fieldValue == ''" @click="taskScrapeSceneInfoEntered()">Continue
+          </button>
+        </footer>
+      </div>
+    </b-modal>
+
   </div>
+
 </template>
 
 <script>
@@ -87,7 +123,14 @@ export default {
     return {
       javrQuery: '',
       tpdbSceneUrl: '',
-      isLoading: false
+      isLoading: false,
+      sceneUrl: '',
+      isSingleScrapeModalActive: false,
+      additionalInfo: [{fieldName: "scene_url", fieldPrompt: "Scene Url", placeholder: "eg https://www.mysite.com/scenes/my scene", fieldValue: '', required: true, type: 'url' }],
+      additionalInfoIdx: 0,
+      currentScraper: '',
+      scraperwarning: '',
+      scraperwarning2: '',
     }
   },
   mounted () {
@@ -103,6 +146,91 @@ export default {
     },
     taskScrape (scraper) {
       ky.get(`/api/task/scrape?site=${scraper}`)
+    },
+    taskScrapeScene (scraper) {
+      this.currentScraper=scraper      
+      this.additionalInfo = [{fieldName: "scene_url", fieldPrompt: "Scene Url", placeholder: "Enter the url for a VR Scene", fieldValue: '', required: true, type: 'url'}]      
+      this.scraperwarning = "Take care to only use scene urls for the " + scraper + " Scraper"
+      this.scraperwarning2 = ""
+      switch (scraper) {
+        case 'wankzvr':
+        case 'milfvr':
+        case 'herpovr':
+        case  'brasilvr':
+        case 'tranzvr':
+          this.scraperwarning = "Only use povr.com urls for the " + scraper + " Scraper"
+          break
+        case 'tonightsgirlfriend':
+          this.scraperwarning2 = "Warning " + scraper + " also includes 2d scenes, only select scenes from their VR section"
+        case 'naughtyamericavr':
+          this.scraperwarning2 = "Warning The NaughtyAmerica site also includes 2d scenes, only select scenes from their VR section"
+          break
+    }
+      this.additionalInfoIdx=0
+      this.isSingleScrapeModalActive = true      
+    },
+    taskScrapeSceneInfoEntered () {      
+      const inputElement = this.$refs.additionInfoInput
+      if (!inputElement.isValid) {
+        // get the field again
+        this.isSingleScrapeModalActive = true
+        return
+      }
+
+      this.isSingleScrapeModalActive = false      
+      var fieldCheckMsg = ""
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('fuckpassvr.com')) {
+        var fieldCheckMsg="Note: Video Previews are not available when scraping single scenes from FuckpassVR"
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('lethalhardcorevr.com')) {
+        var fieldCheckMsg=`Please check the Site if the scene was for WhorecraftVR. Please check the Release Date`
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('littlecaprice-dreams.com')) {
+        var fieldCheckMsg=`Please specify a URL for the cover image`
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('sexbabesvr.com')) {
+        var fieldCheckMsg="Please check the Release Date"
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('stasyqvr.com')) {
+        var fieldCheckMsg=`Please specify a Duration if required`
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('tonightsgirlfriend.com')) {
+        var fieldCheckMsg="Please check the Release Date"
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('virtualporn.com')) {
+        var fieldCheckMsg=`Please check the Release Date and specify a Duration if required`
+      }
+      if (this.additionalInfo[0].fieldValue.toLowerCase().includes('wetvr.com')) {        
+        var fieldCheckMsg="Please check the Release Date"
+      }
+
+      if (this.additionalInfoIdx == 0) {
+        if (this.additionalInfo[0].fieldValue.toLowerCase().includes('wetvr.com')) {
+          this.additionalInfo.push({fieldName: "scene_id", fieldPrompt: "Scene Id", placeholder: "eg 69037 (excl site prefix)", fieldValue: '', required: true, type: 'number'})
+        }
+      }
+      
+      this.additionalInfo[this.additionalInfoIdx].fieldValue = this.additionalInfo[this.additionalInfoIdx].fieldValue.trim()
+      if (this.additionalInfoIdx + 1 < this.additionalInfo.length) {          
+        this.additionalInfoIdx = this.additionalInfoIdx +1
+        this.isSingleScrapeModalActive = true      
+      } else {
+        if (fieldCheckMsg != "") {
+          this.$buefy.toast.open({message: `Scene scraping in progress, please wait for the Scene Detail popup`, type: 'is-warning', duration: 5000})
+        } else {
+          this.$buefy.toast.open({message: `Scene scraping in progress`, type: 'is-warning', duration: 5000})
+        }
+        ky.post(`/api/task/singlescrape`, {timeout: false, json: { site: this.currentScraper, sceneurl: this.additionalInfo[0].fieldValue, additionalinfo: this.additionalInfo.slice(1)}})
+        .json()
+        .then(data => { 
+          if (data.status == 'OK') {          
+            this.$store.commit('overlay/editDetails', { scene: data.scene })
+            if (fieldCheckMsg != "") {
+              this.$buefy.toast.open({message: fieldCheckMsg, type: 'is-warning', duration: 10000})
+            }
+          }
+        })
+      }
     },
     forceSiteUpdate (site, scraper) {
       ky.post('/api/options/scraper/force-site-update', {

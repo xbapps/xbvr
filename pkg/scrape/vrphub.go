@@ -29,7 +29,7 @@ func getVideoName(fileUrl string) (string, error) {
 	return filename, nil
 }
 
-func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, siteURL string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
+func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -42,6 +42,27 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.Studio = company
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		if scraperID == "" {
+			// there maybe no site/studio if user is jusy scraping a scene url
+			e.ForEach(`li.entry-category a`, func(id int, e *colly.HTMLElement) {
+				studioId := strings.TrimSuffix(strings.ReplaceAll(e.Attr("href"), "https://vrphub.com/category/", ""), "/")
+				sc.Studio = strings.TrimSpace(e.Text)
+				sc.Site = sc.Studio
+				// see if we can find the site record, there may not be
+				db, _ := models.GetDB()
+				defer db.Close()
+				var site models.Site
+				db.Where("name like ?", sc.Studio+"%VRPHub) or id = ?", sc.Studio, studioId).First(&site)
+				if site.ID != "" {
+					sc.ScraperID = site.ID
+				}
+			})
+			// if doing a single scrape we need a cover as well
+			e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
+				sc.Covers = append(sc.Covers, e.Attr("poster"))
+			})
+
+		}
 
 		isPost := false
 		e.ForEach(`link[rel="shortlink"]`, func(id int, e *colly.HTMLElement) {
@@ -172,7 +193,14 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit(siteURL)
+	if singleSceneURL != "" {
+		sc := models.ScrapedScene{}
+		ctx := colly.NewContext()
+		ctx.Put("scene", &sc)
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+	} else {
+		siteCollector.Visit(siteURL)
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -229,12 +257,15 @@ func addVRPHubScraper(id string, name string, company string, avatarURL string, 
 		avatarURL = "https://cdn.vrphub.com/wp-content/uploads/2016/08/vrphubnew.png"
 	}
 
-	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return VRPHub(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL, callback)
+	registerScraper(id, suffixedName, avatarURL, "vrphub.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+		return VRPHub(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, callback)
 	})
 }
 
 func init() {
+	registerScraper("vrphub-single_scene", "VRPHub - Other Studios", "", "vrphub.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+		return VRPHub(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "", singeScrapeAdditionalInfo, noop)
+	})
 	var scrapers config.ScraperList
 	scrapers.Load()
 	for _, scraper := range scrapers.XbvrScrapers.VrphubScrapers {

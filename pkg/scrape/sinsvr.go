@@ -14,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "sinsvr"
 	siteID := "SinsVR"
@@ -140,8 +140,12 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://xsinsvr.com/studio/sinsvr/videos")
-	siteCollector.Visit("https://xsinsvr.com/studio/billie-star/videos")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://xsinsvr.com/studio/sinsvr/videos")
+		siteCollector.Visit("https://xsinsvr.com/studio/billie-star/videos")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -151,5 +155,5 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("sinsvr", "SinsVR", "https://assets.xsinsvr.com/logo.black.svg", SinsVR)
+	registerScraper("sinsvr", "SinsVR", "https://assets.xsinsvr.com/logo.black.svg", "xsinsvr.com", SinsVR)
 }

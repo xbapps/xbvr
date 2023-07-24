@@ -13,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "tonightsgirlfriend"
 	siteID := "Tonight's Girlfriend VR"
@@ -158,7 +158,15 @@ func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://www.tonightsgirlfriend.com/scenes/vr")
+	if singleSceneURL != "" {
+		ctx := colly.NewContext()
+		ctx.Put("date", "")
+
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+
+	} else {
+		siteCollector.Visit("https://www.tonightsgirlfriend.com/scenes/vr")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -168,5 +176,5 @@ func TNGFVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend VR", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", TNGFVR)
+	registerScraper("tonightsgirlfriend", "Tonight's Girlfriend VR", "https://mcdn.vrporn.com/files/20200404124349/TNGF_LOGO_BLK.jpg", "tonightsgirlfriend.com", TNGFVR)
 }

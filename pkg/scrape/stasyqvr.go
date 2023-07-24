@@ -13,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "stasyqvr"
 	siteID := "StasyQVR"
@@ -128,7 +128,13 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		}
 	})
 
-	siteCollector.Visit("https://stasyqvr.com/virtualreality/list")
+	if singleSceneURL != "" {
+		ctx := colly.NewContext()
+		ctx.Put("duration", 0)
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+	} else {
+		siteCollector.Visit("https://stasyqvr.com/virtualreality/list")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -138,5 +144,5 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("stasyqvr", "StasyQVR", "https://stasyqvr.com/s/images/apple-touch-icon.png", StasyQVR)
+	registerScraper("stasyqvr", "StasyQVR", "https://stasyqvr.com/s/images/apple-touch-icon.png", "stasyqvr.com", StasyQVR)
 }

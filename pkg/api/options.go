@@ -106,6 +106,7 @@ type RequestSaveOptionsPreviews struct {
 type GetStateResponse struct {
 	CurrentState config.ObjectState  `json:"currentState"`
 	Config       config.ObjectConfig `json:"config"`
+	Scrapers     []models.Scraper    `json:"scrapers"`
 }
 
 type GetSearchStateResponse struct {
@@ -590,6 +591,7 @@ func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 
 	out.Config = config.Config
 	out.CurrentState = config.State
+	out.Scrapers = models.GetScrapers()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
 }

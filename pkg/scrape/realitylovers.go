@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"regexp"
 	"strings"
 	"sync"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, domain string) error {
+func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, domain string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -83,28 +84,39 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 	})
 
 	// Request scenes via REST API
-	r, err := resty.New().R().
-		SetHeader("User-Agent", UserAgent).
-		Get("https://engine." + domain + "/content/videos?max=3000&page=0&pornstar=&category=&perspective=&sort=NEWEST")
+	if singleSceneURL == "" {
+		r, err := resty.New().R().
+			SetHeader("User-Agent", UserAgent).
+			Get("https://engine." + domain + "/content/videos?max=3000&page=0&pornstar=&category=&perspective=&sort=NEWEST")
 
-	if err != nil {
-		log.Errorf("Error fetching BaberoticaVR feed: %s", err)
-		logScrapeFinished(scraperID, siteID)
-		return nil
-	}
+		if err != nil {
+			log.Errorf("Error fetching BaberoticaVR feed: %s", err)
+			logScrapeFinished(scraperID, siteID)
+			return nil
+		}
 
-	if err == nil || r.StatusCode() == 200 {
-		result := gjson.Get(r.String(), "contents")
-		result.ForEach(func(key, value gjson.Result) bool {
-			sceneURL := "https://" + domain + "/" + value.Get("videoUri").String()
-			sceneID := value.Get("id").String()
-			if !funk.ContainsString(knownScenes, sceneURL) {
-				ctx := colly.NewContext()
-				ctx.Put("sceneURL", sceneURL)
-				sceneCollector.Request("GET", "https://engine."+domain+"/content/videoDetail?contentId="+sceneID, nil, ctx, nil)
-			}
-			return true
-		})
+		if err == nil || r.StatusCode() == 200 {
+			result := gjson.Get(r.String(), "contents")
+			result.ForEach(func(key, value gjson.Result) bool {
+				sceneURL := "https://" + domain + "/" + value.Get("videoUri").String()
+				sceneID := value.Get("id").String()
+				if !funk.ContainsString(knownScenes, sceneURL) {
+					ctx := colly.NewContext()
+					ctx.Put("sceneURL", sceneURL)
+					sceneCollector.Request("GET", "https://engine."+domain+"/content/videoDetail?contentId="+sceneID, nil, ctx, nil)
+				}
+				return true
+			})
+		}
+	} else {
+		re := regexp.MustCompile(`.com\/vd\/(\d+)\/`)
+		match := re.FindStringSubmatch(singleSceneURL)
+		if len(match) >= 2 {
+			ctx := colly.NewContext()
+			ctx.Put("sceneURL", singleSceneURL)
+			sceneCollector.Request("GET", "https://engine."+domain+"/content/videoDetail?contentId="+match[1], nil, ctx, nil)
+		}
+
 	}
 
 	if updateSite {
@@ -114,15 +126,15 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 	return nil
 }
 
-func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return RealityLoversSite(wg, updateSite, knownScenes, out, "realitylovers", "RealityLovers", "realitylovers.com")
+func RealityLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return RealityLoversSite(wg, updateSite, knownScenes, out, singleSceneURL, "realitylovers", "RealityLovers", "realitylovers.com", singeScrapeAdditionalInfo)
 }
 
-func TSVirtualLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-	return RealityLoversSite(wg, updateSite, knownScenes, out, "tsvirtuallovers", "TSVirtualLovers", "tsvirtuallovers.com")
+func TSVirtualLovers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return RealityLoversSite(wg, updateSite, knownScenes, out, singleSceneURL, "tsvirtuallovers", "TSVirtualLovers", "tsvirtuallovers.com", singeScrapeAdditionalInfo)
 }
 
 func init() {
-	registerScraper("realitylovers", "RealityLovers", "http://static.rlcontent.com/shared/VR/common/favicons/apple-icon-180x180.png", RealityLovers)
-	registerScraper("tsvirtuallovers", "TSVirtualLovers", "http://static.rlcontent.com/shared/TS/common/favicons/apple-icon-180x180.png", TSVirtualLovers)
+	registerScraper("realitylovers", "RealityLovers", "http://static.rlcontent.com/shared/VR/common/favicons/apple-icon-180x180.png", "realitylovers.com", RealityLovers)
+	registerScraper("tsvirtuallovers", "TSVirtualLovers", "http://static.rlcontent.com/shared/TS/common/favicons/apple-icon-180x180.png", "tsvirtuallovers.com", TSVirtualLovers)
 }

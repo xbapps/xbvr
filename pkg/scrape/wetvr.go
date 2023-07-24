@@ -1,10 +1,12 @@
 package scrape
 
 import (
+	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -13,7 +15,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "wetvr"
 	siteID := "WetVR"
@@ -43,8 +45,10 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 
 		// Date
 		scenedate := e.Request.Ctx.GetAny("scene-date").(string)
-		tmpDate, _ := goment.New(scenedate, "MMMM DD, YYYY")
-		sc.Released = tmpDate.Format("YYYY-MM-DD")
+		if scenedate != "" {
+			tmpDate, _ := goment.New(scenedate, "MMMM DD, YYYY")
+			sc.Released = tmpDate.Format("YYYY-MM-DD")
+		}
 
 		// Duration
 		tmpDuration := durationRegEx.FindStringSubmatch(e.ChildText(`div#t2019-stime`))[1]
@@ -107,7 +111,26 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		}
 	})
 
-	siteCollector.Visit("https://wetvr.com/")
+	if singleSceneURL != "" {
+		type extraInfo struct {
+			FieldName  string `json:"fieldName"`
+			FieldValue string `json:"fieldValue"`
+		}
+		var extrainfo []extraInfo
+		json.Unmarshal([]byte(singeScrapeAdditionalInfo), &extrainfo)
+		ctx := colly.NewContext()
+		ctx.Put("scene-id", extrainfo[0].FieldValue)
+		if len(extrainfo) > 1 {
+			parsedDate, _ := time.Parse("2006-01-02", extrainfo[1].FieldValue)
+			formattedDate := parsedDate.Format("January 02, 2006")
+			ctx.Put("scene-date", formattedDate)
+		} else {
+			ctx.Put("scene-date", "")
+		}
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+	} else {
+		siteCollector.Visit("https://wetvr.com/")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -117,5 +140,5 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 }
 
 func init() {
-	registerScraper("wetvr", "WetVR", "https://wetvr.com/assets/images/sites/wetvr/logo-4a2f06a4c9.png", WetVR)
+	registerScraper("wetvr", "WetVR", "https://wetvr.com/assets/images/sites/wetvr/logo-4a2f06a4c9.png", "wetvr.com", WetVR)
 }

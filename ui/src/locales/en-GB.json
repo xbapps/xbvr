@@ -134,6 +134,7 @@
   "Enter Studio Name": "Enter Studio Name",
   "Optional: defaults to Name": "Optional: defaults to Name",
   "Optional": "Optional",
+  "Scrape Single Scene": "Scrape Single Scene",
   "Actors": "Actors",
   "Added Date": "Added Date",
   "Birthdate": "Birthdate",
@@ -199,5 +200,6 @@
   "No matching sites":"No matching sites",
   "No matching attributes":"No matching attributes",
   "Only required when troubleshooting search issues, this will enable a Tab in the Scene Details to display what search fields exist and their values for a scene":"Only required when troubleshooting search issues, this will enable a Tab in the Scene Details to display what search fields exist and their values for a scene",
+  "Scene Id Required": "Scene Id Required",
   "Go": "Go"
 }

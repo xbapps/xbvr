@@ -13,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "darkroomvr"
 	siteID := "DarkRoomVR"
@@ -122,7 +122,11 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		}
 	})
 
-	siteCollector.Visit("https://darkroomvr.com/video/")
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://darkroomvr.com/video/")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -132,5 +136,5 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 }
 
 func init() {
-	registerScraper("darkroomvr", "DarkRoomVR", "https://static.darkroomvr.com/img/favicon/apple-touch-180.png", DarkRoomVR)
+	registerScraper("darkroomvr", "DarkRoomVR", "https://static.darkroomvr.com/img/favicon/apple-touch-180.png", "darkroomvr.com", DarkRoomVR)
 }

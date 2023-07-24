@@ -16,7 +16,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "fuckpassvr-native"
 	siteID := "FuckPassVR"
@@ -32,8 +32,9 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			return
 		}
 		res := gjson.ParseBytes(r.Body)
-		previewVideoURL := r.Ctx.Get("preview_video_url")
 		scenedata := res.Get("data.scene")
+		previewVideoURL := r.Ctx.Get("preview_video_url")
+
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
@@ -121,34 +122,42 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	var page int64 = 1
 	var lastPage int64 = 1
 
-	for page <= lastPage {
-		resp, err := client.R().
-			SetQueryParams(map[string]string{
-				"size":   "24",
-				"sortBy": "newest",
-				"page":   strconv.FormatInt(page, 10),
-			}).
-			Get("https://www.fuckpassvr.com/api/api/scene")
+	if singleSceneURL != "" {
+		ctx := colly.NewContext()
+		ctx.Put("preview_video_url", "")
+		slug := strings.Replace(singleSceneURL, "https://www.fuckpassvr.com/video/", "", 1)
+		sceneDetail := "https://www.fuckpassvr.com/api/api/scene/show?slug=" + slug
+		sceneCollector.Request("GET", sceneDetail, nil, ctx, nil)
+	} else {
+		for page <= lastPage {
+			resp, err := client.R().
+				SetQueryParams(map[string]string{
+					"size":   "24",
+					"sortBy": "newest",
+					"page":   strconv.FormatInt(page, 10),
+				}).
+				Get("https://www.fuckpassvr.com/api/api/scene")
 
-		if err == nil {
-			res := gjson.ParseBytes(resp.Body())
-			res.Get("data.scenes.data").ForEach(func(_, scenedata gjson.Result) bool {
-				ctx := colly.NewContext()
-				ctx.Put("preview_video_url", scenedata.Get("preview_video_url").String())
+			if err == nil {
+				res := gjson.ParseBytes(resp.Body())
+				res.Get("data.scenes.data").ForEach(func(_, scenedata gjson.Result) bool {
+					ctx := colly.NewContext()
+					ctx.Put("preview_video_url", scenedata.Get("preview_video_url").String())
 
-				sceneURL := "https://www.fuckpassvr.com/video/" + scenedata.Get("slug").String()
-				sceneDetail := "https://www.fuckpassvr.com/api/api/scene/show?slug=" + scenedata.Get("slug").String()
+					sceneURL := "https://www.fuckpassvr.com/video/" + scenedata.Get("slug").String()
+					sceneDetail := "https://www.fuckpassvr.com/api/api/scene/show?slug=" + scenedata.Get("slug").String()
 
-				if !funk.ContainsString(knownScenes, sceneURL) {
-					sceneCollector.Request("GET", sceneDetail, nil, ctx, nil)
-				}
+					if !funk.ContainsString(knownScenes, sceneURL) {
+						sceneCollector.Request("GET", sceneDetail, nil, ctx, nil)
+					}
 
-				return true
-			})
-			lastPage = res.Get("data.scenes.last_page").Int()
-			page = page + 1
-		} else {
-			log.Error(err)
+					return true
+				})
+				lastPage = res.Get("data.scenes.last_page").Int()
+				page = page + 1
+			} else {
+				log.Error(err)
+			}
 		}
 	}
 
@@ -160,5 +169,5 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 }
 
 func init() {
-	registerScraper("fuckpassvr-native", "FuckPassVR", "https://www.fuckpassvr.com/_nuxt/img/logo_bw.1fac7d1.png", FuckPassVR)
+	registerScraper("fuckpassvr-native", "FuckPassVR", "https://www.fuckpassvr.com/_nuxt/img/logo_bw.1fac7d1.png", "fuckpassvr.com", FuckPassVR)
 }

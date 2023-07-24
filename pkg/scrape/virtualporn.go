@@ -12,7 +12,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "bvr"
 	siteID := "VirtualPorn"
@@ -136,7 +136,15 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
+	if singleSceneURL != "" {
+		ctx := colly.NewContext()
+		ctx.Put("dur", "")
+		ctx.Put("date", "")
+
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+	} else {
+		siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -146,5 +154,5 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 }
 
 func init() {
-	registerScraper("bvr", "VirtualPorn", "https://images.cn77nd.com/members/bangbros/favicon/apple-icon-60x60.png", VirtualPorn)
+	registerScraper("bvr", "VirtualPorn", "https://images.cn77nd.com/members/bangbros/favicon/apple-icon-60x60.png", "virtualporn.com", VirtualPorn)
 }

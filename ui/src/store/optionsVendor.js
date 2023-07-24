@@ -2,8 +2,9 @@ import ky from 'ky'
 
 const state = {
   tpdb: {
-    apiToken: ''
-  }
+    apiToken: '',
+  },
+  scrapers: [],
 }
 
 const mutations = {}
@@ -14,6 +15,7 @@ const actions = {
       .json()
       .then(data => {
         state.tpdb.apiToken = data.config.vendor.tpdb.apiToken
+        state.scrapers = data.scrapers        
       })
   },
 }

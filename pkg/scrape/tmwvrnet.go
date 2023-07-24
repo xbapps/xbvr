@@ -13,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "tmwvrnet"
 	siteID := "TmwVRnet"
@@ -45,7 +45,12 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
 			sc.Title = strings.TrimSpace(e.Attr("title"))
 
-			tmpCover := e.Request.AbsoluteURL(e.Request.Ctx.GetAny("cover-id").(string))
+			tmpCover := ""
+			if e.Request.Ctx.GetAny("cover-id").(string) == "" {
+				tmpCover = e.Request.AbsoluteURL(e.Attr("poster"))
+			} else {
+				tmpCover = e.Request.AbsoluteURL(e.Request.Ctx.GetAny("cover-id").(string))
+			}
 			sc.Covers = append(sc.Covers, tmpCover)
 
 			tmp := strings.Split(tmpCover, "/")
@@ -109,7 +114,14 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		}
 	})
 
-	siteCollector.Visit("https://tmwvrnet.com/categories/movies.html")
+	if singleSceneURL != "" {
+		ctx := colly.NewContext()
+		ctx.Put("cover-id", "")
+
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+	} else {
+		siteCollector.Visit("https://tmwvrnet.com/categories/movies.html")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -119,5 +131,5 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("tmwvrnet", "TmwVRnet", "https://tmwvrnet.com/assets/vr/public/tour1/images/favicon/apple-touch-icon.png", TmwVRnet)
+	registerScraper("tmwvrnet", "TmwVRnet", "https://tmwvrnet.com/assets/vr/public/tour1/images/favicon/apple-touch-icon.png", "tmwvrnet.com", TmwVRnet)
 }

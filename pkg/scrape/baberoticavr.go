@@ -15,7 +15,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "baberoticavr"
 	siteID := "BaberoticaVR"
@@ -154,5 +154,5 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 }
 
 func init() {
-	registerScraper("baberoticavr", "BaberoticaVR", "https://baberoticavr.com/wp-content/themes/baberoticavr/images/fav/android-chrome-192x192.png", BaberoticaVR)
+	registerScraper("baberoticavr", "BaberoticaVR", "https://baberoticavr.com/wp-content/themes/baberoticavr/images/fav/android-chrome-192x192.png", "baberoticavr.com", BaberoticaVR)
 }

@@ -19,7 +19,7 @@ import (
 var currentYear int
 var lastMonth int
 
-func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "sexbabesvr"
 	siteID := "SexBabesVR"
@@ -128,7 +128,14 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	currentYear = time.Now().Year()
 	lastMonth = int(time.Now().Month())
 
-	siteCollector.Visit("https://sexbabesvr.com/videos")
+	if singleSceneURL != "" {
+		ctx := colly.NewContext()
+		ctx.Put("released", "")
+
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+	} else {
+		siteCollector.Visit("https://sexbabesvr.com/videos")
+	}
 
 	// Sort the videoList as page visits may not return in the same speed and be out of order
 	var sortedVideos []int
@@ -162,5 +169,5 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 }
 
 func init() {
-	registerScraper("sexbabesvr", "SexBabesVR", "https://sexbabesvr.com/assets/front/assets/logo.png", SexBabesVR)
+	registerScraper("sexbabesvr", "SexBabesVR", "https://sexbabesvr.com/assets/front/assets/logo.png", "sexbabesvr.com", SexBabesVR)
 }

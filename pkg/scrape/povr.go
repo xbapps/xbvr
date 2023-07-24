@@ -15,7 +15,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, scraperID string, siteID string, company string, siteURL string) error {
+func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -30,6 +30,22 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
+		if scraperID == "" {
+			// there maybe no site/studio if user is jusy scraping a scene url
+			e.ForEach(`div.meta a[href^="/studios/"]`, func(id int, e *colly.HTMLElement) {
+				studioId := strings.TrimSuffix(strings.ReplaceAll(e.Attr("href"), "/studios/", ""), "/")
+				sc.Studio = strings.TrimSpace(e.Text)
+				sc.Site = sc.Studio
+				// see if we can find the site record, there may not be
+				db, _ := models.GetDB()
+				defer db.Close()
+				var site models.Site
+				db.Where("name like ?", sc.Studio+"%POVR) or id = ?", sc.Studio, studioId).First(&site)
+				if site.ID != "" {
+					sc.ScraperID = site.ID
+				}
+			})
+		}
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "-")
 		sc.SiteID = tmp[len(tmp)-1]
@@ -118,7 +134,11 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.Visit(siteURL)
+	if singleSceneURL != "" {
+		sceneCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit(siteURL)
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -136,12 +156,15 @@ func addPOVRScraper(id string, name string, company string, avatarURL string, cu
 	} else {
 		suffixedName += " (POVR)"
 	}
-	registerScraper(id, suffixedName, avatarURL, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
-		return POVR(wg, updateSite, knownScenes, out, id, siteNameSuffix, company, siteURL)
+	registerScraper(id, suffixedName, avatarURL, "povr.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+		return POVR(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo)
 	})
 }
 
 func init() {
+	registerScraper("povr-single_scene", "POVR - Other Studios", "", "povr.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+		return POVR(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "", singeScrapeAdditionalInfo)
+	})
 	var scrapers config.ScraperList
 	scrapers.Load()
 	for _, scraper := range scrapers.XbvrScrapers.PovrScrapers {

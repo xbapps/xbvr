@@ -14,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene) error {
+func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "vr3000"
 	siteID := "VR3000"
@@ -120,7 +120,11 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	siteCollector.Visit("https://www.vr3000.com")
+	if singleSceneURL != "" {
+		siteCollector.Visit(singleSceneURL)
+	} else {
+		siteCollector.Visit("https://www.vr3000.com")
+	}
 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
@@ -130,5 +134,5 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 }
 
 func init() {
-	registerScraper("vr3000", "VR3000", "https://pbs.twimg.com/profile_images/753992720348217344/-q03m_OT_200x200.jpg", VR3000)
+	registerScraper("vr3000", "VR3000", "https://pbs.twimg.com/profile_images/753992720348217344/-q03m_OT_200x200.jpg", "vr3000.com", VR3000)
 }
