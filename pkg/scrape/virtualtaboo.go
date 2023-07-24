@@ -115,7 +115,7 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.video-card__container a[class=video-card__item]`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.video-card__item a[class=image-container]`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
