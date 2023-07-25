@@ -44,18 +44,18 @@
               </b-tab-item>
 
               <b-tab-item label="Player">
-                <video ref="player" class="video-js vjs-default-skin" controls playsinline preload="none"/>                
+                <video ref="player" class="video-js vjs-default-skin" controls playsinline preload="none"/>
                 <b-field position="is-centered">
                   <b-field>
-                    <b-tooltip v-for="(skipBack, i) in skipBackIntervals" class="is-size-7" :key="i" :active="skipBack == lastSkipBackInterval ? true : false" :label="$t('Keyboard shortcut: Left Arrow')" 
+                    <b-tooltip v-for="(skipBack, i) in skipBackIntervals" class="is-size-7" :key="i" :active="skipBack == lastSkipBackInterval ? true : false" :label="$t('Keyboard shortcut: Left Arrow')"
                         position="is-top" type="is-primary is-light" >
-                    <b-button class="tag is-small is-outlined is-info is-light"  @click="playerStepBack(skipBack)">                      
+                    <b-button class="tag is-small is-outlined is-info is-light"  @click="playerStepBack(skipBack)">
                       <b-icon v-if="skipBack == lastSkipBackInterval" pack="mdi" icon="arrow-left-thin" size="is-small"></b-icon> {{ skipBack }}</b-button>
                     </b-tooltip>
                   </b-field>
                   <b-field style="margin-left:1em">
-                    <b-tooltip v-for="(skipForward, i) in skipForwardIntervals" :key="i" :active="skipForward == lastSkipFowardInterval ? true : false" :label="$t('Keyboard shortcut: Right Arrow')" 
-                        position="is-top" type="is-primary is-light" >                    
+                    <b-tooltip v-for="(skipForward, i) in skipForwardIntervals" :key="i" :active="skipForward == lastSkipFowardInterval ? true : false" :label="$t('Keyboard shortcut: Right Arrow')"
+                        position="is-top" type="is-primary is-light" >
                     <b-button class="tag is-small is-outlined is-info is-light" @click="playerStepForward(skipForward)">
                       <b-icon v-if="skipForward == lastSkipFowardInterval" pack="mdi" icon="arrow-right-thin" size="is-small"></b-icon> +{{ skipForward }}</b-button>
                     </b-tooltip>
@@ -81,7 +81,7 @@
                 <div class="columns">
                   <div class="column pb-0">
                     <small>
-                      <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>                  
+                      <a :href="item.scene_url" target="_blank" rel="noreferrer">{{ item.site }}</a>
                       <br v-if="item.members_url != ''"/>
                       <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" rel="noreferrer"><b-icon pack="mdi" icon="link-lock" custom-size="mdi-18px"/>Members Link</a>
                     </small>
@@ -102,8 +102,8 @@
                   </div>
                   <div class="column pt-0">
                     <div class="is-pulled-right">
-                      <hidden-button :item="item"/>&nbsp;  
-                      <watchlist-button :item="item"/>&nbsp;                      
+                      <hidden-button :item="item"/>&nbsp;
+                      <watchlist-button :item="item"/>&nbsp;
                       <trailerlist-button :item="item"/>&nbsp;
                       <favourite-button :item="item"/>&nbsp;
                       <watched-button :item="item"/>&nbsp;
@@ -114,23 +114,23 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="image-row" v-if="activeTab != 1">
               <div v-for="(image, idx) in castimages" :key="idx" class="image-wrapper">
                 <b-tooltip  type="is-light" :label="image.actor_name"  :delay=100>
-                  <vue-load-image>                                    
-                    <img slot="image" :src="getImageURL(image.src)" alt="Image" class="thumbnail" @mouseover="showTooltip(idx)" @mouseout="hideTooltip(idx)" @click='showActorDetail([image.actor_id])' />                    
+                  <vue-load-image>
+                    <img slot="image" :src="getImageURL(image.src)" alt="Image" class="thumbnail" @mouseover="showTooltip(idx)" @mouseout="hideTooltip(idx)" @click='showActorDetail([image.actor_id])' />
                     <img slot="preloader" :src="getImageURL('https://i.stack.imgur.com/kOnzy.gif')" style="height: 50px;display: block;margin-left:auto;margin-right: auto;" @click='showCastScenes([image.actor_name])' />
                     <img slot="error" src="/ui/images/blank_female_profile.png" width="80" @click='showActorDetail([image.actor_id])' />
                   </vue-load-image>
                 </b-tooltip>
-                
+
                 <div v-if="image.visible" class="tooltip">
-                  <img :src="getImageURL(image.src)" alt="Tooltip Image" />                    
+                  <img :src="getImageURL(image.src)" alt="Tooltip Image" />
                 </div>
-              </div>              
+              </div>
             </div>
-            
+
             <div class="block-tags block" v-if="activeTab != 1">
               <b-taglist>
                 <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])'
@@ -141,13 +141,13 @@
                    class="tag is-info is-small">{{ tag.name }} ({{ tag.count }})</a>
               </b-taglist>
             </div>
-            
-            <div class="block-tags block" v-if="activeTab == 1">              
+
+            <div class="block-tags block" v-if="activeTab == 1">
              <b-taglist>
               <b-tooltip  type="is-danger" :label="disableSaveMsg()" position="is-right" :delay=250 :active="disableSaveButtons()">
                 <b-button @click="updateCuepoint(false)" class="tag is-info is-small is-warning" accesskey="a" :disabled="disableSaveButtons()" >
                   <u>A</u>dd New
-                </b-button>                
+                </b-button>
               </b-tooltip>
                 <b-button @click="vidPosition = new Date(0,0,0,0,0, 0, player.currentTime() * 1000)" class="tag is-info is-small is-warning" accesskey="t">Current <u>T</u>ime</b-button>
               <b-tooltip type="is-danger" :label="$t(disableSaveMsg())" position="is-right" :delay=250 :active="disableSaveButtons()">
@@ -155,38 +155,38 @@
                   :disabled="disableSaveButtons()" >
                   <u>S</u>ave Edit
                 </b-button>
-              </b-tooltip>                
+              </b-tooltip>
                 <b-button v-if="cuepointName!=''" @click='cuepointName=""' class="tag is-info is-small is-warning" >Clear Cuepoint Name</b-button>
-                <b-button v-if="tagAct!=''" @click='setCuepointName("")' class="tag is-info is-small is-warning" accesskey="c"><u>C</u>lear Action</b-button>                  
+                <b-button v-if="tagAct!=''" @click='setCuepointName("")' class="tag is-info is-small is-warning" accesskey="c"><u>C</u>lear Action</b-button>
               </b-taglist>
             </div>
-            
+
             <div class="is-divider" data-content="Cuepoint Positions" v-if="activeTab == 1"></div>
-            <div class="block-tags block" v-if="activeTab == 1">              
-              <b-taglist>                  
+            <div class="block-tags block" v-if="activeTab == 1">
+              <b-taglist>
                 <b-button v-for="(c, idx) in cuepointPositionTags.slice(1)" :key="'pos' + idx" @click='setCuepointName([c])' class="tag is-info is-small">{{c}}</b-button>
               </b-taglist>
             </div>
             <div class="is-divider" data-content="Default Cuepoint Actions" v-if="activeTab == 1"></div>
-            <div class="block-tags block" v-if="activeTab == 1">    
+            <div class="block-tags block" v-if="activeTab == 1">
               <b-taglist>
                 <b-button v-for="(c, idx) in cuepointActTags.slice(1)" :key="'action' + idx" @click='setCuepointName([c])' class="tag is-info is-small">{{c}}</b-button>
               </b-taglist>
             </div>
             <div class="is-divider" data-content="Cast Cuepoints" v-if="activeTab == 1"></div>
-            <div class="block-tags block" v-if="activeTab == 1">              
-              <b-taglist>                  
+            <div class="block-tags block" v-if="activeTab == 1">
+              <b-taglist>
                 <b-button v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='setCuepointName([c.name])' class="tag is-info is-small">{{c.name}}</b-button>
               </b-taglist>
             </div>
             <div class="is-divider" data-content="Scene Tag Cuepoints" v-if="activeTab == 1"></div>
-            <div class="block-tags block" v-if="activeTab == 1">    
+            <div class="block-tags block" v-if="activeTab == 1">
               <b-taglist>
                 <b-button v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='setCuepointName([tag.name])'
                    class="tag is-info is-small">{{ tag.name }}</b-button>
-              </b-taglist>              
+              </b-taglist>
             </div>
-            
+
 
             <div class="block-opts block">
               <b-tabs v-model="activeTab" :animated="false">
@@ -212,7 +212,7 @@
                         <button rounded class="button is-info is-small is-outlined" disabled
                                 v-show="f.type === 'subtitles'">
                           <b-icon pack="mdi" icon="subtitles"></b-icon>
-                        </button>                        
+                        </button>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
                         <strong>{{ f.filename }}</strong><br/>
@@ -253,7 +253,7 @@
                         <b-field label="Name" label-position="on-border">
                           <b-autocomplete v-model="cuepointName" :data="filteredCuepointPositionList" :open-on-focus="true"></b-autocomplete>
                         </b-field>
-                        </div>                        
+                        </div>
                         <div class="column is-2">
                         <b-field label="Start" label-position="on-border">
                           <b-timepicker v-model="vidPosition" rounded editable placeholder="Defaults to player position" hour-format="24" :enable-seconds="true" :max-time="maxTime" :time-formatter="timeFormatter" :time-parser="timeParser" >
@@ -273,12 +273,12 @@
                             @click="endTime = new Date(0,0,0,0,0, 0, player.currentTime() * 1000)" />
                           </b-timepicker>
                         </b-field>
-                        </div>  
+                        </div>
                       </div>
                     </div>
                     <div>
                       <!-- :sort-multiple="sortMultiple" :sort-multiple-data="cuepointSorting" -->
-                        <b-table :data="sortedCuepoints"  :narrowed=true :per-page=7 focusable striped sticky-header                          
+                        <b-table :data="sortedCuepoints"  :narrowed=true :per-page=7 focusable striped sticky-header
                           @select="cuepointSelected">
                           <!-- paginated  pagination-position="top" :pagination-rounded=true pagination-size="is-small" -->
                           <b-table-column field="track" label="Track" width="7.25em" v-slot="props" >
@@ -335,7 +335,7 @@
                   <div class="block-tab-content block">
                     <div class="content is-small">
                       <div class="block" v-for="(field, idx) in searchfields" :key="idx">
-                        <strong>{{ field.FieldName }} - </strong> {{ field.FieldValue }}                        
+                        <strong>{{ field.FieldName }} - </strong> {{ field.FieldValue }}
                       </div>
                     </div>
                   </div>
@@ -353,7 +353,7 @@
         <a v-if="this.$store.state.optionsAdvanced.advanced.showHSPApiLink" :href="`/heresphere/${item.id}`" target="_blank" rel="noreferrer" style="margin-left:0.5em">
           <img src="/ui/icons/heresphere_24.png" style="height:15px;"/>
         </a>
-      </div>      
+      </div>
     </div>
     <button class="modal-close is-large" aria-label="close" @click="close()"></button>
     <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"
@@ -416,12 +416,12 @@ export default {
       const item = this.$store.state.overlay.details.scene
       if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
         item.tags.sort((a, b) => a.name < b.name ? -1 : 1)
-      }      
+      }
       let imgs = item.cast.map((actor) => {
         let img = actor.image_url
         if (img == "" ){
           img = "blank"  // forces an error image to load, blank won't display an image
-        }        
+        }
         if (actor.name.startsWith("aka:")) {
           img = ""
         }
@@ -437,7 +437,7 @@ export default {
     images () {
       if (this.item.images=="null") {
         return "[]"
-      }      
+      }
       return JSON.parse(this.item.images).filter(im => im && im.url)
     },
     // Tab: cuepoints
@@ -446,7 +446,7 @@ export default {
         for (let i = 0; i < this.item.cuepoints.length; i++) {
           this.item.cuepoints[i].is_hsp = this.item.cuepoints[i].track == null ? 0 : 1
         }
-        let x=this.item.cuepoints.slice().sort((a, b) => (a.time_start > b.time_start) ? 1 : -1 || (a.is_hsp >b.is_hsp) ? 1 : -1 )        
+        let x=this.item.cuepoints.slice().sort((a, b) => (a.time_start > b.time_start) ? 1 : -1 || (a.is_hsp >b.is_hsp) ? 1 : -1 )
         x=this.item.cuepoints.slice().sort((a,b) => {
           let compare = (a.is_hsp<b.is_hsp) ? -1 : (a.is_hsp>b.is_hsp) ? 1 : 0
           if (compare!=0) {
@@ -460,7 +460,7 @@ export default {
           if (compare!=0) {
             return compare
           }
-          return  (a.time_end<b.time_end) ? -1 : (a.time_end>b.time_end) ? 1 : 0          
+          return  (a.time_end<b.time_end) ? -1 : (a.time_end>b.time_end) ? 1 : 0
         })
         return x
       }
@@ -514,15 +514,15 @@ export default {
   },
   mounted () {
     this.setupPlayer()
-    
+
     // load default cuepoint actions & positions from kv entry in the db
-    ky.get('/api/options/cuepoints').json().then(data => { 
+    ky.get('/api/options/cuepoints').json().then(data => {
       this.cuepointActTags = data.actions
       this.cuepointPositionTags = data.positions
       this.cuepointActTags.unshift("")
-      this.cuepointPositionTags.unshift("")      
-      }) 
-    this.getSearchFields() 
+      this.cuepointPositionTags.unshift("")
+      })
+    this.getSearchFields()
 },
   methods: {
     setupPlayer () {
@@ -604,7 +604,7 @@ export default {
         if (data.id != 0){
           this.$store.commit('overlay/showActorDetails', { actor: data })
           this.close()
-        }          
+        }
       })
     },
     playPreview () {
@@ -653,13 +653,13 @@ export default {
           this.$store.commit('overlay/showDetails', { scene: data })
       })
     },
-    getImageURL (u, size) {      
+    getImageURL (u, size) {
       if (u==undefined) {
         return u
       }
       try {
         if (u.startsWith('http') || u.startsWith('https')) {
-          return '/img/' + size + '/' + u.replace('://', ':/')
+          return '/img/' + size + '/' + encodeURI(u)
         } else {
           return u
         }
@@ -700,18 +700,18 @@ export default {
       if (editCuepoint && this.currentCuepointId > 0) {
         this.deleteCuepoint(this.currentCuepointId)
       }
-      let name =  this.cuepointName      
+      let name =  this.cuepointName
       let pos = this.player.currentTime()
       let endpos=null
       this.track=parseInt(this.track)
-      if (this.vidPosition != null) {        
-        pos = (this.vidPosition.getMilliseconds() / 1000) + this.vidPosition.getSeconds() + (this.vidPosition.getMinutes() * 60) + (this.vidPosition.getHours() * 60 * 60)        
+      if (this.vidPosition != null) {
+        pos = (this.vidPosition.getMilliseconds() / 1000) + this.vidPosition.getSeconds() + (this.vidPosition.getMinutes() * 60) + (this.vidPosition.getHours() * 60 * 60)
       }
-      if (this.endTime != null) {        
-        endpos = (this.endTime.getMilliseconds() / 1000) + this.endTime.getSeconds() + (this.endTime.getMinutes() * 60) + (this.endTime.getHours() * 60 * 60)        
+      if (this.endTime != null) {
+        endpos = (this.endTime.getMilliseconds() / 1000) + this.endTime.getSeconds() + (this.endTime.getMinutes() * 60) + (this.endTime.getHours() * 60 * 60)
       }
       this.currentCuepointId = 0
-      
+
       ky.post(`/api/scene/${this.item.id}/cuepoint`, {
         json: {
           track: this.track,
@@ -743,7 +743,7 @@ export default {
     humanizeSeconds (seconds) {
       return new Date(seconds * 1000).toISOString().substr(11, 8)
     },
-    humanizeSeconds1DP (seconds) {      
+    humanizeSeconds1DP (seconds) {
       return new Date(seconds * 1000).toISOString().substr(11, 10)
     },
     setRating (val) {
@@ -786,7 +786,7 @@ export default {
       this.player.currentTime(seekTime)
       if (wasPlaying) {
         this.player.play()
-      }      
+      }
       this.lastSkipBackInterval = interval
     },
     playerStepForward (interval) {
@@ -811,8 +811,8 @@ export default {
           this.cuepointName = param.toString()
         }else{
           this.cuepointName = this.cuepointName+'-'+param.toString()
-        }        
-      }      
+        }
+      }
     },
     toggleGallery () {
       if (this.activeMedia == 0) {
@@ -821,11 +821,11 @@ export default {
         this.activeMedia = 0
         }
     },
-    handleLeftArrow () {      
+    handleLeftArrow () {
       if (this.activeMedia === 0)
       {
         this.carouselSlide = this.carouselSlide - 1
-      } else {        
+      } else {
         this.playerStepBack(this.lastSkipBackInterval)
       }
     },
@@ -833,7 +833,7 @@ export default {
       if (this.activeMedia === 0)
       {
         this.carouselSlide = this.carouselSlide + 1
-      } else {        
+      } else {
         this.playerStepForward(this.lastSkipFowardInterval)
       }
     },
@@ -846,19 +846,19 @@ export default {
         behavior: 'smooth'
       })
     },
-    timeFormatter(time) {        
+    timeFormatter(time) {
        return new Intl.DateTimeFormat('en', { hourCycle: 'h23', hour: "2-digit", minute: "2-digit", second: "2-digit", fractionalSecondDigits: 1 }).format(time)
     },
     timeParser(inputString) {
       let items = inputString.split(":")
       return new Date(0, 0, 0, items[0],items[1], 0, items[2]*1000)
     },
-    cuepointSelected(cuepoint) {      
+    cuepointSelected(cuepoint) {
       // populate the cuepoint edit fields
       this.vidPosition = new Date(0, 0, 0, 0, 0, 0, cuepoint.time_start*1000)
       this.endTime = new Date(0, 0, 0, 0, 0, 0, cuepoint.time_end*1000)
-      this.currentCuepointId = cuepoint.id      
-      this.cuepointName = cuepoint.name        
+      this.currentCuepointId = cuepoint.id
+      this.cuepointName = cuepoint.name
       this.track=cuepoint.track
       this.cuepointRating=cuepoint.rating
       // now mow the player position
@@ -870,25 +870,25 @@ export default {
       if ((this.track==null || this.track==="") && !isNaN(this.endTime) && this.endTime!=null) return true
       return false
     },
-    disableSaveMsg() {      
+    disableSaveMsg() {
       if (this.track!=null && this.track!="" && (isNaN(this.endTime) || this.endTime==null)) return "Specify a End Time"
       if ((this.track==null || this.track==="") && !isNaN(this.endTime) && this.endTime!=null) return "End Time is only valid for HSP Cuepoints"
       return ""
     },
     setCuepointRating (row) {
-      this.cuepointSelected(row) 
+      this.cuepointSelected(row)
       this.updateCuepoint(true)
     },
     clearCuepointRating (row) {
       row.rating=0
-      this.cuepointSelected(row) 
+      this.cuepointSelected(row)
       this.updateCuepoint(true)
     },
     showTooltip(idx) {
-      this.castimages[idx].visible = true;      
+      this.castimages[idx].visible = true;
     },
     hideTooltip(idx) {
-      this.castimages[idx].visible = false;      
+      this.castimages[idx].visible = false;
     },
     getSearchFields() {
       // load search fields
@@ -897,7 +897,7 @@ export default {
           searchParams: {
             q: this.item.id
           },
-          }).json().then(data => { 
+          }).json().then(data => {
             this.searchfields = data
           })
       }
@@ -1035,7 +1035,7 @@ span.is-active img {
   margin: .8rem 0;
 }
 .image-row {
-  display: flex;  
+  display: flex;
 }
 .image-wrapper {
   position: relative;

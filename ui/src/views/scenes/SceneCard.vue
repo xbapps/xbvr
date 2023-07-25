@@ -132,7 +132,7 @@ export default {
   methods: {
     getImageURL (u) {
       if (u.startsWith('http')) {
-        return '/img/700x/' + u.replace('://', ':/')
+        return '/img/700x/' + encodeURI(u)
       } else {
         return u
       }

@@ -1617,6 +1617,16 @@ func Migrate() {
 				return tx.Exec(sql).Error
 			},
 		},
+		{
+			ID: "0066-fix-vrlatina-cover-urls",
+			Migrate: func(tx *gorm.DB) error {
+				sql := `update scenes set
+				cover_url = replace(replace(cover_url, 'http:////', 'https://'), 'http://https://', 'https://'),
+				images = replace(replace(images, 'http:////', 'https://'), 'http://https://', 'https://')
+				where site = 'VRLatina';`
+				return tx.Exec(sql).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
