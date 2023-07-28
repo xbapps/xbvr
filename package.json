@@ -43,7 +43,7 @@
     "@vue/eslint-config-standard": "8.0.1",
     "buffer": "6.0.3",
     "concurrently": "7.6.0",
-    "eslint": "8.45.0",
+    "eslint": "8.46.0",
     "eslint-plugin-import": "2.27.5",
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-promise": "6.1.1",
