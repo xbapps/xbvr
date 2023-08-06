@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -21,6 +22,9 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	sceneCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com")
 	siteCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com")
 	trailerCollector := cloneCollector(sceneCollector)
+
+	db, _ := models.GetDB()
+	defer db.Close()
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -101,6 +105,10 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			}
 		})
 
+		e.ForEach(`p.video-tags a[href^="/category/funscript"]`, func(id int, e *colly.HTMLElement) {
+			sc.HasScriptDownload = true
+		})
+
 		ctx := colly.NewContext()
 		ctx.Put("scene", sc)
 
@@ -154,6 +162,17 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
+	siteCollector.OnHTML(`div.video-card-info`, func(e *colly.HTMLElement) {
+		sceneURL := ""
+		e.ForEach(`div.video-card-info-main a`, func(id int, e *colly.HTMLElement) {
+			sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
+		})
+
+		e.ForEach(`a[href^="/category/funscript"]`, func(id int, e *colly.HTMLElement) {
+			db.Model(&models.Scene{}).Where("scene_url = ? and script_published = '0000-00-00'", sceneURL).Update("script_published", time.Now())
+		})
+	})
+
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
@@ -163,7 +182,9 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
 	}
+
 	logScrapeFinished(scraperID, siteID)
+
 	return nil
 }
 

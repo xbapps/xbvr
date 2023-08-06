@@ -18,26 +18,27 @@ type Scraper struct {
 }
 
 type ScrapedScene struct {
-	SceneID     string   `json:"_id"`
-	ScraperID   string   `json:"xbvr_site"`
-	SiteID      string   `json:"scene_id"`
-	SceneType   string   `json:"scene_type"`
-	Title       string   `json:"title"`
-	Studio      string   `json:"studio"`
-	Site        string   `json:"site"`
-	Covers      []string `json:"covers"`
-	Gallery     []string `json:"gallery"`
-	Tags        []string `json:"tags"`
-	Cast        []string `json:"cast"`
-	Filenames   []string `json:"filename"`
-	Duration    int      `json:"duration"`
-	Synopsis    string   `json:"synopsis"`
-	Released    string   `json:"released"`
-	HomepageURL string   `json:"homepage_url"`
-	MembersUrl  string   `json:"members_url"`
-	TrailerType string   `json:"trailer_type"`
-	TrailerSrc  string   `json:"trailer_source"`
-	ChromaKey   string   `json:"chromakey"`
+	SceneID           string   `json:"_id"`
+	ScraperID         string   `json:"xbvr_site"`
+	SiteID            string   `json:"scene_id"`
+	SceneType         string   `json:"scene_type"`
+	Title             string   `json:"title"`
+	Studio            string   `json:"studio"`
+	Site              string   `json:"site"`
+	Covers            []string `json:"covers"`
+	Gallery           []string `json:"gallery"`
+	Tags              []string `json:"tags"`
+	Cast              []string `json:"cast"`
+	Filenames         []string `json:"filename"`
+	Duration          int      `json:"duration"`
+	Synopsis          string   `json:"synopsis"`
+	Released          string   `json:"released"`
+	HomepageURL       string   `json:"homepage_url"`
+	MembersUrl        string   `json:"members_url"`
+	TrailerType       string   `json:"trailer_type"`
+	TrailerSrc        string   `json:"trailer_source"`
+	ChromaKey         string   `json:"chromakey"`
+	HasScriptDownload bool     `json:"has_script_Download"`
 
 	ActorDetails map[string]ActorDetails `json:"actor_details"`
 }
