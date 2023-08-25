@@ -11,6 +11,7 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -52,7 +53,7 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 				e.ForEach(`.stars-list a`, func(id int, e *colly.HTMLElement) {
 					sc.Cast = append(sc.Cast, e.Text)
 					sc.ActorDetails[e.Text] = models.ActorDetails{
-						Source: scraperID + " scrape",
+						Source:     scraperID + " scrape",
 						ProfileUrl: e.Request.AbsoluteURL(e.Attr(`href`)),
 					}
 				})
@@ -61,7 +62,7 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 				if len(durationParts) == 3 {
 					hours, _ := strconv.Atoi(durationParts[0])
 					minutes, _ := strconv.Atoi(durationParts[1])
-					sc.Duration = hours * 60 + minutes
+					sc.Duration = hours*60 + minutes
 				}
 			case "Release date":
 				tmpDate, _ := goment.New(strings.TrimSpace(value), "DD MMM YYYY")
@@ -86,7 +87,6 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 					}
 				}
 			}
-
 		})
 
 		cdnSceneURL := e.Request.URL
@@ -106,7 +106,7 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		trailersRegex := regexp.MustCompile(regexp.QuoteMeta(cdnSceneURL.String()) + `/trailers/([^?"]*)\.mp4`)
 		for _, trailer := range trailersRegex.FindAllStringSubmatch(nuxtData, -1) {
 			params.VideoSources = append(params.VideoSources, models.VideoSource{
-				URL: trailer[0],
+				URL:     trailer[0],
 				Quality: trailer[1],
 			})
 		}
@@ -119,7 +119,7 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 	siteCollector.OnHTML(`body`, func(e *colly.HTMLElement) {
 		e.ForEachWithBreak(`.video-section a.photo-preview`, func(id int, e *colly.HTMLElement) bool {
 			currentPage, _ := strconv.Atoi(e.Request.URL.Query().Get("page"))
-			siteCollector.Visit(fmt.Sprintf("%s/videos?sort=new&page=%d", baseURL, currentPage + 1))
+			siteCollector.Visit(fmt.Sprintf("%s/videos?sort=new&page=%d", baseURL, currentPage+1))
 			return false
 		})
 	})

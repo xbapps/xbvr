@@ -10,13 +10,13 @@ import (
 
 	"github.com/gocolly/colly/v2"
 	"github.com/tidwall/gjson"
+
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
 func LoadHeresphereScene(url string) HeresphereVideo {
 	response, err := http.Get(url)
-
 	if err != nil {
 		return HeresphereVideo{}
 	}
@@ -37,7 +37,6 @@ func LoadHeresphereScene(url string) HeresphereVideo {
 
 func LoadDeovrScene(url string) DeoScene {
 	response, err := http.Get(url)
-
 	if err != nil {
 		return DeoScene{}
 	}
@@ -78,7 +77,7 @@ func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
 				}
 			} else {
 				//  extract match with regex expression if one was specified
-				var re = regexp.MustCompile(params.ExtractRegex)
+				re := regexp.MustCompile(params.ExtractRegex)
 				r := re.FindStringSubmatch(e.Text)
 				if len(r) > 0 {
 					if r[1] != "" {
@@ -94,7 +93,6 @@ func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
 		VideoSources: srcs,
 	}
 	return r
-
 }
 
 func ScrapeJson(scrapeParams string) models.VideoSourceResponse {
@@ -108,7 +106,7 @@ func ScrapeJson(scrapeParams string) models.VideoSourceResponse {
 			txt := e.Text
 			//  extract json with regex expression if one was specified
 			if params.ExtractRegex != "" {
-				var re = regexp.MustCompile(params.ExtractRegex)
+				re := regexp.MustCompile(params.ExtractRegex)
 				r := re.FindStringSubmatch(txt)
 				if len(r) > 0 {
 					if r[1] != "" {
@@ -133,7 +131,6 @@ func LoadJson(scrapeParams string) models.VideoSourceResponse {
 	json.Unmarshal([]byte(scrapeParams), &params)
 
 	response, err := http.Get(params.SceneUrl)
-
 	if err != nil {
 		return models.VideoSourceResponse{}
 	}
@@ -191,7 +188,6 @@ func extractFromJson(inputJson string, params models.TrailerScrape, srcs []model
 }
 
 func LoadUrl(url string) models.VideoSourceResponse {
-
 	var srcs []models.VideoSource
 	srcs = append(srcs, models.VideoSource{URL: url, Quality: "Unknown"})
 
