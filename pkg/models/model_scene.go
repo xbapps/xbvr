@@ -118,6 +118,15 @@ type Image struct {
 	Orientation string `json:"orientation"`
 }
 
+type VideoSourceResponse struct {
+	VideoSources []VideoSource `json:"video_sources"`
+}
+
+type VideoSource struct {
+	URL     string `json:"url"`
+	Quality string `json:"quality"`
+}
+
 func (i *Scene) Save() error {
 	db, _ := GetDB()
 	defer db.Close()

@@ -371,6 +371,11 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		case "url":
 			sources := LoadUrl(scene.TrailerSource)
 			media = copyVideoSourceResponse(sources, media)
+		case "urls":
+			sources := models.VideoSourceResponse{}
+			if err := json.Unmarshal([]byte(scene.TrailerSource), &sources); err == nil {
+				media = copyVideoSourceResponse(sources, media)
+			}
 		case "scrape_html":
 			sources := ScrapeHtml(scene.TrailerSource)
 			media = copyVideoSourceResponse(sources, media)
@@ -724,7 +729,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	resp.WriteHeaderAndEntity(http.StatusOK, video)
 }
 
-func copyVideoSourceResponse(sources VideoSourceResponse, media []HeresphereMedia) []HeresphereMedia {
+func copyVideoSourceResponse(sources models.VideoSourceResponse, media []HeresphereMedia) []HeresphereMedia {
 	if len(sources.VideoSources) > 0 {
 		for _, source := range sources.VideoSources {
 			var hsp HeresphereMedia

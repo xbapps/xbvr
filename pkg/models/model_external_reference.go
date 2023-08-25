@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	"github.com/gocolly/colly/v2"
 	"github.com/markphelps/optional"
 	"github.com/xbapps/xbvr/pkg/common"
 )
@@ -55,17 +56,23 @@ type GenericScraperRuleSet struct {
 
 type GenericActorScraperRule struct {
 	XbvrField      string           `json:"xbvr_field"`
-	Selector       string           `json:"selector`        // css selector to identify data
-	PostProcessing []PostProcessing `json:"post_processing` // call routines for specific handling, eg dates parshing, json extracts, etc, see PostProcessing function
-	First          optional.Int     `json:"first"`          // used to limit how many results you want, the start position you want.  First index pos	 is 0
-	Last           optional.Int     `json:"last"`           // used to limit how many results you want, the end position you want
-	ResultType     string           `json:"result_type"`    // how to treat the result, text, attribute value, json
-	Attribute      string           `json:"attribute`       // name of the atribute you want
+
+	// Go implementation of the rule. If specified, other fields below are ignored.
+	// This function receives the body of the page as json or html and must return one or multiple values for the field.
+	// This cannot be loaded from json.
+	Native func(interface{}) []string `json:"-"`
+
+	Selector       string           `json:"selector"`        // css selector to identify data
+	PostProcessing []PostProcessing `json:"post_processing"` // call routines for specific handling, eg dates parshing, json extracts, etc, see PostProcessing function
+	First          optional.Int     `json:"first"`           // used to limit how many results you want, the start position you want.  First index pos	 is 0
+	Last           optional.Int     `json:"last"`            // used to limit how many results you want, the end position you want
+	ResultType     string           `json:"result_type"`     // how to treat the result, text, attribute value, json
+	Attribute      string           `json:"attribute"`       // name of the atribute you want
 }
 type PostProcessing struct {
-	Function string                  `json:"post_processing` // call routines for specific handling, eg dates, json extracts
-	Params   []string                `json:"params`          // used to pass params to PostProcessing functions, eg date format
-	SubRule  GenericActorScraperRule `json:"sub_rule`        // sub rules allow for a foreach within a foreach, use Function CollyForEach
+	Function string                  `json:"post_processing"`     // call routines for specific handling, eg dates, json extracts
+	Params   []string                `json:"params"`              // used to pass params to PostProcessing functions, eg date format
+	SubRule  GenericActorScraperRule `json:"sub_rule"`            // sub rules allow for a foreach within a foreach, use Function CollyForEach
 }
 
 type StashSiteConfig struct {
@@ -744,6 +751,35 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 		{Function: "RegexString", Params: []string{`<\/div>\s*([^<]+)$`, "1"}}, // get everything after the last div
 		{Function: "UnescapeString"}}})
 	scrapeRules.GenericActorScrapingConfig["sexbabesvr scrape"] = siteDetails
+
+	siteDetails = GenericScraperRuleSet{}
+	siteDetails.Domain = "vrspy.com"
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `.star-biography-description`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `.star-photo img`, ResultType: "attr", Attribute: "src", PostProcessing: []PostProcessing{{Function: "RemoveQueryParams"}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "images", Native: func (e interface{}) []string {
+		html := e.(*colly.HTMLElement)
+		var values []string
+		if mainPhotoURL := html.ChildAttr(`.star-photo img`, `src`); mainPhotoURL != "" {
+			partialURLRegex := regexp.MustCompile(`^(.*)/[^/]+.jpg`)
+			if partialURLMatch := partialURLRegex.FindStringSubmatch(mainPhotoURL); len(partialURLMatch) == 2 {
+				fullURLRegex := regexp.MustCompile(regexp.QuoteMeta(partialURLMatch[1]) + `/[^"]+.jpg`)
+				nuxtData := html.ChildText(`#__NUXT_DATA__`)
+				if imageURLs := fullURLRegex.FindAllString(nuxtData, -1); imageURLs != nil {
+					values = imageURLs
+				}
+			}
+		}
+		return values
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "height", Selector: `.about-me-mobile .stars-params-title:contains("Height:") + .stars-params-value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "weight", Selector: `.about-me-mobile .stars-params-title:contains("Weight:") + .stars-params-value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Selector: `.about-me-mobile .stars-params-title:contains("Measurements:") + .stars-params-value`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`(\d+)([A-Za-z]*)-(\d+)-(\d+)`, "1"}}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "cup_size", Selector: `.about-me-mobile .stars-params-title:contains("Measurements:") + .stars-params-value`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`(\d+)([A-Za-z]*)-(\d+)-(\d+)`, "2"}}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Selector: `.about-me-mobile .stars-params-title:contains("Measurements:") + .stars-params-value`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`(\d+)([A-Za-z]*)-(\d+)-(\d+)`, "3"}}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Selector: `.about-me-mobile .stars-params-title:contains("Measurements:") + .stars-params-value`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`(\d+)([A-Za-z]*)-(\d+)-(\d+)`, "4"}}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "nationality", Selector: `.about-me-mobile .stars-params-title:contains("Nationality:") + .stars-params-value`, PostProcessing: []PostProcessing{{Function: "Lookup Country"}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `.about-me-mobile .stars-params-title:contains("Hair Color:") + .stars-params-value`})
+	scrapeRules.GenericActorScrapingConfig["vrspy scrape"] = siteDetails
 }
 
 // Loads custom rules from actor_scrapers_examples.json
@@ -846,6 +882,7 @@ func (scrapeRules ActorScraperConfig) getSiteUrlMatchingRules() {
 	scrapeRules.StashSceneMatching["vrmansion-slr"] = StashSiteConfig{StashId: "a01012bc-42e9-4372-9c25-58f0f94e316b"}
 	scrapeRules.StashSceneMatching["vrsexygirlz"] = StashSiteConfig{StashId: "b346fe21-5d12-407f-9f50-837f067956d7"}
 	scrapeRules.StashSceneMatching["vrsolos"] = StashSiteConfig{StashId: "b2d048da-9180-4e43-b41a-bdb4d265c8ec"}
+	scrapeRules.StashSceneMatching["vrspy"] = StashSiteConfig{StashId: "513001ef-dff4-476d-840d-e22ef27e81ed"}
 	scrapeRules.StashSceneMatching["wankitnowvr"] = StashSiteConfig{StashId: "acb1ed8f-4967-4c5a-b16a-7025bdeb75c5"}
 
 	scrapeRules.StashSceneMatching["wetvr"] = StashSiteConfig{StashId: "981887d6-da48-4dfc-88d1-7ed13a2754f2"}
