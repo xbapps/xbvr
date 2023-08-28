@@ -73,21 +73,13 @@ func getScriptFileIds(urlpart string) ([]uint, error) {
 		return ids, err
 	}
 
-	if scene.IsMultipart {
-		scriptfiles, err := scene.GetScriptFilesSorted(config.Config.Interfaces.Players.ScriptSortSeq)
-		if err != nil || len(scriptfiles) < 1 {
-			return ids, fmt.Errorf("scene %d has no script files", sceneId)
-		}
+	scriptfiles, err := scene.GetScriptFilesSorted(config.Config.Interfaces.Players.ScriptSortSeq)
+	if err != nil || len(scriptfiles) < 1 {
+		return ids, fmt.Errorf("scene %d has no script files", sceneId)
+	}
 
-		for i := range scriptfiles {
-			ids = append(ids, scriptfiles[i].ID)
-		}
-	} else {
-		scriptfiles, err := scene.GetScriptFiles()
-		if err != nil || len(scriptfiles) < 1 {
-			return ids, fmt.Errorf("scene %d has no script files", sceneId)
-		}
-		ids = append(ids, scriptfiles[0].ID)
+	for i := range scriptfiles {
+		ids = append(ids, scriptfiles[i].ID)
 	}
 	return ids, nil
 }
