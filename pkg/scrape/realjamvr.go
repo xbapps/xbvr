@@ -14,6 +14,7 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -26,7 +27,7 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	sceneCollector := createCollector("realjamvr.com")
 	siteCollector := createCollector("realjamvr.com")
 
-	var c = siteCollector.Cookies("realjamvr.com")
+	c := siteCollector.Cookies("realjamvr.com")
 	cookie := http.Cookie{Name: "age_confirmed", Value: "Tru", Domain: "realjamvr.com", Path: "/", Expires: time.Now().Add(time.Hour)}
 	c = append(c, &cookie)
 	siteCollector.SetCookies("https://realjamvr.com", c)
@@ -38,11 +39,7 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		sc.SceneType = "VR"
 		sc.Studio = "Real Jam Network"
 		sc.Site = siteID
-		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
-		if strings.HasSuffix(sc.HomepageURL, "/") {
-			// make homepage url conistant
-			sc.HomepageURL = sc.HomepageURL[0 : len(sc.HomepageURL)-1]
-		}
+		sc.HomepageURL = strings.TrimSuffix(strings.Split(e.Request.URL.String(), "?")[0], "/")
 
 		// source the scene_id from the trailer filename.  This is not the best appraoch but the only id source we have
 		trailerId := ""
@@ -89,14 +86,15 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 		})
 
 		// Duration
-		e.ForEach(`.bi-clock-history`, func(id int, e *colly.HTMLElement) {
-			p := e.DOM.Parent()
-			t, _ := time.Parse("15:04:05", p.Text())
+		e.ForEach(`.bi-clock-history + span`, func(id int, e *colly.HTMLElement) {
+			t, _ := time.Parse("15:04:05", e.Text)
 			sc.Duration = t.Minute() + t.Hour()*60
 		})
 
 		// Title
-		sc.Title = strings.TrimSpace(e.ChildText(`h1`))
+		titleSelection := e.DOM.Find(`h1`)
+		titleSelection.Children().Remove()
+		sc.Title = strings.TrimSpace(titleSelection.Text())
 
 		// Cover URL
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
