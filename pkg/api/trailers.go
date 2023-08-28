@@ -10,17 +10,13 @@ import (
 
 	"github.com/gocolly/colly/v2"
 	"github.com/tidwall/gjson"
+
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
-type VideoSourceResponse struct {
-	VideoSources []VideoSource `json:"video_sources"`
-}
-
 func LoadHeresphereScene(url string) HeresphereVideo {
 	response, err := http.Get(url)
-
 	if err != nil {
 		return HeresphereVideo{}
 	}
@@ -41,7 +37,6 @@ func LoadHeresphereScene(url string) HeresphereVideo {
 
 func LoadDeovrScene(url string) DeoScene {
 	response, err := http.Get(url)
-
 	if err != nil {
 		return DeoScene{}
 	}
@@ -63,17 +58,12 @@ func LoadDeovrScene(url string) DeoScene {
 	return video
 }
 
-type VideoSource struct {
-	URL     string `json:"url"`
-	Quality string `json:"quality"`
-}
-
-func ScrapeHtml(scrapeParams string) VideoSourceResponse {
+func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
 	c := colly.NewCollector(colly.UserAgent(scrape.UserAgent))
 	var params models.TrailerScrape
 	json.Unmarshal([]byte(scrapeParams), &params)
 
-	var srcs []VideoSource
+	var srcs []models.VideoSource
 	c.OnHTML(`html`, func(e *colly.HTMLElement) {
 		e.ForEach(params.HtmlElement, func(id int, e *colly.HTMLElement) {
 			if params.ExtractRegex == "" {
@@ -83,15 +73,15 @@ func ScrapeHtml(scrapeParams string) VideoSourceResponse {
 					if params.ContentBaseUrl != "" {
 						origURLtmp = params.ContentBaseUrl + origURLtmp
 					}
-					srcs = append(srcs, VideoSource{URL: origURLtmp, Quality: quality})
+					srcs = append(srcs, models.VideoSource{URL: origURLtmp, Quality: quality})
 				}
 			} else {
 				//  extract match with regex expression if one was specified
-				var re = regexp.MustCompile(params.ExtractRegex)
+				re := regexp.MustCompile(params.ExtractRegex)
 				r := re.FindStringSubmatch(e.Text)
 				if len(r) > 0 {
 					if r[1] != "" {
-						srcs = append(srcs, VideoSource{URL: r[1], Quality: "unknown"})
+						srcs = append(srcs, models.VideoSource{URL: r[1], Quality: "unknown"})
 					}
 				}
 			}
@@ -99,25 +89,24 @@ func ScrapeHtml(scrapeParams string) VideoSourceResponse {
 	})
 	c.Visit(params.SceneUrl)
 
-	r := VideoSourceResponse{
+	r := models.VideoSourceResponse{
 		VideoSources: srcs,
 	}
 	return r
-
 }
 
-func ScrapeJson(scrapeParams string) VideoSourceResponse {
+func ScrapeJson(scrapeParams string) models.VideoSourceResponse {
 	c := colly.NewCollector(colly.UserAgent(scrape.UserAgent))
 	var params models.TrailerScrape
 	json.Unmarshal([]byte(scrapeParams), &params)
 
-	var srcs []VideoSource
+	var srcs []models.VideoSource
 	c.OnHTML(`html`, func(e *colly.HTMLElement) {
 		e.ForEach(params.HtmlElement, func(id int, e *colly.HTMLElement) {
 			txt := e.Text
 			//  extract json with regex expression if one was specified
 			if params.ExtractRegex != "" {
-				var re = regexp.MustCompile(params.ExtractRegex)
+				re := regexp.MustCompile(params.ExtractRegex)
 				r := re.FindStringSubmatch(txt)
 				if len(r) > 0 {
 					if r[1] != "" {
@@ -131,20 +120,19 @@ func ScrapeJson(scrapeParams string) VideoSourceResponse {
 	})
 	c.Visit(params.SceneUrl)
 
-	r := VideoSourceResponse{
+	r := models.VideoSourceResponse{
 		VideoSources: srcs,
 	}
 	return r
 }
 
-func LoadJson(scrapeParams string) VideoSourceResponse {
+func LoadJson(scrapeParams string) models.VideoSourceResponse {
 	var params models.TrailerScrape
 	json.Unmarshal([]byte(scrapeParams), &params)
 
 	response, err := http.Get(params.SceneUrl)
-
 	if err != nil {
-		return VideoSourceResponse{}
+		return models.VideoSourceResponse{}
 	}
 
 	responseData, err := ioutil.ReadAll(response.Body)
@@ -152,13 +140,13 @@ func LoadJson(scrapeParams string) VideoSourceResponse {
 		log.Errorf("Error from %s %s", params.SceneUrl, err)
 	}
 
-	var resp VideoSourceResponse
-	resp.VideoSources = extractFromJson(string(responseData), params, []VideoSource{})
+	var resp models.VideoSourceResponse
+	resp.VideoSources = extractFromJson(string(responseData), params, []models.VideoSource{})
 
 	return resp
 }
 
-func extractFromJson(inputJson string, params models.TrailerScrape, srcs []VideoSource) []VideoSource {
+func extractFromJson(inputJson string, params models.TrailerScrape, srcs []models.VideoSource) []models.VideoSource {
 	JsonMetadata := strings.TrimSpace(inputJson)
 
 	// if the path to a record exists loop through each video source
@@ -173,7 +161,7 @@ func extractFromJson(inputJson string, params models.TrailerScrape, srcs []Video
 			}
 
 			if url != "" {
-				srcs = append(srcs, VideoSource{URL: url, Quality: encoding + quality})
+				srcs = append(srcs, models.VideoSource{URL: url, Quality: encoding + quality})
 			}
 			return true // keep iterating
 		})
@@ -193,18 +181,17 @@ func extractFromJson(inputJson string, params models.TrailerScrape, srcs []Video
 					url = params.ContentBaseUrl + url
 				}
 			}
-			srcs = append(srcs, VideoSource{URL: url, Quality: encoding + quality})
+			srcs = append(srcs, models.VideoSource{URL: url, Quality: encoding + quality})
 		}
 	}
 	return srcs
 }
 
-func LoadUrl(url string) VideoSourceResponse {
+func LoadUrl(url string) models.VideoSourceResponse {
+	var srcs []models.VideoSource
+	srcs = append(srcs, models.VideoSource{URL: url, Quality: "Unknown"})
 
-	var srcs []VideoSource
-	srcs = append(srcs, VideoSource{URL: url, Quality: "Unknown"})
-
-	r := VideoSourceResponse{
+	r := models.VideoSourceResponse{
 		VideoSources: srcs,
 	}
 	return r
