@@ -936,9 +936,9 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			}
 		case "Has Script Download":
 			if truefalse {
-				where = "scenes.script_published <> '0000-00-00'"
+				where = "scenes.script_published > '0001-01-01 00:00:00+00:00'"
 			} else {
-				where = "scenes.script_published = '0000-00-00'"
+				where = "scenes.script_published < '0001-01-02 00:00:00+00:00'"
 			}
 		}
 
