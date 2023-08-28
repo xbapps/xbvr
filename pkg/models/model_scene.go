@@ -108,6 +108,8 @@ type Scene struct {
 	IsHidden      bool   `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
 	LegacySceneID string `json:"legacy_scene_id" xbvrbackup:"legacy_scene_id"`
 
+	ScriptPublished time.Time `json:"script_published" xbvrbackup:"script_published"`
+
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
 }
@@ -433,6 +435,9 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	o.MemberURL = ext.MembersUrl
 
 	o.ChromaKey = ext.ChromaKey
+	if ext.HasScriptDownload && o.ScriptPublished.IsZero() {
+		o.ScriptPublished = time.Now()
+	}
 
 	// Trailers
 	o.TrailerType = ext.TrailerType
@@ -918,6 +923,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			} else {
 				where = `scenes.scene_id not like "vrporn-%"`
 			}
+		case "Has Script Download":
+			if truefalse {
+				where = "scenes.script_published <> '0000-00-00'"
+			} else {
+				where = "scenes.script_published = '0000-00-00'"
+			}
 		}
 
 		switch firstchar := string(attribute.OrElse(" ")[0]); firstchar {
@@ -1126,6 +1137,8 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("created_at desc")
 	case "scene_updated_desc":
 		tx = tx.Order("updated_at desc")
+	case "script_published_desc":
+		tx = tx.Order("script_published desc")
 	case "random":
 		if dbConn.Driver == "mysql" {
 			tx = tx.Order("rand()")

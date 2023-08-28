@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -16,6 +17,8 @@ import (
 func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, nwID string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
+	db, _ := models.GetDB()
+	defer db.Close()
 
 	sceneCollector := createCollector("www.czechvrnetwork.com")
 	siteCollector := createCollector("www.czechvrnetwork.com")
@@ -95,6 +98,10 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 			}
 		})
 
+		e.ForEach(`div.interactive`, func(id int, e *colly.HTMLElement) {
+			sc.HasScriptDownload = true
+		})
+
 		// trailer details
 		sc.TrailerType = "heresphere"
 		//  extract internal id with (\d+)
@@ -144,13 +151,18 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.postTag div.foto a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-
-		// If scene exist in database, there's no need to scrape
-		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
-		}
+	siteCollector.OnHTML(`div.postTag`, func(e *colly.HTMLElement) {
+		sceneURL := ""
+		e.ForEach(`div.foto a`, func(id int, e *colly.HTMLElement) {
+			sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
+			// If scene exist in database, there's no need to scrape
+			if !funk.ContainsString(knownScenes, sceneURL) {
+				sceneCollector.Visit(sceneURL)
+			}
+		})
+		e.ForEach(`div.interactive`, func(id int, e *colly.HTMLElement) {
+			db.Model(&models.Scene{}).Where("scene_url = ? and script_published = '0000-00-00'", sceneURL).Update("script_published", time.Now())
+		})
 	})
 
 	if singleSceneURL != "" {
@@ -163,6 +175,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		updateSiteLastUpdate(scraperID)
 	}
 	logScrapeFinished(scraperID, siteID)
+
 	return nil
 }
 
