@@ -714,6 +714,19 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0067-scenes-add-has-script-download",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					ScriptPublished time.Time `json:"script_published" xbvrbackup:"script_published"`
+				}
+				err := tx.AutoMigrate(Scene{}).Error
+				if err != nil {
+					return err
+				}
+				return tx.Exec("update scenes set script_published = '0000-00-00' where script_published is null").Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
@@ -1614,6 +1627,16 @@ func Migrate() {
 				and a.scene_id is null  
 				and filenames_arr <> 'null'
 				`
+				return tx.Exec(sql).Error
+			},
+		},
+		{
+			ID: "0066-fix-vrlatina-cover-urls",
+			Migrate: func(tx *gorm.DB) error {
+				sql := `update scenes set
+				cover_url = replace(replace(cover_url, 'http:////', 'https://'), 'http://https://', 'https://'),
+				images = replace(replace(images, 'http:////', 'https://'), 'http://https://', 'https://')
+				where site = 'VRLatina';`
 				return tx.Exec(sql).Error
 			},
 		},

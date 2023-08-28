@@ -14,6 +14,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/jinzhu/gorm"
 	"github.com/markphelps/optional"
+
 	"github.com/xbapps/xbvr/pkg/common"
 )
 
@@ -108,6 +109,8 @@ type Scene struct {
 	IsHidden      bool   `json:"is_hidden" gorm:"default:false" xbvrbackup:"is_hidden"`
 	LegacySceneID string `json:"legacy_scene_id" xbvrbackup:"legacy_scene_id"`
 
+	ScriptPublished time.Time `json:"script_published" xbvrbackup:"script_published"`
+
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
 }
@@ -116,6 +119,15 @@ type Image struct {
 	URL         string `json:"url"`
 	Type        string `json:"type"`
 	Orientation string `json:"orientation"`
+}
+
+type VideoSourceResponse struct {
+	VideoSources []VideoSource `json:"video_sources"`
+}
+
+type VideoSource struct {
+	URL     string `json:"url"`
+	Quality string `json:"quality"`
 }
 
 func (i *Scene) Save() error {
@@ -188,9 +200,8 @@ func (o *Scene) GetIfExistURL(u string) error {
 }
 
 func (o *Scene) GetFunscriptTitle() string {
-
 	// first make the title filename safe
-	var re = regexp.MustCompile(`[?/\<>|]`)
+	re := regexp.MustCompile(`[?/\<>|]`)
 
 	title := o.Title
 	// Colons are pretty common in titles, so we use a unicode alternative
@@ -226,6 +237,7 @@ func (o *Scene) GetVideoFiles() ([]File, error) {
 	files, err := o.GetVideoFilesSorted("")
 	return files, err
 }
+
 func (o *Scene) GetVideoFilesSorted(sort string) ([]File, error) {
 	db, _ := GetDB()
 	defer db.Close()
@@ -241,9 +253,10 @@ func (o *Scene) GetVideoFilesSorted(sort string) ([]File, error) {
 }
 
 func (o *Scene) GetScriptFiles() ([]File, error) {
-	var files, err = o.GetScriptFilesSorted("is_selected_script DESC, created_time DESC")
+	files, err := o.GetScriptFilesSorted("is_selected_script DESC, created_time DESC")
 	return files, err
 }
+
 func (o *Scene) GetScriptFilesSorted(sort string) ([]File, error) {
 	db, _ := GetDB()
 	defer db.Close()
@@ -433,6 +446,9 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	o.MemberURL = ext.MembersUrl
 
 	o.ChromaKey = ext.ChromaKey
+	if ext.HasScriptDownload && o.ScriptPublished.IsZero() {
+		o.ScriptPublished = time.Now()
+	}
 
 	// Trailers
 	o.TrailerType = ext.TrailerType
@@ -509,13 +525,13 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 			if tmpActor.AddToImageArray(ext.ActorDetails[name].ImageUrl) {
 				saveActor = true
 			}
-			//AddActionActor(name, ext.ActorDetails[name].Source, "add", "image_url", ext.ActorDetails[name].ImageUrl)
+			// AddActionActor(name, ext.ActorDetails[name].Source, "add", "image_url", ext.ActorDetails[name].ImageUrl)
 		}
 		if ext.ActorDetails[name].ProfileUrl != "" {
 			if tmpActor.AddToActorUrlArray(ActorLink{Url: ext.ActorDetails[name].ProfileUrl, Type: ext.ActorDetails[name].Source}) {
 				saveActor = true
 			}
-			//AddActionActor(name, ext.ActorDetails[name].Source, "add", "image_url", ext.ActorDetails[name].ImageUrl)
+			// AddActionActor(name, ext.ActorDetails[name].Source, "add", "image_url", ext.ActorDetails[name].ImageUrl)
 		}
 		if saveActor {
 			tmpActor.Save()
@@ -918,6 +934,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			} else {
 				where = `scenes.scene_id not like "vrporn-%"`
 			}
+		case "Has Script Download":
+			if truefalse {
+				where = "scenes.script_published > '0001-01-01 00:00:00+00:00'"
+			} else {
+				where = "scenes.script_published < '0001-01-02 00:00:00+00:00'"
+			}
 		}
 
 		switch firstchar := string(attribute.OrElse(" ")[0]); firstchar {
@@ -1126,6 +1148,8 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("created_at desc")
 	case "scene_updated_desc":
 		tx = tx.Order("updated_at desc")
+	case "script_published_desc":
+		tx = tx.Order("script_published desc")
 	case "random":
 		if dbConn.Driver == "mysql" {
 			tx = tx.Order("rand()")
@@ -1172,6 +1196,7 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 
 	return out
 }
+
 func setCuepointString(cuepoint string) string {
 	// swap * wildcard to sql wildcard %
 	cuepoint = strings.Replace(cuepoint, "*", "%", -1)

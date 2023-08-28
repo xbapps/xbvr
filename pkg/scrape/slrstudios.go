@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
@@ -21,6 +22,9 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 	sceneCollector := createCollector("www.sexlikereal.com")
 	siteCollector := createCollector("www.sexlikereal.com")
+
+	db, _ := models.GetDB()
+	defer db.Close()
 
 	// RegEx Patterns
 	coverRegEx := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
@@ -243,6 +247,10 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				}
 			})
 		})
+		sc.HasScriptDownload = false
+		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
+			sc.HasScriptDownload = true
+		})
 		out <- sc
 	})
 
@@ -258,6 +266,10 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		isTransScene := strings.Contains(sceneURL, "/trans")
 
 		if isStraightScene || isTransScene {
+			e.ForEach(`div.c-grid-badge--fleshlight-badge`, func(id int, e_a *colly.HTMLElement) {
+				db.Model(&models.Scene{}).Where("scene_url = ? and script_published = '0000-00-00'", sceneURL).Update("script_published", time.Now())
+			})
+
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {
 				durationText := e.ChildText("div.c-grid-ratio-bottom.u-z--two")

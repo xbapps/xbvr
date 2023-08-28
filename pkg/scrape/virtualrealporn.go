@@ -224,18 +224,20 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`a.w-portfolio-item-anchor`, func(e *colly.HTMLElement) {
-		if e.Request.URL.RawQuery == "videoPage="+strconv.Itoa(page) {
-			// found scenes on this page, get the next page of results
-			page++
-			siteCollector.Visit(fmt.Sprintf("%s?videoPage=%v", URL, page))
-		}
-		sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
+	siteCollector.OnHTML(`div.videoListContainer.paginated`, func(e *colly.HTMLElement) {
+		e.ForEach(`a.w-portfolio-item-anchor`, func(id int, e *colly.HTMLElement) {
+			if e.Request.URL.RawQuery == "videoPage="+strconv.Itoa(page) {
+				// found scenes on this page, get the next page of results
+				page++
+				siteCollector.Visit(fmt.Sprintf("%s?videoPage=%v", URL, page))
+			}
+			sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
 
-		// If scene exist in database, there's no need to scrape
-		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
-		}
+			// If scene exist in database, there's no need to scrape
+			if !funk.ContainsString(knownScenes, sceneURL) {
+				sceneCollector.Visit(sceneURL)
+			}
+		})
 	})
 
 	if singleSceneURL != "" {

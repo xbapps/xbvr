@@ -13,8 +13,8 @@ import (
 
 type File struct {
 	ID        uint      `gorm:"primary_key" json:"id" xbvrbackup:"-"`
-	CreatedAt time.Time `json:"created_at" json:"-" xbvrbackup:"-"`
-	UpdatedAt time.Time `json:"updated_at" json:"-" xbvrbackup:"-"`
+	CreatedAt time.Time `json:"created_at" xbvrbackup:"-"`
+	UpdatedAt time.Time `json:"updated_at" xbvrbackup:"-"`
 
 	VolumeID    uint      `json:"volume_id" xbvrbackup:"-"`
 	Volume      Volume    `json:"-" xbvrbackup:"-"`
@@ -34,7 +34,7 @@ type File struct {
 	VideoBitRate         int     `json:"video_bitrate" xbvrbackup:"video_bitrate"`
 	VideoAvgFrameRate    string  `json:"-" xbvrbackup:"video_avgfps"`
 	VideoAvgFrameRateVal float64 `json:"video_avgfps_val" xbvrbackup:"video_avgfps_val"`
-	VideoCodecName       string  `json:"-" xbvrbackup:"video_codec_name"`
+	VideoCodecName       string  `json:"video_codec_name" xbvrbackup:"video_codec_name"`
 	VideoDuration        float64 `json:"duration" xbvrbackup:"duration"`
 	VideoProjection      string  `json:"projection" xbvrbackup:"projection"`
 

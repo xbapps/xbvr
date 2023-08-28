@@ -13,11 +13,14 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
+
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-var currentYear int
-var lastMonth int
+var (
+	currentYear int
+	lastMonth   int
+)
 
 func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
@@ -114,12 +117,12 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	siteCollector.OnHTML(`div.videos__content`, func(e *colly.HTMLElement) {
 		e.ForEach(`a.video-container__description--information`, func(cnt int, e *colly.HTMLElement) {
 			sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-			var re = regexp.MustCompile(`(?m)(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}`)
+			re := regexp.MustCompile(`(?m)(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}`)
 			match := re.FindAllString(e.Text, -1)
 
 			if len(match) > 0 {
 				// If scene exist in database, there's no need to scrape
-				page, _ := strconv.Atoi(strings.ReplaceAll(e.Request.URL.String(), "https://sexbabesvr.com/videos/", ""))
+				page, _ := strconv.Atoi(strings.ReplaceAll(e.Request.URL.String(), "https://sexbabesvr.com/vr-porn-videos/", ""))
 				videoList[page*1000+cnt] = video{url: sceneURL, released: match[0]}
 			}
 		})
@@ -134,7 +137,7 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {
-		siteCollector.Visit("https://sexbabesvr.com/videos")
+		siteCollector.Visit("https://sexbabesvr.com/vr-porn-videos")
 	}
 
 	// Sort the videoList as page visits may not return in the same speed and be out of order

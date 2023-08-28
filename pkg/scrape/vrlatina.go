@@ -39,7 +39,7 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		// Covers
 		coverurl := e.ChildAttr(`meta[property="og:image"]`, "content")
 		if coverurl != "" {
-			sc.Covers = append(sc.Covers, "http://"+coverurl)
+			sc.Covers = append(sc.Covers, coverurl)
 		}
 
 		// Gallery

@@ -17,12 +17,13 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/markphelps/optional"
-	"github.com/xbapps/xbvr/pkg/config"
-	"github.com/xbapps/xbvr/pkg/models"
-	"github.com/xbapps/xbvr/pkg/tasks"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
+
+	"github.com/xbapps/xbvr/pkg/config"
+	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/tasks"
 )
 
 type HeresphereLibrary struct {
@@ -205,9 +206,9 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
-	var resolution = file.VideoHeight
-	var height = file.VideoHeight
-	var width = file.VideoWidth
+	resolution := file.VideoHeight
+	height := file.VideoHeight
+	width := file.VideoWidth
 	if file.VideoProjection == "360_tb" {
 		resolution = resolution / 2
 	}
@@ -310,10 +311,10 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	videoLength := float64(scene.Duration)
 
 	for i, file := range videoFiles {
-		var height = file.VideoHeight
-		var width = file.VideoWidth
-		var resolution = file.VideoHeight
-		var vertresolution = file.VideoWidth
+		height := file.VideoHeight
+		width := file.VideoWidth
+		resolution := file.VideoHeight
+		vertresolution := file.VideoWidth
 
 		if file.VideoProjection == "360_tb" {
 			resolution = resolution / 2
@@ -327,7 +328,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 			addFeatureTag(fmt.Sprintf("Frame Rate: %.0ffps", file.VideoAvgFrameRateVal))
 		}
 
-		var mediafile = HeresphereMedia{
+		mediafile := HeresphereMedia{
 			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(videoFiles), resolution, humanize.Bytes(uint64(file.Size))),
 			Sources: []HeresphereSource{
 				{
@@ -361,7 +362,8 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 							Width:      source.Width,
 							Height:     source.Height,
 							Resolution: source.Resolution,
-							Size:       source.Size}
+							Size:       source.Size,
+						}
 						hsp.Sources = append(hsp.Sources, hspSource)
 					}
 					media = append(media, hsp)
@@ -371,6 +373,11 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		case "url":
 			sources := LoadUrl(scene.TrailerSource)
 			media = copyVideoSourceResponse(sources, media)
+		case "urls":
+			sources := models.VideoSourceResponse{}
+			if err := json.Unmarshal([]byte(scene.TrailerSource), &sources); err == nil {
+				media = copyVideoSourceResponse(sources, media)
+			}
 		case "scrape_html":
 			sources := ScrapeHtml(scene.TrailerSource)
 			media = copyVideoSourceResponse(sources, media)
@@ -600,8 +607,8 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	var projection string = "equirectangular"
 	var stereo string = "sbs"
-	var fov = 180.0
-	var lens = "Linear"
+	fov := 180.0
+	lens := "Linear"
 
 	if len(videoFiles) == 0 {
 		videoFiles = append(videoFiles, models.File{})
@@ -686,7 +693,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		addFeatureTag("Year: " + scene.ReleaseDate.Format("2006"))
 	}
 
-	for f, _ := range features {
+	for f := range features {
 		tags = append(tags, HeresphereTag{
 			Name: "Feature:" + f,
 		})
@@ -724,7 +731,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	resp.WriteHeaderAndEntity(http.StatusOK, video)
 }
 
-func copyVideoSourceResponse(sources VideoSourceResponse, media []HeresphereMedia) []HeresphereMedia {
+func copyVideoSourceResponse(sources models.VideoSourceResponse, media []HeresphereMedia) []HeresphereMedia {
 	if len(sources.VideoSources) > 0 {
 		for _, source := range sources.VideoSources {
 			var hsp HeresphereMedia
@@ -742,7 +749,6 @@ func copyVideoSourceResponse(sources VideoSourceResponse, media []HeresphereMedi
 var lockHeresphereUpdates sync.Mutex
 
 func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthRequest, videoFile models.File) {
-
 	db, _ := models.GetDB()
 	defer db.Close()
 
@@ -836,7 +842,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 					}
 					replacementCuepoints = append(replacementCuepoints, models.SceneCuepoint{SceneID: scene.ID, TimeStart: float64(tag.StartMilliseconds) / 1000, Name: tag.Name, Track: &trackNo, TimeEnd: float64(tag.EndMilliseconds) / 1000, Rating: tag.Rating})
 				} else {
-					//allow for multi track, merge into the main cuepoint name
+					// allow for multi track, merge into the main cuepoint name
 					if tag.StartMilliseconds > 0 || tag.EndMilliseconds < endpos {
 						for idx, newtag := range replacementCuepoints {
 							// allow 5 seconds lewway to align manually entered tags
@@ -883,6 +889,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		tasks.ScanLocalHspFile(fName, videoFile.VolumeID, scene.ID)
 	}
 }
+
 func findTheMainTrack(requestData HereSphereAuthRequest) int {
 	// 99% of the time we want Track 0, but the user may have deleted and added whole track
 
@@ -921,6 +928,7 @@ func findTheMainTrack(requestData HereSphereAuthRequest) int {
 
 	return -1
 }
+
 func findEndPos(requestData HereSphereAuthRequest) float64 {
 	// find the max duration
 	endpos := float64(0)
@@ -931,8 +939,8 @@ func findEndPos(requestData HereSphereAuthRequest) float64 {
 	}
 	return endpos
 }
-func matchCuepoint(findCuepoint models.SceneCuepoint, cuepointList []models.SceneCuepoint) int {
 
+func matchCuepoint(findCuepoint models.SceneCuepoint, cuepointList []models.SceneCuepoint) int {
 	for idx, cuepoint := range cuepointList {
 		if cuepoint.Name == findCuepoint.Name && cuepoint.TimeStart == findCuepoint.TimeStart && *cuepoint.Track == *findCuepoint.Track && cuepoint.TimeEnd == findCuepoint.TimeEnd {
 			return idx

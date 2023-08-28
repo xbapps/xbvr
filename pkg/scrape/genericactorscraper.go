@@ -6,6 +6,7 @@ import (
 	"html"
 	"math"
 	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -54,7 +55,7 @@ func GenericActorScrapers() {
 			SELECT actors.id, trim('"' from JSON_EXTRACT(json_each.value, '$.url')) AS url, trim('"' from JSON_EXTRACT(json_each.value, '$.type')) AS linktype
 			FROM actors
 			CROSS JOIN JSON_TABLE(actors.urls, '$[*]' COLUMNS(value JSON PATH '$')) AS json_each
-			WHERE urls like '% scrape%' and JSON_TYPE(actors.urls) = 'ARRAY'    
+			WHERE urls like '% scrape%' and JSON_TYPE(actors.urls) = 'ARRAY'
 		)
 		SELECT actorlist.id, url, linktype
 		FROM actorlist
@@ -211,53 +212,67 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 			}
 			resp := gjson.ParseBytes(r.Body)
 			for _, rule := range rules.SiteRules {
-				result := resp.Get(rule.Selector).String()
-
-				if len(rule.PostProcessing) > 0 {
-					result = postProcessing(rule, result, nil)
-				}
-				if assignField(rule.XbvrField, result, actor, overwrite) {
-					actorChanged = true
-				}
-				// log.Infof("set %s to %s", rule.XbvrField, result)
-				if data[rule.XbvrField] == "" {
-					data[rule.XbvrField] = result
+				var results []string
+				if rule.Native != nil {
+					results = rule.Native(&resp)
 				} else {
-					data[rule.XbvrField] = data[rule.XbvrField] + ", " + result
+					results = []string{resp.Get(rule.Selector).String()}
+					if len(rule.PostProcessing) > 0 {
+						results[0] = postProcessing(rule, results[0], nil)
+					}
+				}
+
+				for _, result := range results {
+					if assignField(rule.XbvrField, result, actor, overwrite) {
+						actorChanged = true
+					}
+					if data[rule.XbvrField] == "" {
+						data[rule.XbvrField] = result
+					} else {
+						data[rule.XbvrField] = data[rule.XbvrField] + ", " + result
+					}
 				}
 			}
 		})
 	} else {
 		actorCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 			for _, rule := range rules.SiteRules {
-				recordCnt := 1
-				e.ForEach(rule.Selector, func(id int, e *colly.HTMLElement) {
-					if (rule.First.Present() && rule.First.OrElse(0) > recordCnt) || (rule.Last.Present() && recordCnt > rule.Last.OrElse(0)) {
-					} else {
-						var result string
-						switch rule.ResultType {
-						case "text", "":
-							result = strings.TrimSpace(e.Text)
-						case "attr":
-							result = strings.TrimSpace(e.Attr(rule.Attribute))
-						case "html":
-							result, _ = e.DOM.Html()
+				var results []string
+				if rule.Native != nil {
+					results = rule.Native(e)
+				} else {
+					recordCnt := 1
+					e.ForEach(rule.Selector, func(id int, e *colly.HTMLElement) {
+						if !(rule.First.Present() && rule.First.OrElse(0) > recordCnt) || (rule.Last.Present() && recordCnt > rule.Last.OrElse(0)) {
+							var result string
+							switch rule.ResultType {
+							case "text", "":
+								result = strings.TrimSpace(e.Text)
+							case "attr":
+								result = strings.TrimSpace(e.Attr(rule.Attribute))
+							case "html":
+								result, _ = e.DOM.Html()
+							}
+							if len(rule.PostProcessing) > 0 {
+								result = postProcessing(rule, result, e)
+							}
+							results = append(results, result)
 						}
-						if len(rule.PostProcessing) > 0 {
-							result = postProcessing(rule, result, e)
-						}
-						if assignField(rule.XbvrField, result, actor, overwrite) {
-							actorChanged = true
-						}
-						//log.Infof("set %s to %s", rule.XbvrField, result)
-						if data[rule.XbvrField] == "" {
-							data[rule.XbvrField] = result
-						} else {
-							data[rule.XbvrField] = data[rule.XbvrField] + ", " + result
-						}
+						recordCnt += 1
+					})
+				}
+
+				for _, result := range results {
+					if assignField(rule.XbvrField, result, actor, overwrite) {
+						actorChanged = true
 					}
-					recordCnt += 1
-				})
+					//log.Infof("set %s to %s", rule.XbvrField, result)
+					if data[rule.XbvrField] == "" {
+						data[rule.XbvrField] = result
+					} else {
+						data[rule.XbvrField] = data[rule.XbvrField] + ", " + result
+					}
+				}
 			}
 		})
 	}
@@ -525,6 +540,11 @@ func postProcessing(rule models.GenericActorScraperRule, value string, htmlEleme
 			value = strings.Replace(value, postprocessing.Params[0], postprocessing.Params[1], 1)
 		case "AbsoluteUrl":
 			value = htmlElement.Request.AbsoluteURL(value)
+		case "RemoveQueryParams":
+			if urlValue, err := url.Parse(value); err == nil {
+				urlValue.RawQuery = ""
+				value = urlValue.String()
+			}
 		case "CollyForEach":
 			value = getSubRuleResult(postprocessing.SubRule, htmlElement)
 		case "DOMNext":

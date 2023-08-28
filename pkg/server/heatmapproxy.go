@@ -18,6 +18,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"willnorris.com/go/imageproxy"
 )
@@ -26,6 +27,7 @@ const thumbnailWidth = 700
 const thumbnailHeight = 420
 const heatmapHeight = 10
 const heatmapMargin = 3
+const maximumHeatmaps = 20 // maximumHeatmaps*(heatmapHeight+heatmapMargin) needs to be lower than thumbnailHeight
 
 type BufferResponseWriter struct {
 	header     http.Header
@@ -58,22 +60,28 @@ func NewHeatmapThumbnailProxy(imageproxy *imageproxy.Proxy, cache imageproxy.Cac
 	return proxy
 }
 
-func getScriptFileId(urlpart string) (uint, error) {
+func getScriptFileIds(urlpart string) ([]uint, error) {
 	sceneId, err := strconv.Atoi(urlpart)
+	ids := make([]uint, 0)
 	if err != nil {
-		return 0, err
+		return ids, err
 	}
 
 	var scene models.Scene
 	err = scene.GetIfExistByPK(uint(sceneId))
 	if err != nil {
-		return 0, err
+		return ids, err
 	}
-	scriptfiles, err := scene.GetScriptFiles()
+
+	scriptfiles, err := scene.GetScriptFilesSorted(config.Config.Interfaces.Players.ScriptSortSeq)
 	if err != nil || len(scriptfiles) < 1 {
-		return 0, fmt.Errorf("scene %d has no script files", sceneId)
+		return ids, fmt.Errorf("scene %d has no script files", sceneId)
 	}
-	return scriptfiles[0].ID, nil
+
+	for i := range scriptfiles {
+		ids = append(ids, scriptfiles[i].ID)
+	}
+	return ids, nil
 }
 
 func getHeatmapImageForScene(fileId uint) (image.Image, error) {
@@ -93,25 +101,31 @@ func getHeatmapImageForScene(fileId uint) (image.Image, error) {
 	return heatmapImage, nil
 }
 
-func createHeatmapThumbnail(out *bytes.Buffer, r io.Reader, heatmapImage image.Image) error {
+func createHeatmapThumbnail(out *bytes.Buffer, r io.Reader, heatmapImages []image.Image) error {
 	thumbnailImage, err := jpeg.Decode(r)
 
 	if err != nil {
 		return err
 	}
 
+	heatmapsHeight := len(heatmapImages) * (heatmapHeight + heatmapMargin)
 	rect := thumbnailImage.Bounds()
-	if rect.Dx() != thumbnailWidth || rect.Dy() != thumbnailHeight-heatmapHeight-heatmapMargin {
-		thumbnailImage = imaging.Fill(thumbnailImage, thumbnailWidth, thumbnailHeight-heatmapHeight-heatmapMargin, imaging.Center, imaging.Linear)
+	if rect.Dx() != thumbnailWidth || rect.Dy() != thumbnailHeight-heatmapsHeight {
+		thumbnailImage = imaging.Fill(thumbnailImage, thumbnailWidth, thumbnailHeight-heatmapsHeight, imaging.Center, imaging.Linear)
 	}
-	heatmapImage = imaging.Resize(heatmapImage, thumbnailWidth, heatmapHeight, imaging.Linear)
 
 	canvas := image.NewNRGBA(image.Rect(0, 0, thumbnailWidth, thumbnailHeight))
 
-	drawRect := image.Rect(0, 0, thumbnailWidth, thumbnailHeight-heatmapHeight-heatmapMargin)
+	drawRect := image.Rect(0, 0, thumbnailWidth, thumbnailHeight-heatmapsHeight)
 	draw.Draw(canvas, drawRect, thumbnailImage, image.Point{}, draw.Over)
-	drawRect = image.Rect(0, thumbnailHeight-heatmapHeight, thumbnailWidth, thumbnailHeight)
-	draw.Draw(canvas, drawRect, heatmapImage, image.Point{}, draw.Over)
+
+	for i := range heatmapImages {
+		heatmapImage := imaging.Resize(heatmapImages[i], thumbnailWidth, heatmapHeight, imaging.Linear)
+
+		drawRect = image.Rect(0, thumbnailHeight-heatmapsHeight+heatmapMargin+i*(heatmapHeight+heatmapMargin), thumbnailWidth, thumbnailHeight)
+		draw.Draw(canvas, drawRect, heatmapImage, image.Point{}, draw.Over)
+	}
+
 	jpeg.Encode(out, canvas, &jpeg.Options{Quality: 90})
 	return nil
 }
@@ -135,13 +149,13 @@ func (p *HeatmapThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 
 	imageURL := parts[2]
-	fileId, err := getScriptFileId(parts[1])
+	fileIds, err := getScriptFileIds(parts[1])
 	if err != nil {
 		p.serveImageproxyResponse(w, r, imageURL)
 		return
 	}
 
-	cacheKey := fmt.Sprintf("%d:%s", fileId, imageURL)
+	cacheKey := fmt.Sprintf("%d:%s", fileIds[0], imageURL)
 	cachedContent, ok := p.Cache.Get(cacheKey)
 	if ok {
 		w.Header().Add("Content-Type", "image/jpeg")
@@ -152,13 +166,25 @@ func (p *HeatmapThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	heatmapImage, err := getHeatmapImageForScene(fileId)
-	if err != nil {
+	heatmapImages := make([]image.Image, 0)
+
+	for i := range fileIds {
+		heatmapImage, err := getHeatmapImageForScene(fileIds[i])
+		if err == nil {
+			heatmapImages = append(heatmapImages, heatmapImage)
+			if len(heatmapImages) == maximumHeatmaps {
+				break
+			}
+		}
+	}
+
+	if len(heatmapImages) == 0 {
 		p.serveImageproxyResponse(w, r, imageURL)
 		return
 	}
 
-	proxyURL := fmt.Sprintf("/%dx%d,jpeg/%s", thumbnailWidth, thumbnailHeight-heatmapHeight-heatmapMargin, imageURL)
+	heatmapsHeight := len(heatmapImages) * (heatmapHeight + heatmapMargin)
+	proxyURL := fmt.Sprintf("/%dx%d,jpeg/%s", thumbnailWidth, thumbnailHeight-heatmapsHeight, imageURL)
 	r2 := new(http.Request)
 	*r2 = *r
 	r2.URL = new(url.URL)
@@ -173,7 +199,7 @@ func (p *HeatmapThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request
 	respbody, err := ioutil.ReadAll(imageproxyResponseWriter.buf)
 	if err == nil {
 		var output bytes.Buffer
-		err = createHeatmapThumbnail(&output, bytes.NewReader(respbody), heatmapImage)
+		err = createHeatmapThumbnail(&output, bytes.NewReader(respbody), heatmapImages)
 		if err == nil {
 			p.Cache.Set(cacheKey, output.Bytes())
 			w.Header().Add("Content-Type", "image/jpeg")
