@@ -28,6 +28,8 @@ type Script struct {
 	Range int `json:"range,omitempty"`
 	// Actions are the timed moves.
 	Actions []Action `json:"actions"`
+	// Metadata of the Funscript.
+	Metadata *ScriptMetadata `json:"metadata,omitempty"`
 }
 
 // Action is a move at a specific time.
@@ -39,6 +41,12 @@ type Action struct {
 
 	Slope     float64
 	Intensity int64
+}
+
+// Metadata of a Funscript
+type ScriptMetadata struct {
+	// Duration of the scripted video, in seconds.
+	Duration int64 `json:"duration,omitempty"`
 }
 
 type GradientTable []struct {
@@ -228,7 +236,7 @@ func (funscript Script) getGradientTable(numSegments int) GradientTable {
 	}, numSegments)
 	gradient := make(GradientTable, numSegments)
 
-	maxts := funscript.Actions[len(funscript.Actions)-1].At
+	maxts := funscript.getDuration() * 1000.0
 
 	for _, a := range funscript.Actions {
 		segment := int(float64(a.At) / float64(maxts+1) * float64(numSegments))
@@ -248,13 +256,21 @@ func (funscript Script) getGradientTable(numSegments int) GradientTable {
 	return gradient
 }
 
+func (funscript Script) getDuration() float64 {
+	maxts := funscript.Actions[len(funscript.Actions)-1].At
+	duration := float64(maxts) / 1000.0
+
+	if funscript.Metadata != nil && float64(funscript.Metadata.Duration) > duration {
+		duration = float64(funscript.Metadata.Duration)
+	}
+	return duration
+}
+
 func getFunscriptDuration(path string) (float64, error) {
 	funscript, err := LoadFunscriptData(path)
 	if err != nil {
 		return 0.0, err
 	}
 
-	maxts := funscript.Actions[len(funscript.Actions)-1].At
-
-	return float64(maxts) / 1000.0, nil
+	return funscript.getDuration(), nil
 }
