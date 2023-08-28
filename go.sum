@@ -46,6 +46,8 @@ github.com/blevesearch/bleve/v2 v2.3.9 h1:pUMvK0mxAexqasZcVj8lazmWnEW5XiV0tASIqA
 github.com/blevesearch/bleve/v2 v2.3.9/go.mod h1:1PibElcjlQMQHF9uS9mRv58ODQgj4pCWHA1Wfd+qagU=
 github.com/blevesearch/bleve_index_api v1.0.5 h1:Lc986kpC4Z0/n1g3gg8ul7H+lxgOQPcXb9SxvQGu+tw=
 github.com/blevesearch/bleve_index_api v1.0.5/go.mod h1:YXMDwaXFFXwncRS8UobWs7nvo0DmusriM1nztTlj1ms=
+github.com/blevesearch/bleve_index_api v1.0.6 h1:gyUUxdsrvmW3jVhhYdCVL6h9dCjNT/geNU7PxGn37p8=
+github.com/blevesearch/bleve_index_api v1.0.6/go.mod h1:YXMDwaXFFXwncRS8UobWs7nvo0DmusriM1nztTlj1ms=
 github.com/blevesearch/geo v0.1.17 h1:AguzI6/5mHXapzB0gE9IKWo+wWPHZmXZoscHcjFgAFA=
 github.com/blevesearch/geo v0.1.17/go.mod h1:uRMGWG0HJYfWfFJpK3zTdnnr1K+ksZTuWKhXeSokfnM=
 github.com/blevesearch/go-porterstemmer v1.0.3 h1:GtmsqID0aZdCSNiY8SkuPJ12pD4jI+DdXTAn4YRcHCo=
