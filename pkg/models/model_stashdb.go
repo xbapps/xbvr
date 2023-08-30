@@ -54,7 +54,7 @@ type StashBodyModification struct {
 type StashURL struct {
 	URL  string `json:"url"`
 	Type string `json:"type"`
-	Site Site   `json:type"`
+	Site Site   `json:"site"`
 }
 
 type StashScene struct {
@@ -71,7 +71,6 @@ type StashScene struct {
 }
 
 type StashPerformerAs struct {
-	//Performer StashPerformerMin ``
 	Performer StashPerformer ``
 	As        string         ``
 }
