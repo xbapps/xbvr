@@ -22,12 +22,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio"
 	"github.com/tidwall/gjson"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/tasks"
-	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/oauth2"
 )
 
 type NewVolumeRequest struct {
@@ -44,6 +45,7 @@ type VersionCheckResponse struct {
 
 type RequestSaveOptionsWeb struct {
 	TagSort           string `json:"tagSort"`
+	SceneHidden       bool   `json:"sceneHidden"`
 	SceneWatchlist    bool   `json:"sceneWatchlist"`
 	SceneFavourite    bool   `json:"sceneFavourite"`
 	SceneWatched      bool   `json:"sceneWatched"`
@@ -296,6 +298,7 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {
 	i.toggleSiteField(req, resp, "IsEnabled")
 }
+
 func (i ConfigResource) toggleSubscribed(req *restful.Request, resp *restful.Response) {
 	i.toggleSiteField(req, resp, "Subscribed")
 }
@@ -357,6 +360,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	}
 
 	config.Config.Web.TagSort = r.TagSort
+	config.Config.Web.SceneHidden = r.SceneHidden
 	config.Config.Web.SceneWatchlist = r.SceneWatchlist
 	config.Config.Web.SceneFavourite = r.SceneFavourite
 	config.Config.Web.SceneWatched = r.SceneWatched
@@ -371,6 +375,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }
+
 func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.Response) {
 	var r RequestSaveOptionsAdvanced
 	err := req.ReadEntity(&r)
@@ -820,7 +825,6 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
-
 }
 
 func (i ConfigResource) getDefaultCuepoints(req *restful.Request, resp *restful.Response) {
@@ -835,6 +839,7 @@ func (i ConfigResource) getDefaultCuepoints(req *restful.Request, resp *restful.
 	json.Unmarshal([]byte(kv.Value), &cp)
 	resp.WriteHeaderAndEntity(http.StatusOK, &cp)
 }
+
 func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
 	defer db.Close()
