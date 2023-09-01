@@ -335,7 +335,7 @@
                   <div class="block-tab-content block">
                     <div class="content is-small">
                       <div class="block" v-for="(field, idx) in searchfields" :key="idx">
-                        <strong>{{ field.FieldName }} - </strong> {{ field.FieldValue }}
+                        <strong>{{ field.fieldName }} - </strong> {{ field.fieldValue }}
                       </div>
                     </div>
                   </div>
