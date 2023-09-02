@@ -110,6 +110,9 @@ type Scene struct {
 	LegacySceneID string `json:"legacy_scene_id" xbvrbackup:"legacy_scene_id"`
 
 	ScriptPublished time.Time `json:"script_published" xbvrbackup:"script_published"`
+	AiScript        bool      `json:"ai_script" gorm:"default:false" xbvrbackup:"ai_script"`
+	MultiAxisScript bool      `json:"multi_axis_script" gorm:"default:false" xbvrbackup:"multi_axis_script"`
+	HumanScript     bool      `json:"human_script" gorm:"default:false" xbvrbackup:"human_script"`
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
@@ -449,6 +452,9 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	if ext.HasScriptDownload && o.ScriptPublished.IsZero() {
 		o.ScriptPublished = time.Now()
 	}
+	o.AiScript = ext.AiScript
+	o.MultiAxisScript = ext.MultiAxisScript
+	o.HumanScript = ext.HumanScript
 
 	// Trailers
 	o.TrailerType = ext.TrailerType
@@ -939,6 +945,24 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 				where = "scenes.script_published > '0001-01-01 00:00:00+00:00'"
 			} else {
 				where = "scenes.script_published < '0001-01-02 00:00:00+00:00'"
+			}
+		case "Has AI Generated Script":
+			if truefalse {
+				where = "scenes.ai_script = 1"
+			} else {
+				where = "scenes.ai_script = 0"
+			}
+		case "Has Multi Axis Script":
+			if truefalse {
+				where = "scenes.multi_axis_script = 1"
+			} else {
+				where = "scenes.multi_axis_script = 0"
+			}
+		case "Has Human Generated Script":
+			if truefalse {
+				where = "scenes.human_script = 1"
+			} else {
+				where = "scenes.human_script = 0"
 			}
 		}
 
