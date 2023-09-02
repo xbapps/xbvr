@@ -2,16 +2,23 @@ package scrape
 
 import (
 	"encoding/json"
+	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+
+	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/ffprobe"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -121,7 +128,7 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		e.ForEach(`dl8-video source`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 
-				//This now needs to be made case insensitive (_trailer is now _Trailer)
+				// This now needs to be made case insensitive (_trailer is now _Trailer)
 				origURLtmp := e.Attr("src")
 				origURL := strings.ToLower(origURLtmp)
 
@@ -142,6 +149,37 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 				sc.Filenames = filenames
 				sc.Filenames = append(sc.Filenames, baseName+".funscript")
+
+				// Get release date from trailer's creation date if it wasn't on the scene page (BabeVR)
+				if sc.Released == "" {
+					if trailerURL, err := url.Parse(origURLtmp); err == nil {
+						trailerPath := filepath.Join(common.CacheDir, filepath.Base(trailerURL.Path))
+						// 200kB should be enough to include the relevant metadata
+						if r, err := resty.New().R().SetOutput(trailerPath).SetHeader("Range", "bytes=0-200000").Get(trailerURL.String()); err == nil {
+							if probeData, err := ffprobe.GetProbeData(trailerPath, time.Second*10); err == nil {
+								if creationTime, err := goment.New(probeData.Format.Tags.CreationTime); err == nil {
+									sc.Released = creationTime.Format("YYYY-MM-DD")
+								}
+							}
+
+							// If we still don't have a release date, try headers sent with the trailer
+							// We check both the `date` and `last-modified` headers and take the oldest one
+							// This isn't super reliable, but it's better than no date at all
+							if sc.Released == "" {
+								date, _ := goment.New(r.Header().Get("date"), "ddd, DD MMM YYYY")
+								modified, _ := goment.New(r.Header().Get("last-modified"), "ddd, DD MMM YYYY")
+								if date == nil || (modified != nil && modified.IsBefore(date)) {
+									date = modified
+								}
+								if date != nil {
+									sc.Released = date.Format("YYYY-MM-DD")
+								}
+							}
+						}
+						os.Remove(trailerPath)
+					}
+				}
+
 			}
 		})
 
