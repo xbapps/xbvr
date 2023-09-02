@@ -282,7 +282,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 			var existingScene models.Scene
 			existingScene.GetIfExistURL(sceneURL)
-			if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
+			if existingScene.ID != 0 {
 				fleshlightBadge := false
 				aiBadge := false
 				multiBadge := false
