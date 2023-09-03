@@ -590,25 +590,51 @@ func QueryScenesFull(r RequestSceneList) ResponseSceneList {
 }
 
 func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
-	limit := r.Limit.OrElse(100)
-	offset := r.Offset.OrElse(0)
+	r.Limit = optional.NewInt(r.Limit.OrElse(100))
 
 	db, _ := GetDB()
 	defer db.Close()
 
-	var scenes []Scene
-	tx := db.Model(&scenes)
+	preCountTx, finalTx := queryScenes(db, r)
 
 	var out ResponseSceneList
 
+	// Count other variations
+	preCountTx.Where("is_hidden = ?", false).Count(&out.CountAny)
+	preCountTx.Where("is_available = ?", true).Where("is_accessible = ?", true).Where("is_hidden = ?", false).Count(&out.CountAvailable)
+	preCountTx.Where("is_available = ?", true).Where("is_hidden = ?", false).Count(&out.CountDownloaded)
+	preCountTx.Where("is_available = ?", false).Where("is_hidden = ?", false).Count(&out.CountNotDownloaded)
+	preCountTx.Where("is_hidden = ?", true).Count(&out.CountHidden)
+
+	finalTx.Count(&out.Results)
+
 	if enablePreload {
-		tx = tx.
+		finalTx = finalTx.
 			Preload("Cast").
 			Preload("Tags").
 			Preload("Files").
 			Preload("History").
 			Preload("Cuepoints")
 	}
+	finalTx.Find(&out.Scenes)
+
+	return out
+}
+
+func QuerySceneIDs(r RequestSceneList) []string {
+	db, _ := GetDB()
+	defer db.Close()
+
+	_, finalTx := queryScenes(db, r)
+
+	var ids []string
+	finalTx.Pluck("scenes.id", &ids)
+
+	return ids
+}
+
+func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
+	tx := db.Model(&Scene{})
 
 	if r.IsWatched.Present() {
 		tx = tx.Where("is_watched = ?", r.IsWatched.OrElse(true))
@@ -697,7 +723,7 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 			where = "exists (select 1 from scene_cast join actors on actors.id = scene_cast.actor_id where scene_cast.scene_id = scenes.id and actors.name not like 'aka:%' group by scene_cast.scene_id having count(*) = " + fieldName[5:] + ")"
 		case "Resolution":
 			div := "/"
-			if db.Dialect().GetName() == "mysql" {
+			if tx.Dialect().GetName() == "mysql" {
 				div = "div"
 			}
 			where = "exists (select 1 from files where files.scene_id = scenes.id and ((files.video_width * (case when files.video_projection like '%_tb' then 2 else 1 end) + 500) " + div + " 1000) = " + value + ")"
@@ -927,14 +953,14 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	case "release_asc":
 		tx = tx.Order("release_date asc")
 	case "title_desc":
-		switch db.Dialect().GetName() {
+		switch tx.Dialect().GetName() {
 		case "mysql":
 			tx = tx.Order("title desc")
 		case "sqlite3":
 			tx = tx.Order("title COLLATE NOCASE desc")
 		}
 	case "title_asc":
-		switch db.Dialect().GetName() {
+		switch tx.Dialect().GetName() {
 		case "mysql":
 			tx = tx.Order("title asc")
 		case "sqlite3":
@@ -980,14 +1006,8 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("release_date desc")
 	}
 
-	if r.Counts.OrElse(true) {
-		// Count other variations
-		tx.Group("scenes.scene_id").Where("is_hidden = ?", false).Count(&out.CountAny)
-		tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_accessible = ?", true).Where("is_hidden = ?", false).Count(&out.CountAvailable)
-		tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_hidden = ?", false).Count(&out.CountDownloaded)
-		tx.Group("scenes.scene_id").Where("is_available = ?", false).Where("is_hidden = ?", false).Count(&out.CountNotDownloaded)
-		tx.Group("scenes.scene_id").Where("is_hidden = ?", true).Count(&out.CountHidden)
-	}
+	preCountTx := tx.Group("scenes.scene_id")
+	tx = tx.Group("scenes.scene_id")
 
 	// Apply avail/accessible after counting
 	if r.IsAvailable.Present() {
@@ -1004,21 +1024,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Where("is_hidden = ?", false)
 	}
 
-	if r.Counts.OrElse(true) {
-		// Count totals for selection
-		tx.
-			Group("scenes.scene_id").
-			Count(&out.Results)
+	// Pagination
+	if r.Limit.Present() {
+		tx = tx.Limit(r.Limit.MustGet()).Offset(r.Offset.OrElse(0))
 	}
 
-	// Get scenes
-	tx.
-		Group("scenes.scene_id").
-		Limit(limit).
-		Offset(offset).
-		Find(&out.Scenes)
-
-	return out
+	return preCountTx, tx
 }
 
 func setCuepointString(cuepoint string) string {
