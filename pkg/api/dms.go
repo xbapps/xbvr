@@ -11,6 +11,7 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/jinzhu/gorm"
+
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/session"
@@ -36,18 +37,22 @@ func (i DMSResource) WebService() *restful.WebService {
 
 	ws.Route(ws.GET("/file/{file-id}").To(i.getFile).
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		ContentEncodingEnabled(false).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.GET("/file/{file-id}/{var:*}").To(i.getFile).
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		ContentEncodingEnabled(false).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.GET("/heatmap/{file-id}").To(i.getHeatmap).
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		ContentEncodingEnabled(false).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.GET("/preview/{scene-id}").To(i.getPreview).
 		Param(ws.PathParameter("scene-id", "Scene ID")).
+		ContentEncodingEnabled(false).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
