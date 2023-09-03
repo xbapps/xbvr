@@ -13,11 +13,12 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/markphelps/optional"
 	"github.com/tidwall/gjson"
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/session"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type DeoLibrary struct {
@@ -285,8 +286,8 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
-	var height = file.VideoHeight
-	var width = file.VideoWidth
+	height := file.VideoHeight
+	width := file.VideoWidth
 	var sources []DeoSceneEncoding
 	sources = append(sources, DeoSceneEncoding{
 		Name: fmt.Sprintf("File 1/1 - %v", humanize.Bytes(uint64(file.Size))),
@@ -389,9 +390,9 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	var sceneMultiProjection bool = true
 
 	for i, file := range videoFiles {
-		var height = file.VideoHeight
-		var width = file.VideoWidth
-		var source = DeoSceneEncoding{
+		height := file.VideoHeight
+		width := file.VideoWidth
+		source := DeoSceneEncoding{
 			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(videoFiles), file.VideoHeight, humanize.Bytes(uint64(file.Size))),
 			VideoSources: []DeoSceneVideoSource{
 				{
@@ -499,7 +500,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	title := scene.Title
 	thumbnailURL := session.DeoRequestHost + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 
-	//Passthrough
+	// Passthrough
 	var ckdata map[string]interface{}
 	//	nochromaKey := `{"enabled":false,"hasAlpha":false,"h":0,"opacity":0,"s":0,"threshold":0,"v":0}`
 	chromaKey := gjson.Parse(scene.ChromaKey)
@@ -512,7 +513,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		if !result.Exists() || ckdata["hasAlpha"] == "" {
 			//			if ckdata["."].(map[string]interface{})["hasAlpha"] = "false" || ckdata["."].(map[string]interface{})["hasAlpha"] = "" {
 
-			//setting hasAlpha to false
+			// setting hasAlpha to false
 			ckdata["hasAlpha"] = "false"
 		}
 		// Convert back to JSON string
@@ -625,6 +626,7 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 			r.IsAccessible = optional.NewBool(true)
 			r.IsAvailable = optional.NewBool(true)
 			r.Limit = optional.NewInt(10000)
+			r.Counts = optional.NewBool(false)
 
 			q := models.QueryScenes(r, false)
 			sceneLists = append(sceneLists, DeoListScenes{

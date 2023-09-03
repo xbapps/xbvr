@@ -546,6 +546,7 @@ type RequestSceneList struct {
 	DlState      optional.String   `json:"dlState"`
 	Limit        optional.Int      `json:"limit"`
 	Offset       optional.Int      `json:"offset"`
+	Counts       optional.Bool     `json:"counts"`
 	IsAvailable  optional.Bool     `json:"isAvailable"`
 	IsAccessible optional.Bool     `json:"isAccessible"`
 	IsWatched    optional.Bool     `json:"isWatched"`
@@ -1160,12 +1161,14 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Order("release_date desc")
 	}
 
-	// Count other variations
-	tx.Group("scenes.scene_id").Where("is_hidden = ?", false).Count(&out.CountAny)
-	tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_accessible = ?", true).Where("is_hidden = ?", false).Count(&out.CountAvailable)
-	tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_hidden = ?", false).Count(&out.CountDownloaded)
-	tx.Group("scenes.scene_id").Where("is_available = ?", false).Where("is_hidden = ?", false).Count(&out.CountNotDownloaded)
-	tx.Group("scenes.scene_id").Where("is_hidden = ?", true).Count(&out.CountHidden)
+	if r.Counts.OrElse(true) {
+		// Count other variations
+		tx.Group("scenes.scene_id").Where("is_hidden = ?", false).Count(&out.CountAny)
+		tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_accessible = ?", true).Where("is_hidden = ?", false).Count(&out.CountAvailable)
+		tx.Group("scenes.scene_id").Where("is_available = ?", true).Where("is_hidden = ?", false).Count(&out.CountDownloaded)
+		tx.Group("scenes.scene_id").Where("is_available = ?", false).Where("is_hidden = ?", false).Count(&out.CountNotDownloaded)
+		tx.Group("scenes.scene_id").Where("is_hidden = ?", true).Count(&out.CountHidden)
+	}
 
 	// Apply avail/accessible after counting
 	if r.IsAvailable.Present() {
@@ -1182,10 +1185,12 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 		tx = tx.Where("is_hidden = ?", false)
 	}
 
-	// Count totals for selection
-	tx.
-		Group("scenes.scene_id").
-		Count(&out.Results)
+	if r.Counts.OrElse(true) {
+		// Count totals for selection
+		tx.
+			Group("scenes.scene_id").
+			Count(&out.Results)
+	}
 
 	// Get scenes
 	tx.

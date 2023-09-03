@@ -970,6 +970,7 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 			r.IsAccessible = optional.NewBool(true)
 			r.IsAvailable = optional.NewBool(true)
 			r.Limit = optional.NewInt(20000)
+			r.Counts = optional.NewBool(false)
 
 			q := models.QueryScenes(r, false)
 
