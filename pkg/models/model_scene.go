@@ -633,6 +633,26 @@ func QuerySceneIDs(r RequestSceneList) []string {
 	return ids
 }
 
+type SceneSummary struct {
+	ID         uint
+	Title      string
+	Duration   uint
+	CoverURL   string
+	IsScripted bool
+}
+
+func QuerySceneSummaries(r RequestSceneList) []SceneSummary {
+	db, _ := GetDB()
+	defer db.Close()
+
+	_, finalTx := queryScenes(db, r)
+
+	var summaries []SceneSummary
+	finalTx.Select("scenes.id, title, duration, cover_url, is_scripted").Scan(&summaries)
+
+	return summaries
+}
+
 func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 	tx := db.Model(&Scene{})
 
@@ -1005,6 +1025,9 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 	default:
 		tx = tx.Order("release_date desc")
 	}
+
+	// Add second order to keep things stable in case of ties
+	tx = tx.Order("scenes.id asc")
 
 	preCountTx := tx.Group("scenes.scene_id")
 	tx = tx.Group("scenes.scene_id")

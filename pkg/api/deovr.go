@@ -33,7 +33,7 @@ type DeoListScenes struct {
 
 type DeoListItem struct {
 	Title        string `json:"title"`
-	VideoLength  int    `json:"videoLength"`
+	VideoLength  uint   `json:"videoLength"`
 	ThumbnailURL string `json:"thumbnailUrl"`
 	VideoURL     string `json:"video_url"`
 }
@@ -625,13 +625,11 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 		if err := json.Unmarshal([]byte(savedPlaylists[i].SearchParams), &r); err == nil {
 			r.IsAccessible = optional.NewBool(true)
 			r.IsAvailable = optional.NewBool(true)
-			r.Limit = optional.NewInt(10000)
-			r.Counts = optional.NewBool(false)
 
-			q := models.QueryScenes(r, false)
+			summaries := models.QuerySceneSummaries(r)
 			sceneLists = append(sceneLists, DeoListScenes{
 				Name: savedPlaylists[i].Name,
-				List: scenesToDeoList(req, q.Scenes),
+				List: scenesToDeoList(req, summaries),
 			})
 		}
 	}
@@ -656,15 +654,16 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	})
 }
 
-func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem {
+func scenesToDeoList(req *restful.Request, scenes []models.SceneSummary) []DeoListItem {
 	setDeoPlayerHost(req)
 
 	list := make([]DeoListItem, 0)
 	for i := range scenes {
-		thumbnailURL := fmt.Sprintf("%v/img/700x/%v", session.DeoRequestHost, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
-
+		var thumbnailURL string
 		if config.Config.Interfaces.DeoVR.RenderHeatmaps && scenes[i].IsScripted {
 			thumbnailURL = fmt.Sprintf("%v/imghm/%d/%v", session.DeoRequestHost, scenes[i].ID, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
+		} else {
+			thumbnailURL = fmt.Sprintf("%v/img/700x/%v", session.DeoRequestHost, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
 		}
 
 		item := DeoListItem{
@@ -695,7 +694,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 		}
 		item := DeoListItem{
 			Title:        files[i].Filename,
-			VideoLength:  int(files[i].VideoDuration),
+			VideoLength:  uint(files[i].VideoDuration),
 			ThumbnailURL: session.DeoRequestHost + "/ui/images/blank.png",
 			VideoURL:     fmt.Sprintf("%v/deovr/file/%v%v", session.DeoRequestHost, files[i].ID, dnt),
 		}
