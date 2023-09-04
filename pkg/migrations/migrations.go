@@ -729,6 +729,17 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0067-scenes-add-ai-multi-human-script-types",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					AiScript        bool `json:"ai_script" gorm:"default:false" xbvrbackup:"ai_script"`
+					MultiAxisScript bool `json:"multi_axis_script" gorm:"default:false" xbvrbackup:"multi_axis_script"`
+					HumanScript     bool `json:"human_script" gorm:"default:false" xbvrbackup:"human_script"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
 			ID: "0068-scene-wishlist",
 			Migrate: func(tx *gorm.DB) error {
 				type Scene struct {

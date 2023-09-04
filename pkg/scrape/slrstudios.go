@@ -248,9 +248,22 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			})
 		})
 		sc.HasScriptDownload = false
-		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-vr'], ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-ai-vr'], ul.c-meta--scene-specs a[href='/tags/multi-axis-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
+		sc.AiScript = false
+		sc.MultiAxisScript = false
+		sc.HumanScript = false
+		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
 			sc.HasScriptDownload = true
+			sc.HumanScript = true
 		})
+		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-ai-vr']`, func(id int, e_a *colly.HTMLElement) {
+			sc.HasScriptDownload = true
+			sc.AiScript = true
+		})
+		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/multi-axis-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
+			sc.HasScriptDownload = true
+			sc.MultiAxisScript = true
+		})
+
 		out <- sc
 	})
 
@@ -266,14 +279,50 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		isTransScene := strings.Contains(sceneURL, "/trans")
 
 		if isStraightScene || isTransScene {
-			e.ForEach(`div.c-grid-badge--fleshlight, div.c-grid-badge--script-ai, div.c-grid-badge--fleshlight-badge-multi`, func(id int, e_a *colly.HTMLElement) {
-				var existingScene models.Scene
-				existingScene.GetIfExistURL(sceneURL)
-				if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
+
+			var existingScene models.Scene
+			existingScene.GetIfExistURL(sceneURL)
+			if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
+				fleshlightBadge := false
+				aiBadge := false
+				multiBadge := false
+
+				human := false
+				ai := false
+				multiAxis := false
+				e.ForEach(`div.c-grid-badge--fleshlight`, func(id int, e_a *colly.HTMLElement) {
+					fleshlightBadge = true
+				})
+				e.ForEach(`div.c-grid-badge--script-ai`, func(id int, e_a *colly.HTMLElement) {
+					ai = true
+				})
+				e.ForEach(`div.c-grid-badge--fleshlight-badge-multi`, func(id int, e_a *colly.HTMLElement) {
+					multiBadge = true
+				})
+
+				if fleshlightBadge {
+					human = true
+				}
+				if aiBadge {
+					ai = true
+				}
+				if multiBadge && !fleshlightBadge {
+					human = true
+					// ai = true
+				}
+				if multiBadge && fleshlightBadge {
+					// dont apply this rule yet until more examples are available to confirm rule validity
+					//multiAxis = true
+				}
+
+				if existingScene.HumanScript != human || existingScene.AiScript != ai || existingScene.MultiAxisScript != multiAxis {
 					existingScene.ScriptPublished = time.Now()
+					existingScene.HumanScript = human
+					existingScene.AiScript = ai
+					existingScene.MultiAxisScript = multiAxis
 					existingScene.Save()
 				}
-			})
+			}
 
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {
