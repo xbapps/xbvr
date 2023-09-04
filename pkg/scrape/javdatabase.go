@@ -26,16 +26,12 @@ func ScrapeJavDB(out *[]models.ScrapedScene, queryString string) {
 		// Cast
 		html.ForEach("h2.subhead", func(id int, h2 *colly.HTMLElement) {
 			if strings.HasSuffix(h2.Text, "Actress/Idols") {
-				dom := h2.DOM
-				parent := dom.Parent()
-				if parent != nil {
-					parent.Find("a").Each(func(i int, anchor *goquery.Selection) {
-						href, exists := anchor.Attr("href")
-						if exists && strings.Contains(href, "javdatabase.com/idols/") && anchor.Text() != "" {
-							sc.Cast = append(sc.Cast, strings.TrimSpace(anchor.Text()))
-						}
-					})
-				}
+				h2.DOM.Parent().Find("div.card-body a.cut-text").Each(func(i int, anchor *goquery.Selection) {
+					href, exists := anchor.Attr("href")
+					if exists && strings.Contains(href, "javdatabase.com/idols/") && anchor.Text() != "" {
+						sc.Cast = append(sc.Cast, strings.TrimSpace(anchor.Text()))
+					}
+				})
 			}
 		})
 
