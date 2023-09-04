@@ -729,7 +729,7 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0026-scene-wishlist",
+			ID: "0068-scene-wishlist",
 			Migrate: func(tx *gorm.DB) error {
 				type Scene struct {
 					Wishlist bool `json:"wishlist" gorm:"default:false"`
