@@ -28,7 +28,7 @@
             </b-table-column>
             <b-table-column field="video_bitrate" :label="$t('Bitrate')" style="white-space: nowrap;" sortable
                             v-slot="props">
-              <span v-if="props.row.video_bitrate !== 0">{{ prettyBytes(props.row.video_bitrate) }}</span>
+              <span v-if="props.row.video_bitrate !== 0">{{ prettyBytes(props.row.video_bitrate, { bits: true }) }}/s</span>
               <span v-else>-</span>
             </b-table-column>
             <b-table-column field="duration" :label="$t('Duration')" style="white-space: nowrap;" sortable
@@ -129,7 +129,7 @@ export default {
       }).then(data => {
             this.$store.dispatch('files/load')
       })
-    },    
+    },
     createScene (file) {
       this.$store.commit('overlay/createCustomScene', { file: file })
     },
