@@ -20,6 +20,8 @@ import (
 	"github.com/koding/websocketproxy"
 	"github.com/peterbourgon/diskv"
 	"github.com/rs/cors"
+	"willnorris.com/go/imageproxy"
+
 	"github.com/xbapps/xbvr/pkg/api"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -28,7 +30,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/session"
 	"github.com/xbapps/xbvr/pkg/tasks"
 	"github.com/xbapps/xbvr/ui"
-	"willnorris.com/go/imageproxy"
 )
 
 var (
@@ -63,6 +64,8 @@ func StartServer(version, commit, branch, date string) {
 
 	models.InitSites()
 
+	restful.DefaultContainer.EnableContentEncoding(true)
+
 	// API endpoints
 	ws := new(restful.WebService)
 	ws.Route(ws.GET("/").To(func(req *restful.Request, resp *restful.Response) {
@@ -88,7 +91,7 @@ func StartServer(version, commit, branch, date string) {
 		WebServices: restful.RegisteredWebServices(),
 		APIPath:     "/api.json",
 		PostBuildSwaggerObjectHandler: func(swo *spec.Swagger) {
-			var e = spec.VendorExtensible{}
+			e := spec.VendorExtensible{}
 			e.AddExtension("x-logo", map[string]interface{}{
 				"url": "/ui/icons/xbvr-512.png",
 			})

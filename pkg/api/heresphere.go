@@ -969,14 +969,11 @@ func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *res
 		if err := json.Unmarshal([]byte(savedPlaylists[i].SearchParams), &r); err == nil {
 			r.IsAccessible = optional.NewBool(true)
 			r.IsAvailable = optional.NewBool(true)
-			r.Limit = optional.NewInt(20000)
 
-			q := models.QueryScenes(r, false)
+			list := models.QuerySceneIDs(r)
 
-			list := make([]string, len(q.Scenes))
-			for i := range q.Scenes {
-				url := fmt.Sprintf("%v://%v/heresphere/%v", getProto(req), req.Request.Host, q.Scenes[i].ID)
-				list[i] = url
+			for i := range list {
+				list[i] = fmt.Sprintf("%v://%v/heresphere/%v", getProto(req), req.Request.Host, list[i])
 			}
 
 			sceneLists = append(sceneLists, HeresphereListScenes{
