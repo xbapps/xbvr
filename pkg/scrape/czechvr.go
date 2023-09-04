@@ -5,12 +5,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -98,9 +98,11 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 			}
 		})
 
-		e.ForEach(`div.interactive`, func(id int, e *colly.HTMLElement) {
-			sc.HasScriptDownload = true
-		})
+		if config.Config.Funscripts.ScrapeFunscripts {
+			e.ForEach(`div.interactive`, func(id int, e *colly.HTMLElement) {
+				sc.HasScriptDownload = true
+			})
+		}
 
 		// trailer details
 		sc.TrailerType = "heresphere"
@@ -151,24 +153,32 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.postTag`, func(e *colly.HTMLElement) {
-		sceneURL := ""
-		e.ForEach(`div.foto a`, func(id int, e *colly.HTMLElement) {
-			sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
-			// If scene exist in database, there's no need to scrape
-			if !funk.ContainsString(knownScenes, sceneURL) {
-				sceneCollector.Visit(sceneURL)
-			}
+	if config.Config.Funscripts.ScrapeFunscripts {
+		siteCollector.OnHTML(`div.postTag`, func(e *colly.HTMLElement) {
+			sceneURL := ""
+			e.ForEach(`div.foto a`, func(id int, e *colly.HTMLElement) {
+				sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
+				// If scene exist in database, there's no need to scrape
+				if !funk.ContainsString(knownScenes, sceneURL) {
+					sceneCollector.Visit(sceneURL)
+				}
+			})
+			e.ForEach(`div.interactive`, func(id int, e *colly.HTMLElement) {
+				var existingScene models.Scene
+				existingScene.GetIfExistURL(sceneURL)
+				if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
+					var sc models.ScrapedScene
+					sc.InternalSceneId = existingScene.ID
+					sc.HasScriptDownload = true
+					sc.OnlyUpdateScriptData = true
+					sc.HumanScript = false
+					sc.AiScript = false
+					sc.MultiAxisScript = false
+					out <- sc
+				}
+			})
 		})
-		e.ForEach(`div.interactive`, func(id int, e *colly.HTMLElement) {
-			var existingScene models.Scene
-			existingScene.GetIfExistURL(sceneURL)
-			if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
-				existingScene.ScriptPublished = time.Now()
-				existingScene.Save()
-			}
-		})
-	})
+	}
 
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)

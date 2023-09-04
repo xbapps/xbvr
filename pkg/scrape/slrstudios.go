@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
@@ -247,22 +246,24 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				}
 			})
 		})
-		sc.HasScriptDownload = false
-		sc.AiScript = false
-		sc.MultiAxisScript = false
-		sc.HumanScript = false
-		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
-			sc.HasScriptDownload = true
-			sc.HumanScript = true
-		})
-		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-ai-vr']`, func(id int, e_a *colly.HTMLElement) {
-			sc.HasScriptDownload = true
-			sc.AiScript = true
-		})
-		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/multi-axis-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
-			sc.HasScriptDownload = true
-			sc.MultiAxisScript = true
-		})
+		if config.Config.Funscripts.ScrapeFunscripts {
+			sc.HasScriptDownload = false
+			sc.AiScript = false
+			sc.MultiAxisScript = false
+			sc.HumanScript = false
+			e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
+				sc.HasScriptDownload = true
+				sc.HumanScript = true
+			})
+			e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-ai-vr']`, func(id int, e_a *colly.HTMLElement) {
+				sc.HasScriptDownload = true
+				sc.AiScript = true
+			})
+			e.ForEach(`ul.c-meta--scene-specs a[href='/tags/multi-axis-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
+				sc.HasScriptDownload = true
+				sc.MultiAxisScript = true
+			})
+		}
 
 		out <- sc
 	})
@@ -280,47 +281,52 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		if isStraightScene || isTransScene {
 
-			var existingScene models.Scene
-			existingScene.GetIfExistURL(sceneURL)
-			if existingScene.ID != 0 {
-				fleshlightBadge := false
-				aiBadge := false
-				multiBadge := false
+			if config.Config.Funscripts.ScrapeFunscripts {
+				var existingScene models.Scene
+				existingScene.GetIfExistURL(sceneURL)
+				if existingScene.ID != 0 {
+					fleshlightBadge := false
+					aiBadge := false
+					multiBadge := false
 
-				human := false
-				ai := false
-				multiAxis := false
-				e.ForEach(`div.c-grid-badge--fleshlight`, func(id int, e_a *colly.HTMLElement) {
-					fleshlightBadge = true
-				})
-				e.ForEach(`div.c-grid-badge--script-ai`, func(id int, e_a *colly.HTMLElement) {
-					ai = true
-				})
-				e.ForEach(`div.c-grid-badge--fleshlight-badge-multi`, func(id int, e_a *colly.HTMLElement) {
-					multiBadge = true
-				})
+					human := false
+					ai := false
+					multiAxis := false
+					e.ForEach(`div.c-grid-badge--fleshlight`, func(id int, e_a *colly.HTMLElement) {
+						fleshlightBadge = true
+					})
+					e.ForEach(`div.c-grid-badge--script-ai`, func(id int, e_a *colly.HTMLElement) {
+						ai = true
+					})
+					e.ForEach(`div.c-grid-badge--fleshlight-badge-multi`, func(id int, e_a *colly.HTMLElement) {
+						multiBadge = true
+					})
 
-				if fleshlightBadge {
-					human = true
-				}
-				if aiBadge {
-					ai = true
-				}
-				if multiBadge && !fleshlightBadge {
-					human = true
-					// ai = true
-				}
-				if multiBadge && fleshlightBadge {
-					// dont apply this rule yet until more examples are available to confirm rule validity
-					//multiAxis = true
-				}
+					if fleshlightBadge {
+						human = true
+					}
+					if aiBadge {
+						ai = true
+					}
+					if multiBadge && !fleshlightBadge {
+						human = true
+						// ai = true
+					}
+					if multiBadge && fleshlightBadge {
+						// dont apply this rule yet until more examples are available to confirm rule validity
+						//multiAxis = true
+					}
 
-				if existingScene.HumanScript != human || existingScene.AiScript != ai || existingScene.MultiAxisScript != multiAxis {
-					existingScene.ScriptPublished = time.Now()
-					existingScene.HumanScript = human
-					existingScene.AiScript = ai
-					existingScene.MultiAxisScript = multiAxis
-					existingScene.Save()
+					if existingScene.HumanScript != human || existingScene.AiScript != ai || existingScene.MultiAxisScript != multiAxis {
+						var sc models.ScrapedScene
+						sc.InternalSceneId = existingScene.ID
+						sc.HasScriptDownload = true
+						sc.OnlyUpdateScriptData = true
+						sc.HumanScript = human
+						sc.AiScript = ai
+						sc.MultiAxisScript = multiAxis
+						out <- sc
+					}
 				}
 			}
 

@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -105,9 +105,11 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			}
 		})
 
-		e.ForEach(`p.video-tags a[href^="/category/funscript"]`, func(id int, e *colly.HTMLElement) {
-			sc.HasScriptDownload = true
-		})
+		if config.Config.Funscripts.ScrapeFunscripts {
+			e.ForEach(`p.video-tags a[href^="/category/funscript"]`, func(id int, e *colly.HTMLElement) {
+				sc.HasScriptDownload = true
+			})
+		}
 
 		ctx := colly.NewContext()
 		ctx.Put("scene", sc)
@@ -162,21 +164,29 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 	})
 
-	siteCollector.OnHTML(`div.video-card-info`, func(e *colly.HTMLElement) {
-		sceneURL := ""
-		e.ForEach(`div.video-card-info-main a`, func(id int, e *colly.HTMLElement) {
-			sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
-		})
+	if config.Config.Funscripts.ScrapeFunscripts {
+		siteCollector.OnHTML(`div.video-card-info`, func(e *colly.HTMLElement) {
+			sceneURL := ""
+			e.ForEach(`div.video-card-info-main a`, func(id int, e *colly.HTMLElement) {
+				sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
+			})
 
-		e.ForEach(`a[href^="/category/funscript"]`, func(id int, e *colly.HTMLElement) {
-			var existingScene models.Scene
-			existingScene.GetIfExistURL(sceneURL)
-			if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
-				existingScene.ScriptPublished = time.Now()
-				existingScene.Save()
-			}
+			e.ForEach(`a[href^="/category/funscript"]`, func(id int, e *colly.HTMLElement) {
+				var existingScene models.Scene
+				existingScene.GetIfExistURL(sceneURL)
+				if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
+					var sc models.ScrapedScene
+					sc.InternalSceneId = existingScene.ID
+					sc.HasScriptDownload = true
+					sc.OnlyUpdateScriptData = true
+					sc.HumanScript = false
+					sc.AiScript = false
+					sc.MultiAxisScript = false
+					out <- sc
+				}
+			})
 		})
-	})
+	}
 
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)

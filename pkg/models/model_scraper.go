@@ -43,6 +43,9 @@ type ScrapedScene struct {
 	MultiAxisScript   bool     `json:"multi_axis_script"`
 	HumanScript       bool     `json:"human_script"`
 
+	OnlyUpdateScriptData bool `default:"false" json:"only_update_script_data"`
+	InternalSceneId      uint `json:"internal_id"`
+
 	ActorDetails map[string]ActorDetails `json:"actor_details"`
 }
 

@@ -548,6 +548,21 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	return nil
 }
 
+func SceneUpdateScriptData(db *gorm.DB, ext ScrapedScene) {
+	var o Scene
+	o.GetIfExistByPK(ext.InternalSceneId)
+
+	if o.ID != 0 {
+		if o.ScriptPublished.IsZero() || o.HumanScript != ext.HumanScript || o.AiScript != ext.AiScript || o.MultiAxisScript != ext.MultiAxisScript {
+			o.ScriptPublished = time.Now()
+			o.HumanScript = ext.HumanScript
+			o.AiScript = ext.AiScript
+			o.MultiAxisScript = ext.MultiAxisScript
+			o.Save()
+		}
+	}
+}
+
 type RequestSceneList struct {
 	DlState      optional.String   `json:"dlState"`
 	Limit        optional.Int      `json:"limit"`
