@@ -40,7 +40,6 @@ type ScrapedScene struct {
 	ChromaKey         string   `json:"chromakey"`
 	HasScriptDownload bool     `json:"has_script_Download"`
 	AiScript          bool     `json:"ai_script"`
-	MultiAxisScript   bool     `json:"multi_axis_script"`
 	HumanScript       bool     `json:"human_script"`
 
 	OnlyUpdateScriptData bool `default:"false" json:"only_update_script_data"`
