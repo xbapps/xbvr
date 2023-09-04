@@ -248,7 +248,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			})
 		})
 		sc.HasScriptDownload = false
-		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
+		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-vr'], ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-ai-vr'], ul.c-meta--scene-specs a[href='/tags/multi-axis-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
 			sc.HasScriptDownload = true
 		})
 		out <- sc
@@ -266,8 +266,13 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		isTransScene := strings.Contains(sceneURL, "/trans")
 
 		if isStraightScene || isTransScene {
-			e.ForEach(`div.c-grid-badge--fleshlight-badge`, func(id int, e_a *colly.HTMLElement) {
-				db.Model(&models.Scene{}).Where("scene_url = ? and script_published = '0000-00-00'", sceneURL).Update("script_published", time.Now())
+			e.ForEach(`div.c-grid-badge--fleshlight, div.c-grid-badge--script-ai, div.c-grid-badge--fleshlight-badge-multi`, func(id int, e_a *colly.HTMLElement) {
+				var existingScene models.Scene
+				existingScene.GetIfExistURL(sceneURL)
+				if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
+					existingScene.ScriptPublished = time.Now()
+					existingScene.Save()
+				}
 			})
 
 			// If scene exist in database, there's no need to scrape

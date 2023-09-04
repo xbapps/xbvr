@@ -207,7 +207,12 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		e.ForEach(`a[href^="/category/funscript"]`, func(id int, e *colly.HTMLElement) {
-			db.Model(&models.Scene{}).Where("scene_url = ? and script_published = '0000-00-00'", sceneURL).Update("script_published", time.Now())
+			var existingScene models.Scene
+			existingScene.GetIfExistURL(sceneURL)
+			if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
+				existingScene.ScriptPublished = time.Now()
+				existingScene.Save()
+			}
 		})
 	})
 
