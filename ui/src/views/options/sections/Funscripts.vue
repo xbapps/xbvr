@@ -44,6 +44,15 @@
           }})</b-button
         >
       </p>
+      <hr />
+      <b-field>
+        <b-switch v-model="scrapeFunscripts" type="is-default">
+          <strong>Scrape for Available Funscripts</strong>
+        </b-switch>
+      </b-field>
+      <b-field>
+        <b-button type="is-primary" @click="save">Save</b-button>
+      </b-field>
     </div>
   </div>
 </template>
@@ -67,6 +76,9 @@ export default {
       link.href = "/api/task/funscript/export-new";
       link.click();
     },
+    save () {
+      this.$store.dispatch('optionsFunscripts/save')
+    },
   },
   computed: {
     countTotal: function () {
@@ -74,6 +86,14 @@ export default {
     },
     countUpdated: function () {
       return this.$store.state.optionsFunscripts.countUpdated;
+    },
+    scrapeFunscripts: {
+      get () {
+        return this.$store.state.optionsFunscripts.optionsFunscripts.scrapeFunscripts
+      },
+      set (value) {
+        this.$store.state.optionsFunscripts.optionsFunscripts.scrapeFunscripts = value
+      },
     },
   },
 };

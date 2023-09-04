@@ -68,6 +68,9 @@ type RequestSaveOptionsAdvanced struct {
 	UseImperialEntry      bool   `json:"useImperialEntry"`
 }
 
+type RequestSaveOptionsFunscripts struct {
+	ScrapeFunscripts bool `json:"scrapeFunscripts":`
+}
 type RequestSaveOptionsDLNA struct {
 	Enabled      bool     `json:"enabled"`
 	ServiceName  string   `json:"name"`
@@ -236,6 +239,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.PUT("/interface/advanced").To(i.saveOptionsAdvanced).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	// "Web Advanced UI options" section endpoints
+	ws.Route(ws.PUT("/funscripts").To(i.saveOptionsFunscripts).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	// "Cache" section endpoints
 	ws.Route(ws.DELETE("/cache/reset/{cache}").To(i.resetCache).
 		Param(ws.PathParameter("cache", "Cache to reset - possible choices are `images`, `previews`, and `searchIndex`").DataType("string")).
@@ -392,6 +399,19 @@ func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.
 	config.Config.Advanced.StashApiKey = r.StashApiKey
 	config.Config.Advanced.ScrapeActorAfterScene = r.ScrapeActorAfterScene
 	config.Config.Advanced.UseImperialEntry = r.UseImperialEntry
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+func (i ConfigResource) saveOptionsFunscripts(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsFunscripts
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Funscripts.ScrapeFunscripts = r.ScrapeFunscripts
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
