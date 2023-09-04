@@ -1729,6 +1729,23 @@ func Migrate() {
 				return tx.Exec(sql).Error
 			},
 		},
+		{
+			ID: "0069-fix-javdatabase-actors",
+			Migrate: func(tx *gorm.DB) error {
+				var actors []models.Actor
+				err := tx.Where("name like ?", "<img src%").Find(&actors).Error
+				if err != nil {
+					return err
+				}
+
+				for _, actor := range actors {
+					common.Log.Infof("Removing actor %s", actor.Name)
+					db.Model(&actor).Association("Scenes").Clear()
+					db.Delete(&actor)
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
