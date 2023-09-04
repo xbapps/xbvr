@@ -31,6 +31,11 @@
               </b-switch>
             </b-field>
             <b-field>
+              <b-switch v-model="sceneWishlist" type="is-info">
+                show Add/Remove from Wishlist button
+              </b-switch>
+            </b-field>
+            <b-field>
               <b-switch v-model="sceneTrailerlist" type="is-default">
                 show Add/Remove from Trailer list button
               </b-switch>
@@ -116,6 +121,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.sceneFavourite = value
+      }
+    },
+    sceneWishlist: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneWishlist
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneWishlist = value
       }
     },
     sceneTrailerlist: {

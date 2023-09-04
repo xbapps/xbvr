@@ -6,7 +6,7 @@
            @click="showDetails(item)"
            @mouseover="preview = true"
            @mouseleave="preview = false">
-        <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>        
+        <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
         <div class="overlay align-bottom-left">
           <div style="padding: 5px">
             <b-tag v-if="item.is_watched && !this.$store.state.optionsWeb.web.sceneWatched">
@@ -52,6 +52,7 @@
       <watchlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatchlist"/>
       <trailerlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneTrailerlist"/>
       <favourite-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneFavourite"/>
+      <wishlist-button v-if="this.$store.state.optionsWeb.web.sceneWishlist && !item.is_available" :item="item"/>
       <watched-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatched"/>
       <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
 
@@ -70,6 +71,7 @@
 import { format, parseISO } from 'date-fns'
 import WatchlistButton from '../../components/WatchlistButton'
 import FavouriteButton from '../../components/FavouriteButton'
+import WishlistButton from '../../components/WishlistButton'
 import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import TrailerlistButton from '../../components/TrailerlistButton'
@@ -79,7 +81,7 @@ import ky from 'ky'
 export default {
   name: 'SceneCard',
   props: { item: Object, reRead: Boolean },
-  components: { WatchlistButton, FavouriteButton, WatchedButton, EditButton, TrailerlistButton, HiddenButton },
+  components: { WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       preview: false,
@@ -88,8 +90,8 @@ export default {
     }
   },
   computed: {
-    videoFilesCount () {      
-      if (this.item.file == null) { return 0 }      
+    videoFilesCount () {
+      if (this.item.file == null) { return 0 }
       let count = 0
       this.item.file.forEach(obj => {
         if (obj.type === 'video') {
@@ -139,13 +141,13 @@ export default {
     },
     showDetails (scene) {
       // reRead is required when the SceneCard is clicked from the ActorDetails
-      // the Scenes associated Tables such as Tags, Cast arwon't be Preloaded and 
+      // the Scenes associated Tables such as Tags, Cast arwon't be Preloaded and
       // will cause errors when the Details Overlay loads
       if (this.reRead) {
         ky.get('/api/scene/'+scene.id).json().then(data => {
           if (data.id != 0){
             this.$store.commit('overlay/showDetails', { scene: data })
-          }          
+          }
         })
       } else {
         this.$store.commit('overlay/showDetails', { scene: scene })

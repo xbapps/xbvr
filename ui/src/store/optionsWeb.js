@@ -6,6 +6,7 @@ const state = {
     tagSort: 'By Tag Count',
     sceneWatchlist: true,
     sceneFavourite: true,
+    sceneWishlist: true,
     sceneWatched: false,
     sceneEdit: false,
     sceneDuration: false,
@@ -28,6 +29,7 @@ const actions = {
         state.web.tagSort = data.config.web.tagSort
         state.web.sceneWatchlist = data.config.web.sceneWatchlist
         state.web.sceneFavourite = data.config.web.sceneFavourite
+        state.web.sceneWishlist = data.config.web.sceneWishlist
         state.web.sceneWatched = data.config.web.sceneWatched
         state.web.sceneEdit = data.config.web.sceneEdit
         state.web.sceneDuration = data.config.web.sceneDuration
@@ -47,6 +49,7 @@ const actions = {
         state.web.tagSort = data.tagSort
         state.web.sceneWatchlist = data.sceneWatchlist
         state.web.sceneFavourite = data.sceneFavourite
+        state.web.sceneWishlist = data.sceneWishlist
         state.web.sceneWatched = data.sceneWatched
         state.web.sceneEdit = data.sceneEdit
         state.web.sceneDuration = data.sceneDuration

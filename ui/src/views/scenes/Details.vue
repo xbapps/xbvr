@@ -101,13 +101,14 @@
                     </b-field>
                   </div>
                   <div class="column pt-0">
-                    <div class="is-pulled-right">
-                      <hidden-button :item="item"/>&nbsp;
-                      <watchlist-button :item="item"/>&nbsp;
-                      <trailerlist-button :item="item"/>&nbsp;
-                      <favourite-button :item="item"/>&nbsp;
-                      <watched-button :item="item"/>&nbsp;
-                      <edit-button :item="item"/>&nbsp;
+                    <div class="is-flex is-pulled-right" style="gap: 0.25rem">
+                      <hidden-button :item="item"/>
+                      <watchlist-button :item="item"/>
+                      <trailerlist-button :item="item"/>
+                      <favourite-button :item="item"/>
+                      <wishlist-button :item="item"/>
+                      <watched-button :item="item"/>
+                      <edit-button :item="item"/>
                       <refresh-button :item="item"/>
                     </div>
                   </div>
@@ -374,6 +375,7 @@ import GlobalEvents from 'vue-global-events'
 import StarRating from 'vue-star-rating'
 import FavouriteButton from '../../components/FavouriteButton'
 import WatchlistButton from '../../components/WatchlistButton'
+import WishlistButton from '../../components/WishlistButton'
 import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import RefreshButton from '../../components/RefreshButton'
@@ -382,7 +384,7 @@ import HiddenButton from '../../components/HiddenButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton, HiddenButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       index: 1,

@@ -31,6 +31,7 @@ type ObjectConfig struct {
 		TagSort           string `default:"by-tag-count" json:"tagSort"`
 		SceneWatchlist    bool   `default:"true" json:"sceneWatchlist"`
 		SceneFavourite    bool   `default:"true" json:"sceneFavourite"`
+		SceneWishlist     bool   `default:"true" json:"sceneWishlist"`
 		SceneWatched      bool   `default:"false" json:"sceneWatched"`
 		SceneEdit         bool   `default:"false" json:"sceneEdit"`
 		SceneDuration     bool   `default:"false" json:"sceneDuration"`

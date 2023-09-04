@@ -15,6 +15,7 @@ type ObjectState struct {
 		TagSort           string `json:"tagSort"`
 		SceneWatchlist    bool   `json:"sceneWatchlist"`
 		SceneFavourite    bool   `json:"sceneFavourite"`
+		SceneWishlist     bool   `json:"sceneWishlist"`
 		SceneWatched      bool   `json:"sceneWatched"`
 		SceneEdit         bool   `json:"sceneEdit"`
 		SceneDuration     bool   `json:"sceneDuration"`
