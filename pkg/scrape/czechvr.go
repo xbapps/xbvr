@@ -173,7 +173,6 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 					sc.OnlyUpdateScriptData = true
 					sc.HumanScript = false
 					sc.AiScript = false
-					sc.MultiAxisScript = false
 					out <- sc
 				}
 			})

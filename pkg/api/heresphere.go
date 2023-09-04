@@ -561,9 +561,6 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		if scene.AiScript {
 			addFeatureTag("AI Generated Funscript")
 		}
-		if scene.MultiAxisScript {
-			addFeatureTag("Multi-xis Funscript")
-		}
 	}
 
 	var heresphereSubtitlesFiles []HeresphereSubtitles

@@ -112,7 +112,6 @@ type Scene struct {
 
 	ScriptPublished time.Time `json:"script_published" xbvrbackup:"script_published"`
 	AiScript        bool      `json:"ai_script" gorm:"default:false" xbvrbackup:"ai_script"`
-	MultiAxisScript bool      `json:"multi_axis_script" gorm:"default:false" xbvrbackup:"multi_axis_script"`
 	HumanScript     bool      `json:"human_script" gorm:"default:false" xbvrbackup:"human_script"`
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
@@ -455,7 +454,6 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		o.ScriptPublished = time.Now()
 	}
 	o.AiScript = ext.AiScript
-	o.MultiAxisScript = ext.MultiAxisScript
 	o.HumanScript = ext.HumanScript
 
 	// Trailers
@@ -555,11 +553,10 @@ func SceneUpdateScriptData(db *gorm.DB, ext ScrapedScene) {
 	o.GetIfExistByPK(ext.InternalSceneId)
 
 	if o.ID != 0 {
-		if o.ScriptPublished.IsZero() || o.HumanScript != ext.HumanScript || o.AiScript != ext.AiScript || o.MultiAxisScript != ext.MultiAxisScript {
+		if o.ScriptPublished.IsZero() || o.HumanScript != ext.HumanScript || o.AiScript != ext.AiScript {
 			o.ScriptPublished = time.Now()
 			o.HumanScript = ext.HumanScript
 			o.AiScript = ext.AiScript
-			o.MultiAxisScript = ext.MultiAxisScript
 			o.Save()
 		}
 	}
