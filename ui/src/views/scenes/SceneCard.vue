@@ -48,7 +48,7 @@
     <div style="padding-top:4px;">
       <div class="scene_title">{{item.title}}</div>
 
-      <hidden-button :item="item"/>
+      <hidden-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneHidden"/>
       <watchlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatchlist"/>
       <trailerlist-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneTrailerlist"/>
       <favourite-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneFavourite"/>

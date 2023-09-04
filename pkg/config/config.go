@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/creasty/defaults"
+
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -29,6 +30,7 @@ type ObjectConfig struct {
 	} `json:"security"`
 	Web struct {
 		TagSort           string `default:"by-tag-count" json:"tagSort"`
+		SceneHidden       bool   `default:"true" json:"sceneHidden"`
 		SceneWatchlist    bool   `default:"true" json:"sceneWatchlist"`
 		SceneFavourite    bool   `default:"true" json:"sceneFavourite"`
 		SceneWishlist     bool   `default:"true" json:"sceneWishlist"`
@@ -147,8 +149,10 @@ type ObjectConfig struct {
 	} `json:"cron"`
 }
 
-var Config ObjectConfig
-var RecentIPAddresses []string
+var (
+	Config            ObjectConfig
+	RecentIPAddresses []string
+)
 
 func LoadConfig() {
 	db, _ := models.GetDB()

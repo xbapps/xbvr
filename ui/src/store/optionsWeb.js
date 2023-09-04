@@ -4,6 +4,7 @@ const state = {
   loading: false,
   web: {
     tagSort: 'By Tag Count',
+    sceneHidden: true,
     sceneWatchlist: true,
     sceneFavourite: true,
     sceneWishlist: true,
@@ -27,6 +28,7 @@ const actions = {
       .json()
       .then(data => {
         state.web.tagSort = data.config.web.tagSort
+        state.web.sceneHidden = data.config.web.sceneHidden
         state.web.sceneWatchlist = data.config.web.sceneWatchlist
         state.web.sceneFavourite = data.config.web.sceneFavourite
         state.web.sceneWishlist = data.config.web.sceneWishlist
@@ -47,6 +49,7 @@ const actions = {
       .json()
       .then(data => {
         state.web.tagSort = data.tagSort
+        state.web.sceneHidden = data.sceneHidden
         state.web.sceneWatchlist = data.sceneWatchlist
         state.web.sceneFavourite = data.sceneFavourite
         state.web.sceneWishlist = data.sceneWishlist
@@ -55,7 +58,7 @@ const actions = {
         state.web.sceneDuration = data.sceneDuration
         state.web.sceneCuepoint = data.sceneCuepoint
         state.web.showHspFile = data.showHspFile
-        state.web.showSubtitlesFile = data.showSubtitlesFile        
+        state.web.showSubtitlesFile = data.showSubtitlesFile
         state.web.sceneTrailerlist = data.sceneTrailerlist
         state.web.updateCheck = data.updateCheck
         state.loading = false

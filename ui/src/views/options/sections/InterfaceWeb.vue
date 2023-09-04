@@ -21,6 +21,11 @@
             <b-field label="Buttons in Scene List">
             </b-field>
             <b-field>
+              <b-switch v-model="sceneHidden" type="is-danger">
+                show Toggle Hidden Status button
+              </b-switch>
+            </b-field>
+            <b-field>
               <b-switch v-model="sceneWatchlist" type="is-default">
                 show Add/Remove from Watchlist button
               </b-switch>
@@ -105,6 +110,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.tagSort = value
+      }
+    },
+    sceneHidden: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneHidden
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneHidden = value
       }
     },
     sceneWatchlist: {

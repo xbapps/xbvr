@@ -13,6 +13,7 @@ type ObjectState struct {
 	} `json:"server"`
 	Web struct {
 		TagSort           string `json:"tagSort"`
+		SceneHidden       bool   `json:"sceneHidden"`
 		SceneWatchlist    bool   `json:"sceneWatchlist"`
 		SceneFavourite    bool   `json:"sceneFavourite"`
 		SceneWishlist     bool   `json:"sceneWishlist"`
