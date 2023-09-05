@@ -554,6 +554,13 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 			Name: file.Filename,
 			URL:  fmt.Sprintf("%v://%v/api/dms/file/%v", getProto(req), req.Request.Host, file.ID),
 		})
+
+		if scene.HumanScript {
+			addFeatureTag("Hand Crafted Funscript")
+		}
+		if scene.AiScript {
+			addFeatureTag("AI Generated Funscript")
+		}
 	}
 
 	var heresphereSubtitlesFiles []HeresphereSubtitles

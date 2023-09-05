@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
@@ -247,10 +246,20 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				}
 			})
 		})
-		sc.HasScriptDownload = false
-		e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
-			sc.HasScriptDownload = true
-		})
+		if config.Config.Funscripts.ScrapeFunscripts {
+			sc.HasScriptDownload = false
+			sc.AiScript = false
+			sc.HumanScript = false
+			e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-vr']`, func(id int, e_a *colly.HTMLElement) {
+				sc.HasScriptDownload = true
+				sc.HumanScript = true
+			})
+			e.ForEach(`ul.c-meta--scene-specs a[href='/tags/sex-toy-scripts-ai-vr']`, func(id int, e_a *colly.HTMLElement) {
+				sc.HasScriptDownload = true
+				sc.AiScript = true
+			})
+		}
+
 		out <- sc
 	})
 
@@ -266,9 +275,49 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		isTransScene := strings.Contains(sceneURL, "/trans")
 
 		if isStraightScene || isTransScene {
-			e.ForEach(`div.c-grid-badge--fleshlight-badge`, func(id int, e_a *colly.HTMLElement) {
-				db.Model(&models.Scene{}).Where("scene_url = ? and script_published = '0000-00-00'", sceneURL).Update("script_published", time.Now())
-			})
+
+			if config.Config.Funscripts.ScrapeFunscripts {
+				var existingScene models.Scene
+				existingScene.GetIfExistURL(sceneURL)
+				if existingScene.ID != 0 {
+					fleshlightBadge := false
+					aiBadge := false
+					multiBadge := false
+
+					human := false
+					ai := false
+					e.ForEach(`div.c-grid-badge--fleshlight`, func(id int, e_a *colly.HTMLElement) {
+						fleshlightBadge = true
+					})
+					e.ForEach(`div.c-grid-badge--script-ai`, func(id int, e_a *colly.HTMLElement) {
+						ai = true
+					})
+					e.ForEach(`div.c-grid-badge--fleshlight-badge-multi`, func(id int, e_a *colly.HTMLElement) {
+						multiBadge = true
+					})
+
+					if fleshlightBadge {
+						human = true
+					}
+					if aiBadge {
+						ai = true
+					}
+					if multiBadge && !fleshlightBadge {
+						human = true
+						// ai = true
+					}
+
+					if existingScene.HumanScript != human || existingScene.AiScript != ai {
+						var sc models.ScrapedScene
+						sc.InternalSceneId = existingScene.ID
+						sc.HasScriptDownload = true
+						sc.OnlyUpdateScriptData = true
+						sc.HumanScript = human
+						sc.AiScript = ai
+						out <- sc
+					}
+				}
+			}
 
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {

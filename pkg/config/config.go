@@ -52,6 +52,9 @@ type ObjectConfig struct {
 		UseImperialEntry      bool   `default:"false" json:"useImperialEntry"`
 		ProgressTimeInterval  int    `default:"15" json:"progressTimeInterval"`
 	} `json:"advanced"`
+	Funscripts struct {
+		ScrapeFunscripts bool `default:"false" json:"scrapeFunscripts"`
+	} `json:"funscripts"`
 	Vendor struct {
 		TPDB struct {
 			ApiToken string `default:"" json:"apiToken"`

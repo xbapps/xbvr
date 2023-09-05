@@ -111,6 +111,8 @@ type Scene struct {
 	LegacySceneID string `json:"legacy_scene_id" xbvrbackup:"legacy_scene_id"`
 
 	ScriptPublished time.Time `json:"script_published" xbvrbackup:"script_published"`
+	AiScript        bool      `json:"ai_script" gorm:"default:false" xbvrbackup:"ai_script"`
+	HumanScript     bool      `json:"human_script" gorm:"default:false" xbvrbackup:"human_script"`
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
@@ -451,6 +453,8 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	if ext.HasScriptDownload && o.ScriptPublished.IsZero() {
 		o.ScriptPublished = time.Now()
 	}
+	o.AiScript = ext.AiScript
+	o.HumanScript = ext.HumanScript
 
 	// Trailers
 	o.TrailerType = ext.TrailerType
@@ -542,6 +546,20 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	}
 
 	return nil
+}
+
+func SceneUpdateScriptData(db *gorm.DB, ext ScrapedScene) {
+	var o Scene
+	o.GetIfExistByPK(ext.InternalSceneId)
+
+	if o.ID != 0 {
+		if o.ScriptPublished.IsZero() || o.HumanScript != ext.HumanScript || o.AiScript != ext.AiScript {
+			o.ScriptPublished = time.Now()
+			o.HumanScript = ext.HumanScript
+			o.AiScript = ext.AiScript
+			o.Save()
+		}
+	}
 }
 
 type RequestSceneList struct {
@@ -808,6 +826,10 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = `scenes.scene_id like "vrporn-%"`
 		case "Has Script Download":
 			where = "scenes.script_published > '0001-01-01 00:00:00+00:00'"
+		case "Has AI Generated Script":
+			where = "scenes.ai_script = 1"
+		case "Has Human Generated Script":
+			where = "scenes.human_script = 1"
 		}
 
 		if negate {

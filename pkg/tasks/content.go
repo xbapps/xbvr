@@ -156,7 +156,13 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saving %v", scene.SceneID)
 		}
-		models.SceneCreateUpdateFromExternal(db, scene)
+		if scene.OnlyUpdateScriptData {
+			if config.Config.Funscripts.ScrapeFunscripts {
+				models.SceneUpdateScriptData(db, scene)
+			}
+		} else {
+			models.SceneCreateUpdateFromExternal(db, scene)
+		}
 		atomic.AddUint64(i, 1)
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saved %v", scene.SceneID)
