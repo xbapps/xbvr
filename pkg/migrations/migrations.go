@@ -747,6 +747,15 @@ func Migrate() {
 				return tx.AutoMigrate(Scene{}).Error
 			},
 		},
+		{
+			ID: "0069-file-refresh-heatmap-cache",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					RefreshHeatmapCache bool `json:"refresh_heatmap_cache" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
