@@ -118,7 +118,7 @@
 
             <div class="image-row" v-if="activeTab != 1">
               <div v-for="(image, idx) in castimages" :key="idx" class="image-wrapper">
-                <b-tooltip  type="is-light" :label="image.actor_name"  :delay=100>
+                <b-tooltip  type="is-light" :label="image.actor_label"  :delay=100>
                   <vue-load-image>
                     <img slot="image" :src="getImageURL(image.src)" alt="Image" class="thumbnail" @mouseover="showTooltip(idx)" @mouseout="hideTooltip(idx)" @click='showActorDetail([image.actor_id])' />
                     <img slot="preloader" :src="getImageURL('https://i.stack.imgur.com/kOnzy.gif')" style="height: 50px;display: block;margin-left:auto;margin-right: auto;" @click='showCastScenes([image.actor_name])' />
@@ -419,7 +419,17 @@ export default {
       if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
         item.tags.sort((a, b) => a.name < b.name ? -1 : 1)
       }
+      let releasedate = parseISO(item.release_date)
       let imgs = item.cast.map((actor) => {
+        let birthdate = parseISO(actor.birth_date)
+        let label = actor.name
+        if (birthdate.getFullYear() > 0) {
+          let age = releasedate.getFullYear() - birthdate.getFullYear()
+          if ((releasedate.getMonth() < birthdate.getMonth()) || (releasedate.getMonth() == birthdate.getMonth() && releasedate.getDate() < birthdate.getDate())) {
+            age -= 1
+          }
+          label += `, ${age} in scene`
+        }
         let img = actor.image_url
         if (img == "" ){
           img = "blank"  // forces an error image to load, blank won't display an image
@@ -427,7 +437,7 @@ export default {
         if (actor.name.startsWith("aka:")) {
           img = ""
         }
-        return {src: img, visible: false, actor_name: actor.name, actor_id: actor.id};
+        return {src: img, visible: false, actor_name: actor.name, actor_label: label, actor_id: actor.id};
       });
 
       this.castimages =  imgs.filter((img) => {
