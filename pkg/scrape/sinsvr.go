@@ -11,6 +11,7 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -42,7 +43,7 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.Title = strings.TrimSpace(e.ChildAttrs(`dl8-video`, "title")[0])
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
-		//Cover
+		// Cover
 		if len(e.ChildAttrs(`dl8-video`, "poster")) > 0 {
 			sc.Covers = append(sc.Covers, e.ChildAttrs(`dl8-video`, "poster")[0])
 		}
@@ -61,7 +62,7 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 
-		//Cast and Released
+		// Cast and Released
 		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`.video-detail__specs div.cell`, func(id int, e *colly.HTMLElement) {
 			c := strings.TrimSpace(e.Text)
@@ -97,7 +98,7 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			}
 		}
 
-		//Tags
+		// Tags
 		e.ForEach(`.tags-item a`, func(id int, e *colly.HTMLElement) {
 			tags := strings.Split(e.Text, " / ")
 			if tags[0] == "VR - Virtual-Reality" {
@@ -128,7 +129,7 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.OnHTML(`div.tn-video`, func(e *colly.HTMLElement) {
 		studio := e.ChildText("a.author")
 
-		if studio != "By: SinsVR" && studio != "By: Billie Star" {
+		if studio != "By: SinsVR" && studio != "By: Billie Star" && studio != "By: Poisonio" {
 			return
 		}
 
@@ -145,6 +146,7 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	} else {
 		siteCollector.Visit("https://xsinsvr.com/studio/sinsvr/videos")
 		siteCollector.Visit("https://xsinsvr.com/studio/billie-star/videos")
+		siteCollector.Visit("https://xsinsvr.com/studio/poisonio/videos")
 	}
 
 	if updateSite {
