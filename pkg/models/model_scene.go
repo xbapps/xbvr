@@ -566,7 +566,6 @@ type RequestSceneList struct {
 	DlState      optional.String   `json:"dlState"`
 	Limit        optional.Int      `json:"limit"`
 	Offset       optional.Int      `json:"offset"`
-	Counts       optional.Bool     `json:"counts"`
 	IsAvailable  optional.Bool     `json:"isAvailable"`
 	IsAccessible optional.Bool     `json:"isAccessible"`
 	IsWatched    optional.Bool     `json:"isWatched"`
@@ -626,7 +625,8 @@ func QueryScenes(r RequestSceneList, enablePreload bool) ResponseSceneList {
 	preCountTx.Where("is_available = ?", false).Where("is_hidden = ?", false).Count(&out.CountNotDownloaded)
 	preCountTx.Where("is_hidden = ?", true).Count(&out.CountHidden)
 
-	finalTx.Count(&out.Results)
+	// r.Offset must _not_ apply to the count, as the count query always returns a single value
+	finalTx.Offset(0).Count(&out.Results)
 
 	if enablePreload {
 		finalTx = finalTx.
