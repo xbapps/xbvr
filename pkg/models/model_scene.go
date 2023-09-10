@@ -758,6 +758,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "trailerlist = 1"
 		case "Has Subscription":
 			where = "is_subscribed = 1"
+		case "Has Preview":
+			where = "has_video_preview = 1"
 		case "Rating":
 			where = "scenes.star_rating = " + value
 		case "Cast 6+":
