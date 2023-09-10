@@ -7,17 +7,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-test/deep"
-	"github.com/jinzhu/gorm"
-	"github.com/mozillazg/go-slugify"
-	"github.com/xbapps/xbvr/pkg/tasks"
-
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/document"
 	index "github.com/blevesearch/bleve_index_api"
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
+	"github.com/go-test/deep"
+	"github.com/jinzhu/gorm"
+	"github.com/mozillazg/go-slugify"
+
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/tasks"
 )
 
 type RequestToggleList struct {
@@ -82,8 +82,8 @@ type ResponseGetFilters struct {
 }
 
 type ResponseSceneSearchValue struct {
-	FieldName  string `json:fieldName`
-	FieldValue string `json:fieldValue`
+	FieldName  string `json:"fieldName"`
+	FieldValue string `json:"fieldValue"`
 }
 type SceneResource struct{}
 
@@ -154,7 +154,7 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	//Get request data
+	// Get request data
 	var r RequestCustomScene
 	err := req.ReadEntity(&r)
 	if err != nil {
@@ -162,7 +162,7 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 		return
 	}
 
-	//Get scene id
+	// Get scene id
 	currentTime := time.Now()
 	if r.SceneID == "" {
 		log.Info("SceneID missing from request!")
@@ -170,7 +170,7 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 	}
 	r.SceneID = slugify.Slugify(r.SceneID)
 
-	//Construct custom scene
+	// Construct custom scene
 	var scene models.ScrapedScene
 	scene.SceneID = r.SceneID
 	scene.SceneType = "VR"
@@ -186,10 +186,10 @@ func (i SceneResource) createCustomScene(req *restful.Request, resp *restful.Res
 
 	log.Infof("Creating custom scene: \"%v\" \"%v\"", scene.SceneID, scene.Title)
 
-	//Create custom scene
+	// Create custom scene
 	models.SceneCreateUpdateFromExternal(db, scene)
 
-	//Return resulting scene
+	// Return resulting scene
 	var resultingScene models.Scene
 	err = resultingScene.GetIfExist(scene.SceneID)
 	if err != nil {
@@ -366,6 +366,8 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "VRPorn Scraper")
 	outAttributes = append(outAttributes, "Stashdb Linked")
 	outAttributes = append(outAttributes, "Has Script Download")
+	outAttributes = append(outAttributes, "Has AI Generated Script")
+	outAttributes = append(outAttributes, "Has Human Generated Script")
 	type Results struct {
 		Result string
 	}
@@ -503,6 +505,11 @@ func (i SceneResource) toggleList(req *restful.Request, resp *restful.Response) 
 	if r.List == "is_hidden" {
 		scene.IsHidden = !scene.IsHidden
 	}
+
+	if r.List == "wishlist" && !scene.IsAvailable {
+		scene.Wishlist = !scene.Wishlist
+	}
+
 	scene.Save()
 }
 
@@ -540,7 +547,6 @@ func (i SceneResource) getSearchFields(req *restful.Request, resp *restful.Respo
 	} else {
 		fieldValue := ""
 		doc.VisitFields(func(field index.Field) {
-			//if field.Name() == "id" {
 			switch ft := field.(type) {
 			case *document.DateTimeField:
 				dt, _ := ft.DateTime()
@@ -553,7 +559,6 @@ func (i SceneResource) getSearchFields(req *restful.Request, resp *restful.Respo
 			default:
 				fieldValue = "Unknown format"
 			}
-			//}
 			results = append(results, ResponseSceneSearchValue{
 				FieldName:  field.Name(),
 				FieldValue: fieldValue,
@@ -882,6 +887,7 @@ func castContains(arr []models.Actor, val interface{}) bool {
 	}
 	return false
 }
+
 func ProcessTagChanges(scene *models.Scene, tags *[]string, db *gorm.DB) {
 	var diffs []string
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/creasty/defaults"
+
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -29,8 +30,10 @@ type ObjectConfig struct {
 	} `json:"security"`
 	Web struct {
 		TagSort           string `default:"by-tag-count" json:"tagSort"`
+		SceneHidden       bool   `default:"true" json:"sceneHidden"`
 		SceneWatchlist    bool   `default:"true" json:"sceneWatchlist"`
 		SceneFavourite    bool   `default:"true" json:"sceneFavourite"`
+		SceneWishlist     bool   `default:"true" json:"sceneWishlist"`
 		SceneWatched      bool   `default:"false" json:"sceneWatched"`
 		SceneEdit         bool   `default:"false" json:"sceneEdit"`
 		SceneDuration     bool   `default:"false" json:"sceneDuration"`
@@ -49,6 +52,9 @@ type ObjectConfig struct {
 		UseImperialEntry      bool   `default:"false" json:"useImperialEntry"`
 		ProgressTimeInterval  int    `default:"15" json:"progressTimeInterval"`
 	} `json:"advanced"`
+	Funscripts struct {
+		ScrapeFunscripts bool `default:"false" json:"scrapeFunscripts"`
+	} `json:"funscripts"`
 	Vendor struct {
 		TPDB struct {
 			ApiToken string `default:"" json:"apiToken"`
@@ -146,8 +152,10 @@ type ObjectConfig struct {
 	} `json:"cron"`
 }
 
-var Config ObjectConfig
-var RecentIPAddresses []string
+var (
+	Config            ObjectConfig
+	RecentIPAddresses []string
+)
 
 func LoadConfig() {
 	db, _ := models.GetDB()

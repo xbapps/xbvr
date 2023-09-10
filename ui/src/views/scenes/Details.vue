@@ -101,13 +101,14 @@
                     </b-field>
                   </div>
                   <div class="column pt-0">
-                    <div class="is-pulled-right">
-                      <hidden-button :item="item"/>&nbsp;
-                      <watchlist-button :item="item"/>&nbsp;
-                      <trailerlist-button :item="item"/>&nbsp;
-                      <favourite-button :item="item"/>&nbsp;
-                      <watched-button :item="item"/>&nbsp;
-                      <edit-button :item="item"/>&nbsp;
+                    <div class="is-flex is-pulled-right" style="gap: 0.25rem">
+                      <hidden-button :item="item"/>
+                      <watchlist-button :item="item"/>
+                      <trailerlist-button :item="item"/>
+                      <favourite-button :item="item"/>
+                      <wishlist-button :item="item"/>
+                      <watched-button :item="item"/>
+                      <edit-button :item="item"/>
                       <refresh-button :item="item"/>
                     </div>
                   </div>
@@ -117,7 +118,7 @@
 
             <div class="image-row" v-if="activeTab != 1">
               <div v-for="(image, idx) in castimages" :key="idx" class="image-wrapper">
-                <b-tooltip  type="is-light" :label="image.actor_name"  :delay=100>
+                <b-tooltip  type="is-light" :label="image.actor_label"  :delay=100>
                   <vue-load-image>
                     <img slot="image" :src="getImageURL(image.src)" alt="Image" class="thumbnail" @mouseover="showTooltip(idx)" @mouseout="hideTooltip(idx)" @click='showActorDetail([image.actor_id])' />
                     <img slot="preloader" :src="getImageURL('https://i.stack.imgur.com/kOnzy.gif')" style="height: 50px;display: block;margin-left:auto;margin-right: auto;" @click='showCastScenes([image.actor_name])' />
@@ -219,7 +220,7 @@
                         <small>
                           <span class="pathDetails">{{ f.path }}</span>
                           <br/>
-                          {{ prettyBytes(f.size) }},
+                          {{ prettyBytes(f.size) }}<span v-if="f.type === 'video'"> ({{ prettyBytes(f.video_bitrate, { bits: true })  }}/s)</span>,
                           <span v-if="f.type === 'video'"><span class="videosize">{{ f.video_width }}x{{ f.video_height }} {{ f.video_codec_name }}</span>, {{ f.projection }},&nbsp;</span>
                           <span v-if="f.duration > 1">{{ humanizeSeconds(f.duration) }},</span>
                           {{ format(parseISO(f.created_time), "yyyy-MM-dd") }}
@@ -335,7 +336,7 @@
                   <div class="block-tab-content block">
                     <div class="content is-small">
                       <div class="block" v-for="(field, idx) in searchfields" :key="idx">
-                        <strong>{{ field.FieldName }} - </strong> {{ field.FieldValue }}
+                        <strong>{{ field.fieldName }} - </strong> {{ field.fieldValue }}
                       </div>
                     </div>
                   </div>
@@ -374,6 +375,7 @@ import GlobalEvents from 'vue-global-events'
 import StarRating from 'vue-star-rating'
 import FavouriteButton from '../../components/FavouriteButton'
 import WatchlistButton from '../../components/WatchlistButton'
+import WishlistButton from '../../components/WishlistButton'
 import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import RefreshButton from '../../components/RefreshButton'
@@ -382,7 +384,7 @@ import HiddenButton from '../../components/HiddenButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton, HiddenButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       index: 1,
@@ -417,7 +419,17 @@ export default {
       if (this.$store.state.optionsWeb.web.tagSort === 'alphabetically') {
         item.tags.sort((a, b) => a.name < b.name ? -1 : 1)
       }
+      let releasedate = parseISO(item.release_date)
       let imgs = item.cast.map((actor) => {
+        let birthdate = parseISO(actor.birth_date)
+        let label = actor.name
+        if (birthdate.getFullYear() > 0) {
+          let age = releasedate.getFullYear() - birthdate.getFullYear()
+          if ((releasedate.getMonth() < birthdate.getMonth()) || (releasedate.getMonth() == birthdate.getMonth() && releasedate.getDate() < birthdate.getDate())) {
+            age -= 1
+          }
+          label += `, ${age} in scene`
+        }
         let img = actor.image_url
         if (img == "" ){
           img = "blank"  // forces an error image to load, blank won't display an image
@@ -425,7 +437,7 @@ export default {
         if (actor.name.startsWith("aka:")) {
           img = ""
         }
-        return {src: img, visible: false, actor_name: actor.name, actor_id: actor.id};
+        return {src: img, visible: false, actor_name: actor.name, actor_label: label, actor_id: actor.id};
       });
 
       this.castimages =  imgs.filter((img) => {

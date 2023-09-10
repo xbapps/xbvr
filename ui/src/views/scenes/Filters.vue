@@ -20,6 +20,12 @@
         </b-checkbox-button>
       </div>
       <div class="column is-half">
+        <b-checkbox-button v-model="lists" native-value="wishlist" type="is-info">
+          <b-icon pack="mdi" icon="oil-lamp"/>
+          <span>{{ $t('Wishlist') }}</span>
+        </b-checkbox-button>
+      </div>
+      <div class="column is-half">
         <b-checkbox-button v-model="lists" native-value="scripted" type="is-info">
           <b-icon pack="mdi" icon="pulse"/>
           <span>{{ $t('Scripted') }}</span>

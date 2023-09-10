@@ -39,6 +39,11 @@ type ScrapedScene struct {
 	TrailerSrc        string   `json:"trailer_source"`
 	ChromaKey         string   `json:"chromakey"`
 	HasScriptDownload bool     `json:"has_script_Download"`
+	AiScript          bool     `json:"ai_script"`
+	HumanScript       bool     `json:"human_script"`
+
+	OnlyUpdateScriptData bool `default:"false" json:"only_update_script_data"`
+	InternalSceneId      uint `json:"internal_id"`
 
 	ActorDetails map[string]ActorDetails `json:"actor_details"`
 }

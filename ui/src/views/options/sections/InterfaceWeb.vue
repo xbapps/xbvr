@@ -21,6 +21,11 @@
             <b-field label="Buttons in Scene List">
             </b-field>
             <b-field>
+              <b-switch v-model="sceneHidden" type="is-danger">
+                show Toggle Hidden Status button
+              </b-switch>
+            </b-field>
+            <b-field>
               <b-switch v-model="sceneWatchlist" type="is-default">
                 show Add/Remove from Watchlist button
               </b-switch>
@@ -28,6 +33,11 @@
             <b-field>
               <b-switch v-model="sceneFavourite" type="is-danger">
                 show Add/Remove from Favourites button
+              </b-switch>
+            </b-field>
+            <b-field>
+              <b-switch v-model="sceneWishlist" type="is-info">
+                show Add/Remove from Wishlist button
               </b-switch>
             </b-field>
             <b-field>
@@ -102,6 +112,14 @@ export default {
         this.$store.state.optionsWeb.web.tagSort = value
       }
     },
+    sceneHidden: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneHidden
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneHidden = value
+      }
+    },
     sceneWatchlist: {
       get () {
         return this.$store.state.optionsWeb.web.sceneWatchlist
@@ -116,6 +134,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.sceneFavourite = value
+      }
+    },
+    sceneWishlist: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneWishlist
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneWishlist = value
       }
     },
     sceneTrailerlist: {

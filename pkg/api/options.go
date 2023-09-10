@@ -22,12 +22,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio"
 	"github.com/tidwall/gjson"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/tasks"
-	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/oauth2"
 )
 
 type NewVolumeRequest struct {
@@ -44,8 +45,10 @@ type VersionCheckResponse struct {
 
 type RequestSaveOptionsWeb struct {
 	TagSort           string `json:"tagSort"`
+	SceneHidden       bool   `json:"sceneHidden"`
 	SceneWatchlist    bool   `json:"sceneWatchlist"`
 	SceneFavourite    bool   `json:"sceneFavourite"`
+	SceneWishlist     bool   `json:"sceneWishlist"`
 	SceneWatched      bool   `json:"sceneWatched"`
 	SceneEdit         bool   `json:"sceneEdit"`
 	SceneDuration     bool   `json:"sceneDuration"`
@@ -65,6 +68,9 @@ type RequestSaveOptionsAdvanced struct {
 	UseImperialEntry      bool   `json:"useImperialEntry"`
 }
 
+type RequestSaveOptionsFunscripts struct {
+	ScrapeFunscripts bool `json:"scrapeFunscripts":`
+}
 type RequestSaveOptionsDLNA struct {
 	Enabled      bool     `json:"enabled"`
 	ServiceName  string   `json:"name"`
@@ -233,6 +239,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.PUT("/interface/advanced").To(i.saveOptionsAdvanced).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	// "Web Advanced UI options" section endpoints
+	ws.Route(ws.PUT("/funscripts").To(i.saveOptionsFunscripts).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	// "Cache" section endpoints
 	ws.Route(ws.DELETE("/cache/reset/{cache}").To(i.resetCache).
 		Param(ws.PathParameter("cache", "Cache to reset - possible choices are `images`, `previews`, and `searchIndex`").DataType("string")).
@@ -296,6 +306,7 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {
 	i.toggleSiteField(req, resp, "IsEnabled")
 }
+
 func (i ConfigResource) toggleSubscribed(req *restful.Request, resp *restful.Response) {
 	i.toggleSiteField(req, resp, "Subscribed")
 }
@@ -357,8 +368,10 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	}
 
 	config.Config.Web.TagSort = r.TagSort
+	config.Config.Web.SceneHidden = r.SceneHidden
 	config.Config.Web.SceneWatchlist = r.SceneWatchlist
 	config.Config.Web.SceneFavourite = r.SceneFavourite
+	config.Config.Web.SceneWishlist = r.SceneWishlist
 	config.Config.Web.SceneWatched = r.SceneWatched
 	config.Config.Web.SceneEdit = r.SceneEdit
 	config.Config.Web.SceneDuration = r.SceneDuration
@@ -371,6 +384,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }
+
 func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.Response) {
 	var r RequestSaveOptionsAdvanced
 	err := req.ReadEntity(&r)
@@ -385,6 +399,19 @@ func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.
 	config.Config.Advanced.StashApiKey = r.StashApiKey
 	config.Config.Advanced.ScrapeActorAfterScene = r.ScrapeActorAfterScene
 	config.Config.Advanced.UseImperialEntry = r.UseImperialEntry
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+func (i ConfigResource) saveOptionsFunscripts(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsFunscripts
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Funscripts.ScrapeFunscripts = r.ScrapeFunscripts
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -820,7 +847,6 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
-
 }
 
 func (i ConfigResource) getDefaultCuepoints(req *restful.Request, resp *restful.Response) {
@@ -835,6 +861,7 @@ func (i ConfigResource) getDefaultCuepoints(req *restful.Request, resp *restful.
 	json.Unmarshal([]byte(kv.Value), &cp)
 	resp.WriteHeaderAndEntity(http.StatusOK, &cp)
 }
+
 func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Response) {
 	db, _ := models.GetDB()
 	defer db.Close()

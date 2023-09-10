@@ -13,11 +13,12 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/markphelps/optional"
 	"github.com/tidwall/gjson"
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/session"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type DeoLibrary struct {
@@ -32,7 +33,7 @@ type DeoListScenes struct {
 
 type DeoListItem struct {
 	Title        string `json:"title"`
-	VideoLength  int    `json:"videoLength"`
+	VideoLength  uint   `json:"videoLength"`
 	ThumbnailURL string `json:"thumbnailUrl"`
 	VideoURL     string `json:"video_url"`
 }
@@ -285,8 +286,8 @@ func (i DeoVRResource) getDeoFile(req *restful.Request, resp *restful.Response) 
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
-	var height = file.VideoHeight
-	var width = file.VideoWidth
+	height := file.VideoHeight
+	width := file.VideoWidth
 	var sources []DeoSceneEncoding
 	sources = append(sources, DeoSceneEncoding{
 		Name: fmt.Sprintf("File 1/1 - %v", humanize.Bytes(uint64(file.Size))),
@@ -389,9 +390,9 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	var sceneMultiProjection bool = true
 
 	for i, file := range videoFiles {
-		var height = file.VideoHeight
-		var width = file.VideoWidth
-		var source = DeoSceneEncoding{
+		height := file.VideoHeight
+		width := file.VideoWidth
+		source := DeoSceneEncoding{
 			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(videoFiles), file.VideoHeight, humanize.Bytes(uint64(file.Size))),
 			VideoSources: []DeoSceneVideoSource{
 				{
@@ -499,7 +500,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	title := scene.Title
 	thumbnailURL := session.DeoRequestHost + "/img/700x/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 
-	//Passthrough
+	// Passthrough
 	var ckdata map[string]interface{}
 	//	nochromaKey := `{"enabled":false,"hasAlpha":false,"h":0,"opacity":0,"s":0,"threshold":0,"v":0}`
 	chromaKey := gjson.Parse(scene.ChromaKey)
@@ -512,7 +513,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		if !result.Exists() || ckdata["hasAlpha"] == "" {
 			//			if ckdata["."].(map[string]interface{})["hasAlpha"] = "false" || ckdata["."].(map[string]interface{})["hasAlpha"] = "" {
 
-			//setting hasAlpha to false
+			// setting hasAlpha to false
 			ckdata["hasAlpha"] = "false"
 		}
 		// Convert back to JSON string
@@ -624,12 +625,11 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 		if err := json.Unmarshal([]byte(savedPlaylists[i].SearchParams), &r); err == nil {
 			r.IsAccessible = optional.NewBool(true)
 			r.IsAvailable = optional.NewBool(true)
-			r.Limit = optional.NewInt(10000)
 
-			q := models.QueryScenes(r, false)
+			summaries := models.QuerySceneSummaries(r)
 			sceneLists = append(sceneLists, DeoListScenes{
 				Name: savedPlaylists[i].Name,
-				List: scenesToDeoList(req, q.Scenes),
+				List: scenesToDeoList(req, summaries),
 			})
 		}
 	}
@@ -654,15 +654,16 @@ func (i DeoVRResource) getDeoLibrary(req *restful.Request, resp *restful.Respons
 	})
 }
 
-func scenesToDeoList(req *restful.Request, scenes []models.Scene) []DeoListItem {
+func scenesToDeoList(req *restful.Request, scenes []models.SceneSummary) []DeoListItem {
 	setDeoPlayerHost(req)
 
 	list := make([]DeoListItem, 0)
 	for i := range scenes {
-		thumbnailURL := fmt.Sprintf("%v/img/700x/%v", session.DeoRequestHost, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
-
+		var thumbnailURL string
 		if config.Config.Interfaces.DeoVR.RenderHeatmaps && scenes[i].IsScripted {
 			thumbnailURL = fmt.Sprintf("%v/imghm/%d/%v", session.DeoRequestHost, scenes[i].ID, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
+		} else {
+			thumbnailURL = fmt.Sprintf("%v/img/700x/%v", session.DeoRequestHost, strings.Replace(scenes[i].CoverURL, "://", ":/", -1))
 		}
 
 		item := DeoListItem{
@@ -693,7 +694,7 @@ func filesToDeoList(req *restful.Request, files []models.File) []DeoListItem {
 		}
 		item := DeoListItem{
 			Title:        files[i].Filename,
-			VideoLength:  int(files[i].VideoDuration),
+			VideoLength:  uint(files[i].VideoDuration),
 			ThumbnailURL: session.DeoRequestHost + "/ui/images/blank.png",
 			VideoURL:     fmt.Sprintf("%v/deovr/file/%v%v", session.DeoRequestHost, files[i].ID, dnt),
 		}

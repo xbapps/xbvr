@@ -105,6 +105,9 @@ const mutations = {
         if (payload.list === 'is_hidden') {
           obj.is_hidden = !obj.is_hidden
         }        
+        if (payload.list === 'wishlist') {
+          obj.wishlist = !obj.wishlist
+        }
       }
       return obj
     })
