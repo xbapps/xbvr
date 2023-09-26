@@ -549,18 +549,64 @@ export default {
         volumeStep: 0.1,
         seekStep: 5,
         enableModifiersForNumbers: false,
+        enableVolumeScroll: false,
         customKeys: {
           closeModal: {
-            key: function (event) {
-              return event.which === 27
+            key: function(event) {
+              return event.which === 27;
             },
             handler: (player, options, event) => {
-              this.player.dispose()
-              this.$store.commit('overlay/hideDetails')
+              this.player.dispose();
+              this.$store.commit('overlay/hideDetails');
+            }
+          },
+          zoomIn: {
+            key: function(event) {
+              return event.which === 43 || event.which === 61;  // + and =
+            },
+            handler: (player, options, event) => {
+              this.zoomHandler(true);
+            }
+          },
+          zoomOut: {
+            key: function(event) {
+              return event.which === 45 || event.which === 95;  // - and _
+            },
+            handler: (player, options, event) => {
+              this.zoomHandler(false);
             }
           }
         }
       })
+
+      const videoElement = this.player.el();
+      videoElement.addEventListener('wheel', this.zoomHandlerWeb.bind(this));
+    },
+
+    zoomHandlerWeb(event) {
+      if (this.player.paused()) {
+        return;
+      }
+
+      event.preventDefault();
+      this.zoomHandler(event.deltaY < 0);
+    },
+    zoomHandler(isZoomingIn) {
+      const vr = this.player.vr();
+      const minFov = 30;
+      const maxFov = 130;
+      let fov = vr.camera.fov + (isZoomingIn ? -1 : 1);
+
+      if (fov < minFov) {
+        fov = minFov;
+      }
+
+      if (fov > maxFov) {
+        fov = maxFov;
+      }
+
+      vr.camera.fov = fov;
+      vr.camera.updateProjectionMatrix();
     },
     updatePlayer (src, projection) {
       this.player.reset()
