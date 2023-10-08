@@ -119,7 +119,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// To determine filenames
 		var videotype string
 		e.ForEach(`ul.c-meta--scene-specs li a`, func(id int, e *colly.HTMLElement) {
-			if e.Attr("title") == "190°" || e.Attr("title") == "200°" || e.Attr("title") == "220°" || e.Attr("title") == "360°" || e.Attr("title") == "fisheye" {
+			if e.Attr("title") == "190°" || e.Attr("title") == "200°" || e.Attr("title") == "220°" || e.Attr("title") == "360°" || e.Attr("title") == "Fisheye" {
 				videotype = e.Attr("title")
 				if !skiptags[e.Attr("title")] {
 					sc.Tags = append(sc.Tags, e.Attr("title"))
