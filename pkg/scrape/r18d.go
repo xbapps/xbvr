@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
-	"github.com/go-resty/resty/v2"
 )
 
 func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
