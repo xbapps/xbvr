@@ -814,6 +814,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "favourite = 1"
 		case "Is Passthrough":
 			where = "chroma_key <> ''"
+		case "In Wishlist":
+			where = "wishlist = 1"
 		case "Stashdb Linked":
 			where = "exists (select 1 from external_reference_links erl where erl.internal_db_id = scenes.id and erl.external_source = 'stashdb scene')"
 		case "POVR Scraper":
