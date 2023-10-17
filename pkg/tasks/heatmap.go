@@ -81,6 +81,7 @@ func GenerateHeatmaps(tlog *logrus.Entry) {
 				)
 				if err == nil {
 					file.HasHeatmap = true
+					file.RefreshHeatmapCache = true
 					file.Save()
 				} else {
 					log.Warn(err)

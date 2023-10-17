@@ -38,9 +38,10 @@ type File struct {
 	VideoDuration        float64 `json:"duration" xbvrbackup:"duration"`
 	VideoProjection      string  `json:"projection" xbvrbackup:"projection"`
 
-	HasHeatmap       bool `json:"has_heatmap" xbvrbackup:"-"`
-	IsSelectedScript bool `json:"is_selected_script" xbvrbackup:"is_selected_script"`
-	IsExported       bool `json:"is_exported" xbvrbackup:"-"`
+	HasHeatmap          bool `json:"has_heatmap" xbvrbackup:"-"`
+	IsSelectedScript    bool `json:"is_selected_script" xbvrbackup:"is_selected_script"`
+	IsExported          bool `json:"is_exported" xbvrbackup:"-"`
+	RefreshHeatmapCache bool `json:"refresh_heatmap_cache" xbvrbackup:"-"`
 }
 
 func (f *File) GetPath() string {
