@@ -88,6 +88,11 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 
 		// Filenames (only a guess for now, according to the sample files)
 		suffixes := []string{"4k", "5k", "5k10", "6k", "7k", "960p", "1440p", "psvr_1440p"}
+		base := e.Request.URL.Path
+		base = strings.TrimPrefix(base, "/video/")
+		for _, suffix := range suffixes {
+			sc.Filenames = append(sc.Filenames, "drvr-"+base+"-"+suffix+"_180_LR.mp4")
+		}
 		release := strings.TrimSuffix(e.ChildAttr(`meta[property="og:video"]`, "content"), "-ws_4k.mp4")
 		relname := release[strings.LastIndex(release, "/")+1:]
 		for _, suffix := range suffixes {
