@@ -756,6 +756,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "exists (select 1 from scene_cuepoints where scene_cuepoints.scene_id = scenes.id and track is not null)"
 		case "In Trailer List":
 			where = "trailerlist = 1"
+		case "Has Preview":
+			where = "has_video_preview = 1"
 		case "Has Subscription":
 			where = "is_subscribed = 1"
 		case "Rating":

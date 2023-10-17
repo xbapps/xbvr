@@ -80,6 +80,12 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
 		})
 
+		// Scene ID
+		e.ForEach(`a[href*="signup.php?vid"]`, func(id int, e *colly.HTMLElement) {
+			url := e.Attr("href")
+			sc.SiteID = url[strings.LastIndex(url, "=")+1:]
+		})
+
 		// Filenames (only a guess for now, according to the sample files)
 		suffixes := []string{"4k", "5k", "5k10", "6k", "7k", "960p", "1440p", "psvr_1440p"}
 		base := e.Request.URL.Path
@@ -87,12 +93,11 @@ func DarkRoomVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		for _, suffix := range suffixes {
 			sc.Filenames = append(sc.Filenames, "drvr-"+base+"-"+suffix+"_180_LR.mp4")
 		}
-
-		// Scene ID
-		e.ForEach(`a[href*="signup.php?vid"]`, func(id int, e *colly.HTMLElement) {
-			url := e.Attr("href")
-			sc.SiteID = url[strings.LastIndex(url, "=")+1:]
-		})
+		release := strings.TrimSuffix(e.ChildAttr(`meta[property="og:video"]`, "content"), "-ws_4k.mp4")
+		relname := release[strings.LastIndex(release, "/")+1:]
+		for _, suffix := range suffixes {
+			sc.Filenames = append(sc.Filenames, relname+"-"+suffix+".mp4")
+		}
 
 		// trailer details
 		sc.TrailerType = "load_json"
