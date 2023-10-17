@@ -48,7 +48,7 @@
               </vue-load-image>
             </div>
             <div class="media-content">
-              {{ props.option.site}} 
+              {{ props.option.site}}
               <b-icon v-if="props.option.is_hidden" pack="mdi" icon="eye-off-outline" size="is-small"/><br/>
               <div class="truncate"><strong>{{ props.option.title }}</strong></div>
               <div style="margin-top:0.5em">
@@ -58,6 +58,7 @@
                   </span>
                 </small>
               </div>
+              <star-rating v-if="props.option.star_rating != 0" :read-only="true" :rating="props.option.star_rating" :increment="0.5" :show-rating="false" :star-size="10"/>
             </div>
             <div class="media-right">
               {{format(parseISO(props.option.release_date), "yyyy-MM-dd")}}
@@ -74,6 +75,7 @@ import ky from 'ky'
 import VueLoadImage from 'vue-load-image'
 import GlobalEvents from 'vue-global-events'
 import { format, parseISO } from 'date-fns'
+import StarRating from 'vue-star-rating'
 
 export default {
   name: 'ModalNewTag',
@@ -81,7 +83,7 @@ export default {
     active: Boolean,
     sceneId: String
   },
-  components: { VueLoadImage, GlobalEvents },
+  components: { VueLoadImage, GlobalEvents, StarRating },
   computed: {
     isActive: {
       get () {
