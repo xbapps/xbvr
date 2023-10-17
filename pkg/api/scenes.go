@@ -550,7 +550,7 @@ func (i SceneResource) getSearchFields(req *restful.Request, resp *restful.Respo
 		doc.VisitFields(func(field index.Field) {
 			switch ft := field.(type) {
 			case *document.DateTimeField:
-				dt, _ := ft.DateTime()
+				dt, _, _ := ft.DateTime()
 				fieldValue = dt.Format("2006-01-02 15:04:05")
 			case *document.TextField:
 				fieldValue = ft.Text()
