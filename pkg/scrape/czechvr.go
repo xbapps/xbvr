@@ -153,16 +153,16 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		siteCollector.Visit(pageURL)
 	})
 
-	if config.Config.Funscripts.ScrapeFunscripts {
-		siteCollector.OnHTML(`div.postTag`, func(e *colly.HTMLElement) {
-			sceneURL := ""
-			e.ForEach(`div.foto a`, func(id int, e *colly.HTMLElement) {
-				sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
-				// If scene exist in database, there's no need to scrape
-				if !funk.ContainsString(knownScenes, sceneURL) {
-					sceneCollector.Visit(sceneURL)
-				}
-			})
+	siteCollector.OnHTML(`div.postTag`, func(e *colly.HTMLElement) {
+		sceneURL := ""
+		e.ForEach(`div.foto a`, func(id int, e *colly.HTMLElement) {
+			sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
+			// If scene exist in database, there's no need to scrape
+			if !funk.ContainsString(knownScenes, sceneURL) {
+				sceneCollector.Visit(sceneURL)
+			}
+		})
+		if config.Config.Funscripts.ScrapeFunscripts {
 			e.ForEach(`div.interactive`, func(id int, e *colly.HTMLElement) {
 				var existingScene models.Scene
 				existingScene.GetIfExistURL(sceneURL)
@@ -176,8 +176,8 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 					out <- sc
 				}
 			})
-		})
-	}
+		}
+	})
 
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
