@@ -7,16 +7,16 @@ import (
 
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
-	"gopkg.in/resty.v1"
+	"github.com/go-resty/resty/v2"
 )
 
-func ScrapeR18D(knownScenes []string, out *[]models.ScrapedScene, queryString string) error {
+func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 	scenes := strings.Split(queryString, ",")
 	for _, v := range scenes {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 
-		r, _ := resty.R().Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + v + "/json")
+		r, _ := resty.New().R().Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + v + "/json")
 		JsonMetadata := r.String()
 
 		content_id := gjson.Get(JsonMetadata, "content_id").String()
@@ -25,8 +25,7 @@ func ScrapeR18D(knownScenes []string, out *[]models.ScrapedScene, queryString st
 		// Title
 		if gjson.Get(JsonMetadata, "title_en_is_machine_translation").String() == "false" {
 			sc.Title = strings.Replace(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "title_en").String())), "[VR] ", "", -1)
-		}
-		else {
+		} else {
 			sc.Title = gjson.Get(JsonMetadata, "content_id").String()
 		}
 
@@ -92,11 +91,12 @@ func ScrapeR18D(knownScenes []string, out *[]models.ScrapedScene, queryString st
 		} else {
 			sc.SceneID = dvdID
 			sc.SiteID = dvdID
-			sc.Site = strings.Split("dvd_id", "-")[0]
+			sc.Site = strings.Split(dvdID, "-")[0]
 		}
 
 		if sc.SceneID != "" {
 			*out = append(*out, sc)
 		}
 	}
+	return nil
 }
