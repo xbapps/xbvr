@@ -106,9 +106,9 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 		// Filler Filenames
 		resolutions := []string{"vmb"}
 		if quality == "HQ" {
-			resolutions = []string{"vrv1uhqe","vrv1uhqf"}
+			resolutions = []string{"vrv1uhqe", "vrv1uhqf"}
 		} else if quality == "8K" {
-			resolutions = []string{"vrv1uhqf","vrv18khia"}
+			resolutions = []string{"vrv1uhqf", "vrv18khia"}
 		}
 		for r := range resolutions {
 			parts := []string{"", "1", "2", "3"}
