@@ -251,13 +251,21 @@ export default {
   watch: {
     // when a file is selected, then this will fire the upload process
     file: function (o, n) {
-      if (this.file != null) {
-        const reader = new FileReader()
-        reader.onload = (event) => {
-          this.uploadData = JSON.stringify(JSON.parse(event.target.result))
-          this.restoreContent()
+      try {
+        if (this.file != null) {
+          const reader = new FileReader()
+          reader.onload = (event) => {
+            try {
+              this.uploadData = JSON.stringify(JSON.parse(event.target.result))
+              this.restoreContent()
+          } catch (error) {
+            this.$buefy.toast.open({message: `Error:  ${error.message}`, type: 'is-danger', duration: 30000})    
+          }
+          }
+          reader.readAsText(this.file)
         }
-        reader.readAsText(this.file)
+      } catch (error) {        
+        this.$buefy.toast.open({message: `Error:  ${error.message}`, type: 'is-danger', duration: 30000})    
       }
     },
     testfile: function (o, n) {
