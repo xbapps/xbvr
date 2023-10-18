@@ -1765,6 +1765,44 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0070-update_possible_aka_saved_search",
+			Migrate: func(tx *gorm.DB) error {
+				// update existing Possible Aka Actor Playlist
+				var playlist models.Playlist
+				tx.Model(&models.Playlist{}).Where("playlist_type = ? and name = ?", "actor", "Possible Aka").First(&playlist)
+				if playlist.ID != 0 {
+					list := models.RequestActorList{
+						DlState:        optional.NewString("Any"),
+						Lists:          []optional.String{},
+						Cast:           []optional.String{},
+						Sites:          []optional.String{},
+						Tags:           []optional.String{},
+						Attributes:     []optional.String{},
+						JumpTo:         optional.NewString(""),
+						MinAge:         optional.NewInt(0),
+						MaxAge:         optional.NewInt(100),
+						MinHeight:      optional.NewInt(120),
+						MaxHeight:      optional.NewInt(220),
+						MinCount:       optional.NewInt(0),
+						MaxCount:       optional.NewInt(150),
+						MinAvail:       optional.NewInt(0),
+						MaxAvail:       optional.NewInt(150),
+						MinRating:      optional.NewFloat64(0),
+						MaxRating:      optional.NewFloat64(5),
+						MinSceneRating: optional.NewFloat64(0),
+						MaxSceneRating: optional.NewFloat64(5),
+						Sort:           optional.NewString("birthday_desc"),
+					}
+					list.Attributes = append(list.Attributes, optional.NewString("&Possible Aka"), optional.NewString("!In An Aka Group"), optional.NewString("!Aka Group"))
+					b, _ := json.Marshal(list)
+
+					playlist.SearchParams = string(b)
+					playlist.Save()
+				}
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

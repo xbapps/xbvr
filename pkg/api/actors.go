@@ -127,6 +127,7 @@ func (i ActorResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Has Piercing")
 	outAttributes = append(outAttributes, "Aka Group")
 	outAttributes = append(outAttributes, "Possible Aka")
+	outAttributes = append(outAttributes, "In An Aka Group")
 	outAttributes = append(outAttributes, "Multiple Stashdb Links")
 	outAttributes = append(outAttributes, "Has Image")
 
