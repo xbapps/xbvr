@@ -134,8 +134,8 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.TrailerType = "slr"
 		sc.TrailerSrc = "https://api.sexlikereal.com/virtualreality/video/id/" + sc.SiteID
 		s, _ := resty.New().R().
-		SetHeader("User-Agent", UserAgent).
-		Get(sc.TrailerSrc)
+			SetHeader("User-Agent", UserAgent).
+			Get(sc.TrailerSrc)
 		JsonMetadataA := s.String()
 
 		isTransScene := e.Request.Ctx.GetAny("isTransScene").(bool)
@@ -234,7 +234,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		}
 
 		// Filenames
-		appendFilenames(&sc, siteID, filenameRegEx, videotype, FB360, alphA)
+		appendFilenames(&sc, siteID, filenameRegEx, videotype, FB360, alphA, JsonMetadataA)
 
 		// actor details
 		sc.ActorDetails = make(map[string]models.ActorDetails)
@@ -355,23 +355,23 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	return nil
 }
 
-func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *regexp.Regexp, videotype string, FB360 string, AlphA string) {
+func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *regexp.Regexp, videotype string, FB360 string, AlphA string, JsonMetadataA string) {
 	// Only shown for logged in users so need to generate them
 	// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
-	viewAngle = gjson.Get(JsonMetadataA, "viewAngle")
-	projSuffix = "_LR_180.mp4"
-	if viewAngle = 190 || viewAngle = 200 || viewAngle = 220 {
-		screentype = strings.ToUpper(gjson.Get(JsonMetadataA, "screenType").String())
+	viewAngle := gjson.Get(JsonMetadataA, "viewAngle").String()
+	projSuffix := "_LR_180.mp4"
+	if viewAngle == "190" || viewAngle == "200" || viewAngle == "220" {
+		screentype := strings.ToUpper(gjson.Get(JsonMetadataA, "screenType").String())
 		projSuffix = "_" + screentype
 		if AlphA == "true" {
 			projSuffix = "_" + screentype + "_alpha"
 		}
 		if FB360 != "" {
 			FB360 = projSuffix + "_FB360.mkv"
-			}
+		}
 		projSuffix = projSuffix + ".mp4"
-	} else if viewAngle = 360 {
-		monotb = gjson.Get(JsonMetadataA, "stereomode").String()
+	} else if viewAngle == "360" {
+		monotb := gjson.Get(JsonMetadataA, "stereomode").String()
 		if monotb == "mono" {
 			projSuffix = "_MONO_360.mp4"
 		} else {
@@ -379,14 +379,13 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 		}
 	}
 	resolutions := []string{"_original_"}
-	encodings := gjson.Get(JsonMetadataA, "encodings.h265.videoSources.#.resolution").String()
+	encodings := gjson.Get(JsonMetadataA, "encodings.#(name=h265).videoSources.#.resolution")
 	for _, name := range encodings.Array() {
-			resolutions = append(resolutions, "_" + name + "p_")
-		}
-	//resolutions := []string{"_6400p_", "_4096p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_3000p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
+		resolutions = append(resolutions, "_"+name.String()+"p_")
+	}
 	baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
 	switch videotype {
-	case "360°": // Sadly can't determine if TB or MONO so have to add both - No we don't, we absolutely can determine this...
+	case "360°":
 		for i := range resolutions {
 			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+projSuffix)
 		}
