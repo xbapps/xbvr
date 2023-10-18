@@ -75,6 +75,11 @@
                 show subtitles File button
               </b-switch>
             </b-field>
+            <b-field>
+              <b-switch v-model="ScriptHeatmap" type="is-dark">
+                show Script Heatmap
+              </b-switch>
+            </b-field>
 
             <b-field label="Automatically Check for Updates">
               <b-switch v-model="updateCheck">
@@ -166,6 +171,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.sceneEdit = value
+      }
+    },
+    ScriptHeatmap: {
+      get () {
+        return this.$store.state.optionsWeb.web.showScriptHeatmap
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.showScriptHeatmap = value
       }
     },
     updateCheck: {

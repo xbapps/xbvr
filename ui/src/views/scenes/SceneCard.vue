@@ -40,6 +40,13 @@
               <b-icon pack="mdi" icon="clock" size="is-small"/>
               {{item.duration}}m
             </b-tag>
+            <div v-if="this.$store.state.optionsWeb.web.showScriptHeatmap">
+              <div v-if="f = getFunscript()">
+                <div v-if="f.has_heatmap" class="heatmapFunscript">
+                  <img :src="getHeatmapURL(f.id)"/>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -153,6 +160,15 @@ export default {
         this.$store.commit('overlay/showDetails', { scene: scene })
       }
       this.$store.commit('overlay/hideActorDetails')
+    },
+    getHeatmapURL (fileId) {
+      return `/api/dms/heatmap/${fileId}`
+    },
+    getFunscript () {
+      if (this.item.file !== null && this.item.file.slice().some(a => a.type === 'script')) {
+        return this.item.file.slice().find(a => a.type === 'script')
+      }
+      return
     }
   }
 }
@@ -223,4 +239,23 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+.heatmapFunscript {
+  width: auto;
+  padding: 0;
+  margin-top: 0.25em;
+  margin-left: 0.2em;
+  margin-right: 0.2em;
+}
+
+.heatmapFunscript img {
+  border: 1px #888 solid;
+  width: 100%;
+  height: 15px;
+  margin: 0;
+  padding: 0;
+  border-bottom-left-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
 </style>
