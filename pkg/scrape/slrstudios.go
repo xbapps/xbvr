@@ -133,6 +133,10 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		sc.TrailerType = "slr"
 		sc.TrailerSrc = "https://api.sexlikereal.com/virtualreality/video/id/" + sc.SiteID
+		s, _ := resty.New().R().
+		SetHeader("User-Agent", UserAgent).
+		Get(sc.TrailerSrc)
+		JsonMetadataA := s.String()
 
 		isTransScene := e.Request.Ctx.GetAny("isTransScene").(bool)
 
@@ -223,10 +227,6 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		// Passthrough "chromaKey":{"enabled":false,"hasAlpha":true,"h":0,"opacity":1,"s":0,"threshold":0,"v":0}
 		if alphA == "PT" {
-			s, _ := resty.New().R().
-				SetHeader("User-Agent", UserAgent).
-				Get(sc.TrailerSrc)
-			JsonMetadataA := s.String()
 			if gjson.Get(JsonMetadataA, "chromaKey").Exists() {
 				sc.ChromaKey = gjson.Get(JsonMetadataA, "chromaKey").String()
 			}
@@ -358,44 +358,49 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *regexp.Regexp, videotype string, FB360 string, AlphA string) {
 	// Only shown for logged in users so need to generate them
 	// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
-	resolutions := []string{"_6400p_", "_4096p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_3000p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
+	viewAngle = gjson.Get(JsonMetadataA, "viewAngle")
+	projSuffix = "_LR_180.mp4"
+	if viewAngle = 190 || viewAngle = 200 || viewAngle = 220 {
+		screentype = strings.ToUpper(gjson.Get(JsonMetadataA, "screenType").String())
+		projSuffix = "_" + screentype
+		if AlphA == "true" {
+			projSuffix = "_" + screentype + "_alpha"
+		}
+		if FB360 != "" {
+			FB360 = projSuffix + "_FB360.mkv"
+			}
+		projSuffix = projSuffix + ".mp4"
+	} else if viewAngle = 360 {
+		monotb = gjson.Get(JsonMetadataA, "stereomode").String()
+		if monotb == "mono" {
+			projSuffix = "_MONO_360.mp4"
+		} else {
+			projSuffix = "_TB_360.mp4"
+		}
+	}
+	resolutions := []string{"_original_"}
+	encodings := gjson.Get(JsonMetadataA, "encodings.h265.videoSources.#.resolution").String()
+	for _, name := range encodings.Array() {
+			resolutions = append(resolutions, "_" + name + "p_")
+		}
+	//resolutions := []string{"_6400p_", "_4096p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_3000p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
 	baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
 	switch videotype {
-	case "360°": // Sadly can't determine if TB or MONO so have to add both
+	case "360°": // Sadly can't determine if TB or MONO so have to add both - No we don't, we absolutely can determine this...
 		for i := range resolutions {
-			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MONO_360.mp4")
-			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_TB_360.mp4")
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+projSuffix)
 		}
 	case "Fisheye": // 200° videos named with MKX200
 		for i := range resolutions {
-			if AlphA == "true" {
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200_alpha.mp4")
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220_alpha.mp4")
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_RF52_alpha.mp4")
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_FISHEYE190_alpha.mp4")
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220_alpha.mp4")
-			} else {
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX200.mp4")
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_MKX220.mp4")
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_RF52.mp4")
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_FISHEYE190.mp4")
-				sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_VRCA220.mp4")
-			}
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+projSuffix)
 		}
 	default: // Assuming everything else is 180 and LR, yet to find a TB_180
 		for i := range resolutions {
-			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+"_LR_180.mp4")
+			sc.Filenames = append(sc.Filenames, baseName+resolutions[i]+sc.SiteID+projSuffix)
 		}
 	}
 	if FB360 != "" {
-		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_LR_180"+FB360)
-		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX200"+FB360)
-		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MKX220"+FB360)
-		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_RF52"+FB360)
-		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"FISHEYE190"+FB360)
-		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_VRCA220"+FB360)
-		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_MONO_360"+FB360)
-		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+"_TB_360"+FB360)
+		sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+FB360)
 	}
 }
 
