@@ -71,7 +71,15 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 		joshikosei := "Academy Uniform"
 
 		taglist := gjson.Get(JsonMetadata, "categories.#.name_en")
+		quality := "VR"
+		has8KVR := false
 		for _, name := range taglist.Array() {
+			if name.Str == "8KVR" {
+				has8KVR = true
+				quality = "8K"
+			} else if name.Str == "High-Quality VR" && !has8KVR {
+				quality = "HQ"
+			}
 			if !skiptags[name.Str] {
 				if name.Str == joshikosei {
 					sc.Tags = append(sc.Tags, "schoolgirl")
@@ -93,6 +101,21 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 			sc.SceneID = dvdID
 			sc.SiteID = dvdID
 			sc.Site = strings.Split(dvdID, "-")[0]
+		}
+
+		// Filler Filenames
+		resolutions := []string{"vmb"}
+		if quality == "HQ" {
+			resolutions = []string{"vrv1uhqe","vrv1uhqf"}
+		} else if quality == "8K" {
+			resolutions = []string{"vrv1uhqf","vrv18khia"}
+		}
+		for r := range resolutions {
+			parts := []string{"", "1", "2", "3"}
+			for p := range parts {
+				fn := content_id + resolutions[r] + parts[p] + ".mp4"
+				sc.Filenames = append(sc.Filenames, fn)
+			}
 		}
 
 		if sc.SceneID != "" {
