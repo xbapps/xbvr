@@ -3,6 +3,7 @@ package scrape
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -37,7 +38,21 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		sc.Site = siteID
 		sc.HomepageURL = e.Request.URL.String()
 
-		sc.SiteID = sc.HomepageURL[strings.LastIndex(sc.HomepageURL, "/")+1:]
+		ogimage := e.ChildAttr(`meta[property="og:image"]`, "content")
+		if ogimage != "" {
+			ogimageURL, err := url.Parse(ogimage)
+			if err == nil {
+				parts := strings.Split(ogimageURL.Path, "/")
+				if len(parts) > 2 {
+					sc.SiteID = parts[2]
+				}
+			}
+		}
+
+		if sc.SiteID == "" {
+			return
+		}
+
 		sc.SceneID = scraperID + "-" + sc.SiteID
 
 		sc.Title = e.ChildText(`.video-content .header-container .section-header-container`)
@@ -91,6 +106,7 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 
 		cdnSceneURL := e.Request.URL
 		cdnSceneURL.Host = "cdn." + domain
+		cdnSceneURL.Path = "/videos/" + sc.SiteID
 
 		sc.Covers = []string{
 			cdnSceneURL.JoinPath("images", "cover.jpg").String(),

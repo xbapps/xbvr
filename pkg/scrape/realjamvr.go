@@ -18,20 +18,18 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func RealJamSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, domain string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
-	scraperID := "realjamvr"
-	siteID := "RealJam VR"
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("realjamvr.com")
-	siteCollector := createCollector("realjamvr.com")
+	sceneCollector := createCollector(domain)
+	siteCollector := createCollector(domain)
 
-	c := siteCollector.Cookies("realjamvr.com")
-	cookie := http.Cookie{Name: "age_confirmed", Value: "Tru", Domain: "realjamvr.com", Path: "/", Expires: time.Now().Add(time.Hour)}
+	c := siteCollector.Cookies(domain)
+	cookie := http.Cookie{Name: "age_confirmed", Value: "Tru", Domain: domain, Path: "/", Expires: time.Now().Add(time.Hour)}
 	c = append(c, &cookie)
-	siteCollector.SetCookies("https://realjamvr.com", c)
-	sceneCollector.SetCookies("https://realjamvr.com", c)
+	siteCollector.SetCookies("https://"+domain, c)
+	sceneCollector.SetCookies("https://"+domain, c)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -194,7 +192,7 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 			sceneURL = sceneURL[0 : len(sceneURL)-1]
 		}
 		// If scene exist in database, there's no need to scrape
-		if !funk.ContainsString(knownScenes, sceneURL) && strings.Contains(sceneURL, "realjamvr.com/scene/") {
+		if !funk.ContainsString(knownScenes, sceneURL) && strings.Contains(sceneURL, domain+"/scene/") {
 			sceneCollector.Visit(sceneURL)
 		}
 	})
@@ -202,7 +200,7 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit("https://realjamvr.com/scenes")
+		siteCollector.Visit("https://" + domain + "/scenes")
 	}
 
 	if updateSite {
@@ -212,6 +210,14 @@ func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	return nil
 }
 
+func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return RealJamSite(wg, updateSite, knownScenes, out, singleSceneURL, "realjamvr", "RealJam VR", "realjamvr.com", singeScrapeAdditionalInfo)
+}
+func PornCornVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+	return RealJamSite(wg, updateSite, knownScenes, out, singleSceneURL, "porncornvr", "PornCorn VR", "porncornvr.com", singeScrapeAdditionalInfo)
+}
+
 func init() {
 	registerScraper("realjamvr", "RealJam VR", "https://styles.redditmedia.com/t5_3iym1/styles/communityIcon_kqzp15xw0r361.png", "realjamvr.com", RealJamVR)
+	registerScraper("porncornvr", "PornCorn VR", "https://pbs.twimg.com/profile_images/1700944751837458433/IWZqucQ__400x400.jpg", "porncornvr.com", PornCornVR)
 }

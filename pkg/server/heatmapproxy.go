@@ -60,28 +60,28 @@ func NewHeatmapThumbnailProxy(imageproxy *imageproxy.Proxy, cache imageproxy.Cac
 	return proxy
 }
 
-func getScriptFileIds(urlpart string) ([]uint, error) {
+func getScriptFiles(urlpart string) ([]models.File, error) {
 	sceneId, err := strconv.Atoi(urlpart)
-	ids := make([]uint, 0)
+	files := make([]models.File, 0)
 	if err != nil {
-		return ids, err
+		return files, err
 	}
 
 	var scene models.Scene
 	err = scene.GetIfExistByPK(uint(sceneId))
 	if err != nil {
-		return ids, err
+		return files, err
 	}
 
 	scriptfiles, err := scene.GetScriptFilesSorted(config.Config.Interfaces.Players.ScriptSortSeq)
 	if err != nil || len(scriptfiles) < 1 {
-		return ids, fmt.Errorf("scene %d has no script files", sceneId)
+		return files, fmt.Errorf("scene %d has no script files", sceneId)
 	}
 
 	for i := range scriptfiles {
-		ids = append(ids, scriptfiles[i].ID)
+		files = append(files, scriptfiles[i])
 	}
-	return ids, nil
+	return files, nil
 }
 
 func getHeatmapImageForScene(fileId uint) (image.Image, error) {
@@ -149,27 +149,39 @@ func (p *HeatmapThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 
 	imageURL := parts[2]
-	fileIds, err := getScriptFileIds(parts[1])
+	files, err := getScriptFiles(parts[1])
 	if err != nil {
 		p.serveImageproxyResponse(w, r, imageURL)
 		return
 	}
 
-	cacheKey := fmt.Sprintf("%d:%s", fileIds[0], imageURL)
-	cachedContent, ok := p.Cache.Get(cacheKey)
-	if ok {
-		w.Header().Add("Content-Type", "image/jpeg")
-		w.Header().Add("Content-Length", fmt.Sprint(len(cachedContent)))
-		if _, err := io.Copy(w, bytes.NewReader(cachedContent)); err != nil {
-			log.Printf("Failed to send out response: %v", err)
+	loadFromCache := true
+
+	for i := range files {
+		if files[i].RefreshHeatmapCache {
+			loadFromCache = false
+			break
 		}
-		return
+	}
+
+	cacheKey := fmt.Sprintf("%d:%s", files[0].ID, imageURL)
+
+	if loadFromCache {
+		cachedContent, ok := p.Cache.Get(cacheKey)
+		if ok {
+			w.Header().Add("Content-Type", "image/jpeg")
+			w.Header().Add("Content-Length", fmt.Sprint(len(cachedContent)))
+			if _, err := io.Copy(w, bytes.NewReader(cachedContent)); err != nil {
+				log.Printf("Failed to send out response: %v", err)
+			}
+			return
+		}
 	}
 
 	heatmapImages := make([]image.Image, 0)
 
-	for i := range fileIds {
-		heatmapImage, err := getHeatmapImageForScene(fileIds[i])
+	for i := range files {
+		heatmapImage, err := getHeatmapImageForScene(files[i].ID)
 		if err == nil {
 			heatmapImages = append(heatmapImages, heatmapImage)
 			if len(heatmapImages) == maximumHeatmaps {
@@ -181,6 +193,12 @@ func (p *HeatmapThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request
 	if len(heatmapImages) == 0 {
 		p.serveImageproxyResponse(w, r, imageURL)
 		return
+	}
+
+	for i := range files {
+		file := files[i]
+		file.RefreshHeatmapCache = false
+		file.Save()
 	}
 
 	heatmapsHeight := len(heatmapImages) * (heatmapHeight + heatmapMargin)

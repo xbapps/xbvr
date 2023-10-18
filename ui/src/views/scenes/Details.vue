@@ -549,6 +549,7 @@ export default {
         volumeStep: 0.1,
         seekStep: 5,
         enableModifiersForNumbers: false,
+        enableVolumeScroll: false,
         customKeys: {
           closeModal: {
             key: function (event) {
@@ -558,9 +559,45 @@ export default {
               this.player.dispose()
               this.$store.commit('overlay/hideDetails')
             }
+          },
+          zoomIn: {
+            handler: (player, options, event) => {
+              this.zoomHandler(true)
+            }
+          },
+          zoomOut: {
+            handler: (player, options, event) => {
+              this.zoomHandler(false)
+            }
           }
         }
       })
+
+      const videoElement = this.player.el();
+      videoElement.addEventListener('wheel', this.zoomHandlerWeb.bind(this))
+    },
+
+    zoomHandlerWeb(event) {
+      event.preventDefault();
+      this.zoomHandler(event.deltaY < 0)
+    },
+
+    zoomHandler(isZoomingIn) {
+      const vr = this.player.vr()
+      const minFov = 30
+      const maxFov = 130
+      let fov = vr.camera.fov + (isZoomingIn ? -1 : 1)
+
+      if (fov < minFov) {
+        fov = minFov
+      }
+
+      if (fov > maxFov) {
+        fov = maxFov
+      }
+
+      vr.camera.fov = fov;
+      vr.camera.updateProjectionMatrix()
     },
     updatePlayer (src, projection) {
       this.player.reset()

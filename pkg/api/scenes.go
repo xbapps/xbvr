@@ -320,6 +320,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Is Scripted")
 	outAttributes = append(outAttributes, "Is Passthrough")
 	outAttributes = append(outAttributes, "In Watchlist")
+	outAttributes = append(outAttributes, "In Wishlist")
 	outAttributes = append(outAttributes, "Has Rating")
 	outAttributes = append(outAttributes, "Has Cuepoints")
 	outAttributes = append(outAttributes, "Has Simple Cuepoints")
@@ -550,7 +551,7 @@ func (i SceneResource) getSearchFields(req *restful.Request, resp *restful.Respo
 		doc.VisitFields(func(field index.Field) {
 			switch ft := field.(type) {
 			case *document.DateTimeField:
-				dt, _ := ft.DateTime()
+				dt, _, _ := ft.DateTime()
 				fieldValue = dt.Format("2006-01-02 15:04:05")
 			case *document.TextField:
 				fieldValue = ft.Text()

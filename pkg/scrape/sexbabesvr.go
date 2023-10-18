@@ -52,8 +52,8 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Gallery
-		e.ForEach(`.gallery-slider img`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("src")))
+		e.ForEach(`.gallery-slider a[data-fancybox=gallery]`, func(id int, e *colly.HTMLElement) {
+			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
 		})
 
 		// Synopsis

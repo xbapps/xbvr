@@ -15,7 +15,7 @@
     "@fortawesome/fontawesome-free": "5.15.4",
     "@fortawesome/fontawesome-svg-core": "1.2.36",
     "@mdi/font": "7.2.96",
-    "buefy": "0.9.23",
+    "buefy": "0.9.25",
     "bulma-extensions": "6.2.7",
     "date-fns": "2.30.0",
     "ky": "0.30.0",
@@ -35,8 +35,8 @@
     "wampy": "6.4.2"
   },
   "devDependencies": {
-    "@babel/core": "7.22.11",
-    "@babel/eslint-parser": "7.22.11",
+    "@babel/core": "7.23.2",
+    "@babel/eslint-parser": "7.22.15",
     "@vue/cli-plugin-babel": "5.0.8",
     "@vue/cli-plugin-eslint": "5.0.8",
     "@vue/cli-service": "5.0.8",

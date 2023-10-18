@@ -809,13 +809,15 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 		case "Codec":
 			where = "exists (select 1 from files where files.scene_id = scenes.id and files.`type` = 'video' and files.video_codec_name = '" + value + "')"
 		case "In Watchlist":
-			where = "watchlist = 1"
+			where = "scenes.watchlist = 1"
 		case "Is Scripted":
 			where = "is_scripted = 1"
 		case "Is Favourite":
-			where = "favourite = 1"
+			where = "scenes.favourite = 1"
 		case "Is Passthrough":
 			where = "chroma_key <> ''"
+		case "In Wishlist":
+			where = "wishlist = 1"
 		case "Stashdb Linked":
 			where = "exists (select 1 from external_reference_links erl where erl.internal_db_id = scenes.id and erl.external_source = 'stashdb scene')"
 		case "POVR Scraper":
