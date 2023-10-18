@@ -27,6 +27,7 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 			sc.Title = strings.Replace(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "title_en").String())), "[VR] ", "", -1)
 		} else {
 			sc.Title = gjson.Get(JsonMetadata, "content_id").String()
+			sc.Synopsis = gjson.Get(JsonMetadata, "title_en").String()
 		}
 
 		// Studio
