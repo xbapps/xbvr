@@ -19,7 +19,8 @@ type EnvConfigSpec struct {
 	UIUsername    string `envconfig:"UI_USERNAME" required:"false"`
 	UIPassword    string `envconfig:"UI_PASSWORD" required:"false"`
 	DatabaseURL   string `envconfig:"DATABASE_URL" required:"false" default:""`
-	WsAddr        string `envconfig:"WS_ADDR" required:"false" default:""`
+	WsAddr        string `envconfig:"XBVR_WS_ADDR" required:"false" default:""`
+	WebPort       int    `envconfig:"XBVR_WEB_PORT" required:"false" default:"0"`
 }
 
 var EnvConfig EnvConfigSpec
@@ -30,8 +31,5 @@ func init() {
 	err := envconfig.Process("", &EnvConfig)
 	if err != nil {
 		Log.Fatal(err.Error())
-	}
-	if EnvConfig.WsAddr != "" {
-		WsAddr = EnvConfig.WsAddr
 	}
 }
