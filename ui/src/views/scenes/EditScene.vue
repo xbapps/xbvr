@@ -205,6 +205,7 @@ export default {
       this.scene.images = JSON.stringify(images)
       this.scene.cover_url = this.scene.covers[0]
       this.scene.filenames_arr = JSON.stringify(this.scene.files)
+      this.scene.duration = String(this.scene.duration)  // force to a string, if no change the UI sends an int, otherwise a string, nust be constant
 
       ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } })
 
