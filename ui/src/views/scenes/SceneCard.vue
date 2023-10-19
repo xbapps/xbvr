@@ -41,11 +41,9 @@
               {{item.duration}}m
             </b-tag>
           </div>
-          <div v-if="this.$store.state.optionsWeb.web.showScriptHeatmap" style="padding: 5px, padding-top: 0px">
-            <div v-if="f = getFunscript()" >
-              <div v-if="f.has_heatmap" class="heatmapFunscript">
-                <img :src="getHeatmapURL(f.id)"/>
-              </div>
+          <div v-if="this.$store.state.optionsWeb.web.showScriptHeatmap && (f = getFunscript())" style="padding: 0px 5px 5px">
+            <div v-if="f.has_heatmap" class="heatmapFunscript">
+              <img :src="getHeatmapURL(f.id)"/>
             </div>
           </div>
         </div>
@@ -244,19 +242,13 @@ export default {
 
 .heatmapFunscript {
   width: auto;
-  padding: 0;
-  margin-left: 0.2em;
-  margin-right: 0.2em;
 }
 
 .heatmapFunscript img {
   border: 1px #888 solid;
   width: 100%;
   height: 15px;
-  margin: 0;
-  padding: 0;
-  border-bottom-left-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
+  border-radius: 0.25rem;
 }
 
 </style>
