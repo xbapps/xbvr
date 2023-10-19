@@ -40,11 +40,11 @@
               <b-icon pack="mdi" icon="clock" size="is-small"/>
               {{item.duration}}m
             </b-tag>
-            <div v-if="this.$store.state.optionsWeb.web.showScriptHeatmap">
-              <div v-if="f = getFunscript()">
-                <div v-if="f.has_heatmap" class="heatmapFunscript">
-                  <img :src="getHeatmapURL(f.id)"/>
-                </div>
+          </div>
+          <div v-if="this.$store.state.optionsWeb.web.showScriptHeatmap" style="padding: 5px, padding-top: 0px">
+            <div v-if="f = getFunscript()" >
+              <div v-if="f.has_heatmap" class="heatmapFunscript">
+                <img :src="getHeatmapURL(f.id)"/>
               </div>
             </div>
           </div>
@@ -220,6 +220,8 @@ export default {
   .align-bottom-left {
     align-items: flex-end;
     justify-content: flex-end;
+    flex-wrap: wrap;
+    flex-direction: column
   }
 
   .bbox:after {
@@ -243,7 +245,6 @@ export default {
 .heatmapFunscript {
   width: auto;
   padding: 0;
-  margin-top: 0.25em;
   margin-left: 0.2em;
   margin-right: 0.2em;
 }
