@@ -40,7 +40,7 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
 			sc.SiteID = e.Attr("data-scene")
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
-			sc.Covers = append(sc.Covers, e.Attr("poster"))
+			sc.Covers = append(sc.Covers, strings.Replace(e.Attr("poster"), "/videoDetail2x", "", -1))
 		})
 
 		// Title
