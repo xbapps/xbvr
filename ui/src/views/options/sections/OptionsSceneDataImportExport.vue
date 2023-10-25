@@ -160,8 +160,8 @@
           <b-switch v-model="overwrite"><p>Overwrite existing data</p></b-switch>
         </b-tooltip>
       </b-field>
-      <b-field v-if="isImport">
-        <b-tooltip
+      <b-field>
+        <b-tooltip v-if="isImport"
             label="Select a file to import."
             size="is-large" type="is-primary is-light" multilined :delay="1000">
           <b-field class="file is-primary" :class="{'has-name': !!file}">
@@ -176,14 +176,27 @@
             </b-upload>
           </b-field>
         </b-tooltip>
-      </b-field>
-      <b-field v-if="activeTab == 1">
-          <b-tooltip
+          <b-tooltip  v-if="activeTab == 1"
             label="Generating the data for a large number of scenes is time consuming, montior progress in the status messages in the top right of the browser."
             size="is-large" type="is-primary is-light" multilined :delay="1000">
             <b-button type="is-primary"  @click="backupContent" icon-left="download">Export
             </b-button>
           </b-tooltip>
+        <b-tooltip style="margin-left: 10px"            
+            :label="$t('Occasionaly test uploading your export bundles. Browser memory constraints may cause problems restoring large exports. Use this function to test if your browser can load an export.')"
+            size="is-large" type="is-primary is-light" multilined :delay="1000">
+          <b-field class="file is-primary" :class="{'has-name': !!file}">
+            <b-upload v-model="testfile" class="file-label">
+                <span class="file-cta">
+                    <b-icon class="file-icon" icon="upload" size="is-small"></b-icon>
+                    <span class="file-label">Test</span>
+                </span>
+                <span class="file-name" v-if="progressMsg">
+                    {{ progressMsg }}
+                </span>
+            </b-upload>
+          </b-field>
+        </b-tooltip>
       </b-field>
     </div>
   </div>
@@ -217,6 +230,8 @@ export default {
       currentPlaylist: '0',
       myUrl: '/download/xbvr-content-bundle.json',
       file: null,
+      testfile: null,
+      progressMsg:"",
       uploadData: '',
       activeTab: 0,
       activeSubTab: 0
@@ -236,13 +251,46 @@ export default {
   watch: {
     // when a file is selected, then this will fire the upload process
     file: function (o, n) {
-      if (this.file != null) {
-        const reader = new FileReader()
-        reader.onload = (event) => {
-          this.uploadData = JSON.stringify(JSON.parse(event.target.result))
-          this.restoreContent()
+      try {
+        if (this.file != null) {
+          const reader = new FileReader()
+          reader.onload = (event) => {
+            try {
+              this.uploadData = JSON.stringify(JSON.parse(event.target.result))
+              this.restoreContent()
+          } catch (error) {
+            this.$buefy.toast.open({message: `Error:  ${error.message}`, type: 'is-danger', duration: 30000})    
+          }
+          }
+          reader.readAsText(this.file)
         }
-        reader.readAsText(this.file)
+      } catch (error) {        
+        this.$buefy.toast.open({message: `Error:  ${error.message}`, type: 'is-danger', duration: 30000})    
+      }
+    },
+    testfile: function (o, n) {
+      try {        
+        this.$buefy.toast.open({message: `Loading: ` + this.testfile.name, type: 'is-primary', duration: 30000})
+        if (this.testfile != null) {
+          this.progressMsg = "Uploading " + this.testfile.name
+          const reader = new FileReader()
+          reader.onload = (event) => {
+            try {
+              this.progressMsg = "File uploaded, converting to Json " + this.testfile.name
+              this.uploadData = JSON.stringify(JSON.parse(event.target.result))          
+              this.progressMsg = ""
+              this.$buefy.toast.open({message: `Success Loading: ` + this.testfile.name, type: 'is-success', duration: 5000})
+          } catch (error) {
+            this.progressMsg = "Error: " + error.message            
+            this.$buefy.toast.open({message: `Error:  ${error.message}`, type: 'is-danger', duration: 30000})    
+          }
+
+          }
+          reader.readAsText(this.testfile)
+        }      
+      } catch (error) {        
+        this.progressMsg = "Error: " + error.message
+        this.$buefy.toast.open({message: `Error:  ${error.message}`, type: 'is-danger', duration: 30000})    
       }
     }
   },
