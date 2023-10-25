@@ -42,6 +42,7 @@ type ObjectConfig struct {
 		ShowSubtitlesFile bool   `default:"true" json:"showSubtitlesFile"`
 		SceneTrailerlist  bool   `default:"true" json:"sceneTrailerlist"`
 		UpdateCheck       bool   `default:"true" json:"updateCheck"`
+		IsAvailOpacity    int    `default:"40" json:"isAvailOpacity"`
 	} `json:"web"`
 	Advanced struct {
 		ShowInternalSceneId   bool   `default:"false" json:"showInternalSceneId"`

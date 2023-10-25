@@ -15,7 +15,8 @@ const state = {
     showHspFile: true,
     showSubtitlesFile: true,
     sceneTrailerlist: true,
-    updateCheck: true
+    updateCheck: true,
+    isAvailOpacity: 40,
   }
 }
 
@@ -40,6 +41,7 @@ const actions = {
         state.web.showSubtitlesFile = data.config.web.showSubtitlesFile
         state.web.sceneTrailerlist = data.config.web.sceneTrailerlist
         state.web.updateCheck = data.config.web.updateCheck
+        state.web.isAvailOpacity = data.config.web.isAvailOpacity        
         state.loading = false
       })
   },
@@ -61,6 +63,7 @@ const actions = {
         state.web.showSubtitlesFile = data.showSubtitlesFile
         state.web.sceneTrailerlist = data.sceneTrailerlist
         state.web.updateCheck = data.updateCheck
+        state.web.isAvailOpacity = data.isAvailOpacity        
         state.loading = false
       })
   }
