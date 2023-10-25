@@ -238,10 +238,15 @@ func ReapplyEdits() {
 			continue
 		}
 		// Reapply other edits
-		db.Model(&scene).Update(a.ChangedColumn, a.NewValue)
-		if a.ChangedColumn == "release_date_text" {
+		switch a.ChangedColumn {
+		case "duration":
+			i, _ := strconv.Atoi(a.NewValue)
+			db.Model(&scene).Update(a.ChangedColumn, i)
+		case "release_date_text":
 			dt, _ := time.Parse("2006-01-02", a.NewValue)
 			db.Model(&scene).Update("release_date", dt)
+		default:
+			db.Model(&scene).Update(a.ChangedColumn, a.NewValue)
 		}
 	}
 	db.Model(&models.Scene{}).UpdateColumn("edits_applied", true)

@@ -64,6 +64,7 @@ type RequestEditSceneDetails struct {
 	Images       string   `json:"images"`
 	CoverURL     string   `json:"cover_url"`
 	IsMultipart  bool     `json:"is_multipart"`
+	Duration     string   `json:"duration"`
 }
 
 type ResponseGetScenes struct {
@@ -804,7 +805,10 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 			scene.IsMultipart = r.IsMultipart
 			models.AddAction(scene.SceneID, "edit", "is_multipart", strconv.FormatBool(r.IsMultipart))
 		}
-
+		if strconv.Itoa(scene.Duration) != r.Duration {
+			scene.Duration, _ = strconv.Atoi(r.Duration)
+			models.AddAction(scene.SceneID, "edit", "duration", r.Duration)
+		}
 		ProcessTagChanges(&scene, &r.Tags, db)
 
 		newCast := make([]models.Actor, 0)
