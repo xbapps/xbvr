@@ -3,9 +3,6 @@ package scrape
 import (
 	"encoding/json"
 	"net/url"
-	"regexp"
-	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -83,18 +80,20 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Date
-		sc.Released = e.Request.Ctx.Get("released")
+		releaseDateText := e.ChildText(`.video-detail__description--container > div:last-of-type`)
+		tmpDate, _ := time.Parse("Jan 02, 2006", releaseDateText)
+		sc.Released = tmpDate.Format("2006-01-02")
 
 		// Duration
 
 		// Filenames
-		// old site,  needs update
+		// old site, needs update
 		e.ForEach(`div.modal a.vd-row`, func(id int, e *colly.HTMLElement) {
 			origURL, _ := url.Parse(e.Attr("href"))
 			base := origURL.Query().Get("response-content-disposition")
-			base = strings.Replace(base, "attachment; filename=", "", -1)
-			base = strings.Replace(base, "\"", "", -1)
-			base = strings.Replace(base, "_trailer", "", -1)
+			base = strings.ReplaceAll(base, "attachment; filename=", "")
+			base = strings.ReplaceAll(base, "\"", "")
+			base = strings.ReplaceAll(base, "_trailer", "")
 			if !funk.ContainsString(sc.Filenames, base) {
 				sc.Filenames = append(sc.Filenames, base)
 			}
@@ -108,22 +107,11 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		siteCollector.Visit(pageURL)
 	})
 
-	type video struct {
-		url      string
-		released string
-	}
-	videoList := make(map[int]video)
-
 	siteCollector.OnHTML(`div.videos__content`, func(e *colly.HTMLElement) {
-		e.ForEach(`a.video-container__description--information`, func(cnt int, e *colly.HTMLElement) {
+		e.ForEach(`a.video-container__description--title`, func(cnt int, e *colly.HTMLElement) {
 			sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-			re := regexp.MustCompile(`(?m)(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{2}`)
-			match := re.FindAllString(e.Text, -1)
-
-			if len(match) > 0 {
-				// If scene exist in database, there's no need to scrape
-				page, _ := strconv.Atoi(strings.ReplaceAll(e.Request.URL.String(), "https://sexbabesvr.com/vr-porn-videos/", ""))
-				videoList[page*1000+cnt] = video{url: sceneURL, released: match[0]}
+			if !funk.ContainsString(knownScenes, sceneURL) {
+				sceneCollector.Visit(sceneURL)
 			}
 		})
 	})
@@ -132,36 +120,9 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	lastMonth = int(time.Now().Month())
 
 	if singleSceneURL != "" {
-		ctx := colly.NewContext()
-		ctx.Put("released", "")
-
-		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+		sceneCollector.Visit(singleSceneURL)
 	} else {
 		siteCollector.Visit("https://sexbabesvr.com/vr-porn-videos")
-	}
-
-	// Sort the videoList as page visits may not return in the same speed and be out of order
-	var sortedVideos []int
-	for key := range videoList {
-		sortedVideos = append(sortedVideos, key)
-	}
-	sort.Ints(sortedVideos)
-
-	for _, seq := range sortedVideos {
-		ctx := colly.NewContext()
-		tmpDate, _ := time.Parse("Jan 02", videoList[seq].released)
-		if tmpDate.Month() == 12 && lastMonth == 1 {
-			currentYear -= 1
-		} else if tmpDate.Month() == 1 && lastMonth == 12 {
-			currentYear += 1
-		}
-		tmpDate = tmpDate.AddDate(currentYear-tmpDate.Year(), 0, 0)
-		lastMonth = int(tmpDate.Month())
-		ctx.Put("released", tmpDate.Format("2006-01-02"))
-
-		if !funk.ContainsString(knownScenes, videoList[seq].url) {
-			sceneCollector.Request("GET", videoList[seq].url, nil, ctx, nil)
-		}
 	}
 
 	if updateSite {
