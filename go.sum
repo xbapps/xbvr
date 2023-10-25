@@ -314,6 +314,8 @@ github.com/prometheus/procfs v0.11.1 h1:xRC8Iq1yyca5ypa9n1EZnWZkt7dwcoRPQwX/5gwa
 github.com/prometheus/procfs v0.11.1/go.mod h1:eesXgaPo1q7lBpVMoMy0ZOFTth9hBn4W/y0/p/ScXhY=
 github.com/putdotio/go-putio v1.7.0 h1:iL7G9O30NCiOH4FULbul/tRNWDA9LuvlsfXjBIBmRY4=
 github.com/putdotio/go-putio v1.7.0/go.mod h1:QhjpLhn3La/ea4FeJlp1qsiaFZDC0EIO8VUe8VEKMV0=
+github.com/putdotio/go-putio v1.7.1 h1:316PpOMO2a7H73foRxlpHmekeLso07et26Z00YlwQ2A=
+github.com/putdotio/go-putio v1.7.1/go.mod h1:QhjpLhn3La/ea4FeJlp1qsiaFZDC0EIO8VUe8VEKMV0=
 github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/robertkrimen/otto v0.2.1 h1:FVP0PJ0AHIjC+N4pKCG9yCDz6LHNPCwi/GKID5pGGF0=
 github.com/robertkrimen/otto v0.2.1/go.mod h1:UPwtJ1Xu7JrLcZjNWN8orJaM5n5YEtqL//farB5FlRY=
