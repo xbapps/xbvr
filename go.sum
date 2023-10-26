@@ -16,6 +16,8 @@ github.com/abbot/go-http-auth v0.4.0/go.mod h1:Cz6ARTIzApMJDzh5bRMSUou6UMSp0IEXg
 github.com/anacrolix/envpprof v1.0.0 h1:AwZ+mBP4rQ5f7JSsrsN3h7M2xDW/xSE66IPVOqlnuUc=
 github.com/anacrolix/ffprobe v1.0.1 h1:S/MfCrUNZvbkkykX/1mmLVRf8//M7mvlY3BcwHaK3bQ=
 github.com/anacrolix/ffprobe v1.0.1/go.mod h1:MXe+zG/RRa5OdIf5+VYYfS/CfsSqOH7RrvGIqJBzqhI=
+github.com/anacrolix/ffprobe v1.1.0 h1:eKBudnERW9zRJ0+ge6FzkQ0pWLyq142+FJrwRwSRMT4=
+github.com/anacrolix/ffprobe v1.1.0/go.mod h1:MXe+zG/RRa5OdIf5+VYYfS/CfsSqOH7RrvGIqJBzqhI=
 github.com/anacrolix/missinggo v1.1.0 h1:0lZbaNa6zTR1bELAIzCNmRGAtkHuLDPJqTiTtXoAIx8=
 github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9PqHO0sqidkEA4Y=
 github.com/andybalholm/cascadia v1.2.0/go.mod h1:YCyR8vOZT9aZ1CHEd8ap0gMVm2aFgxBp0T0eFw1RUQY=
