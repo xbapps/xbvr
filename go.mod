@@ -21,7 +21,7 @@ require (
 	github.com/gammazero/nexus/v3 v3.2.1
 	github.com/getlantern/systray v1.2.2
 	github.com/go-openapi/spec v0.20.9
-	github.com/go-resty/resty/v2 v2.7.0
+	github.com/go-resty/resty/v2 v2.10.0
 	github.com/go-test/deep v1.1.0
 	github.com/gocolly/colly/v2 v2.1.0
 	github.com/gorilla/mux v1.8.0
