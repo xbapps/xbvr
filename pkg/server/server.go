@@ -142,6 +142,8 @@ func StartServer(version, commit, branch, date string) {
 	r.PathPrefix("/imghm/").Handler(http.StripPrefix("/imghm", hmp))
 	downloadhandler := DownloadHandler{}
 	r.PathPrefix("/download/").Handler(http.StripPrefix("/download/", downloadhandler))
+	myfileshandler := MyFilesHandler{}
+	r.PathPrefix("/myfiles/").Handler(http.StripPrefix("/myfiles/", myfileshandler))
 	r.SkipClean(true)
 
 	r.PathPrefix("/").Handler(http.DefaultServeMux)

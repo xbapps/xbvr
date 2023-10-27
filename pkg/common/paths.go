@@ -20,6 +20,7 @@ var ScrapeCacheDir string
 var VideoPreviewDir string
 var VideoThumbnailDir string
 var ScriptHeatmapDir string
+var MyFilesDir string
 var DownloadDir string
 
 func DirSize(path string) (int64, error) {
@@ -66,6 +67,7 @@ func InitPaths() {
 	VideoThumbnailDir = filepath.Join(AppDir, "video_thumbnail")
 	ScriptHeatmapDir = filepath.Join(AppDir, "script_heatmap")
 
+	MyFilesDir = filepath.Join(AppDir, "myfiles")
 	DownloadDir = filepath.Join(AppDir, "download")
 
 	// Initialize DATABASE_URL once appdir path is known
@@ -84,5 +86,6 @@ func InitPaths() {
 	_ = os.MkdirAll(IndexDirV2, os.ModePerm)
 	_ = os.MkdirAll(ScrapeCacheDir, os.ModePerm)
 	_ = os.MkdirAll(ScriptHeatmapDir, os.ModePerm)
+	_ = os.MkdirAll(MyFilesDir, os.ModePerm)
 	_ = os.MkdirAll(DownloadDir, os.ModePerm)
 }
