@@ -30,8 +30,7 @@ export default {
       onReconnectSuccess: () => {
         this.wsStatus = 'connected'
       }
-    })
-    console.log("wampy ", ws)
+    })    
 
     ws.subscribe('service.log', (dataArr, dataObj) => {
       if (dataArr.argsDict.level == 'debug') {
