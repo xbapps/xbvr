@@ -1,9 +1,11 @@
 package scrape
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html"
+	"image"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,10 +22,17 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 	logScrapeStart(scraperID, siteID)
 	page := 1
 
+	imageCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	castCollector.AllowURLRevisit = true
+
+	imageCollector.OnResponse(func(r *colly.Response) {
+		if _, _, err := image.Decode(bytes.NewReader(r.Body)); err == nil {
+			r.Ctx.Put("valid", "1")
+		}
+	})
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -54,14 +63,30 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 
 		// Cover URLs
 		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				sc.Covers = append(sc.Covers, strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0])
+			if len(sc.Covers) == 0 {
+				u := strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0]
+				ctx := colly.NewContext()
+				if err := imageCollector.Request("GET", u, nil, ctx, nil); err == nil {
+					if ctx.Get("valid") != "" {
+						sc.Covers = append(sc.Covers, u)
+					}
+				}
 			}
 		})
 
 		// Gallery
 		e.ForEach(`figure[itemprop="associatedMedia"] a`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(strings.Split(e.Attr("href"), "?")[0]))
+			if len(sc.Covers) == 0 {
+				u := e.Request.AbsoluteURL(strings.Split(e.Attr("href"), "?")[0])
+				ctx := colly.NewContext()
+				if err := imageCollector.Request("GET", u, nil, ctx, nil); err == nil {
+					if ctx.Get("valid") != "" {
+						sc.Covers = append(sc.Covers, u)
+					}
+				}
+			} else {
+				sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(strings.Split(e.Attr("href"), "?")[0]))
+			}
 		})
 
 		// Tags
