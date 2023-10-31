@@ -163,10 +163,7 @@ export default {
       return `/api/dms/heatmap/${fileId}`
     },
     getFunscript () {
-      if (this.item.file !== null && this.item.file.slice().some(a => a.type === 'script')) {
-        return this.item.file.slice().find(a => a.type === 'script')
-      }
-      return
+      return this.item.file !== null && this.item.file.find(a => a.type === 'script' && a.has_heatmap);
     }
   }
 }
