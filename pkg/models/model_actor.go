@@ -88,6 +88,7 @@ type ResponseActorList struct {
 	CountDownloaded    int     `json:"count_downloaded"`
 	CountNotDownloaded int     `json:"count_not_downloaded"`
 	CountHidden        int     `json:"count_hidden"`
+	Offset             int     `json:"offset"`
 }
 
 type ActorLink struct {
@@ -346,10 +347,6 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 		tx = tx.Where("actors.name NOT IN (?)", excludedCast)
 	}
 
-	if r.JumpTo.OrElse("") != "" {
-		tx = tx.Where("actors.name > ?", r.JumpTo.OrElse(""))
-	}
-
 	if r.MinAge.OrElse(0) > 18 || r.MaxAge.OrElse(100) < 100 {
 		startRange := time.Now().AddDate(r.MinAge.OrElse(0)*-1, 0, 0)
 		endRange := time.Now().AddDate(r.MaxAge.OrElse(0)*-1, 0, 0)
@@ -475,6 +472,21 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 	tx = tx.Preload("Scenes", func(db *gorm.DB) *gorm.DB {
 		return db.Order("release_date DESC").Where("is_hidden = 0")
 	})
+
+	if r.JumpTo.OrElse("") != "" {
+		// if we want to jump to actors starting with a specific letter, then we need to work out the offset to them
+		cnt := 0
+		txList := tx.Select(`distinct actors.name`)
+		txList.Find(&out.Actors)
+		for idx, actor := range out.Actors {
+			if strings.ToLower(actor.Name) >= strings.ToLower(r.JumpTo.OrElse("")) {
+				break
+			}
+			cnt = idx
+		}
+		offset = (cnt / limit) * limit
+	}
+	out.Offset = offset
 
 	tx = tx.Select(`distinct actors.*, 
 	(select AVG(s.star_rating) scene_avg from scene_cast sc join scenes s on s.id=sc.scene_id where sc.actor_id =actors.id and s.star_rating > 0 ) as scene_rating_average	
