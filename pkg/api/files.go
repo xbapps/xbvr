@@ -323,6 +323,7 @@ func removeFileByFileId(fileId uint) models.Scene {
 	err := db.Preload("Volume").Where(&models.File{ID: fileId}).First(&file).Error
 	if err == nil {
 
+		log.Infof("Deleting file %s", filepath.Join(file.Path, file.Filename))
 		deleted := false
 		switch file.Volume.Type {
 		case "local":

@@ -238,6 +238,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 		Media:                media,
 	}
 	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
+		log.Infof("Got request by HereSphere to delete file %v", file.Filename)
 		removeFileByFileId(file.ID)
 	}
 
@@ -879,6 +880,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 	}
 
 	if requestData.DeleteFiles != nil && config.Config.Interfaces.Heresphere.AllowFileDeletes {
+		log.Infof("Got request by HereSphere to delete files for scene %v", scene.ID)
 		for _, sceneFile := range scene.Files {
 			removeFileByFileId(sceneFile.ID)
 		}
@@ -887,7 +889,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 	if requestData.Hsp != nil && config.Config.Interfaces.Heresphere.AllowHspData {
 		hspContent, err := base64.StdEncoding.DecodeString(*requestData.Hsp)
 		if err != nil {
-			log.Error("Error decoding heresphere hsp data %v", err)
+			log.Errorf("Error decoding heresphere hsp data %v", err)
 		}
 
 		fName := filepath.Join(scene.Files[0].Path, strings.TrimSuffix(scene.Files[0].Filename, filepath.Ext(videoFile.Filename))+".hsp")
