@@ -462,6 +462,12 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 		} else {
 			tx = tx.Order("random()")
 		}
+	case "scene_count_desc":
+		tx = tx.
+			Order("actors.`count` desc, actors.name")
+	case "scene_available_desc":
+		tx = tx.
+			Order("actors.`avail_count` desc, actors.name")
 	default:
 		tx = tx.Order("name asc")
 	}

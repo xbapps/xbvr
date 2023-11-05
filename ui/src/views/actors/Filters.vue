@@ -41,6 +41,8 @@
             <option value="scene_release_desc">↓ {{ $t("Scene Released Date") }}</option>
             <option value="scene_added_desc">↓ {{ $t("Scene Added Date") }}</option>
             <option value="file_added_desc">↓ {{ $t("File Added Date") }}</option>
+            <option value="scene_available_desc">↓ {{ $t("Available Scene Count") }}</option>
+            <option value="scene_count_desc">↓ {{ $t("Scene Count") }}</option>            
             <option value="random">↯ {{ $t("Random") }}</option>
           </select>
         </div>
