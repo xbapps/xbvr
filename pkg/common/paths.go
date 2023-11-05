@@ -20,6 +20,7 @@ var ScrapeCacheDir string
 var VideoPreviewDir string
 var VideoThumbnailDir string
 var ScriptHeatmapDir string
+var MyFilesDir string
 var DownloadDir string
 var WebPort int
 
@@ -46,6 +47,7 @@ func InitPaths() {
 	search_dir := flag.String("search_dir", "", "Optional: path to the Search Index directory")
 	preview_dir := flag.String("preview_dir", "", "Optional: path to the Scraper Cache directory")
 	scriptsheatmap_dir := flag.String("scripts_heatmap_dir", "", "Optional: path to the scripts_heatmap directory")
+	myfiles_dir := flag.String("myfiles_dir", "", "Optional: path to the myfiles directory for serving users own content (eg images")
 	databaseurl := flag.String("database_url", "", "Optional: override default database path")
 	web_port := flag.Int("web_port", 0, "Optional: override default Web Page port 9999")
 	ws_addr := flag.String("ws_addr", "", "Optional: override default Websocket address from the default 0.0.0.0:9998")
@@ -85,6 +87,7 @@ func InitPaths() {
 	VideoThumbnailDir = filepath.Join(AppDir, "video_thumbnail")
 	ScriptHeatmapDir = getPath(*scriptsheatmap_dir, "XBVR_SCRIPTHEATMAPDIR", "script_heatmap")
 
+	MyFilesDir = getPath(*myfiles_dir, "XBVR_MYFILESDIR", "myfiles")
 	DownloadDir = filepath.Join(AppDir, "download")
 
 	// Initialize DATABASE_URL once appdir path is known
@@ -120,6 +123,7 @@ func InitPaths() {
 	_ = os.MkdirAll(IndexDirV2, os.ModePerm)
 	_ = os.MkdirAll(ScrapeCacheDir, os.ModePerm)
 	_ = os.MkdirAll(ScriptHeatmapDir, os.ModePerm)
+	_ = os.MkdirAll(MyFilesDir, os.ModePerm)
 	_ = os.MkdirAll(DownloadDir, os.ModePerm)
 }
 func getPath(commandLinePath string, environmentName string, directoryName string) string {
