@@ -26,6 +26,7 @@ type ObjectState struct {
 		SceneTrailerlist  bool   `json:"sceneTrailerlist"`
 		ShowScriptHeatmap bool   `json:"showScriptHeatmap"`
 		UpdateCheck       bool   `json:"updateCheck"`
+		IsAvailOpacity    int    `json:"isAvailOpacity"`
 	} `json:"web"`
 	DLNA struct {
 		Running  bool     `json:"running"`
