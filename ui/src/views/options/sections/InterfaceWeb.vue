@@ -75,16 +75,17 @@
                 show subtitles File button
               </b-switch>
             </b-field>
+            <b-field>
+              <b-switch v-model="ScriptHeatmap" type="is-dark">
+                show Script Heatmap
+              </b-switch>
+            </b-field>
             <b-field label="Opacity of unavailable scenes">
               <div class="columns">
                 <div class="column is-two-thirds">
                   <b-slider :min="0" :max="100" :step="10" :tooltip="false" v-model="isAvailOpacity" opacity:isAvailOpacity></b-slider>
                 </div>
               </div>
-            <b-field>
-              <b-switch v-model="ScriptHeatmap" type="is-dark">
-                show Script Heatmap
-              </b-switch>
             </b-field>
 
             <b-field label="Automatically Check for Updates">
