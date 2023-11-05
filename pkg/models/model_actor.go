@@ -258,6 +258,12 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 			} else {
 				where = "name not like 'aka:%'"
 			}
+		case "In An Aka Group":
+			if truefalse {
+				where = "(select count(*) from actor_akas " + " where actor_akas.actor_id = actors.id) > 0"
+			} else {
+				where = "(select count(*) from actor_akas " + " where actor_akas.actor_id = actors.id) = 0"
+			}
 		case "Has Image":
 			if truefalse {
 				where = "image_url is not null and image_url <> ''"
