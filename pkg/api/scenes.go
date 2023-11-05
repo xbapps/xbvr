@@ -371,6 +371,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Has Script Download")
 	outAttributes = append(outAttributes, "Has AI Generated Script")
 	outAttributes = append(outAttributes, "Has Human Generated Script")
+	outAttributes = append(outAttributes, "Has Favourite Actor")
 	type Results struct {
 		Result string
 	}
