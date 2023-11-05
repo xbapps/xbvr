@@ -41,6 +41,7 @@ type ObjectConfig struct {
 		ShowHspFile       bool   `default:"true" json:"showHspFile"`
 		ShowSubtitlesFile bool   `default:"true" json:"showSubtitlesFile"`
 		SceneTrailerlist  bool   `default:"true" json:"sceneTrailerlist"`
+		ShowScriptHeatmap bool   `default:"true" json:"showScriptHeatmap"`
 		UpdateCheck       bool   `default:"true" json:"updateCheck"`
 	} `json:"web"`
 	Advanced struct {

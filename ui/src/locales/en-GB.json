@@ -202,5 +202,6 @@
   "No matching attributes":"No matching attributes",
   "Only required when troubleshooting search issues, this will enable a Tab in the Scene Details to display what search fields exist and their values for a scene":"Only required when troubleshooting search issues, this will enable a Tab in the Scene Details to display what search fields exist and their values for a scene",
   "Scene Id Required": "Scene Id Required",
+  "Occasionaly test uploading your export bundles. Browser memory constraints may cause problems restoring large exports. Use this function to test if your browser can load an export.": "Occasionaly test uploading your export bundles. Browser memory constraints may cause problems restoring large exports. Use this function to test if your browser can load an export.",
   "Go": "Go"
 }
