@@ -834,6 +834,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "scenes.ai_script = 1"
 		case "Has Human Generated Script":
 			where = "scenes.human_script = 1"
+		case "Has Favourite Actor":
+			where = "exists (select * from scene_cast join actors on actors.id=scene_cast.actor_id where actors.favourite=1 and scene_cast.scene_id=scenes.id)"
 		}
 
 		if negate {

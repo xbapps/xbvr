@@ -32,7 +32,11 @@ func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		content_id := strings.Split(strings.Replace(sc.HomepageURL, "//", "/", -1), "/")[3]
+		parts := strings.Split(strings.Replace(sc.HomepageURL, "//", "/", -1), "/")
+		if len(parts) < 4 {
+			return
+		}
+		content_id := parts[3]
 
 		//https://content.vrbangers.com
 		contentURL := strings.Replace(URL, "//", "//content.", 1)

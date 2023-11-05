@@ -32,10 +32,10 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Date & Duration
-		e.ForEach(`.info-block__main-info_f`, func(id int, e *colly.HTMLElement) {
-			tmpDate, _ := goment.New(e.ChildText(`.date`), "MMMM DD, YYYY")
+		e.ForEach(`.video-info-data`, func(id int, e *colly.HTMLElement) {
+			tmpDate, _ := goment.New(e.ChildText(`.video-info-date`), "MMMM DD, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
-			tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.ChildText(`.durations`), " min", "", -1)))
+			tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.ChildText(`.video-info-time`), " min", "", -1)))
 			if err == nil {
 				sc.Duration = tmpDuration
 			}
@@ -45,12 +45,7 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
 			sc.Title = strings.TrimSpace(e.Attr("title"))
 
-			tmpCover := ""
-			if e.Request.Ctx.GetAny("cover-id").(string) == "" {
-				tmpCover = e.Request.AbsoluteURL(e.Attr("poster"))
-			} else {
-				tmpCover = e.Request.AbsoluteURL(e.Request.Ctx.GetAny("cover-id").(string))
-			}
+			tmpCover := e.Request.AbsoluteURL(e.Attr("poster"))
 			sc.Covers = append(sc.Covers, tmpCover)
 
 			tmp := strings.Split(tmpCover, "/")
@@ -60,16 +55,25 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 		// Gallery
 		e.ForEach(`div.photo-list img`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("src")))
+			galleryURL := e.Request.AbsoluteURL(e.Attr("src"))
+			if galleryURL == "" || galleryURL == "https://tmwvrnet.com/assets/vr/public/tour1/images/th5.jpg" {
+				return
+			}
+			srcset := strings.Split(e.Attr("srcset"), ",")
+			lastSrc := srcset[len(srcset)-1]
+			if lastSrc != "" {
+				galleryURL = e.Request.AbsoluteURL(strings.TrimSpace(strings.Split(lastSrc, " ")[0]))
+			}
+			sc.Gallery = append(sc.Gallery, galleryURL)
 		})
 
 		// Synopsis
-		e.ForEach(`div.about-video p.about`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`p.video-description-text`, func(id int, e *colly.HTMLElement) {
 			sc.Synopsis = strings.TrimSpace(e.Text)
 		})
 
 		// Tags
-		e.ForEach(`div.about-video .tags-list a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.video-tag-list a`, func(id int, e *colly.HTMLElement) {
 			tag := strings.TrimSpace(e.Text)
 			if tag != "" {
 				sc.Tags = append(sc.Tags, tag)
@@ -84,7 +88,7 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 
 		// Cast
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`div.about-video p.featuring a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.video-actor-list a`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 		})
@@ -100,25 +104,20 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		siteCollector.Visit(pageURL)
 	})
 
-	siteCollector.OnHTML(`div.thumbs__image`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.thumb-photo`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
-		ctx := colly.NewContext()
-		ctx.Put("cover-id", e.ChildAttr(`img`, "data-src"))
 
 		if strings.Contains(sceneURL, "trailers") {
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {
 
-				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+				sceneCollector.Visit(sceneURL)
 			}
 		}
 	})
 
 	if singleSceneURL != "" {
-		ctx := colly.NewContext()
-		ctx.Put("cover-id", "")
-
-		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
+		sceneCollector.Visit(singleSceneURL)
 	} else {
 		siteCollector.Visit("https://tmwvrnet.com/categories/movies.html")
 	}

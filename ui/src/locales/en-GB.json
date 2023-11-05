@@ -193,6 +193,8 @@
   "Clear":"Clear",
   "No matching country":"No matching country",
   "Scene Released Date":"Scene Released Date",
+  "Available Scene Count":"Available Scene Count",
+  "Scene Count":"Scene Count",
   "Cast":"Cast",
   "Allows searching a variety of attributes such as: Possible Aka actors, Cup Size, Eye/Hair Color, Has Tattoo, Has Piercing, Breast Type, Nationailty, Ethnicity, Aka, Has Images":"Allows searching a variety of attributes such as: Possible Aka actors, Cup Size, Eye/Hair Color, Has Tattoo, Has Piercing, Breast Type, Nationailty, Ethnicity, Aka, Has Images",
   "New Aka Group. Select 2 or more actors in the Cast filter":"New Aka Group. Select 2 or more actors in the Cast filter",
@@ -202,5 +204,6 @@
   "No matching attributes":"No matching attributes",
   "Only required when troubleshooting search issues, this will enable a Tab in the Scene Details to display what search fields exist and their values for a scene":"Only required when troubleshooting search issues, this will enable a Tab in the Scene Details to display what search fields exist and their values for a scene",
   "Scene Id Required": "Scene Id Required",
+  "Occasionaly test uploading your export bundles. Browser memory constraints may cause problems restoring large exports. Use this function to test if your browser can load an export.": "Occasionaly test uploading your export bundles. Browser memory constraints may cause problems restoring large exports. Use this function to test if your browser can load an export.",
   "Go": "Go"
 }

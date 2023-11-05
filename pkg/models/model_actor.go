@@ -88,6 +88,7 @@ type ResponseActorList struct {
 	CountDownloaded    int     `json:"count_downloaded"`
 	CountNotDownloaded int     `json:"count_not_downloaded"`
 	CountHidden        int     `json:"count_hidden"`
+	Offset             int     `json:"offset"`
 }
 
 type ActorLink struct {
@@ -258,6 +259,12 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 			} else {
 				where = "name not like 'aka:%'"
 			}
+		case "In An Aka Group":
+			if truefalse {
+				where = "(select count(*) from actor_akas " + " where actor_akas.actor_id = actors.id) > 0"
+			} else {
+				where = "(select count(*) from actor_akas " + " where actor_akas.actor_id = actors.id) = 0"
+			}
 		case "Has Image":
 			if truefalse {
 				where = "image_url is not null and image_url <> ''"
@@ -338,10 +345,6 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 	}
 	if len(excludedCast) > 0 {
 		tx = tx.Where("actors.name NOT IN (?)", excludedCast)
-	}
-
-	if r.JumpTo.OrElse("") != "" {
-		tx = tx.Where("actors.name > ?", r.JumpTo.OrElse(""))
 	}
 
 	if r.MinAge.OrElse(0) > 18 || r.MaxAge.OrElse(100) < 100 {
@@ -459,6 +462,12 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 		} else {
 			tx = tx.Order("random()")
 		}
+	case "scene_count_desc":
+		tx = tx.
+			Order("actors.`count` desc, actors.name")
+	case "scene_available_desc":
+		tx = tx.
+			Order("actors.`avail_count` desc, actors.name")
 	default:
 		tx = tx.Order("name asc")
 	}
@@ -469,6 +478,21 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 	tx = tx.Preload("Scenes", func(db *gorm.DB) *gorm.DB {
 		return db.Order("release_date DESC").Where("is_hidden = 0")
 	})
+
+	if r.JumpTo.OrElse("") != "" {
+		// if we want to jump to actors starting with a specific letter, then we need to work out the offset to them
+		cnt := 0
+		txList := tx.Select(`distinct actors.name`)
+		txList.Find(&out.Actors)
+		for idx, actor := range out.Actors {
+			if strings.ToLower(actor.Name) >= strings.ToLower(r.JumpTo.OrElse("")) {
+				break
+			}
+			cnt = idx
+		}
+		offset = (cnt / limit) * limit
+	}
+	out.Offset = offset
 
 	tx = tx.Select(`distinct actors.*, 
 	(select AVG(s.star_rating) scene_avg from scene_cast sc join scenes s on s.id=sc.scene_id where sc.actor_id =actors.id and s.star_rating > 0 ) as scene_rating_average	

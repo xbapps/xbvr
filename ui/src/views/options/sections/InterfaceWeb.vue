@@ -81,6 +81,10 @@
                   <b-slider :min="0" :max="100" :step="10" :tooltip="false" v-model="isAvailOpacity" opacity:isAvailOpacity></b-slider>
                 </div>
               </div>
+            <b-field>
+              <b-switch v-model="ScriptHeatmap" type="is-dark">
+                show Script Heatmap
+              </b-switch>
             </b-field>
 
             <b-field label="Automatically Check for Updates">
@@ -173,6 +177,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.sceneEdit = value
+      }
+    },
+    ScriptHeatmap: {
+      get () {
+        return this.$store.state.optionsWeb.web.showScriptHeatmap
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.showScriptHeatmap = value
       }
     },
     updateCheck: {
