@@ -24,7 +24,7 @@ require (
 	github.com/go-resty/resty/v2 v2.10.0
 	github.com/go-test/deep v1.1.0
 	github.com/gocolly/colly/v2 v2.1.0
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/gosimple/slug v1.13.1
 	github.com/gowww/log v1.0.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
