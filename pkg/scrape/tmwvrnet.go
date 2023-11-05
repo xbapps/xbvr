@@ -130,5 +130,5 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 }
 
 func init() {
-	registerScraper("tmwvrnet", "TmwVRnet", "https://tmwvrnet.com/assets/vr/public/tour1/images/favicon/apple-touch-icon.png", "tmwvrnet.com", TmwVRnet)
+	registerScraper("tmwvrnet", "TmwVRnet", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/26/logo_crop_1623330575.png", "tmwvrnet.com", TmwVRnet)
 }
