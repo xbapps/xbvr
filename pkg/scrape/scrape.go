@@ -30,7 +30,7 @@ func createCollector(domains ...string) *colly.Collector {
 
 	// Set error handler
 	c.OnError(func(r *colly.Response, err error) {
-		log.Infof("Error visiting %s %s", r.Request.URL, err)
+		log.Errorf("Error visiting %s %s", r.Request.URL, err)
 	})
 
 	c = createCallbacks(c)
