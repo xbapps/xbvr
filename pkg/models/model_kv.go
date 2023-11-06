@@ -3,7 +3,7 @@ package models
 import "github.com/avast/retry-go/v4"
 
 type KV struct {
-	Key   string `json:"key" gorm:"primary_key" gorm:"unique_index"`
+	Key   string `json:"key" gorm:"primary_key"`
 	Value string `json:"value" sql:"type:text;"`
 }
 
@@ -11,8 +11,7 @@ func (o *KV) Save() {
 	db, _ := GetDB()
 	defer db.Close()
 
-	var err error
-	err = retry.Do(
+	var err error = retry.Do(
 		func() error {
 			err := db.Save(&o).Error
 			if err != nil {

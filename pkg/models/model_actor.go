@@ -100,8 +100,7 @@ func (i *Actor) Save() error {
 	db, _ := GetDB()
 	defer db.Close()
 
-	var err error
-	err = retry.Do(
+	var err error = retry.Do(
 		func() error {
 			err := db.Save(&i).Error
 			if err != nil {
@@ -201,9 +200,8 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 			truefalse = false
 			fieldName = fieldName[1:]
 		}
-		if strings.HasPrefix(fieldName, "&") { // & prefix indicate must have filtering
-			fieldName = fieldName[1:]
-		}
+
+		fieldName = strings.TrimPrefix(fieldName, "&") // & prefix indicate must have filtering
 
 		value := ""
 		where := ""

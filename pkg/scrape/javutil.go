@@ -56,7 +56,7 @@ func ProcessJavrTag(tag string) string {
 
 	// Leave out some japanese text tags
 	matched, err := regexp.Match("[^a-z0-9_\\- /&()\\+]", []byte(taglower))
-	if matched == true || err != nil {
+	if matched || err != nil {
 		return ""
 	}
 
@@ -72,7 +72,7 @@ func determineContentId(sc *models.ScrapedScene) string {
 	for i := range sc.Covers {
 		href := sc.Covers[i]
 		match := contentIdRegex.FindStringSubmatch(href)
-		if match != nil && len(match) > 1 {
+		if len(match) > 1 {
 			contentId = match[1]
 			log.Println("Found content ID from cover image: " + contentId)
 			break
@@ -84,7 +84,7 @@ func determineContentId(sc *models.ScrapedScene) string {
 		for i := range sc.Gallery {
 			href := sc.Gallery[i]
 			match := contentIdRegex.FindStringSubmatch(href)
-			if match != nil && len(match) > 1 {
+			if len(match) > 1 {
 				contentId = match[1]
 				log.Println("Found content ID from gallery image: " + contentId)
 				break
@@ -105,7 +105,7 @@ func determineContentId(sc *models.ScrapedScene) string {
 				"3dsvr": true,
 				"fsdss": true,
 			}
-			if nameMap[site] == true {
+			if nameMap[site] {
 				site = "1" + site
 			}
 			contentId = fmt.Sprintf("%s%05d", site, i)
@@ -154,9 +154,9 @@ func PostProcessJavScene(sc *models.ScrapedScene, contentId string) {
 
 	// Some specific postprocessing for error-correcting 3DSVR scenes
 	if len(contentId) > 0 && sc.Site == "DSVR" {
-		r := regexp.MustCompile("13dsvr0(\\d{4})")
+		r := regexp.MustCompile(`13dsvr0(\d{4})`)
 		match := r.FindStringSubmatch(contentId)
-		if match != nil && len(match) > 1 {
+		if len(match) > 1 {
 			// Found a 3DSVR scene that is being wrongly categorized as DSVR
 			log.Println("Applying DSVR->3DSVR workaround")
 			sid := match[1]

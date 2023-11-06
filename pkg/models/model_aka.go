@@ -69,11 +69,6 @@ func (o *Aka) UpdateAkaSceneCastRecords() {
 	`)
 
 	// delete scene_cast records for aka actors that have been removed
-	type DeleteList struct {
-		AkaActorId uint
-		SceneId    uint
-	}
-
 	db.Exec(`
 		with SceneIds as (
 			select distinct a.id, sc.scene_id

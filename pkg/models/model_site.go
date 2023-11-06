@@ -22,8 +22,7 @@ func (i *Site) Save() error {
 	db, _ := GetDB()
 	defer db.Close()
 
-	var err error
-	err = retry.Do(
+	var err error = retry.Do(
 		func() error {
 			err := db.Save(&i).Error
 			if err != nil {
@@ -53,7 +52,7 @@ func InitSites() {
 
 	scrapers := GetScrapers()
 	for i := range scrapers {
-		if strings.HasSuffix(scrapers[i].ID, "-single_scene") == false {
+		if !strings.HasSuffix(scrapers[i].ID, "-single_scene") {
 			var st Site
 			db.Where(&Site{ID: scrapers[i].ID}).FirstOrCreate(&st)
 			st.Name = scrapers[i].Name
