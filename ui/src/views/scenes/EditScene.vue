@@ -147,6 +147,9 @@ export default {
     }    
     try {
       scene.files = JSON.parse(scene.filenames_arr)
+      if (scene.files == null) {
+        scene.files = []
+      }
     } catch {
       scene.files = []
     }
@@ -207,27 +210,11 @@ export default {
       this.scene.filenames_arr = JSON.stringify(this.scene.files)
       this.scene.duration = String(this.scene.duration)  // force to a string, if no change the UI sends an int, otherwise a string, nust be constant
 
-      ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } })
+      ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } }).json().then(data => {
+            this.$store.commit('sceneList/updateScene', data)
+            this.$store.commit('overlay/showDetails', { scene: data })
+          })
 
-      this.scene.cast = this.scene.castArray.map(a => {
-        const find = this.scene.cast.find(o => o.name === a)
-        if (find) return find
-        return {
-          name: a,
-          count: 0
-        }
-      })
-
-      this.scene.tags = this.scene.tagsArray.map(t => {
-        const find = this.scene.tags.find(o => o.name === t)
-        if (find) return find
-        return {
-          name: t,
-          count: 0
-        }
-      })
-
-      this.$store.commit('sceneList/updateScene', this.scene)
       this.changesMade = false
 
       this.close()
