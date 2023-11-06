@@ -28,6 +28,11 @@ func createCollector(domains ...string) *colly.Collector {
 		colly.UserAgent(UserAgent),
 	)
 
+	// Set error handler
+	c.OnError(func(r *colly.Response, err error) {
+		log.Infof("Error visiting %s %s", r.Request.URL, err)
+	})
+
 	c = createCallbacks(c)
 	return c
 }
