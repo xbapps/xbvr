@@ -1,6 +1,6 @@
 module github.com/xbapps/xbvr
 
-go 1.19
+go 1.20
 
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
