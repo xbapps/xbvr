@@ -207,7 +207,7 @@ func (i AkaResource) getAka(req *restful.Request, resp *restful.Response) {
 
 	var aka models.Aka
 	db, _ := models.GetDB()
-	err = aka.GetIfExistByPK(uint(sceneId))
+	_ = aka.GetIfExistByPK(uint(sceneId))
 	db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, aka)

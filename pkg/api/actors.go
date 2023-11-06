@@ -487,39 +487,6 @@ func checkStringArrayChanged(field_name string, newValue *string, actorField *st
 	}
 }
 
-func checkURLArrayChanged(field_name string, newValue *string, actorField *string, actorId uint) {
-	if *actorField != *newValue {
-		var actorArray []models.ActorLink
-		var newArray []string
-		json.Unmarshal([]byte(*newValue), &newArray)
-		json.Unmarshal([]byte(*actorField), &actorArray)
-		for _, actorField := range actorArray {
-			exists := false
-			for _, newField := range newArray {
-				if newField == actorField.Url {
-					exists = true
-				}
-			}
-			if !exists {
-				models.AddActionActor(actorId, "edit_actor", "delete", field_name, actorField.Url)
-			}
-		}
-		for _, newField := range newArray {
-			exists := false
-			for _, actorField := range actorArray {
-				if newField == actorField.Url {
-					exists = true
-				}
-			}
-			if !exists {
-				models.AddActionActor(actorId, "edit_actor", "add", field_name, newField)
-			}
-		}
-
-		*actorField = *newValue
-	}
-}
-
 func (i ActorResource) setActorImage(req *restful.Request, resp *restful.Response) {
 	var r RequestSetActorImage
 	err := req.ReadEntity(&r)

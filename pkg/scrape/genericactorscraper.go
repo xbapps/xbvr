@@ -7,7 +7,6 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -165,12 +164,6 @@ func GenericActorScrapersBySite(site string) {
 
 	scraperConfig := models.BuildActorScraperRules()
 
-	type outputList struct {
-		Id       uint
-		Url      string
-		Linktype string
-	}
-
 	er := models.ExternalReference{}
 	scrapeId := er.DetermineActorScraperBySiteId(site)
 
@@ -295,7 +288,7 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 		actor.Save()
 		dataJson, _ := json.Marshal(data)
 
-		extrefLink := []models.ExternalReferenceLink{models.ExternalReferenceLink{InternalTable: "actors", InternalDbId: actor.ID, InternalNameId: actor.Name, ExternalSource: source, ExternalId: actorPage}}
+		extrefLink := []models.ExternalReferenceLink{{InternalTable: "actors", InternalDbId: actor.ID, InternalNameId: actor.Name, ExternalSource: source, ExternalId: actorPage}}
 		extref = models.ExternalReference{ID: extref.ID, XbvrLinks: extrefLink, ExternalSource: source, ExternalId: actorPage, ExternalURL: actorPage, ExternalDate: time.Now(), ExternalData: string(dataJson)}
 		extref.AddUpdateWithId()
 	} else {
@@ -324,23 +317,6 @@ func getSubRuleResult(rule models.GenericActorScraperRule, e *colly.HTMLElement)
 	return result
 }
 
-func checkActorUpdateRequired(linkUrl string, actor *models.Actor) bool {
-	db, _ := models.GetDB()
-	defer db.Close()
-
-	var extRefLink models.ExternalReferenceLink
-	db.Preload("ExternalReference").
-		Where("internal_db_id = ? and external_id = ?", actor.ID, linkUrl).First(&extRefLink)
-	if extRefLink.ID != 0 {
-		for _, scene := range actor.Scenes {
-			if extRefLink.ExternalReference.ExternalDate.Before(scene.CreatedAt) {
-				return true
-			}
-		}
-	}
-
-	return true
-}
 func assignField(field string, value string, actor *models.Actor, overwrite bool) bool {
 	changed := false
 	switch field {
@@ -597,18 +573,4 @@ func lookupCountryCode(countryName string) (string, error) {
 	}
 
 	return countries[0].Alpha2Code, nil
-}
-
-func structToMap(obj interface{}) map[string]interface{} {
-	values := reflect.ValueOf(obj)
-	typ := values.Type()
-
-	result := make(map[string]interface{})
-	for i := 0; i < values.NumField(); i++ {
-		key := typ.Field(i).Name
-		value := values.Field(i).Interface()
-		result[key] = value
-	}
-
-	return result
 }

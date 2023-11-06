@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -332,7 +331,7 @@ func Scrape(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo st
 
 			tlog.Infof("Scraped %v new scenes in %s",
 				sceneCount,
-				time.Now().Sub(t0).Round(time.Second))
+				time.Since(t0).Round(time.Second))
 
 		}
 	}
@@ -376,7 +375,7 @@ func ScrapeJAVR(queryString string, scraper string) {
 
 			tlog.Infof("Scraped %v new scenes in %s",
 				len(collectedScenes),
-				time.Now().Sub(t0).Round(time.Second))
+				time.Since(t0).Round(time.Second))
 		} else {
 			tlog.Infof("No new scenes scraped")
 		}
@@ -431,7 +430,7 @@ func ScrapeTPDB(apiToken string, sceneUrl string) {
 
 			tlog.Infof("Scraped %v new scenes in %s",
 				len(collectedScenes),
-				time.Now().Sub(t0).Round(time.Second))
+				time.Since(t0).Round(time.Second))
 		} else {
 			tlog.Infof("No new scenes scraped")
 		}
@@ -465,9 +464,9 @@ func ExportBundle() {
 		content, err := json.MarshalIndent(out, "", " ")
 		if err == nil {
 			fName := filepath.Join(common.DownloadDir, fmt.Sprintf("content-bundle-v1-%v.json", time.Now().Unix()))
-			err = ioutil.WriteFile(fName, content, 0644)
+			err = os.WriteFile(fName, content, 0644)
 			if err == nil {
-				tlog.Infof("Export completed in %v, file saved to %v", time.Now().Sub(t0), fName)
+				tlog.Infof("Export completed in %v, file saved to %v", time.Since(t0), fName)
 			}
 		}
 	}
@@ -517,7 +516,6 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 	var out BackupContentBundle
 	var content []byte
 	exportCnt := 0
-	lastMessage := time.Now()
 
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
@@ -657,7 +655,7 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 
 		var externalReferences []models.ExternalReference
 		if inclExtRefs {
-			lastMessage = time.Now()
+			lastMessage := time.Now()
 			db.Order("external_source").Order("id").Find(&externalReferences)
 			recCnt := 0
 			for idx, ref := range externalReferences {
@@ -731,7 +729,7 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 
 		if err == nil {
 			fName := filepath.Join(common.DownloadDir, outputBundleFilename)
-			err = ioutil.WriteFile(fName, content, 0644)
+			err = os.WriteFile(fName, content, 0644)
 			if err == nil {
 				tlog.Infof("Backup file generated in %v, %v scenes selected, ready to download", time.Since(t0), exportCnt)
 			} else {

@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -985,7 +984,7 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 	//	this is to give examples, it is not loaded
 	fName := filepath.Join(common.AppDir, "actor_scraper_config_examples.json")
 	out, _ := json.MarshalIndent(scrapeRules, "", "  ")
-	ioutil.WriteFile(fName, out, 0644)
+	os.WriteFile(fName, out, 0644)
 
 	// now check if the user has any custom rules
 	fName = filepath.Join(common.AppDir, "actor_scraper_custom_config.json")
@@ -1025,12 +1024,12 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 			exampleConfig.StashSceneMatching["siteid"] = stashMatch
 
 			out, _ := json.MarshalIndent(exampleConfig, "", "  ")
-			ioutil.WriteFile(fName, out, 0644)
+			os.WriteFile(fName, out, 0644)
 		}
 	} else {
 		// load any custom rules and update the builtin list
 		var customScrapeRules ActorScraperConfig
-		b, err := ioutil.ReadFile(fName)
+		b, err := os.ReadFile(fName)
 		if err != nil {
 			return
 		}

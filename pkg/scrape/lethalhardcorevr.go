@@ -43,19 +43,6 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		// Site ID
 		sc.Site = siteID
 
-		if singleSceneURL != "" {
-			// client := resty.New()
-			// client.SetHeader("User-Agent", UserAgent)
-			// resp, err := client.R().Get("https://www.fuckpassvr.com/api/api/scene/detail")
-			// searchCollector.Response = resp
-			// if err == nil {
-
-			// } else {
-			// 	log.Error(err)
-
-			// }
-
-		}
 		// Release Date
 		tmpDate, _ := goment.New(e.Request.Ctx.Get("date"), "MM/DD/YYYY")
 		sc.Released = tmpDate.Format("YYYY-MM-DD")
@@ -117,8 +104,6 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 				} else {
 					if e.Attr("src") != "https://imgs1cdn.adultempire.com/res/pm/pixel.gif" {
 						img = e.Attr("src")
-					} else {
-						log.Infof("% lethalhardcore %s style, %v ", matches)
 					}
 				}
 

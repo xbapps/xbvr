@@ -14,11 +14,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-var (
-	currentYear int
-	lastMonth   int
-)
-
 func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	scraperID := "sexbabesvr"
@@ -115,9 +110,6 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			}
 		})
 	})
-
-	currentYear = time.Now().Year()
-	lastMonth = int(time.Now().Month())
 
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)

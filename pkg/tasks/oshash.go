@@ -19,7 +19,7 @@ func HashFile(file *os.File) (hash uint64, err error) {
 		return
 	}
 	if fi.Size() < ChunkSize {
-		return 0, fmt.Errorf("File is too small")
+		return 0, fmt.Errorf("file is too small")
 	}
 
 	// Read head and tail blocks.
@@ -64,7 +64,7 @@ func readChunk(file *os.File, offset int64, buf []byte) (err error) {
 		return
 	}
 	if n != ChunkSize {
-		return fmt.Errorf("Invalid read %v", n)
+		return fmt.Errorf("invalid read %v", n)
 	}
 	return
 }

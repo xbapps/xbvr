@@ -8,7 +8,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -78,9 +77,8 @@ func getScriptFiles(urlpart string) ([]models.File, error) {
 		return files, fmt.Errorf("scene %d has no script files", sceneId)
 	}
 
-	for i := range scriptfiles {
-		files = append(files, scriptfiles[i])
-	}
+	files = append(files, scriptfiles...)
+
 	return files, nil
 }
 
@@ -214,7 +212,7 @@ func (p *HeatmapThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 	p.ImageProxy.ServeHTTP(imageproxyResponseWriter, r2)
 
-	respbody, err := ioutil.ReadAll(imageproxyResponseWriter.buf)
+	respbody, err := io.ReadAll(imageproxyResponseWriter.buf)
 	if err == nil {
 		var output bytes.Buffer
 		err = createHeatmapThumbnail(&output, bytes.NewReader(respbody), heatmapImages)

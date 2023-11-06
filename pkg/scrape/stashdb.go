@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -120,7 +120,6 @@ func StashDb() {
 		}
 		tlog.Info("Scrape of Stashdb completed")
 	}
-	return
 }
 
 func findStudio(studio string, field string) FindStudioResult {
@@ -533,15 +532,8 @@ func callStashDb(query string, rawVariables string) []byte {
 
 		defer resp.Body.Close()
 
-		bodyBytes, _ = ioutil.ReadAll(resp.Body)
+		bodyBytes, _ = io.ReadAll(resp.Body)
 		return bodyBytes
 	}
 	return callClient()
-}
-
-func formatInternalDbId(input uint) string {
-	if input == 0 {
-		return ""
-	}
-	return strconv.FormatUint(uint64(input), 10)
 }

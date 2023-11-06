@@ -676,7 +676,7 @@ func (i SceneResource) deleteSceneCuepoint(req *restful.Request, resp *restful.R
 	db.Delete(&cuepoint)
 
 	var scene models.Scene
-	err = scene.GetIfExistByPK(uint(sceneId))
+	_ = scene.GetIfExistByPK(uint(sceneId))
 	defer db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
@@ -739,7 +739,7 @@ func (i SceneResource) selectScript(req *restful.Request, resp *restful.Response
 				}
 			}
 		}
-		err = scene.GetIfExistByPK(uint(sceneId))
+		_ = scene.GetIfExistByPK(uint(sceneId))
 	}
 	db.Close()
 
