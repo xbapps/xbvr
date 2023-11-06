@@ -73,7 +73,7 @@ Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG)
 
 Make sure you have following installed:
 
-- Go 1.19
+- Go 1.20
 - Node.js 12.x
 - Yarn 1.17.x
 - air (run `go install github.com/cosmtrek/air@latest` outside project directory)
