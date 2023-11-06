@@ -256,6 +256,9 @@ export default {
       if (this.$store.state.overlay.actordetails.show){
         return 
       }
+      if (this.$store.state.overlay.details.show){
+        return 
+      }
       if (this.current * this.limit >= this.total) {
         this.current = 1
       } else {
@@ -265,6 +268,9 @@ export default {
     },
     prevpage () {      
       if (this.$store.state.overlay.actordetails.show){
+        return 
+      }
+      if (this.$store.state.overlay.details.show){
         return 
       }
       if (this.current > 1) {

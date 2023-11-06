@@ -161,13 +161,14 @@ const actions = {
       .json()
 
     state.isLoading = false
+    state.filters.jumpTo = ""  // clear the jumpto value now that we have the data
 
     if (iOffset === 0) {
       commit('setActors', [])
     }
 
     commit('setActors', state.actors=data.actors)
-    state.offset = iOffset + state.limit
+    state.offset = data.offset + state.limit
     state.total = data.results    
   }
 }

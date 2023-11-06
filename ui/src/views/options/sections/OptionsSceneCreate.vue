@@ -6,13 +6,14 @@
         <b-field grouped>
           <b-select placeholder="Select scraper" v-model="javrScraper">
             <option value="javdatabase">javdatabase.com</option>
+            <option value="r18d">r18.dev</option>
             <option value="javlibrary">javlibrary.com</option>
-            <option value="javbus">javbus.com</option>
             <option value="javland">jav.land</option>
           </b-select>
           <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
           <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
         </b-field>
+        <span>R18.dev scraper requires FANZA content ID, e.g. 84vrkm00139</span>
       </div>
     </div>
 

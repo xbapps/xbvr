@@ -2,7 +2,7 @@
   <div class="card is-shadowless">
     <div class="card-image">
       <div class="bbox"
-           v-bind:style="{backgroundImage: `url(${getImageURL(actor.image_url)})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', opacity:isAvailable(actor) ? 1.0 : 0.4}"
+           v-bind:style="{backgroundImage: `url(${getImageURL(actor.image_url)})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', opacity:isAvailable(actor) ? 1.0 : isAvailOpactiy}"
            @click="showDetails(actor)"
            @mouseover="preview = true"
            @mouseleave="preview = false">
@@ -69,6 +69,12 @@ export default {
     }
   },
   computed: {
+      isAvailOpactiy () {      
+      if (this.$store.state.optionsWeb.web.isAvailOpacity == undefined) {
+        return .4
+      }
+      return this.$store.state.optionsWeb.web.isAvailOpacity / 100
+    },
   },
   methods: {
     getImageURL (u) {

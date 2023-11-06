@@ -161,5 +161,5 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 }
 
 func init() {
-	registerScraper(scraperID, siteID, baseURL+"/favicon.png", domain, VRSpy)
+	registerScraper(scraperID, siteID, baseURL+"/favicon.ico", domain, VRSpy)
 }

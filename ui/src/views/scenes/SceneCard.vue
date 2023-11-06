@@ -2,7 +2,7 @@
   <div class="card is-shadowless">
     <div class="card-image">
       <div class="bbox"
-           v-bind:style="{backgroundImage: `url(${getImageURL(item.cover_url)})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', opacity:item.is_available ? 1.0 : 0.4}"
+           v-bind:style="{backgroundImage: `url(${getImageURL(item.cover_url)})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', opacity:item.is_available ? 1.0 : this.isAvailOpactiy}"
            @click="showDetails(item)"
            @mouseover="preview = true"
            @mouseleave="preview = false">
@@ -40,6 +40,11 @@
               <b-icon pack="mdi" icon="clock" size="is-small"/>
               {{item.duration}}m
             </b-tag>
+          </div>
+          <div v-if="this.$store.state.optionsWeb.web.showScriptHeatmap && (f = getFunscript())" style="padding: 0px 5px 5px">
+            <div v-if="f.has_heatmap" class="heatmapFunscript">
+              <img :src="getHeatmapURL(f.id)"/>
+            </div>
           </div>
         </div>
       </div>
@@ -129,7 +134,13 @@ export default {
         }
       })
       return count
-    }
+    },
+    isAvailOpactiy () {
+      if (this.$store.state.optionsWeb.web.isAvailOpacity == undefined) {
+        return .4
+      }
+      return this.$store.state.optionsWeb.web.isAvailOpacity / 100
+    },
   },
   methods: {
     getImageURL (u) {
@@ -153,6 +164,12 @@ export default {
         this.$store.commit('overlay/showDetails', { scene: scene })
       }
       this.$store.commit('overlay/hideActorDetails')
+    },
+    getHeatmapURL (fileId) {
+      return `/api/dms/heatmap/${fileId}`
+    },
+    getFunscript () {
+      return this.item.file !== null && this.item.file.find(a => a.type === 'script' && a.has_heatmap);
     }
   }
 }
@@ -204,6 +221,8 @@ export default {
   .align-bottom-left {
     align-items: flex-end;
     justify-content: flex-end;
+    flex-wrap: wrap;
+    flex-direction: column
   }
 
   .bbox:after {
@@ -223,4 +242,16 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+.heatmapFunscript {
+  width: auto;
+}
+
+.heatmapFunscript img {
+  border: 1px #888 solid;
+  width: 100%;
+  height: 15px;
+  border-radius: 0.25rem;
+}
+
 </style>

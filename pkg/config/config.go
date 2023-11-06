@@ -41,7 +41,9 @@ type ObjectConfig struct {
 		ShowHspFile       bool   `default:"true" json:"showHspFile"`
 		ShowSubtitlesFile bool   `default:"true" json:"showSubtitlesFile"`
 		SceneTrailerlist  bool   `default:"true" json:"sceneTrailerlist"`
+		ShowScriptHeatmap bool   `default:"true" json:"showScriptHeatmap"`
 		UpdateCheck       bool   `default:"true" json:"updateCheck"`
+		IsAvailOpacity    int    `default:"40" json:"isAvailOpacity"`
 	} `json:"web"`
 	Advanced struct {
 		ShowInternalSceneId   bool   `default:"false" json:"showInternalSceneId"`
@@ -166,6 +168,10 @@ func LoadConfig() {
 	if err == nil {
 		if err := json.Unmarshal([]byte(obj.Value), &Config); err != nil {
 			common.Log.Error("Failed to load config from database")
+		}
+		if common.WebPort != 0 && common.WebPort != Config.Server.Port {
+			Config.Server.Port = common.WebPort
+			SaveConfig()
 		}
 	}
 }

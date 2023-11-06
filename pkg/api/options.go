@@ -56,7 +56,9 @@ type RequestSaveOptionsWeb struct {
 	ShowHspFile       bool   `json:"showHspFile"`
 	ShowSubtitlesFile bool   `json:"showSubtitlesFile"`
 	SceneTrailerlist  bool   `json:"sceneTrailerlist"`
+	ShowScriptHeatmap bool   `json:"showScriptHeatmap"`
 	UpdateCheck       bool   `json:"updateCheck"`
+	IsAvailOpacity    int    `json:"isAvailOpacity"`
 }
 
 type RequestSaveOptionsAdvanced struct {
@@ -379,7 +381,9 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.ShowHspFile = r.ShowHspFile
 	config.Config.Web.ShowSubtitlesFile = r.ShowSubtitlesFile
 	config.Config.Web.SceneTrailerlist = r.SceneTrailerlist
+	config.Config.Web.ShowScriptHeatmap = r.ShowScriptHeatmap
 	config.Config.Web.UpdateCheck = r.UpdateCheck
+	config.Config.Web.IsAvailOpacity = r.IsAvailOpacity
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)

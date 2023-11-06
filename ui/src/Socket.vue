@@ -30,7 +30,7 @@ export default {
       onReconnectSuccess: () => {
         this.wsStatus = 'connected'
       }
-    })
+    })    
 
     ws.subscribe('service.log', (dataArr, dataObj) => {
       if (dataArr.argsDict.level == 'debug') {
