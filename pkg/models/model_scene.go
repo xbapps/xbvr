@@ -1049,6 +1049,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 		tx = tx.Order("updated_at desc")
 	case "script_published_desc":
 		tx = tx.Order("script_published desc")
+	case "scene_id_desc":
+		tx = tx.Order("scene_id desc")
 	case "random":
 		if dbConn.Driver == "mysql" {
 			tx = tx.Order("rand()")

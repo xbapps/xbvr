@@ -56,6 +56,7 @@
             <option value="last_opened_desc">↓ {{ $t("Last viewed date") }}</option>
             <option value="last_opened_asc">↑ {{ $t("Last viewed date") }}</option>
             <option value="script_published_desc">↓ {{ $t("Published Script Added") }}</option>
+            <option value="scene_id_desc">↓ {{ $t("Scene Id") }}</option>
             <option value="random">↯ {{ $t("Random") }}</option>
           </select>
         </div>
