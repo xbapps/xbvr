@@ -99,7 +99,7 @@ func downloadFfbinaries(tool string) error {
 		return err
 	}
 
-	err = os.Remove(filepath.Join(common.BinDir, tool+".zip"))
+	_ = os.Remove(filepath.Join(common.BinDir, tool+".zip"))
 
 	return nil
 }

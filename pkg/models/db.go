@@ -93,10 +93,8 @@ func CheckLock(lock string) bool {
 
 	var obj KV
 	err := db.Where(&KV{Key: "lock-" + lock}).First(&obj).Error
-	if err == nil {
-		return true
-	}
-	return false
+
+	return err == nil
 }
 
 func RemoveLock(lock string) {

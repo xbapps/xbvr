@@ -3,7 +3,6 @@ package config
 import (
 	_ "embed"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,9 +54,9 @@ func (o *ScraperList) Load() error {
 	fName := filepath.Join(common.AppDir, "scrapers.json")
 	if _, err := os.Stat(fName); os.IsNotExist(err) {
 		list, _ := json.MarshalIndent(officalScrapers, "", "  ")
-		ioutil.WriteFile(fName, list, 0644)
+		os.WriteFile(fName, list, 0644)
 	} else {
-		b, err := ioutil.ReadFile(fName)
+		b, err := os.ReadFile(fName)
 		if err != nil {
 			o.XbvrScrapers = officalScrapers.XbvrScrapers
 			return err
@@ -86,7 +85,7 @@ func (o *ScraperList) Load() error {
 
 	list, err := json.MarshalIndent(o, "", "  ")
 	if err == nil {
-		ioutil.WriteFile(fName, list, 0644)
+		os.WriteFile(fName, list, 0644)
 	}
 
 	return nil

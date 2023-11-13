@@ -3,7 +3,6 @@ package session
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
@@ -78,7 +77,7 @@ func TrackSessionFromRemote(packet DeoPacket) {
 
 		f := models.File{}
 		db, _ := models.GetDB()
-		err = db.First(&f, currentFileID).Error
+		_ = db.First(&f, currentFileID).Error
 		defer db.Close()
 
 		// Create new session
@@ -181,10 +180,10 @@ func dumpHeatmap(sceneID uint, data []int) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		// Create new heatmap
 		dataOut, _ := json.Marshal(data)
-		ioutil.WriteFile(path, dataOut, 0644)
+		os.WriteFile(path, dataOut, 0644)
 	} else {
 		// Update existing heatmap
-		b, err := ioutil.ReadFile(path)
+		b, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
@@ -200,7 +199,7 @@ func dumpHeatmap(sceneID uint, data []int) error {
 		}
 
 		dataOut, _ := json.Marshal(data)
-		ioutil.WriteFile(path, dataOut, 0644)
+		os.WriteFile(path, dataOut, 0644)
 	}
 	return nil
 }

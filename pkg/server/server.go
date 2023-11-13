@@ -34,7 +34,7 @@ import (
 
 var (
 	wsAddr = common.WsAddr
-	log    = common.Log
+	log    = &common.Log
 )
 
 func authHandle(pattern string, authEnabled bool, authSecret auth.SecretProvider, handler http.Handler) {
@@ -163,7 +163,7 @@ func StartServer(version, commit, branch, date string) {
 		},
 	}
 
-	wampRouter, err := router.NewRouter(routerConfig, &log)
+	wampRouter, err := router.NewRouter(routerConfig, log)
 	if err != nil {
 		log.Fatal(err)
 	}

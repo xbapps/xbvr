@@ -52,8 +52,7 @@ func (f *File) Save() error {
 	db, _ := GetDB()
 	defer db.Close()
 
-	var err error
-	err = retry.Do(
+	var err error = retry.Do(
 		func() error {
 			err := db.Save(&f).Error
 			if err != nil {

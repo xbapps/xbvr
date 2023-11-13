@@ -336,25 +336,6 @@ func UpdateXbvrActor(performer models.StashPerformer, xbvrActorID uint) {
 	}
 }
 
-func addToArray(existingArray string, newValue string) string {
-	values := []string{}
-	if existingArray != "" {
-		err := json.Unmarshal([]byte(existingArray), &values)
-		if err != nil {
-			log.Errorf("Could not extract array %s", values)
-		}
-	}
-	for _, existingValue := range values {
-		if existingValue == newValue {
-			return existingArray
-		}
-	}
-	values = append(values, newValue)
-	jsonBytes, _ := json.Marshal(values)
-	return string(jsonBytes)
-
-}
-
 func convertBodyModToString(bodyMod models.StashBodyModification) string {
 
 	newMod := ""

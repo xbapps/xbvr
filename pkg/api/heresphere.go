@@ -4,9 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -107,7 +108,7 @@ type HereSphereAuthRequest struct {
 var RequestBody []byte
 
 func HeresphereAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	RequestBody, _ = ioutil.ReadAll(req.Request.Body)
+	RequestBody, _ = io.ReadAll(req.Request.Body)
 	if isDeoAuthEnabled() {
 		var authorized bool
 		var requestData HereSphereAuthRequest
@@ -358,13 +359,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 				if len(encoding.VideoSources) > 0 {
 					hsp.Name = encoding.Name
 					for _, source := range encoding.VideoSources {
-						hspSource := HeresphereSource{
-							URL:        source.URL,
-							Width:      source.Width,
-							Height:     source.Height,
-							Resolution: source.Resolution,
-							Size:       source.Size,
-						}
+						hspSource := HeresphereSource(source)
 						hsp.Sources = append(hsp.Sources, hspSource)
 					}
 					media = append(media, hsp)
@@ -893,7 +888,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		}
 
 		fName := filepath.Join(scene.Files[0].Path, strings.TrimSuffix(scene.Files[0].Filename, filepath.Ext(videoFile.Filename))+".hsp")
-		ioutil.WriteFile(fName, hspContent, 0644)
+		os.WriteFile(fName, hspContent, 0644)
 
 		tasks.ScanLocalHspFile(fName, videoFile.VolumeID, scene.ID)
 	}
@@ -947,15 +942,6 @@ func findEndPos(requestData HereSphereAuthRequest) float64 {
 		}
 	}
 	return endpos
-}
-
-func matchCuepoint(findCuepoint models.SceneCuepoint, cuepointList []models.SceneCuepoint) int {
-	for idx, cuepoint := range cuepointList {
-		if cuepoint.Name == findCuepoint.Name && cuepoint.TimeStart == findCuepoint.TimeStart && *cuepoint.Track == *findCuepoint.Track && cuepoint.TimeEnd == findCuepoint.TimeEnd {
-			return idx
-		}
-	}
-	return -1
 }
 
 func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *restful.Response) {

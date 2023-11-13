@@ -37,8 +37,7 @@ func (o *SceneCuepoint) Save() error {
 	db, _ := GetDB()
 	defer db.Close()
 
-	var err error
-	err = retry.Do(
+	var err error = retry.Do(
 		func() error {
 			err := db.Save(&o).Error
 			if err != nil {
@@ -137,8 +136,7 @@ func (i *Scene) Save() error {
 	db, _ := GetDB()
 	defer db.Close()
 
-	var err error
-	err = retry.Do(
+	var err error = retry.Do(
 		func() error {
 			err := db.Save(&i).Error
 			if err != nil {
@@ -351,23 +349,23 @@ func (o *Scene) UpdateStatus() {
 			changed = true
 		}
 
-		if scripts > 0 && o.IsScripted == false {
+		if scripts > 0 && !o.IsScripted {
 			o.IsScripted = true
 			changed = true
 		}
 
-		if scripts == 0 && o.IsScripted == true {
+		if scripts == 0 && o.IsScripted {
 			o.IsScripted = false
 			changed = true
 		}
 
-		if videos > 0 && o.IsAvailable == false {
+		if videos > 0 && !o.IsAvailable {
 			o.IsAvailable = true
 			o.Wishlist = false
 			changed = true
 		}
 
-		if videos == 0 && o.IsAvailable == true {
+		if videos == 0 && o.IsAvailable {
 			o.IsAvailable = false
 			changed = true
 		}
@@ -382,7 +380,7 @@ func (o *Scene) UpdateStatus() {
 			changed = true
 		}
 
-		if o.IsScripted == true {
+		if o.IsScripted {
 			o.IsScripted = false
 			changed = true
 		}

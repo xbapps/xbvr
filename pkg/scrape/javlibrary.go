@@ -21,7 +21,7 @@ func ScrapeJavLibrary(out *[]models.ScrapedScene, queryString string) {
 		if boxTitle != nil {
 			r := regexp.MustCompile("\"([^\"]+)\" ID Search Result")
 			match := r.FindStringSubmatch(boxTitle.Text())
-			if match != nil && len(match) > 1 {
+			if len(match) > 1 {
 				// Found a search results page
 				searchQuery := strings.ToLower(match[1])
 				log.Printf("Search results page found for " + searchQuery)

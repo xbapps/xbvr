@@ -198,7 +198,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			})
 		} else { // isTransScene
 			e.ForEach("script[type=\"text/javascript\"]", func(id int, e *colly.HTMLElement) {
-				var re = regexp.MustCompile("videoData:\\s*(.*}),")
+				var re = regexp.MustCompile(`videoData:\s*(.*}),`)
 				r := re.FindStringSubmatch(e.Text)
 				if len(r) > 0 {
 					JsonMetadata := strings.TrimSpace(r[1])

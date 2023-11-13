@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"html"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -21,7 +21,7 @@ func LoadHeresphereScene(url string) HeresphereVideo {
 		return HeresphereVideo{}
 	}
 
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Errorf("Error from %s %s", url, err)
 	}
@@ -41,7 +41,7 @@ func LoadDeovrScene(url string) DeoScene {
 		return DeoScene{}
 	}
 
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Errorf("Error from %s %s", url, err)
 	}
@@ -135,7 +135,7 @@ func LoadJson(scrapeParams string) models.VideoSourceResponse {
 		return models.VideoSourceResponse{}
 	}
 
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Errorf("Error from %s %s", params.SceneUrl, err)
 	}

@@ -44,7 +44,7 @@ func onReady() {
 		iconData, _ := ui.Assets.ReadFile("dist/icons/xbvr-128.png")
 		systray.SetIcon(iconData)
 	}
-	systray.SetTooltip(fmt.Sprintf("XBVR"))
+	systray.SetTooltip("XBVR")
 
 	systray.AddSeparator()
 

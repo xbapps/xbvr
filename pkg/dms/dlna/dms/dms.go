@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -588,7 +587,7 @@ func (me *Server) serveIcon(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
@@ -649,13 +648,13 @@ func (server *Server) contentDirectoryInitialEvent(urls []*url.URL, sid string) 
 			continue
 		}
 		eventingLogger.Print(resp)
-		b, _ := ioutil.ReadAll(resp.Body)
+		b, _ := io.ReadAll(resp.Body)
 		eventingLogger.Println(string(b))
 		resp.Body.Close()
 	}
 }
 
-var eventingLogger = log.New(ioutil.Discard, "", 0)
+var eventingLogger = log.New(io.Discard, "", 0)
 
 func (server *Server) contentDirectoryEventSubHandler(w http.ResponseWriter, r *http.Request) {
 	if server.StallEventSubscribe {
