@@ -60,7 +60,7 @@ require (
 	golang.org/x/oauth2 v0.13.0
 	golang.org/x/sys v0.14.0
 	golang.org/x/text v0.14.0
-	gopkg.in/gormigrate.v1 v1.6.0
+	gopkg.in/gormigrate.v2 v2.1.1
 	willnorris.com/go/imageproxy v0.11.3-0.20231113231555-ef50c1f9a64e
 )
 
