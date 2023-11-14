@@ -98,6 +98,7 @@ type HeresphereSource struct {
 }
 
 type HereSphereAlphaPackedSettings struct {
+	DefaultSettings bool `json:"defaultSettings"` // not an actual setting, the struct does not get marshalled if it is empty
 }
 
 type HereSphereAuthRequest struct {
@@ -705,8 +706,8 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	if gjson.Valid(scene.ChromaKey) {
 		result := gjson.Get(scene.ChromaKey, "hasAlpha")
 		if result.Exists() && result.Bool() {
-			alphaPackedSettings = &HereSphereAlphaPackedSettings{}
-			addFeatureTag("Has Alpha Passthrough")
+			alphaPackedSettings = &HereSphereAlphaPackedSettings{DefaultSettings: true}
+			addFeatureTag("Is Alpha Passthrough")
 		}
 	}
 

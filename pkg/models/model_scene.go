@@ -814,6 +814,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "scenes.favourite = 1"
 		case "Is Passthrough":
 			where = "chroma_key <> ''"
+		case "Is Alpha Passthrough":
+			where = `chroma_key <> '' and chroma_key like '%"hasAlpha":true%'`
 		case "In Wishlist":
 			where = "wishlist = 1"
 		case "Stashdb Linked":
