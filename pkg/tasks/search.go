@@ -127,6 +127,7 @@ func SearchIndex() {
 
 		tlog.Infof("Building search index...")
 
+		lastProgressUpdate := time.Now()
 		for {
 			tx.Offset(offset).Limit(100).Find(&scenes)
 			if len(scenes) == 0 {
@@ -141,8 +142,11 @@ func SearchIndex() {
 					}
 				}
 				current = current + 1
+				if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
+					tlog.Infof("Indexed %v/%v scenes", current, total)
+					lastProgressUpdate = time.Now()
+				}
 			}
-			tlog.Infof("Indexed %v/%v scenes", current, total)
 
 			offset = offset + 100
 		}

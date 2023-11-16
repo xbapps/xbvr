@@ -191,9 +191,11 @@ func ReapplyEdits() {
 
 	actionCnt := 0
 
+	lastProgressUpdate := time.Now()
 	for _, a := range actions {
-		if actionCnt%100 == 0 {
+		if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 			tlog.Infof("Processing %v of %v edits", actionCnt+1, len(actions))
+			lastProgressUpdate = time.Now()
 		}
 		actionCnt += 1
 
@@ -505,8 +507,12 @@ func ImportBundleV1(bundleData ContentBundle) {
 	db, _ := models.GetDB()
 	defer db.Close()
 
+	lastProgressUpdate := time.Now()
 	for i := range bundleData.Scenes {
-		tlog.Infof("Importing %v of %v scenes", i+1, len(bundleData.Scenes))
+		if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
+			tlog.Infof("Importing %v of %v scenes", i+1, len(bundleData.Scenes))
+			lastProgressUpdate = time.Now()
+		}
 		models.SceneCreateUpdateFromExternal(db, bundleData.Scenes[i])
 	}
 
@@ -571,10 +577,12 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 				db.Select("id, scene_id").Find(&scenes)
 			}
 
+			lastProgressUpdate := time.Now()
 			var err error
 			for cnt, scene := range scenes {
-				if cnt%500 == 0 {
+				if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 					tlog.Infof("Reading scene %v of %v, selected %v scenes", cnt+1, len(scenes), exportCnt)
+					lastProgressUpdate = time.Now()
 				}
 
 				// check if the scene is for a site we want
@@ -854,9 +862,11 @@ func RestoreScenes(scenes []models.Scene, inclAllSites bool, selectedSites []mod
 	tlog.Infof("Restoring scenes")
 
 	addedCnt := 0
+	lastProgressUpdate := time.Now()
 	for sceneCnt, scene := range scenes {
-		if sceneCnt%250 == 0 {
+		if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 			tlog.Infof("Processing %v of %v scenes", sceneCnt+1, len(scenes))
+			lastProgressUpdate = time.Now()
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
@@ -904,9 +914,11 @@ func RestoreCuepoints(sceneCuepointList []BackupSceneCuepoint, inclAllSites bool
 	tlog.Infof("Restoring scene cuepoints")
 
 	addedCnt := 0
+	lastProgressUpdate := time.Now()
 	for cnt, cuepoints := range sceneCuepointList {
-		if cnt%500 == 0 {
+		if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 			tlog.Infof("Processing cuepoints %v of %v", cnt+1, len(sceneCuepointList))
+			lastProgressUpdate = time.Now()
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
@@ -952,9 +964,11 @@ func RestoreSceneFileLinks(backupFileList []BackupFileLink, inclAllSites bool, s
 	db.Find(&volumes)
 
 	addedCnt := 0
+	lastProgressUpdate := time.Now()
 	for cnt, backupSceneFiles := range backupFileList {
-		if cnt%500 == 0 {
+		if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 			tlog.Infof("Processing files %v of %v", cnt+1, len(backupFileList))
+			lastProgressUpdate = time.Now()
 		}
 
 		// check if the scene is for a site we want
@@ -1003,9 +1017,11 @@ func RestoreHistory(sceneHistoryList []BackupSceneHistory, inclAllSites bool, se
 	tlog.Infof("Restoring scene watch history")
 
 	addedCnt := 0
+	lastProgressUpdate := time.Now()
 	for cnt, histories := range sceneHistoryList {
-		if cnt%500 == 0 {
+		if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 			tlog.Infof("Processing history %v of %v", cnt+1, len(sceneHistoryList))
+			lastProgressUpdate = time.Now()
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
@@ -1060,9 +1076,11 @@ func RestoreActions(sceneActionList []BackupSceneAction, inclAllSites bool, sele
 	tlog.Infof("Restoring scene edits")
 
 	addedCnt := 0
+	lastProgressUpdate := time.Now()
 	for cnt, actions := range sceneActionList {
-		if cnt%500 == 0 {
+		if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 			tlog.Infof("Processing actions %v of %v", cnt+1, len(sceneActionList))
+			lastProgressUpdate = time.Now()
 		}
 		// check if the scene is for a site we want
 		if !inclAllSites {
@@ -1610,10 +1628,12 @@ func UpdateSceneStatus(db *gorm.DB) {
 	scenes := []models.Scene{}
 	db.Model(&models.Scene{}).Find(&scenes)
 
+	lastProgressUpdate := time.Now()
 	for i := range scenes {
 		scenes[i].UpdateStatus()
-		if (i % 70) == 0 {
+		if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 			tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+			lastProgressUpdate = time.Now()
 		}
 	}
 }
