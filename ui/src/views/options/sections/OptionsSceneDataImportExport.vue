@@ -150,6 +150,13 @@
             <b-switch v-model="includeSites">Include Scraper Settings</b-switch>
           </b-tooltip>
         </b-field>
+        <b-field>
+          <b-tooltip
+            :label="isImport ? 'Requires restarting XBVR once complete. Include XBVR Configuration Settings. Preview setting, task schedules, etc.' : 'Includes passowrds/access tokens. Includes XBVR Configuration Settings. Preview settings, task schedules, etc.'"  
+            size="is-large" :type="isImport ? 'is-warning is-light' : 'is-danger is-light'" multilined :delay="300" >
+            <b-switch v-model="includeConfig">Include Config Settings</b-switch>
+          </b-tooltip>
+        </b-field>
         <b-button type="is-info is-small" style="margin-bottom: 1em;"  @click="toggleSettingsIncludes()">Toggle Includes</b-button>
       </div>
       <hr />
@@ -219,6 +226,7 @@ export default {
       includePlaylists: true,
       includeVolumes: true,
       includeSites: true,
+      includeConfig: false,
       includeActorAkas: true,
       includeExternalReferences: true,
       includeTagGroups: true,
@@ -300,13 +308,13 @@ export default {
         // put up a starting msg, as large files can cause it to appear to hang
         this.$store.state.messages.lastScrapeMessage = 'Starting restore'
         ky.post('/api/task/bundle/restore', {
-          json: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, overwrite: this.overwrite, uploadData: this.uploadData }
+          json: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, inclConfig: this.includeConfig, overwrite: this.overwrite, uploadData: this.uploadData }
         })
         this.file = null
       }
     },
     backupContent () {      
-      ky.get('/api/task/bundle/backup', { timeout: false, searchParams: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, playlistId: this.currentPlaylist, download: true } }).json().then(data => {      
+      ky.get('/api/task/bundle/backup', { timeout: false, searchParams: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, inclConfig: this.includeConfig, playlistId: this.currentPlaylist, download: true } }).json().then(data => {      
         const link = document.createElement('a')
         link.href = this.myUrl
         link.click()
@@ -330,6 +338,7 @@ export default {
       this.includePlaylists = !this.includePlaylists
       this.includeVolumes=!this.includeVolumes
       this.includeSites=!this.includeSites
+      this.includeConfig=!this.includeConfig
     },
   }
 }

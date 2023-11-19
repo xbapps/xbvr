@@ -70,6 +70,7 @@ type BackupContentBundle struct {
 	ExternalRefs  []models.ExternalReference `xbvrbackup:"externalReferences"`
 	Actors        []models.Actor             `xbvrbackup:"actors"`
 	ActionActors  []BackupActionActor        `xbvrbackup:"actionActors"`
+	Kvs           []models.KV                `xbvrbackup:"config"`
 }
 type RequestRestore struct {
 	InclAllSites     bool   `json:"allSites"`
@@ -89,6 +90,7 @@ type RequestRestore struct {
 	InclExternalRefs bool   `json:"inclExtRefs"`
 	InclActors       bool   `json:"inclActors"`
 	InclActorActions bool   `json:"inclActorActions"`
+	InclConfig       bool   `json:"inclConfig"`
 }
 
 func CleanTags() {
@@ -512,7 +514,7 @@ func ImportBundleV1(bundleData ContentBundle) {
 
 }
 
-func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclTagGroups bool, inclVolumes bool, inclSites bool, inclActions bool, inclExtRefs bool, inclActors bool, inclActorActions bool, playlistId string, outputBundleFilename string, version string) string {
+func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclTagGroups bool, inclVolumes bool, inclSites bool, inclActions bool, inclExtRefs bool, inclActors bool, inclActorActions bool, inclConfig bool, playlistId string, outputBundleFilename string, version string) string {
 	var out BackupContentBundle
 	var content []byte
 	exportCnt := 0
@@ -699,6 +701,10 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 				backupActionActorList = append(backupActionActorList, actorsActions)
 			}
 		}
+		var kvs []models.KV
+		if inclConfig {
+			db.Where("`key` not like 'lock%'").Find(&kvs)
+		}
 
 		var err error
 		out = BackupContentBundle{
@@ -717,6 +723,7 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 			ExternalRefs:  externalReferences,
 			Actors:        actors,
 			ActionActors:  backupActionActorList,
+			Kvs:           kvs,
 		}
 
 		var json = jsoniter.Config{
@@ -835,6 +842,9 @@ func RestoreBundle(request RequestRestore) {
 			}
 			if request.InclActorActions {
 				RestoreActionActors(bundleData.ActionActors, request.Overwrite, db)
+			}
+			if request.InclConfig {
+				RestoreKvs(bundleData.Kvs, db)
 			}
 
 			if request.InclScenes {
@@ -1541,6 +1551,16 @@ func RestoreActionActors(actionActorsList []BackupActionActor, overwrite bool, d
 		addedCnt++
 	}
 	tlog.Infof("%v Actors with edits restored", addedCnt)
+}
+func RestoreKvs(kvs []models.KV, db *gorm.DB) {
+	tlog := log.WithField("task", "scrape")
+	tlog.Infof("Restoring System Config")
+
+	for _, kv := range kvs {
+		models.SaveWithRetry(db, &kv)
+	}
+
+	tlog.Infof("System Config Restored ")
 }
 
 func CountTags() {
