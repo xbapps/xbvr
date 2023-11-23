@@ -5,6 +5,7 @@ import (
 
 	"github.com/avast/retry-go/v4"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/common"
 )
 
 type Tag struct {
@@ -30,6 +31,7 @@ func (t *Tag) Save() error {
 	)
 
 	if err != nil {
+		log.Infof("%s", common.GetStackTrace())
 		log.Fatal("Failed to save ", err)
 	}
 

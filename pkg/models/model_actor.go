@@ -9,6 +9,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/jinzhu/gorm"
 	"github.com/markphelps/optional"
+	"github.com/xbapps/xbvr/pkg/common"
 )
 
 type Actor struct {
@@ -111,6 +112,7 @@ func (i *Actor) Save() error {
 	)
 
 	if err != nil {
+		log.Infof("%s", common.GetStackTrace())
 		log.Fatal("Failed to save ", err)
 	}
 
