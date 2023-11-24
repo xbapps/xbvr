@@ -70,7 +70,7 @@ func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
 				origURLtmp := e.Attr(params.ContentPath)
 				quality := e.Attr(params.QualityPath)
 				if origURLtmp != "" {
-					if params.ContentBaseUrl != "" {
+					if params.ContentBaseUrl != "" && !strings.HasPrefix(origURLtmp, params.ContentBaseUrl) {
 						origURLtmp = params.ContentBaseUrl + origURLtmp
 					}
 					srcs = append(srcs, models.VideoSource{URL: origURLtmp, Quality: quality})
@@ -174,7 +174,7 @@ func extractFromJson(inputJson string, params models.TrailerScrape, srcs []model
 			if params.EncodingPath != "" {
 				encoding = gjson.Get(JsonMetadata, params.EncodingPath).String() + "-"
 			}
-			if params.ContentBaseUrl != "" {
+			if params.ContentBaseUrl != "" && !strings.HasPrefix(url, params.ContentBaseUrl) {
 				if params.ContentBaseUrl[len(params.ContentBaseUrl)-1:] == "/" && string(url[0]) == "/" {
 					url = params.ContentBaseUrl + url[1:]
 				} else {
