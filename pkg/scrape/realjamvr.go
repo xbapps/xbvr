@@ -171,9 +171,9 @@ func RealJamSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		switch trailerId {
 		case "":
-			log.Errorf("Could not determine Scene Id for %, Id not found", sc.HomepageURL)
+			log.Errorf("Could not determine Scene Id for %v, Id not found", sc.HomepageURL)
 		case "mismatch":
-			log.Errorf("Could not determine Scene Id for %, inconsistent trailer filenames", sc.HomepageURL)
+			log.Errorf("Could not determine Scene Id for %v, inconsistent trailer filenames", sc.HomepageURL)
 		default:
 			out <- sc
 		}
@@ -186,11 +186,8 @@ func RealJamSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 	siteCollector.OnHTML(`div.panel a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+		sceneURL = strings.TrimSuffix(sceneURL, "/")
 
-		if strings.HasSuffix(sceneURL, "/") {
-			// make a consistent URL
-			sceneURL = sceneURL[0 : len(sceneURL)-1]
-		}
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) && strings.Contains(sceneURL, domain+"/scene/") {
 			sceneCollector.Visit(sceneURL)

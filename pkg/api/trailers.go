@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"html"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -21,7 +21,7 @@ func LoadHeresphereScene(url string) HeresphereVideo {
 		return HeresphereVideo{}
 	}
 
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Errorf("Error from %s %s", url, err)
 	}
@@ -41,7 +41,7 @@ func LoadDeovrScene(url string) DeoScene {
 		return DeoScene{}
 	}
 
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Errorf("Error from %s %s", url, err)
 	}
@@ -70,7 +70,7 @@ func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
 				origURLtmp := e.Attr(params.ContentPath)
 				quality := e.Attr(params.QualityPath)
 				if origURLtmp != "" {
-					if params.ContentBaseUrl != "" {
+					if params.ContentBaseUrl != "" && !strings.HasPrefix(origURLtmp, params.ContentBaseUrl) {
 						origURLtmp = params.ContentBaseUrl + origURLtmp
 					}
 					srcs = append(srcs, models.VideoSource{URL: origURLtmp, Quality: quality})
@@ -135,7 +135,7 @@ func LoadJson(scrapeParams string) models.VideoSourceResponse {
 		return models.VideoSourceResponse{}
 	}
 
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Errorf("Error from %s %s", params.SceneUrl, err)
 	}
@@ -174,7 +174,7 @@ func extractFromJson(inputJson string, params models.TrailerScrape, srcs []model
 			if params.EncodingPath != "" {
 				encoding = gjson.Get(JsonMetadata, params.EncodingPath).String() + "-"
 			}
-			if params.ContentBaseUrl != "" {
+			if params.ContentBaseUrl != "" && !strings.HasPrefix(url, params.ContentBaseUrl) {
 				if params.ContentBaseUrl[len(params.ContentBaseUrl)-1:] == "/" && string(url[0]) == "/" {
 					url = params.ContentBaseUrl + url[1:]
 				} else {

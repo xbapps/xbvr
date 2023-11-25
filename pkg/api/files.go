@@ -331,7 +331,7 @@ func removeFileByFileId(fileId uint) models.Scene {
 			if err == nil {
 				deleted = true
 			} else {
-				log.Errorf("Error deleting file ", err)
+				log.Errorf("error deleting file: %v", err)
 			}
 		case "putio":
 			id, err := strconv.ParseInt(file.Path, 10, 64)
@@ -343,7 +343,7 @@ func removeFileByFileId(fileId uint) models.Scene {
 			if err == nil {
 				deleted = true
 			} else {
-				log.Errorf("Error deleting file ", err)
+				log.Errorf("error deleting file %v", err)
 			}
 		}
 
@@ -355,7 +355,7 @@ func removeFileByFileId(fileId uint) models.Scene {
 			}
 		}
 	} else {
-		log.Errorf("Error deleting file ", err)
+		log.Errorf("error deleting file %v", err)
 	}
 	return scene
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func GetMetric(name string) (*whisper.Whisper, error) {
-	retentions, err := whisper.ParseRetentionDefs("1m:1d,1h:60d,12h:20y")
+	retentions, _ := whisper.ParseRetentionDefs("1m:1d,1h:60d,12h:20y")
 	path := filepath.Join(MetricsDir, name+".wsp")
 
 	wsp, err := whisper.Create(path, retentions, whisper.Last, 0.5)

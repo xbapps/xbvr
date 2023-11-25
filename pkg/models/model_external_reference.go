@@ -2,7 +2,6 @@ package models
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -859,6 +858,10 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	})
 	scrapeRules.GenericActorScrapingConfig["realjamvr scrape"] = siteDetails
 
+	// use the site rules just setup for realjamvr, just need to update the Domain to use
+	siteDetails.Domain = "porncornvr.com"
+	scrapeRules.GenericActorScrapingConfig["porncornvr scrape"] = siteDetails
+
 	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "povr.com"
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `script[type="application/ld+json"]`, PostProcessing: []PostProcessing{{Function: "jsonString", Params: []string{"image"}}}})
@@ -981,7 +984,7 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 	//	this is to give examples, it is not loaded
 	fName := filepath.Join(common.AppDir, "actor_scraper_config_examples.json")
 	out, _ := json.MarshalIndent(scrapeRules, "", "  ")
-	ioutil.WriteFile(fName, out, 0644)
+	os.WriteFile(fName, out, 0644)
 
 	// now check if the user has any custom rules
 	fName = filepath.Join(common.AppDir, "actor_scraper_custom_config.json")
@@ -1021,12 +1024,12 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 			exampleConfig.StashSceneMatching["siteid"] = stashMatch
 
 			out, _ := json.MarshalIndent(exampleConfig, "", "  ")
-			ioutil.WriteFile(fName, out, 0644)
+			os.WriteFile(fName, out, 0644)
 		}
 	} else {
 		// load any custom rules and update the builtin list
 		var customScrapeRules ActorScraperConfig
-		b, err := ioutil.ReadFile(fName)
+		b, err := os.ReadFile(fName)
 		if err != nil {
 			return
 		}
@@ -1045,6 +1048,7 @@ func (scrapeRules ActorScraperConfig) getSiteUrlMatchingRules() {
 
 	var sites []Site
 
+	// if the scene_url in xbvr and stash typically matches, then no special rules required
 	scrapeRules.StashSceneMatching["allvrporn-vrporn"] = StashSiteConfig{StashId: "44fd483b-85eb-4b22-b7f2-c92c1a50923a"}
 	scrapeRules.StashSceneMatching["bvr"] = StashSiteConfig{StashId: "1ffbd972-7d69-4ccb-b7da-c6342a9c3d70"}
 	scrapeRules.StashSceneMatching["cuties-vr"] = StashSiteConfig{StashId: "1e5240a8-29b3-41ed-ae28-fc9231eac449"}
@@ -1077,8 +1081,11 @@ func (scrapeRules ActorScraperConfig) getSiteUrlMatchingRules() {
 	scrapeRules.StashSceneMatching["vrsolos"] = StashSiteConfig{StashId: "b2d048da-9180-4e43-b41a-bdb4d265c8ec"}
 	scrapeRules.StashSceneMatching["vrspy"] = StashSiteConfig{StashId: "513001ef-dff4-476d-840d-e22ef27e81ed"}
 	scrapeRules.StashSceneMatching["wankitnowvr"] = StashSiteConfig{StashId: "acb1ed8f-4967-4c5a-b16a-7025bdeb75c5"}
+	scrapeRules.StashSceneMatching["porncornvr"] = StashSiteConfig{StashId: "9ecb1d29-64e8-4336-9bd2-5dda53341e29"}
 
 	scrapeRules.StashSceneMatching["wetvr"] = StashSiteConfig{StashId: "981887d6-da48-4dfc-88d1-7ed13a2754f2"}
+
+	// setup special rules to match scenes in xbvr and stashdb, rather than assuming scene_urls match
 	scrapeRules.StashSceneMatching["wankzvr"] = StashSiteConfig{
 		StashId: "b04bca51-15ea-45ab-80f6-7b002fd4a02d",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(povr|wankzvr).com\/(.*)(-\d*?)\/?$`, StashMatchResultPosition: 3}},

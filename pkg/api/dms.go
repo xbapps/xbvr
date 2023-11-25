@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"time"
 
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
@@ -18,13 +17,6 @@ import (
 )
 
 type DMSResource struct{}
-
-var (
-	lastSessionID      uint
-	lastSessionSceneID uint
-	lastSessionStart   time.Time
-	lastSessionEnd     time.Time
-)
 
 func (i DMSResource) WebService() *restful.WebService {
 	tags := []string{"DMS"}
@@ -112,6 +104,6 @@ func (i DMSResource) getFile(req *restful.Request, resp *restful.Response) {
 		if err != nil {
 			return
 		}
-		http.Redirect(resp.ResponseWriter, req.Request, url, 302)
+		http.Redirect(resp.ResponseWriter, req.Request, url, http.StatusFound)
 	}
 }

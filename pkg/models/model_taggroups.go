@@ -76,11 +76,6 @@ func (o *TagGroup) UpdateSceneTagRecords() {
 	`)
 
 	// delete scene_tags for tag groups that have been removed
-	type DeleteList struct {
-		TagGroupTagId uint
-		SceneId       uint
-	}
-
 	db.Exec(`
 	with SceneIds as (
 		select distinct tg.id, st.scene_id

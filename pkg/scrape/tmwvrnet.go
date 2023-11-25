@@ -99,9 +99,11 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`div.pagination__element.next a`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		siteCollector.Visit(pageURL)
+	siteCollector.OnHTML(`a.pagination-element__link`, func(e *colly.HTMLElement) {
+		if strings.Contains(e.Text, "Next") {
+			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+			siteCollector.Visit(pageURL)
+		}
 	})
 
 	siteCollector.OnHTML(`div.thumb-photo`, func(e *colly.HTMLElement) {

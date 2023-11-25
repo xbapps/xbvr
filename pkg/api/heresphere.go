@@ -4,9 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -17,6 +18,7 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/markphelps/optional"
+	"github.com/tidwall/gjson"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
@@ -37,29 +39,30 @@ type HeresphereListScenes struct {
 }
 
 type HeresphereVideo struct {
-	Access               int                   `json:"access"`
-	Title                string                `json:"title"`
-	Description          string                `json:"description"`
-	ThumbnailImage       string                `json:"thumbnailImage"`
-	ThumbnailVideo       string                `json:"thumbnailVideo,omitempty"`
-	DateReleased         string                `json:"dateReleased"`
-	DateAdded            string                `json:"dateAdded"`
-	DurationMilliseconds uint                  `json:"duration"`
-	Rating               float64               `json:"rating,omitempty"`
-	IsFavorite           bool                  `json:"isFavorite"`
-	Projection           string                `json:"projection"`
-	Stereo               string                `json:"stereo"`
-	FOV                  float64               `json:"fov"`
-	Lens                 string                `json:"lens"`
-	HspUrl               string                `json:"hsp,omitempty"`
-	Scripts              []HeresphereScript    `json:"scripts,omitempty"`
-	Subtitles            []HeresphereSubtitles `json:"subtitles,omitempty"`
-	Tags                 []HeresphereTag       `json:"tags,omitempty"`
-	Media                []HeresphereMedia     `json:"media"`
-	WriteFavorite        bool                  `json:"writeFavorite"`
-	WriteRating          bool                  `json:"writeRating"`
-	WriteTags            bool                  `json:"writeTags"`
-	WriteHSP             bool                  `json:"writeHSP"`
+	Access               int                            `json:"access"`
+	Title                string                         `json:"title"`
+	Description          string                         `json:"description"`
+	ThumbnailImage       string                         `json:"thumbnailImage"`
+	ThumbnailVideo       string                         `json:"thumbnailVideo,omitempty"`
+	DateReleased         string                         `json:"dateReleased"`
+	DateAdded            string                         `json:"dateAdded"`
+	DurationMilliseconds uint                           `json:"duration"`
+	Rating               float64                        `json:"rating,omitempty"`
+	IsFavorite           bool                           `json:"isFavorite"`
+	Projection           string                         `json:"projection"`
+	Stereo               string                         `json:"stereo"`
+	FOV                  float64                        `json:"fov"`
+	Lens                 string                         `json:"lens"`
+	HspUrl               string                         `json:"hsp,omitempty"`
+	Scripts              []HeresphereScript             `json:"scripts,omitempty"`
+	Subtitles            []HeresphereSubtitles          `json:"subtitles,omitempty"`
+	Tags                 []HeresphereTag                `json:"tags,omitempty"`
+	Media                []HeresphereMedia              `json:"media"`
+	AlphaPackedSettings  *HereSphereAlphaPackedSettings `json:"alphaPackedSettings,omitempty"`
+	WriteFavorite        bool                           `json:"writeFavorite"`
+	WriteRating          bool                           `json:"writeRating"`
+	WriteTags            bool                           `json:"writeTags"`
+	WriteHSP             bool                           `json:"writeHSP"`
 }
 
 type HeresphereScript struct {
@@ -94,6 +97,10 @@ type HeresphereSource struct {
 	URL        string `json:"url"`
 }
 
+type HereSphereAlphaPackedSettings struct {
+	DefaultSettings bool `json:"defaultSettings"` // not an actual setting, the struct does not get marshalled if it is empty
+}
+
 type HereSphereAuthRequest struct {
 	Username    string           `json:"username"`
 	Password    string           `json:"password"`
@@ -107,7 +114,7 @@ type HereSphereAuthRequest struct {
 var RequestBody []byte
 
 func HeresphereAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	RequestBody, _ = ioutil.ReadAll(req.Request.Body)
+	RequestBody, _ = io.ReadAll(req.Request.Body)
 	if isDeoAuthEnabled() {
 		var authorized bool
 		var requestData HereSphereAuthRequest
@@ -358,13 +365,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 				if len(encoding.VideoSources) > 0 {
 					hsp.Name = encoding.Name
 					for _, source := range encoding.VideoSources {
-						hspSource := HeresphereSource{
-							URL:        source.URL,
-							Width:      source.Width,
-							Height:     source.Height,
-							Resolution: source.Resolution,
-							Size:       source.Size,
-						}
+						hspSource := HeresphereSource(source)
 						hsp.Sources = append(hsp.Sources, hspSource)
 					}
 					media = append(media, hsp)
@@ -701,6 +702,15 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		addFeatureTag("Year: " + scene.ReleaseDate.Format("2006"))
 	}
 
+	var alphaPackedSettings *HereSphereAlphaPackedSettings = nil
+	if gjson.Valid(scene.ChromaKey) {
+		result := gjson.Get(scene.ChromaKey, "hasAlpha")
+		if result.Exists() && result.Bool() {
+			alphaPackedSettings = &HereSphereAlphaPackedSettings{DefaultSettings: true}
+			addFeatureTag("Is Alpha Passthrough")
+		}
+	}
+
 	for f := range features {
 		tags = append(tags, HeresphereTag{
 			Name: "Feature:" + f,
@@ -726,6 +736,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		Subtitles:            heresphereSubtitlesFiles,
 		Tags:                 tags,
 		Media:                media,
+		AlphaPackedSettings:  alphaPackedSettings,
 		WriteFavorite:        config.Config.Interfaces.Heresphere.AllowFavoriteUpdates,
 		WriteRating:          config.Config.Interfaces.Heresphere.AllowRatingUpdates,
 		WriteTags:            config.Config.Interfaces.Heresphere.AllowTagUpdates || config.Config.Interfaces.Heresphere.AllowCuepointUpdates || config.Config.Interfaces.Heresphere.AllowWatchlistUpdates || config.Config.Web.SceneTrailerlist,
@@ -893,7 +904,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 		}
 
 		fName := filepath.Join(scene.Files[0].Path, strings.TrimSuffix(scene.Files[0].Filename, filepath.Ext(videoFile.Filename))+".hsp")
-		ioutil.WriteFile(fName, hspContent, 0644)
+		os.WriteFile(fName, hspContent, 0644)
 
 		tasks.ScanLocalHspFile(fName, videoFile.VolumeID, scene.ID)
 	}
@@ -947,15 +958,6 @@ func findEndPos(requestData HereSphereAuthRequest) float64 {
 		}
 	}
 	return endpos
-}
-
-func matchCuepoint(findCuepoint models.SceneCuepoint, cuepointList []models.SceneCuepoint) int {
-	for idx, cuepoint := range cuepointList {
-		if cuepoint.Name == findCuepoint.Name && cuepoint.TimeStart == findCuepoint.TimeStart && *cuepoint.Track == *findCuepoint.Track && cuepoint.TimeEnd == findCuepoint.TimeEnd {
-			return idx
-		}
-	}
-	return -1
 }
 
 func (i HeresphereResource) getHeresphereLibrary(req *restful.Request, resp *restful.Response) {

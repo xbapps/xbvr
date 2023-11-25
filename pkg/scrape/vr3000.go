@@ -87,9 +87,8 @@ func VR3000(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 						"%s_960_60fps_15mb_180x180_3dh.mp4",
 						"%s_960_30fps_10mb_180x180_3dh.mp4"}
 					for i := range filenames {
-						filenames[i] = fmt.Sprintf(filenames[i], sc.SiteID)
+						sc.Filenames = append(sc.Filenames, fmt.Sprintf(filenames[i], sc.SiteID))
 					}
-					sc.Filenames = append(filenames)
 				}
 			})
 

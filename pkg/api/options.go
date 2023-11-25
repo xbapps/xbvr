@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -71,7 +70,7 @@ type RequestSaveOptionsAdvanced struct {
 }
 
 type RequestSaveOptionsFunscripts struct {
-	ScrapeFunscripts bool `json:"scrapeFunscripts":`
+	ScrapeFunscripts bool `json:"scrapeFunscripts"`
 }
 type RequestSaveOptionsDLNA struct {
 	Enabled      bool     `json:"enabled"`
@@ -935,7 +934,7 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 	scraperConfig.CustomScrapers.VrpornScrapers = scrapers["vrporn"]
 	fName := filepath.Join(common.AppDir, "scrapers.json")
 	list, _ := json.MarshalIndent(scraperConfig, "", "  ")
-	ioutil.WriteFile(fName, list, 0644)
+	os.WriteFile(fName, list, 0644)
 
 	resp.WriteHeader(http.StatusOK)
 }

@@ -208,4 +208,5 @@ func init() {
 	addCZVRScraper("czechvrfetish", "Czech VR Fetish", "16", "https://www.czechvrfetish.com/images/favicon/android-chrome-256x256.png")
 	addCZVRScraper("czechvrcasting", "Czech VR Casting", "17", "https://www.czechvrcasting.com/images/favicon/android-chrome-256x256.png")
 	addCZVRScraper("czechvrintimacy", "VR Intimacy", "18", "https://www.vrintimacy.com/images/favicon/android-chrome-256x256.png")
+	addCZVRScraper("czechar", "Czech AR", "19", "https://www.czechar.com/images/favicon/apple-touch-icon.png")
 }

@@ -1483,7 +1483,7 @@ func Migrate() {
 				}
 				// backup bundle
 				common.Log.Infof("Creating pre-migration backup, please waiit, backups can take some time on a system with a large number of scenes ")
-				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, "0", "xbvr-premigration-bundle.json", "2")
+				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, false, "0", "xbvr-premigration-bundle.json", "2")
 				common.Log.Infof("Go to download/xbvr-premigration-bundle.json, or http://xxx.xxx.xxx.xxx:9999/download/xbvr-premigration-bundle.json if you need access to the backup")
 				var sites []models.Site
 				officalSiteChanges := []SiteChange{
@@ -1799,6 +1799,36 @@ func Migrate() {
 
 					playlist.SearchParams = string(b)
 					playlist.Save()
+				}
+				return nil
+			},
+		},
+		{
+			ID: "0071-Update-WetVR",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+
+				err := tx.Where("site = ?", "WetVR").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for _, scene := range scenes {
+					scene.TrailerType = "scrape_html"
+					scene.TrailerSource = `{"scene_url":"` + scene.SceneURL + `","html_element":"deo-video source","extract_regex":"","content_base_url":"","record_path":"","content_path":"src","encoding_path":"","quality_path":"quality"}`
+					scene.MemberURL = strings.Replace(scene.SceneURL, "https://wetvr.com/", "https://wetvr.com/members/", 1)
+
+					var filenames []string
+					err = json.Unmarshal([]byte(scene.FilenamesArr), &filenames)
+					baseFilename := strings.TrimPrefix(scene.SceneURL, "https://wetvr.com/video/")
+					if !strings.Contains(scene.FilenamesArr, "2700.mp4") {
+						filenames = append(filenames, "wetvr-"+baseFilename+"-2700.mp4")
+						filenames = append(filenames, "wetvr-"+baseFilename+"-2048.mp4")
+						filenames = append(filenames, "wetvr-"+baseFilename+"-1600.mp4")
+						filenames = append(filenames, "wetvr-"+baseFilename+"-960.mp4")
+						tmp, _ := json.Marshal(filenames)
+						scene.FilenamesArr = string(tmp)
+					}
+					tx.Save(&scene)
 				}
 				return nil
 			},

@@ -22,8 +22,7 @@ func (a *Action) Save() {
 	db, _ := GetDB()
 	defer db.Close()
 
-	var err error
-	err = retry.Do(
+	var err error = retry.Do(
 		func() error {
 			err := db.Save(&a).Error
 			if err != nil {

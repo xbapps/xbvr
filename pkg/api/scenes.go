@@ -320,6 +320,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Is Favourite")
 	outAttributes = append(outAttributes, "Is Scripted")
 	outAttributes = append(outAttributes, "Is Passthrough")
+	outAttributes = append(outAttributes, "Is Alpha Passthrough")
 	outAttributes = append(outAttributes, "In Watchlist")
 	outAttributes = append(outAttributes, "In Wishlist")
 	outAttributes = append(outAttributes, "Has Rating")
@@ -676,7 +677,7 @@ func (i SceneResource) deleteSceneCuepoint(req *restful.Request, resp *restful.R
 	db.Delete(&cuepoint)
 
 	var scene models.Scene
-	err = scene.GetIfExistByPK(uint(sceneId))
+	_ = scene.GetIfExistByPK(uint(sceneId))
 	defer db.Close()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
@@ -739,7 +740,7 @@ func (i SceneResource) selectScript(req *restful.Request, resp *restful.Response
 				}
 			}
 		}
-		err = scene.GetIfExistByPK(uint(sceneId))
+		_ = scene.GetIfExistByPK(uint(sceneId))
 	}
 	db.Close()
 
