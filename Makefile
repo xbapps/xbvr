@@ -70,5 +70,5 @@ release:
 		-v `pwd`:/go/src \
 		-v `pwd`/sysroot:/sysroot \
 		-w /go/src \
-		ghcr.io/goreleaser/goreleaser-cross:latest \
+		ghcr.io/goreleaser/goreleaser-cross:GORELEASER_CROSS_VERSION \
 		release --clean
