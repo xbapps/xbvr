@@ -919,7 +919,7 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 		scraper := config.ScraperConfig{URL: r.Url, Name: r.Name, Company: r.Company, AvatarUrl: r.Avatar}
 		switch match[3] {
 		case "povr":
-			scrapers["povr"] = append(scrapers["povrr"], scraper)
+			scrapers["povr"] = append(scrapers["povr"], scraper)
 		case "sexlikereal":
 			scrapers["slr"] = append(scrapers["slr"], scraper)
 		case "vrphub":
