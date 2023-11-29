@@ -41,9 +41,9 @@
               {{item.duration}}m
             </b-tag>
           </div>
-          <div v-if="this.$store.state.optionsWeb.web.showScriptHeatmap && (f = getFunscript())" style="padding: 0px 5px 5px">
-            <div v-if="f.has_heatmap" class="heatmapFunscript">
-              <img :src="getHeatmapURL(f.id)"/>
+          <div v-if="this.$store.state.optionsWeb.web.showScriptHeatmap && (files = getFunscripts(this.$store.state.optionsWeb.web.showAllHeatmaps))" style="padding: 0px 5px 5px">
+            <div v-if="files.length" class="heatmapFunscript">
+              <img v-for="file in files" :src="getHeatmapURL(file.id)"/>
             </div>
           </div>
         </div>
@@ -168,17 +168,21 @@ export default {
     getHeatmapURL (fileId) {
       return `/api/dms/heatmap/${fileId}`
     },
-    getFunscript() {
-      if (this.item.file !== null) {
-        let script;
-        if (script = this.item.file.find((a) => a.type === 'script' && a.has_heatmap && a.is_selected_script)) {
-          return script
+    getFunscripts (showAll) {
+      if (showAll) {
+        return this.item.file !== null && this.item.file.filter(a => a.type === 'script' && a.has_heatmap);
+      } else {
+        if (this.item.file !== null) {
+          let script;
+          if (script = this.item.file.find((a) => a.type === 'script' && a.has_heatmap && a.is_selected_script)) {
+            return [script]
+          }
+          if (script = this.item.file.find((a) => a.type === 'script' && a.has_heatmap)) {
+            return [script]
+          }
         }
-        if (script = this.item.file.find((a) => a.type === 'script' && a.has_heatmap)) {
-          return script
-        }
+        return false;
       }
-      return false;
     }
   }
 }

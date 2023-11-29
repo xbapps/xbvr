@@ -105,11 +105,13 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		}
 
 		// trailer details
-		sc.TrailerType = "heresphere"
 		//  extract internal id with (\d+)
 		var re = regexp.MustCompile(`(?m)https:\/\/www.czechvrnetwork.com\/detail-(\d+)`)
 		r := re.FindStringSubmatch(sc.HomepageURL)
-		sc.TrailerSrc = "https://www.czechvrnetwork.com/heresphere/videoID" + r[1]
+		if len(r) > 0 {
+			sc.TrailerType = "heresphere"
+			sc.TrailerSrc = "https://www.czechvrnetwork.com/heresphere/videoID" + r[1]
+		}
 
 		// Filenames
 		e.ForEach(`div.post div.download a.trailer`, func(id int, e *colly.HTMLElement) {
@@ -155,7 +157,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 
 	siteCollector.OnHTML(`div.postTag`, func(e *colly.HTMLElement) {
 		sceneURL := ""
-		e.ForEach(`div.foto a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.navez h2 a`, func(id int, e *colly.HTMLElement) {
 			sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {

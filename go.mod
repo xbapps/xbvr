@@ -55,10 +55,10 @@ require (
 	github.com/tidwall/gjson v1.17.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.18.2
-	golang.org/x/crypto v0.15.0
-	golang.org/x/net v0.18.0
-	golang.org/x/oauth2 v0.14.0
-	golang.org/x/sys v0.14.0
+	golang.org/x/crypto v0.16.0
+	golang.org/x/net v0.19.0
+	golang.org/x/oauth2 v0.15.0
+	golang.org/x/sys v0.15.0
 	golang.org/x/text v0.14.0
 	gopkg.in/gormigrate.v1 v1.6.0
 	willnorris.com/go/imageproxy v0.11.3-0.20231113231555-ef50c1f9a64e
@@ -143,7 +143,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	golang.org/x/image v0.10.0 // indirect
-	golang.org/x/term v0.14.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
