@@ -157,7 +157,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 
 	siteCollector.OnHTML(`div.postTag`, func(e *colly.HTMLElement) {
 		sceneURL := ""
-		e.ForEach(`div.navez h2 a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.nazev h2 a`, func(id int, e *colly.HTMLElement) {
 			sceneURL = e.Request.AbsoluteURL(e.Attr("href"))
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {
@@ -165,7 +165,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 			}
 		})
 		if config.Config.Funscripts.ScrapeFunscripts {
-			e.ForEach(`div.interactive`, func(id int, e *colly.HTMLElement) {
+			e.ForEach(`div.iconinteractive`, func(id int, e *colly.HTMLElement) {
 				var existingScene models.Scene
 				existingScene.GetIfExistURL(sceneURL)
 				if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
