@@ -117,17 +117,11 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		imageRegex := regexp.MustCompile(regexp.QuoteMeta(cdnSceneURL.String()) + `/photos/[^?"]*\.jpg`)
 		sc.Gallery = imageRegex.FindAllString(nuxtData, -1)
 
-		sc.TrailerType = "urls"
-		params := models.VideoSourceResponse{}
-		trailersRegex := regexp.MustCompile(regexp.QuoteMeta(cdnSceneURL.String()) + `/trailers/([^?"]*)\.mp4`)
-		for _, trailer := range trailersRegex.FindAllStringSubmatch(nuxtData, -1) {
-			params.VideoSources = append(params.VideoSources, models.VideoSource{
-				URL:     trailer[0],
-				Quality: trailer[1],
-			})
-		}
-		strParams, _ := json.Marshal(params)
-		sc.TrailerSrc = string(strParams)
+		// trailer details
+		sc.TrailerType = "scrape_html"
+		paramsdata := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "script[id=\"__NUXT_DATA__\"]", ExtractRegex: `(https:\/\/cdn.vrspy.com\/videos\/\d*\/trailers\/\dk\.mp4\?token.*?)"`}
+		jsonStr, _ := json.Marshal(paramsdata)
+		sc.TrailerSrc = string(jsonStr)
 
 		out <- sc
 	})
