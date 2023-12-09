@@ -101,6 +101,10 @@ func (i *Actor) Save() error {
 	db, _ := GetDB()
 	defer db.Close()
 
+	if strings.TrimSpace(i.Name) == "" {
+		log.Infof("Warning Actor saved with no name %v", i.ID)
+		log.Infof("%s", common.GetStackTrace())
+	}
 	var err error = retry.Do(
 		func() error {
 			err := db.Save(&i).Error
@@ -610,7 +614,7 @@ func (i *Actor) AddToPiercings(newValue string) bool {
 }
 func (i *Actor) AddToAliases(newValue string) bool {
 	updated := false
-	if newValue != "" {
+	if strings.TrimSpace(newValue) != "" {
 		i.Aliases, updated = addToStringArray(i.Aliases, newValue)
 	}
 	return updated

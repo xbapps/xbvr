@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -300,7 +301,7 @@ func UpdateXbvrActor(performer models.StashPerformer, xbvrActorID uint) {
 	changed = CheckAndSetStringActorField(&actor.Ethnicity, "ethnicity", performer.Ethnicity, actor.ID) || changed
 	changed = CheckAndSetIntActorField(&actor.Height, "height", performer.Height, actor.ID) || changed
 	changed = CheckAndSetStringActorField(&actor.EyeColor, "eye_color", performer.EyeColor, actor.ID) || changed
-	changed = CheckAndSetStringActorField(&actor.HairColor, "eye_color", performer.HairColor, actor.ID) || changed
+	changed = CheckAndSetStringActorField(&actor.HairColor, "hair_color", performer.HairColor, actor.ID) || changed
 	changed = CheckAndSetStringActorField(&actor.CupSize, "cup_size", performer.CupSize, actor.ID) || changed
 	changed = CheckAndSetIntActorField(&actor.BandSize, "band_size", int(math.Round(float64(performer.BandSize)*2.54)), actor.ID) || changed
 	changed = CheckAndSetIntActorField(&actor.HipSize, "hip_size", int(math.Round(float64(performer.HipSize)*2.54)), actor.ID) || changed
@@ -332,6 +333,10 @@ func UpdateXbvrActor(performer models.StashPerformer, xbvrActorID uint) {
 		}
 	}
 	if changed {
+		if strings.TrimSpace(actor.Name) == "" {
+			log.Infof("Warning Saving Actor with Blank Name actor.ID %v, called with ID %v stash performer %s %s", actor.ID, xbvrActorID, performer.ID, performer.Name)
+			log.Infof("%s", common.GetStackTrace())
+		}
 		actor.Save()
 	}
 }
