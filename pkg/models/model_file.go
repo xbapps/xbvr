@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	"github.com/xbapps/xbvr/pkg/common"
 )
 
 type File struct {
@@ -63,6 +64,7 @@ func (f *File) Save() error {
 	)
 
 	if err != nil {
+		log.Infof("%s", common.GetStackTrace())
 		log.Fatal("Failed to save ", err)
 	}
 

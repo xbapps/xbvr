@@ -8,6 +8,7 @@ import (
 
 	"github.com/avast/retry-go/v4"
 	"github.com/putdotio/go-putio"
+	"github.com/xbapps/xbvr/pkg/common"
 	"golang.org/x/oauth2"
 )
 
@@ -73,6 +74,7 @@ func (o *Volume) Save() error {
 	)
 
 	if err != nil {
+		log.Infof("%s", common.GetStackTrace())
 		log.Fatal("Failed to save ", err)
 	}
 

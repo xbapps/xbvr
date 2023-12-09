@@ -48,6 +48,7 @@ func (o *SceneCuepoint) Save() error {
 	)
 
 	if err != nil {
+		log.Infof("%s", common.GetStackTrace())
 		log.Fatal("Failed to save ", err)
 	}
 
@@ -147,6 +148,7 @@ func (i *Scene) Save() error {
 	)
 
 	if err != nil {
+		log.Infof("%s", common.GetStackTrace())
 		log.Fatal("Failed to save ", err)
 	}
 
