@@ -280,7 +280,10 @@ func UpdateXbvrActor(performer models.StashPerformer, xbvrActorID uint) {
 
 	changed := false
 	actor := models.Actor{ID: xbvrActorID}
-	db.Where(&actor).First(&actor)
+	err := db.Where(&actor).First(&actor).Error
+	if err != nil {
+		log.Infof("Error reading actor in UpdateXbvrActor %v for %s", xbvrActorID, performer.Name)
+	}
 
 	if len(performer.Images) > 0 {
 		if actor.ImageUrl != performer.Images[0].URL && !actor.CheckForSetImage() {
