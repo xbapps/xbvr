@@ -1138,7 +1138,7 @@ func RestorePlaylist(playlists []models.Playlist, overwrite bool, db *gorm.DB) {
 	addedCnt := 0
 	for _, playlist := range playlists {
 		var found models.Playlist
-		db.Where(&models.Playlist{Name: playlist.Name}).First(&found)
+		db.Where(&models.Playlist{Name: playlist.Name, PlaylistType: playlist.PlaylistType}).First(&found)
 
 		if found.ID == 0 { // id = 0 is a new record
 			playlist.ID = 0 // dont use the id from json
