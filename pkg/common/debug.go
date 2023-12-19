@@ -33,7 +33,10 @@ func getFrame(skipFrames int) runtime.Frame {
 }
 
 func GetStackTrace() string {
-	buf := make([]byte, 1<<32)
+	buf := make([]byte, 2147483647)
 	stackSize := runtime.Stack(buf, false)
+	if stackSize > 2147483647 {
+		stackSize = 2147483647
+	}
 	return string(buf[:stackSize])
 }
