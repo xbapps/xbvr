@@ -76,7 +76,7 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	for _, row := range data {
 		sc := models.ScrapedScene{}
 		sceneURL := row[3]
-		if funk.ContainsString(knownScenes, sceneURL) {
+		if funk.ContainsString(knownScenes, sceneURL) && sceneURL != singleSceneURL {
 			continue
 		}
 
@@ -129,8 +129,6 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 				url := "https://baberoticavr.com/model/" + slug.Make(actor) + "/"
 				sc.ActorDetails[actor] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: url}
 			}
-			sc.Studio = actor
-			break
 		}
 
 		// trailer details
