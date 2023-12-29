@@ -13,7 +13,6 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/markphelps/optional"
 	"github.com/sirupsen/logrus"
-	dg "golang.org/x/net/html"
 
 	"github.com/xbapps/xbvr/pkg/common"
 )
@@ -989,95 +988,18 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 		{Function: "RegexString", Params: []string{`\d+`, "0"}},
 	}})
 
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Native: func(e interface{}) []string {
-		html := e.(*colly.HTMLElement)
-		var values []string
-
-		result := html.DOM.Find(`b:contains("Measurements:")`)
-
-		// not found
-		if result.Length() == 0 || result.Length() > 1 {
-			return values
-		}
-
-		m := result.Get(0)
-		mSibling := m.NextSibling
-
-		// not found
-		if mSibling == nil {
-			return values
-		}
-
-		// not found
-		if mSibling.Type != dg.TextNode {
-			return values
-		}
-
-		data := strings.Split(strings.TrimSpace(strings.TrimSuffix(mSibling.Data, " - ")), "-")
-		values = append(values, data[0])
-
-		return values
-	}, PostProcessing: []PostProcessing{
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Selector: `b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "DOMNextText"},
 		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "1"}},
 	}})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "cup_size", Selector: `b:contains("Cup:") + a`, ResultType: "text"})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Native: func(e interface{}) []string {
-		html := e.(*colly.HTMLElement)
-		var values []string
-
-		result := html.DOM.Find(`b:contains("Measurements:")`)
-
-		// not found
-		if result.Length() == 0 || result.Length() > 1 {
-			return values
-		}
-
-		m := result.Get(0)
-		mSibling := m.NextSibling
-
-		// not found
-		if mSibling == nil {
-			return values
-		}
-
-		// not found
-		if mSibling.Type != dg.TextNode {
-			return values
-		}
-
-		data := strings.Split(strings.TrimSpace(strings.TrimSuffix(mSibling.Data, " - ")), "-")
-		values = append(values, data[1])
-
-		return values
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Selector: `b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "DOMNextText"},
+		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "2"}},
 	}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Native: func(e interface{}) []string {
-		html := e.(*colly.HTMLElement)
-		var values []string
-
-		result := html.DOM.Find(`b:contains("Measurements:")`)
-
-		// not found
-		if result.Length() == 0 || result.Length() > 1 {
-			return values
-		}
-
-		m := result.Get(0)
-		mSibling := m.NextSibling
-
-		// not found
-		if mSibling == nil {
-			return values
-		}
-
-		// not found
-		if mSibling.Type != dg.TextNode {
-			return values
-		}
-
-		data := strings.Split(strings.TrimSpace(strings.TrimSuffix(mSibling.Data, " - ")), "-")
-		values = append(values, data[2])
-
-		return values
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Selector: `b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "DOMNextText"},
+		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "3"}},
 	}})
 
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "ethnicity", Native: func(e interface{}) []string {

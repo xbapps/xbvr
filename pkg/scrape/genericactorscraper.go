@@ -18,6 +18,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/externalreference"
 	"github.com/xbapps/xbvr/pkg/models"
+	nethtml "golang.org/x/net/html"
 )
 
 type outputList struct {
@@ -524,7 +525,16 @@ func postProcessing(rule models.GenericActorScraperRule, value string, htmlEleme
 		case "CollyForEach":
 			value = getSubRuleResult(postprocessing.SubRule, htmlElement)
 		case "DOMNext":
-			value = strings.TrimSpace(htmlElement.DOM.Next().Text())
+			next := htmlElement.DOM.Next()
+			value = strings.TrimSpace(next.Text())
+		case "DOMNextText":
+			node := htmlElement.DOM.Get(0)
+			textNodeType := nethtml.TextNode
+			nextSibling := node.NextSibling
+
+			if nextSibling != nil && nextSibling.Type == textNodeType {
+				value = strings.TrimSpace(nextSibling.Data)
+			}
 		case "UnescapeString":
 			value = html.UnescapeString(value)
 		}
