@@ -1011,8 +1011,17 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 		{Function: "DOMNextText"},
 	}})
 
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "gender", Selector: `a[href*="_body_type=trans1"]`, ResultType: "text", PostProcessing: []PostProcessing{
-		{Function: "ConstantValue", Params: []string{"Transgender Female"}},
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "gender", Native: func(e interface{}) []string {
+		html := e.(*colly.HTMLElement)
+		var value = "Female"
+
+		result := html.DOM.Find(`a[href*="_body_type=trans"]`)
+
+		if result.Length() > 0 {
+			value = "Transgender Female"
+		}
+
+		return []string{value}
 	}})
 
 	scrapeRules.GenericActorScrapingConfig["javdatabase scrape"] = siteDetails
