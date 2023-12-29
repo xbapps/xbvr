@@ -12,6 +12,8 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/gocolly/colly/v2"
 	"github.com/markphelps/optional"
+	"github.com/sirupsen/logrus"
+	dg "golang.org/x/net/html"
 
 	"github.com/xbapps/xbvr/pkg/common"
 )
@@ -244,6 +246,8 @@ func (o *ExternalReference) DetermineActorScraperByUrl(url string) string {
 	if len(match) >= 3 {
 		site = match[3]
 	}
+
+	log.Logln(logrus.InfoLevel, "TEST:"+site)
 
 	switch site {
 	case "stashdb":
@@ -974,6 +978,128 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "nationality", Selector: `.about-me-mobile .stars-params-title:contains("Nationality:") + .stars-params-value`, PostProcessing: []PostProcessing{{Function: "Lookup Country"}}})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `.about-me-mobile .stars-params-title:contains("Hair Color:") + .stars-params-value`})
 	scrapeRules.GenericActorScrapingConfig["vrspy scrape"] = siteDetails
+
+	siteDetails = GenericScraperRuleSet{}
+	siteDetails.Domain = "www.javdatabase.com"
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `img[data-src^="https://www.javdatabase.com/idolimages/full/"]`, ResultType: "attr", Attribute: "data-src", PostProcessing: []PostProcessing{{Function: "AbsoluteUrl"}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `#biography > div:first-of-type`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `b:contains("Hair Color(s):") + a`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "birth_date", Selector: `b:contains("DOB:") + a`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "height", Selector: `b:contains("Height:") + a`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "RegexString", Params: []string{`\d+`, "0"}},
+	}})
+
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Native: func(e interface{}) []string {
+		html := e.(*colly.HTMLElement)
+		var values []string
+
+		result := html.DOM.Find(`b:contains("Measurements:")`)
+
+		// not found
+		if result.Length() == 0 || result.Length() > 1 {
+			return values
+		}
+
+		m := result.Get(0)
+		mSibling := m.NextSibling
+
+		// not found
+		if mSibling == nil {
+			return values
+		}
+
+		// not found
+		if mSibling.Type != dg.TextNode {
+			return values
+		}
+
+		data := strings.Split(strings.TrimSpace(strings.TrimSuffix(mSibling.Data, " - ")), "-")
+		values = append(values, data[0])
+
+		return values
+	}, PostProcessing: []PostProcessing{
+		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "1"}},
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "cup_size", Selector: `b:contains("Cup:") + a`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Native: func(e interface{}) []string {
+		html := e.(*colly.HTMLElement)
+		var values []string
+
+		result := html.DOM.Find(`b:contains("Measurements:")`)
+
+		// not found
+		if result.Length() == 0 || result.Length() > 1 {
+			return values
+		}
+
+		m := result.Get(0)
+		mSibling := m.NextSibling
+
+		// not found
+		if mSibling == nil {
+			return values
+		}
+
+		// not found
+		if mSibling.Type != dg.TextNode {
+			return values
+		}
+
+		data := strings.Split(strings.TrimSpace(strings.TrimSuffix(mSibling.Data, " - ")), "-")
+		values = append(values, data[1])
+
+		return values
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Native: func(e interface{}) []string {
+		html := e.(*colly.HTMLElement)
+		var values []string
+
+		result := html.DOM.Find(`b:contains("Measurements:")`)
+
+		// not found
+		if result.Length() == 0 || result.Length() > 1 {
+			return values
+		}
+
+		m := result.Get(0)
+		mSibling := m.NextSibling
+
+		// not found
+		if mSibling == nil {
+			return values
+		}
+
+		// not found
+		if mSibling.Type != dg.TextNode {
+			return values
+		}
+
+		data := strings.Split(strings.TrimSpace(strings.TrimSuffix(mSibling.Data, " - ")), "-")
+		values = append(values, data[2])
+
+		return values
+	}})
+
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "ethnicity", Native: func(e interface{}) []string {
+		var value = "Japanese"
+		values := []string{value}
+
+		return values
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "nationality", Native: func(e interface{}) []string {
+		var value = "Japan"
+		values := []string{value}
+
+		return values
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "gender", Native: func(e interface{}) []string {
+		var value = "Female"
+		values := []string{value}
+
+		return values
+	}})
+
+	scrapeRules.GenericActorScrapingConfig["javdatabase scrape"] = siteDetails
 }
 
 // Loads custom rules from actor_scrapers_examples.json
