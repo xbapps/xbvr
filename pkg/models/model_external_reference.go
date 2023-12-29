@@ -69,6 +69,7 @@ type GenericActorScraperRule struct {
 	Last           optional.Int     `json:"last"`            // used to limit how many results you want, the end position you want
 	ResultType     string           `json:"result_type"`     // how to treat the result, text, attribute value, json
 	Attribute      string           `json:"attribute"`       // name of the atribute you want
+	DefaultValue   string
 }
 type PostProcessing struct {
 	Function string                  `json:"post_processing"` // call routines for specific handling, eg dates, json extracts
@@ -980,7 +981,12 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 
 	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "www.javdatabase.com"
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `img[data-src^="https://www.javdatabase.com/idolimages/full/"]`, ResultType: "attr", Attribute: "data-src", PostProcessing: []PostProcessing{{Function: "AbsoluteUrl"}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `img[data-src^="https://www.javdatabase.com/idolimages/full/"]`, ResultType: "attr", Attribute: "data-src", PostProcessing: []PostProcessing{
+		{Function: "AbsoluteUrl"},
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "images", Selector: `a[href^="https://pics.dmm.co.jp/digital/video/"]`, ResultType: "attr", Attribute: "href", PostProcessing: []PostProcessing{
+		{Function: "AbsoluteUrl"},
+	}})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `#biography > div:first-of-type`, ResultType: "text"})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `b:contains("Hair Color(s):") + a`, ResultType: "text"})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "birth_date", Selector: `b:contains("DOB:") + a`, ResultType: "text"})
@@ -1001,24 +1007,12 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 		{Function: "DOMNextText"},
 		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "3"}},
 	}})
-
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "ethnicity", Native: func(e interface{}) []string {
-		var value = "Japanese"
-		values := []string{value}
-
-		return values
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "aliases", Selector: `b:contains("Alt:")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "DOMNextText"},
 	}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "nationality", Native: func(e interface{}) []string {
-		var value = "Japan"
-		values := []string{value}
 
-		return values
-	}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "gender", Native: func(e interface{}) []string {
-		var value = "Female"
-		values := []string{value}
-
-		return values
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "gender", Selector: `a[href*="_body_type=trans1"]`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "ConstantValue", Params: []string{"Transgender Female"}},
 	}})
 
 	scrapeRules.GenericActorScrapingConfig["javdatabase scrape"] = siteDetails
