@@ -534,13 +534,39 @@ func postProcessing(rule models.GenericActorScraperRule, value string, htmlEleme
 			if nextSibling != nil && nextSibling.Type == textNodeType {
 				value = strings.TrimSpace(nextSibling.Data)
 			}
-		case "ConstantValue":
-			value = postprocessing.Params[0]
+		case "SetWhenValueContains":
+			searchValue := postprocessing.Params[0]
+			newValue := postprocessing.Params[1]
+
+			if strings.Contains(value, searchValue) {
+				value = newValue
+			}
+		case "SetWhenValueNotContains":
+			searchValue := postprocessing.Params[0]
+			newValue := postprocessing.Params[1]
+
+			if !strings.Contains(value, searchValue) {
+				value = newValue
+			}
 		case "UnescapeString":
 			value = html.UnescapeString(value)
 		}
 	}
 	return value
+}
+
+func substr(s string, start, end int) string {
+	counter, startIdx := 0, 0
+	for i := range s {
+		if counter == start {
+			startIdx = i
+		}
+		if counter == end {
+			return s[startIdx:i]
+		}
+		counter++
+	}
+	return s[startIdx:]
 }
 
 func getCountryCode(countryName string) string {

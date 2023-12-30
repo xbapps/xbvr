@@ -983,7 +983,7 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "images", Selector: `a[href^="https://pics.dmm.co.jp/digital/video/"]:not([href^="https://pics.dmm.co.jp/digital/video/mdj010/"])`, ResultType: "attr", Attribute: "href", PostProcessing: []PostProcessing{
 		{Function: "AbsoluteUrl"},
 	}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `#biography > div:first-of-type`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `#biography + div`, ResultType: "text"})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `b:contains("Hair Color(s):") + a`, ResultType: "text"})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "birth_date", Selector: `b:contains("DOB:") + a`, ResultType: "text"})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "height", Selector: `b:contains("Height:") + a`, ResultType: "text", PostProcessing: []PostProcessing{
@@ -1007,8 +1007,9 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 		{Function: "DOMNextText"},
 	}})
 
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "gender", Selector: `a[href*="_body_type=trans"]`, ResultType: "text", PostProcessing: []PostProcessing{
-		{Function: "ConstantValue", Params: []string{"Transgender Female"}},
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "gender", Selector: `div > p:contains("Tags")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "SetWhenValueContains", Params: []string{"Trans", "Transgender Female"}},
+		{Function: "SetWhenValueNotContains", Params: []string{"Trans", "Female"}},
 	}})
 
 	scrapeRules.GenericActorScrapingConfig["javdatabase scrape"] = siteDetails
