@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/gocolly/colly/v2"
 	"github.com/gosimple/slug"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -20,6 +21,15 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	scraperID := "baberoticavr"
 	siteID := "BaberoticaVR"
 	logScrapeStart(scraperID, siteID)
+	additionalDetailCollector := createCollector("baberoticavr.com")
+
+	additionalDetailCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+		sc := e.Request.Ctx.GetAny("scene").(models.ScrapedScene)
+		e.ForEach(`div.videoinfo>p`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.TrimSpace(e.Text)
+		})
+		out <- sc
+	})
 
 	resp, err := resty.New().R().
 		SetHeader("User-Agent", UserAgent).
@@ -76,7 +86,7 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	for _, row := range data {
 		sc := models.ScrapedScene{}
 		sceneURL := row[3]
-		if funk.ContainsString(knownScenes, sceneURL) {
+		if funk.ContainsString(knownScenes, sceneURL) && sceneURL != singleSceneURL {
 			continue
 		}
 
@@ -129,8 +139,6 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 				url := "https://baberoticavr.com/model/" + slug.Make(actor) + "/"
 				sc.ActorDetails[actor] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: url}
 			}
-			sc.Studio = actor
-			break
 		}
 
 		// trailer details
@@ -143,7 +151,9 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 			sc.SceneID = fmt.Sprintf("baberoticavr-%v", sc.SiteID)
 		}
 
-		out <- sc
+		ctx := colly.NewContext()
+		ctx.Put("scene", sc)
+		additionalDetailCollector.Request("GET", sc.HomepageURL, nil, ctx, nil)
 	}
 
 	if updateSite {
@@ -152,7 +162,6 @@ func BaberoticaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 	logScrapeFinished(scraperID, siteID)
 	return nil
 }
-
 func init() {
 	registerScraper("baberoticavr", "BaberoticaVR", "https://baberoticavr.com/wp-content/themes/baberoticavr/images/fav/android-chrome-192x192.png", "baberoticavr.com", BaberoticaVR)
 }

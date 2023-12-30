@@ -1833,6 +1833,13 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0072-Update-Baberotica-Studio",
+			Migrate: func(tx *gorm.DB) error {
+				sql := `update scenes set studio = 'Baberotica' where site = 'BaberoticaVR' and studio <> 'Baberotica';`
+				return tx.Exec(sql).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
