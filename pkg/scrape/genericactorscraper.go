@@ -525,8 +525,7 @@ func postProcessing(rule models.GenericActorScraperRule, value string, htmlEleme
 		case "CollyForEach":
 			value = getSubRuleResult(postprocessing.SubRule, htmlElement)
 		case "DOMNext":
-			next := htmlElement.DOM.Next()
-			value = strings.TrimSpace(next.Text())
+			value = strings.TrimSpace(htmlElement.DOM.Next().Text())
 		case "DOMNextText":
 			node := htmlElement.DOM.Get(0)
 			textNodeType := nethtml.TextNode
