@@ -11,7 +11,7 @@
       @keydown.exact.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watchlist'})"
       @keydown.shift.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
       @keydown.t="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'trailerlist'})"
-      @keydown.e="$store.commit('overlay/editDetails', {scene: item.scene})"
+      @keydown.e="$store.commit('overlay/editDetails', {scene: item})"
       @keydown.g="toggleGallery"
       @keydown.48="setRating(0)"
     />

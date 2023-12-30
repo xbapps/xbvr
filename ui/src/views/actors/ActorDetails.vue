@@ -9,7 +9,7 @@
       @keydown.p="nextActor"
       @keydown.f="$store.commit('actorList/toggleActorList', {actor_id: actor.id, list: 'favourite'})"
       @keydown.exact.w="$store.commit('actorList/toggleActorList', {actor_id: actor.id, list: 'watchlist'})"
-      @keydown.e="$store.commit('overlay/editActorDetails', {actor: actor.actor})"
+      @keydown.e="$store.commit('overlay/editActorDetails', {actor: actor})"
       @keydown.48="setRating(0)"
     />
 
