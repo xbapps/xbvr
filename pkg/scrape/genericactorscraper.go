@@ -534,6 +534,8 @@ func postProcessing(rule models.GenericActorScraperRule, value string, htmlEleme
 			if nextSibling != nil && nextSibling.Type == textNodeType {
 				value = strings.TrimSpace(nextSibling.Data)
 			}
+		case "ConstantValue":
+			value = postprocessing.Params[0]
 		case "UnescapeString":
 			value = html.UnescapeString(value)
 		}
