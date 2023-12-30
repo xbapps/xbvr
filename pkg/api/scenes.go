@@ -578,6 +578,20 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 
 	db, _ := models.GetDB()
 	defer db.Close()
+	var scenes []models.Scene
+
+	if strings.HasPrefix(q, "http") {
+		// if searching for a link, see if it is in the external ref table for scene alternate source
+		var scene models.Scene
+		splits := strings.Split(q, "?")
+		q = splits[0]
+
+		// see if the url matches a scrapped scene
+		scene.GetIfExistURL(q)
+		if scene.ID != 0 {
+			scenes = append(scenes, scene)
+		}
+	}
 
 	idx, err := tasks.NewIndex("scenes")
 	if err != nil {
@@ -600,7 +614,6 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 		return
 	}
 
-	var scenes []models.Scene
 	for _, v := range searchResults.Hits {
 		var scene models.Scene
 		err := scene.GetIfExist(v.ID)
