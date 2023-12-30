@@ -12,7 +12,6 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/gocolly/colly/v2"
 	"github.com/markphelps/optional"
-	"github.com/sirupsen/logrus"
 
 	"github.com/xbapps/xbvr/pkg/common"
 )
@@ -69,7 +68,6 @@ type GenericActorScraperRule struct {
 	Last           optional.Int     `json:"last"`            // used to limit how many results you want, the end position you want
 	ResultType     string           `json:"result_type"`     // how to treat the result, text, attribute value, json
 	Attribute      string           `json:"attribute"`       // name of the atribute you want
-	DefaultValue   string
 }
 type PostProcessing struct {
 	Function string                  `json:"post_processing"` // call routines for specific handling, eg dates, json extracts
@@ -246,8 +244,6 @@ func (o *ExternalReference) DetermineActorScraperByUrl(url string) string {
 	if len(match) >= 3 {
 		site = match[3]
 	}
-
-	log.Logln(logrus.InfoLevel, "TEST:"+site)
 
 	switch site {
 	case "stashdb":
@@ -984,7 +980,7 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `img[data-src^="https://www.javdatabase.com/idolimages/full/"]`, ResultType: "attr", Attribute: "data-src", PostProcessing: []PostProcessing{
 		{Function: "AbsoluteUrl"},
 	}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "images", Selector: `a[href^="https://pics.dmm.co.jp/digital/video/"]`, ResultType: "attr", Attribute: "href", PostProcessing: []PostProcessing{
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "images", Selector: `a[href^="https://pics.dmm.co.jp/digital/video/"]:not([href^="https://pics.dmm.co.jp/digital/video/mdj010/"])`, ResultType: "attr", Attribute: "href", PostProcessing: []PostProcessing{
 		{Function: "AbsoluteUrl"},
 	}})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `#biography > div:first-of-type`, ResultType: "text"})
@@ -1025,6 +1021,7 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	}})
 
 	scrapeRules.GenericActorScrapingConfig["javdatabase scrape"] = siteDetails
+
 }
 
 // Loads custom rules from actor_scrapers_examples.json
