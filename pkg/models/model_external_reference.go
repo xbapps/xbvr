@@ -983,27 +983,27 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "images", Selector: `a[href^="https://pics.dmm.co.jp/digital/video/"]:not([href^="https://pics.dmm.co.jp/digital/video/mdj010/"])`, ResultType: "attr", Attribute: "href", PostProcessing: []PostProcessing{
 		{Function: "AbsoluteUrl"},
 	}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `#biography > div`, ResultType: "text"})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `b:contains("Hair Color(s):") + a`, ResultType: "text"})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "birth_date", Selector: `b:contains("DOB:") + a`, ResultType: "text"})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "height", Selector: `b:contains("Height:") + a`, ResultType: "text", PostProcessing: []PostProcessing{
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `div[id="biography"] > div`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `div > b:contains("Hair Color(s):") + a`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "birth_date", Selector: `div > b:contains("DOB:") + a`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "height", Selector: `div > b:contains("Height:") + a`, ResultType: "text", PostProcessing: []PostProcessing{
 		{Function: "RegexString", Params: []string{`\d+`, "0"}},
 	}})
 
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Selector: `b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Selector: `div > b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
 		{Function: "DOMNextText"},
 		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "1"}},
 	}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "cup_size", Selector: `b:contains("Cup:") + a`, ResultType: "text"})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Selector: `b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "cup_size", Selector: `div > b:contains("Cup:") + a`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Selector: `div > b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
 		{Function: "DOMNextText"},
 		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "2"}},
 	}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Selector: `b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Selector: `div > b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
 		{Function: "DOMNextText"},
 		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "3"}},
 	}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "aliases", Selector: `b:contains("Alt:")`, ResultType: "text", PostProcessing: []PostProcessing{
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "aliases", Selector: `div > p > b:contains("Alt:")`, ResultType: "text", PostProcessing: []PostProcessing{
 		{Function: "DOMNextText"},
 	}})
 
