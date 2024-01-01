@@ -2,8 +2,8 @@ package scrape
 
 import (
 	"encoding/json"
-	"net/url"
-	"regexp"
+	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -22,8 +22,7 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	sceneCollector := createCollector("vrhush.com")
 	siteCollector := createCollector("vrhush.com")
-	castCollector := createCollector("vrhush.com")
-	castCollector.AllowURLRevisit = true
+	pageCnt := 1
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -34,108 +33,85 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 		sc.MembersUrl = strings.Replace(sc.HomepageURL, "https://vrhush.com/scenes/", "https://ma.vrhush.com/scene/", 1)
 
-		// Scene ID - get from URL
-		tmp := strings.Split(sc.HomepageURL, "/")
-		tmp2 := strings.Split(tmp[len(tmp)-1], "_")[0]
-		sc.SiteID = strings.Replace(tmp2, "vrh", "", -1)
+		// get json data
+		var jsonResult map[string]interface{}
+		e.ForEach(`script[Id="__NEXT_DATA__"]`, func(id int, e *colly.HTMLElement) {
+			json.Unmarshal([]byte(e.Text), &jsonResult)
+		})
+		jsonResult = jsonResult["props"].(map[string]interface{})
+		jsonResult = jsonResult["pageProps"].(map[string]interface{})
+		content := jsonResult["content"].(map[string]interface{})
+
+		// Scene ID - get from json scene code (url no longer has the code)
+		tmp := strings.Split(content["scene_code"].(string), "_")[0]
+		sc.SiteID = strings.Replace(tmp, "vrh", "", -1)
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
-		// Regex for original resolution of gallery
-		reGetOriginal := regexp.MustCompile(`^(https?:\/\/b8h6h9v9\.ssl\.hwcdn\.net\/vrh\/)(?:largethumbs|hugethumbs|rollover_large|rollover_huge)(\/.+)-c\d{3,4}x\d{3,4}(\.\w{3,4})$`)
-
 		// Title / Cover
-		e.ForEach(`.latest-scene-title`, func(id int, e *colly.HTMLElement) {
-			sc.Title = strings.TrimSpace(e.Text)
-		})
-		e.ForEach(`web-vr-video-player`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("coverimage")))
-		})
-
-		// Gallery
-		// note 'rollover_large' could be changed to 'rollover_huge' for HQ original but those are easily 5Mb+
-		e.ForEach(`div.owl-carousel img.img-responsive`, func(id int, e *colly.HTMLElement) {
-			tmpParts := reGetOriginal.FindStringSubmatch(e.Request.AbsoluteURL(e.Attr("src")))
-			if len(tmpParts) > 3 {
-				sc.Gallery = append(sc.Gallery, tmpParts[1]+"rollover_large"+tmpParts[2]+tmpParts[3])
-			}
-		})
+		sc.Title = content["title"].(string)
+		sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(content["trailer_screencap"].(string)))
 
 		// Synopsis
-		e.ForEach(`span.full-description`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text)
-		})
+		sc.Synopsis = content["description"].(string)
 
 		// Tags
-		e.ForEach(`p.tag-container a.label-tag`, func(id int, e *colly.HTMLElement) {
-			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
-		})
+		tagList := content["tags"].([]interface{})
+		for _, tag := range tagList {
+			sc.Tags = append(sc.Tags, tag.(string))
+		}
 
 		// Cast
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		var tmpCast []string
-		e.ForEach(`h5.latest-scene-subtitle a`, func(id int, e *colly.HTMLElement) {
-			tmpCast = append(tmpCast, e.Attr("href"))
-			sc.ActorDetails[e.Text] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Attr("href")}
-		})
+		modelList := jsonResult["models"].([]interface{})
+		for _, model := range modelList {
+			modelMap, _ := model.(map[string]interface{})
+			if modelMap["gender"] == "Female" {
+				sc.Cast = append(sc.Cast, modelMap["name"].(string))
+				sc.ActorDetails[modelMap["name"].(string)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: "https://vrhush.com/models/" + modelMap["slug"].(string)}
+			}
+		}
 
-		// Date
-		e.ForEach(`div.latest-scene-meta-1 div.text-left`, func(id int, e *colly.HTMLElement) {
-			tmpDate, _ := goment.New(e.Text, "MMM DD, YYYY")
-			sc.Released = tmpDate.Format("YYYY-MM-DD")
-		})
-
-		// Duration
-		sc.Duration = 0
-
+		// Date & duration
+		tmpDate, _ := goment.New(content["publish_date"].(string), "YYYY/MM/DD")
+		sc.Released = tmpDate.Format("YYYY-MM-DD")
+		dur_str := content["videos_duration"].(string)
+		if dur_str != "" {
+			num, _ := strconv.ParseFloat(dur_str, 64)
+			sc.Duration = int(num / 60)
+		}
 		// trailer details
-		sc.TrailerType = "scrape_html"
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "web-vr-video-player source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https:"}
-		strParams, _ := json.Marshal(params)
-		sc.TrailerSrc = string(strParams)
+
+		sc.TrailerType = "scrape_json"
+		var t models.TrailerScrape
+		t.SceneUrl = sc.HomepageURL
+		t.HtmlElement = `script[id="__NEXT_DATA__"]`
+		t.RecordPath = "props.pageProps.content.trailers"
+		t.ContentPath = "url"
+		t.QualityPath = "label"
+		t.ContentBaseUrl = "https:"
+		tmpjson, _ := json.Marshal(t)
+		sc.TrailerSrc = string(tmpjson)
 
 		// Filenames
-		e.ForEach(`input.stream-input-box`, func(id int, e *colly.HTMLElement) {
-			origURL, _ := url.Parse(e.Attr("value"))
-			sc.Filenames = append(sc.Filenames, origURL.Query().Get("name"))
-		})
-
-		ctx := colly.NewContext()
-		ctx.Put("scene", &sc)
-
-		for i := range tmpCast {
-			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
+		videolList := content["videos"].(map[string]interface{})
+		for _, video := range videolList {
+			videoMap, _ := video.(map[string]interface{})
+			tmp := strings.Split(videoMap["file"].(string), "/")
+			sc.Filenames = append(sc.Filenames, tmp[len(tmp)-1])
 		}
 
 		out <- sc
 	})
 
-	castCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
-
-		var name string
-		reDoubleWhitespace := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
-		e.ForEach(`h1#model-name`, func(id int, e *colly.HTMLElement) {
-			name = strings.TrimSpace(reDoubleWhitespace.ReplaceAllString(e.Text, " "))
-		})
-
-		var gender string
-		e.ForEach(`ul.model-attributes li`, func(id int, e *colly.HTMLElement) {
-			if strings.Split(e.Text, " ")[0] == "Gender" {
-				gender = strings.Split(e.Text, " ")[1]
-			}
-		})
-
-		if gender == "Female" {
-			sc.Cast = append(sc.Cast, name)
+	siteCollector.OnHTML(`ul.pagination li`, func(e *colly.HTMLElement) {
+		if strings.Contains(e.Attr("class"), "next") && !strings.Contains(e.Attr("class"), "disabled") {
+			pageCnt += 1
+			pageURL := e.Request.AbsoluteURL(`https://vrhush.com/scenes?page=` + fmt.Sprint(pageCnt) + `&order_by=publish_date&sort_by=desc`)
+			siteCollector.Visit(pageURL)
 		}
 	})
 
-	siteCollector.OnHTML(`ul.pagination a`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		siteCollector.Visit(pageURL)
-	})
-
-	siteCollector.OnHTML(`div.row div.col-md-4 p.desc a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.contentThumb__info__title A`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exist in database, there's no need to scrape
@@ -147,7 +123,7 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit("https://vrhush.com/scenes")
+		siteCollector.Visit("https://vrhush.com/scenes?page=1&order_by=publish_date&sort_by=desc")
 	}
 
 	if updateSite {
