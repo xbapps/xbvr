@@ -152,6 +152,8 @@ github.com/go-openapi/swag v0.22.6 h1:dnqg1XfHXL9aBxSbktBqFR5CxVyVI+7fYWhAf1JOeT
 github.com/go-openapi/swag v0.22.6/go.mod h1:Gl91UqO+btAM0plGGxHqJcQZ1ZTy6jbmridBTsDy8A0=
 github.com/go-resty/resty/v2 v2.10.0 h1:Qla4W/+TMmv0fOeeRqzEpXPLfTUnR5HZ1+lGs+CkiCo=
 github.com/go-resty/resty/v2 v2.10.0/go.mod h1:iiP/OpA0CkcL3IGt1O0+/SIItFUbkkyw5BGXiVdTu+A=
+github.com/go-resty/resty/v2 v2.11.0 h1:i7jMfNOJYMp69lq7qozJP+bjgzfAzeOhuGlyDrqxT/8=
+github.com/go-resty/resty/v2 v2.11.0/go.mod h1:iiP/OpA0CkcL3IGt1O0+/SIItFUbkkyw5BGXiVdTu+A=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
