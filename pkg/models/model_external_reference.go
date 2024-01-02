@@ -974,6 +974,45 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "nationality", Selector: `.about-me-mobile .stars-params-title:contains("Nationality:") + .stars-params-value`, PostProcessing: []PostProcessing{{Function: "Lookup Country"}}})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `.about-me-mobile .stars-params-title:contains("Hair Color:") + .stars-params-value`})
 	scrapeRules.GenericActorScrapingConfig["vrspy scrape"] = siteDetails
+
+	siteDetails = GenericScraperRuleSet{}
+	siteDetails.Domain = "www.javdatabase.com"
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `img[data-src^="https://www.javdatabase.com/idolimages/full/"]`, ResultType: "attr", Attribute: "data-src", PostProcessing: []PostProcessing{
+		{Function: "AbsoluteUrl"},
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "images", Selector: `a[href^="https://pics.dmm.co.jp/digital/video/"]:not([href^="https://pics.dmm.co.jp/digital/video/mdj010/"])`, ResultType: "attr", Attribute: "href", PostProcessing: []PostProcessing{
+		{Function: "AbsoluteUrl"},
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `div[id="biography"] > div`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `div > b:contains("Hair Color(s):") + a`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "birth_date", Selector: `div > b:contains("DOB:") + a`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "height", Selector: `div > b:contains("Height:") + a`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "RegexString", Params: []string{`\d+`, "0"}},
+	}})
+
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Selector: `div > b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "DOMNextText"},
+		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "1"}},
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "cup_size", Selector: `div > b:contains("Cup:") + a`, ResultType: "text"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Selector: `div > b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "DOMNextText"},
+		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "2"}},
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Selector: `div > b:contains("Measurements:")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "DOMNextText"},
+		{Function: "RegexString", Params: []string{`(\d+)-(\d+)-(\d+)`, "3"}},
+	}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "aliases", Selector: `div > p > b:contains("Alt:")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "DOMNextText"},
+	}})
+
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "gender", Selector: `div > p:contains("Tags")`, ResultType: "text", PostProcessing: []PostProcessing{
+		{Function: "SetWhenValueContains", Params: []string{"Trans", "Transgender Female"}},
+		{Function: "SetWhenValueNotContains", Params: []string{"Trans", "Female"}},
+	}})
+
+	scrapeRules.GenericActorScrapingConfig["javdatabase scrape"] = siteDetails
 }
 
 // Loads custom rules from actor_scrapers_examples.json
