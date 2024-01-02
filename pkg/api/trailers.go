@@ -156,7 +156,8 @@ func extractFromJson(inputJson string, params models.TrailerScrape, srcs []model
 	if params.RecordPath != "" {
 		u := gjson.Get(JsonMetadata, params.RecordPath)
 		u.ForEach(func(key, value gjson.Result) bool {
-			url := gjson.Get(value.String(), params.ContentPath).String()
+			url := params.ContentBaseUrl
+			url += gjson.Get(value.String(), params.ContentPath).String()
 			quality := gjson.Get(value.String(), params.QualityPath).String()
 			encoding := ""
 			if params.EncodingPath != "" {

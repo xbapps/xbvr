@@ -81,7 +81,7 @@ func GenericActorScrapers() {
 	db.Raw(sqlcmd).Scan(&output)
 
 	var wg sync.WaitGroup
-	concurrentLimit := 20 // Maximum number of concurrent tasks
+	concurrentLimit := 10 // Maximum number of concurrent tasks
 
 	semaphore = make(chan struct{}, concurrentLimit)
 	actorSemMap := make(map[uint]chan struct{})
