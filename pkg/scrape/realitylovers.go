@@ -1,9 +1,11 @@
 package scrape
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
@@ -85,28 +87,48 @@ func RealityLoversSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string
 
 	// Request scenes via REST API
 	if singleSceneURL == "" {
-		r, err := resty.New().R().
-			SetHeader("User-Agent", UserAgent).
-			Get("https://engine." + domain + "/content/videos?max=3000&page=0&pornstar=&category=&perspective=&sort=NEWEST")
+		page := 0
+		for {
+			url := fmt.Sprintf("https://engine.%s/content/videos?max=12&page=%v&pornstar=&category=&perspective=&sort=NEWEST", domain, page)
+			log.Infoln("visiting", url)
+			r, err := resty.New().R().
+				SetHeader("User-Agent", UserAgent).
+				Get(url)
 
-		if err != nil {
-			log.Errorf("Error fetching BaberoticaVR feed: %s", err)
-			logScrapeFinished(scraperID, siteID)
-			return nil
-		}
+			if err != nil {
+				log.Errorf("Error fetching BaberoticaVR feed: %s", err)
+				logScrapeFinished(scraperID, siteID)
+				return nil
+			}
 
-		if err == nil || r.StatusCode() == 200 {
-			result := gjson.Get(r.String(), "contents")
-			result.ForEach(func(key, value gjson.Result) bool {
-				sceneURL := "https://" + domain + "/" + value.Get("videoUri").String()
-				sceneID := value.Get("id").String()
-				if !funk.ContainsString(knownScenes, sceneURL) {
-					ctx := colly.NewContext()
-					ctx.Put("sceneURL", sceneURL)
-					sceneCollector.Request("GET", "https://engine."+domain+"/content/videoDetail?contentId="+sceneID, nil, ctx, nil)
-				}
-				return true
-			})
+			scenecnt := 0
+			if err == nil || r.StatusCode() == 200 {
+				result := gjson.Get(r.String(), "contents")
+				result.ForEach(func(key, value gjson.Result) bool {
+					scenecnt++
+					sceneURL := "https://" + domain + "/" + value.Get("videoUri").String()
+					sceneID := value.Get("id").String()
+					if !funk.ContainsString(knownScenes, sceneURL) {
+						ctx := colly.NewContext()
+						ctx.Put("sceneURL", sceneURL)
+						sceneCollector.Request("GET", "https://engine."+domain+"/content/videoDetail?contentId="+sceneID, nil, ctx, nil)
+					}
+					return true
+				})
+			}
+			if err != nil {
+				log.Errorf("Error visiting %s %s", url, err)
+			}
+			if r.StatusCode() != 200 {
+				log.Errorf("Return code visiting %s %v", url, r.StatusCode())
+			}
+
+			if scenecnt < 12 {
+				break
+			}
+			page++
+			// have seen instances of status 404, so make sure we don't span will calls
+			time.Sleep(time.Second)
 		}
 	} else {
 		re := regexp.MustCompile(`.com\/vd\/(\d+)\/`)
