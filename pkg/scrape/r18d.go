@@ -10,10 +10,10 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func getByContentId(req *resty.Request, content_id string) (*resty.Response, error) {
-	res, err := req.Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + content_id + "/json")
+func getByContentId(req *resty.Request, content_id string) *resty.Response {
+	res, _ := req.Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + content_id + "/json")
 
-	return res, err
+	return res
 }
 
 func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
@@ -30,14 +30,14 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 		sc.SceneType = "VR"
 
 		req := resty.New().R()
-		res, _ := getByContentId(req, v)
+		res := getByContentId(req, v)
 
 		if res.StatusCode() == 404 {
 			res, _ = req.Get("https://r18.dev/videos/vod/movies/detail/-/dvd_id=" + v + "/json")
 
 			if res.StatusCode() == 200 {
 				content_id := gjson.Get(res.String(), "content_id").String()
-				res, _ = getByContentId(req, content_id)
+				res = getByContentId(req, content_id)
 			} else {
 				return nil
 			}
