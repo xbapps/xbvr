@@ -17,13 +17,7 @@ func getByContentId(req *resty.Request, content_id string) *resty.Response {
 }
 
 func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
-	var scenes []string
-
-	if strings.Contains(queryString, ",") {
-		scenes = strings.Split(queryString, ",")
-	} else {
-		scenes = []string{queryString}
-	}
+	scenes := strings.Split(queryString, ",")
 
 	for _, v := range scenes {
 		sc := models.ScrapedScene{}
