@@ -10,14 +10,40 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
+func getByContentId(req *resty.Request, content_id string) (*resty.Response, error) {
+	res, err := req.Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + content_id + "/json")
+
+	return res, err
+}
+
 func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
-	scenes := strings.Split(queryString, ",")
+	var scenes []string
+
+	if strings.Contains(queryString, ",") {
+		scenes = strings.Split(queryString, ",")
+	} else {
+		scenes = []string{queryString}
+	}
+
 	for _, v := range scenes {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 
-		r, _ := resty.New().R().Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + v + "/json")
-		JsonMetadata := r.String()
+		req := resty.New().R()
+		res, _ := getByContentId(req, v)
+
+		if res.StatusCode() == 404 {
+			res, _ = req.Get("https://r18.dev/videos/vod/movies/detail/-/dvd_id=" + v + "/json")
+
+			if res.StatusCode() == 200 {
+				content_id := gjson.Get(res.String(), "content_id").String()
+				res, _ = getByContentId(req, content_id)
+			} else {
+				return nil
+			}
+		}
+
+		JsonMetadata := res.String()
 
 		content_id := gjson.Get(JsonMetadata, "content_id").String()
 		sc.HomepageURL = "https://www.dmm.co.jp/en/digital/videoa/-/detail/=/cid=" + content_id + "/"
