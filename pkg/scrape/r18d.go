@@ -10,12 +10,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func getByContentId(req *resty.Request, content_id string) *resty.Response {
-	res, _ := req.Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + content_id + "/json")
-
-	return res
-}
-
 func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 	scenes := strings.Split(queryString, ",")
 
@@ -27,7 +21,7 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 		res := getByContentId(req, v)
 
 		if res.StatusCode() == 404 {
-			res, _ = req.Get("https://r18.dev/videos/vod/movies/detail/-/dvd_id=" + v + "/json")
+			res = getByDVDId(req, v)
 
 			if res.StatusCode() == 200 {
 				content_id := gjson.Get(res.String(), "content_id").String()
@@ -143,4 +137,16 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 		}
 	}
 	return nil
+}
+
+func getByContentId(req *resty.Request, content_id string) *resty.Response {
+	res, _ := req.Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + content_id + "/json")
+
+	return res
+}
+
+func getByDVDId(req *resty.Request, dvd_id string) *resty.Response {
+	res, _ := req.Get("https://r18.dev/videos/vod/movies/detail/-/dvd_id=" + dvd_id + "/json")
+
+	return res
 }
