@@ -242,7 +242,7 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 }
 
 func BadoinkVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, "badoinkvr", "BadoinkVR", "https://badoinkvr.com/vrpornvideos", singeScrapeAdditionalInfo)
+	return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, "badoinkvr", "BadoinkVR", "https://badoinkvr.com/vrpornvideos?order=newest", singeScrapeAdditionalInfo)
 }
 
 func B18VR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {

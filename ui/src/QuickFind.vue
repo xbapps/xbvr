@@ -10,10 +10,10 @@
       <b-taglist>
         <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
         <b-tooltip :label="$t('Optional: select one or more words to target searching to a specific field')" :delay="500" position="is-top">
-          <b-button @click='searchPrefix("title:")' class="tag is-info is-small is-light">title:</b-button>
+          <b-button @click='searchPrefix("+title:")' class="tag is-info is-small is-light">title:</b-button>
           <b-button @click='searchPrefix("cast:")' class="tag is-info is-small is-light">cast:</b-button>
-          <b-button @click='searchPrefix("site:")' class="tag is-info is-small is-light">site:</b-button>
-          <b-button @click='searchPrefix("id:")' class="tag is-info is-small is-light">id:</b-button>
+          <b-button @click='searchPrefix("+site:")' class="tag is-info is-small is-light">site:</b-button>
+          <b-button @click='searchPrefix("+id:")' class="tag is-info is-small is-light">id:</b-button>
         </b-tooltip>&nbsp;
         <b-tooltip :label="$t('Add file duration to search')" :delay="500" position="is-top">
           <b-button @click='searchDurationPrefix("duration:")' class="tag is-info is-small is-light">duration:</b-button>

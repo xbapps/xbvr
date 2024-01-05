@@ -5,6 +5,8 @@ import (
 	"html"
 	"io"
 	"net/http"
+	"net/url"
+	"path"
 	"regexp"
 	"strings"
 
@@ -78,11 +80,12 @@ func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
 			} else {
 				//  extract match with regex expression if one was specified
 				re := regexp.MustCompile(params.ExtractRegex)
-				r := re.FindStringSubmatch(e.Text)
-				if len(r) > 0 {
-					if r[1] != "" {
-						srcs = append(srcs, models.VideoSource{URL: r[1], Quality: "unknown"})
-					}
+				results := re.FindAllStringSubmatch(e.Text, -1)
+				for _, result := range results {
+					parsedURL, _ := url.Parse(result[0])
+					filename := path.Base(parsedURL.Path)
+					baseFilename := strings.TrimSuffix(filename, path.Ext(filename))
+					srcs = append(srcs, models.VideoSource{URL: result[1], Quality: baseFilename})
 				}
 			}
 		})
@@ -153,7 +156,8 @@ func extractFromJson(inputJson string, params models.TrailerScrape, srcs []model
 	if params.RecordPath != "" {
 		u := gjson.Get(JsonMetadata, params.RecordPath)
 		u.ForEach(func(key, value gjson.Result) bool {
-			url := gjson.Get(value.String(), params.ContentPath).String()
+			url := params.ContentBaseUrl
+			url += gjson.Get(value.String(), params.ContentPath).String()
 			quality := gjson.Get(value.String(), params.QualityPath).String()
 			encoding := ""
 			if params.EncodingPath != "" {
