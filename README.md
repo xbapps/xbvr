@@ -134,4 +134,19 @@ o - previous actor
 p - next actor  
 left arrow - cycles backwards in gallery  
 right arrow - cycles forward in gallery  
-esc - closes details pane    
+esc - closes details pane
+
+#### using Command Line Arguments
+| Command line parameter | Type | Description |
+|------------------------|-------|--------------
+| `--enableLocalStorage` | boolean |Use local folder to store application data|
+|	`--app_dir` | String|path to the application directory|
+|	`--cache_dir` | String|path to the tempoarary scraper cache directory|
+|	`--imgproxy_dir` | String|path to the imageproxy directory|
+|	`--search_dir` | String| path to the Search Index directory|
+|	`--preview_dir` | String| path to the Scraper Cache directory|
+|	`--scriptsheatmap_dir` | String| path to the scripts_heatmap directory|
+|	`--myfiles_dir` | String| path to the myfiles directory for serving users own content (eg images|
+|	`--databaseurl` | String|override default database path|
+|	`--web_port` | Int| override default Web Page port 9999|
+|	`--ws_addr` | String| override default Websocket address from the default 0.0.0.0:9998|
