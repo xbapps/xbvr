@@ -20,8 +20,7 @@ type Aka struct {
 }
 
 func (i *Aka) Save() error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	err := retry.Do(
 		func() error {
@@ -41,8 +40,7 @@ func (i *Aka) Save() error {
 }
 
 func (o *Aka) GetIfExistByPK(id uint) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.
 		Preload("Actors").
@@ -50,8 +48,7 @@ func (o *Aka) GetIfExistByPK(id uint) error {
 }
 
 func (o *Aka) UpdateAkaSceneCastRecords() {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	// Queries to update the scene_cast table for the aka actor are comlex but fast.
 	//  Significating faster than iterating through the results of multiple simpler queries.
@@ -95,8 +92,7 @@ func (o *Aka) UpdateAkaSceneCastRecords() {
 }
 
 func (o *Aka) RefreshAkaActorNames() {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	type SortedList struct {
 		AkaActorId uint

@@ -31,9 +31,6 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	siteCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com")
 	trailerCollector := cloneCollector(sceneCollector)
 
-	db, _ := models.GetDB()
-	defer db.Close()
-
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID

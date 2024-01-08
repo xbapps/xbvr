@@ -17,8 +17,6 @@ import (
 func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, nwID string, singeScrapeAdditionalInfo string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
-	db, _ := models.GetDB()
-	defer db.Close()
 
 	sceneCollector := createCollector("www.czechvrnetwork.com")
 	siteCollector := createCollector("www.czechvrnetwork.com")

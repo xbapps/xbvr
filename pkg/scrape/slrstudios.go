@@ -22,8 +22,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	sceneCollector := createCollector("www.sexlikereal.com")
 	siteCollector := createCollector("www.sexlikereal.com")
 
-	db, _ := models.GetDB()
-	defer db.Close()
+	db, _ := models.GetCommonDB()
 
 	// RegEx Patterns
 	coverRegEx := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
@@ -48,8 +47,6 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				studioId = strings.TrimSuffix(strings.ReplaceAll(studioId, "/studios/", ""), "/")
 
 				// see if we can find the site record, there may not be
-				db, _ := models.GetDB()
-				defer db.Close()
 				var site models.Site
 				db.Where("id = ? or name like ? or (name = ? and name like 'SLR%')", studioId, sc.Studio+"%SLR)", sc.Studio).First(&site)
 				if site.ID != "" {

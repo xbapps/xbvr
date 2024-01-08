@@ -34,8 +34,7 @@ func GenericActorScrapers() {
 	tlog := log.WithField("task", "scrape")
 	tlog.Infof("Scraping Actor Details from Sites")
 
-	db, _ := models.GetDB()
-	defer db.Close()
+	db, _ := models.GetCommonDB()
 
 	scraperConfig := models.BuildActorScraperRules()
 
@@ -133,8 +132,7 @@ func processAuthorLink(row outputList, siteRules map[string]models.GenericScrape
 
 func GenericSingleActorScraper(actorId uint, actorPage string) {
 	log.Infof("Scraping Actor Details from %s", actorPage)
-	db, _ := models.GetDB()
-	defer db.Close()
+	db, _ := models.GetCommonDB()
 
 	var actor models.Actor
 	actor.ID = actorId
@@ -160,9 +158,7 @@ func GenericActorScrapersBySite(site string) {
 	tlog := log.WithField("task", "scrape")
 	tlog.Infof("Scraping Actor Details from %s", site)
 
-	db, _ := models.GetDB()
-	defer db.Close()
-
+	db, _ := models.GetCommonDB()
 	scraperConfig := models.BuildActorScraperRules()
 
 	er := models.ExternalReference{}
@@ -278,8 +274,7 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 	var extref models.ExternalReference
 	var extreflink models.ExternalReferenceLink
 
-	db, _ := models.GetDB()
-	defer db.Close()
+	db, _ := models.GetCommonDB()
 	db.Preload("ExternalReference").
 		Where(&models.ExternalReferenceLink{ExternalSource: source, InternalDbId: actor.ID}).
 		First(&extreflink)

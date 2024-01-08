@@ -710,8 +710,7 @@ func (i ActorResource) editActorExtRefs(req *restful.Request, resp *restful.Resp
 
 	var links []models.ExternalReferenceLink
 
-	db, _ := models.GetDB()
-	defer db.Close()
+	db, _ := models.GetCommonDB()
 
 	// find any links that were removed
 	db.Preload("ExternalReference").Where("internal_table = 'actors' and internal_db_id = ?", id).Find(&links)

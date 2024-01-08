@@ -90,29 +90,25 @@ type SceneMatchRule struct {
 }
 
 func (o *ExternalReference) GetIfExist(id uint) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.Preload("XbvrLinks").Where(&ExternalReference{ID: id}).First(o).Error
 }
 
 func (o *ExternalReference) FindExternalUrl(externalSource string, externalUrl string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.Preload("XbvrLinks").Where(&ExternalReference{ExternalSource: externalSource, ExternalURL: externalUrl}).First(o).Error
 }
 
 func (o *ExternalReference) FindExternalId(externalSource string, externalId string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.Preload("XbvrLinks").Where(&ExternalReference{ExternalSource: externalSource, ExternalId: externalId}).First(o).Error
 }
 
 func (o *ExternalReference) Save() {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	err := retry.Do(
 		func() error {
@@ -129,14 +125,12 @@ func (o *ExternalReference) Save() {
 }
 
 func (o *ExternalReference) Delete() {
-	db, _ := GetDB()
+	db, _ := GetCommonDB()
 	db.Delete(&o)
-	db.Close()
 }
 
 func (o *ExternalReference) AddUpdateWithUrl() {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	existingRef := ExternalReference{ExternalSource: o.ExternalSource, ExternalURL: o.ExternalURL}
 	existingRef.FindExternalUrl(o.ExternalSource, o.ExternalURL)
@@ -166,8 +160,7 @@ func (o *ExternalReference) AddUpdateWithUrl() {
 }
 
 func (o *ExternalReference) AddUpdateWithId() {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	existingRef := ExternalReference{ExternalSource: o.ExternalSource, ExternalId: o.ExternalId}
 	existingRef.FindExternalId(o.ExternalSource, o.ExternalId)
@@ -197,8 +190,7 @@ func (o *ExternalReference) AddUpdateWithId() {
 }
 
 func (o *ExternalReferenceLink) Save() {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	err := retry.Do(
 		func() error {
@@ -215,8 +207,7 @@ func (o *ExternalReferenceLink) Save() {
 }
 
 func (o *ExternalReferenceLink) Find(externalSource string, internalName string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.Where(&ExternalReferenceLink{ExternalSource: externalSource, InternalNameId: internalName}).First(o).Error
 }
@@ -264,8 +255,7 @@ func (o *ExternalReference) DetermineActorScraperByUrl(url string) string {
 }
 
 func (o *ExternalReference) DetermineActorScraperBySiteId(siteId string) string {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var site Site
 	db.Where("id = ?", siteId).First(&site)
@@ -304,8 +294,7 @@ func (config ActorScraperConfig) loadActorScraperRules() {
 }
 
 func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 	var sites []Site
 
 	// To understand the regex used, sign up to chat.openai.com and just ask something like Explain (.*, )?(.*)$
@@ -1080,8 +1069,7 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 }
 
 func (scrapeRules ActorScraperConfig) getSiteUrlMatchingRules() {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var sites []Site
 

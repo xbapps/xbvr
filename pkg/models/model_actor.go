@@ -97,8 +97,7 @@ type ActorLink struct {
 }
 
 func (i *Actor) Save() error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var err error = retry.Do(
 		func() error {
@@ -118,8 +117,7 @@ func (i *Actor) Save() error {
 }
 
 func (i *Actor) CountActorTags() {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	type CountResults struct {
 		ID            int
@@ -170,8 +168,7 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 	limit := r.Limit.OrElse(100)
 	offset := r.Offset.OrElse(0)
 
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var actors []Actor
 	tx := db.Model(&actors)
@@ -504,8 +501,7 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 }
 
 func (o *Actor) GetIfExist(id string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.
 		Preload("Scenes", func(db *gorm.DB) *gorm.DB {
@@ -515,8 +511,7 @@ func (o *Actor) GetIfExist(id string) error {
 }
 
 func (o *Actor) GetIfExistByPK(id uint) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.
 		Preload("Scenes", func(db *gorm.DB) *gorm.DB {
@@ -526,8 +521,7 @@ func (o *Actor) GetIfExistByPK(id uint) error {
 }
 
 func (o *Actor) GetIfExistByPKWithSceneAvg(id uint) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	tx := db.Model(&Actor{})
 	tx = tx.Select(`actors.*, 
@@ -631,8 +625,7 @@ func addToStringArray(inputArray string, newValue string) (string, bool) {
 
 func (a *Actor) CheckForSetImage() bool {
 	// check if the field was deleted by the user,
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 	var action ActionActor
 	db.Where("source = 'edit_actor' and actor_id = ? and changed_column = 'image_url' and action_type = 'setimage'", a.ID).Order("ID desc").First(&action)
 	return action.ID != 0
@@ -640,8 +633,7 @@ func (a *Actor) CheckForSetImage() bool {
 
 func (a *Actor) CheckForUserDeletes(fieldName string, newValue string) bool {
 	// check if the field was deleted by the user,
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 	var action ActionActor
 	db.Where("source = 'edit_actor' and actor_id = ? and changed_column = ? and new_value = ?", a.ID, fieldName, newValue).Order("ID desc").First(&action)
 	if action.ID != 0 && action.ActionType == "delete" {

@@ -34,8 +34,7 @@ type SceneCuepoint struct {
 }
 
 func (o *SceneCuepoint) Save() error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var err error = retry.Do(
 		func() error {
@@ -133,8 +132,7 @@ type VideoSource struct {
 }
 
 func (i *Scene) Save() error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var err error = retry.Do(
 		func() error {
@@ -162,8 +160,7 @@ func (i *Scene) FromJSON(data []byte) error {
 }
 
 func (o *Scene) GetIfExist(id string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.
 		Preload("Tags").
@@ -175,8 +172,7 @@ func (o *Scene) GetIfExist(id string) error {
 }
 
 func (o *Scene) GetIfExistByPK(id uint) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.
 		Preload("Tags").
@@ -188,8 +184,7 @@ func (o *Scene) GetIfExistByPK(id uint) error {
 }
 
 func (o *Scene) GetIfExistURL(u string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	return db.
 		Preload("Tags").
@@ -215,8 +210,7 @@ func (o *Scene) GetFunscriptTitle() string {
 }
 
 func (o *Scene) GetFiles() ([]File, error) {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var files []File
 	db.Preload("Volume").Where(&File{SceneID: o.ID}).Find(&files)
@@ -225,8 +219,7 @@ func (o *Scene) GetFiles() ([]File, error) {
 }
 
 func (o *Scene) GetTotalWatchTime() int {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	totalResult := struct{ Total float64 }{}
 	db.Raw(`select sum(duration) as total from histories where scene_id = ?`, o.ID).Scan(&totalResult)
@@ -240,8 +233,7 @@ func (o *Scene) GetVideoFiles() ([]File, error) {
 }
 
 func (o *Scene) GetVideoFilesSorted(sort string) ([]File, error) {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var files []File
 	if sort == "" {
@@ -259,8 +251,7 @@ func (o *Scene) GetScriptFiles() ([]File, error) {
 }
 
 func (o *Scene) GetScriptFilesSorted(sort string) ([]File, error) {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var files []File
 	if sort == "" {
@@ -273,8 +264,7 @@ func (o *Scene) GetScriptFilesSorted(sort string) ([]File, error) {
 }
 
 func (o *Scene) GetHSPFiles() ([]File, error) {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var files []File
 	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "hsp").Find(&files)
@@ -283,8 +273,7 @@ func (o *Scene) GetHSPFiles() ([]File, error) {
 }
 
 func (o *Scene) GetSubtitlesFiles() ([]File, error) {
-	db, _ := GetDB()
-	defer db.Close()
+	db, _ := GetCommonDB()
 
 	var files []File
 	db.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "subtitles").Find(&files)

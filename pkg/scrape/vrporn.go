@@ -45,8 +45,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 				sc.Studio = strings.TrimSpace(e.Text)
 				sc.Site = sc.Studio
 				// see if we can find the site record, there may not be
-				db, _ := models.GetDB()
-				defer db.Close()
+				db, _ := models.GetCommonDB()
 				var site models.Site
 				db.Where("name like ?", sc.Studio+"%VRPorn) or id = ?", sc.Studio, studioId).First(&site)
 				if site.ID != "" {
