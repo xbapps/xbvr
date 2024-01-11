@@ -4106,17 +4106,17 @@ eslint-plugin-standard@4.1.0:
   resolved "https://registry.yarnpkg.com/eslint-plugin-standard/-/eslint-plugin-standard-4.1.0.tgz#0c3bf3a67e853f8bbbc580fb4945fbf16f41b7c5"
   integrity sha512-ZL7+QRixjTR6/528YNGyDotyffm5OQst/sGxKDwGb9Uqs4In5Egi4+jbobhqJoyoCM6/7v/1A5fhQ7ScMtDjaQ==
 
-eslint-plugin-vue@9.19.2:
-  version "9.19.2"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-vue/-/eslint-plugin-vue-9.19.2.tgz#7ab83a001a1ac8bccae013c5b9cb5d2c644fb376"
-  integrity sha512-CPDqTOG2K4Ni2o4J5wixkLVNwgctKXFu6oBpVJlpNq7f38lh9I80pRTouZSJ2MAebPJlINU/KTFSXyQfBUlymA==
+eslint-plugin-vue@9.20.0:
+  version "9.20.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-vue/-/eslint-plugin-vue-9.20.0.tgz#2fd47259508d70a4fd8e1d9684c179fa4f5a820c"
+  integrity sha512-9/DV5CM7ItfgWmXjL6j3zyDtVTrslYdnEm+rnYNajdElx17b3erxi/Wc6FY7t3BQ6dgo0t/UBpgiWCOKtJyN8Q==
   dependencies:
     "@eslint-community/eslint-utils" "^4.4.0"
     natural-compare "^1.4.0"
     nth-check "^2.1.1"
     postcss-selector-parser "^6.0.13"
     semver "^7.5.4"
-    vue-eslint-parser "^9.3.1"
+    vue-eslint-parser "^9.4.0"
     xml-name-validator "^4.0.0"
 
 eslint-scope@5.1.1:
@@ -8248,10 +8248,10 @@ vue-debounce@4.0.1:
   resolved "https://registry.yarnpkg.com/vue-debounce/-/vue-debounce-4.0.1.tgz#4b482123911a9033d8f8cb0595e43efcf9ef7aa0"
   integrity sha512-f2HeuLA5b9WY+cKVAU+ydwi9UHxgCWZQt/6HP/5QogthFwm/e+WMP5jpUq2WhEvnHisPkPMomYDRXDxc2AiQDw==
 
-vue-eslint-parser@^9.3.1:
-  version "9.3.1"
-  resolved "https://registry.yarnpkg.com/vue-eslint-parser/-/vue-eslint-parser-9.3.1.tgz#429955e041ae5371df5f9e37ebc29ba046496182"
-  integrity sha512-Clr85iD2XFZ3lJ52/ppmUDG/spxQu6+MAeHXjjyI4I1NUYZ9xmenQp4N0oaHJhrA8OOxltCVxMRfANGa70vU0g==
+vue-eslint-parser@^9.4.0:
+  version "9.4.0"
+  resolved "https://registry.yarnpkg.com/vue-eslint-parser/-/vue-eslint-parser-9.4.0.tgz#dfd22302e2992fe45748a76553cef7afa5bdde27"
+  integrity sha512-7KsNBb6gHFA75BtneJsoK/dbZ281whUIwFYdQxA68QrCrGMXYzUMbPDHGcOQ0OocIVKrWSKWXZ4mL7tonCXoUw==
   dependencies:
     debug "^4.3.4"
     eslint-scope "^7.1.1"
