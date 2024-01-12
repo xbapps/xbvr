@@ -2,6 +2,7 @@ package models
 
 import (
 	"strings"
+	"time"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/jinzhu/gorm"
@@ -93,6 +94,7 @@ func GetCommonDB() (*gorm.DB, error) {
 		func() error {
 			commonConnection, err = gorm.Open(dbConn.Driver, dbConn.DSN)
 			commonConnection.LogMode(common.EnvConfig.DebugSQL)
+			commonConnection.DB().SetConnMaxIdleTime(4 * time.Minute)
 			if common.DBConnectionPoolSize > 0 {
 				commonConnection.DB().SetMaxOpenConns(common.DBConnectionPoolSize)
 			}
