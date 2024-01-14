@@ -1840,31 +1840,6 @@ func Migrate() {
 				return tx.Exec(sql).Error
 			},
 		},
-		{
-			ID: "0073-reset-RealJamVR-scenes-with-duped-actors",
-			Migrate: func(tx *gorm.DB) error {
-
-				rj := [...]string{"realjam-vr-39859", "realjam-vr-39861", "realjam-vr-40044", "realjam-vr-40064"}
-				var scenes []models.Scene
-				err := tx.Where("site = ?", "RealJam VR").Find(&scenes).Error
-				if err != nil {
-					return err
-				}
-				for _, scene := range scenes {
-					for _, v := range rj {
-						if scene.SceneID == v {
-							scene.NeedsUpdate = true
-							err = tx.Save(&scene).Error
-							if err != nil {
-								return err
-							}
-							// common.Log.Infof("Updated scene %s", scene.SceneID)
-						}
-					}
-				}
-				return nil
-			},
-		},
 	})
 
 	if err := m.Migrate(); err != nil {
