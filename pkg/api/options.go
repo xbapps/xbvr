@@ -282,7 +282,7 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 		r, err := resty.New().R().
 			SetHeader("User-Agent", "XBVR/"+common.CurrentVersion).
 			SetHeader("Accept", "application/vnd.github.v3+json").
-			Get("https://api.github.com/repos/xbapps/xbvr/releases/latest")
+			Get("https://api.github.com/repos/therealklh/xbvr/releases/latest")
 		if err != nil || r.StatusCode() != 200 {
 			resp.WriteHeaderAndEntity(http.StatusOK, out)
 			return

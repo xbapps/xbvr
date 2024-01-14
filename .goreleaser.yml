@@ -100,11 +100,11 @@ dockers:
     goos: linux
     goarch: amd64
     image_templates:
-      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
+      - ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
     build_flag_templates:
       - --platform=linux/amd64
       - --no-cache
-      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}
+      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_PROJECT}}
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
@@ -115,11 +115,11 @@ dockers:
     goos: linux
     goarch: arm64
     image_templates:
-      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+      - ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
     build_flag_templates:
       - --platform=linux/arm64
       - --no-cache
-      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}
+      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_PROJECT}}
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
@@ -131,27 +131,27 @@ dockers:
     goarch: arm
     goarm: 7
     image_templates:
-      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
+      - ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
     build_flag_templates:
       - --platform=linux/arm/v7
       - --no-cache
-      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}
+      - --label=org.opencontainers.image.source=https://github.com/{{.Env.GITHUB_PROJECT}}
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.version={{ .Version }}
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}      
 
 docker_manifests:
-  - name_template: ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}
+  - name_template: ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}
     image_templates:
-      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
-      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
-      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
-  - name_template: ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:latest
+      - ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
+      - ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+      - ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
+  - name_template: ghcr.io/{{.Env.GITHUB_PROJECT}}:latest
     image_templates:
-      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
-      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
-      - ghcr.io/{{.Env.GITHUB_USER}}/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
+      - ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-amd64
+      - ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-arm64
+      - ghcr.io/{{.Env.GITHUB_PROJECT}}:{{ .Version }}-armv7
 
 archives:
 - id: archive-linux

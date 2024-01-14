@@ -41,20 +41,19 @@ func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 
 		// Cover / ID
 		e.ForEach(`deo-video`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, strings.Split(e.Attr("cover-image"), "?")[0]+"?h=900")
+			sc.Covers = append(sc.Covers, e.Attr("cover-image"))
 		})
 		// Note: not all scenes have a deo-video element, only a regular img cover instead
 		if len(sc.Covers) == 0 {
 			e.ForEach(`div.container.pt-5 > div > div > img`, func(id int, e *colly.HTMLElement) {
-				sc.Covers = append(sc.Covers, strings.Split(e.Attr("src"), "?")[0]+"?h=900")
+				sc.Covers = append(sc.Covers, e.Attr("src"))
 			})
 		}
 
 		// Gallery
-		// Note: Limiting gallery to 900px in height as some are huge by default
 		e.ForEach(`div.gallery > div`, func(id int, e *colly.HTMLElement) {
 			if id > 0 {
-				sc.Gallery = append(sc.Gallery, strings.Split(e.ChildAttr("div.view > a", "href"), "?")[0]+"?h=900")
+				sc.Gallery = append(sc.Gallery, e.ChildAttr("div.view > a > img", "src"))
 			}
 		})
 
