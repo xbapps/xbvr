@@ -104,13 +104,13 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 	scrapers := models.GetScrapers()
 
 	var sites []models.Site
-	db, _ := models.GetCommonDB()
+	commonDb, _ := models.GetCommonDB()
 	if toScrape == "_all" {
-		db.Find(&sites)
+		commonDb.Find(&sites)
 	} else if toScrape == "_enabled" {
-		db.Where(&models.Site{IsEnabled: true}).Find(&sites)
+		commonDb.Where(&models.Site{IsEnabled: true}).Find(&sites)
 	} else {
-		db.Where(&models.Site{ID: toScrape}).Find(&sites)
+		commonDb.Where(&models.Site{ID: toScrape}).Find(&sites)
 	}
 
 	var wg sync.WaitGroup
@@ -150,17 +150,17 @@ func sceneSliceAppender(collectedScenes *[]models.ScrapedScene, scenes <-chan mo
 func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedScene) {
 	defer wg.Done()
 
-	db, _ := models.GetCommonDB()
+	commonDb, _ := models.GetCommonDB()
 	for scene := range scenes {
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saving %v", scene.SceneID)
 		}
 		if scene.OnlyUpdateScriptData {
 			if config.Config.Funscripts.ScrapeFunscripts {
-				models.SceneUpdateScriptData(db, scene)
+				models.SceneUpdateScriptData(commonDb, scene)
 			}
 		} else {
-			models.SceneCreateUpdateFromExternal(db, scene)
+			models.SceneCreateUpdateFromExternal(commonDb, scene)
 		}
 		atomic.AddUint64(i, 1)
 		if os.Getenv("DEBUG") != "" {
@@ -254,8 +254,8 @@ func ReapplyEdits() {
 func ScrapeSingleScene(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo string) models.Scene {
 	var newScene models.Scene
 	Scrape(toScrape, singleSceneURL, singeScrapeAdditionalInfo)
-	db, _ := models.GetCommonDB()
-	db.
+	commonDb, _ := models.GetCommonDB()
+	commonDb.
 		Preload("Tags").
 		Preload("Cast").
 		Preload("Files").
@@ -278,8 +278,8 @@ func Scrape(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo st
 
 		// Get all known scenes
 		var scenes []models.Scene
-		db, _ := models.GetCommonDB()
-		db.Find(&scenes)
+		commonDb, _ := models.GetCommonDB()
+		commonDb.Find(&scenes)
 
 		var knownScenes []string
 		for i := range scenes {
