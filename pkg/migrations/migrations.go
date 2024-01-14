@@ -1844,14 +1844,14 @@ func Migrate() {
 			ID: "0073-reset-RealJamVR-scenes-with-duped-actors",
 			Migrate: func(tx *gorm.DB) error {
 
-				rj := [...]string{"realjam-vr-39859", "realjam-vr-39861", "realjam-vr-40044", "realjam-vr-40064"}
+				rjn := [...]string{"realjam-vr-39859", "realjam-vr-39861", "realjam-vr-40044", "realjam-vr-40064", "porncorn-vr-39827", "porncorn-vr-39902", "porncorn-vr-40031", "porncorn-vr-39903"}
 				var scenes []models.Scene
-				err := tx.Where("site = ?", "RealJam VR").Find(&scenes).Error
+				err := tx.Where("studio = ?", "Real Jam Network").Find(&scenes).Error
 				if err != nil {
 					return err
 				}
 				for _, scene := range scenes {
-					for _, v := range rj {
+					for _, v := range rjn {
 						if scene.SceneID == v {
 							scene.NeedsUpdate = true
 							err = tx.Save(&scene).Error
