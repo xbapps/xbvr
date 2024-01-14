@@ -153,6 +153,9 @@ type ObjectConfig struct {
 			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"stashdbRescrapeSchedule"`
 	} `json:"cron"`
+	Storage struct {
+		MatchOhash bool `default:"false" json:"match_ohash"`
+	} `json:"storage"`
 }
 
 var (
