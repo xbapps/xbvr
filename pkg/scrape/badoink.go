@@ -151,7 +151,7 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				e.ForEach(`a.video-tag`, func(id int, e *colly.HTMLElement) {
 					sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 				})
-				if has7K == true {
+				if has6K7K == true {
 					filenames := []string{"samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh", "7k_180_180x180_3dh", "6k_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "7k_180_180x180_3dh_LR", "6k_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
 					}
 				else {
