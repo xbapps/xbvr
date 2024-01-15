@@ -13,7 +13,7 @@
           <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
           <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
         </b-field>
-        <span>R18.dev scraper requires FANZA content ID, e.g. 84vrkm00139</span>
+        <span>R18.dev scraper works best with FANZA content ID, e.g. 84vrkm00139, but DVD-ID works too when maintained.</span>
       </div>
     </div>
 

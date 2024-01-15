@@ -12,12 +12,26 @@ import (
 
 func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 	scenes := strings.Split(queryString, ",")
+
 	for _, v := range scenes {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 
-		r, _ := resty.New().R().Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + v + "/json")
-		JsonMetadata := r.String()
+		req := resty.New().R()
+		res := getByContentId(req, v)
+
+		if res.StatusCode() == 404 {
+			res = getByDVDId(req, v)
+
+			if res.StatusCode() == 200 {
+				content_id := gjson.Get(res.String(), "content_id").String()
+				res = getByContentId(req, content_id)
+			} else {
+				return nil
+			}
+		}
+
+		JsonMetadata := res.String()
 
 		content_id := gjson.Get(JsonMetadata, "content_id").String()
 		sc.HomepageURL = "https://www.dmm.co.jp/en/digital/videoa/-/detail/=/cid=" + content_id + "/"
@@ -123,4 +137,16 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 		}
 	}
 	return nil
+}
+
+func getByContentId(req *resty.Request, content_id string) *resty.Response {
+	res, _ := req.Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + content_id + "/json")
+
+	return res
+}
+
+func getByDVDId(req *resty.Request, dvd_id string) *resty.Response {
+	res, _ := req.Get("https://r18.dev/videos/vod/movies/detail/-/dvd_id=" + dvd_id + "/json")
+
+	return res
 }
