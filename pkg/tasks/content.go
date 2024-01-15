@@ -148,7 +148,7 @@ func sceneSliceAppender(collectedScenes *[]models.ScrapedScene, scenes <-chan mo
 	}
 }
 
-func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedScene) {
+func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedScene, processedScenes *[]models.ScrapedScene, lock *sync.Mutex) {
 	defer wg.Done()
 
 	db, _ := models.GetDB()
@@ -164,6 +164,11 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 		} else {
 			models.SceneCreateUpdateFromExternal(db, scene)
 		}
+		// Add the processed scene to the list to re/index
+		lock.Lock()
+		*processedScenes = append(*processedScenes, scene)
+		lock.Unlock()
+
 		atomic.AddUint64(i, 1)
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saved %v", scene.SceneID)
@@ -295,9 +300,12 @@ func Scrape(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo st
 		collectedScenes := make(chan models.ScrapedScene, 250)
 		var sceneCount uint64
 
+		var processedScenes []models.ScrapedScene
+		var processedScenesLock sync.Mutex
+
 		var wg sync.WaitGroup
 		wg.Add(1)
-		go sceneDBWriter(&wg, &sceneCount, collectedScenes)
+		go sceneDBWriter(&wg, &sceneCount, collectedScenes, &processedScenes, &processedScenesLock)
 
 		// Start scraping
 		if e := runScrapers(knownScenes, toScrape, true, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo); e != nil {
@@ -329,7 +337,7 @@ func Scrape(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo st
 			tlog.Infof("Reapplying edits")
 			ReapplyEdits()
 
-			SearchIndex()
+			IndexScrapedScenes(&processedScenes)
 
 			tlog.Infof("Scraped %v new scenes in %s",
 				sceneCount,
