@@ -756,6 +756,17 @@ func Migrate() {
 				return tx.AutoMigrate(File{}).Error
 			},
 		},
+		{
+			ID: "0073-scene-_id-index-plus-columns_size_changes",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					SceneID  string `gorm:"index" json:"scene_id" xbvrbackup:"scene_id"`
+					CoverURL string `gorm:"size:500" json:"cover_url" xbvrbackup:"cover_url"`
+					SceneURL string `gorm:"size:500" json:"scene_url" xbvrbackup:"scene_url"`
+				}
+				return tx.AutoMigrate(&Scene{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below

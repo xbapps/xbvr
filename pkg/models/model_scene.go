@@ -61,7 +61,7 @@ type Scene struct {
 	UpdatedAt time.Time  `json:"updated_at" xbvrbackup:"updated_at"`
 	DeletedAt *time.Time `sql:"index" json:"-" xbvrbackup:"-"`
 
-	SceneID         string    `json:"scene_id" xbvrbackup:"scene_id"`
+	SceneID         string    `gorm:"index" json:"scene_id" xbvrbackup:"scene_id"`
 	Title           string    `json:"title" sql:"type:varchar(1024);" xbvrbackup:"title"`
 	SceneType       string    `json:"scene_type" xbvrbackup:"scene_type"`
 	ScraperId       string    `json:"scraper_id" xbvrbackup:"scraper_id"`
@@ -76,8 +76,8 @@ type Scene struct {
 	Synopsis        string    `json:"synopsis" sql:"type:text;" xbvrbackup:"synopsis"`
 	ReleaseDate     time.Time `json:"release_date" xbvrbackup:"release_date"`
 	ReleaseDateText string    `json:"release_date_text" xbvrbackup:"release_date_text"`
-	CoverURL        string    `json:"cover_url" xbvrbackup:"cover_url"`
-	SceneURL        string    `json:"scene_url" xbvrbackup:"scene_url"`
+	CoverURL        string    `gorm:"size:500" json:"cover_url" xbvrbackup:"cover_url"`
+	SceneURL        string    `gorm:"size:500" json:"scene_url" xbvrbackup:"scene_url"`
 	MemberURL       string    `json:"members_url" xbvrbackup:"members_url"`
 	IsMultipart     bool      `json:"is_multipart" xbvrbackup:"is_multipart"`
 
