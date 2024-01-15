@@ -34,6 +34,8 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	db, _ := models.GetDB()
 	defer db.Close()
 
+	var Has6K7K bool = false
+
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
@@ -78,11 +80,10 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		// Tags
-		has6K7K := false
 		e.ForEach(`a.video-tag`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
-			if strings.TrimSpace(e.Text) == "7K" {
-				has6K7K = true
+			if strings.Contains(strings.TrimSpace(e.Text), "7K") {
+				Has6K7K = true
 				}
 		})
 		if scraperID == "vrcosplayx" {
@@ -150,13 +151,16 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 				e.ForEach(`a.video-tag`, func(id int, e *colly.HTMLElement) {
 					sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
+					if strings.Contains(strings.TrimSpace(e.Text), "7K") {
+						Has6K7K = true
+						}
 				})
-				if has6K7K == true {
-					filenames := []string{"samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh", "7k_180_180x180_3dh", "6k_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "7k_180_180x180_3dh_LR", "6k_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
-					}
-				else {
-					filenames := []string{"samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
-					}
+
+				filenames := []string{"samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
+
+				if Has6K7K {
+					filenames = []string{"7k_180_180x180_3dh", "6k_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "7k_180_180x180_3dh_LR", "6k_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh",  "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
+				}
 
 				for i := range filenames {
 					filenames[i] = baseName + "_" + filenames[i] + ".mp4"
