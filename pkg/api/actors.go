@@ -710,11 +710,10 @@ func (i ActorResource) editActorExtRefs(req *restful.Request, resp *restful.Resp
 
 	var links []models.ExternalReferenceLink
 
-	db, _ := models.GetDB()
-	defer db.Close()
+	commonDb, _ := models.GetCommonDB()
 
 	// find any links that were removed
-	db.Preload("ExternalReference").Where("internal_table = 'actors' and internal_db_id = ?", id).Find(&links)
+	commonDb.Preload("ExternalReference").Where("internal_table = 'actors' and internal_db_id = ?", id).Find(&links)
 	for _, link := range links {
 		found := false
 		for _, url := range urls {
@@ -724,7 +723,7 @@ func (i ActorResource) editActorExtRefs(req *restful.Request, resp *restful.Resp
 			}
 		}
 		if !found {
-			db.Delete(&link)
+			commonDb.Delete(&link)
 			models.AddActionActor(actor.ID, "edit_actor", "delete", "external_reference_link", link.ExternalReference.ExternalURL)
 		}
 	}

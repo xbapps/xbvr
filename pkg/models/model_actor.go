@@ -97,12 +97,11 @@ type ActorLink struct {
 }
 
 func (i *Actor) Save() error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	var err error = retry.Do(
 		func() error {
-			err := db.Save(&i).Error
+			err := commonDb.Save(&i).Error
 			if err != nil {
 				return err
 			}
@@ -118,8 +117,7 @@ func (i *Actor) Save() error {
 }
 
 func (i *Actor) CountActorTags() {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	type CountResults struct {
 		ID            int
@@ -131,7 +129,7 @@ func (i *Actor) CountActorTags() {
 
 	var results []CountResults
 
-	db.Model(&Actor{}).
+	commonDb.Model(&Actor{}).
 		Select("actors.id, count as existingcnt, count(*) cnt, sum(scenes.is_available ) is_available, avail_count as existingavail").
 		Group("actors.id").
 		Joins("join scene_cast on scene_cast.actor_id = actors.id").
@@ -141,7 +139,7 @@ func (i *Actor) CountActorTags() {
 	for i := range results {
 		var actor Actor
 		if results[i].Cnt != results[i].Existingcnt || results[i].IsAvailable != results[i].Existingavail {
-			db.First(&actor, results[i].ID)
+			commonDb.First(&actor, results[i].ID)
 			actor.Count = results[i].Cnt
 			actor.AvailCount = results[i].IsAvailable
 			actor.Save()
@@ -170,11 +168,10 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 	limit := r.Limit.OrElse(100)
 	offset := r.Offset.OrElse(0)
 
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	var actors []Actor
-	tx := db.Model(&actors)
+	tx := commonDb.Model(&actors)
 
 	var out ResponseActorList
 
@@ -504,10 +501,9 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 }
 
 func (o *Actor) GetIfExist(id string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
-	return db.
+	return commonDb.
 		Preload("Scenes", func(db *gorm.DB) *gorm.DB {
 			return db.Where("is_hidden = 0")
 		}).
@@ -515,10 +511,9 @@ func (o *Actor) GetIfExist(id string) error {
 }
 
 func (o *Actor) GetIfExistByPK(id uint) error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
-	return db.
+	return commonDb.
 		Preload("Scenes", func(db *gorm.DB) *gorm.DB {
 			return db.Where("is_hidden = 0")
 		}).
@@ -526,10 +521,9 @@ func (o *Actor) GetIfExistByPK(id uint) error {
 }
 
 func (o *Actor) GetIfExistByPKWithSceneAvg(id uint) error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
-	tx := db.Model(&Actor{})
+	tx := commonDb.Model(&Actor{})
 	tx = tx.Select(`actors.*, 
 	(select AVG(s.star_rating) scene_avg from scene_cast sc join scenes s on s.id=sc.scene_id where sc.actor_id =actors.id and s.star_rating > 0 and is_hidden=0) as scene_rating_average`)
 
@@ -631,19 +625,17 @@ func addToStringArray(inputArray string, newValue string) (string, bool) {
 
 func (a *Actor) CheckForSetImage() bool {
 	// check if the field was deleted by the user,
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 	var action ActionActor
-	db.Where("source = 'edit_actor' and actor_id = ? and changed_column = 'image_url' and action_type = 'setimage'", a.ID).Order("ID desc").First(&action)
+	commonDb.Where("source = 'edit_actor' and actor_id = ? and changed_column = 'image_url' and action_type = 'setimage'", a.ID).Order("ID desc").First(&action)
 	return action.ID != 0
 }
 
 func (a *Actor) CheckForUserDeletes(fieldName string, newValue string) bool {
 	// check if the field was deleted by the user,
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 	var action ActionActor
-	db.Where("source = 'edit_actor' and actor_id = ? and changed_column = ? and new_value = ?", a.ID, fieldName, newValue).Order("ID desc").First(&action)
+	commonDb.Where("source = 'edit_actor' and actor_id = ? and changed_column = ? and new_value = ?", a.ID, fieldName, newValue).Order("ID desc").First(&action)
 	if action.ID != 0 && action.ActionType == "delete" {
 		return true
 	}

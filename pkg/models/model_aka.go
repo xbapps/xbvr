@@ -20,12 +20,11 @@ type Aka struct {
 }
 
 func (i *Aka) Save() error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	err := retry.Do(
 		func() error {
-			err := db.Save(&i).Error
+			err := commonDb.Save(&i).Error
 			if err != nil {
 				return err
 			}
@@ -41,24 +40,22 @@ func (i *Aka) Save() error {
 }
 
 func (o *Aka) GetIfExistByPK(id uint) error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
-	return db.
+	return commonDb.
 		Preload("Actors").
 		Where(&Aka{ID: id}).First(o).Error
 }
 
 func (o *Aka) UpdateAkaSceneCastRecords() {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	// Queries to update the scene_cast table for the aka actor are comlex but fast.
 	//  Significating faster than iterating through the results of multiple simpler queries.
 	// 	The Raw Sql used is compatible between mysql & sqlite
 
 	// add missing scene_cast records for aka actors
-	db.Exec(`
+	commonDb.Exec(`
 	insert into scene_cast 
 	select distinct sc.scene_id, a.aka_actor_id 
 	from akas a 
@@ -69,7 +66,7 @@ func (o *Aka) UpdateAkaSceneCastRecords() {
 	`)
 
 	// delete scene_cast records for aka actors that have been removed
-	db.Exec(`
+	commonDb.Exec(`
 		with SceneIds as (
 			select distinct a.id, sc.scene_id
 			from akas a 
@@ -95,8 +92,7 @@ func (o *Aka) UpdateAkaSceneCastRecords() {
 }
 
 func (o *Aka) RefreshAkaActorNames() {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	type SortedList struct {
 		AkaActorId uint
@@ -105,7 +101,7 @@ func (o *Aka) RefreshAkaActorNames() {
 	var sortedList []SortedList
 
 	// this update the aka names by reordering the actor names based on descending count
-	db.Raw(`
+	commonDb.Raw(`
 	with sorted as (
 		select a.aka_actor_id, a2.name, a2.count  from akas a 
 		join actor_akas aa on a.id =aa.aka_id 
@@ -118,7 +114,7 @@ func (o *Aka) RefreshAkaActorNames() {
 	for _, listItem := range sortedList {
 		var actor Actor
 		actor.ID = listItem.AkaActorId
-		db.Model(&actor).Where("name != ?", "aka:"+listItem.SortedName).Update("name", "aka:"+listItem.SortedName)
+		commonDb.Model(&actor).Where("name != ?", "aka:"+listItem.SortedName).Update("name", "aka:"+listItem.SortedName)
 	}
 }
 

@@ -34,20 +34,19 @@ func GenericActorScrapers() {
 	tlog := log.WithField("task", "scrape")
 	tlog.Infof("Scraping Actor Details from Sites")
 
-	db, _ := models.GetDB()
-	defer db.Close()
+	commonDb, _ := models.GetCommonDB()
 
 	scraperConfig := models.BuildActorScraperRules()
 
 	var actors []models.Actor
-	db.Preload("Scenes").
+	commonDb.Preload("Scenes").
 		Where("id =1").
 		Find(&actors)
 
 	sqlcmd := ""
 
 	var output []outputList
-	switch db.Dialect().GetName() {
+	switch commonDb.Dialect().GetName() {
 	// gets the list of an actors Urls for scraper and join to external_reference_links to see if the haven't been linked
 	case "mysql":
 		sqlcmd = `
@@ -78,7 +77,7 @@ func GenericActorScrapers() {
 
 	processed := 0
 	lastMessage := time.Now()
-	db.Raw(sqlcmd).Scan(&output)
+	commonDb.Raw(sqlcmd).Scan(&output)
 
 	var wg sync.WaitGroup
 	concurrentLimit := 10 // Maximum number of concurrent tasks
@@ -133,16 +132,15 @@ func processAuthorLink(row outputList, siteRules map[string]models.GenericScrape
 
 func GenericSingleActorScraper(actorId uint, actorPage string) {
 	log.Infof("Scraping Actor Details from %s", actorPage)
-	db, _ := models.GetDB()
-	defer db.Close()
+	commonDb, _ := models.GetCommonDB()
 
 	var actor models.Actor
 	actor.ID = actorId
-	db.Find(&actor)
+	commonDb.Find(&actor)
 	scraperConfig := models.BuildActorScraperRules()
 
 	var extRefLink models.ExternalReferenceLink
-	db.Preload("ExternalReference").
+	commonDb.Preload("ExternalReference").
 		Where(&models.ExternalReferenceLink{ExternalId: actorPage, InternalDbId: actor.ID}).
 		First(&extRefLink)
 
@@ -160,16 +158,14 @@ func GenericActorScrapersBySite(site string) {
 	tlog := log.WithField("task", "scrape")
 	tlog.Infof("Scraping Actor Details from %s", site)
 
-	db, _ := models.GetDB()
-	defer db.Close()
-
+	commonDb, _ := models.GetCommonDB()
 	scraperConfig := models.BuildActorScraperRules()
 
 	er := models.ExternalReference{}
 	scrapeId := er.DetermineActorScraperBySiteId(site)
 
 	var actors []models.Actor
-	db.Debug().Select("DISTINCT actors.*").
+	commonDb.Debug().Select("DISTINCT actors.*").
 		Joins("JOIN scene_cast ON scene_cast.actor_id = actors.id").
 		Joins("JOIN scenes ON scenes.id = scene_cast.scene_id").
 		Where("scenes.scraper_id = ?", site).
@@ -184,7 +180,7 @@ func GenericActorScrapersBySite(site string) {
 
 		// find the url for the actor for this site
 		var extreflink models.ExternalReferenceLink
-		db.Where(`internal_table = 'actors' and internal_db_id = ? and external_source = ?`, actor.ID, scrapeId).First(&extreflink)
+		commonDb.Where(`internal_table = 'actors' and internal_db_id = ? and external_source = ?`, actor.ID, scrapeId).First(&extreflink)
 		for source, rule := range scraperConfig.GenericActorScrapingConfig {
 			if source == scrapeId {
 				applyRules(extreflink.ExternalId, scrapeId, rule, &actor, true)
@@ -278,9 +274,8 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 	var extref models.ExternalReference
 	var extreflink models.ExternalReferenceLink
 
-	db, _ := models.GetDB()
-	defer db.Close()
-	db.Preload("ExternalReference").
+	commonDb, _ := models.GetCommonDB()
+	commonDb.Preload("ExternalReference").
 		Where(&models.ExternalReferenceLink{ExternalSource: source, InternalDbId: actor.ID}).
 		First(&extreflink)
 	extref = extreflink.ExternalReference

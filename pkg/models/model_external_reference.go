@@ -90,33 +90,29 @@ type SceneMatchRule struct {
 }
 
 func (o *ExternalReference) GetIfExist(id uint) error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
-	return db.Preload("XbvrLinks").Where(&ExternalReference{ID: id}).First(o).Error
+	return commonDb.Preload("XbvrLinks").Where(&ExternalReference{ID: id}).First(o).Error
 }
 
 func (o *ExternalReference) FindExternalUrl(externalSource string, externalUrl string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
-	return db.Preload("XbvrLinks").Where(&ExternalReference{ExternalSource: externalSource, ExternalURL: externalUrl}).First(o).Error
+	return commonDb.Preload("XbvrLinks").Where(&ExternalReference{ExternalSource: externalSource, ExternalURL: externalUrl}).First(o).Error
 }
 
 func (o *ExternalReference) FindExternalId(externalSource string, externalId string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
-	return db.Preload("XbvrLinks").Where(&ExternalReference{ExternalSource: externalSource, ExternalId: externalId}).First(o).Error
+	return commonDb.Preload("XbvrLinks").Where(&ExternalReference{ExternalSource: externalSource, ExternalId: externalId}).First(o).Error
 }
 
 func (o *ExternalReference) Save() {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	err := retry.Do(
 		func() error {
-			err := db.Save(&o).Error
+			err := commonDb.Save(&o).Error
 			if err != nil {
 				return err
 			}
@@ -129,14 +125,12 @@ func (o *ExternalReference) Save() {
 }
 
 func (o *ExternalReference) Delete() {
-	db, _ := GetDB()
-	db.Delete(&o)
-	db.Close()
+	commonDb, _ := GetCommonDB()
+	commonDb.Delete(&o)
 }
 
 func (o *ExternalReference) AddUpdateWithUrl() {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	existingRef := ExternalReference{ExternalSource: o.ExternalSource, ExternalURL: o.ExternalURL}
 	existingRef.FindExternalUrl(o.ExternalSource, o.ExternalURL)
@@ -153,7 +147,7 @@ func (o *ExternalReference) AddUpdateWithUrl() {
 
 	err := retry.Do(
 		func() error {
-			err := db.Save(&o).Error
+			err := commonDb.Save(&o).Error
 			if err != nil {
 				return err
 			}
@@ -166,8 +160,7 @@ func (o *ExternalReference) AddUpdateWithUrl() {
 }
 
 func (o *ExternalReference) AddUpdateWithId() {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	existingRef := ExternalReference{ExternalSource: o.ExternalSource, ExternalId: o.ExternalId}
 	existingRef.FindExternalId(o.ExternalSource, o.ExternalId)
@@ -184,7 +177,7 @@ func (o *ExternalReference) AddUpdateWithId() {
 
 	err := retry.Do(
 		func() error {
-			err := db.Save(&o).Error
+			err := commonDb.Save(&o).Error
 			if err != nil {
 				return err
 			}
@@ -197,12 +190,11 @@ func (o *ExternalReference) AddUpdateWithId() {
 }
 
 func (o *ExternalReferenceLink) Save() {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	err := retry.Do(
 		func() error {
-			err := db.Save(&o).Error
+			err := commonDb.Save(&o).Error
 			if err != nil {
 				return err
 			}
@@ -215,10 +207,9 @@ func (o *ExternalReferenceLink) Save() {
 }
 
 func (o *ExternalReferenceLink) Find(externalSource string, internalName string) error {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
-	return db.Where(&ExternalReferenceLink{ExternalSource: externalSource, InternalNameId: internalName}).First(o).Error
+	return commonDb.Where(&ExternalReferenceLink{ExternalSource: externalSource, InternalNameId: internalName}).First(o).Error
 }
 
 func FormatInternalDbId(input uint) string {
@@ -264,11 +255,10 @@ func (o *ExternalReference) DetermineActorScraperByUrl(url string) string {
 }
 
 func (o *ExternalReference) DetermineActorScraperBySiteId(siteId string) string {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	var site Site
-	db.Where("id = ?", siteId).First(&site)
+	commonDb.Where("id = ?", siteId).First(&site)
 	if site.Name == "" {
 		return siteId
 	}
@@ -304,8 +294,7 @@ func (config ActorScraperConfig) loadActorScraperRules() {
 }
 
 func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 	var sites []Site
 
 	// To understand the regex used, sign up to chat.openai.com and just ask something like Explain (.*, )?(.*)$
@@ -357,7 +346,7 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "aliases", Selector: `div[data-qa="model-info-aliases"] div.u-wh`})
 	scrapeRules.GenericActorScrapingConfig["slr-originals scrape"] = siteDetails
 	scrapeRules.GenericActorScrapingConfig["slr-jav-originals scrape"] = siteDetails
-	db.Where("name like ?", "%SLR)").Find(&sites)
+	commonDb.Where("name like ?", "%SLR)").Find(&sites)
 	scrapeRules.GenericActorScrapingConfig["slr scrape"] = siteDetails
 
 	siteDetails = GenericScraperRuleSet{}
@@ -1080,8 +1069,7 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 }
 
 func (scrapeRules ActorScraperConfig) getSiteUrlMatchingRules() {
-	db, _ := GetDB()
-	defer db.Close()
+	commonDb, _ := GetCommonDB()
 
 	var sites []Site
 
@@ -1191,7 +1179,7 @@ func (scrapeRules ActorScraperConfig) getSiteUrlMatchingRules() {
 		Rules:   []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `(lethalhardcorevr.com).*\/(\d{6,8})\/.*`, XbvrMatchResultPosition: 2, StashRule: `(lethalhardcorevr.com).*\/(\d{6,8})\/.*`, StashMatchResultPosition: 2}},
 	}
 
-	db.Where(&Site{IsEnabled: true}).Order("id").Find(&sites)
+	commonDb.Where(&Site{IsEnabled: true}).Order("id").Find(&sites)
 	for _, site := range sites {
 		if _, found := scrapeRules.StashSceneMatching[site.ID]; !found {
 			if strings.HasSuffix(site.Name, "SLR)") {

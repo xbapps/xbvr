@@ -23,6 +23,7 @@ var ScriptHeatmapDir string
 var MyFilesDir string
 var DownloadDir string
 var WebPort int
+var DBConnectionPoolSize int
 
 func DirSize(path string) (int64, error) {
 	var size int64
@@ -51,6 +52,7 @@ func InitPaths() {
 	databaseurl := flag.String("database_url", "", "Optional: override default database path")
 	web_port := flag.Int("web_port", 0, "Optional: override default Web Page port 9999")
 	ws_addr := flag.String("ws_addr", "", "Optional: override default Websocket address from the default 0.0.0.0:9998")
+	db_connection_pool_size := flag.Int("db_connection_pool_size", 0, "Optional: sets a limit to the number of db connections while scraping")
 
 	flag.Parse()
 
@@ -112,6 +114,11 @@ func InitPaths() {
 		if EnvConfig.WsAddr != "" {
 			WsAddr = EnvConfig.WsAddr
 		}
+	}
+	if *db_connection_pool_size != 0 {
+		DBConnectionPoolSize = *db_connection_pool_size
+	} else {
+		DBConnectionPoolSize = EnvConfig.DBConnectionPoolSize
 	}
 
 	_ = os.MkdirAll(AppDir, os.ModePerm)

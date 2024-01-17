@@ -104,15 +104,14 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 	scrapers := models.GetScrapers()
 
 	var sites []models.Site
-	db, _ := models.GetDB()
+	commonDb, _ := models.GetCommonDB()
 	if toScrape == "_all" {
-		db.Find(&sites)
+		commonDb.Find(&sites)
 	} else if toScrape == "_enabled" {
-		db.Where(&models.Site{IsEnabled: true}).Find(&sites)
+		commonDb.Where(&models.Site{IsEnabled: true}).Find(&sites)
 	} else {
-		db.Where(&models.Site{ID: toScrape}).Find(&sites)
+		commonDb.Where(&models.Site{ID: toScrape}).Find(&sites)
 	}
-	db.Close()
 
 	var wg sync.WaitGroup
 
@@ -151,18 +150,17 @@ func sceneSliceAppender(collectedScenes *[]models.ScrapedScene, scenes <-chan mo
 func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedScene, processedScenes *[]models.ScrapedScene, lock *sync.Mutex) {
 	defer wg.Done()
 
-	db, _ := models.GetDB()
-	defer db.Close()
+	commonDb, _ := models.GetCommonDB()
 	for scene := range scenes {
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saving %v", scene.SceneID)
 		}
 		if scene.OnlyUpdateScriptData {
 			if config.Config.Funscripts.ScrapeFunscripts {
-				models.SceneUpdateScriptData(db, scene)
+				models.SceneUpdateScriptData(commonDb, scene)
 			}
 		} else {
-			models.SceneCreateUpdateFromExternal(db, scene)
+			models.SceneCreateUpdateFromExternal(commonDb, scene)
 		}
 		// Add the processed scene to the list to re/index
 		lock.Lock()
@@ -261,9 +259,8 @@ func ReapplyEdits() {
 func ScrapeSingleScene(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo string) models.Scene {
 	var newScene models.Scene
 	Scrape(toScrape, singleSceneURL, singeScrapeAdditionalInfo)
-	db, _ := models.GetDB()
-	defer db.Close()
-	db.
+	commonDb, _ := models.GetCommonDB()
+	commonDb.
 		Preload("Tags").
 		Preload("Cast").
 		Preload("Files").
@@ -286,9 +283,8 @@ func Scrape(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo st
 
 		// Get all known scenes
 		var scenes []models.Scene
-		db, _ := models.GetDB()
-		db.Find(&scenes)
-		db.Close()
+		commonDb, _ := models.GetCommonDB()
+		commonDb.Find(&scenes)
 
 		var knownScenes []string
 		for i := range scenes {
