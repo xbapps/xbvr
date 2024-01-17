@@ -40,6 +40,9 @@
               <span class="pulsate is-info">{{$t('Scraping now...')}}</span>
             </span>
       </b-table-column>
+      <b-table-column field="limit_scraping" :label="$t('Limit Scraping')" v-slot="props" width="60" sortable>
+          <span><b-switch v-model ="props.row.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: props.row.id})"/></span>
+      </b-table-column>
       <b-table-column field="subscribed" :label="$t('Subscribed')" v-slot="props" width="60" sortable>
           <span><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
       </b-table-column>

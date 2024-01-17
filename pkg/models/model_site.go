@@ -8,14 +8,15 @@ import (
 )
 
 type Site struct {
-	ID         string    `gorm:"primary_key" json:"id" xbvrbackup:"-"`
-	Name       string    `json:"name"  xbvrbackup:"name"`
-	AvatarURL  string    `json:"avatar_url" xbvrbackup:"-"`
-	IsBuiltin  bool      `json:"is_builtin" xbvrbackup:"-"`
-	IsEnabled  bool      `json:"is_enabled" xbvrbackup:"is_enabled"`
-	LastUpdate time.Time `json:"last_update" xbvrbackup:"-"`
-	Subscribed bool      `json:"subscribed" xbvrbackup:"subscribed"`
-	HasScraper bool      `gorm:"-" json:"has_scraper" xbvrbackup:"-"`
+	ID            string    `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	Name          string    `json:"name"  xbvrbackup:"name"`
+	AvatarURL     string    `json:"avatar_url" xbvrbackup:"-"`
+	IsBuiltin     bool      `json:"is_builtin" xbvrbackup:"-"`
+	IsEnabled     bool      `json:"is_enabled" xbvrbackup:"is_enabled"`
+	LastUpdate    time.Time `json:"last_update" xbvrbackup:"-"`
+	Subscribed    bool      `json:"subscribed" xbvrbackup:"subscribed"`
+	HasScraper    bool      `gorm:"-" json:"has_scraper" xbvrbackup:"-"`
+	LimitScraping bool      `json:"limit_scraping" xbvrbackup:"limit_scraping"`
 }
 
 func (i *Site) Save() error {

@@ -13,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "tmwvrnet"
 	siteID := "TmwVRnet"
@@ -100,9 +100,11 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	})
 
 	siteCollector.OnHTML(`a.pagination-element__link`, func(e *colly.HTMLElement) {
-		if strings.Contains(e.Text, "Next") {
-			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-			siteCollector.Visit(pageURL)
+		if !limitScraping {
+			if strings.Contains(e.Text, "Next") {
+				pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+				siteCollector.Visit(pageURL)
+			}
 		}
 	})
 

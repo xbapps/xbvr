@@ -16,8 +16,10 @@ const actions = {
   },
   async toggleSubscribed ({ state }, params) {
     state.items = await ky.put(`/api/options/sites/subscribed/${params.id}`, { json: {} }).json()
-    console.log('calling',params.id)
-  }
+  },
+  async toggleLimitScraping ({ state }, params) {
+    state.items = await ky.put(`/api/options/sites/limit_scraping/${params.id}`, { json: {} }).json()
+  },
 }
 
 export default {

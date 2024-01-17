@@ -767,6 +767,15 @@ func Migrate() {
 				return tx.AutoMigrate(&Scene{}).Error
 			},
 		},
+		{
+			ID: "0074-Limit-Scraper",
+			Migrate: func(tx *gorm.DB) error {
+				type Site struct {
+					LimitScraping bool `json:"limit_scraping" xbvrbackup:"limit_scraping"`
+				}
+				return tx.AutoMigrate(Site{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below

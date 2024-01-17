@@ -120,7 +120,7 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 			for _, scraper := range scrapers {
 				if site.ID == scraper.ID {
 					wg.Add(1)
-					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo)
+					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, site.LimitScraping)
 				}
 			}
 		}
@@ -129,7 +129,7 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 			for _, scraper := range scrapers {
 				if toScrape == scraper.ID {
 					wg.Add(1)
-					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo)
+					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, false)
 				}
 			}
 		} else {

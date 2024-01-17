@@ -18,7 +18,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func RealJamSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, domain string, singeScrapeAdditionalInfo string) error {
+func RealJamSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, domain string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -180,8 +180,10 @@ func RealJamSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	})
 
 	siteCollector.OnHTML(`a.page-link`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		siteCollector.Visit(pageURL)
+		if !limitScraping {
+			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+			siteCollector.Visit(pageURL)
+		}
 	})
 
 	siteCollector.OnHTML(`div.panel a`, func(e *colly.HTMLElement) {
@@ -207,11 +209,11 @@ func RealJamSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	return nil
 }
 
-func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
-	return RealJamSite(wg, updateSite, knownScenes, out, singleSceneURL, "realjamvr", "RealJam VR", "realjamvr.com", singeScrapeAdditionalInfo)
+func RealJamVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	return RealJamSite(wg, updateSite, knownScenes, out, singleSceneURL, "realjamvr", "RealJam VR", "realjamvr.com", singeScrapeAdditionalInfo, limitScraping)
 }
-func PornCornVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
-	return RealJamSite(wg, updateSite, knownScenes, out, singleSceneURL, "porncornvr", "PornCorn VR", "porncornvr.com", singeScrapeAdditionalInfo)
+func PornCornVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	return RealJamSite(wg, updateSite, knownScenes, out, singleSceneURL, "porncornvr", "PornCorn VR", "porncornvr.com", singeScrapeAdditionalInfo, limitScraping)
 }
 
 func init() {
