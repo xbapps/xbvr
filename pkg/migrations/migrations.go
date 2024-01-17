@@ -768,7 +768,7 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0056-Limit-Scraper",
+			ID: "0074-Limit-Scraper",
 			Migrate: func(tx *gorm.DB) error {
 				type Site struct {
 					LimitScraping bool `json:"limit_scraping" xbvrbackup:"limit_scraping"`

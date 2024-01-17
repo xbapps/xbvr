@@ -208,6 +208,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.PUT("/sites/subscribed/{site}").To(i.toggleSubscribed).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.PUT("/sites/limit_scraping/{site}").To(i.toggleLimitScraping).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.POST("/scraper/force-site-update").To(i.forceSiteUpdate).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -313,6 +316,10 @@ func (i ConfigResource) toggleSubscribed(req *restful.Request, resp *restful.Res
 	i.toggleSiteField(req, resp, "Subscribed")
 }
 
+func (i ConfigResource) toggleLimitScraping(req *restful.Request, resp *restful.Response) {
+	i.toggleSiteField(req, resp, "LimitScraping")
+}
+
 func (i ConfigResource) toggleSiteField(req *restful.Request, resp *restful.Response, field string) {
 	db, _ := models.GetDB()
 	defer db.Close()
@@ -335,6 +342,9 @@ func (i ConfigResource) toggleSiteField(req *restful.Request, resp *restful.Resp
 		site.Subscribed = !site.Subscribed
 		log.Infof("Toggling %s %v", id, site.Subscribed)
 		db.Model(&models.Scene{}).Where("scraper_id = ?", site.ID).Update("is_subscribed", site.Subscribed)
+	case "LimitScraping":
+		site.LimitScraping = !site.LimitScraping
+		db.Model(&models.Scene{}).Where("scraper_id = ?", site.ID).Update("limit_scraping", site.LimitScraping)
 	}
 	site.Save()
 

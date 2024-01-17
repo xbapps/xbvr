@@ -40,6 +40,9 @@
               <span class="pulsate is-info">{{$t('Scraping now...')}}</span>
             </span>
       </b-table-column>
+      <b-table-column field="limit_scraping" :label="$t('Limit Scraping')" v-slot="props" width="60" sortable>
+          <span><b-switch v-model ="props.row.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: props.row.id})"/></span>
+      </b-table-column>
       <b-table-column field="subscribed" :label="$t('Subscribed')" v-slot="props" width="60" sortable>
           <span><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
       </b-table-column>
@@ -63,9 +66,6 @@
             </b-dropdown-item>
             <b-dropdown-item aria-role="listitem" @click="scrapeActors(props.row.name, props.row.id)">
               {{$t('Scrape Actor Details from Site')}}
-            </b-dropdown-item>
-            <b-dropdown-item aria-role="listitem" @click="scraperSettings(props.row.name, props.row.id)">
-              {{$t('Settings')}}
             </b-dropdown-item>
           </b-dropdown>
         </div>
@@ -110,35 +110,6 @@
       </div>
     </b-modal>
 
-    <b-modal :active.sync="isSettingsModalActive"
-             has-modal-card
-             trap-focus
-             aria-role="dialog"
-             aria-modal>
-      <div class="modal-card" style="width: auto">
-        <header class="modal-card-head">
-          <p class="modal-card-title">{{$t('Settings')}}</p>
-        </header>
-        <section class="modal-card-body">
-          <b-field label="Limit Scene List Pages">
-            <b-input type="number" v-model.number="scrape" min="0" placeholder="Scene List Pages to scrape" style="width: 5em;"/>
-            <b-input 
-              :type=additionalInfo[additionalInfoIdx].type
-              v-model='additionalInfo[additionalInfoIdx].fieldValue'
-              :required=additionalInfo[additionalInfoIdx].required
-              :placeholder=additionalInfo[additionalInfoIdx].placeholder                            
-              ref="additionInfoInput"
-              >
-            </b-input>            
-          </b-field>
-        </section>
-        <footer class="modal-card-foot">
-          <button class="button is-primary" :disabled="this.additionalInfo[additionalInfoIdx].required && this.additionalInfo[additionalInfoIdx].fieldValue == ''" @click="taskSettingsInfoEntered()">Continue
-          </button>
-        </footer>
-      </div>
-    </b-modal>
-
   </div>
 
 </template>
@@ -158,7 +129,6 @@ export default {
       isLoading: false,
       sceneUrl: '',
       isSingleScrapeModalActive: false,
-      isSettingsModalActive: false,
       additionalInfo: [{fieldName: "scene_url", fieldPrompt: "Scene Url", placeholder: "eg https://www.mysite.com/scenes/my scene", fieldValue: '', required: true, type: 'url' }],
       additionalInfoIdx: 0,
       currentScraper: '',
@@ -296,28 +266,6 @@ export default {
         this.$store.dispatch('optionsSites/load')
       }
       this.isLoading=false
-    },
-    scraperSettings (site, scraper) {
-      this.currentScraper=scraper      
-      this.additionalInfo = [{fieldName: "scene_url", fieldPrompt: "Scene Url", placeholder: "Enter the url for a VR Scene", fieldValue: '', required: true, type: 'url'}]      
-      this.scraperwarning = "Take care to only use scene urls for the " + scraper + " Scraper"
-      this.scraperwarning2 = ""
-      switch (scraper) {
-        case 'wankzvr':
-        case 'milfvr':
-        case 'herpovr':
-        case  'brasilvr':
-        case 'tranzvr':
-          this.scraperwarning = "Only use povr.com urls for the " + scraper + " Scraper"
-          break
-        case 'tonightsgirlfriend':
-          this.scraperwarning2 = "Warning " + scraper + " also includes 2d scenes, only select scenes from their VR section"
-        case 'naughtyamericavr':
-          this.scraperwarning2 = "Warning The NaughtyAmerica site also includes 2d scenes, only select scenes from their VR section"
-          break
-    }
-      this.additionalInfoIdx=0
-      this.isSettingsModalActive = true      
     },
     parseISO,
     formatDistanceToNow
