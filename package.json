@@ -52,7 +52,7 @@
     "less": "4.2.0",
     "less-loader": "12.0.0",
     "sass": "1.69.7",
-    "sass-loader": "13.3.3",
+    "sass-loader": "14.0.0",
     "simple-progress-webpack-plugin": "2.0.0",
     "vue-cli-plugin-i18n": "2.3.2",
     "vue-i18n-extract": "2.0.7",
