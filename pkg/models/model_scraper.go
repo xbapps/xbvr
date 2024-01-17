@@ -7,7 +7,7 @@ import (
 
 var scrapers []Scraper
 
-type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene, string, string) error
+type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene, string, string, bool) error
 
 type Scraper struct {
 	ID        string      `json:"id"`

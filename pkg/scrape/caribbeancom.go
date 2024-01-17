@@ -15,7 +15,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "caribbeancomvr"
 	siteID := "CaribbeanCom VR"
@@ -125,9 +125,11 @@ func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	})
 
 	siteCollector.OnHTML(`.pagination-large .pagination__item[rel="next"]`, func(e *colly.HTMLElement) {
-		// replace "all" with "vr" to allow for correct page navigation
-		pageURL := strings.Replace(e.Request.AbsoluteURL(e.Attr("href")), "all", "vr", 1)
-		siteCollector.Visit(pageURL)
+		if !limitScraping {
+			// replace "all" with "vr" to allow for correct page navigation
+			pageURL := strings.Replace(e.Request.AbsoluteURL(e.Attr("href")), "all", "vr", 1)
+			siteCollector.Visit(pageURL)
+		}
 	})
 
 	if singleSceneURL != "" {

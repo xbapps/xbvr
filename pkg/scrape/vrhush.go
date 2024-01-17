@@ -16,7 +16,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "vrhush"
 	siteID := "VRHush"
@@ -138,8 +138,10 @@ func VRHush(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.OnHTML(`ul.pagination li`, func(e *colly.HTMLElement) {
 		if strings.Contains(e.Attr("class"), "next") && !strings.Contains(e.Attr("class"), "disabled") {
 			pageCnt += 1
-			pageURL := e.Request.AbsoluteURL(`https://vrhush.com/scenes?page=` + fmt.Sprint(pageCnt) + `&order_by=publish_date&sort_by=desc`)
-			siteCollector.Visit(pageURL)
+			if !limitScraping {
+				pageURL := e.Request.AbsoluteURL(`https://vrhush.com/scenes?page=` + fmt.Sprint(pageCnt) + `&order_by=publish_date&sort_by=desc`)
+				siteCollector.Visit(pageURL)
+			}
 		}
 	})
 

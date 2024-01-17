@@ -16,7 +16,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "fuckpassvr-native"
 	siteID := "FuckPassVR"
@@ -121,6 +121,9 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 
 	var page int64 = 1
 	var lastPage int64 = 1
+	if limitScraping {
+		lastPage = 1
+	}
 
 	if singleSceneURL != "" {
 		ctx := colly.NewContext()

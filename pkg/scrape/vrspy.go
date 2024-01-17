@@ -23,7 +23,7 @@ const (
 	baseURL   = "https://" + domain
 )
 
-func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singleScrapeAdditionalInfo string) error {
+func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singleScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -129,7 +129,9 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 	siteCollector.OnHTML(`body`, func(e *colly.HTMLElement) {
 		e.ForEachWithBreak(`.video-section a.photo-preview`, func(id int, e *colly.HTMLElement) bool {
 			currentPage, _ := strconv.Atoi(e.Request.URL.Query().Get("page"))
-			siteCollector.Visit(fmt.Sprintf("%s/videos?sort=new&page=%d", baseURL, currentPage+1))
+			if !limitScraping {
+				siteCollector.Visit(fmt.Sprintf("%s/videos?sort=new&page=%d", baseURL, currentPage+1))
+			}
 			return false
 		})
 	})
