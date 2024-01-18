@@ -153,6 +153,11 @@ type ObjectConfig struct {
 			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"stashdbRescrapeSchedule"`
 	} `json:"cron"`
+	ScraperSettings struct {
+		TMWVRNet struct {
+			TmwMembersDomain string `default:"members.tmwvrnet.com" json:"tmwMembersDomain"`
+		} `json:"tmwvrnet"`
+	} `json:"scraper_settings"`
 }
 
 var (
