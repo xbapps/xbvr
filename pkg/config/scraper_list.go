@@ -33,12 +33,13 @@ type CustomScrapers struct {
 	VrphubScrapers []ScraperConfig `json:"vrphub"`
 }
 type ScraperConfig struct {
-	ID        string `json:"-"`
-	URL       string `json:"url"`
-	Name      string `json:"name"`
-	Company   string `json:"company"`
-	AvatarUrl string `json:"avatar_url"`
-	FileID    string `json:"id,omitempty"`
+	ID           string `json:"-"`
+	URL          string `json:"url"`
+	Name         string `json:"name"`
+	Company      string `json:"company"`
+	AvatarUrl    string `json:"avatar_url"`
+	FileID       string `json:"id,omitempty"`
+	MasterSiteId string `json:"master_site_id,omitempty"`
 }
 
 var loadLock sync.Mutex
@@ -117,7 +118,7 @@ func CheckMatchingSite(findSite ScraperConfig, searchList []ScraperConfig) bool 
 		if !strings.HasSuffix(s2, "/") {
 			s2 += "/"
 		}
-		if s1 == s2 {
+		if s1 == s2 && customSite.MasterSiteId == findSite.MasterSiteId {
 			return true
 		}
 	}

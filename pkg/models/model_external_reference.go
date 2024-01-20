@@ -27,7 +27,11 @@ type ExternalReference struct {
 	ExternalURL    string                  `json:"external_url" gorm:"size:1000" xbvrbackup:"external_url"`
 	ExternalDate   time.Time               `json:"external_date" xbvrbackup:"external_date"`
 	ExternalData   string                  `json:"external_data" sql:"type:text;" xbvrbackup:"external_data"`
+	UdfBool1       bool                    `json:"udf_bool1" xbvrbackup:"udf_bool1"` // user defined fields, use depends what type of data the extref is for.
+	UdfBool2       bool                    `json:"udf_bool2" xbvrbackup:"udf_bool2"`
+	UdfDatetime1   time.Time               `json:"udf_datetime1" xbvrbackup:"udf_datetime1"`
 }
+
 type ExternalReferenceLink struct {
 	ID             uint      `gorm:"primary_key" json:"id" xbvrbackup:"-"`
 	CreatedAt      time.Time `json:"-" xbvrbackup:"created_at-"`
@@ -36,10 +40,11 @@ type ExternalReferenceLink struct {
 	InternalDbId   uint      `json:"internal_db_id" gorm:"index" xbvrbackup:"-"`
 	InternalNameId string    `json:"internal_name_id" gorm:"index" xbvrbackup:"internal_name_id"`
 
-	ExternalReferenceID uint   `json:"external_reference_id" gorm:"index" xbvrbackup:"-"`
-	ExternalSource      string `json:"external_source" xbvrbackup:"-"`
-	ExternalId          string `json:"external_id" gorm:"index" xbvrbackup:"-"`
-	MatchType           int    `json:"match_type" xbvrbackup:"match_type"`
+	ExternalReferenceID uint      `json:"external_reference_id" gorm:"index" xbvrbackup:"-"`
+	ExternalSource      string    `json:"external_source" xbvrbackup:"-"`
+	ExternalId          string    `json:"external_id" gorm:"index" xbvrbackup:"-"`
+	MatchType           int       `json:"match_type" xbvrbackup:"match_type"`
+	UdfDatetime1        time.Time `json:"udf_datetime1" xbvrbackup:"udf_datetime1"`
 
 	ExternalReference ExternalReference `json:"external_reference" gorm:"foreignKey:ExternalReferenceId" xbvrbackup:"-"`
 }
@@ -107,6 +112,23 @@ func (o *ExternalReference) FindExternalId(externalSource string, externalId str
 	return commonDb.Preload("XbvrLinks").Where(&ExternalReference{ExternalSource: externalSource, ExternalId: externalId}).First(o).Error
 }
 
+func (o *ExternalReferenceLink) FindByInternalID(internalTable string, internalId uint) []ExternalReferenceLink {
+	commonDb, _ := GetCommonDB()
+	var refs []ExternalReferenceLink
+	commonDb.Preload("ExternalReference").Where(&ExternalReferenceLink{InternalTable: internalTable, InternalDbId: internalId}).Find(&refs)
+	return refs
+}
+func (o *ExternalReferenceLink) FindByInternalName(internalTable string, internalName string) []ExternalReferenceLink {
+	commonDb, _ := GetCommonDB()
+	var refs []ExternalReferenceLink
+	commonDb.Preload("ExternalReference").Where(&ExternalReferenceLink{InternalTable: internalTable, InternalNameId: internalName}).Find(&refs)
+	return refs
+}
+func (o *ExternalReferenceLink) FindByExternaID(externalSource string, externalId string) {
+	commonDb, _ := GetCommonDB()
+	commonDb.Preload("ExternalReference").Where(&ExternalReferenceLink{ExternalSource: externalSource, ExternalId: externalId}).Find(&o)
+}
+
 func (o *ExternalReference) Save() {
 	commonDb, _ := GetCommonDB()
 
@@ -125,6 +147,11 @@ func (o *ExternalReference) Save() {
 }
 
 func (o *ExternalReference) Delete() {
+	commonDb, _ := GetCommonDB()
+	commonDb.Delete(&o)
+}
+
+func (o *ExternalReferenceLink) Delete() {
 	commonDb, _ := GetCommonDB()
 	commonDb.Delete(&o)
 }

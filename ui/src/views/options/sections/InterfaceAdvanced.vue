@@ -7,7 +7,8 @@
       <b-tabs v-model="activeTab" size="medium" type="is-boxed" style="margin-left: 0px" id="importexporttab">
             <b-tab-item label="Scene Details"/>
             <b-tab-item label="Actor Settings"/>
-            <b-tab-item label="Create Custom Site"/>            
+            <b-tab-item label="Create Custom Site"/>
+            <b-tab-item :label="$t('Alternate Sites')"/>
       </b-tabs>
 
       <!-- Screen Details Tab -->
@@ -88,6 +89,18 @@
             <b-field :label="$t('Avatar Url')" label-position="on-border">
               <b-input v-model="scraperAvatar" :placeholder="$t('Optional')"></b-input>
             </b-field>  
+            <b-field :label="$t('Main Site')" label-position="on-border" :addons="true" class="field-extra">
+              <b-tooltip :label="$t('Leave blank, unless you want to link scenes from the new custom site to scenes on an existing studio site, e.g. VRHush on SLR or VRPorn to the main VRHush site')" :delay="500" multilined >
+                  <div class="control is-expanded">
+                    <div class="select is-fullwidth">
+                      <select v-model="listOfMainSites">
+                        <option></option>
+                        <option v-for="t in listOfMainSites" :key="t">{{ t }}</option>
+                      </select>
+                    </div>
+                  </div>
+              </b-tooltip>
+            </b-field>
             <b-tooltip :label="$t('Restart XBR to load new Sites')" :delay="500" type="is-warning">
               <b-field>
                 <b-button type="is-primary" :disabled="!scraperFieldsValid" @click="saveScraper">Save</b-button>
@@ -96,6 +109,62 @@
           </section>
         </div>
       </div>
+
+      <div class="columns" v-if="activeTab == 3">
+        <div class="column">
+          <section>
+            <b-field>
+              <b-tooltip :label="$t('Scenes from Akternate Sites will be matched after Scene Scraping')" :delay="500">
+                <b-switch v-model="linkScenesAfterSceneScraping" type="is-default">
+                  Link Scenes after Scene Scraping
+                </b-switch>
+              </b-tooltip>
+            </b-field>
+            <b-field>
+              <b-tooltip :label="$t('If a file is not matched to a scene, then try scenes from Alternate Sites')" :delay="500">
+                <b-switch v-model="useAltSrcInFileMatching" type="is-default">
+                  Include Scenes from Alternate Sites in File Matching
+                </b-switch>
+              </b-tooltip>
+            </b-field>
+            <b-field>
+              <b-tooltip :label="$t('When filtering for Scenes with Scripts or sorting by Script Published Date, scenes from Alternate Sites will be included. Note: Slows these queries')" multiline :delay="500" type="is-warning">
+                <b-switch v-model="useAltSrcInScriptFilters" type="is-default">
+                  Include Scenes from Alternate Sites when filtering/sorting Scenes for Scripts
+                </b-switch>
+              </b-tooltip>
+            </b-field>
+            <b-tooltip :label="$t('Do not link scenes prior to the specified date.  The quality of metadata of older scenes is often poor and causes mismatches')" 
+                :delay="500" type="is-primary" multilined size="is-large" position="is-bottom">
+                <b-field label="Ignore Scenes Released Prior To">
+                  <b-datepicker v-model="ignoreReleasedBefore" :icon-right="ignoreReleasedBefore ? 'close-circle' : ''" icon-right-clickable @icon-right-click="ignoreReleasedBefore = null">
+                    <b-button
+                        label="Today"
+                        type="is-primary"
+                        icon-left="calendar-today"
+                        @click="ignoreReleasedBefore = new Date()" />
+
+                    <b-button
+                        label="Clear"
+                        type="is-danger"
+                        icon-left="close"
+                        outlined
+                        @click="ignoreReleasedBefore = null" />
+                  </b-datepicker>
+                </b-field>
+              </b-tooltip>
+            <b-field>              
+              <b-button type="is-primary" @click="clearAltSrcKeepEdits" style="margin-right: 1em;">Clear scene links - keep edits</b-button>
+              <b-button type="is-primary" @click="clearAltSrc" style="margin-right: 1em;">Clear scene links</b-button>
+              <b-button type="is-primary" @click="relinkAltSrc" style="margin-right: 1em;">Re-link scenes</b-button>
+            </b-field>
+            <b-field>
+              <b-button type="is-primary" @click="save">Save</b-button>
+            </b-field>
+          </section>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -115,10 +184,11 @@ export default {
       scraperCompany: '',
       scraperAvatar: '',
       scraperFieldsValid: false,
+      masterSiteId: '',
       }
   },
   methods: {
-    save () {
+    save () {      
       this.$store.dispatch('optionsAdvanced/save')
     },
     validateScraperFields() {      
@@ -137,7 +207,8 @@ export default {
           scraperUrl: this.scraperUrl,
           scraperName: this.scraperName,
           scraperCompany: this.scraperCompany,
-          scraperAvatar: this.scraperAvatar
+          scraperAvatar: this.scraperAvatar,
+          masterSiteId: this.masterSiteId,
         }
       })
 
@@ -147,6 +218,15 @@ export default {
     },
     scrapeXbvrActors() {
       ky.get('/api/extref/generic/scrape_all')
+    },
+    clearAltSrcKeepEdits () {
+      ky.delete(`/api/extref/delete_extref_source_links/keep_manual`, { json: {external_source: 'alternate scene %'} });
+    },
+    clearAltSrc () {
+      ky.delete(`/api/extref/delete_extref_source_links/all`, { json: {external_source: 'alternate scene %'} });
+    },
+    relinkAltSrc () {
+      ky.get('/api/task/relink_alt_aource_scenes')
     },
   },
   computed: {
@@ -180,7 +260,6 @@ export default {
       },
       set (value) {
         this.$store.state.optionsAdvanced.advanced.stashApiKey = value
-
       }
     },
     useImperialEntry: {
@@ -200,6 +279,62 @@ export default {
         this.$store.state.optionsAdvanced.advanced.scrapeActorAfterScene = value
 
       }
+    },
+    useAltSrcInFileMatching: {
+      get () {
+        return this.$store.state.optionsAdvanced.advanced.useAltSrcInFileMatching
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.useAltSrcInFileMatching = value
+      }
+    },
+    linkScenesAfterSceneScraping: {
+      get () {
+        return this.$store.state.optionsAdvanced.advanced.linkScenesAfterSceneScraping
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.linkScenesAfterSceneScraping = value
+      }
+
+    },
+    useAltSrcInScriptFilters: {
+      get () {
+        return this.$store.state.optionsAdvanced.advanced.useAltSrcInScriptFilters
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.useAltSrcInScriptFilters = value
+      }
+    },
+    ignoreReleasedBefore: {
+      get () {
+        return new Date(this.$store.state.optionsAdvanced.advanced.ignoreReleasedBefore)
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.ignoreReleasedBefore = value
+      }
+    },
+    listOfMainSites: {
+      get () {
+        const items = this.$store.state.optionsSites.items
+        let sites = []
+        for (let i=0; i < items.length; i++) {
+          if (items[i].master_site_id == '') {
+            sites.push(items[i].name)
+          }      
+        }
+        return sites
+      },
+      set (value) {
+        if (value == "") {
+          this.masterSiteId=""
+        } else {          
+          const siteFound  = this.$store.state.optionsSites.items.find(site => site.master_site_id == '' && site.name==value);
+          this.masterSiteId=siteFound.id
+        }
+      }
+    },
+    showMatchParamsOverlay () {
+      return this.$store.state.overlay.sceneMatchParams.show
     },
     isLoading: function () {
       return this.$store.state.optionsAdvanced.loading

@@ -31,6 +31,8 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	siteCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com")
 	trailerCollector := cloneCollector(sceneCollector)
 
+	commonDb, _ := models.GetCommonDB()
+
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
@@ -211,7 +213,7 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 			e.ForEach(`a[href^="/category/funscript"]`, func(id int, e *colly.HTMLElement) {
 				var existingScene models.Scene
-				existingScene.GetIfExistURL(sceneURL)
+				commonDb.Where(&models.Scene{SceneURL: sceneURL}).First(&existingScene)
 				if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
 					var sc models.ScrapedScene
 					sc.InternalSceneId = existingScene.ID

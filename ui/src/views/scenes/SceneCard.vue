@@ -66,8 +66,18 @@
         <a :href="item.scene_url" :class="{'has-text-white has-background-primary-dark': item.is_subscribed }" target="_blank" rel="noreferrer" style="padding:2px">{{item.site}}</a><br/>
         <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
-        </span>
+        </span>        
       </span>
+      <div class="image-row" v-if="getAlternateSceneSources != 0">
+        <div v-for="(altsrc, idx) in this.alternateSources" :key="idx" class="altsrc-image-wrapper">
+          <a :href="altsrc.url" target="_blank">
+            <vue-load-image>
+              <img slot="image" :src="getImageURL(altsrc.site_icon)" alt="Image" class="thumbnail" width="20" />
+              <b-icon slot="error" pack="mdi" icon="link" size="is-small" />
+            </vue-load-image>
+          </a>
+        </div>
+      </div>    
     </div>
   </div>
 </template>
@@ -82,16 +92,18 @@ import EditButton from '../../components/EditButton'
 import TrailerlistButton from '../../components/TrailerlistButton'
 import HiddenButton from '../../components/HiddenButton'
 import ky from 'ky'
+import VueLoadImage from 'vue-load-image'
 
 export default {
   name: 'SceneCard',
   props: { item: Object, reRead: Boolean },
-  components: { WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, TrailerlistButton, HiddenButton },
+  components: { WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, TrailerlistButton, HiddenButton, VueLoadImage },
   data () {
     return {
       preview: false,
       format,
-      parseISO
+      parseISO,
+      alternateSources: [],
     }
   },
   computed: {
@@ -140,6 +152,23 @@ export default {
         return .4
       }
       return this.$store.state.optionsWeb.web.isAvailOpacity / 100
+    },
+    async getAlternateSceneSources() {
+      try {    
+        const response = await ky.get('/api/scene/alternate_source/' + this.item.id).json();
+        this.alternateSources = [];
+        if (response==null){
+          return 0
+        }
+        response.forEach(altsrc => {          
+          if (altsrc.external_source.startsWith("alternate scene ") || altsrc.external_source == "stashdb scene") {
+            this.alternateSources.push(altsrc)
+          }
+        });        
+        return this.alternateSources.length;
+      } catch (error) {        
+        return 0; // Return 0 or handle error as needed
+      }
     },
   },
   methods: {
@@ -265,6 +294,12 @@ export default {
   width: 100%;
   height: 15px;
   border-radius: 0.25rem;
+}
+
+.altsrc-image-wrapper {
+  display: inline-block;
+  margin-right: 5px;
+  margin-top: 3px;
 }
 
 </style>

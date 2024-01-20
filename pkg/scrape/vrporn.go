@@ -14,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, limitScraping bool, masterSiteId string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -37,6 +37,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.Studio = company
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.MasterSiteId = masterSiteId
 
 		if scraperID == "" {
 			// there maybe no site/studio if user is jusy scraping a scene url
@@ -150,7 +151,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 
 	siteCollector.OnHTML(`body.tax-studio article.post div.tube-post a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-		// If scene exists in database, there's no need to scrape
+		// If scene exists in database, or the slternate source exists, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
@@ -169,7 +170,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	return nil
 }
 
-func addVRPornScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string) {
+func addVRPornScraper(id string, name string, company string, avatarURL string, custom bool, siteURL string, masterSiteId string) {
 	suffixedName := name
 	siteNameSuffix := name
 	if custom {
@@ -178,22 +179,28 @@ func addVRPornScraper(id string, name string, company string, avatarURL string, 
 	} else {
 		suffixedName += " (VRPorn)"
 	}
-	registerScraper(id, suffixedName, avatarURL, "vrporn.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
-		return VRPorn(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping)
-	})
+	if masterSiteId == "" {
+		registerScraper(id, suffixedName, avatarURL, "vrporn.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+			return VRPorn(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, "")
+		})
+	} else {
+		registerAlternateScraper(id, suffixedName, avatarURL, "vrporn.com", masterSiteId, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+			return VRPorn(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, masterSiteId)
+		})
+	}
 }
 
 func init() {
 	registerScraper("vrporn-single_scene", "VRPorn - Other Studios", "", "vrporn.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
-		return VRPorn(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "", singeScrapeAdditionalInfo, limitScraping)
+		return VRPorn(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "", singeScrapeAdditionalInfo, limitScraping, "")
 	})
 
 	var scrapers config.ScraperList
 	scrapers.Load()
 	for _, scraper := range scrapers.XbvrScrapers.VrpornScrapers {
-		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL)
+		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL, scraper.MasterSiteId)
 	}
 	for _, scraper := range scrapers.CustomScrapers.VrpornScrapers {
-		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true, scraper.URL)
+		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true, scraper.URL, scraper.MasterSiteId)
 	}
 }

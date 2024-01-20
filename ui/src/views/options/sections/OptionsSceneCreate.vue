@@ -105,6 +105,12 @@ export default {
   },
   mounted () {
     this.$store.dispatch('optionsVendor/load')
+
+    if (this.$store.state.optionsSceneCreate.scrapeScene!='') {
+      this.scrapeUrl=this.$store.state.optionsSceneCreate.scrapeScene
+      this.$store.commit('optionsSceneCreate/setScrapeScene', "")
+      this.scrapeSingleScene()
+    } 
   },
   methods: {
     addScene(showEdit) {

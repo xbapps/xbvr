@@ -17,6 +17,7 @@ import (
 func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, nwID string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
+	commonDb, _ := models.GetCommonDB()
 
 	sceneCollector := createCollector("www.czechvrnetwork.com")
 	siteCollector := createCollector("www.czechvrnetwork.com")
@@ -167,7 +168,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		if config.Config.Funscripts.ScrapeFunscripts {
 			e.ForEach(`div.iconinteractive`, func(id int, e *colly.HTMLElement) {
 				var existingScene models.Scene
-				existingScene.GetIfExistURL(sceneURL)
+				commonDb.Where(&models.Scene{SceneURL: sceneURL}).First(&existingScene)
 				if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
 					var sc models.ScrapedScene
 					sc.InternalSceneId = existingScene.ID

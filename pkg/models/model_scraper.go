@@ -10,11 +10,12 @@ var scrapers []Scraper
 type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene, string, string, bool) error
 
 type Scraper struct {
-	ID        string      `json:"id"`
-	Name      string      `json:"name"`
-	AvatarURL string      `json:"avaatarurl"`
-	Domain    string      `json:"domain"`
-	Scrape    ScraperFunc `json:"-"`
+	ID           string      `json:"id"`
+	Name         string      `json:"name"`
+	AvatarURL    string      `json:"avaatarurl"`
+	Domain       string      `json:"domain"`
+	Scrape       ScraperFunc `json:"-"`
+	MasterSiteId string      `json:"master_site_id"`
 }
 
 type ScrapedScene struct {
@@ -46,6 +47,7 @@ type ScrapedScene struct {
 	InternalSceneId      uint `json:"internal_id"`
 
 	ActorDetails map[string]ActorDetails `json:"actor_details"`
+	MasterSiteId string                  `json:"master_site_id"`
 }
 
 type ActorDetails struct {
@@ -78,12 +80,13 @@ func GetScrapers() []Scraper {
 	return scrapers
 }
 
-func RegisterScraper(id string, name string, avatarURL string, domain string, f ScraperFunc) {
+func RegisterScraper(id string, name string, avatarURL string, domain string, f ScraperFunc, masterSiteId string) {
 	s := Scraper{}
 	s.ID = id
 	s.Name = name
 	s.AvatarURL = avatarURL
 	s.Domain = domain
 	s.Scrape = f
+	s.MasterSiteId = masterSiteId
 	scrapers = append(scrapers, s)
 }
