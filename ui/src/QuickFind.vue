@@ -87,16 +87,23 @@ export default {
   computed: {
     isActive: {
       get () {
-        const out = this.$store.state.overlay.showQuickFind
+        if (this.queryString!=null && this.queryString!="") {
+          this.getAsyncData(this.queryString)
+        }
+        const out = this.$store.state.overlay.quickFind.show
         if (out === true) {
           this.$nextTick(() => {
             this.$refs.autocompleteInput.$refs.input.focus()
+          if (this.$store.state.overlay.quickFind.searchString !=null && this.$store.state.overlay.quickFind.searchString!="") {
+              this.queryString = this.$store.state.overlay.quickFind.searchString
+              this.$store.state.overlay.quickFind.searchString = null
+          }
           })
         }
         return out
       },
       set (values) {
-        this.$store.state.overlay.showQuickFind = values
+        this.$store.state.overlay.quickFind.show = values
       }
     }
   },
@@ -153,12 +160,20 @@ export default {
       }
     },
     showSceneDetails (scene) {
-      if (this.$router.currentRoute.name !== 'scenes') {
-        this.$router.push({ name: 'scenes' })
-      }
       this.$store.commit('overlay/hideQuickFind')
-      this.data = []
-      this.$store.commit('overlay/showDetails', { scene })
+      if (this.$store.state.overlay.quickFind.displaySelectedScene) {
+        if (this.$router.currentRoute.name !== 'scenes') {
+            this.$router.push({ name: 'scenes' })
+          }
+          this.$store.commit('overlay/hideQuickFind')
+          this.data = []
+          this.$store.commit('overlay/showDetails', { scene })
+        } else {
+          // don't display the scene, just pass the selected scene back in the $store.state and close
+          this.$store.state.overlay.quickFind.selectedScene = scene          
+          this.$store.commit('overlay/hideQuickFind')
+          this.data = []
+      }
     },
     searchPrefix(prefix) {      
       let textbox = this.$refs.autocompleteInput.$refs.input.$refs.input

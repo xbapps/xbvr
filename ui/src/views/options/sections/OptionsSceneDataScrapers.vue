@@ -44,7 +44,7 @@
           <span><b-switch v-model ="props.row.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: props.row.id})"/></span>
       </b-table-column>
       <b-table-column field="subscribed" :label="$t('Subscribed')" v-slot="props" width="60" sortable>
-          <span><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
+          <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
       </b-table-column>
       <b-table-column field="options" v-slot="props" width="30">
         <div class="menu">
@@ -58,17 +58,31 @@
             <b-dropdown-item v-if="props.row.has_scraper && props.row.id != 'baberoticavr'" aria-role="listitem" @click="taskScrapeScene(props.row.id)">
               {{$t('Scrape Single Scene')}}
             </b-dropdown-item>
-            <b-dropdown-item v-if="props.row.has_scraper" aria-role="listitem" @click="forceSiteUpdate(props.row.name, props.row.id)">
+            <b-dropdown-item v-if="props.row.has_scraper && props.row.master_site_id==''" aria-role="listitem" @click="forceSiteUpdate(props.row.name, props.row.id)">
               {{$t('Force update scenes')}}
             </b-dropdown-item>
-            <b-dropdown-item aria-role="listitem" @click="deleteScenes(props.row.name, props.row.id)">
+            <b-dropdown-item v-if="props.row.has_scraper && props.row.master_site_id!=''" aria-role="listitem" @click="removeSceneLinks(props.row, true)">
+              {{$t('Remove Scene Links')}}
+            </b-dropdown-item>
+            <b-dropdown-item v-if="props.row.has_scraper && props.row.master_site_id!=''" aria-role="listitem" @click="removeSceneLinks(props.row, false)">
+              {{$t('Remove Scene Links (Keep edits)')}}
+            </b-dropdown-item>
+            <b-dropdown-item aria-role="listitem" @click="deleteScenes(props.row)">
               {{$t('Delete scraped scenes')}}
             </b-dropdown-item>
-            <b-dropdown-item aria-role="listitem" @click="scrapeActors(props.row.name, props.row.id)">
+            <b-dropdown-item aria-role="listitem" @click="scrapeActors(props.row.name, props.row.id)" v-if="props.row.master_site_id==''">
               {{$t('Scrape Actor Details from Site')}}
             </b-dropdown-item>
           </b-dropdown>
         </div>
+      </b-table-column>
+      <b-table-column field="master_site_id" :label="$t('Main Site')" v-slot="props" width="60" sortable>
+        <span>
+          <a @click="editMatchParams(props.row)" title="Edit Scene Matching Parameters" v-if="props.row.master_site_id != ''"> 
+            <b-icon pack="mdi" icon="cog-outline" size="is-small"/>
+          </a>
+          {{getMasterSiteName(props.row.master_site_id)}}
+        </span>
       </b-table-column>
     </b-table>
     <div class="columns">
@@ -241,16 +255,43 @@ export default {
       })
       this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`)
     },
-    deleteScenes (site, scraper) {
+    deleteScenes (site) {
       this.$buefy.dialog.confirm({
         title: this.$t('Delete scraped scenes'),
-        message: `You're about to delete scraped scenes for <strong>${site}</strong>. Previously matched files will return to unmatched state.`,
+        message: `You're about to delete scraped scenes for <strong>${site.name}</strong>.`,
         type: 'is-danger',
         hasIcon: true,
         onConfirm: function () {
-          ky.post('/api/options/scraper/delete-scenes', {
-            json: { scraper_id: scraper }
-          })
+          if (site.master_site_id==""){
+            ky.post('/api/options/scraper/delete-scenes', {
+              json: { scraper_id: site.id }
+            })
+          } else {
+            const external_source = 'alternate scene ' + site.id
+            ky.delete(`/api/extref/delete_extref_source`, {
+              json: {external_source: external_source}
+            });
+          }
+        }
+      })
+    },
+    removeSceneLinks (site, all) {
+      this.$buefy.dialog.confirm({
+        title: this.$t('Remove Scene Links'),
+        message: `You're about to remove links for scenes from <strong>${site.name}</strong>. Scenes will be relinked after the next scrape.`,
+        type: 'is-warning',
+        hasIcon: true,
+        onConfirm: function () {
+          const external_source = 'alternate scene ' + site.id          
+          if (all) {
+            ky.delete(`/api/extref/delete_extref_source_links/all`, {
+              json: {external_source: external_source}
+            });
+          } else {
+            ky.delete(`/api/extref/delete_extref_source_links/keep_manual`, {
+              json: {external_source: external_source}
+            });
+          }
         }
       })
     },
@@ -266,6 +307,15 @@ export default {
         this.$store.dispatch('optionsSites/load')
       }
       this.isLoading=false
+    },
+    editMatchParams(site){
+      this.$store.commit('overlay/showSceneMatchParams', { site: site })
+    },
+    getMasterSiteName(siteId){
+      if (siteId=="") {
+        return ""
+      }      
+      return  this.scraperList.find(element => element.id === siteId).name;
     },
     parseISO,
     formatDistanceToNow

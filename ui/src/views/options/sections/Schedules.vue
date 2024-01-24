@@ -10,6 +10,7 @@
             <b-tab-item label="Preview Generation"/>
             <b-tab-item label="Actor Rescrape"/>
             <b-tab-item label="Stashdb Rescrape"/>
+            <b-tab-item :label="$t('Link Scenes')"/>
       </b-tabs>
       <div class="columns">
         <div class="column">
@@ -209,6 +210,46 @@
                   <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(stashdbRescrapeStartDelay) }}</div>
               </b-field>
             </div>
+           <div v-if="activeTab == 5">            
+            <b-field>
+              <b-switch v-model="linkScenesEnabled">Enable schedule</b-switch>
+            </b-field>
+            <b-field v-if="linkScenesEnabled">
+              <b-slider v-model="linkScenesHourInterval" :min="1" :max="23" :step="1" ></b-slider>
+              <div class="column is-one-third" style="margin-left:.75em">{{`Run every ${this.linkScenesHourInterval} hour${this.linkScenesHourInterval > 1 ? 's': ''}`}}</div>
+            </b-field>
+            <b-field>
+              <b-switch v-if="linkScenesEnabled" v-model="useLinkScenesTimeRange">Limit time of day</b-switch>
+            </b-field>
+            <div v-if="useLinkScenesTimeRange && linkScenesEnabled">
+              <b-field>
+                <b-slider v-model="linkScenesTimeRange" :min="0" :max="48" :step="1" :custom-formatter="val => timeRange[val]" @input="restrictLinkScenesTo24Hours">
+                  <b-slider-tick :value="0">00:00</b-slider-tick>
+                  <b-slider-tick :value="6">06:00</b-slider-tick>
+                  <b-slider-tick :value="12">12:00</b-slider-tick>
+                  <b-slider-tick :value="18">18:00</b-slider-tick>
+                  <b-slider-tick :value="24">Midnight</b-slider-tick>
+                  <b-slider-tick :value="30">06:00</b-slider-tick>
+                  <b-slider-tick :value="36">12:00</b-slider-tick>
+                  <b-slider-tick :value="42">18:00</b-slider-tick>
+                  <b-slider-tick :value="48">00:00</b-slider-tick>
+                </b-slider>
+                <div class="column is-one-third" style="margin-left:.75em">{{`${this.timeRange[this.linkScenesTimeRange[0]]} - ${this.timeRange[this.linkScenesTimeRange[1]]}`}}</div>
+              </b-field>
+              <b-field>
+                <b-slider v-model="linkScenesMinuteStart" :min="0" :max="60" :step="1" ></b-slider>
+                <div class="column is-one-third" style="margin-left:.75em">{{ minutesStartMsg(linkScenesMinuteStart) }}</div>
+              </b-field>
+              <p>
+                Linking Scenes will not start after the Time Window Ends
+              </p>
+            </div>
+            <br/>
+            <b-field label="Startup">
+                <b-slider v-model="linkScenesStartDelay" :min="0" :max="60" :step="1" ></b-slider>
+                <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(linkScenesStartDelay) }}</div>
+            </b-field>
+          </div>
             <hr/>
               <b-field grouped>
                 <b-button type="is-primary" @click="saveSettings" style="margin-right:1em">Save settings</b-button>
@@ -271,6 +312,13 @@ export default {
       lastStashdbRescrapeTimeRange: [0,23],
       useStashdbRescrapeTimeRange: false,      
       stashdbRescrapeStartDelay: 0,
+      linkScenesEnabled: false,
+      linkScenesTimeRange:[0,23],
+      linkScenesHourInterval: 0,
+      linkScenesMinuteStart: 0,
+      lastlinkScenesTimeRange: [0,23],
+      useLinkScenesTimeRange: false,      
+      linkScenesStartDelay: 0,
       timeRange: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
         '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00',
         '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
@@ -311,6 +359,10 @@ export default {
     restrictStashdbRescrapeTo24Hours () {
       this.stashdbRescrapeTimeRange = this.restrictTo24Hours(this.stashdbRescrapeTimeRange, this.lastStashdbRescrapeTimeRange)
       this.lastStashdbRescrapeTimeRange = this.stashdbRescrapeTimeRange
+    },
+    restrictLinkScenesTo24Hours () {
+      this.linkScenesTimeRange = this.restrictTo24Hours(this.linkScenesTimeRange, this.lastLinkScenesTimeRange)
+      this.lastLinkScenesTimeRange = this.LinkScenesTimeRange
     },
     restrictTo24Hours (timeRange, lastTimeRange) {
       // check the first time is not in the second 24 hours, no need, should be in the first 24 hours
@@ -353,6 +405,10 @@ export default {
           this.stashdbRescrapeHourInterval = data.config.cron.stashdbRescrapeSchedule.hourInterval
           this.useStashdbRescrapeTimeRange = data.config.cron.stashdbRescrapeSchedule.useRange
           this.stashdbRescrapeMinuteStart = data.config.cron.stashdbRescrapeSchedule.minuteStart          
+          this.linkScenesEnabled = data.config.cron.linkScenesSchedule.enabled
+          this.linkScenesHourInterval = data.config.cron.linkScenesSchedule.hourInterval
+          this.useLinkScenesTimeRange = data.config.cron.linkScenesSchedule.useRange
+          this.linkScenesMinuteStart = data.config.cron.linkScenesSchedule.minuteStart          
           if (data.config.cron.rescrapeSchedule.hourStart > data.config.cron.rescrapeSchedule.hourEnd) {
             this.rescrapeTimeRange = [data.config.cron.rescrapeSchedule.hourStart, data.config.cron.rescrapeSchedule.hourEnd + 24]
           } else {
@@ -379,12 +435,19 @@ export default {
           } else {
             this.stashdbRescrapeTimeRange = [data.config.cron.stashdbRescrapeSchedule.hourStart, data.config.cron.stashdbRescrapeSchedule.hourEnd]            
           }
+
+          if (data.config.cron.linkScenesSchedule.hourStart > data.config.cron.linkScenesSchedule.hourEnd) {
+            this.linkScenesTimeRange = [data.config.cron.linkScenesSchedule.hourStart, data.config.cron.linkScenesSchedule.hourEnd + 24]
+          } else {
+            this.linkScenesTimeRange = [data.config.cron.linkScenesSchedule.hourStart, data.config.cron.linkScenesSchedule.hourEnd]            
+          }
           
           this.rescrapeStartDelay = data.config.cron.rescrapeSchedule.runAtStartDelay
           this.rescanStartDelay = data.config.cron.rescanSchedule.runAtStartDelay          
           this.previewStartDelay = data.config.cron.previewSchedule.runAtStartDelay
           this.actorRescrapeStartDelay = data.config.cron.actorRescrapeSchedule.runAtStartDelay          
           this.stashdbRescrapeStartDelay = data.config.cron.stashdbRescrapeSchedule.runAtStartDelay          
+          this.linkScenesStartDelay = data.config.cron.linkScenesSchedule.runAtStartDelay          
           this.isLoading = false
         })
     },
@@ -446,7 +509,14 @@ export default {
           stashdbRescrapeMinuteStart: this.stashdbRescrapeMinuteStart,
           stashdbRescrapeHourStart: this.stashdbRescrapeTimeRange[0],
           stashdbRescrapeHourEnd: this.stashdbRescrapeTimeRange[1],
-          stashdbRescrapeStartDelay:this.stashdbRescrapeStartDelay          
+          stashdbRescrapeStartDelay:this.stashdbRescrapeStartDelay,
+          linkScenesEnabled: this.linkScenesEnabled,
+          linkScenesHourInterval: this.linkScenesHourInterval,
+          linkScenesUseRange: this.useLinkScenesTimeRange,
+          linkScenesMinuteStart: this.linkScenesMinuteStart,
+          linkScenesHourStart: this.linkScenesTimeRange[0],
+          linkScenesHourEnd: this.linkScenesTimeRange[1],
+          linkScenesStartDelay:this.linkScenesStartDelay          
         }
       })
         .json()

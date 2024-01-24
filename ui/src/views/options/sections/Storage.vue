@@ -112,6 +112,22 @@
       </div>
     </div>
 
+    <hr/>
+
+  <div>
+    <h3 class="title">{{ $t('Options') }}</h3>
+    <b-field>
+      <b-switch v-model="match_ohash" type="is-default">
+        Match StashDB Hashes
+      </b-switch>
+    </b-field>
+    <b-field>
+      <b-button type="is-primary" @click="save">Save options</b-button>
+    </b-field>
+
+
+  </div>
+
   </div>
 
 </template>
@@ -161,9 +177,20 @@ export default {
     },
     rescanFolder: function (folder) {
       ky.get(`/api/task/rescan/${folder.id}`)
-    }
+    },
+    save () {
+      this.$store.dispatch('optionsStorage/save')
+    },
   },
   computed: {
+    match_ohash: {
+      get () {        
+        return this.$store.state.optionsStorage.options.match_ohash
+      },
+      set (value) {
+        this.$store.state.optionsStorage.options.match_ohash = value
+      },
+    },
     total () {
       let files = 0; let unmatched = 0; let size = 0
       this.$store.state.optionsStorage.items.map(v => {

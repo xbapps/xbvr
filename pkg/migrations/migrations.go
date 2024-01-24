@@ -776,6 +776,32 @@ func Migrate() {
 				return tx.AutoMigrate(Site{}).Error
 			},
 		},
+		{
+			ID: "0076-Scene-Alt-Sources",
+			Migrate: func(tx *gorm.DB) error {
+				type Site struct {
+					MasterSiteID   string `json:"master_site_id" xbvrbackup:"master_site_id"`
+					MatchingParams string `json:"matching_params" gorm:"size:1000" xbvrbackup:"matching_params"`
+				}
+				type ExternalReference struct {
+					UdfBool1     bool      `json:"udf_bool1" xbvrbackup:"udf_bool1"` // user defined fields, use depends what type of data the extref is for.
+					UdfBool2     bool      `json:"udf_bool2" xbvrbackup:"udf_bool2"`
+					UdfDatetime1 time.Time `json:"udf_datetime1" xbvrbackup:"udf_datetime1"`
+				}
+				type ExternalReferenceLink struct {
+					UdfDatetime1 time.Time `json:"udf_datetime1" xbvrbackup:"udf_datetime1"`
+				}
+				err := tx.AutoMigrate(Site{}).Error
+				if err != nil {
+					return err
+				}
+				err = tx.AutoMigrate(ExternalReferenceLink{}).Error
+				if err != nil {
+					return err
+				}
+				return tx.AutoMigrate(ExternalReference{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
@@ -1503,7 +1529,7 @@ func Migrate() {
 				}
 				// backup bundle
 				common.Log.Infof("Creating pre-migration backup, please waiit, backups can take some time on a system with a large number of scenes ")
-				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, false, "0", "xbvr-premigration-bundle.json", "2")
+				tasks.BackupBundle(true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, false, "", "0", "xbvr-premigration-bundle.json", "2")
 				common.Log.Infof("Go to download/xbvr-premigration-bundle.json, or http://xxx.xxx.xxx.xxx:9999/download/xbvr-premigration-bundle.json if you need access to the backup")
 				var sites []models.Site
 				officalSiteChanges := []SiteChange{
@@ -1861,6 +1887,31 @@ func Migrate() {
 			},
 		},
 		{
+			ID: "0073-reset-RealJamVR-scenes-with-duped-actors",
+			Migrate: func(tx *gorm.DB) error {
+
+				rjn := [...]string{"realjam-vr-39859", "realjam-vr-39861", "realjam-vr-40044", "realjam-vr-40064", "porncorn-vr-39827", "porncorn-vr-39902", "porncorn-vr-40031", "porncorn-vr-39903"}
+				var scenes []models.Scene
+				err := tx.Where("studio = ?", "Real Jam Network").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for _, scene := range scenes {
+					for _, v := range rjn {
+						if scene.SceneID == v {
+							scene.NeedsUpdate = true
+							err = tx.Save(&scene).Error
+							if err != nil {
+								return err
+							}
+							// common.Log.Infof("Updated scene %s", scene.SceneID)
+						}
+					}
+				}
+				return nil
+			},
+		},
+    {
 			ID: "0075-Update-tmwvrnet-members",
 			Migrate: func(tx *gorm.DB) error {
 				sql := `update scenes set member_url = replace(replace(scene_url, 'https://tmwvrnet.com/trailers/', 'https://members.tmwvrnet.com/scenes/'), '.html', '_vids.html') where scene_url like 'https://tmwvrnet.com/trailers/%';`
@@ -1870,8 +1921,8 @@ func Migrate() {
 					err = tx.Exec(sql).Error
 				}
 				return err
-			},
-		},
+      },
+    },
 	})
 
 	if err := m.Migrate(); err != nil {

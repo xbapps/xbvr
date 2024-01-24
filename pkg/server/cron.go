@@ -17,6 +17,7 @@ var rescanTask cron.EntryID
 var previewTask cron.EntryID
 var actorScrapeTask cron.EntryID
 var stashdbScrapeTask cron.EntryID
+var linkScenesTask cron.EntryID
 
 func SetupCron() {
 	cronInstance = cron.New()
@@ -43,6 +44,10 @@ func SetupCron() {
 		log.Println(fmt.Sprintf("Setup Stashdb Rescrape Task %v", formatCronSchedule(config.CronSchedule(config.Config.Cron.StashdbRescrapeSchedule))))
 		stashdbScrapeTask, _ = cronInstance.AddFunc(formatCronSchedule(config.CronSchedule(config.Config.Cron.StashdbRescrapeSchedule)), stashdbRescrapeCron)
 	}
+	if config.Config.Cron.LinkScenesSchedule.Enabled {
+		log.Println(fmt.Sprintf("Setup Link Scenes Task %v", formatCronSchedule(config.CronSchedule(config.Config.Cron.LinkScenesSchedule))))
+		linkScenesTask, _ = cronInstance.AddFunc(formatCronSchedule(config.CronSchedule(config.Config.Cron.LinkScenesSchedule)), linkScenesCron)
+	}
 	cronInstance.Start()
 
 	go tasks.CalculateCacheSizes()
@@ -62,12 +67,16 @@ func SetupCron() {
 	if config.Config.Cron.StashdbRescrapeSchedule.RunAtStartDelay > 0 {
 		time.AfterFunc(time.Duration(config.Config.Cron.StashdbRescrapeSchedule.RunAtStartDelay)*time.Minute, stashdbRescrapeCron)
 	}
+	if config.Config.Cron.LinkScenesSchedule.RunAtStartDelay > 0 {
+		time.AfterFunc(time.Duration(config.Config.Cron.LinkScenesSchedule.RunAtStartDelay)*time.Minute, linkScenesCron)
+	}
 
 	log.Println(fmt.Sprintf("Next Rescrape Task at %v", cronInstance.Entry(rescrapTask).Next))
 	log.Println(fmt.Sprintf("Next Rescan Task at %v", cronInstance.Entry(rescanTask).Next))
 	log.Println(fmt.Sprintf("Next Preview Generation Task at %v", cronInstance.Entry(previewTask).Next))
 	log.Println(fmt.Sprintf("Next Actor Rescripe Task at %v", cronInstance.Entry(actorScrapeTask).Next))
 	log.Println(fmt.Sprintf("Next Stashdb Rescrape Task at %v", cronInstance.Entry(stashdbScrapeTask).Next))
+	log.Println(fmt.Sprintf("Next Link Scenes Task at %v", cronInstance.Entry(linkScenesTask).Next))
 }
 
 func scrapeCron() {
@@ -94,6 +103,13 @@ func stashdbRescrapeCron() {
 		api.StashdbRunAll()
 	}
 	log.Println(fmt.Sprintf("Next Stashdb Rescrape Task at %v", cronInstance.Entry(rescrapTask).Next))
+}
+
+func linkScenesCron() {
+	if !session.HasActiveSession() {
+		tasks.MatchAlternateSources()
+	}
+	log.Println(fmt.Sprintf("Next Link Scenes Task at %v", cronInstance.Entry(rescrapTask).Next))
 }
 
 var previewGenerateInProgress = false

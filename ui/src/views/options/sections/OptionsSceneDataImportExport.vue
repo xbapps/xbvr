@@ -111,13 +111,6 @@
             <b-switch v-model="inclActorActions">Include Actor Edits</b-switch>
           </b-tooltip>
         </b-field>
-        <b-field>
-          <b-tooltip
-            label="Includes your External References"
-            size="is-large" type="is-primary is-light" multilined :delay="1000" >
-            <b-switch v-model="includeExternalReferences">Include External References</b-switch>
-          </b-tooltip>
-        </b-field>
         <b-button type="is-info is-small" style="margin-bottom: 1em;"  @click="toggleActorIncludes()">Toggle Includes</b-button>
       </div>
       <h4 v-if="activeSubTab==2">{{ isImport ? "Import Settings" : "Export Settings"}}</h4>
@@ -150,6 +143,30 @@
             <b-switch v-model="includeSites">Include Scraper Settings</b-switch>
           </b-tooltip>
         </b-field>
+        <div class="columns">
+          <div class="column">
+            <b-field>
+              <b-tooltip
+                label="Includes your External References"
+                size="is-large" type="is-primary is-light" multilined :delay="1000" >
+                <b-switch v-model="includeExternalReferences">Include External References</b-switch>
+              </b-tooltip>
+            </b-field>
+          </div>
+          <div class="column">
+            <b-field :label="$t('Subset')" label-position="on-border" :addons="true" class="field-extra">
+              <div class="control is-expanded">
+                <div class="select is-fullwidth">
+                  <select v-model="extRefSubset">
+                    <option value="">{{ $t("Include All External References") }}</option>
+                    <option value="manual_matched">{{ $t("Manual Matched Alternate Source Scenes") }}</option>
+                    <option value="deleted_match">{{ $t("Deleted Alternate Source Sceness") }}</option>
+                  </select>
+                </div>
+              </div>
+            </b-field>
+          </div>
+        </div>
         <b-field>
           <b-tooltip
             :label="isImport ? 'Requires restarting XBVR once complete. Include XBVR Configuration Settings. Preview setting, task schedules, etc.' : 'Includes passowrds/access tokens. Includes XBVR Configuration Settings. Preview settings, task schedules, etc.'"  
@@ -236,6 +253,7 @@ export default {
       allSites: "true",
       onlyIncludeOfficalSites: false,
       currentPlaylist: '0',
+      extRefSubset: '',
       myUrl: '/download/xbvr-content-bundle.json',
       file: null,
       testfile: null,
@@ -308,13 +326,19 @@ export default {
         // put up a starting msg, as large files can cause it to appear to hang
         this.$store.state.messages.lastScrapeMessage = 'Starting restore'
         ky.post('/api/task/bundle/restore', {
-          json: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, inclConfig: this.includeConfig, overwrite: this.overwrite, uploadData: this.uploadData }
+          json: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, 
+          inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, 
+          inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, 
+          inclConfig: this.includeConfig, extRefSubset: this.extRefSubset, overwrite: this.overwrite, uploadData: this.uploadData }
         })
         this.file = null
       }
     },
     backupContent () {      
-      ky.get('/api/task/bundle/backup', { timeout: false, searchParams: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, inclConfig: this.includeConfig, playlistId: this.currentPlaylist, download: true } }).json().then(data => {      
+      ky.get('/api/task/bundle/backup', { timeout: false, searchParams: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory,
+           inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, 
+           inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions,
+           inclConfig: this.includeConfig, extRefSubset: this.extRefSubset, playlistId: this.currentPlaylist, download: true } }).json().then(data => {      
         const link = document.createElement('a')
         link.href = this.myUrl
         link.click()
@@ -331,13 +355,13 @@ export default {
       this.includeActors = !this.includeActors
       this.includeActorAkas = !this.includeActorAkas
       this.inclActorActions = !this.inclActorActions
-      this.includeExternalReferences = !this.includeExternalReferences
     },
     toggleSettingsIncludes () {
       this.includeTagGroups = !this.includeTagGroups
       this.includePlaylists = !this.includePlaylists
       this.includeVolumes=!this.includeVolumes
       this.includeSites=!this.includeSites
+      this.includeExternalReferences = !this.includeExternalReferences
       this.includeConfig=!this.includeConfig
     },
   }

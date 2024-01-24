@@ -532,7 +532,6 @@ func ReverseMatch() {
 							var data models.StashPerformer
 							json.Unmarshal([]byte(extref.ExternalData), &data)
 							UpdateXbvrActor(data, actor.ID)
-							log.Info("match")
 						}
 						break sceneLoop
 					}
