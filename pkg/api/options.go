@@ -178,6 +178,14 @@ type RequestSCustomSiteCreate struct {
 	Company string `json:"scraperCompany"`
 }
 
+type GetStorageResponse struct {
+	Volumes    []models.Volume `json:"volumes"`
+	MatchOhash bool            `json:"match_ohash"`
+}
+type RequestSaveOptionsStorage struct {
+	MatchOhash bool `json:"match_ohash"`
+}
+
 type ConfigResource struct{}
 
 func (i ConfigResource) WebService() *restful.WebService {
@@ -226,6 +234,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 
 	ws.Route(ws.DELETE("/storage/{storage-id}").To(i.removeStorage).
 		Param(ws.PathParameter("storage-id", "Storage ID").DataType("int")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.PUT("/storage").To(i.saveOptionsStorage).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "DLNA" section endpoints
@@ -478,7 +489,10 @@ func (i ConfigResource) listStorage(req *restful.Request, resp *restful.Response
        	(select sum(files.size) from files where files.volume_id = volumes.id) as total_size
 		from volumes order by last_scan desc;`).Scan(&vol)
 
-	resp.WriteHeaderAndEntity(http.StatusOK, vol)
+	var out GetStorageResponse
+	out.Volumes = vol
+	out.MatchOhash = config.Config.Storage.MatchOhash
+	resp.WriteHeaderAndEntity(http.StatusOK, out)
 }
 
 func (i ConfigResource) addStorage(req *restful.Request, resp *restful.Response) {
@@ -949,4 +963,17 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 	os.WriteFile(fName, list, 0644)
 
 	resp.WriteHeader(http.StatusOK)
+}
+func (i ConfigResource) saveOptionsStorage(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsStorage
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Storage.MatchOhash = r.MatchOhash
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }

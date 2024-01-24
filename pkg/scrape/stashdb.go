@@ -145,7 +145,7 @@ func findStudio(studio string, field string) FindStudioResult {
 	// Define the variables needed for your query as a Go map
 	variables := `{"` + field + `": "` + studio + `"}`
 
-	resp := callStashDb(query, variables)
+	resp := CallStashDb(query, variables)
 	var data FindStudioResult
 	json.Unmarshal(resp, &data)
 	return data
@@ -191,7 +191,7 @@ func getPerformersPage(studioId string, page int) QueryPerformerResult {
 		}
 		`
 
-	resp := callStashDb(query, variables)
+	resp := CallStashDb(query, variables)
 	var data QueryPerformerResult
 	json.Unmarshal(resp, &data)
 	return data
@@ -214,7 +214,7 @@ func getScenes(studioId string, parentId string, tagId string) QueryScenesResult
 	} else {
 		variables = getStudioSceneQueryVariable(studioId, page, count)
 	}
-	sceneList = getScenePage(variables)
+	sceneList = GetScenePage(variables)
 	nextList = sceneList
 	for len(nextList.Data.QueryScenes.Scenes) > 0 &&
 		len(sceneList.Data.QueryScenes.Scenes) < sceneList.Data.QueryScenes.Count && // {
@@ -225,7 +225,7 @@ func getScenes(studioId string, parentId string, tagId string) QueryScenesResult
 		} else {
 			variables = getStudioSceneQueryVariable(studioId, page, count)
 		}
-		nextList = getScenePage(variables)
+		nextList = GetScenePage(variables)
 		sceneList.Data.QueryScenes.Scenes = append(sceneList.Data.QueryScenes.Scenes, nextList.Data.QueryScenes.Scenes...)
 	}
 	return sceneList
@@ -267,7 +267,7 @@ func getParentSceneQueryVariable(parentId string, tagId string, page int, count 
 }
 
 // calls graphql scene query and return a list of scenes
-func getScenePage(variables string) QueryScenesResult {
+func GetScenePage(variables string) QueryScenesResult {
 	query := `
 	query  queryScenes($input: SceneQueryInput!) {
 		queryScenes(input: $input) {
@@ -325,7 +325,7 @@ func getScenePage(variables string) QueryScenesResult {
 	  `
 
 	// Define the variables needed for your query as a Go map
-	resp := callStashDb(query, variables)
+	resp := CallStashDb(query, variables)
 	var data QueryScenesResult
 	json.Unmarshal(resp, &data)
 	return data
@@ -492,14 +492,15 @@ func getStashPerformer(performer string) FindPerformerResult {
 	// Define the variables needed for your query as a Go map
 	var data FindPerformerResult
 	variables := `{"id": "` + performer + `"}`
-	resp := callStashDb(query, variables)
+	resp := CallStashDb(query, variables)
 	err := json.Unmarshal(resp, &data)
 	if err != nil {
 		log.Errorf("Eror extracting actor json")
 	}
 	return data
 }
-func callStashDb(query string, rawVariables string) []byte {
+
+func CallStashDb(query string, rawVariables string) []byte {
 	var variables map[string]interface{}
 	json.Unmarshal([]byte(rawVariables), &variables)
 

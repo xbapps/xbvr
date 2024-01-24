@@ -19,8 +19,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/ffprobe"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
 var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
@@ -84,6 +86,50 @@ func RescanVolumes(id int) {
 				files[i].SceneID = scenes[0].ID
 				files[i].Save()
 				scenes[0].UpdateStatus()
+			} else {
+				if config.Config.Storage.MatchOhash && config.Config.Advanced.StashApiKey != "" {
+					hash := files[i].OsHash
+					if len(hash) < 16 {
+						// the has in xbvr is sometiomes < 16 pad with zeros
+						paddingLength := 16 - len(hash)
+						hash = strings.Repeat("0", paddingLength) + hash
+					}
+					queryVariable := `
+				{"input":{
+					"fingerprints": {					
+						"value": "` + hash + `",
+						"modifier": "INCLUDES"
+					},				
+					"page": 1
+				}
+				}`
+					// call Stashdb graphql searching for os_hash
+					stashMatches := scrape.GetScenePage(queryVariable)
+					for _, match := range stashMatches.Data.QueryScenes.Scenes {
+						if match.ID != "" {
+							var externalRefLink models.ExternalReferenceLink
+							db.Where(&models.ExternalReferenceLink{ExternalSource: "stashdb scene", ExternalId: match.ID}).First(&externalRefLink)
+							if externalRefLink.ID != 0 {
+								files[i].SceneID = externalRefLink.InternalDbId
+								files[i].Save()
+								var scene models.Scene
+								scene.GetIfExistByPK(externalRefLink.InternalDbId)
+
+								// add filename tyo the array
+								var pfTxt []string
+								json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt)
+								pfTxt = append(pfTxt, files[i].Filename)
+								tmp, _ := json.Marshal(pfTxt)
+								scene.FilenamesArr = string(tmp)
+								scene.Save()
+								models.AddAction(scene.SceneID, "match", "filenames_arr", scene.FilenamesArr)
+
+								scene.UpdateStatus()
+								log.Infof("File %s matched to Scene %s matched using stashdb hash %s", path.Base(files[i].Filename), scene.SceneID, hash)
+							}
+						}
+					}
+				}
 			}
 
 			if (i % 50) == 0 {
