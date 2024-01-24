@@ -61,6 +61,7 @@ func RescanVolumes(id int) {
 		// Match Scene to File
 		var files []models.File
 		var scenes []models.Scene
+		var extrefs []models.ExternalReference
 
 		tlog.Infof("Matching Scenes to known filenames")
 		db.Model(&models.File{}).Where("files.scene_id = 0").Find(&files)
@@ -81,7 +82,31 @@ func RescanVolumes(id int) {
 			if err != nil {
 				log.Error(err, " when matching "+unescapedFilename)
 			}
+			if len(scenes) == 0 && config.Config.Advanced.UseAltSrcInFileMatching {
+				// check if the filename matches in external_reference record
 
+				db.Preload("XbvrLinks").Where("external_source like 'alternate scene %' and external_data LIKE ? OR external_data LIKE ? OR external_data LIKE ?", `%"`+filename+`%`, `%"`+filename2+`%`, `%"`+filename3+`%`).Find(&extrefs)
+				if len(extrefs) == 1 {
+					if len(extrefs[0].XbvrLinks) == 1 {
+						// the scene id will be the Internal DB Id from the associated link
+						var scene models.Scene
+						scene.GetIfExistByPK(extrefs[0].XbvrLinks[0].InternalDbId)
+						// Add File to the list of Scene filenames
+						var pfTxt []string
+						err = json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt)
+						if err != nil {
+							continue
+						}
+						pfTxt = append(pfTxt, files[i].Filename)
+						tmp, err := json.Marshal(pfTxt)
+						if err == nil {
+							scene.FilenamesArr = string(tmp)
+						}
+						scene.Save()
+						scenes = append(scenes, scene)
+					}
+				}
+			}
 			if len(scenes) == 1 {
 				files[i].SceneID = scenes[0].ID
 				files[i].Save()

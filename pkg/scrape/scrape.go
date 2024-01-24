@@ -84,7 +84,12 @@ func getScrapeCacheDir() string {
 }
 
 func registerScraper(id string, name string, avatarURL string, domain string, f models.ScraperFunc) {
-	models.RegisterScraper(id, name, avatarURL, domain, f)
+	models.RegisterScraper(id, name, avatarURL, domain, f, "")
+}
+
+func registerAlternateScraper(id string, name string, avatarURL string, domain string, masterSiteId string, f models.ScraperFunc) {
+	// alternate scrapers are to scrape scenes available at other sites to match against a scenes from the studio's site, eg scrape VRHush scenes from SLR and match to scenes from VRHush
+	models.RegisterScraper(id, name, avatarURL, domain, f, masterSiteId)
 }
 
 func logScrapeStart(id string, name string) {

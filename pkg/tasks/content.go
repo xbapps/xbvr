@@ -55,22 +55,23 @@ type BackupActionActor struct {
 	ActionActors []models.ActionActor `xbvrbackup:"action_actors"`
 }
 type BackupContentBundle struct {
-	Timestamp     time.Time                  `xbvrbackup:"timestamp"`
-	BundleVersion string                     `xbvrbackup:"bundleVersion"`
-	Volumne       []models.Volume            `xbvrbackup:"volumes"`
-	Playlists     []models.Playlist          `xbvrbackup:"playlists"`
-	Sites         []models.Site              `xbvrbackup:"sites"`
-	Scenes        []models.Scene             `xbvrbackup:"scenes"`
-	FilesLinks    []BackupFileLink           `xbvrbackup:"sceneFileLinks"`
-	Cuepoints     []BackupSceneCuepoint      `xbvrbackup:"sceneCuepoints"`
-	History       []BackupSceneHistory       `xbvrbackup:"sceneHistory"`
-	Actions       []BackupSceneAction        `xbvrbackup:"actions"`
-	Akas          []models.Aka               `xbvrbackup:"akas"`
-	TagGroups     []models.TagGroup          `xbvrbackup:"tagGroups"`
-	ExternalRefs  []models.ExternalReference `xbvrbackup:"externalReferences"`
-	Actors        []models.Actor             `xbvrbackup:"actors"`
-	ActionActors  []BackupActionActor        `xbvrbackup:"actionActors"`
-	Kvs           []models.KV                `xbvrbackup:"config"`
+	Timestamp          time.Time                  `xbvrbackup:"timestamp"`
+	BundleVersion      string                     `xbvrbackup:"bundleVersion"`
+	Volumne            []models.Volume            `xbvrbackup:"volumes"`
+	Playlists          []models.Playlist          `xbvrbackup:"playlists"`
+	Sites              []models.Site              `xbvrbackup:"sites"`
+	Scenes             []models.Scene             `xbvrbackup:"scenes"`
+	FilesLinks         []BackupFileLink           `xbvrbackup:"sceneFileLinks"`
+	Cuepoints          []BackupSceneCuepoint      `xbvrbackup:"sceneCuepoints"`
+	History            []BackupSceneHistory       `xbvrbackup:"sceneHistory"`
+	Actions            []BackupSceneAction        `xbvrbackup:"actions"`
+	Akas               []models.Aka               `xbvrbackup:"akas"`
+	TagGroups          []models.TagGroup          `xbvrbackup:"tagGroups"`
+	ExternalRefs       []models.ExternalReference `xbvrbackup:"externalReferences"`
+	ManualSceneMatches []models.ExternalReference `xbvrbackup:"manualSceneMatches"`
+	Actors             []models.Actor             `xbvrbackup:"actors"`
+	ActionActors       []BackupActionActor        `xbvrbackup:"actionActors"`
+	Kvs                []models.KV                `xbvrbackup:"config"`
 }
 type RequestRestore struct {
 	InclAllSites     bool   `json:"allSites"`
@@ -91,6 +92,7 @@ type RequestRestore struct {
 	InclActors       bool   `json:"inclActors"`
 	InclActorActions bool   `json:"inclActorActions"`
 	InclConfig       bool   `json:"inclConfig"`
+	ExtRefSubset     string `json:"extRefSubset"`
 }
 
 func CleanTags() {
@@ -160,14 +162,19 @@ func sceneDBWriter(wg *sync.WaitGroup, i *uint64, scenes <-chan models.ScrapedSc
 				models.SceneUpdateScriptData(commonDb, scene)
 			}
 		} else {
-			models.SceneCreateUpdateFromExternal(commonDb, scene)
+			if scene.MasterSiteId == "" {
+				models.SceneCreateUpdateFromExternal(commonDb, scene)
+			} else {
+				AddAlternateSceneSource(commonDb, scene)
+			}
 		}
-		// Add the processed scene to the list to re/index
-		lock.Lock()
-		*processedScenes = append(*processedScenes, scene)
-		lock.Unlock()
-
-		atomic.AddUint64(i, 1)
+		if scene.MasterSiteId == "" {
+			// Add the processed scene to the list to re/index
+			lock.Lock()
+			*processedScenes = append(*processedScenes, scene)
+			lock.Unlock()
+			atomic.AddUint64(i, 1)
+		}
 		if os.Getenv("DEBUG") != "" {
 			log.Printf("Saved %v", scene.SceneID)
 		}
@@ -283,14 +290,19 @@ func Scrape(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo st
 
 		// Get all known scenes
 		var scenes []models.Scene
+		var extrefs []models.ExternalReference
 		commonDb, _ := models.GetCommonDB()
 		commonDb.Find(&scenes)
+		commonDb.Where("external_source like 'alternate scene %'").Find(&extrefs)
 
 		var knownScenes []string
 		for i := range scenes {
 			if !scenes[i].NeedsUpdate {
 				knownScenes = append(knownScenes, scenes[i].SceneURL)
 			}
+		}
+		for i := range extrefs {
+			knownScenes = append(knownScenes, extrefs[i].ExternalURL)
 		}
 
 		collectedScenes := make(chan models.ScrapedScene, 250)
@@ -334,6 +346,9 @@ func Scrape(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo st
 			ReapplyEdits()
 
 			IndexScrapedScenes(&processedScenes)
+			if config.Config.Advanced.LinkScenesAfterSceneScraping {
+				MatchAlternateSources()
+			}
 
 			tlog.Infof("Scraped %v new scenes in %s",
 				sceneCount,
@@ -518,7 +533,7 @@ func ImportBundleV1(bundleData ContentBundle) {
 
 }
 
-func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclTagGroups bool, inclVolumes bool, inclSites bool, inclActions bool, inclExtRefs bool, inclActors bool, inclActorActions bool, inclConfig bool, playlistId string, outputBundleFilename string, version string) string {
+func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bool, inclFileLinks bool, inclCuepoints bool, inclHistory bool, inclPlaylists bool, InclActorAkas bool, inclTagGroups bool, inclVolumes bool, inclSites bool, inclActions bool, inclExtRefs bool, inclActors bool, inclActorActions bool, inclConfig bool, extRefSubset string, playlistId string, outputBundleFilename string, version string) string {
 	var out BackupContentBundle
 	var content []byte
 	exportCnt := 0
@@ -660,9 +675,15 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 		}
 
 		var externalReferences []models.ExternalReference
+		var filteredxternalReferences []models.ExternalReference
 		if inclExtRefs {
 			lastMessage := time.Now()
-			db.Order("external_source").Order("id").Find(&externalReferences)
+			switch extRefSubset {
+			case "":
+				db.Order("external_source").Order("external_source").Order("external_id").Find(&externalReferences)
+			case "manual_matched", "deleted_match":
+				db.Where("external_source like 'alternate scene %'").Order("external_source").Order("external_id").Find(&externalReferences)
+			}
 			recCnt := 0
 			for idx, ref := range externalReferences {
 				if time.Since(lastMessage) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
@@ -670,9 +691,27 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 					lastMessage = time.Now()
 				}
 				var links []models.ExternalReferenceLink
-				db.Where("external_reference_id = ?", ref.ID).Find(&links)
-				externalReferences[idx].XbvrLinks = links
+				switch extRefSubset {
+				case "", "all":
+					db.Where("external_reference_id = ?", ref.ID).Order("external_source").Order("external_id").Find(&links)
+					externalReferences[idx].XbvrLinks = links
+				case "manual_matched":
+					db.Where("external_reference_id = ? and match_type=99999", ref.ID).Order("external_source").Order("external_id").Find(&links)
+					if len(links) > 0 {
+						externalReferences[idx].XbvrLinks = links
+						filteredxternalReferences = append(filteredxternalReferences, externalReferences[idx])
+					}
+				case "deleted_match":
+					db.Where("external_reference_id = ? and match_type=-1 and internal_name_id='deleted'", ref.ID).Order("external_source").Order("external_id").Find(&links)
+					if len(links) > 0 {
+						externalReferences[idx].XbvrLinks = links
+						filteredxternalReferences = append(filteredxternalReferences, externalReferences[idx])
+					}
+				}
 				recCnt += 1
+			}
+			if extRefSubset != "" {
+				externalReferences = filteredxternalReferences
 			}
 			tlog.Infof("Reading %v of %v external references", recCnt, len(externalReferences))
 		}
@@ -839,7 +878,7 @@ func RestoreBundle(request RequestRestore) {
 				tagGroup.UpdateSceneTagRecords()
 			}
 			if request.InclExternalRefs {
-				RestoreExternalRefs(bundleData.ExternalRefs, request.Overwrite, db)
+				RestoreExternalRefs(bundleData.ExternalRefs, request.Overwrite, request.ExtRefSubset, db)
 			}
 			if request.InclActors {
 				RestoreActors(bundleData.Actors, request.Overwrite, db)
@@ -1310,7 +1349,7 @@ func RenameTags() {
 	}
 }
 
-func RestoreExternalRefs(extRefs []models.ExternalReference, overwrite bool, db *gorm.DB) {
+func RestoreExternalRefs(extRefs []models.ExternalReference, overwrite bool, extRefSubset string, db *gorm.DB) {
 	tlog := log.WithField("task", "scrape")
 	tlog.Infof("Restoring External References")
 
@@ -1322,6 +1361,35 @@ func RestoreExternalRefs(extRefs []models.ExternalReference, overwrite bool, db 
 			lastMessage = time.Now()
 		}
 
+		// if we specified a filter check if we should import
+		switch extRefSubset {
+		case "manual_matched":
+			if !strings.HasPrefix(extRef.ExternalSource, "alternate scene") {
+				continue
+			}
+			skip := true
+			for _, link := range extRef.XbvrLinks {
+				if link.MatchType == 99999 {
+					skip = false
+				}
+			}
+			if skip {
+				continue
+			}
+		case "deleted_match":
+			if !strings.HasPrefix(extRef.ExternalSource, "alternate scene") {
+				continue
+			}
+			skip := true
+			for _, link := range extRef.XbvrLinks {
+				if link.MatchType == -1 && link.InternalNameId == "deleted" {
+					skip = false
+				}
+			}
+			if skip {
+				continue
+			}
+		}
 		var found models.ExternalReference
 		db.Preload("XbvrLinks").Where(&models.ExternalReference{ExternalSource: extRef.ExternalSource, ExternalId: extRef.ExternalId}).First(&found)
 
@@ -1341,12 +1409,15 @@ func RestoreExternalRefs(extRefs []models.ExternalReference, overwrite bool, db 
 				//				case "sites":
 				//					extRef.XbvrLinks[idx].InternalDbId = link.InternalNameId
 				case "scenes":
-					var scene models.Scene
-					scene.GetIfExist(link.InternalNameId)
-					if scene.ID == 0 {
-						continue
+					if link.InternalNameId != "deleted" {
+						// if the name is deleted, we don't need the scene id
+						var scene models.Scene
+						scene.GetIfExist(link.InternalNameId)
+						if scene.ID == 0 {
+							continue
+						}
+						extRef.XbvrLinks[idx].InternalDbId = scene.ID
 					}
-					extRef.XbvrLinks[idx].InternalDbId = scene.ID
 				case "actors":
 					var actor models.Actor
 					db.Where("name = ?", link.InternalNameId).First(&actor)

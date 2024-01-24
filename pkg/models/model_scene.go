@@ -114,6 +114,8 @@ type Scene struct {
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
+
+	AlternateSource []ExternalReferenceLink `json:"alternate_source" xbvrbackup:"-"`
 }
 
 type Image struct {
@@ -129,6 +131,12 @@ type VideoSourceResponse struct {
 type VideoSource struct {
 	URL     string `json:"url"`
 	Quality string `json:"quality"`
+}
+
+type Config struct {
+	Advanced struct {
+		UseAltSrcInFileMatching bool `json:"useAltSrcInFileMatching"`
+	} `json:"advanced"`
 }
 
 func (i *Scene) Save() error {
@@ -404,14 +412,7 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var o Scene
 	db.Where(&Scene{SceneID: ext.SceneID}).FirstOrCreate(&o)
 
-	o.NeedsUpdate = false
-	o.EditsApplied = false
-	o.SceneID = ext.SceneID
-	o.ScraperId = ext.ScraperID
-
 	if o.Title != ext.Title {
-		o.Title = ext.Title
-
 		// reset scriptfile.IsExported state on title change
 		scriptfiles, err := o.GetScriptFiles()
 		if err == nil {
@@ -424,6 +425,71 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		}
 	}
 
+	o.PopulateSceneFieldsFromExternal(db, ext)
+	var site Site
+	db.Where("id = ?", o.ScraperId).FirstOrInit(&site)
+	o.IsSubscribed = site.Subscribed
+	SaveWithRetry(db, &o)
+
+	// Clean & Associate Tags
+	var tags = o.Tags
+	db.Model(&o).Association("Tags").Clear()
+	for _, tag := range tags {
+		tmpTag := Tag{}
+		db.Where(&Tag{Name: tag.Name}).FirstOrCreate(&tmpTag)
+		db.Model(&o).Association("Tags").Append(tmpTag)
+	}
+
+	// Clean & Associate Actors
+	db.Model(&o).Association("Cast").Clear()
+	var tmpActor Actor
+	for _, name := range ext.Cast {
+		tmpActor = Actor{}
+		db.Where(&Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&tmpActor)
+		saveActor := false
+		if ext.ActorDetails[name].ImageUrl != "" {
+			if tmpActor.ImageUrl == "" {
+				tmpActor.ImageUrl = ext.ActorDetails[name].ImageUrl
+				saveActor = true
+			}
+			if tmpActor.AddToImageArray(ext.ActorDetails[name].ImageUrl) {
+				saveActor = true
+			}
+		}
+		if ext.ActorDetails[name].ProfileUrl != "" {
+			if tmpActor.AddToActorUrlArray(ActorLink{Url: ext.ActorDetails[name].ProfileUrl, Type: ext.ActorDetails[name].Source}) {
+				saveActor = true
+			}
+		}
+		if saveActor {
+			tmpActor.Save()
+		}
+		db.Model(&o).Association("Cast").Append(tmpActor)
+	}
+	// delete any altrernate scene records, in case this scene was originally a linked scene
+	var extrefs []ExternalReference
+	db.Where("external_source like 'alternate scene %' and external_url = ?", o.SceneURL).Find(&extrefs)
+	for _, extref := range extrefs {
+		db.Where("external_reference_id = ?", extref.ID).Delete(&ExternalReferenceLink{})
+		db.Delete(&extref)
+	}
+
+	return nil
+}
+
+func (o *Scene) PopulateSceneFieldsFromExternal(db *gorm.DB, ext ScrapedScene) {
+	// this function is shared between scenes and alternate scenes,
+	//	it should only setup values in the scene record from the scraped scene
+	//	it should not update scene data, as that won't apply for alternate scene sources
+	if ext.SceneID == "" {
+		return
+	}
+
+	o.NeedsUpdate = false
+	o.EditsApplied = false
+	o.SceneID = ext.SceneID
+	o.ScraperId = ext.ScraperID
+	o.Title = ext.Title
 	o.SceneType = ext.SceneType
 	o.Studio = ext.Studio
 	o.Site = ext.Site
@@ -489,62 +555,58 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var site Site
 	db.Where("id = ?", o.ScraperId).FirstOrInit(&site)
 	o.IsSubscribed = site.Subscribed
-	SaveWithRetry(db, &o)
 
-	// Clean & Associate Tags
-	db.Model(&o).Association("Tags").Clear()
-	var tmpTag Tag
+	var tags []Tag
 	for _, name := range ext.Tags {
 		tagClean := ConvertTag(name)
 		if tagClean != "" {
-			tmpTag = Tag{}
-			db.Where(&Tag{Name: tagClean}).FirstOrCreate(&tmpTag)
-			db.Model(&o).Association("Tags").Append(tmpTag)
+			tags = append(tags, Tag{Name: tagClean})
 		}
 	}
+	o.Tags = tags
 
 	// Clean & Associate Actors
-	db.Model(&o).Association("Cast").Clear()
+	var cast []Actor
 	var tmpActor Actor
 	for _, name := range ext.Cast {
 		tmpActor = Actor{}
 		db.Where(&Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&tmpActor)
-		saveActor := false
-		if ext.ActorDetails[name].ImageUrl != "" {
-			if tmpActor.ImageUrl == "" {
-				tmpActor.ImageUrl = ext.ActorDetails[name].ImageUrl
-				saveActor = true
-			}
-			if tmpActor.AddToImageArray(ext.ActorDetails[name].ImageUrl) {
-				saveActor = true
-			}
-			// AddActionActor(name, ext.ActorDetails[name].Source, "add", "image_url", ext.ActorDetails[name].ImageUrl)
-		}
-		if ext.ActorDetails[name].ProfileUrl != "" {
-			if tmpActor.AddToActorUrlArray(ActorLink{Url: ext.ActorDetails[name].ProfileUrl, Type: ext.ActorDetails[name].Source}) {
-				saveActor = true
-			}
-			// AddActionActor(name, ext.ActorDetails[name].Source, "add", "image_url", ext.ActorDetails[name].ImageUrl)
-		}
-		if saveActor {
-			tmpActor.Save()
-		}
-		db.Model(&o).Association("Cast").Append(tmpActor)
+		cast = append(cast, tmpActor)
 	}
-
-	return nil
+	o.Cast = cast
 }
 
 func SceneUpdateScriptData(db *gorm.DB, ext ScrapedScene) {
-	var o Scene
-	o.GetIfExistByPK(ext.InternalSceneId)
+	if ext.MasterSiteId == "" {
+		var o Scene
+		o.GetIfExistByPK(ext.InternalSceneId)
 
-	if o.ID != 0 {
-		if o.ScriptPublished.IsZero() || o.HumanScript != ext.HumanScript || o.AiScript != ext.AiScript {
-			o.ScriptPublished = time.Now()
-			o.HumanScript = ext.HumanScript
-			o.AiScript = ext.AiScript
-			o.Save()
+		if o.ID != 0 {
+			if o.ScriptPublished.IsZero() || o.HumanScript != ext.HumanScript || o.AiScript != ext.AiScript {
+				o.ScriptPublished = time.Now()
+				o.HumanScript = ext.HumanScript
+				o.AiScript = ext.AiScript
+				o.Save()
+			}
+		}
+	} else {
+		var extref ExternalReference
+		extref.FindExternalId("alternate scene "+ext.ScraperID, ext.SceneID)
+		var externalData SceneAlternateSource
+		json.Unmarshal([]byte(extref.ExternalData), &externalData)
+		if extref.ID > 0 {
+			if externalData.Scene.ScriptPublished.IsZero() || externalData.Scene.HumanScript != ext.HumanScript || externalData.Scene.AiScript != ext.AiScript {
+				// set user defined fields for querying, rather than querying the json
+				extref.UdfDatetime1 = time.Now()
+				extref.UdfBool1 = ext.HumanScript
+				extref.UdfBool2 = ext.AiScript
+				externalData.Scene.ScriptPublished = extref.UdfDatetime1
+				externalData.Scene.HumanScript = ext.HumanScript
+				externalData.Scene.AiScript = ext.AiScript
+				newjson, _ := json.Marshal(externalData)
+				extref.ExternalData = string(newjson)
+				extref.Save()
+			}
 		}
 	}
 }
@@ -661,6 +723,9 @@ func QuerySceneSummaries(r RequestSceneList) []SceneSummary {
 }
 
 func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
+	// get config, can't reference config directly due to circular package references
+	config := getConfig(db)
+
 	tx := db.Model(&Scene{})
 
 	if r.IsWatched.Present() {
@@ -818,13 +883,36 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 		case "VRPorn Scraper":
 			where = `scenes.scene_id like "vrporn-%"`
 		case "Has Script Download":
-			where = "scenes.script_published > '0001-01-01 00:00:00+00:00'"
+			// querying the scenes in from alternate sources (stored in external_reference) has a performance impact, so it's user choice
+			if config.Advanced.UseAltSrcInFileMatching {
+				where = "(scenes.script_published > '0001-01-01 00:00:00+00:00' or (select distinct 1 from external_reference_links erl join external_references er on er.id=erl.external_reference_id where erl.internal_table='scenes' and internal_db_id=scenes.id and er.udf_datetime1 > '0001-01-02'))"
+			} else {
+				where = "scenes.script_published > '0001-01-01 00:00:00+00:00'"
+			}
 		case "Has AI Generated Script":
-			where = "scenes.ai_script = 1"
+			// querying the scenes in from alternate sources (stored in external_reference) has a performance impact, so it's user choice
+			if config.Advanced.UseAltSrcInFileMatching {
+				where = "(scenes.ai_script = 1 or (select distinct 1 from external_reference_links erl join external_references er on er.id=erl.external_reference_id where erl.internal_table='scenes' and internal_db_id=scenes.id and JSON_EXTRACT(er.external_data, '$.scene.ai_script') = 1))"
+			} else {
+				where = "scenes.ai_script = 1"
+			}
 		case "Has Human Generated Script":
-			where = "scenes.human_script = 1"
+			// querying the scenes in from alternate sources (stored in external_reference) has a performance impact, so it's user choice
+			if config.Advanced.UseAltSrcInFileMatching {
+				where = "(scenes.human_script = 1 or (select distinct 1 from external_reference_links erl join external_references er on er.id=erl.external_reference_id where erl.internal_table='scenes' and internal_db_id=scenes.id and JSON_EXTRACT(er.external_data, '$.scene.human_script') = 1))"
+			} else {
+				where = "scenes.human_script = 1"
+			}
 		case "Has Favourite Actor":
 			where = "exists (select * from scene_cast join actors on actors.id=scene_cast.actor_id where actors.favourite=1 and scene_cast.scene_id=scenes.id)"
+		case "Available from POVR":
+			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and external_id like 'povr-%' and internal_db_id = scenes.id)"
+		case "Available from VRPorn":
+			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and external_id like 'vrporn-%' and internal_db_id = scenes.id)"
+		case "Available from SLR":
+			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and external_id like 'slr-%' and internal_db_id = scenes.id)"
+		case "Available from Alternate Sites":
+			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and internal_db_id = scenes.id)"
 		}
 
 		if negate {
@@ -1037,7 +1125,16 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 	case "scene_updated_desc":
 		tx = tx.Order("updated_at desc")
 	case "script_published_desc":
-		tx = tx.Order("script_published desc")
+		// querying the scenes in from alternate sources (stored in external_reference) has a performance impact, so it's user choice
+		if config.Advanced.UseAltSrcInFileMatching {
+			tx = tx.Order(`
+						case when script_published > (select max(er.udf_datetime1) from external_reference_links erl join external_references er on er.id=erl.external_reference_id where erl.internal_table='scenes' and erl.internal_db_id=scenes.id and er.external_source like 'alternate scene %')
+						then script_published
+						else (select max(er.udf_datetime1) from external_reference_links erl join external_references er on er.id=erl.external_reference_id where erl.internal_table='scenes' and erl.internal_db_id=scenes.id and er.external_source like 'alternate scene %')
+						end desc`)
+		} else {
+			tx = tx.Order("script_published desc")
+		}
 	case "scene_id_desc":
 		tx = tx.Order("scene_id desc")
 	case "random":
@@ -1046,6 +1143,9 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 		} else {
 			tx = tx.Order("random()")
 		}
+	case "alt_src_desc":
+		//tx = tx.Order(`(select max(er.external_date) from external_reference_links erl join external_references er on er.id=erl.external_reference_id where erl.internal_table='scenes' and erl.internal_db_id=scenes.id and er.external_source like 'alternate scene %') desc`)
+		tx = tx.Order(`(select max(erl.udf_datetime1) from external_reference_links erl where erl.internal_table='scenes' and erl.internal_db_id=scenes.id and erl.external_source like 'alternate scene %') desc`)
 	default:
 		tx = tx.Order("release_date desc")
 	}
@@ -1089,4 +1189,14 @@ func setCuepointString(cuepoint string) string {
 	} else {
 		return "%" + cuepoint + "%"
 	}
+}
+
+func getConfig(db *gorm.DB) Config {
+	var config Config
+
+	var kv KV
+	db.Where("`key`='config'").First(&kv)
+
+	json.Unmarshal([]byte(kv.Value), &config)
+	return config
 }

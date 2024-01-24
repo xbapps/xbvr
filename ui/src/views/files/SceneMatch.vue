@@ -223,8 +223,7 @@ export default {
       return parseInt(value, radix || 10) || defaultValue || 0
     },
     videoFilesCount (scene) {
-      let count = 0
-      console.log(scene)
+      let count = 0      
       scene.file.forEach(obj => {
         if (obj.type === 'video') {
           count = count + 1

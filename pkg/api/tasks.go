@@ -100,6 +100,8 @@ func (i TaskResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/scrape-tpdb").To(i.scrapeTPDB).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/relink_alt_aource_scenes").To(i.relink_alt_aource_scenes).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
 	return ws
 }
 
@@ -173,10 +175,12 @@ func (i TaskResource) backupBundle(req *restful.Request, resp *restful.Response)
 	inclActors, _ := strconv.ParseBool(req.QueryParameter("inclActors"))
 	inclActorActions, _ := strconv.ParseBool(req.QueryParameter("inclActorActions"))
 	inclConfig, _ := strconv.ParseBool(req.QueryParameter("inclConfig"))
+	extRefSubset := req.QueryParameter("extRefSubset")
 	playlistId := req.QueryParameter("playlistId")
 	download := req.QueryParameter("download")
 
-	bundle := tasks.BackupBundle(inclAllSites, onlyIncludeOfficalSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists, inclActorAkas, inclTagGroups, inclVolumes, inclSites, inclActions, inclExtRefs, inclActors, inclActorActions, inclConfig, playlistId, "", "")
+	bundle := tasks.BackupBundle(inclAllSites, onlyIncludeOfficalSites, inclScenes, inclFileLinks, inclCuepoints, inclHistory, inclPlaylists,
+		inclActorAkas, inclTagGroups, inclVolumes, inclSites, inclActions, inclExtRefs, inclActors, inclActorActions, inclConfig, extRefSubset, playlistId, "", "")
 	if download == "true" {
 		resp.WriteHeaderAndEntity(http.StatusOK, ResponseBackupBundle{Response: "Ready to Download from http://xxx.xxx.xxx.xxx:9999/download/xbvr-content-bundle.json"})
 	} else {
@@ -225,4 +229,7 @@ func (i TaskResource) scrapeTPDB(req *restful.Request, resp *restful.Response) {
 	if r.ApiToken != "" && r.SceneUrl != "" {
 		go tasks.ScrapeTPDB(strings.TrimSpace(r.ApiToken), strings.TrimSpace(r.SceneUrl))
 	}
+}
+func (i TaskResource) relink_alt_aource_scenes(req *restful.Request, resp *restful.Response) {
+	go tasks.MatchAlternateSources()
 }

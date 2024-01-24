@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/creasty/defaults"
 
@@ -47,13 +48,17 @@ type ObjectConfig struct {
 		IsAvailOpacity    int    `default:"40" json:"isAvailOpacity"`
 	} `json:"web"`
 	Advanced struct {
-		ShowInternalSceneId   bool   `default:"false" json:"showInternalSceneId"`
-		ShowHSPApiLink        bool   `default:"false" json:"showHSPApiLink"`
-		ShowSceneSearchField  bool   `default:"false" json:"showSceneSearchField"`
-		StashApiKey           string `default:"" json:"stashApiKey"`
-		ScrapeActorAfterScene bool   `default:"true" json:"scrapeActorAfterScene"`
-		UseImperialEntry      bool   `default:"false" json:"useImperialEntry"`
-		ProgressTimeInterval  int    `default:"15" json:"progressTimeInterval"`
+		ShowInternalSceneId          bool      `default:"false" json:"showInternalSceneId"`
+		ShowHSPApiLink               bool      `default:"false" json:"showHSPApiLink"`
+		ShowSceneSearchField         bool      `default:"false" json:"showSceneSearchField"`
+		StashApiKey                  string    `default:"" json:"stashApiKey"`
+		ScrapeActorAfterScene        bool      `default:"true" json:"scrapeActorAfterScene"`
+		UseImperialEntry             bool      `default:"false" json:"useImperialEntry"`
+		ProgressTimeInterval         int       `default:"15" json:"progressTimeInterval"`
+		LinkScenesAfterSceneScraping bool      `default:"true" json:"linkScenesAfterSceneScraping"`
+		UseAltSrcInFileMatching      bool      `default:"true" json:"useAltSrcInFileMatching"`
+		UseAltSrcInScriptFilters     bool      `default:"true" json:"useAltSrcInScriptFilters"`
+		IgnoreReleasedBefore         time.Time `json:"ignoreReleasedBefore"`
 	} `json:"advanced"`
 	Funscripts struct {
 		ScrapeFunscripts bool `default:"false" json:"scrapeFunscripts"`
@@ -152,6 +157,15 @@ type ObjectConfig struct {
 			HourEnd         int  `default:"23" json:"hourEnd"`
 			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"stashdbRescrapeSchedule"`
+		LinkScenesSchedule struct {
+			Enabled         bool `default:"false" json:"enabled"`
+			HourInterval    int  `default:"12" json:"hourInterval"`
+			UseRange        bool `default:"false" json:"useRange"`
+			MinuteStart     int  `default:"0" json:"minuteStart"`
+			HourStart       int  `default:"0" json:"hourStart"`
+			HourEnd         int  `default:"23" json:"hourEnd"`
+			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
+		} `json:"linkScenesSchedule"`
 	} `json:"cron"`
 	Storage struct {
 		MatchOhash bool `default:"false" json:"match_ohash"`

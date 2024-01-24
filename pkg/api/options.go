@@ -62,12 +62,16 @@ type RequestSaveOptionsWeb struct {
 }
 
 type RequestSaveOptionsAdvanced struct {
-	ShowInternalSceneId   bool   `json:"showInternalSceneId"`
-	ShowHSPApiLink        bool   `json:"showHSPApiLink"`
-	ShowSceneSearchField  bool   `json:"showSceneSearchField"`
-	StashApiKey           string `json:"stashApiKey"`
-	ScrapeActorAfterScene bool   `json:"scrapeActorAfterScene"`
-	UseImperialEntry      bool   `json:"useImperialEntry"`
+	ShowInternalSceneId          bool      `json:"showInternalSceneId"`
+	ShowHSPApiLink               bool      `json:"showHSPApiLink"`
+	ShowSceneSearchField         bool      `json:"showSceneSearchField"`
+	StashApiKey                  string    `json:"stashApiKey"`
+	ScrapeActorAfterScene        bool      `json:"scrapeActorAfterScene"`
+	UseImperialEntry             bool      `json:"useImperialEntry"`
+	LinkScenesAfterSceneScraping bool      `json:"linkScenesAfterSceneScraping"`
+	UseAltSrcInFileMatching      bool      `json:"useAltSrcInFileMatching"`
+	UseAltSrcInScriptFilters     bool      `json:"useAltSrcInScriptFilters"`
+	IgnoreReleasedBefore         time.Time `json:"ignoreReleasedBefore"`
 }
 
 type RequestSaveOptionsFunscripts struct {
@@ -165,6 +169,18 @@ type RequestSaveOptionsTaskSchedule struct {
 	StashdbRescrapeHourStart    int  `json:"stashdbRescrapeHourStart"`
 	StashdbRescrapeHourEnd      int  `json:"stashdbRescrapeHourEnd"`
 	StashdbRescrapeStartDelay   int  `json:"stashdbRescrapeStartDelay"`
+
+	LinkScenesEnabled      bool `json:"linkScenesEnabled"`
+	LinkScenesHourInterval int  `json:"linkScenesHourInterval"`
+	LinkScenesUseRange     bool `json:"linkScenesUseRange"`
+	LinkScenesMinuteStart  int  `json:"linkScenesMinuteStart"`
+	LinkScenesHourStart    int  `json:"linkScenesHourStart"`
+	LinkScenesHourEnd      int  `json:"linkScenesHourEnd"`
+	LinkScenesStartDelay   int  `json:"linkScenesStartDelay"`
+}
+type RequestSaveSiteMatchParams struct {
+	SiteId      string                   `json:"site"`
+	MatchParams models.AltSrcMatchParams `json:"match_params"`
 }
 
 type RequestCuepointsResponse struct {
@@ -172,10 +188,11 @@ type RequestCuepointsResponse struct {
 	Actions   []string `json:"actions"`
 }
 type RequestSCustomSiteCreate struct {
-	Url     string `json:"scraperUrl"`
-	Name    string `json:"scraperName"`
-	Avatar  string `json:"scraperAvatar"`
-	Company string `json:"scraperCompany"`
+	Url          string `json:"scraperUrl"`
+	Name         string `json:"scraperName"`
+	Avatar       string `json:"scraperAvatar"`
+	Company      string `json:"scraperCompany"`
+	MasterSiteId string `json:"masterSiteId"`
 }
 
 type GetStorageResponse struct {
@@ -223,6 +240,11 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/scraper/delete-scenes").To(i.deleteScenes).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/site/match_params/{site}").To(i.siteMatchParams).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.POST("/site/save_match_params").To(i.saveSiteMatchParams).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Storage" section endpoints
@@ -382,6 +404,49 @@ func (i ConfigResource) listSitesWithDB(req *restful.Request, resp *restful.Resp
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
 
+func (i ConfigResource) siteMatchParams(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	id := req.PathParameter("site")
+	if id == "" {
+		return
+	}
+
+	var site models.Site
+	err := site.GetIfExist(id)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	var matchParams models.AltSrcMatchParams
+	matchParams.UnmarshalParams(site.MatchingParams)
+	resp.WriteHeaderAndEntity(http.StatusOK, matchParams)
+}
+func (i ConfigResource) saveSiteMatchParams(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+	var r RequestSaveSiteMatchParams
+	if err := req.ReadEntity(&r); err != nil {
+		APIError(req, resp, http.StatusInternalServerError, err)
+		return
+	}
+
+	var site models.Site
+	err := site.GetIfExist(r.SiteId)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	json, _ := json.Marshal(r.MatchParams)
+	site.MatchingParams = string(json)
+	site.Save()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, nil)
+}
+
 func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Response) {
 	var r RequestSaveOptionsWeb
 	err := req.ReadEntity(&r)
@@ -425,6 +490,10 @@ func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.
 	config.Config.Advanced.StashApiKey = r.StashApiKey
 	config.Config.Advanced.ScrapeActorAfterScene = r.ScrapeActorAfterScene
 	config.Config.Advanced.UseImperialEntry = r.UseImperialEntry
+	config.Config.Advanced.LinkScenesAfterSceneScraping = r.LinkScenesAfterSceneScraping
+	config.Config.Advanced.UseAltSrcInFileMatching = r.UseAltSrcInFileMatching
+	config.Config.Advanced.UseAltSrcInScriptFilters = r.UseAltSrcInScriptFilters
+	config.Config.Advanced.IgnoreReleasedBefore = r.IgnoreReleasedBefore
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -873,6 +942,14 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.Config.Cron.StashdbRescrapeSchedule.HourEnd = r.StashdbRescrapeHourEnd
 	config.Config.Cron.StashdbRescrapeSchedule.RunAtStartDelay = r.StashdbRescrapeStartDelay
 
+	config.Config.Cron.LinkScenesSchedule.Enabled = r.LinkScenesEnabled
+	config.Config.Cron.LinkScenesSchedule.HourInterval = r.LinkScenesHourInterval
+	config.Config.Cron.LinkScenesSchedule.UseRange = r.LinkScenesUseRange
+	config.Config.Cron.LinkScenesSchedule.MinuteStart = r.LinkScenesMinuteStart
+	config.Config.Cron.LinkScenesSchedule.HourStart = r.LinkScenesHourStart
+	config.Config.Cron.LinkScenesSchedule.HourEnd = r.LinkScenesHourEnd
+	config.Config.Cron.LinkScenesSchedule.RunAtStartDelay = r.LinkScenesStartDelay
+
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -908,6 +985,7 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 	r.Name = strings.TrimSpace(r.Name)
 	r.Company = strings.TrimSpace(r.Company)
 	r.Avatar = strings.TrimSpace(r.Avatar)
+	r.MasterSiteId = strings.TrimSpace(r.MasterSiteId)
 	if r.Company == "" {
 		r.Company = r.Name
 	}
@@ -937,12 +1015,13 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 				scrapers[key][idx].Name = r.Name
 				scrapers[key][idx].Company = r.Company
 				scrapers[key][idx].AvatarUrl = r.Avatar
+				scrapers[key][idx].MasterSiteId = r.MasterSiteId
 			}
 		}
 	}
 
 	if !exists {
-		scraper := config.ScraperConfig{URL: r.Url, Name: r.Name, Company: r.Company, AvatarUrl: r.Avatar}
+		scraper := config.ScraperConfig{URL: r.Url, Name: r.Name, Company: r.Company, AvatarUrl: r.Avatar, MasterSiteId: r.MasterSiteId}
 		switch match[3] {
 		case "povr":
 			scrapers["povr"] = append(scrapers["povr"], scraper)

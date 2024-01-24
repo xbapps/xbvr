@@ -43,7 +43,7 @@
                 </b-carousel>
               </b-tab-item>
 
-              <b-tab-item label="Player">
+              <b-tab-item label="Player" v-if="!displayingAlternateSource">
                 <video ref="player" class="video-js vjs-default-skin" controls playsinline preload="none"/>
                 <b-field position="is-centered">
                   <b-field>
@@ -73,7 +73,7 @@
               <div class="content">
                 <h3>
                   <span v-if="item.title">{{ item.title }}</span>
-                  <span v-else class="missing">(no title)</span>
+                  <span v-else class="missing">(no title)</span>                  
                   <small class="is-pulled-right">
                     {{ format(parseISO(item.release_date), "yyyy-MM-dd") }}
                   </small>
@@ -92,31 +92,54 @@
                 </div>
                 <div class="columns is-vcentered">
                   <div class="column pt-0">
-                    <b-field>
+                    <b-field v-if="!displayingAlternateSource">
                       <star-rating :key="item.id" v-model="item.star_rating" :rating="item.star_rating" @rating-selected="setRating"
                                    :increment="0.5" :star-size="20" :show-rating="false" />
                       <b-tooltip :label="$t('Reset Rating')" position="is-right" :delay="250">
                         <b-icon pack="mdi" icon="autorenew" size="is-small" @click.native="setRating(0)" style="padding-left: 1em;padding-top: .5em;"/>
                       </b-tooltip>
                     </b-field>
+                    <b-field v-if="displayingAlternateSource">
+                      <strong>Linked scene, Not an XBVR Scene</strong>
+                    </b-field>
                   </div>
                   <div class="column pt-0">
                     <div class="is-flex is-pulled-right" style="gap: 0.25rem">
-                      <hidden-button :item="item"/>
-                      <watchlist-button :item="item"/>
-                      <trailerlist-button :item="item"/>
-                      <favourite-button :item="item"/>
-                      <wishlist-button :item="item"/>
-                      <watched-button :item="item"/>
+                      <a class="button is-primary is-outlined is-small" @click="searchAlternateSourceScene()" title="Serach for a different scene" v-if="displayingAlternateSource">
+                        <b-icon pack="mdi" icon="movie-search-outline" size="is-small"/>
+                      </a>
+                      <a class="button is-primary is-outlined is-small" @click="scrapeScene()" title="Scrape and create an XBVR scene (not a link)" v-if="displayingAlternateSource">
+                        <b-icon pack="mdi" icon="plus" size="is-medium"/>
+                      </a>
+                      <a class="button is-primary is-outlined is-small" @click="refreshExtRef()" title="Removes the scene.  Rescrape to refresh the scene data and relink" v-if="displayingAlternateSource">
+                        <b-icon pack="mdi" icon="refresh" size="is-small"/>
+                      </a>
+                      <a class="button is-danger is-outlined is-small" @click="flagExtRefDeleted()" title="Unlinks the scene. It cannot be relinked to any scene. This cannot be undone" v-if="displayingAlternateSource">
+                        <b-icon pack="mdi" icon="delete" size="is-small"/>
+                      </a>
+                      <hidden-button :item="item" v-if="!displayingAlternateSource"/>
+                      <watchlist-button :item="item" v-if="!displayingAlternateSource"/>
+                      <trailerlist-button :item="item" v-if="!displayingAlternateSource"/>
+                      <favourite-button :item="item" v-if="!displayingAlternateSource"/>
+                      <wishlist-button :item="item" v-if="!displayingAlternateSource"/>
+                      <watched-button :item="item" v-if="!displayingAlternateSource"/>
                       <edit-button :item="item"/>
-                      <refresh-button :item="item"/>
+                      <refresh-button :item="item" v-if="!displayingAlternateSource"/>
                     </div>
+                  </div>
+                </div>
+                <div class="image-row is-flex is-pulled-right" v-if="getAlternateSceneSources != 0">
+                  <div v-for="(altsrc, idx) in this.alternateSources" :key="idx" class="altsrc-image-wrapper" @click="showExtRefScene(altsrc)">
+                      <vue-load-image>
+                        <img slot="image" :src="getImageURL(altsrc.site_icon)" alt="Image" width="28px" />                        
+                        <b-icon slot="error" pack="mdi" icon="link" size="is-small" />
+                      </vue-load-image>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="image-row" v-if="activeTab != 1">
+            <div class="image-row" v-if="activeTab != 1 && !displayingAlternateSource">
               <div v-for="(image, idx) in castimages" :key="idx" class="image-wrapper">
                 <b-tooltip  type="is-light" :label="image.actor_label"  :delay=100>
                   <vue-load-image>
@@ -192,7 +215,7 @@
             <div class="block-opts block">
               <b-tabs v-model="activeTab" :animated="false">
 
-                <b-tab-item :label="`Files (${fileCount})`">
+                <b-tab-item :label="`Files (${fileCount})`" v-if="!displayingAlternateSource">
                   <div class="block-tab-content block">
                     <div class="content media is-small" v-for="(f, idx) in filesByType" :key="idx">
                       <div class="media-left">
@@ -241,7 +264,7 @@
                   </div>
                 </b-tab-item>
 
-                <b-tab-item :label="`Cuepoints (${sortedCuepoints.length})`">
+                <b-tab-item :label="`Cuepoints (${sortedCuepoints.length})`" v-if="!displayingAlternateSource">
                   <div class="block-tab-content block">
                     <div class="block" >
                       <div class="columns">
@@ -310,7 +333,7 @@
                   </div>
                 </b-tab-item>
 
-                <b-tab-item label="Watch history">
+                <b-tab-item label="Watch history" v-if="!displayingAlternateSource">
                   <div class="block-tab-content block">
                     <div>
                       {{ historySessionsCount }} view sessions, total duration
@@ -332,7 +355,7 @@
                     </b-message>
                   </div>
                 </b-tab-item>
-                <b-tab-item v-if="this.$store.state.optionsAdvanced.advanced.showSceneSearchField" label="Search fields">
+                <b-tab-item v-if="this.$store.state.optionsAdvanced.advanced.showSceneSearchField && !displayingAlternateSource" label="Search fields">
                   <div class="block-tab-content block">
                     <div class="content is-small">
                       <div class="block" v-for="(field, idx) in searchfields" :key="idx">
@@ -357,9 +380,9 @@
       </div>
     </div>
     <button class="modal-close is-large" aria-label="close" @click="close()"></button>
-    <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null"
+    <a class="prev" @click="prevScene" v-if="$store.getters['sceneList/prevScene'](item) !== null && !displayingAlternateSource"
        title="Keyboard shortcut: O">&#10094;</a>
-    <a class="next" @click="nextScene" v-if="$store.getters['sceneList/nextScene'](item) !== null"
+    <a class="next" @click="nextScene" v-if="$store.getters['sceneList/nextScene'](item) !== null && !displayingAlternateSource"
        title="Keyboard shortcut: P">&#10095;</a>
   </div>
 </template>
@@ -411,6 +434,8 @@ export default {
       sortMultiple: true,
       castimages: [],
       searchfields: [],
+      alternateSources: [],
+      waitingForQuickFind: false,
     }
   },
   computed: {
@@ -443,6 +468,7 @@ export default {
       this.castimages =  imgs.filter((img) => {
         return img.src !== '';
         });
+      this.getSearchFields(item.id)
       return item
     },
     // Properties for gallery
@@ -523,6 +549,34 @@ export default {
           .indexOf(this.cuepointName.toString().toLowerCase()) >= 0
       })
     },
+    displayingAlternateSource () {
+      // displayingAlternateSource indicates we aren't displaying a real xbvr scene from the scenes table,
+      //  so functions like watchlist, ratings, etc don't apply
+      // we are displaying scene data serialized and saved in the external_references table
+      if ( this.$store.state.overlay.details.altsrc != null) return true
+      return false
+    },
+    async getAlternateSceneSources() {
+      this.alternateSources = [];
+      if (this.displayingAlternateSource) return 0
+      try {
+        const response = await ky.get('/api/scene/alternate_source/' + this.item.id).json();
+        if (response==null){
+          return 0
+        }
+        response.forEach(altsrc => {
+          if (altsrc.external_source.startsWith("alternate scene ")) {
+            this.alternateSources.push(altsrc)
+          }
+        });
+        return this.alternateSources.length;
+      } catch (error) {        
+        return 0; // Return 0 or handle error as needed
+      }
+    },
+    quickFindOverlayState() {
+      return this.$store.state.overlay.quickFind.show
+    }
   },
   mounted () {
     this.setupPlayer()
@@ -533,8 +587,29 @@ export default {
       this.cuepointPositionTags = data.positions
       this.cuepointActTags.unshift("")
       this.cuepointPositionTags.unshift("")
-      })
-    this.getSearchFields()
+      })    
+},
+watch:{
+  quickFindOverlayState(newVal, oldVal){
+    if (newVal == true) {
+      return
+    }
+    if (this.waitingForQuickFind){
+      this.waitingForQuickFind = false
+      if (this.$store.state.overlay.quickFind.selectedScene != null && this.$store.state.overlay.quickFind.selectedScene.id > 0) {
+        this.$buefy.dialog.confirm({
+          title: 'Relink scene',
+          message: `Do you wish to link this scene to <strong>${this.$store.state.overlay.quickFind.selectedScene.title}</strong>`,
+          type: 'is-info is-wide',
+          hasIcon: true,
+          id: 'heh',
+          onConfirm: () => {
+            this.handleRelinkExtRef()
+          }
+        })
+      }
+    }
+  },
 },
   methods: {
     setupPlayer () {
@@ -556,7 +631,7 @@ export default {
               return event.which === 27
             },
             handler: (player, options, event) => {
-              this.player.dispose()
+              if (!this.displayingAlternateSource) this.player.dispose()
               this.$store.commit('overlay/hideDetails')
             }
           },
@@ -786,7 +861,7 @@ export default {
         })
     },
     close () {
-      this.player.dispose()
+      if (!this.displayingAlternateSource) this.player.dispose()
       this.$store.commit('overlay/hideDetails')
     },
     humanizeSeconds (seconds) {
@@ -805,23 +880,21 @@ export default {
     },
     nextScene () {
       const data = this.$store.getters['sceneList/nextScene'](this.item)
-      if (data !== null) {
+      if (data !== null && !this.displayingAlternateSource) {
         this.$store.commit('overlay/showDetails', { scene: data })
         this.activeMedia = 0
         this.carouselSlide = 0
         this.updatePlayer(undefined, '180')
       }
-      this.getSearchFields()
     },
     prevScene () {
       const data = this.$store.getters['sceneList/prevScene'](this.item)
-      if (data !== null) {
+      if (data !== null && !this.displayingAlternateSource) {
         this.$store.commit('overlay/showDetails', { scene: data })
         this.activeMedia = 0
         this.carouselSlide = 0
         this.updatePlayer(undefined, '180')
       }
-      this.getSearchFields()
     },
     playerStepBack (interval) {
       const wasPlaying = !this.player.paused()
@@ -939,18 +1012,122 @@ export default {
     hideTooltip(idx) {
       this.castimages[idx].visible = false;
     },
-    getSearchFields() {
+    getSearchFields(id) {
       // load search fields
-      if (this.$store.state.optionsAdvanced.advanced.showSceneSearchField) {
+      this.searchfields = []      
+      if (this.$store.state.optionsAdvanced.advanced.showSceneSearchField && !this.displayingAlternateSource) {
         ky.get('/api/scene/searchfields', {
           searchParams: {
-            q: this.item.id
+            q: id
           },
           }).json().then(data => {
             this.searchfields = data
           })
       }
     },
+    showExtRefScene (altsrc) {      
+      const extdata = JSON.parse(altsrc.external_data);      
+      if (extdata.scene.cast == null) 
+      {
+        extdata.scene.cast = []
+      }
+      this.$store.commit('overlay/showDetails', { scene: extdata.scene, altsrc: altsrc, prevscene: this.item, query_for_altsrc: extdata.query })
+      this.activeTab = 0      
+    },
+    searchAlternateSourceScene() {
+      // search for a new scene to link to the alternate source scene
+      const  q = this.$store.state.overlay.details.query_for_altsrc == "" ? this.item.title : this.$store.state.overlay.details.query_for_altsrc      
+      this.$store.commit('overlay/showQuickFind', { searchString:  q, displaySelectedScene: false })
+      this.waitingForQuickFind = true
+    }, 
+    async handleRelinkExtRef() {
+      const response = await ky.post(`/api/extref/edit_link`, {
+        json: {
+          external_source: this.$store.state.overlay.details.altsrc.external_source,
+          external_id: this.$store.state.overlay.details.altsrc.external_id,
+          internal_table: "scenes",
+          internal_db_id: this.$store.state.overlay.quickFind.selectedScene.id,
+          internal_name_id: this.$store.state.overlay.quickFind.selectedScene.scene_id,
+          match_type: 99999
+        }
+      });
+      if (response.status === 200) {
+        this.$store.state.overlay.details.prevscene = this.$store.state.overlay.quickFind.selectedScene;
+        this.$buefy.toast.open({ message: `The scene was sucessfully relinked to a new Scene`, type: 'is-primary', duration: 3000 });
+      }
+    },
+    async scrapeScene() {
+      this.$buefy.dialog.confirm({
+        title: 'Scrape & Create Scene',
+        message: `Do you wish to create a seperate XBVR scene from this linked scene <strong>${this.$store.state.overlay.details.altsrc.url}</strong>`,
+        type: 'is-info is-wide',
+        hasIcon: true,
+        id: 'heh',
+        onConfirm: () => {
+          const url = this.$store.state.overlay.details.altsrc.url
+          this.$store.state.overlay.details.altsrc = null
+          this.$store.commit('overlay/hideDetails')
+          // call the options screen passing the url in state   
+          this.$store.commit('optionsSceneCreate/setScrapeScene', url )
+          this.$store.commit('optionsSceneCreate/showSceneCreate', true )
+          this.$router.push({ path: '/options'})
+        }
+      })
+
+    },
+    async refreshExtRef() {
+      this.$buefy.dialog.confirm({
+        title: 'Continue?',
+        message: `This will remove the scene, rescrape the site to relink it to an XBVR scene`,
+        type: 'is-info is-wide',
+        hasIcon: true,
+        id: 'heh',
+        onConfirm: () => {          
+          this.handleRefreshExtRef()
+        }
+      })
+    },
+    async handleRefreshExtRef() {
+      const response = await ky.delete(`/api/extref/delete_extref`, {
+        json: {
+          external_source: this.$store.state.overlay.details.altsrc.external_source,
+          external_id: this.$store.state.overlay.details.altsrc.external_id,
+        }
+      });
+      if (response.status === 200) {
+        this.$store.state.overlay.details.prevscene = this.$store.state.overlay.quickFind.selectedScene;
+        this.$buefy.toast.open({ message: `The scene was removed, ready to rescan`, type: 'is-primary', duration: 3000 });
+      }
+    },
+    flagExtRefDeleted() {
+      let confirmed = false
+      this.$buefy.dialog.confirm({
+        title: 'Continue?',
+        message: `This will unlink the scene and prevent it from relinking to any scene. This cannot be undone`,
+        type: 'is-danger is-wide',
+        hasIcon: true,
+        id: 'heh',
+        onConfirm: () => {          
+          this.handleFlagExtRefDeleted()
+        },
+      })    
+    },    
+    async handleFlagExtRefDeleted() {
+      const response = await ky.post(`/api/extref/edit_link`, {
+        json: {
+          external_source: this.$store.state.overlay.details.altsrc.external_source,
+          external_id: this.$store.state.overlay.details.altsrc.external_id,
+          internal_table: "scenes",
+          internal_db_id: 0,
+          internal_name_id: "deleted",
+          match_type: -1
+        }
+      });
+      if (response.status === 200) {
+        this.$store.state.overlay.details.prevscene = this.$store.state.overlay.quickFind.selectedScene;
+        this.$buefy.toast.open({ message: `The scene was unlinked and will not be relinked to any scene`, type: 'is-primary', duration: 3000 });
+      }
+    },    
     format,
     parseISO,
     prettyBytes,
@@ -1112,4 +1289,8 @@ span.is-active img {
 .tooltip img {
   max-width: 100%;
   max-height: 100%;
+}
+.altsrc-image-wrapper {
+  display: inline-block;
+  margin-left: 5px;  
 }</style>
