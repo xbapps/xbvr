@@ -170,6 +170,11 @@ type ObjectConfig struct {
 	Storage struct {
 		MatchOhash bool `default:"false" json:"match_ohash"`
 	} `json:"storage"`
+	ScraperSettings struct {
+		TMWVRNet struct {
+			TmwMembersDomain string `default:"members.tmwvrnet.com" json:"tmwMembersDomain"`
+		} `json:"tmwvrnet"`
+	} `json:"scraper_settings"`
 }
 
 var (

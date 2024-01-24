@@ -1911,6 +1911,18 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0075-Update-tmwvrnet-members",
+			Migrate: func(tx *gorm.DB) error {
+				sql := `update scenes set member_url = replace(replace(scene_url, 'https://tmwvrnet.com/trailers/', 'https://members.tmwvrnet.com/scenes/'), '.html', '_vids.html') where scene_url like 'https://tmwvrnet.com/trailers/%';`
+				err := tx.Exec(sql).Error
+				if err == nil {
+
+					err = tx.Exec(sql).Error
+				}
+				return err
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
