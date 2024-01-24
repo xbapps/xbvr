@@ -7,7 +7,7 @@
     <div class="modal-background"></div>
     <div class="modal-card" v-if="site != null">
       <header class="modal-card-head">
-        <p class="modal-card-title">{{ $t("Matching paramerters")}}: {{ site.name }}</p>        
+        <p class="modal-card-title">{{ $t("Matching parameters")}}: {{ site.name }}</p>        
         <button class="delete" @click="close" aria-label="close"></button>
       </header>
       <section class="modal-card-body" v-if="params != null">
@@ -17,7 +17,7 @@
           </header>
           <div class="columns is-multiline">
             <div class="column is-one-third">
-              <b-tooltip :label="$t('Days to wait after the release date, before linking. Useful where the main site releases after SLR/VRPorn/POVR, eg LethalHardware')" 
+              <b-tooltip :label="$t('Days to wait after the release date, before linking. Useful where the main site releases after SLR/VRPorn/POVR, eg LethalHardcore')" 
                 :delay="500" type="is-primary" multilined size="is-large" position="is-bottom">
                 <b-field :label="$t('Delay linking(days)')">
                   <b-numberinput v-model="params.delay_linking"></b-numberinput>
@@ -88,7 +88,7 @@
               </b-tooltip>
             </div>
             <div class="column is-one-third">
-              <b-tooltip :label="$t('The number of days after the release date to match, eg if the scene release date is 23/05/2023 and the days after is =3, it will search <= 23/05/2023. Usually set to 0. If days prior and after are 0, the range is not used')" 
+              <b-tooltip :label="$t('The number of days after the release date to match, eg if the scene release date is 23/05/2023 and the days after is 3, it will search <= 23/05/2023. Usually set to 0. If days prior and after are 0, the range is not used')" 
                 :delay="500" type="is-primary" multilined size="is-large" position="is-bottom">
                 <b-field :label="$t('Days After')">
                   <b-numberinput v-model="params.released_after"></b-numberinput>

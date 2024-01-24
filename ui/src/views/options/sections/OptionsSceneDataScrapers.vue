@@ -41,10 +41,14 @@
             </span>
       </b-table-column>
       <b-table-column field="limit_scraping" :label="$t('Limit Scraping')" v-slot="props" width="60" sortable>
+        <b-tooltip class="is-info" :label="$t('Limit scraping to newest scenes on the website. Turn off if you are missing scenes.')" :delay="250" >
           <span><b-switch v-model ="props.row.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: props.row.id})"/></span>
+        </b-tooltip>
       </b-table-column>
       <b-table-column field="subscribed" :label="$t('Subscribed')" v-slot="props" width="60" sortable>
+        <b-tooltip class="is-info" :label="$t('Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter')" :delay="250" >
           <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
+        </b-tooltip>
       </b-table-column>
       <b-table-column field="options" v-slot="props" width="30">
         <div class="menu">
@@ -89,6 +93,7 @@
       <div class="column">
       </div>
         <div class="column buttons" align="right">
+          <a class="button is-small" v-on:click="toggleAllLimitScraping()">{{$t('Toggle Limit Scraping of all visible sites')}}</a>
           <a class="button is-small" v-on:click="toggleAllSubscriptions()">{{$t('Toggle Subscriptions of all visible sites')}}</a>
         </div>
     </div>
@@ -308,6 +313,15 @@ export default {
       }
       this.isLoading=false
     },
+    async toggleAllLimitScraping(){
+      const table = this.$refs.scraperTable;
+      this.isLoading=true
+      for (let i=0; i<table.newData.length; i++) {
+        await ky.put(`/api/options/sites/limit_scraping/${table.newData[i].id}`, { json: {} }).json()
+        this.$store.dispatch('optionsSites/load')
+      }
+      this.isLoading=false
+    },    
     editMatchParams(site){
       this.$store.commit('overlay/showSceneMatchParams', { site: site })
     },
