@@ -67,7 +67,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		if len(coverURL) > 0 {
 			sc.Covers = append(sc.Covers, coverURL)
 		} else {
-			m := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.splash-screen`, "style")))
+			m := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.c-webxr-splash-screen`, "style")))
 			if len(m) > 0 && len(m[1]) > 0 {
 				sc.Covers = append(sc.Covers, m[1])
 			}
