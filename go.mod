@@ -149,6 +149,5 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	willnorris.com/go/gifresize v1.0.0 // indirect
 )

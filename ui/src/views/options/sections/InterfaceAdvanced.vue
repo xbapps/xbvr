@@ -64,7 +64,7 @@
               </b-tooltip>
             </b-field>
             <b-field>
-              <b-button type="is-primary" @click="scrapeXbvrActors">{{ $t('Scrape Actor Detals from XBVR Sites') }}</b-button>
+              <b-button type="is-primary" @click="scrapeXbvrActors">{{ $t('Scrape Actor Details from XBVR Sites') }}</b-button>
             </b-field>
             <b-field>
               <b-button type="is-primary" @click="save">Save</b-button>
@@ -101,7 +101,7 @@
                   </div>
               </b-tooltip>
             </b-field>
-            <b-tooltip :label="$t('Restart XBR to load new Sites')" :delay="500" type="is-warning">
+            <b-tooltip :label="$t('Restart XBVR to load new Sites')" :delay="500" type="is-warning">
               <b-field>
                 <b-button type="is-primary" :disabled="!scraperFieldsValid" @click="saveScraper">Save</b-button>
               </b-field>

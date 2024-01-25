@@ -10,6 +10,7 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -30,6 +31,8 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc.Studio = "TeenMegaWorld"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.MembersUrl = strings.Replace(sc.HomepageURL, "https://tmwvrnet.com/trailers/", "https://"+config.Config.ScraperSettings.TMWVRNet.TmwMembersDomain+"/scenes/", 1)
+		sc.MembersUrl = strings.Replace(sc.MembersUrl, ".html", "_vids.html", 1)
 
 		// Date & Duration
 		e.ForEach(`.video-info-data`, func(id int, e *colly.HTMLElement) {

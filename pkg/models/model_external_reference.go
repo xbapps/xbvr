@@ -1058,7 +1058,7 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 				Attribute:  "attribute id you want, eg src for an image of href for a link",
 				PostProcessing: []PostProcessing{{
 					Function: "builtin function to apply to the extarcted text, eg RegexString to extract with regex, Parse Date, lbs to kg, see postProcessing function for options.  You may specify multiple function, eg RegexString to extract a Date followed by Parse Date if not in the right format",
-					Params:   []string{`Paramerter depends on the functions requirements `},
+					Params:   []string{`Parameter depends on the functions requirements `},
 				}},
 			})
 			exampleConfig.GenericActorScrapingConfig["example scrape"] = siteDetails
