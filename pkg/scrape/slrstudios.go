@@ -78,7 +78,8 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		// Gallery
 		e.ForEach(`meta[name^="twitter:image"]`, func(id int, e *colly.HTMLElement) {
 			if e.Attr("name") != "twitter:image" { // we need image1, image2...
-				sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("content")))
+				re := regexp.MustCompile("(https:\/\/cdn-vr.sexlikereal.com\/images\/\d+\/)(?:(?:vr-porn-)(?:[\w\-])+?(\d+)(-original))(.webp|.jpg)")
+				sc.Gallery = append(sc.Gallery, re.ReplaceAll(e.Request.AbsoluteURL(e.Attr("content")),"$1$2_o.jpg")
 			}
 		})
 
@@ -396,7 +397,7 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 				projSuffix = "_TB_360.mp4"
 			}
 		}
-		resolutions := []string{"_original_"}
+		resolutions := []string{"__"}
 		encodings := gjson.Get(JsonMetadataA, "encodings.#(name=h265).videoSources.#.resolution")
 		for _, name := range encodings.Array() {
 			resolutions = append(resolutions, "_"+name.String()+"p_")
@@ -417,10 +418,10 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 			}
 		}
 		if FB360 != "" {
-			sc.Filenames = append(sc.Filenames, baseName+"_original_"+sc.SiteID+FB360)
+			sc.Filenames = append(sc.Filenames, baseName+"__"+sc.SiteID+FB360)
 		}
 	} else {
-		resolutions := []string{"_6400p_", "_4096p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_3000p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
+		resolutions := []string{"_6400p_", "_4096p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_3000p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "__"}
 		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
 		switch videotype {
 		case "360°": // Sadly can't determine if TB or MONO so have to add both
