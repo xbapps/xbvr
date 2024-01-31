@@ -135,7 +135,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			re := regexp.MustCompile(`(https:\/\/cdn-vr\.(sexlikereal|trannypornvr)\.com\/images\/\d+\/)vr-porn-[\w\-]+?-(\d+)-original(\.webp|\.jpg)`)
 			if e.Attr("name") != "twitter:image" { // we need image1, image2...
 				if !isTransScene {
-					sc.Gallery = append(sc.Gallery, re.ReplaceAllStringFunc(e.Request.AbsoluteURL(e.Attr("content")),absolutegallery))
+					sc.Gallery = append(sc.Gallery, re.ReplaceAllStringFunc(e.Request.AbsoluteURL(e.Attr("content")), absolutegallery))
 				} //else {
 				//	sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("content")))
 				//}
@@ -162,7 +162,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 						sc.Covers = append(sc.Covers, m[1])
 					}
 				}
-		}
+			}
 		} else {
 			tcoverURL := e.ChildAttr(`.splash-screen > img`, "src")
 			if len(tcoverURL) > 0 {
