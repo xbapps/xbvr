@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -86,6 +87,14 @@ type ResponseSceneSearchValue struct {
 	FieldName  string `json:"fieldName"`
 	FieldValue string `json:"fieldValue"`
 }
+type ResponseGetAlternateSources struct {
+	Url            string `json:"url"`
+	Icon           string `json:"site_icon"`
+	ExternalSource string `json:"external_source"`
+	ExternalId     string `json:"external_id"`
+	ExternalData   string `json:"external_data"`
+}
+
 type SceneResource struct{}
 
 func (i SceneResource) WebService() *restful.WebService {
@@ -147,6 +156,10 @@ func (i SceneResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/{scene-id}").To(i.getScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
+
+	ws.Route(ws.GET("/alternate_source/{scene-id}").To(i.getSceneAlternateSources).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseGetAlternateSources{}))
 
 	return ws
 }
@@ -373,6 +386,10 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Has AI Generated Script")
 	outAttributes = append(outAttributes, "Has Human Generated Script")
 	outAttributes = append(outAttributes, "Has Favourite Actor")
+	outAttributes = append(outAttributes, "Available from Alternate Sites")
+	outAttributes = append(outAttributes, "Available from POVR")
+	outAttributes = append(outAttributes, "Available from VRPorn")
+	outAttributes = append(outAttributes, "Available from SLR")
 	type Results struct {
 		Result string
 	}
@@ -598,6 +615,28 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 		log.Error(err)
 		return
 	}
+	if strings.HasPrefix(q, "http") {
+		// if searching for a link, see if it is in the external ref table for scene alternate source
+		var extref models.ExternalReference
+		var scene models.Scene
+		splits := strings.Split(q, "?")
+		q = splits[0]
+
+		// see if the url matches a scrapped scene
+		scene.GetIfExistURL(q)
+		if scene.ID != 0 {
+			scenes = append(scenes, scene)
+		} else {
+			db.Preload("XbvrLinks").Where("(external_source like 'alternate scene %' or external_source = 'stashdb scene') and external_url = ?", q).First(&extref)
+			for _, link := range extref.XbvrLinks {
+				if link.InternalTable == "scenes" {
+					scene.GetIfExistByPK(link.InternalDbId)
+					scenes = append(scenes, scene)
+				}
+			}
+		}
+	}
+
 	defer idx.Bleve.Close()
 	query := bleve.NewQueryStringQuery(q)
 
@@ -937,4 +976,37 @@ func ProcessTagChanges(scene *models.Scene, tags *[]string, db *gorm.DB) {
 			db.Model(&scene).Association("Tags").Append(&v)
 		}
 	}
+}
+func (i SceneResource) getSceneAlternateSources(req *restful.Request, resp *restful.Response) {
+	var extref models.ExternalReferenceLink
+	var refs []models.ExternalReferenceLink
+	var ressults []ResponseGetAlternateSources
+	db, _ := models.GetDB()
+
+	if strings.Contains(req.PathParameter("scene-id"), "-") {
+		refs = extref.FindByInternalName("scenes", req.PathParameter("scene-id"))
+	} else {
+		id, err := strconv.Atoi(req.PathParameter("scene-id"))
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		refs = extref.FindByInternalID("scenes", uint(id))
+	}
+
+	for _, ref := range refs {
+		var altscene models.SceneAlternateSource
+		var site models.Site
+
+		if ref.ExternalSource == "stashdb scene" {
+			ressults = append(ressults, ResponseGetAlternateSources{Url: ref.ExternalReference.ExternalURL, Icon: "https://docs.stashapp.cc/favicon.ico", ExternalSource: ref.ExternalReference.ExternalSource, ExternalId: ref.ExternalReference.ExternalId, ExternalData: ref.ExternalReference.ExternalData})
+		} else {
+			json.Unmarshal([]byte(ref.ExternalReference.ExternalData), &altscene)
+			site.GetIfExist(altscene.Scene.ScraperId)
+			ressults = append(ressults, ResponseGetAlternateSources{Url: ref.ExternalReference.ExternalURL, Icon: site.AvatarURL, ExternalSource: ref.ExternalReference.ExternalSource, ExternalId: ref.ExternalReference.ExternalId, ExternalData: ref.ExternalReference.ExternalData})
+		}
+	}
+	db.Close()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, ressults)
 }

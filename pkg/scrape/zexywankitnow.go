@@ -13,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string) error {
+func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -161,8 +161,10 @@ func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 	})
 
 	siteCollector.OnHTML(`ul.pagination a.page-link`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		siteCollector.Visit(pageURL)
+		if !limitScraping {
+			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+			siteCollector.Visit(pageURL)
+		}
 	})
 
 	siteCollector.OnHTML(`div.container div.card > a`, func(e *colly.HTMLElement) {
@@ -177,7 +179,7 @@ func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit(URL)
+		siteCollector.Visit(URL + "?order=newest")
 	}
 
 	if updateSite {
@@ -187,12 +189,12 @@ func TwoWebMediaSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, 
 	return nil
 }
 
-func WankitNowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
-	return TwoWebMediaSite(wg, updateSite, knownScenes, out, singleSceneURL, "wankitnowvr", "WankitNowVR", "https://wankitnowvr.com/videos/")
+func WankitNowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	return TwoWebMediaSite(wg, updateSite, knownScenes, out, singleSceneURL, "wankitnowvr", "WankitNowVR", "https://wankitnowvr.com/videos/", limitScraping)
 }
 
-func ZexyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
-	return TwoWebMediaSite(wg, updateSite, knownScenes, out, singleSceneURL, "zexyvr", "ZexyVR", "https://zexyvr.com/videos/")
+func ZexyVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	return TwoWebMediaSite(wg, updateSite, knownScenes, out, singleSceneURL, "zexyvr", "ZexyVR", "https://zexyvr.com/videos/", limitScraping)
 }
 
 func init() {

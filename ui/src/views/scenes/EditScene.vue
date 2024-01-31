@@ -9,7 +9,7 @@
 
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">{{ $t('Edit scene details') }}</p>
+        <p class="modal-card-title">{{ this.scene.id == 0 ? $t('Display scene details') : $t('Edit scene details') }}</p>
         <button class="delete" @click="close" aria-label="close"></button>
       </header>
 
@@ -97,7 +97,7 @@
       </section>
 
       <footer class="modal-card-foot">
-        <b-field>
+        <b-field v-if="this.scene.id != 0">
           <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
           <b-button type="is-danger" outlined @click="deletescene">{{ $t('Delete Scene') }}</b-button>
         </b-field>

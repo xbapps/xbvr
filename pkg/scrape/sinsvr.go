@@ -15,7 +15,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "sinsvr"
 	siteID := "SinsVR"
@@ -120,9 +120,11 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	})
 
 	siteCollector.OnHTML(`nav.pagination a`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		if !strings.Contains(pageURL, "/join") {
-			siteCollector.Visit(pageURL)
+		if !limitScraping {
+			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+			if !strings.Contains(pageURL, "/join") {
+				siteCollector.Visit(pageURL)
+			}
 		}
 	})
 

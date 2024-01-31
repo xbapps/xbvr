@@ -14,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "naughtyamericavr"
 	siteID := "NaughtyAmerica VR"
@@ -163,8 +163,10 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 	})
 
 	siteCollector.OnHTML(`ul[class=pagination] li a`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		siteCollector.Visit(pageURL)
+		if !limitScraping {
+			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+			siteCollector.Visit(pageURL)
+		}
 	})
 
 	siteCollector.OnHTML(`div[class=site-list] div[class=scene-item] a.contain-img`, func(e *colly.HTMLElement) {

@@ -26,7 +26,7 @@ func isGoodTag(lookup string) bool {
 	return true
 }
 
-func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string, singeScrapeAdditionalInfo string) error {
+func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -138,8 +138,10 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 	})
 
 	siteCollector.OnHTML(`div.pagination a`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		siteCollector.Visit(pageURL)
+		if !limitScraping {
+			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+			siteCollector.Visit(pageURL)
+		}
 	})
 
 	siteCollector.OnHTML(`div.scene-list-item`, func(e *colly.HTMLElement) {
@@ -174,12 +176,12 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 	return nil
 }
 
-func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
-	return LethalHardcoreSite(wg, updateSite, knownScenes, out, singleSceneURL, "lethalhardcorevr", "LethalHardcoreVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95595", singeScrapeAdditionalInfo)
+func LethalHardcoreVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, singleSceneURL, "lethalhardcorevr", "LethalHardcoreVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95595&sort=released", singeScrapeAdditionalInfo, limitScraping)
 }
 
-func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
-	return LethalHardcoreSite(wg, updateSite, knownScenes, out, singleSceneURL, "whorecraftvr", "WhorecraftVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95347", singeScrapeAdditionalInfo)
+func WhorecraftVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	return LethalHardcoreSite(wg, updateSite, knownScenes, out, singleSceneURL, "whorecraftvr", "WhorecraftVR", "https://lethalhardcorevr.com/lethal-hardcore-vr-scenes.html?studio=95347&sort=released", singeScrapeAdditionalInfo, limitScraping)
 }
 
 func init() {

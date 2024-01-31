@@ -44,6 +44,7 @@
           <InterfaceDLNA v-show="active==='interface_dlna'"/>
           <InterfaceDeoVR v-show="active==='interface_deovr'"/>
           <InterfaceAdvanced v-show="active==='interface_advanced'"/>
+          <SceneMatchParams v-if="showMatchParamsOverlay"/>
         </div>
       </div>
 
@@ -64,9 +65,10 @@ import Previews from './sections/Previews.vue'
 import Schedules from './sections/Schedules.vue'
 import InterfaceDeoVR from './sections/InterfaceDeoVR.vue'
 import InterfaceAdvanced from './sections/InterfaceAdvanced.vue'
+import SceneMatchParams from './overlays/SceneMatchParams.vue'
 
 export default {
-  components: { Storage, SceneDataScrapers, SceneCreate, Funscripts, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews, Schedules, InterfaceAdvanced },
+  components: { Storage, SceneDataScrapers, SceneCreate, Funscripts, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews, Schedules, InterfaceAdvanced,SceneMatchParams },
   data: function () {
     return {
       active: 'storage'
@@ -76,6 +78,23 @@ export default {
     setActive: function (e) {
       this.active = e
     }
-  }
+  },
+  computed: {
+    showMatchParamsOverlay () {      
+      return this.$store.state.overlay.sceneMatchParams.show
+    },
+    showSceneCreate() {
+      if (this.$store.state.optionsSceneCreate.showSceneCreate){
+        this.setActive('create-scene')
+        this.$store.commit('optionsSceneCreate/showSceneCreate', false )
+      }
+      return this.$store.state.optionsSceneCreate.showSceneCreate;
+    },
+  },
+  watch: {
+    showSceneCreate(newValue, oldValue) {
+      // dummy watch to trigger the computed function
+    },
+  },
 }
 </script>

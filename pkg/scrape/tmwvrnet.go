@@ -10,10 +10,11 @@ import (
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "tmwvrnet"
 	siteID := "TmwVRnet"
@@ -30,6 +31,8 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc.Studio = "TeenMegaWorld"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.MembersUrl = strings.Replace(sc.HomepageURL, "https://tmwvrnet.com/trailers/", "https://"+config.Config.ScraperSettings.TMWVRNet.TmwMembersDomain+"/scenes/", 1)
+		sc.MembersUrl = strings.Replace(sc.MembersUrl, ".html", "_vids.html", 1)
 
 		// Date & Duration
 		e.ForEach(`.video-info-data`, func(id int, e *colly.HTMLElement) {
@@ -100,9 +103,11 @@ func TmwVRnet(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	})
 
 	siteCollector.OnHTML(`a.pagination-element__link`, func(e *colly.HTMLElement) {
-		if strings.Contains(e.Text, "Next") {
-			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-			siteCollector.Visit(pageURL)
+		if !limitScraping {
+			if strings.Contains(e.Text, "Next") {
+				pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+				siteCollector.Visit(pageURL)
+			}
 		}
 	})
 

@@ -54,7 +54,7 @@ require (
 	github.com/thoas/go-funk v0.9.3
 	github.com/tidwall/gjson v1.17.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	github.com/xo/dburl v0.20.2
+	github.com/xo/dburl v0.21.1
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0
 	golang.org/x/oauth2 v0.16.0
@@ -74,7 +74,7 @@ require (
 	github.com/antchfx/xpath v1.1.10 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
-	github.com/blevesearch/bleve_index_api v1.1.4
+	github.com/blevesearch/bleve_index_api v1.1.5
 	github.com/blevesearch/geo v0.1.18 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
 	github.com/blevesearch/gtreap v0.1.1 // indirect
@@ -149,6 +149,5 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	willnorris.com/go/gifresize v1.0.0 // indirect
 )

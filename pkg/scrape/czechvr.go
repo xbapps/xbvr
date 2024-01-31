@@ -14,11 +14,10 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, nwID string, singeScrapeAdditionalInfo string) error {
+func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, nwID string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
-	db, _ := models.GetDB()
-	defer db.Close()
+	commonDb, _ := models.GetCommonDB()
 
 	sceneCollector := createCollector("www.czechvrnetwork.com")
 	siteCollector := createCollector("www.czechvrnetwork.com")
@@ -151,8 +150,10 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	})
 
 	siteCollector.OnHTML(`div#StrankovaniDesktop span.stred a,div#StrankovaniDesktopHome span.stred a`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href") + "&sites=" + nwID)
-		siteCollector.Visit(pageURL)
+		if !limitScraping {
+			pageURL := e.Request.AbsoluteURL(e.Attr("href") + "&sites=" + nwID)
+			siteCollector.Visit(pageURL)
+		}
 	})
 
 	siteCollector.OnHTML(`div.postTag`, func(e *colly.HTMLElement) {
@@ -167,7 +168,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		if config.Config.Funscripts.ScrapeFunscripts {
 			e.ForEach(`div.iconinteractive`, func(id int, e *colly.HTMLElement) {
 				var existingScene models.Scene
-				existingScene.GetIfExistURL(sceneURL)
+				commonDb.Where(&models.Scene{SceneURL: sceneURL}).First(&existingScene)
 				if existingScene.ID != 0 && existingScene.ScriptPublished.IsZero() {
 					var sc models.ScrapedScene
 					sc.InternalSceneId = existingScene.ID
@@ -184,7 +185,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos&sites=" + nwID)
+		siteCollector.Visit("https://www.czechvrnetwork.com/vr-porn-videos&sort=date&sites=" + nwID)
 	}
 
 	if updateSite {
@@ -196,15 +197,15 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 }
 
 func addCZVRScraper(id string, name string, nwid string, avatarURL string) {
-	registerScraper(id, name, avatarURL, "czechvrnetwork.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
-		return CzechVR(wg, updateSite, knownScenes, out, singleSceneURL, id, name, nwid, singeScrapeAdditionalInfo)
+	registerScraper(id, name, avatarURL, "czechvrnetwork.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		return CzechVR(wg, updateSite, knownScenes, out, singleSceneURL, id, name, nwid, singeScrapeAdditionalInfo, limitScraping)
 	})
 }
 
 func init() {
 	// scraper for scraping single scenes where only the url is provided
-	registerScraper("czechvr-single_scene", "Czech VR - Other Studios", "", "czechvrnetwork.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
-		return CzechVR(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "")
+	registerScraper("czechvr-single_scene", "Czech VR - Other Studios", "", "czechvrnetwork.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		return CzechVR(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "", limitScraping)
 	})
 	addCZVRScraper("czechvr", "Czech VR", "15", "https://www.czechvr.com/images/favicon/android-chrome-256x256.png")
 	addCZVRScraper("czechvrfetish", "Czech VR Fetish", "16", "https://www.czechvrfetish.com/images/favicon/android-chrome-256x256.png")

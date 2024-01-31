@@ -2,6 +2,7 @@ package models
 
 import (
 	"strings"
+	"time"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/jinzhu/gorm"
@@ -16,6 +17,7 @@ import (
 var log = &common.Log
 var dbConn *dburl.URL
 var supportedDB = []string{"mysql", "sqlite3"}
+var commonConnection *gorm.DB
 
 func parseDBConnString() {
 	var err error
@@ -78,6 +80,38 @@ func GetDB() (*gorm.DB, error) {
 	return db, nil
 }
 
+func GetCommonDB() (*gorm.DB, error) {
+	if common.EnvConfig.DebugSQL {
+		log.Debug("Getting Common DB handle from ", common.GetCallerFunctionName())
+	}
+
+	var err error
+
+	if commonConnection != nil {
+		return commonConnection, nil
+	}
+	err = retry.Do(
+		func() error {
+			commonConnection, err = gorm.Open(dbConn.Driver, dbConn.DSN)
+			commonConnection.LogMode(common.EnvConfig.DebugSQL)
+			commonConnection.DB().SetConnMaxIdleTime(4 * time.Minute)
+			if common.DBConnectionPoolSize > 0 {
+				commonConnection.DB().SetMaxOpenConns(common.DBConnectionPoolSize)
+			}
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	)
+
+	if err != nil {
+		log.Fatal("Failed to connect to database ", err)
+	}
+
+	return commonConnection, nil
+}
+
 // Lock functions
 
 func CreateLock(lock string) {
@@ -127,4 +161,5 @@ func init() {
 	common.InitPaths()
 	common.InitLogging()
 	parseDBConnString()
+	GetCommonDB()
 }

@@ -9,6 +9,10 @@ const state = {
     stashApiKey: '',
     scrapeActorAfterScene: 'true',
     useImperialEntry: 'false',
+    linkScenesAfterSceneScraping: true,
+    useAltSrcInFileMatching: true,
+    useAltSrcInScriptFilters: true,
+    ignoreReleasedBefore: null,
   }
 }
 
@@ -26,6 +30,10 @@ const actions = {
         state.advanced.stashApiKey = data.config.advanced.stashApiKey
         state.advanced.scrapeActorAfterScene = data.config.advanced.scrapeActorAfterScene
         state.advanced.useImperialEntry = data.config.advanced.useImperialEntry
+        state.advanced.linkScenesAfterSceneScraping = data.config.advanced.linkScenesAfterSceneScraping
+        state.advanced.useAltSrcInFileMatching = data.config.advanced.useAltSrcInFileMatching
+        state.advanced.useAltSrcInScriptFilters = data.config.advanced.useAltSrcInScriptFilters
+        state.advanced.ignoreReleasedBefore = data.config.advanced.ignoreReleasedBefore
         state.loading = false
       })
   },
@@ -40,6 +48,10 @@ const actions = {
         state.advanced.stashApiKey = data.stashApiKey
         state.advanced.scrapeActorAfterScene = data.scrapeActorAfterScene
         state.advanced.useImperialEntry = data.useImperialEntry
+        state.advanced.linkScenesAfterSceneScraping = data.linkScenesAfterSceneScraping
+        state.advanced.useAltSrcInFileMatching = data.useAltSrcInFileMatching
+        state.advanced.useAltSrcInScriptFilters = data.useAltSrcInScriptFilters
+        state.advanced.ignoreReleasedBefore = data.ignoreReleasedBefore
         state.loading = false
       })
   }

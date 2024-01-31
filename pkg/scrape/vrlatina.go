@@ -14,7 +14,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "vrlatina"
 	siteID := "VRLatina"
@@ -109,8 +109,10 @@ func VRLatina(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 	})
 
 	siteCollector.OnHTML(`div.pagination a`, func(e *colly.HTMLElement) {
-		pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-		siteCollector.Visit(pageURL)
+		if !limitScraping {
+			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+			siteCollector.Visit(pageURL)
+		}
 	})
 
 	siteCollector.OnHTML(`div.item-col.-video a`, func(e *colly.HTMLElement) {

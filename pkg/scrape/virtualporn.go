@@ -12,7 +12,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string) error {
+func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "bvr"
 	siteID := "VirtualPorn"
@@ -109,7 +109,9 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		if sceneCnt > 0 {
 			pageCnt += 1
-			siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
+			if !limitScraping {
+				siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
+			}
 		}
 	})
 
