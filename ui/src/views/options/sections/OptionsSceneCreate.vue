@@ -9,6 +9,7 @@
             <option value="r18d">r18.dev</option>
             <option value="javlibrary">javlibrary.com</option>
             <option value="javland">jav.land</option>
+            <option value="javlandjp">jav.land(JP)</option>
           </b-select>
           <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
           <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
