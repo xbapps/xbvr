@@ -26,7 +26,6 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	commonDb, _ := models.GetCommonDB()
 
 	// RegEx Patterns
-	coverRegEx := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
 	durationRegExForSceneCard := regexp.MustCompile(`^(?:(\d{2}):)?(\d{2}):(\d{2})$`)
 	durationRegExForScenePage := regexp.MustCompile(`^T(\d{0,2})H?(\d{2})M(\d{2})S$`)
 	filenameRegEx := regexp.MustCompile(`[:?]|( & )|( \\u0026 )`)
@@ -65,15 +64,9 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.SceneID = "slr-" + sc.SiteID
 
 		// Cover
-		coverURL := e.ChildAttr(`.splash-screen > img`, "src")
-		if len(coverURL) > 0 {
-			sc.Covers = append(sc.Covers, coverURL)
-		} else {
-			m := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.c-webxr-splash-screen`, "style")))
-			if len(m) > 0 && len(m[1]) > 0 {
-				sc.Covers = append(sc.Covers, m[1])
-			}
-		}
+		e.ForEach(`link[as="image"]`, func(id int, e *colly.HTMLElement) {
+			sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("href")))
+		})
 
 		// Gallery
 		e.ForEach(`meta[name^="twitter:image"]`, func(id int, e *colly.HTMLElement) {
