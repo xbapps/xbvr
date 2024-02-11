@@ -172,10 +172,17 @@ export default {
     },
   },
   methods: {
-    getImageURL (u) {
-      if (u.startsWith('http')) {
-        return '/img/700x/' + encodeURI(u)
-      } else {
+    getImageURL (u, size) {
+      try {
+        if (u.startsWith('http')) {
+          if (strpos(u, "%") !== false) {
+            return '/img/' + size + '/' + decodeURI(u)
+          }
+          return '/img/' + size + '/' + encodeURI(u)
+        } else {
+          return u
+        }
+      } catch {
         return u
       }
     },
