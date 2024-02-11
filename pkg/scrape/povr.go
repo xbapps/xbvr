@@ -159,6 +159,10 @@ func addPOVRScraper(id string, name string, company string, avatarURL string, cu
 	} else {
 		suffixedName += " (POVR)"
 	}
+	if avatarURL == "" {
+		avatarURL = "https://images.povr.com/img/povr/android-icon-192x192.png"
+	}
+
 	if masterSiteId == "" {
 		registerScraper(id, suffixedName, avatarURL, "povr.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return POVR(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, "")
