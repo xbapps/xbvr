@@ -179,6 +179,10 @@ func addVRPornScraper(id string, name string, company string, avatarURL string, 
 	} else {
 		suffixedName += " (VRPorn)"
 	}
+	if avatarURL == "" {
+		avatarURL = "https://vrporn.com/assets/favicon.png"
+	}
+
 	if masterSiteId == "" {
 		registerScraper(id, suffixedName, avatarURL, "vrporn.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return VRPorn(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, "")
