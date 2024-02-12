@@ -114,7 +114,7 @@
         <div class="column">
           <section>
             <b-field>
-              <b-tooltip :label="$t('Scenes from Akternate Sites will be matched after Scene Scraping')" :delay="500">
+              <b-tooltip :label="$t('Scenes from Alternate Sites will be matched after Scene Scraping')" :delay="500">
                 <b-switch v-model="linkScenesAfterSceneScraping" type="is-default">
                   Link Scenes after Scene Scraping
                 </b-switch>
