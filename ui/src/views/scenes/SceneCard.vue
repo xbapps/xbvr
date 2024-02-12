@@ -173,18 +173,7 @@ export default {
   },
   methods: {
     getImageURL (u, size) {
-      try {
-        if (u.startsWith('http')) {
-          if (strpos(u, "%") !== false) {
-            return '/img/' + size + '/' + decodeURI(u)
-          }
-          return '/img/' + size + '/' + encodeURI(u)
-        } else {
-          return u
-        }
-      } catch {
-        return u
-      }
+          return '/img/700x/' + u
     },
     showDetails (scene) {
       // reRead is required when the SceneCard is clicked from the ActorDetails
