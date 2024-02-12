@@ -783,6 +783,9 @@ watch:{
       }
       try {
         if (u.startsWith('http') || u.startsWith('https')) {
+          if (strpos(u, "%") !== false) {
+            return '/img/' + size + '/' + decodeURI(u)
+          }
           return '/img/' + size + '/' + encodeURI(u)
         } else {
           return u
