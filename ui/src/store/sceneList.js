@@ -166,7 +166,10 @@ const actions = {
     q.limit = state.limit
 
     const data = await ky
-      .post('/api/scene/list', { json: q })
+      .post('/api/scene/list', {
+        json: q,
+        timeout: 6e6
+      })
       .json()
 
     state.isLoading = false
