@@ -172,8 +172,15 @@ export default {
     },
   },
   methods: {
-    getImageURL (u, size) {
-          return '/img/700x/' + u
+    getImageURL (u) {
+        if (u.startsWith('http') == false) {
+        return u
+        }
+          if (u.search("%") == -1) {
+            return '/img/700x/' + encodeURI(u)
+          } else {
+            return '/img/700x/' + encodeURI(decodeURI(u))
+          } 
     },
     showDetails (scene) {
       // reRead is required when the SceneCard is clicked from the ActorDetails

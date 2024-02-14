@@ -782,12 +782,12 @@ watch:{
         return u
       }
       try {
-        if (u.startsWith('http') || u.startsWith('https')) {
-          if (strpos(u, "%") !== false) {
-            return '/img/' + size + '/' + decodeURI(u)
-          }
-          return '/img/' + size + '/' + encodeURI(u)
-        } else {
+        if (u.startsWith('http')) {
+          if (u.search("%") == -1) {
+            return '/img/' + size + '/' + encodeURI(u)
+          } else {
+            return '/img/' + size + '/' + encodeURI(decodeURI(u))
+          } 
           return u
         }
       } catch {
