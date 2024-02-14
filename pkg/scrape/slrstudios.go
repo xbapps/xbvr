@@ -3,6 +3,7 @@ package scrape
 import (
 	"encoding/json"
 	"html"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -171,7 +172,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 						unescapedURL, err := url.QueryUnescape(posterURL)
 						sc.Covers = append(sc.Covers, unescapedURL)
 						posterURLFound = true
-						}
+					}
 				}
 			})
 		}
