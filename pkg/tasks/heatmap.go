@@ -10,10 +10,12 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -64,9 +66,13 @@ func GenerateHeatmaps(tlog *logrus.Entry) {
 		var scriptfiles []models.File
 		db.Model(&models.File{}).Preload("Volume").Where("type = ?", "script").Where("has_heatmap = ?", false).Find(&scriptfiles)
 
+		lastProgressUpdate := time.Now()
 		for i, file := range scriptfiles {
-			if tlog != nil && (i%50) == 0 {
-				tlog.Infof("Generating heatmaps (%v/%v)", i+1, len(scriptfiles))
+			if tlog != nil {
+				if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
+					tlog.Infof("Generating heatmaps (%v/%v)", i+1, len(scriptfiles))
+					lastProgressUpdate = time.Now()
+				}
 			}
 			if file.Exists() {
 				log.Infof("Rendering %v", file.Filename)

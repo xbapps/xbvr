@@ -72,6 +72,7 @@ func RescanVolumes(id int) {
 			return buffer.String()
 		}
 
+		lastProgressUpdate := time.Now()
 		for i := range files {
 			unescapedFilename := path.Base(files[i].Filename)
 			filename := escape(unescapedFilename)
@@ -157,8 +158,9 @@ func RescanVolumes(id int) {
 				}
 			}
 
-			if (i % 50) == 0 {
+			if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 				tlog.Infof("Matching Scenes to known filenames (%v/%v)", i+1, len(files))
+				lastProgressUpdate = time.Now()
 			}
 		}
 
@@ -458,10 +460,12 @@ func RefreshSceneStatuses() {
 	var scenes []models.Scene
 	db.Model(&models.Scene{}).Find(&scenes)
 
+	lastProgressUpdate := time.Now()
 	for i := range scenes {
 		scenes[i].UpdateStatus()
-		if (i % 70) == 0 {
+		if time.Since(lastProgressUpdate) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
 			tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+			lastProgressUpdate = time.Now()
 		}
 	}
 
