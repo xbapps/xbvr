@@ -27,6 +27,11 @@ import (
 
 var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
 
+func ExtractFormat(input string) []string {
+	re := regexp.MustCompile(`[A-Z]{4}-\d{3,4}`)
+	return re.FindAllString(input, -1)
+}
+
 func RescanVolumes(id int) {
 	if !models.CheckLock("rescan") {
 		models.CreateLock("rescan")
@@ -82,6 +87,15 @@ func RescanVolumes(id int) {
 			if err != nil {
 				log.Error(err, " when matching "+unescapedFilename)
 			}
+
+			if len(scenes) == 0 {
+				queryString := ExtractFormat(unescapedFilename)
+				if len(queryString) > 0 {
+					ScrapeJAVR(queryString[0] ,"dmm") 
+				}
+			}
+
+
 			if len(scenes) == 0 && config.Config.Advanced.UseAltSrcInFileMatching {
 				// check if the filename matches in external_reference record
 
