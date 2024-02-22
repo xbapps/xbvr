@@ -443,10 +443,15 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	// Clean & Associate Actors
 	db.Model(&o).Association("Cast").Clear()
 	var tmpActor Actor
+	cnt := 0
 	for _, name := range ext.Cast {
+
+		log.Infof("name:" + name)
+
 		tmpActor = Actor{}
 		db.Where(&Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&tmpActor)
 		saveActor := false
+
 		if ext.ActorDetails[name].ImageUrl != "" {
 			if tmpActor.ImageUrl == "" {
 				tmpActor.ImageUrl = ext.ActorDetails[name].ImageUrl
@@ -461,6 +466,16 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 				saveActor = true
 			}
 		}
+
+		if ext.Aliases != nil && ext.Aliases[cnt] != "" {
+			if tmpActor.Aliases == "" {
+				tmpActor.Aliases = "[\"" + ext.Aliases[cnt] + "\"]"
+				log.Infof("add aliases:" + ext.Aliases[cnt])
+				saveActor = true
+			}
+		}
+		cnt++
+
 		if saveActor {
 			tmpActor.Save()
 		}
