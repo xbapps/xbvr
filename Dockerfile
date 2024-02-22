@@ -6,7 +6,7 @@ RUN apt-get update && \
 
 COPY xbvr /usr/bin/xbvr
 
-EXPOSE 9998-9999
+EXPOSE 9996-9997
 VOLUME /root/.config/
 
 CMD ["/usr/bin/xbvr"]
