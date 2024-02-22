@@ -369,7 +369,10 @@ func ScrapeJAVR(queryString string, scraper string) {
 		// Start scraping
 		var collectedScenes []models.ScrapedScene
 
-		if scraper == "javlibrary" {
+		if scraper == "dmm" {
+			tlog.Info("Scraping dmm")
+			scrape.ScrapeDMMapi(&collectedScenes, queryString)
+		} else if scraper == "javlibrary" {
 			tlog.Infof("Scraping JavLibrary")
 			scrape.ScrapeJavLibrary(&collectedScenes, queryString)
 		} else if scraper == "r18d" {
