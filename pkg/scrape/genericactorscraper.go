@@ -197,18 +197,25 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 	actorChanged := false
 	if rules.IsJson {
 		actorCollector.OnResponse(func(r *colly.Response) {
+			log.Info("Colly OnResponse")
+
 			if r.StatusCode != 200 {
 				return
 			}
+			
 			resp := gjson.ParseBytes(r.Body)
+			log.Info("Colly Body:" + fmt.Sprintf("%s", r.Body ))
 			for _, rule := range rules.SiteRules {
 				var results []string
 				if rule.Native != nil {
 					results = rule.Native(&resp)
 				} else {
+					log.Info ("Selector:" + rule.Selector)
 					results = []string{resp.Get(rule.Selector).String()}
 					if len(rule.PostProcessing) > 0 {
+
 						results[0] = postProcessing(rule, results[0], nil)
+						log.Info ("postProcessing:" + results[0])
 					}
 				}
 
