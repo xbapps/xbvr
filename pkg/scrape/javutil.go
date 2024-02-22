@@ -30,6 +30,10 @@ func ProcessJavrTag(tag string) string {
 		"solowork":               true,
 		"dmm exclusive":          true,
 		"over 4 hours":           true,
+		"vr専用": true,
+		"独占配信":true,
+		"単体作品":true,
+		"3d":true,
 	}
 	if skiptags[taglower] {
 		return ""
@@ -55,13 +59,12 @@ func ProcessJavrTag(tag string) string {
 	}
 
 	// Leave out some japanese text tags
-	matched, err := regexp.Match("[^a-z0-9_\\- /&()\\+]", []byte(taglower))
-	if matched || err != nil {
-		return ""
-	}
+//	matched, err := regexp.Match("[^a-z0-9_\\- /&()\\+]", []byte(taglower))
+//	if matched || err != nil {
+//		return ""
+//	}
 
-	// keep tag as-is (but lowercase)
-	return taglower
+	return tag
 }
 
 func determineContentId(sc *models.ScrapedScene) string {
