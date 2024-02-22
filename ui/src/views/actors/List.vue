@@ -74,6 +74,17 @@
           <b-radio-button v-model="jumpTo" native-value="T" size="is-small">T</b-radio-button>
           <b-radio-button v-model="jumpTo" native-value="U" size="is-small">U/V</b-radio-button>          
           <b-radio-button v-model="jumpTo" native-value="W" size="is-small">W/X/Y/Z</b-radio-button>
+          <b-radio-button v-model="jumpTo" native-value="あ" size="is-small">あ</b-radio-button>          
+          <b-radio-button v-model="jumpTo" native-value="か" size="is-small">か</b-radio-button>
+          <b-radio-button v-model="jumpTo" native-value="さ" size="is-small">さ</b-radio-button>          
+          <b-radio-button v-model="jumpTo" native-value="た" size="is-small">た</b-radio-button>
+          <b-radio-button v-model="jumpTo" native-value="な" size="is-small">な</b-radio-button>          
+          <b-radio-button v-model="jumpTo" native-value="は" size="is-small">は</b-radio-button>
+          <b-radio-button v-model="jumpTo" native-value="ま" size="is-small">ま</b-radio-button>          
+          <b-radio-button v-model="jumpTo" native-value="や" size="is-small">や</b-radio-button>
+          <b-radio-button v-model="jumpTo" native-value="ら" size="is-small">ら</b-radio-button>          
+          <b-radio-button v-model="jumpTo" native-value="わ" size="is-small">わ</b-radio-button>
+
         </div>
 
     <div class="is-clearfix"></div>

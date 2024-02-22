@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"fmt"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/jinzhu/gorm"
@@ -94,6 +95,18 @@ type ResponseActorList struct {
 type ActorLink struct {
 	Url  string `json:"url"`
 	Type string `json:"type"`
+}
+
+func getFirstCharFromJSON(jsonStr string) (rune, error) {
+	var arr []string
+	err := json.Unmarshal([]byte(jsonStr), &arr)
+	if err != nil {
+		return 0, err
+	}
+	if len(arr) > 0 && len(arr[0]) > 0 {
+		return []rune(arr[0])[0], nil
+	}
+	return 0, fmt.Errorf("empty array or empty first element")
 }
 
 func (i *Actor) Save() error {
@@ -416,9 +429,9 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 
 	switch r.Sort.OrElse("") {
 	case "name_asc":
-		tx = tx.Order("name asc")
+		tx = tx.Order("actors.aliases asc")
 	case "name_desc":
-		tx = tx.Order("name desc")
+		tx = tx.Order("actors.aliases desc")
 	case "rating_desc":
 		tx = tx.
 			Where("actors.star_rating > ?", 0).
@@ -474,15 +487,39 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 		return db.Order("release_date DESC").Where("is_hidden = 0")
 	})
 
+	log.Info("JumpTo initial:" + r.JumpTo.OrElse(""))
 	if r.JumpTo.OrElse("") != "" {
 		// if we want to jump to actors starting with a specific letter, then we need to work out the offset to them
 		cnt := 0
-		txList := tx.Select(`distinct actors.name`)
+		txList := tx.Select(`distinct actors.name, actors.aliases`)
 		txList.Find(&out.Actors)
+
+		log.Info("count:" + strconv.Itoa(len(out.Actors)))
 		for idx, actor := range out.Actors {
+			/*
 			if strings.ToLower(actor.Name) >= strings.ToLower(r.JumpTo.OrElse("")) {
 				break
 			}
+			*/
+
+			/*
+			log.Info("JumpTo " + r.JumpTo.OrElse(""))
+			log.Info("Name:" + actor.Name)
+			log.Info("Aliases: " + actor.Aliases)
+			*/
+			firstChar, err :=  getFirstCharFromJSON(actor.Aliases)
+			if err != nil {
+
+			} else {
+				log.Info("fistchar=" + string(firstChar) )
+
+				if actor.Aliases != "" {
+					if string(firstChar) >= r.JumpTo.OrElse("") {
+						break
+					}
+				}
+			}
+
 			cnt = idx
 		}
 		offset = (cnt / limit) * limit

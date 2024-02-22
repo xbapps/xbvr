@@ -12,7 +12,7 @@
     </div>
 
     <div style="padding-top:4px;">
-      <div class="scene_title">{{actor.name}}</div>
+      <div class="scene_title">{{actor.name}} {{getAliases(actor.aliases)}}</div>
       <a v-if="colleague!=undefined" class="button is-info is-outlined is-small"
         @click="showColleague(actor.name,colleague)"
         :title="'Show Scenes with ' + actor.name">
@@ -77,6 +77,18 @@ export default {
     },
   },
   methods: {
+    getAliases(u) {
+      if (u=='' || u == undefined) {
+        return ""
+      }
+      try {
+        const array = JSON.parse(u)
+        //return "(" + array.join(',') + ")"
+        return "(" + array[0] + ")"
+      } catch (error) {
+        return u
+      }
+    },
     getImageURL (u) {
       if (u=='' || u == undefined) {
         return "/ui/images/blank_female_profile.png"
