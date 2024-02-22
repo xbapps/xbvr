@@ -30,6 +30,7 @@ type ScrapedScene struct {
 	Gallery           []string `json:"gallery"`
 	Tags              []string `json:"tags"`
 	Cast              []string `json:"cast"`
+	Aliases           []string `json:"aliases"`
 	Filenames         []string `json:"filename"`
 	Duration          int      `json:"duration"`
 	Synopsis          string   `json:"synopsis"`
