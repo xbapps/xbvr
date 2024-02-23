@@ -63,6 +63,14 @@
                 <b-button type="is-primary" :disabled="stashApiKey==''" @click="stashdb">{{ $t('Scrape StashDB') }}</b-button>
               </b-tooltip>
             </b-field>
+            
+            <b-field :label="$t('DMM Api id')" label-position="on-border">
+              <b-input v-model="dmmApiId" placeholder="Visit https://affiliate.dmm.com/api/ to sign up to DMM-api service" type="password"></b-input>
+            </b-field>
+            <b-field :label="$t('DMM Affiliate id')" label-position="on-border">
+              <b-input v-model="dmmAffiliateId" placeholder="Visit https://affiliate.dmm.com/api/ to sign up to DMM-api service" type="password"></b-input>
+            </b-field>
+
             <b-field>
               <b-button type="is-primary" @click="scrapeXbvrActors">{{ $t('Scrape Actor Details from XBVR Sites') }}</b-button>
             </b-field>
@@ -260,6 +268,22 @@ export default {
       },
       set (value) {
         this.$store.state.optionsAdvanced.advanced.stashApiKey = value
+      }
+    },
+    dmmApiId: {
+      get () {
+        return this.$store.state.optionsAdvanced.advanced.dmmApiId
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.dmmApiId = value
+      }
+    },
+    dmmAffiliateId: {
+      get () {
+        return this.$store.state.optionsAdvanced.advanced.dmmAffiliateId
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.dmmAffiliateId = value
       }
     },
     useImperialEntry: {

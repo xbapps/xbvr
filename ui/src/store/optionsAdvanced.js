@@ -7,6 +7,8 @@ const state = {
     showHSPApiLink: false,
     showSceneSearchField: false,
     stashApiKey: '',
+    dmmApiId: '',
+    dmmAffiliateId: '',
     scrapeActorAfterScene: 'true',
     useImperialEntry: 'false',
     linkScenesAfterSceneScraping: true,
@@ -28,6 +30,8 @@ const actions = {
         state.advanced.showHSPApiLink = data.config.advanced.showHSPApiLink
         state.advanced.showSceneSearchField = data.config.advanced.showSceneSearchField
         state.advanced.stashApiKey = data.config.advanced.stashApiKey
+        state.advanced.dmmApiId = data.config.advanced.dmmApiId
+        state.advanced.dmmAffiliateId = data.config.advanced.dmmAffiliateId
         state.advanced.scrapeActorAfterScene = data.config.advanced.scrapeActorAfterScene
         state.advanced.useImperialEntry = data.config.advanced.useImperialEntry
         state.advanced.linkScenesAfterSceneScraping = data.config.advanced.linkScenesAfterSceneScraping
@@ -46,6 +50,8 @@ const actions = {
         state.advanced.showHSPApiLink = data.showHSPApiLink
         state.advanced.showSceneSearchField = data.showSceneSearchField
         state.advanced.stashApiKey = data.stashApiKey
+        state.advanced.dmmApiId = data.dmmApiId
+        state.advanced.dmmAffiliateId = data.dmmAffiliateId
         state.advanced.scrapeActorAfterScene = data.scrapeActorAfterScene
         state.advanced.useImperialEntry = data.useImperialEntry
         state.advanced.linkScenesAfterSceneScraping = data.linkScenesAfterSceneScraping

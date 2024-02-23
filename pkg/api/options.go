@@ -66,6 +66,8 @@ type RequestSaveOptionsAdvanced struct {
 	ShowHSPApiLink               bool      `json:"showHSPApiLink"`
 	ShowSceneSearchField         bool      `json:"showSceneSearchField"`
 	StashApiKey                  string    `json:"stashApiKey"`
+	DmmApiId                     string    `json:"dmmApiId"`
+	DmmAffiliateId               string    `json:"dmmAffiliateId"
 	ScrapeActorAfterScene        bool      `json:"scrapeActorAfterScene"`
 	UseImperialEntry             bool      `json:"useImperialEntry"`
 	LinkScenesAfterSceneScraping bool      `json:"linkScenesAfterSceneScraping"`
@@ -488,6 +490,8 @@ func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.
 	config.Config.Advanced.ShowHSPApiLink = r.ShowHSPApiLink
 	config.Config.Advanced.ShowSceneSearchField = r.ShowSceneSearchField
 	config.Config.Advanced.StashApiKey = r.StashApiKey
+	config.Config.Advanced.DmmApiId = r.DmmApiId
+	config.Config.Advanced.DmmAffiliateId = r.DmmAffiliateId
 	config.Config.Advanced.ScrapeActorAfterScene = r.ScrapeActorAfterScene
 	config.Config.Advanced.UseImperialEntry = r.UseImperialEntry
 	config.Config.Advanced.LinkScenesAfterSceneScraping = r.LinkScenesAfterSceneScraping
