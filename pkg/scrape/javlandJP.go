@@ -10,7 +10,6 @@ import (
 
 func ScrapeJavLandJP(out *[]models.ScrapedScene, queryString string) {
 
-
 	sceneCollector := createCollector("jav.land")
 	sceneCollector.OnHTML(`html`, func(html *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -32,7 +31,6 @@ func ScrapeJavLandJP(out *[]models.ScrapedScene, queryString string) {
 			value := tds.Last().Text()
 
 			if label == `メーカー:` {
-			if label == `メーカー:` {
 				// Studio
 				sc.Studio = value
 
@@ -50,12 +48,10 @@ func ScrapeJavLandJP(out *[]models.ScrapedScene, queryString string) {
 				}
 
 			} else if label == `発売日:` {
-			} else if label == `発売日:` {
 				// Release date
 				tmpDate, _ := goment.New(strings.TrimSpace(value), "YYYY-MM-DD")
 				sc.Released = tmpDate.Format("YYYY-MM-DD")
 
-			} else if label == `ジャンル:` {
 			} else if label == `ジャンル:` {
 				// Tags
 				tr.ForEach("span.genre > a", func(id int, anchor *colly.HTMLElement) {
@@ -71,7 +67,6 @@ func ScrapeJavLandJP(out *[]models.ScrapedScene, queryString string) {
 				})
 
 			} else if label == `出演者:` {
-			} else if label == `出演者:` {
 				// Tags
 				tr.ForEach("span.star > a", func(id int, anchor *colly.HTMLElement) {
 					href := anchor.Attr("href")
@@ -81,7 +76,6 @@ func ScrapeJavLandJP(out *[]models.ScrapedScene, queryString string) {
 					}
 				})
 
-			} else if label == `品番:` {
 			} else if label == `品番:` {
 				contentId = value
 			}
@@ -100,19 +94,15 @@ func ScrapeJavLandJP(out *[]models.ScrapedScene, queryString string) {
 
 		// Synopsis
 		title := html.DOM.Find("title")
-		//title := html.Find("title")
-		//title := html.Find("title")
 		if title != nil && title.Length() == 1 {
 			descr := title.Text()
 			descr = strings.ReplaceAll(descr, "- JAV.Land", "")
 			sc.Synopsis = descr
 			sc.Title = descr
-			sc.Title = descr
 		}
 
 		// Apply post-processing for error-correcting code
 		PostProcessJavScene(&sc, contentId)
-		ScrapeJavLandEnglishname(&sc, queryString)
 		ScrapeJavLandEnglishname(&sc, queryString)
 
 		if sc.SceneID != "" {
@@ -123,13 +113,11 @@ func ScrapeJavLandJP(out *[]models.ScrapedScene, queryString string) {
 	// Allow comma-separated scene id's
 	scenes := strings.Split(queryString, ",")
 	for _, v := range scenes {
-		sceneCollector.Visit("https://jav.land/ja/id_search.php?keys=" + strings.ToLower(v))		
-		sceneCollector.Visit("https://jav.land/ja/id_search.php?keys=" + strings.ToLower(v))		
+		sceneCollector.Visit("https://jav.land/ja/id_search.php?keys=" + strings.ToLower(v))
 	}
 
 	sceneCollector.Wait()
 }
-
 
 func ScrapeJavLandEnglishname(sc *models.ScrapedScene, queryString string) {
 	log.Println("ScrapeJavLandEnglishname.")
@@ -161,7 +149,7 @@ func ScrapeJavLandEnglishname(sc *models.ScrapedScene, queryString string) {
 					cnt++
 				})
 
-			} 
+			}
 		})
 
 	})
