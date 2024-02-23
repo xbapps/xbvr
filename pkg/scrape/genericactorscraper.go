@@ -202,20 +202,20 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 			if r.StatusCode != 200 {
 				return
 			}
-			
+
 			resp := gjson.ParseBytes(r.Body)
-			log.Info("Colly Body:" + fmt.Sprintf("%s", r.Body ))
+			log.Info("Colly Body:" + fmt.Sprintf("%s", r.Body))
 			for _, rule := range rules.SiteRules {
 				var results []string
 				if rule.Native != nil {
 					results = rule.Native(&resp)
 				} else {
-					log.Info ("Selector:" + rule.Selector)
+					log.Info("Selector:" + rule.Selector)
 					results = []string{resp.Get(rule.Selector).String()}
 					if len(rule.PostProcessing) > 0 {
 
 						results[0] = postProcessing(rule, results[0], nil)
-						log.Info ("postProcessing:" + results[0])
+						log.Info("postProcessing:" + results[0])
 					}
 				}
 
@@ -273,10 +273,15 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 			}
 		})
 	}
+
+	actorPageUrl := actorPage
+	if domainMatch(actorPage, "*.dmm.com") {
+		actorPageUrl, _ = addAPIParam(actorPageUrl)
+	}
 	if rules.IsJson {
-		actorCollector.Request("GET", actorPage, nil, nil, nil)
+		actorCollector.Request("GET", actorPageUrl, nil, nil, nil)
 	} else {
-		actorCollector.Visit(actorPage)
+		actorCollector.Visit(actorPageUrl)
 	}
 	var extref models.ExternalReference
 	var extreflink models.ExternalReferenceLink
