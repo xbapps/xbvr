@@ -3,26 +3,28 @@ package scrape
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
 const (
-	dmm_appid                     = "tgtffqLHzh222mT2sN59"
-	dmm_affiliateid               = "motopixie-991"
-	PARAM_SORT                    = "match"
-	count                         = "20"
-	dmm_BaseAddress               = "https://api.dmm.com/"
-	dmm_itemListSearchDigitalUrl  = dmm_BaseAddress + "affiliate/v3/ItemList?api_id=" + dmm_appid + "&affiliate_id=" + dmm_affiliateid + "&site=FANZA&service=digital&sort=" + PARAM_SORT + "&output=json"
-	dmm_actorListSearchDigitalUrl = dmm_BaseAddress + "affiliate/v3/ActressSearch?api_id=" + dmm_appid + "&affiliate_id=" + dmm_affiliateid + "&actress_id="
+	PARAM_SORT      = "match"
+	count           = "2"
+	dmm_BaseAddress = "https://api.dmm.com/"
+	//dmm_itemListSearchDigitalUrl  = dmm_BaseAddress + "affiliate/v3/ItemList?api_id=" + dmm_appid + "&affiliate_id=" + dmm_affiliateid + "&site=FANZA&service=digital&sort=" + PARAM_SORT + "&output=json"
+	dmm_itemListSearchDigitalUrl  = dmm_BaseAddress + "affiliate/v3/ItemList?site=FANZA&service=digital&output=json&sort=" + PARAM_SORT
+	dmm_actorListSearchDigitalUrl = dmm_BaseAddress + "affiliate/v3/ActressSearch"
 )
 
 type JSONResponse struct {
@@ -118,6 +120,36 @@ type JSONResponse struct {
 		Status      int64 `json:"status"`
 		TotalCount  int64 `json:"total_count"`
 	} `json:"result"`
+}
+
+func addAPIParam(originalURL string) (string, error) {
+
+	if config.Config.Advanced.DmmApiId == "" || config.Config.Advanced.DmmAffiliateId == "" {
+		return "", errors.New("is not set DmmApiId and DmmAffiliateId param")
+	}
+
+	parsedURL, err := url.Parse(originalURL)
+	if err != nil {
+		return "", err
+	}
+
+	queryParams := parsedURL.Query()
+	queryParams.Set("api_id", config.Config.Advanced.DmmApiId)
+	queryParams.Set("affiliate_id", config.Config.Advanced.DmmAffiliateId)
+	parsedURL.RawQuery = queryParams.Encode()
+
+	return parsedURL.String(), nil
+}
+
+func addQueryParam(originalURL string, paramname string, value string) (string, error) {
+	parsedURL, err := url.Parse(originalURL)
+	if err != nil {
+		return "", err
+	}
+	queryParams := parsedURL.Query()
+	queryParams.Set(paramname, value)
+	parsedURL.RawQuery = queryParams.Encode()
+	return parsedURL.String(), nil
 }
 
 func ConvertFormat(input string) string {
@@ -251,12 +283,15 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 		for _, item := range jsonResponse.Result.Items[0].Iteminfo.Actress {
 			sc.Cast = append(sc.Cast, item.Name)
 			sc.Aliases = append(sc.Aliases, item.Ruby)
-			url := dmm_actorListSearchDigitalUrl + strconv.FormatInt(item.ID, 10)
-			log.Info("actordetail url:" + url)
-			log.Info("detail :" + sc.ActorDetails[item.Name].Source)
-			sc.ActorDetails[item.Name] = models.ActorDetails{Source: "dmm scrape", ProfileUrl: url}
-			log.Info("add actordetail name:" + item.Name)
-			log.Info("add actor profileurl:" + sc.ActorDetails[item.Name].ProfileUrl)
+			actressurl, err := addQueryParam(dmm_actorListSearchDigitalUrl, "actress_id", strconv.FormatInt(item.ID, 10))
+			if err != nil {
+				//url := Addquedmm_actorListSearchDigitalUrl + strconv.FormatInt(item.ID, 10)
+				log.Info("actordetail url:" + actressurl)
+				log.Info("detail :" + sc.ActorDetails[item.Name].Source)
+				sc.ActorDetails[item.Name] = models.ActorDetails{Source: "dmm scrape", ProfileUrl: actressurl}
+				log.Info("add actordetail name:" + item.Name)
+				log.Info("add actor profileurl:" + sc.ActorDetails[item.Name].ProfileUrl)
+			}
 		}
 
 		log.Info("(3)" + sc.SceneID)
@@ -279,8 +314,22 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 
 	// Allow comma-separated scene id's
 	scenes := strings.Split(queryString, ",")
+	queryurl, err := addAPIParam(dmm_itemListSearchDigitalUrl)
+	if err != nil {
+		return
+	}
+	queryurl, err = addQueryParam(queryurl, "hits", count)
+	if err != nil {
+		return
+	}
+
 	for _, v := range scenes {
-		sceneCollector.Visit(dmm_itemListSearchDigitalUrl + "&hits=" + count + "&keyword=" + ConvertFormat(strings.ToLower(v)))
+		queryurl, err = addQueryParam(queryurl, "keyword", ConvertFormat(strings.ToLower(v)))
+		if err == nil {
+			//sceneCollector.Visit(dmm_itemListSearchDigitalUrl + "&hits=" + count + "&keyword=" + ConvertFormat(strings.ToLower(v)))
+			sceneCollector.Visit(queryurl)
+		}
+
 	}
 
 	sceneCollector.Wait()

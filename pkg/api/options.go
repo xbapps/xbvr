@@ -67,7 +67,7 @@ type RequestSaveOptionsAdvanced struct {
 	ShowSceneSearchField         bool      `json:"showSceneSearchField"`
 	StashApiKey                  string    `json:"stashApiKey"`
 	DmmApiId                     string    `json:"dmmApiId"`
-	DmmAffiliateId               string    `json:"dmmAffiliateId"
+	DmmAffiliateId               string    `json:"dmmAffiliateId"`
 	ScrapeActorAfterScene        bool      `json:"scrapeActorAfterScene"`
 	UseImperialEntry             bool      `json:"useImperialEntry"`
 	LinkScenesAfterSceneScraping bool      `json:"linkScenesAfterSceneScraping"`
