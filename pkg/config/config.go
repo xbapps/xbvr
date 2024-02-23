@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/creasty/defaults"
-
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
