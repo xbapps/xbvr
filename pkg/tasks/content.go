@@ -375,6 +375,9 @@ func ScrapeJAVR(queryString string, scraper string) {
 		} else if scraper == "javlibrary" {
 			tlog.Infof("Scraping JavLibrary")
 			scrape.ScrapeJavLibrary(&collectedScenes, queryString)
+		} else if scraper == "javlibraryjp" {
+			tlog.Infof("Scraping JavLibrary(JP)")
+			scrape.ScrapeJavLibraryJP(&collectedScenes, queryString)
 		} else if scraper == "r18d" {
 			tlog.Infof("Scraping R18.dev")
 			scrape.ScrapeR18D(&collectedScenes, queryString)
@@ -382,8 +385,8 @@ func ScrapeJAVR(queryString string, scraper string) {
 			tlog.Infof("Scraping JavLand")
 			scrape.ScrapeJavLand(&collectedScenes, queryString)
 		} else if scraper == "javlandjp" {
-				tlog.Infof("Scraping JavLand(JP)")
-				scrape.ScrapeJavLandJP(&collectedScenes, queryString)
+			tlog.Infof("Scraping JavLand(JP)")
+			scrape.ScrapeJavLandJP(&collectedScenes, queryString)
 		} else {
 			tlog.Infof("Scraping JavDB")
 			scrape.ScrapeJavDB(&collectedScenes, queryString)

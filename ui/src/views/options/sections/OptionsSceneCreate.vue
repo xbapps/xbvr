@@ -9,6 +9,7 @@
             <option value="javdatabase">javdatabase.com</option>
             <option value="r18d">r18.dev</option>
             <option value="javlibrary">javlibrary.com</option>
+            <option value="javlibraryjp">javlibrary.com(JP)</option>
             <option value="javland">jav.land</option>
             <option value="javlandjp">jav.land(JP)</option>
           </b-select>
