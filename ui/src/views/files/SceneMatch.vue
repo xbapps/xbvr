@@ -34,8 +34,6 @@
             {{ format(parseISO(file.created_time), "yyyy-MM-dd") }}
           </small>
           
-          <b-button class="is-primary is-outlined" style="margin-left:20px" v-on:click="reload()">{{$t('Reload')}}</b-button>
-
           <b-field grouped>
             <b-taglist>
               <b-tag class="tag is-info is-small">{{$t('Search Fields')}}</b-tag>
@@ -129,6 +127,7 @@
               <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
               <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
               <b-button class="button is-primary is-outlined" style="margin-left:10px" v-on:click="extractDVDID()">{{$t('Get DVDID')}}</b-button>
+              <b-button class="button is-primary is-outlined" style="margin-left:10px" v-on:click="reload()">{{$t('Reload')}}</b-button>
             </b-field>
           </div>
     </div>
