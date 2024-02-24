@@ -145,7 +145,6 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 	sceneCollector := createCollector("api.dmm.com")
 
 	sceneCollector.OnResponse(func(r *colly.Response) {
-		log.Println("OnResponse." + r.Ctx.Get("url"))
 
 		body, err := ioutil.ReadAll(bytes.NewReader(r.Body))
 		if err != nil {
@@ -160,8 +159,13 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 			return
 		}
 
+		// Resutlが0件の時は、QueryパラメータをKeywordに変更して再実行
 		if jsonResponse.Result.ResultCount == 0 {
 			log.Info("not found")
+			newurl, err := replaceQueryParam(r.Request.URL.String(), "cid", "keyword")
+			if err == nil {
+				sceneCollector.Visit(newurl)
+			}
 			return
 		}
 
@@ -169,37 +173,29 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
-		//ContentID := ""
 
 		sc.Tags = append(sc.Tags, `JAVR`)
 		sc.Tags = append(sc.Tags, `FANZA`)
 
-		if jsonResponse.Result.ResultCount == 0 {
-			return
-		}
 		sc.Title = jsonResponse.Result.Items[0].Title
 		sc.Studio = jsonResponse.Result.Items[0].Iteminfo.Label[0].Name
-		log.Info("(0)" + jsonResponse.Result.Items[0].ProductID)
 		dvdId := strings.ToUpper(jsonResponse.Result.Items[0].ProductID)
-		log.Info("(dvdId)" + dvdId)
 		sc.SceneID = ConvertToDVDId(dvdId)
-		log.Info("(1)" + sc.SceneID)
+
+		log.Info("(dvdId)" + dvdId + "(productID)" + jsonResponse.Result.Items[0].ProductID + "(SceneID)" + sc.SceneID)
 
 		sc.SiteID = dvdId
 		siteParts := strings.Split(sc.SceneID, `-`)
 		if len(siteParts) > 0 {
 			sc.Site = siteParts[0]
 		}
-
 		tmpDate, _ := goment.New(strings.TrimSpace(jsonResponse.Result.Items[0].Date), "YYYY-MM-DD HH:mm:ss")
 		sc.Released = tmpDate.Format("YYYY-MM-DD")
-
 		sc.Covers = append(sc.Covers, jsonResponse.Result.Items[0].ImageURL.Large)
 		sc.HomepageURL = jsonResponse.Result.Items[0].URL
 		sc.Studio = jsonResponse.Result.Items[0].Iteminfo.Maker[0].Name
 		sc.Duration, _ = strconv.Atoi(jsonResponse.Result.Items[0].Volume)
 
-		log.Info("(2)" + sc.SceneID)
 		for _, item := range jsonResponse.Result.Items[0].Iteminfo.Genre {
 			tag := ProcessJavrTag(item.Name)
 			sc.Tags = append(sc.Tags, tag)
@@ -212,15 +208,13 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 			actressurl, err := addQueryParam(dmm_actorListSearchDigitalUrl, "actress_id", strconv.FormatInt(item.ID, 10))
 			if err == nil {
 				//url := Addquedmm_actorListSearchDigitalUrl + strconv.FormatInt(item.ID, 10)
-				log.Info("actordetail url:" + actressurl)
-				log.Info("detail :" + sc.ActorDetails[item.Name].Source)
+				//log.Info("actordetail url:" + actressurl)
+				//log.Info("detail :" + sc.ActorDetails[item.Name].Source)
 				sc.ActorDetails[item.Name] = models.ActorDetails{Source: "dmm scrape", ProfileUrl: actressurl}
-				log.Info("add actordetail name:" + item.Name)
-				log.Info("add actor profileurl:" + sc.ActorDetails[item.Name].ProfileUrl)
+				//log.Info("add actordetail name:" + item.Name)
+				//log.Info("add actor profileurl:" + sc.ActorDetails[item.Name].ProfileUrl)
 			}
 		}
-
-		log.Info("(3)" + sc.SceneID)
 		// Screenshots
 		for _, item := range jsonResponse.Result.Items[0].SampleImageURL.SampleL.Image {
 			sc.Gallery = append(sc.Gallery, item)
@@ -228,10 +222,6 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 		// Synopsis
 		sc.Synopsis = sc.Title
 
-		// Apply post-processing for error-correcting code
-		//PostProcessJavScene(&sc, dvdId)
-
-		log.Info("(4)" + sc.SceneID)
 		if sc.SceneID != "" {
 			*out = append(*out, sc)
 		}
@@ -250,7 +240,7 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 	}
 
 	for _, v := range scenes {
-		queryurl, err = addQueryParam(queryurl, "keyword", ConvertFormat(strings.ToLower(v)))
+		queryurl, err = addQueryParam(queryurl, "cid", ConvertFormat(strings.ToLower(v)))
 		if err == nil {
 			//sceneCollector.Visit(dmm_itemListSearchDigitalUrl + "&hits=" + count + "&keyword=" + ConvertFormat(strings.ToLower(v)))
 			sceneCollector.Visit(queryurl)
