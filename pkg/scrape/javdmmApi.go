@@ -18,7 +18,7 @@ const (
 	count           = "2"
 	dmm_BaseAddress = "https://api.dmm.com/"
 	//dmm_itemListSearchDigitalUrl  = dmm_BaseAddress + "affiliate/v3/ItemList?api_id=" + dmm_appid + "&affiliate_id=" + dmm_affiliateid + "&site=FANZA&service=digital&sort=" + PARAM_SORT + "&output=json"
-	dmm_itemListSearchDigitalUrl  = dmm_BaseAddress + "affiliate/v3/ItemList?site=FANZA&service=digital&output=json&sort=" + PARAM_SORT
+	dmm_itemListSearchDigitalUrl  = dmm_BaseAddress + "affiliate/v3/ItemList?site=FANZA&output=json&sort=" + PARAM_SORT
 	dmm_actorListSearchDigitalUrl = dmm_BaseAddress + "affiliate/v3/ActressSearch"
 )
 
@@ -240,13 +240,18 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 	}
 
 	for _, v := range scenes {
-		queryurl, err = addQueryParam(queryurl, "cid", ConvertFormat(strings.ToLower(v)))
+		if isQuoted(v) {
+			param, err := getQuotedString(strings.ToLower(v))
+			if err == nil {
+				queryurl, err = addQueryParam(queryurl, "keyword", param)
+			}
+		} else {
+			queryurl, err = addQueryParam(queryurl, "cid", ConvertFormat(strings.ToLower(v)))
+		}
 		if err == nil {
 			//sceneCollector.Visit(dmm_itemListSearchDigitalUrl + "&hits=" + count + "&keyword=" + ConvertFormat(strings.ToLower(v)))
 			sceneCollector.Visit(queryurl)
 		}
-
 	}
-
 	sceneCollector.Wait()
 }
