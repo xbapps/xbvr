@@ -30,6 +30,9 @@
         <div class="is-pulled-right">
           <b-field>
             <span class="list-header-label">{{$t('Card size')}}</span>
+            <b-radio-button v-model="cardSize" native-value="0" size="is-small">
+              SS
+            </b-radio-button>
             <b-radio-button v-model="cardSize" native-value="1" size="is-small">
               S
             </b-radio-button>
@@ -78,6 +81,8 @@ export default {
     },
     cardSizeClass () {
       switch (this.$store.state.sceneList.filters.cardSize) {
+        case '0':
+          return 'is-2'
         case '1':
           return 'is-one-fifth'
         case '2':
