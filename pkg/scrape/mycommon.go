@@ -85,7 +85,7 @@ func replaceQueryParam(originalURL string, paramname string, newParamname string
 
 // DVD-ID形式をDMM形式に変換
 func ConvertFormat(input string) string {
-	re := regexp.MustCompile(`([a-zA-Z]{4})-(\d{3,})`)
+	re := regexp.MustCompile(`([a-zA-Z]{3,4})-(\d{3,})`)
 	matches := re.FindAllStringSubmatch(input, -1)
 
 	for _, match := range matches {
@@ -108,7 +108,7 @@ func ConvertFormat(input string) string {
 
 // DMM形式をDVD-ID形式に変換
 func ConvertToDVDId(input string) string {
-	re := regexp.MustCompile(`^([H_]*)(\d*)([a-zA-Z]+)(\d+)$`)
+	re := regexp.MustCompile(`^([H_]*)(\d*)([a-zA-Z]+)(\d+)`)
 	matches := re.FindStringSubmatch(input)
 
 	if len(matches) == 5 {
@@ -120,4 +120,19 @@ func ConvertToDVDId(input string) string {
 		}
 	}
 	return ""
+}
+
+func isQuoted(input string) bool {
+	// 文字列がダブルクオーテーションで始まり、終わるかどうかを確認
+	return strings.HasPrefix(input, "\"") && strings.HasSuffix(input, "\"")
+}
+
+func getQuotedString(input string) (string, error) {
+	// ダブルクオーテーションで始まり、終わるかどうかを確認
+	if strings.HasPrefix(input, "\"") && strings.HasSuffix(input, "\"") {
+		// ダブルクオーテーションを除去して返す
+		return strings.Trim(input, "\""), nil
+	}
+	// ダブルクオーテーションで囲まれた文字列が見つからない場合、エラーを返す
+	return "", errors.New("quoted string not found")
 }
