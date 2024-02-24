@@ -366,6 +366,9 @@ func ScrapeJAVR(queryString string, scraper string) {
 		tlog := log.WithField("task", "scrape")
 		tlog.Infof("Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
 
+		config.Config.ScraperSettings.Javr.JavrScraper = scraper
+		config.SaveConfig()
+
 		// Start scraping
 		var collectedScenes []models.ScrapedScene
 

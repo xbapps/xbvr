@@ -174,6 +174,9 @@ type ObjectConfig struct {
 		TMWVRNet struct {
 			TmwMembersDomain string `default:"members.tmwvrnet.com" json:"tmwMembersDomain"`
 		} `json:"tmwvrnet"`
+		Javr struct {
+			JavrScraper string `default:"javdatabase" json:"javrScraper"`
+		} `json:"javr"`
 	} `json:"scraper_settings"`
 }
 
