@@ -179,7 +179,7 @@ export default {
   },
   methods: {
     extractDVDID() {
-      const regex = /[a-zA-Z]{3,6}-\d{2,6}/;
+      const regex = /[a-zA-Z0-9]{2,6}-\d{2,6}/;
       const match = this.file.filename.match(regex);
       this.javrQuery = match ? match[0] : null;
     },
