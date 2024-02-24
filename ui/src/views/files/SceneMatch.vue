@@ -12,6 +12,14 @@
     <div class="modal-card">
       <header class="modal-card-head">
         <p class="modal-card-title">{{ $t("Match file to scene") }}</p>
+        <b-navbar-item>
+        <table style="font-size:0.9em">
+          <tr v-if="Object.keys(lastScrapeMessage).length !== 0">
+            <th><span :class="[lockScrape ? 'pulsate' : '']">{{$t('Data')}} →</span></th>
+            <td>{{lastScrapeMessage.message}}</td>
+          </tr>
+        </table>
+        </b-navbar-item>
         <button class="delete" @click="close" aria-label="close"></button>
       </header>
       <section class="modal-card-body">
@@ -25,6 +33,8 @@
             <span v-if="file.duration > 0">{{ Math.floor(file.duration / 60) }} min,</span>
             {{ format(parseISO(file.created_time), "yyyy-MM-dd") }}
           </small>
+          
+          <b-button class="is-primary is-outlined" style="margin-left:20px" v-on:click="reload()">{{$t('Reload')}}</b-button>
 
           <b-field grouped>
             <b-taglist>
@@ -102,6 +112,27 @@
           </b-table>
         </div>
       </section>
+
+      <div  class="modal-card-body">
+        <p>{{$t('Import Japanese Adult VR (JAVR) Scene')}}</p>
+        <div class="card">
+          <div class="card-content content">
+            <b-field grouped>
+              <b-select placeholder="Select scraper" v-model="javrScraper">
+                <option value="dmm">DMM(FANZA)</option>
+                <option value="javdatabase">javdatabase.com</option>
+                <option value="r18d">r18.dev</option>
+                <option value="javlibrary">javlibrary.com</option>
+                <option value="javland">jav.land</option>
+                <option value="javlandjp">jav.land(JP)</option>
+              </b-select>
+              <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
+              <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
+              <b-button class="button is-primary is-outlined" style="margin-left:10px" v-on:click="extractDVDID()">{{$t('Get DVDID')}}</b-button>
+            </b-field>
+          </div>
+    </div>
+      </div>
     </div>
     <a class="prev" @click="prevFile" title="Keyboard shortcut: O">&#10094;</a>
     <a class="next" @click="nextFile" title="Keyboard shortcut: P">&#10095;</a>
@@ -125,6 +156,8 @@ export default {
       dataNumResponses: 0,
       currentPage: 1,
       queryString: '',
+      javrQuery: '',
+      javrScraper: '',
       format,
       parseISO
     }
@@ -132,12 +165,26 @@ export default {
   computed: {
     file () {
       return this.$store.state.overlay.match.file
+    },
+    lockScrape () {
+      return this.$store.state.messages.lockScrape
+    },
+    lastScrapeMessage () {
+      return this.$store.state.messages.lastScrapeMessage
     }
   },
   mounted () {
     this.initView()
   },
   methods: {
+    extractDVDID() {
+      const regex = /[a-zA-Z]{4,6}-\d{2,6}/;
+      const match = this.file.filename.match(regex);
+      this.javrQuery = match ? match[0] : null;
+    },
+    scrapeJAVR () {
+      ky.post('/api/task/scrape-javr', { json: { s: this.javrScraper, q: this.javrQuery } })
+    },
     initView () {
       const commonWords = [
         '180', '180x180', '2880x1440', '3d', '3dh', '3dv', '30fps', '30m', '360',
@@ -276,7 +323,6 @@ export default {
         this.queryString = textbox.value.substring(0,textbox.selectionStart) + " " + prefix + selected + " " + textbox.value.substr(textbox.selectionEnd)
         this.loadData()
       }
-      
     },
     searchDatePrefix(prefix) {      
         let today = new Date().toISOString().slice(0, 10)
@@ -291,6 +337,9 @@ export default {
           this.queryString = this.queryString.trim() + ' ' + prefix + '>=' + (Math.floor(this.file.duration / 60)-1) + ' ' +  prefix + '<=' + (Math.floor(this.file.duration / 60)+1) + ''        
         }
         this.loadData()
+    },
+    reload() {
+      this.loadData()
     },
     prettyBytes
   }
