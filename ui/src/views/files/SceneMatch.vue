@@ -12,14 +12,6 @@
     <div class="modal-card">
       <header class="modal-card-head">
         <p class="modal-card-title">{{ $t("Match file to scene") }}</p>
-        <b-navbar-item>
-        <table style="font-size:0.9em">
-          <tr v-if="Object.keys(lastScrapeMessage).length !== 0">
-            <th><span :class="[lockScrape ? 'pulsate' : '']">{{$t('Data')}} →</span></th>
-            <td>{{lastScrapeMessage.message}}</td>
-          </tr>
-        </table>
-        </b-navbar-item>
         <button class="delete" @click="close" aria-label="close"></button>
       </header>
       <section class="modal-card-body">
@@ -127,7 +119,17 @@
               <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
               <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
               <b-button class="button is-primary is-outlined" style="margin-left:10px" v-on:click="extractDVDID()">{{$t('Get DVDID')}}</b-button>
-              <b-button class="button is-primary is-outlined" style="margin-left:10px" v-on:click="reload()">{{$t('Reload')}}</b-button>
+              <b-button class="button is-primary is-outlined" style="margin-left:10px" v-on:click="reload()">{{$t('Reload List')}}</b-button>
+
+              <b-navbar-item>
+              <table style="font-size:0.9em">
+                <tr v-if="Object.keys(lastScrapeMessage).length !== 0">
+                  <th><span :class="[lockScrape ? 'pulsate' : '']">{{$t('Data')}} →</span></th>
+                  <td>{{lastScrapeMessage.message}}</td>
+                </tr>
+              </table>
+              </b-navbar-item>
+
             </b-field>
           </div>
     </div>
