@@ -118,7 +118,7 @@
               </b-select>
               <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
               <b-button class="button is-primary is-outlined" style="margin-left:10px" v-on:click="extractDVDID()">{{$t('Get DVDID')}}</b-button>
-              <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
+              <b-button class="button is-primary" style="margin-left:10px" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
               <b-button class="button is-primary is-outlined" style="margin-left:10px" v-on:click="reload()">{{$t('Reload List')}}</b-button>
 
               <b-navbar-item>
@@ -179,7 +179,7 @@ export default {
   },
   methods: {
     extractDVDID() {
-      const regex = /[a-zA-Z]{4,6}-\d{2,6}/;
+      const regex = /[a-zA-Z]{3,6}-\d{2,6}/;
       const match = this.file.filename.match(regex);
       this.javrQuery = match ? match[0] : null;
     },
