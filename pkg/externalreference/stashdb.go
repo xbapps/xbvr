@@ -249,7 +249,7 @@ func checkMatchedScenes() {
 
 					// if len(ref.XbvrLinks) == 0 {
 					for _, xbvrActor := range xbvrScene.Cast {
-						if strings.EqualFold(strings.TrimSpace(xbvrActor.Name), strings.TrimSpace(performer.Performer.Name)) {
+						if strings.EqualFold(strings.TrimSpace(simplifyName(xbvrActor.Name)), strings.TrimSpace(simplifyName(performer.Performer.Name))) {
 							// check if actor already matched
 							exists := false
 							for _, link := range ref.XbvrLinks {
@@ -364,7 +364,7 @@ func matchPerformerName(scene models.StashScene, xbvrScene models.Scene, matchLe
 
 		if ref.ID != 0 && len(ref.XbvrLinks) == 0 {
 			for _, xbvrActor := range xbvrScene.Cast {
-				if strings.EqualFold(strings.TrimSpace(xbvrActor.Name), strings.TrimSpace(performer.Performer.Name)) {
+				if strings.EqualFold(strings.TrimSpace(simplifyName(xbvrActor.Name)), strings.TrimSpace(simplifyName(performer.Performer.Name))) {
 					xbvrLink := models.ExternalReferenceLink{InternalTable: "actors", InternalDbId: xbvrActor.ID, InternalNameId: xbvrActor.Name, MatchType: matchLevl,
 						ExternalReferenceID: ref.ID, ExternalSource: ref.ExternalSource, ExternalId: ref.ExternalId}
 					ref.XbvrLinks = append(ref.XbvrLinks, xbvrLink)
@@ -388,6 +388,13 @@ func matchPerformerName(scene models.StashScene, xbvrScene models.Scene, matchLe
 		}
 	}
 
+}
+
+func simplifyName(name string) string {
+	name = strings.TrimSpace(name)
+	name = strings.ReplaceAll(name, " ", "")
+	name = strings.ReplaceAll(name, ".", "")
+	return strings.ReplaceAll(name, "-", "")
 }
 
 // tries to match from stash to xbvr using the aka or aliases from stash
@@ -434,10 +441,12 @@ func MatchAkaPerformers() {
 
 	for _, aka := range akaList {
 		var scene models.Scene
-		scene.GetIfExistByPK(uint(aka.SceneInternalDbId))
+
+		db.Preload("Cast").Where(&models.Scene{ID: uint(aka.SceneInternalDbId)}).First(&scene)
+
 		for _, actor := range scene.Cast {
 			var extref models.ExternalReference
-			if strings.EqualFold(strings.TrimSpace(actor.Name), strings.TrimSpace(aka.AkaName)) {
+			if strings.EqualFold(strings.TrimSpace(simplifyName(actor.Name)), strings.TrimSpace(simplifyName(aka.AkaName))) {
 				extref.FindExternalId("stashdb performer", aka.ActorId)
 				if extref.ID != 0 && len(extref.XbvrLinks) == 0 {
 					xbvrLink := models.ExternalReferenceLink{InternalTable: "actors", InternalDbId: actor.ID, InternalNameId: actor.Name, MatchType: 30,
@@ -453,7 +462,7 @@ func MatchAkaPerformers() {
 				var aliases []string
 				json.Unmarshal([]byte(aka.Aliases), &aliases)
 				for _, alias := range aliases {
-					if len(extref.XbvrLinks) == 0 && strings.EqualFold(strings.TrimSpace(actor.Name), strings.TrimSpace(alias)) {
+					if len(extref.XbvrLinks) == 0 && strings.EqualFold(strings.TrimSpace(simplifyName(actor.Name)), strings.TrimSpace(simplifyName(alias))) {
 						extref.FindExternalId("stashdb performer", aka.ActorId)
 						if extref.ID != 0 && len(extref.XbvrLinks) == 0 {
 							xbvrLink := models.ExternalReferenceLink{InternalTable: "actors", InternalDbId: actor.ID, InternalNameId: actor.Name, MatchType: 30,
@@ -502,7 +511,7 @@ func ReverseMatch() {
 			var stashSceneData models.StashScene
 			json.Unmarshal([]byte(stashScene.ExternalData), &stashSceneData)
 			for _, performance := range stashSceneData.Performers {
-				if strings.EqualFold(strings.TrimSpace(actor.Name), strings.TrimSpace(performance.As)) {
+				if strings.EqualFold(strings.TrimSpace(simplifyName(actor.Name)), strings.TrimSpace(simplifyName(performance.As))) {
 					var extref models.ExternalReference
 					extref.FindExternalId("stashdb performer", performance.Performer.ID)
 					if extref.ID != 0 {
@@ -520,7 +529,7 @@ func ReverseMatch() {
 					break sceneLoop
 				}
 				for _, alias := range performance.Performer.Aliases {
-					if strings.EqualFold(strings.TrimSpace(actor.Name), strings.TrimSpace(alias)) {
+					if strings.EqualFold(strings.TrimSpace(simplifyName(actor.Name)), strings.TrimSpace(simplifyName(alias))) {
 						var extref models.ExternalReference
 						extref.FindExternalId("stashdb performer", performance.Performer.ID)
 						if extref.ID != 0 {
