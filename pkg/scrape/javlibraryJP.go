@@ -19,7 +19,7 @@ func ScrapeJavLibraryJP(out *[]models.ScrapedScene, queryString string) {
 		// find out which by looking inside the DOM
 		boxTitle := e.DOM.Find("div.boxtitle")
 		if boxTitle != nil {
-			r := regexp.MustCompile("\"([^\"]+)\" ID Search Result")
+			r := regexp.MustCompile("「([^」]+)」品番検索結果")
 			match := r.FindStringSubmatch(boxTitle.Text())
 			if len(match) > 1 {
 				// Found a search results page
