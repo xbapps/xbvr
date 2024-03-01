@@ -33,7 +33,7 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 	commonDb, _ := models.GetCommonDB()
 
-	var Has6K7K bool = false
+	var UHD = "NO"
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -82,8 +82,12 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		e.ForEach(`a.video-tag`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 			if strings.Contains(strings.TrimSpace(e.Text), "7K") {
-				Has6K7K = true
+				UHD = "7K"
 			}
+			if strings.Contains(strings.TrimSpace(e.Text), "8K") {
+				UHD = "8K"
+			}
+
 		})
 		if scraperID == "vrcosplayx" {
 			sc.Tags = append(sc.Tags, "Cosplay", "Parody")
@@ -151,14 +155,20 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				e.ForEach(`a.video-tag`, func(id int, e *colly.HTMLElement) {
 					sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 					if strings.Contains(strings.TrimSpace(e.Text), "7K") {
-						Has6K7K = true
+						UHD = "7K"
+					}
+					if strings.Contains(strings.TrimSpace(e.Text), "8K") {
+						UHD = "8K"
 					}
 				})
-
-				filenames := []string{"samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
-
-				if Has6K7K {
+				var filenames []string
+				switch UHD {
+				case "8K":
+					filenames = []string{"8k_180_180x180_3dh", "6k_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "8k_180_180x180_3dh_LR", "6k_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh", "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
+				case "7K":
 					filenames = []string{"7k_180_180x180_3dh", "6k_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "7k_180_180x180_3dh_LR", "6k_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh", "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
+				default:
+					filenames = []string{"samsung_180_180x180_3dh", "oculus_180_180x180_3dh", "mobile_180_180x180_3dh", "5k_180_180x180_3dh", "4k_HEVC_180_180x180_3dh", "samsung_180_180x180_3dh_LR", "oculus_180_180x180_3dh_LR", "mobile_180_180x180_3dh_LR", "5k_180_180x180_3dh_LR", "4k_HEVC_180_180x180_3dh_LR", "ps4_180_sbs", "ps4_pro_180_sbs"}
 				}
 
 				for i := range filenames {
