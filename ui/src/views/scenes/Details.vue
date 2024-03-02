@@ -22,7 +22,8 @@
       <section class="modal-card-body">
         <div class="columns">
 
-          <div class="column is-two-thirds">
+          <div class="column left-column">
+          <!-- <div class="column is-two-thirds"> -->
             <b-tabs v-model="activeMedia" position="is-centered" :animated="false">
 
               <b-tab-item label="Gallery">
@@ -63,18 +64,21 @@
                 </b-field>
 
                   <!-- アスペクト比切り替えボタン -->
-  <div class="aspect-ratio-buttons">
-    <b-button @click="changeAspectRatio('1:1')">1:1</b-button>
-    <b-button @click="changeAspectRatio('16:9')">16:9</b-button>
-    <b-button @click="changeAspectRatio('9:16')">9:16</b-button>
-  </div>
+            <div class="aspect-ratio-buttons">
+              <b-button class="btn01" @click="changeAspectRatio('16:9')">16:9</b-button>
+              <b-button class="btn01" @click="changeAspectRatio('4:3')">4:3</b-button>
+              <b-button class="btn01" @click="changeAspectRatio('1:1')">1:1</b-button>
+              <b-button class="btn01" @click="changeAspectRatio('3:4')">3:4</b-button>
+              <b-button class="btn01" @click="changeAspectRatio('9:16')">9:16</b-button>
+            </div>
              </b-tab-item>
 
             </b-tabs>
 
           </div>
 
-          <div class="column is-one-third">
+          <!-- <div class="column is-one-third"> -->
+          <div class="column right-column">
 
             <div class="block-info block">
               <div class="content">
@@ -619,6 +623,61 @@ watch:{
   },
 },
   methods: {
+    calculateAspectRatio(aspectRatioString) {
+      var aspectRatioArray = aspectRatioString.split(':');
+      var width = parseInt(aspectRatioArray[0]);
+      var height = parseInt(aspectRatioArray[1]);
+      var aspectRatio = width / height;
+      return aspectRatio;
+    },
+
+    calculateObjectWidthPercentage(screenAspectRatio, objectAspectRatio, objectHeightPercentage) {
+        // 画面の高さは1と仮定します
+        var screenHeight = 1;
+        var objectHeight = screenHeight * (objectHeightPercentage / 100);
+        var objectWidth = objectHeight * objectAspectRatio;
+        var screenWidth = screenHeight * screenAspectRatio;
+        var objectWidthPercentage = (objectWidth / screenWidth) * 100;
+        return objectWidthPercentage;
+    },
+
+    // left-column クラスを持つ要素の幅を設定する関数
+    setLeftColumnWidth(widthValue) {
+        var leftColumnElements = document.getElementsByClassName('left-column');
+        for (var i = 0; i < leftColumnElements.length; i++) {
+            leftColumnElements[i].style.width = widthValue;
+        }
+    },
+
+    resizeColumnForAspect(aspectRatio) {
+      var width = window.innerWidth;
+      var height = window.innerHeight;
+      var screenAspectRatio = width / height;
+
+      //var screenAspectRatio = 1.7;
+      var objectAspectRatio = 0.56;
+      var objectHeightPercentage = 80;
+
+      objectAspectRatio = this.calculateAspectRatio(aspectRatio)
+      // switch(aspectRatio) {
+      //   case '1:1':
+      //     objectAspectRatio = 1.0
+      //     break;
+      //   case '16:9':
+      //     objectAspectRatio = 16/9
+      //     break;
+      //   case '4:3':
+      //     objectAspectRatio = 4/3
+      //     break;
+      //   case '9:16':
+      //     objectAspectRatio = 9/16
+      //     break;
+      // }
+      var objectWidthPercentage = this.calculateObjectWidthPercentage(screenAspectRatio, objectAspectRatio, objectHeightPercentage);
+      this.setLeftColumnWidth(objectWidthPercentage + "%");
+
+    },
+
     clearPlayer() {
       if (this.player) {
           this.player.dispose(); // プレーヤーを解放
@@ -642,14 +701,14 @@ watch:{
       // this.player.play()
 
       this.playFile(this.item.file[0])
-
+      this.resizeColumnForAspect(aspectRatio)
     },
 
     setupPlayer() {
       this.setupPlayerWithAspect('1:1');
     },
-    setupPlayerWithAspect (aspectRatio) {
 
+    setupPlayerWithAspect (aspectRatio) {
       this.player = videojs(this.$refs.player, {
         aspectRatio: aspectRatio,
         fluid: true,
@@ -1331,4 +1390,26 @@ span.is-active img {
 .altsrc-image-wrapper {
   display: inline-block;
   margin-left: 5px;  
-}</style>
+}
+
+.left-column {
+  -webkit-box-flex: 0;
+    -ms-flex: none;
+    flex: none;
+    width: 40%
+}
+.btn01 {
+  align-items: center;
+  margin-right: 0.5rem;
+  display: inline-flex;
+  font-size: .75rem;
+  height: 2em;
+  padding-left: 0.75em;
+  padding-right: 0.75em;
+}
+.btn01:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+</style>
