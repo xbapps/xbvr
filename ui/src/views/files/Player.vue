@@ -4,7 +4,7 @@
     <div class="modal-content">
       <video ref="player"
              width="640" height="640" class="video-js vjs-default-skin"
-             controls playsinline autoplay>
+             controls playsinline autoplay muted>
         <source :src="sourceUrl" type="video/mp4">
       </video>
     </div>

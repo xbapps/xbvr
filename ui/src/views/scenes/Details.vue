@@ -22,7 +22,7 @@
       <section class="modal-card-body">
         <div class="columns">
 
-          <div class="column is-half">
+          <div class="column is-two-thirds">
             <b-tabs v-model="activeMedia" position="is-centered" :animated="false">
 
               <b-tab-item label="Gallery">
@@ -61,13 +61,20 @@
                     </b-tooltip>
                   </b-field>
                 </b-field>
+
+                  <!-- アスペクト比切り替えボタン -->
+  <div class="aspect-ratio-buttons">
+    <b-button @click="changeAspectRatio('1:1')">1:1</b-button>
+    <b-button @click="changeAspectRatio('16:9')">16:9</b-button>
+    <b-button @click="changeAspectRatio('9:16')">9:16</b-button>
+  </div>
              </b-tab-item>
 
             </b-tabs>
 
           </div>
 
-          <div class="column is-half">
+          <div class="column is-one-third">
 
             <div class="block-info block">
               <div class="content">
@@ -612,11 +619,42 @@ watch:{
   },
 },
   methods: {
-    setupPlayer () {
+    clearPlayer() {
+      if (this.player) {
+          this.player.dispose(); // プレーヤーを解放
+          this.player = null; // 参照を削除
+      }
+    },
+
+    changeAspectRatio(aspectRatio) {
+      let projection;
+      
+      this.player.aspectRatio(aspectRatio);
+      // this.activeMedia = 1;
+
+      // try {
+      //   projection = this.item.file[0].projection;
+      // } catch {
+      //   projection == '180';
+      // }
+
+      // this.updatePlayer('/api/dms/file/' + this.item.file[0].id() + '?dnt=true', (projection == 'flat' ? 'NONE' : '180'))
+      // this.player.play()
+
+      this.playFile(this.item.file[0])
+
+    },
+
+    setupPlayer() {
+      this.setupPlayerWithAspect('1:1');
+    },
+    setupPlayerWithAspect (aspectRatio) {
+
       this.player = videojs(this.$refs.player, {
-        aspectRatio: '1:1',
+        aspectRatio: aspectRatio,
         fluid: true,
-        loop: true
+        loop: true,
+        muted: true 
       })
 
       this.player.hotkeys({
@@ -1156,7 +1194,7 @@ watch:{
 }
 
 .modal-card {
-  width: 85%;
+  width: 95%;
 }
 
 .missing {
