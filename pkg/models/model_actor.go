@@ -487,7 +487,7 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 		return db.Order("release_date DESC").Where("is_hidden = 0")
 	})
 
-	log.Info("JumpTo initial:" + r.JumpTo.OrElse(""))
+	// log.Info("JumpTo initial:" + r.JumpTo.OrElse(""))
 	if r.JumpTo.OrElse("") != "" {
 		// if we want to jump to actors starting with a specific letter, then we need to work out the offset to them
 		cnt := 0
@@ -511,7 +511,7 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 			if err != nil {
 
 			} else {
-				log.Info("fistchar=" + string(firstChar) )
+				// log.Info("fistchar=" + string(firstChar) )
 
 				if actor.Aliases != "" {
 					if string(firstChar) >= r.JumpTo.OrElse("") {
