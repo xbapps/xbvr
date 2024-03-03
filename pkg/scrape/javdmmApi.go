@@ -178,7 +178,9 @@ func ScrapeDMMapi(out *[]models.ScrapedScene, queryString string) {
 		sc.Tags = append(sc.Tags, `FANZA`)
 
 		sc.Title = jsonResponse.Result.Items[0].Title
-		sc.Studio = jsonResponse.Result.Items[0].Iteminfo.Label[0].Name
+		if len(jsonResponse.Result.Items[0].Iteminfo.Label) > 0 {
+			sc.Studio = jsonResponse.Result.Items[0].Iteminfo.Label[0].Name
+		}
 		dvdId := strings.ToUpper(jsonResponse.Result.Items[0].ProductID)
 		sc.SceneID = ConvertToDVDId(dvdId)
 
