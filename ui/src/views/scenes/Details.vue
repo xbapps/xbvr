@@ -524,7 +524,17 @@ export default {
     },
     filesByType () {
       if (this.item.file !== null) {
-        return this.item.file.slice().sort((a, b) => (a.type === 'video') ? -1 : 1)
+        //return this.item.file.slice().sort((a, b) => (a.type === 'video') ? -1 : 1)
+        return this.item.file.slice().sort((a, b) => {
+          if (a.Type === "video" && b.Type !== "video") {
+              return -1;
+          }
+          if (a.Type !== "video" && b.Type === "video") {
+              return 1;
+          }
+          return a.filename.localeCompare(b.filename);
+        });
+
       }
       return []
     },
