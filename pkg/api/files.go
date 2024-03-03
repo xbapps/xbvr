@@ -25,6 +25,11 @@ type RequestUnmatchFile struct {
 	FileID uint `json:"file_id"`
 }
 
+type RequestRenameFile struct {
+	FileID uint `json:"file_id"`
+	NewFilename string `json:"filename"`
+}
+
 type RequestFileList struct {
 	State       optional.String   `json:"state"`
 	CreatedDate []optional.String `json:"createdDate"`
@@ -56,6 +61,9 @@ func (i FilesResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.DELETE("/file/{file-id}").To(i.removeFile).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.POST("/rename").To(i.renameFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
@@ -303,6 +311,69 @@ func (i FilesResource) unmatchFile(req *restful.Request, resp *restful.Response)
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+
+func (i FilesResource) renameFile(req *restful.Request, resp *restful.Response) {
+	var r RequestRenameFile
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	// fileId, err := strconv.Atoi(req.PathParameter("file-id"))
+	// if err != nil {
+	// 	return
+	// }
+	scene := renameFileByFileId(uint(r.FileID), r.NewFilename)
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+
+func renameFileByFileId(fileId uint, newfilename string) models.Scene {
+
+	var scene models.Scene
+	var file models.File
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	err := db.Preload("Volume").Where(&models.File{ID: fileId}).First(&file).Error
+	if err == nil {
+
+		log.Infof("Renaming file %s", filepath.Join(file.Path, file.Filename))
+		renamed := false
+		switch file.Volume.Type {
+		case "local":
+			err := os.Rename(filepath.Join(file.Path, file.Filename), filepath.Join(file.Path, newfilename))
+			if err == nil {
+				renamed = true
+			} else {
+				log.Errorf("error renaming file: %v", err)
+			}
+		case "putio":
+			// id, err := strconv.ParseInt(file.Path, 10, 64)
+			// if err != nil {
+			// 	return scene
+			// }
+			// client := file.Volume.GetPutIOClient()
+			// err = client.Files.Delete(context.Background(), id)
+			// if err == nil {
+			// 	renamed = true
+			// } else {
+			log.Errorf("error renaming file %v", err)
+			// }
+		}
+
+		if renamed {
+			//db.Delete(&file)
+			db.Model(&file).Where("id = ?", fileId).Update("filename", newfilename)
+			if file.SceneID != 0 {
+				scene.GetIfExistByPK(file.SceneID)
+				scene.UpdateStatus()
+			}
+		}
+	} else {
+		log.Errorf("error renaming file %v", err)
+	}
+	return scene
 }
 
 func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) {

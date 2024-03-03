@@ -267,6 +267,9 @@
                         <button class="button is-dark is-small is-outlined" title="Unmatch file from scene" @click='unmatchFile(f)'>
                           <b-icon pack="fas" icon="unlink" size="is-small"></b-icon>
                         </button>&nbsp;
+                        <button class="button is-danger is-small is-outlined" title="rename file" @click='renameFile(f)'>
+                          <b-icon pack="fas" icon="pen" size="is-small"></b-icon>
+                        </button>&nbsp;
                         <button class="button is-danger is-small is-outlined" title="Delete file from disk" @click='removeFile(f)'>
                           <b-icon pack="fas" icon="trash" size="is-small"></b-icon>
                         </button>
@@ -870,6 +873,25 @@ watch:{
         hasIcon: true,
         onConfirm: () => {
           ky.delete(`/api/files/file/${file.id}`).json().then(data => {
+            this.$store.commit('overlay/showDetails', { scene: data })
+          })
+        }
+      })
+    },
+    renameFile (file) {
+      this.$buefy.dialog.prompt({
+        title: 'Rename file',
+        message: `Please input new filename for <strong>${file.filename}</strong>`,
+        type: 'is-danger',
+        hasIcon: true,
+        inputAttrs: {
+                    type: "text",
+                    placeholder: "new filename is...",
+                    value: file.filename
+                },
+        onConfirm: value => {
+          this.$buefy.toast.open(`New filename is: ${value}`)
+          ky.post(`/api/files/rename`, {json:{file_id: file.id, filename: value}}).json().then(data => {
             this.$store.commit('overlay/showDetails', { scene: data })
           })
         }
