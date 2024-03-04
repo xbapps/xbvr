@@ -230,7 +230,7 @@
   "Upper Search Range":"Upper Search Range",
   "Alternate Sites":"Alternate Sites",
   "Main Site":"Main Site",
-  "Scenes from Akternate Sites will be matched after Scene Scraping":"Scenes from Akternate Sites will be matched after Scene Scraping",
+  "Scenes from Alternate Sites will be matched after Scene Scraping":"Scenes from Alternate Sites will be matched after Scene Scraping",
   "If a file is not matched to a scene, then try scenes from Alternate Sites":"If a file is not matched to a scene, then try scenes from Alternate Sites",
   "When filtering for Scenes with Scripts or sorting by Script Published Date, scenes from Alternate Sites will be included. Note: Slows these queries":"When filtering for Scenes with Scripts or sorting by Script Published Date, scenes from Alternate Sites will be included. Note: Slows these queries",
   "Remove Scene Links":"Remove Scene Links",

@@ -360,6 +360,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Cast 4")
 	outAttributes = append(outAttributes, "Cast 5")
 	outAttributes = append(outAttributes, "Cast 6+")
+	outAttributes = append(outAttributes, "No Actor/Cast")
 	outAttributes = append(outAttributes, "Flat video")
 	outAttributes = append(outAttributes, "FOV: 180°")
 	outAttributes = append(outAttributes, "FOV: 190°")
@@ -390,6 +391,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Available from POVR")
 	outAttributes = append(outAttributes, "Available from VRPorn")
 	outAttributes = append(outAttributes, "Available from SLR")
+	outAttributes = append(outAttributes, "Multiple Scenes Available at an Alternate Site")
 	type Results struct {
 		Result string
 	}

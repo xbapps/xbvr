@@ -116,7 +116,7 @@
                   </div>
                   <div class="column pt-0">
                     <div class="is-flex is-pulled-right" style="gap: 0.25rem">
-                      <a class="button is-primary is-outlined is-small" @click="searchAlternateSourceScene()" title="Serach for a different scene" v-if="displayingAlternateSource">
+                      <a class="button is-primary is-outlined is-small" @click="searchAlternateSourceScene()" title="Search for a different scene" v-if="displayingAlternateSource">
                         <b-icon pack="mdi" icon="movie-search-outline" size="is-small"/>
                       </a>
                       <a class="button is-primary is-outlined is-small" @click="scrapeScene()" title="Scrape and create an XBVR scene (not a link)" v-if="displayingAlternateSource">
@@ -913,9 +913,12 @@ watch:{
         return u
       }
       try {
-        if (u.startsWith('http') || u.startsWith('https')) {
-          return '/img/' + size + '/' + encodeURI(u)
-        } else {
+        if (u.startsWith('http')) {
+          if (u.search("%") == -1) {
+            return '/img/' + size + '/' + encodeURI(u)
+          } else {
+            return '/img/' + size + '/' + encodeURI(decodeURI(u))
+          } 
           return u
         }
       } catch {

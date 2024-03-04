@@ -829,6 +829,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "is_subscribed = 1"
 		case "Rating":
 			where = "scenes.star_rating = " + value
+		case "No Actor/Cast":
+			where = "exists (select 1 from scenes s left join scene_cast sc on sc.scene_id =s.id where s.id=scenes.id and  sc.scene_id is NULL)"
 		case "Cast 6+":
 			where = "exists (select 1 from scene_cast join actors on actors.id = scene_cast.actor_id where scene_cast.scene_id = scenes.id and actors.name not like 'aka:%' group by scene_cast.scene_id having count(*) > 5)"
 		case "Cast 1", "Cast 2", "Cast 3", "Cast 4", "Cast 5":
@@ -928,6 +930,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and external_id like 'slr-%' and internal_db_id = scenes.id)"
 		case "Available from Alternate Sites":
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and internal_db_id = scenes.id)"
+		case "Multiple Scenes Available at an Alternate Site":
+			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and internal_db_id = scenes.id  group by external_source having count(*)>1)"
 		}
 
 		if negate {

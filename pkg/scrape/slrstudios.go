@@ -16,6 +16,15 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
+func absolutegallery(match string) string {
+	re := regexp.MustCompile(`(https:\/\/cdn-vr\.(sexlikereal|trannypornvr)\.com\/images\/\d+\/)vr-porn-[\w\-]+?-(\d+)-original(\.webp|\.jpg)`)
+	submatches := re.FindStringSubmatch(match)
+	if len(submatches) == 0 {
+		return match // no match, return original string
+	}
+	return submatches[1] + submatches[3] + "_o.jpg" // construct new string with desired format
+}
+
 func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, limitScraping bool, masterSiteId string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
@@ -63,24 +72,6 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		tmp := strings.Split(sc.HomepageURL, "-")
 		sc.SiteID = tmp[len(tmp)-1]
 		sc.SceneID = "slr-" + sc.SiteID
-
-		// Cover
-		coverURL := e.ChildAttr(`.splash-screen > img`, "src")
-		if len(coverURL) > 0 {
-			sc.Covers = append(sc.Covers, coverURL)
-		} else {
-			m := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.c-webxr-splash-screen`, "style")))
-			if len(m) > 0 && len(m[1]) > 0 {
-				sc.Covers = append(sc.Covers, m[1])
-			}
-		}
-
-		// Gallery
-		e.ForEach(`meta[name^="twitter:image"]`, func(id int, e *colly.HTMLElement) {
-			if e.Attr("name") != "twitter:image" { // we need image1, image2...
-				sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("content")))
-			}
-		})
 
 		// Synopsis
 		sc.Synopsis = strings.TrimSpace(
@@ -138,6 +129,51 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		JsonMetadataA := s.String()
 
 		isTransScene := e.Request.Ctx.GetAny("isTransScene").(bool)
+
+		// Gallery
+		e.ForEach(`meta[name^="twitter:image"]`, func(id int, e *colly.HTMLElement) {
+			re := regexp.MustCompile(`(https:\/\/cdn-vr\.(sexlikereal|trannypornvr)\.com\/images\/\d+\/)vr-porn-[\w\-]+?-(\d+)-original(\.webp|\.jpg)`)
+			if e.Attr("name") != "twitter:image" { // we need image1, image2...
+				if !isTransScene {
+					sc.Gallery = append(sc.Gallery, re.ReplaceAllStringFunc(e.Request.AbsoluteURL(e.Attr("content")), absolutegallery))
+				} //else {
+				//	sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("content")))
+				//}
+				// Trans scenes currently do not scrape gallery images at all
+				// I'm not sure how to, since we're using "twitter:image" and there are none for trans scenes
+				// The URLs are available on the "Photos" tab and they can be re-written to redirect to original images similarly
+				// The RegEx will work for either
+				// i.e. "https://cdn-vr.trannypornvr.com/images/861/vr-porn-Welcome-Back-4570.webp" -> "https://cdn-vr.trannypornvr.com/images/861/4570_o.jpg"
+			}
+		})
+
+		// Cover
+		if !isTransScene {
+			coverURL := strings.Replace(gjson.Get(JsonMetadataA, "thumbnailUrl").String(), "app", "desktop", -1)
+			if len(coverURL) > 0 {
+				sc.Covers = append(sc.Covers, coverURL)
+			} else {
+				coverURL := e.ChildAttr(`.splash-screen > img`, "src")
+				if len(coverURL) > 0 {
+					sc.Covers = append(sc.Covers, coverURL)
+				} else {
+					m := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.c-webxr-splash-screen`, "style")))
+					if len(m) > 0 && len(m[1]) > 0 {
+						sc.Covers = append(sc.Covers, m[1])
+					}
+				}
+			}
+		} else {
+			tcoverURL := e.ChildAttr(`.splash-screen > img`, "src")
+			if len(tcoverURL) > 0 {
+				sc.Covers = append(sc.Covers, tcoverURL)
+			} else {
+				m := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.c-webxr-splash-screen`, "style")))
+				if len(m) > 0 && len(m[1]) > 0 {
+					sc.Covers = append(sc.Covers, m[1])
+				}
+			}
+		}
 
 		// straight and trans videos use a different page structure
 		if !isTransScene {

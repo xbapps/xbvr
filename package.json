@@ -15,7 +15,7 @@
     "@fortawesome/fontawesome-free": "5.15.4",
     "@fortawesome/fontawesome-svg-core": "1.2.36",
     "@mdi/font": "7.4.47",
-    "buefy": "0.9.27",
+    "buefy": "0.9.28",
     "bulma-extensions": "6.2.7",
     "date-fns": "3.3.1",
     "ky": "0.30.0",
@@ -35,8 +35,8 @@
     "wampy": "6.4.2"
   },
   "devDependencies": {
-    "@babel/core": "7.23.7",
-    "@babel/eslint-parser": "7.23.3",
+    "@babel/core": "7.23.9",
+    "@babel/eslint-parser": "7.23.10",
     "@vue/cli-plugin-babel": "5.0.8",
     "@vue/cli-plugin-eslint": "5.0.8",
     "@vue/cli-service": "5.0.8",
@@ -48,16 +48,16 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-promise": "6.1.1",
     "eslint-plugin-standard": "4.1.0",
-    "eslint-plugin-vue": "9.20.1",
+    "eslint-plugin-vue": "9.21.1",
     "less": "4.2.0",
-    "less-loader": "12.1.0",
+    "less-loader": "12.2.0",
     "sass": "1.70.0",
-    "sass-loader": "14.0.0",
+    "sass-loader": "14.1.0",
     "simple-progress-webpack-plugin": "2.0.0",
     "vue-cli-plugin-i18n": "2.3.2",
     "vue-i18n-extract": "2.0.7",
     "vue-template-compiler": "2.7.16",
-    "webpack": "5.90.0"
+    "webpack": "5.90.1"
   },
   "eslintConfig": {
     "root": true,
