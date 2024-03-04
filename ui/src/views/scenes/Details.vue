@@ -718,7 +718,7 @@ watch:{
     },
 
     setupPlayer() {
-      this.setupPlayerWithAspect('1:1');
+      this.setupPlayerWithAspect('4:3');
     },
 
     setupPlayerWithAspect (aspectRatio) {
@@ -892,6 +892,8 @@ watch:{
         onConfirm: value => {
           this.$buefy.toast.open(`New filename is: ${value}`)
           ky.post(`/api/files/rename`, {json:{file_id: file.id, filename: value}}).json().then(data => {
+            //this.$store.commit('overlay/showDetails', { scene: data })
+            this.$store.commit('sceneList/updateScene', data)
             this.$store.commit('overlay/showDetails', { scene: data })
           })
         }
