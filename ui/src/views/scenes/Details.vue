@@ -63,14 +63,23 @@
                   </b-field>
                 </b-field>
 
-                  <!-- アスペクト比切り替えボタン -->
-            <div class="aspect-ratio-buttons">
-              <b-button class="btn01" @click="changeAspectRatio('16:9')">16:9</b-button>
-              <b-button class="btn01" @click="changeAspectRatio('4:3')">4:3</b-button>
-              <b-button class="btn01" @click="changeAspectRatio('1:1')">1:1</b-button>
-              <b-button class="btn01" @click="changeAspectRatio('3:4')">3:4</b-button>
-              <b-button class="btn01" @click="changeAspectRatio('9:16')">9:16</b-button>
-            </div>
+                <div style="display: grid; grid-template-columns: auto auto auto;">
+                    <!-- アスペクト比切り替えボタン -->
+                  <div class="aspect-ratio-buttons">
+                    <b-button class="btn01" @click="changeAspectRatio('16:9')">16:9</b-button>
+                    <b-button class="btn01" @click="changeAspectRatio('4:3')">4:3</b-button>
+                    <b-button class="btn01" @click="changeAspectRatio('1:1')">1:1</b-button>
+                    <b-button class="btn01" @click="changeAspectRatio('3:4')">3:4</b-button>
+                    <b-button class="btn01" @click="changeAspectRatio('9:16')">9:16</b-button>
+                  </div>
+                  <div class="projection-mode-buttons">
+                    <b-button class="btn01" @click="changeProjection('NONE')">flat</b-button>
+                    <b-button class="btn01" @click="changeProjection('180')">180</b-button>
+                  </div>
+                </div>
+
+
+
              </b-tab-item>
 
             </b-tabs>
@@ -450,6 +459,7 @@ export default {
       searchfields: [],
       alternateSources: [],
       waitingForQuickFind: false,
+      currentAspect: '4:3'
     }
   },
   computed: {
@@ -667,25 +677,10 @@ watch:{
       var height = window.innerHeight;
       var screenAspectRatio = width / height;
 
-      //var screenAspectRatio = 1.7;
       var objectAspectRatio = 0.56;
       var objectHeightPercentage = 80;
 
       objectAspectRatio = this.calculateAspectRatio(aspectRatio)
-      // switch(aspectRatio) {
-      //   case '1:1':
-      //     objectAspectRatio = 1.0
-      //     break;
-      //   case '16:9':
-      //     objectAspectRatio = 16/9
-      //     break;
-      //   case '4:3':
-      //     objectAspectRatio = 4/3
-      //     break;
-      //   case '9:16':
-      //     objectAspectRatio = 9/16
-      //     break;
-      // }
       var objectWidthPercentage = this.calculateObjectWidthPercentage(screenAspectRatio, objectAspectRatio, objectHeightPercentage);
       this.setLeftColumnWidth(objectWidthPercentage + "%");
 
@@ -698,27 +693,115 @@ watch:{
       }
     },
 
-    changeAspectRatio(aspectRatio) {
-      let projection;
-      
-      this.player.aspectRatio(aspectRatio);
-      // this.activeMedia = 1;
+    changeProjection(projection) {
+      const parentElement = this.player.el().parentElement
+      const currentSource = this.player.currentSource();
+      this.player.dispose()
 
-      // try {
-      //   projection = this.item.file[0].projection;
-      // } catch {
-      //   projection == '180';
-      // }
+      const videoElement = document.createElement('video');
+      videoElement.setAttribute('id', 'player');
+      videoElement.setAttribute('controls', 'controls');
+      videoElement.setAttribute('playsinline', '');
+      videoElement.setAttribute('preload', 'none');
+      videoElement.setAttribute('class', 'video-js vjs-default-skin');
+      //parentElement.appendChild(videoElement);
+      parentElement.insertBefore(videoElement, parentElement.firstChild);
 
-      // this.updatePlayer('/api/dms/file/' + this.item.file[0].id() + '?dnt=true', (projection == 'flat' ? 'NONE' : '180'))
+      this.setupPlayerWithAspectById(this.currentAspect)
+      // this.player = videojs(videoElement, {
+      //   fluid: true,
+      //   loop: true,
+      //   muted: true 
+      // })
+      // videoElement.addEventListener('wheel', this.zoomHandlerWeb.bind(this))
+      this.updatePlayer(currentSource.src, projection)
+      this.player.play()
+
+      // this.activeMedia = 1
+      // this.updatePlayer('/api/dms/file/' + this.item.file[0].id + '?dnt=true', projection)
       // this.player.play()
+//      this.player = videojs(this.$refs.player, {projection: '360'});
 
+//       var currentSource = this.player.currentSource();
+//       var videoElement;
+//       videoElement = this.player.el();
+// //      this.player.reset()
+
+//       this.player.dispose()
+//       this.setupPlayer()
+
+//       // // this.updatePlayer(currentSource.src, '180')
+//       // this.player.reset()
+//       // this.player.vr({
+//       //   projection: projection,
+//       //   forceCardboard: false
+//       // })
+
+//       // this.player.on('loadedmetadata', function () {
+//       //   // vr.camera.position.set(-1, 0, 2);
+//       // })
+
+//       // if (currentSource.src) {
+//       //   this.player.src({ src: currentSource.src, type: 'video/mp4' })
+//       // } 
+//       // this.player.poster(this.getImageURL(this.item.cover_url, ''))
+
+//       // var currentSource = this.player.currentSource();
+//       // this.updatePlayer(undefined, 'NONE')
+//       // this.activeMedia = 1
+//       this.updatePlayer(currentSource.src, 'NONE')
+//       this.player.play()
+    },
+
+    changeAspectRatio(aspectRatio) {
+      this.player.aspectRatio(aspectRatio);
       this.playFile(this.item.file[0])
       this.resizeColumnForAspect(aspectRatio)
     },
 
     setupPlayer() {
       this.setupPlayerWithAspect('4:3');
+    },
+    setupPlayerWithAspectById (aspectRatio) {
+      this.player = videojs('player', {
+        aspectRatio: aspectRatio,
+        fluid: true,
+        loop: true,
+        muted: true 
+      })
+      this.currentAspect = aspectRatio
+
+      this.player.hotkeys({
+        alwaysCaptureHotkeys: true,
+        volumeStep: 0.1,
+        seekStep: 5,
+        enableModifiersForNumbers: false,
+        enableVolumeScroll: false,
+        customKeys: {
+          closeModal: {
+            key: function (event) {
+              return event.which === 27
+            },
+            handler: (player, options, event) => {
+              if (!this.displayingAlternateSource) this.player.dispose()
+              this.$store.commit('overlay/hideDetails')
+            }
+          },
+          zoomIn: {
+            handler: (player, options, event) => {
+              this.zoomHandler(true)
+            }
+          },
+          zoomOut: {
+            handler: (player, options, event) => {
+              this.zoomHandler(false)
+            }
+          }
+        }
+      })
+
+      const videoElement = this.player.el();
+      videoElement.addEventListener('wheel', this.zoomHandlerWeb.bind(this))
     },
 
     setupPlayerWithAspect (aspectRatio) {
@@ -797,7 +880,7 @@ watch:{
 
       if (src) {
         this.player.src({ src: src, type: 'video/mp4' })
-      }
+      } 
       this.player.poster(this.getImageURL(this.item.cover_url, ''))
     },
     showCastScenes (actor) {
