@@ -19,7 +19,7 @@
     <div class="modal-background"></div>
 
     <div class="modal-card">
-      <section class="modal-card-body">
+      <section class="modal-card-body" style="background:#222222;color:whitesmoke">
         <div class="columns">
 
           <div class="column left-column">
@@ -92,7 +92,7 @@
             <div class="block-info block">
               <div class="content">
                 <h3>
-                  <span v-if="item.title">{{ item.title }}</span>
+                  <span  style="color:navajowhite" v-if="item.title">{{ item.title }}</span>
                   <span v-else class="missing">(no title)</span>                  
                   <small class="is-pulled-right">
                     {{ format(parseISO(item.release_date), "yyyy-MM-dd") }}
@@ -236,7 +236,7 @@
               <b-tabs v-model="activeTab" :animated="false">
 
                 <b-tab-item :label="`Files (${fileCount})`" v-if="!displayingAlternateSource">
-                  <div class="block-tab-content block">
+                  <div class="block-tab-content block" >
                     <div class="content media is-small" v-for="(f, idx) in filesByType" :key="idx">
                       <div class="media-left">
                         <button rounded class="button is-success is-small" @click='playFile(f)'
@@ -259,7 +259,7 @@
                         </button>
                       </div>
                       <div class="media-content" style="overflow-wrap: break-word;">
-                        <strong>{{ f.filename }}</strong><br/>
+                        <strong style="color:navajowhite">{{ f.filename }}</strong><br/>
                         <small>
                           <span class="pathDetails">{{ f.path }}</span>
                           <br/>
@@ -678,7 +678,7 @@ watch:{
       var screenAspectRatio = width / height;
 
       var objectAspectRatio = 0.56;
-      var objectHeightPercentage = 80;
+      var objectHeightPercentage = 93;
 
       objectAspectRatio = this.calculateAspectRatio(aspectRatio)
       var objectWidthPercentage = this.calculateObjectWidthPercentage(screenAspectRatio, objectAspectRatio, objectHeightPercentage);
@@ -696,6 +696,7 @@ watch:{
     changeProjection(projection) {
       const parentElement = this.player.el().parentElement
       const currentSource = this.player.currentSource();
+      const currentDuration = this.player.duration();
       this.player.dispose()
 
       const videoElement = document.createElement('video');
@@ -704,59 +705,21 @@ watch:{
       videoElement.setAttribute('playsinline', '');
       videoElement.setAttribute('preload', 'none');
       videoElement.setAttribute('class', 'video-js vjs-default-skin');
-      //parentElement.appendChild(videoElement);
       parentElement.insertBefore(videoElement, parentElement.firstChild);
 
       this.setupPlayerWithAspectById(this.currentAspect)
-      // this.player = videojs(videoElement, {
-      //   fluid: true,
-      //   loop: true,
-      //   muted: true 
-      // })
-      // videoElement.addEventListener('wheel', this.zoomHandlerWeb.bind(this))
       this.updatePlayer(currentSource.src, projection)
+      this.player.currentTime(currentDuration);
       this.player.play()
-
-      // this.activeMedia = 1
-      // this.updatePlayer('/api/dms/file/' + this.item.file[0].id + '?dnt=true', projection)
-      // this.player.play()
-//      this.player = videojs(this.$refs.player, {projection: '360'});
-
-//       var currentSource = this.player.currentSource();
-//       var videoElement;
-//       videoElement = this.player.el();
-// //      this.player.reset()
-
-//       this.player.dispose()
-//       this.setupPlayer()
-
-//       // // this.updatePlayer(currentSource.src, '180')
-//       // this.player.reset()
-//       // this.player.vr({
-//       //   projection: projection,
-//       //   forceCardboard: false
-//       // })
-
-//       // this.player.on('loadedmetadata', function () {
-//       //   // vr.camera.position.set(-1, 0, 2);
-//       // })
-
-//       // if (currentSource.src) {
-//       //   this.player.src({ src: currentSource.src, type: 'video/mp4' })
-//       // } 
-//       // this.player.poster(this.getImageURL(this.item.cover_url, ''))
-
-//       // var currentSource = this.player.currentSource();
-//       // this.updatePlayer(undefined, 'NONE')
-//       // this.activeMedia = 1
-//       this.updatePlayer(currentSource.src, 'NONE')
-//       this.player.play()
     },
 
     changeAspectRatio(aspectRatio) {
+      const currentDuration = this.player.duration();
       this.player.aspectRatio(aspectRatio);
       this.playFile(this.item.file[0])
       this.resizeColumnForAspect(aspectRatio)
+      this.player.currentTime(currentDuration);
+      this.player.play()
     },
 
     setupPlayer() {
@@ -1374,6 +1337,7 @@ watch:{
 
 .modal-card {
   width: 95%;
+  height: 100%;
 }
 
 .missing {
