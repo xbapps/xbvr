@@ -75,6 +75,7 @@
                   <div class="projection-mode-buttons">
                     <b-button class="btn01" @click="changeProjection('NONE')">flat</b-button>
                     <b-button class="btn01" @click="changeProjection('180')">180</b-button>
+                    <b-button class="btn01" @click="setCurrentTime(500)">test</b-button>
                   </div>
                 </div>
 
@@ -459,7 +460,10 @@ export default {
       searchfields: [],
       alternateSources: [],
       waitingForQuickFind: false,
-      currentAspect: '4:3'
+      currentAspect: '4:3',
+      currentFileNo: 0,
+      currentProjection: 'NONE',
+      currentDuraiton: 0
     }
   },
   computed: {
@@ -693,10 +697,22 @@ watch:{
       }
     },
 
+    setCurrentTime(seconds) {
+      if (!this.player.paused()) {
+        this.player.pause();
+      }
+      setTimeout(() => {
+        this.player.currentTime(Math.floor(seconds));
+        this.player.play();
+        this.currentDuraiton = currentDuration
+      }, 0);
+    },
+
     changeProjection(projection) {
       const parentElement = this.player.el().parentElement
       const currentSource = this.player.currentSource();
-      const currentDuration = this.player.duration();
+      const currentDuration = this.player.currentTime();
+      this.currentDuraiton = currentDuration
       this.player.dispose()
 
       const videoElement = document.createElement('video');
@@ -709,16 +725,21 @@ watch:{
 
       this.setupPlayerWithAspectById(this.currentAspect)
       this.updatePlayer(currentSource.src, projection)
-      this.player.currentTime(currentDuration);
+      this.currentProjection = projection
+
+      this.setCurrentTime(currentDuration)
       this.player.play()
     },
 
+
+
     changeAspectRatio(aspectRatio) {
-      const currentDuration = this.player.duration();
+      const currentDuration = this.player.currentTime();
+      const currentSource = this.player.currentSource();
       this.player.aspectRatio(aspectRatio);
-      this.playFile(this.item.file[0])
-      this.resizeColumnForAspect(aspectRatio)
-      this.player.currentTime(currentDuration);
+      this.updatePlayer(currentSource.src, this.currentProjection)
+      this.resizeColumnForAspect(aspectRatio) 
+      this.setCurrentTime(currentDuration)
       this.player.play()
     },
 
@@ -730,7 +751,8 @@ watch:{
         aspectRatio: aspectRatio,
         fluid: true,
         loop: true,
-        muted: true 
+        muted: true,
+        autoplay: false
       })
       this.currentAspect = aspectRatio
 
@@ -772,7 +794,8 @@ watch:{
         aspectRatio: aspectRatio,
         fluid: true,
         loop: true,
-        muted: true 
+        muted: true,
+        autoplay: false
       })
 
       this.player.hotkeys({
@@ -834,7 +857,8 @@ watch:{
       this.player.reset()
       /* const vr = */ this.player.vr({
         projection: projection,
-        forceCardboard: false
+        forceCardboard: false,
+        autoplay: false
       })
 
       this.player.on('loadedmetadata', function () {
@@ -845,6 +869,8 @@ watch:{
         this.player.src({ src: src, type: 'video/mp4' })
       } 
       this.player.poster(this.getImageURL(this.item.cover_url, ''))
+
+      this.currentProjection = projection
     },
     showCastScenes (actor) {
       this.$store.state.sceneList.filters.cast = actor
@@ -896,6 +922,7 @@ watch:{
       this.activeMedia = 1
       this.updatePlayer('/api/dms/file/' + file.id + '?dnt=true', (file.projection == 'flat' ? 'NONE' : '180'))
       this.player.play()
+      this.curerntFileNo = file.id
     },
     unmatchFile (file) {
       this.$buefy.dialog.confirm({
