@@ -24,6 +24,7 @@ var MyFilesDir string
 var DownloadDir string
 var WebPort int
 var DBConnectionPoolSize int
+var ConcurrentScrapers int
 
 func DirSize(path string) (int64, error) {
 	var size int64
@@ -53,6 +54,7 @@ func InitPaths() {
 	web_port := flag.Int("web_port", 0, "Optional: override default Web Page port 9999")
 	ws_addr := flag.String("ws_addr", "", "Optional: override default Websocket address from the default 0.0.0.0:9998")
 	db_connection_pool_size := flag.Int("db_connection_pool_size", 0, "Optional: sets a limit to the number of db connections while scraping")
+	concurrentSscrapers := flag.Int("concurrent_scrapers", 0, "Optional: sets a limit to the number of concurrent scrapers")
 
 	flag.Parse()
 
@@ -119,6 +121,11 @@ func InitPaths() {
 		DBConnectionPoolSize = *db_connection_pool_size
 	} else {
 		DBConnectionPoolSize = EnvConfig.DBConnectionPoolSize
+	}
+	if *concurrentSscrapers != 0 {
+		ConcurrentScrapers = *concurrentSscrapers
+	} else {
+		ConcurrentScrapers = EnvConfig.ConcurrentScrapers
 	}
 
 	_ = os.MkdirAll(AppDir, os.ModePerm)

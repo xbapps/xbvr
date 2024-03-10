@@ -117,12 +117,34 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 
 	var wg sync.WaitGroup
 
+	sitecnt := 1
+	concurrent_scrapers := common.ConcurrentScrapers
+	if concurrent_scrapers == 0 {
+		concurrent_scrapers = 99999
+	}
 	if len(sites) > 0 {
 		for _, site := range sites {
 			for _, scraper := range scrapers {
 				if site.ID == scraper.ID {
 					wg.Add(1)
-					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, site.LimitScraping)
+					go func(scraper models.Scraper) {
+						start := time.Now()
+						scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, site.LimitScraping)
+						duration := time.Since(start).Seconds()
+						log.Infof("time since %v", duration)
+						var site models.Site
+						err := site.GetIfExist(scraper.ID)
+						if err != nil {
+							log.Error(err)
+							return
+						}
+						site.Save()
+					}(scraper)
+
+					if sitecnt%concurrent_scrapers == 0 { // processing batches of 35 sites
+						wg.Wait()
+					}
+					sitecnt++
 				}
 			}
 		}
