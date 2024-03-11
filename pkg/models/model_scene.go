@@ -907,6 +907,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			}
 		case "Has Favourite Actor":
 			where = "exists (select * from scene_cast join actors on actors.id=scene_cast.actor_id where actors.favourite=1 and scene_cast.scene_id=scenes.id)"
+		case "Has Actor in Watchlist":
+			where = "exists (select * from scene_cast join actors on actors.id=scene_cast.actor_id where actors.watchlist=1 and scene_cast.scene_id=scenes.id)"
 		case "Available from POVR":
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and external_id like 'povr-%' and internal_db_id = scenes.id)"
 		case "Available from VRPorn":
