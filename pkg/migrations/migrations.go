@@ -1925,6 +1925,13 @@ func Migrate() {
 				return err
 			},
 		},
+		{
+			ID: "0077-Update-VirtualPorn-ids",
+			Migrate: func(tx *gorm.DB) error {
+				err := scrape.UpdateVirtualPornIds()
+				return err
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

@@ -2,150 +2,167 @@ package scrape
 
 import (
 	"encoding/json"
+	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/gocolly/colly/v2"
-	"github.com/nleeper/goment"
+	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
+	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
 func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	// this scraper is non-standard in that it gathers info via an api rather than scraping html pages
 	defer wg.Done()
 	scraperID := "bvr"
 	siteID := "VirtualPorn"
 	logScrapeStart(scraperID, siteID)
+	nextApiUrl := ""
 
-	sceneCollector := createCollector("virtualporn.com")
 	siteCollector := createCollector("virtualporn.com")
-	pageCnt := 1
+	apiCollector := createCollector("site-api.project1service.com")
+	offset := 0
 
-	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := models.ScrapedScene{}
-		sc.ScraperID = scraperID
-		sc.SceneType = "VR"
-		sc.Studio = "BangBros"
-		sc.Site = siteID
-		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
-		sc.MembersUrl = "https://members.bangbros.com/product/655/movie/" + strings.Replace(strings.Split(e.Request.URL.String(), "/")[3], "video", "", 1)
+	apiCollector.OnResponse(func(r *colly.Response) {
+		sceneListJson := gjson.ParseBytes(r.Body)
 
-		// Title / Cover / ID / Filenames
-		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
-			sc.Title = strings.TrimSpace(e.Attr("title"))
+		processScene := func(scene gjson.Result) {
+			sc := models.ScrapedScene{}
+			sc.ScraperID = scraperID
+			sc.SceneType = "VR"
+			sc.Studio = "BangBros"
+			sc.Site = siteID
+			id := strconv.Itoa(int(scene.Get("id").Int()))
+			sc.SceneID = "bvr-" + id
 
-			tmpCover := e.Request.AbsoluteURL(e.Request.AbsoluteURL(e.Attr("poster")))
-			sc.Covers = append(sc.Covers, tmpCover)
+			sc.Title = scene.Get("title").String()
+			sc.HomepageURL = "https://virtualporn.com/video/" + id + "/" + slugify.Slugify(strings.ReplaceAll(sc.Title, "'", ""))
+			sc.MembersUrl = "https://site-ma.virtualporn.com/scene/" + id + "/" + slugify.Slugify(strings.ReplaceAll(sc.Title, "'", ""))
+			sc.Synopsis = scene.Get("description").String()
+			dateParts := strings.Split(scene.Get("dateReleased").String(), "T")
+			sc.Released = dateParts[0]
 
-			tmp := strings.Split(tmpCover, "/")
-			sc.SceneID = strings.Replace(tmp[5], "bvr", "bvr-", 1)
+			scene.Get("images.poster").ForEach(func(key, imgGroup gjson.Result) bool {
+				if key.String() == "0" {
+					imgurl := imgGroup.Get("xl.urls.webp").String()
+					if imgurl != "" {
+						sc.Covers = append(sc.Covers, imgurl)
+					}
 
-			e.ForEach(`source`, func(id int, e *colly.HTMLElement) {
-				tmpFile := strings.Split(e.Attr("src"), "/")
-				sc.Filenames = append(sc.Filenames, strings.Replace(tmpFile[len(tmpFile)-1], "trailer-", "", -1))
+				} else {
+					imgurl := imgGroup.Get("xl.urls.webp").String()
+					if imgurl != "" {
+						if len(sc.Covers) == 0 {
+							sc.Covers = append(sc.Covers, imgurl)
+						} else {
+							sc.Gallery = append(sc.Gallery, imgurl)
+						}
+					}
+				}
+				return true
 			})
-		})
 
-		file5kExists := false
-		for _, filename := range sc.Filenames {
-			if strings.Contains(filename, "5k") {
-				file5kExists = true
-			}
+			// Cast
+			sc.ActorDetails = make(map[string]models.ActorDetails)
+			scene.Get("actors").ForEach(func(key, actor gjson.Result) bool {
+				name := actor.Get("name").String()
+				if actor.Get("gender").String() == "female" {
+					sc.Cast = append(sc.Cast, name)
+				}
+				sc.ActorDetails[actor.Get("name").String()] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: "https://virtualporn.com/model/" + strconv.Itoa(int(actor.Get("id").Int())) + "/" + slugify.Slugify(name)}
+				return true
+			})
+
+			// Tags
+			scene.Get("tags").ForEach(func(key, tag gjson.Result) bool {
+				if tag.Get("isVisible").Bool() {
+					sc.Tags = append(sc.Tags, tag.Get("name").String())
+				}
+				return true
+			})
+
+			// trailer & filename details
+			sc.TrailerType = "urls"
+			var trailers []models.VideoSource
+			scene.Get("children").ForEach(func(key, child gjson.Result) bool {
+				child.Get("videos.full.files").ForEach(func(key, file gjson.Result) bool {
+					quality := file.Get("format").String()
+					url := file.Get("urls.view").String()
+					filename := file.Get("urls.download").String()
+					if url != "" {
+						trailers = append(trailers, models.VideoSource{URL: url, Quality: quality})
+					}
+					pos := strings.Index(filename, "?filename=")
+					if pos != -1 {
+						sc.Filenames = append(sc.Filenames, filename[pos+10:])
+					}
+					return true
+				})
+				return true
+			})
+			trailerJson, _ := json.Marshal(models.VideoSourceResponse{VideoSources: trailers})
+			sc.TrailerSrc = string(trailerJson)
+
+			out <- sc
+
 		}
-		if !file5kExists {
-			sc.Filenames = append(sc.Filenames, strings.Replace(sc.SceneID, "bvr-", "bvr", -1)+"-5k.mp4")
+		total := int(sceneListJson.Get("meta.total").Int())
+		scenes := sceneListJson.Get("result")
+		if strings.Contains(r.Request.URL.RawQuery, "offset=") {
+			scenes.ForEach(func(key, scene gjson.Result) bool {
+				// check if we have the scene already
+				matches := funk.Filter(knownScenes, func(s string) bool {
+					return strings.Contains(s, scene.Get("id").String())
+				})
+				if funk.IsEmpty(matches) {
+					processScene(scene)
+				}
+				return true
+			})
+		} else {
+			processScene(scenes)
 		}
 
-		// Gallery
-		e.ForEach(`div.player__thumbs img`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Attr("src"))
-		})
-
-		// trailer details
-		sc.TrailerType = "scrape_html"
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "dl8-video source", ContentPath: "src", QualityPath: "quality"}
-		strParams, _ := json.Marshal(params)
-		sc.TrailerSrc = string(strParams)
-
-		// Cast
-		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`div.player__stats p.player__stats__cast a`, func(id int, e *colly.HTMLElement) {
-			if strings.TrimSpace(e.Text) != "" {
-				sc.Cast = append(sc.Cast, strings.TrimSpace(strings.ReplaceAll(e.Text, "!", "")))
-				sc.ActorDetails[strings.TrimSpace(strings.ReplaceAll(e.Text, "!", ""))] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
-			}
-		})
-
-		// Tags
-		e.ForEach(`div.video__tags__list a.tags`, func(id int, e *colly.HTMLElement) {
-			tag := strings.TrimSpace(e.Text)
-			if tag != "" {
-				sc.Tags = append(sc.Tags, strings.ToLower(tag))
-			}
-		})
-
-		// Synposis
-		e.ForEach(`p.player__description`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text)
-		})
-
-		// Release date / Duration
-		tmpDate, _ := goment.New(strings.TrimSpace(e.Request.Ctx.GetAny("date").(string)), "MMM DD, YYYY")
-		sc.Released = tmpDate.Format("YYYY-MM-DD")
-		tmpDuration, err := strconv.Atoi(strings.TrimSpace(strings.Replace(e.Request.Ctx.GetAny("dur").(string), "mins", "", -1)))
-		if err == nil {
-			sc.Duration = tmpDuration
-		}
-
-		out <- sc
-	})
-
-	siteCollector.OnHTML(`body`, func(e *colly.HTMLElement) {
-		sceneCnt := 0
-		e.ForEach(`div.recommended__item`, func(id int, e *colly.HTMLElement) {
-			sceneCnt += 1
-		})
-
-		if sceneCnt > 0 {
-			pageCnt += 1
+		offset += 24
+		if offset < total {
 			if !limitScraping {
-				siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
+				apiCollector.Visit("https://site-api.project1service.com/v2/releases?type=scene&limit=24&offset=" + strconv.Itoa(offset))
 			}
 		}
 	})
 
-	siteCollector.OnHTML(`div.recommended__item`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
-
-		// If scene exist in database, there's no need to scrape
-		if !funk.ContainsString(knownScenes, sceneURL) {
-
-			//Date & Duration from main index
-			ctx := colly.NewContext()
-			e.ForEach(`span.recommended__item__info__date`, func(id int, e *colly.HTMLElement) {
-				if id == 0 {
-					ctx.Put("date", strings.TrimSpace(e.Text))
-				}
+	siteCollector.OnHTML(`script`, func(e *colly.HTMLElement) {
+		// only interested in a script containg window\.__JUAN\.rawInstance
+		re := regexp.MustCompile(`window\.__JUAN\.rawInstance = (\{.*?\});`)
+		matches := re.FindStringSubmatch(e.Text)
+		if len(matches) > 1 {
+			instanceJson := gjson.ParseBytes([]byte(matches[1]))
+			token := instanceJson.Get("jwt").String()
+			// set up api requests to use the token in the Instance Header
+			apiCollector.OnRequest(func(r *colly.Request) {
+				r.Headers.Set("Instance", token)
 			})
-			e.ForEach(`span.recommended__item__time`, func(id int, e *colly.HTMLElement) {
-				if id == 0 {
-					ctx.Put("dur", strings.TrimSpace(e.Text))
-				}
-			})
-
-			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+			apiCollector.Visit(nextApiUrl)
 		}
 	})
-
 	if singleSceneURL != "" {
 		ctx := colly.NewContext()
 		ctx.Put("dur", "")
 		ctx.Put("date", "")
+		urlParts := strings.Split(singleSceneURL, "/")
+		id := urlParts[len(urlParts)-2]
+		offset = 9999 // do read more pages, we only need 1
+		nextApiUrl = "https://site-api.project1service.com/v2/releases/" + id
+		siteCollector.Visit("https://virtualporn.com/videos")
 
-		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {
-		siteCollector.Visit("https://virtualporn.com/videos/" + strconv.Itoa(pageCnt))
+		// call virtualporn.com, this is just to get the instance token to use the api for this session
+		nextApiUrl = "https://site-api.project1service.com/v2/releases?type=scene&limit=24&offset=" + strconv.Itoa(offset)
+		siteCollector.Visit("https://virtualporn.com/videos")
 	}
 
 	if updateSite {
@@ -157,4 +174,81 @@ func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 func init() {
 	registerScraper("bvr", "VirtualPorn", "https://images.cn77nd.com/members/bangbros/favicon/apple-icon-60x60.png", "virtualporn.com", VirtualPorn)
+}
+
+// one off conversion routine called by migrations.go
+func UpdateVirtualPornIds() error {
+	collector := createCollector("virtualporn.com")
+	apiCollector := createCollector("site-api.project1service.com")
+	offset := 0
+	sceneCnt := 0
+
+	collector.OnHTML(`script`, func(e *colly.HTMLElement) {
+		// only interested in a script containg window\.__JUAN\.rawInstance
+		re := regexp.MustCompile(`window\.__JUAN\.rawInstance = (\{.*?\});`)
+		matches := re.FindStringSubmatch(e.Text)
+		if len(matches) > 1 {
+			instanceJson := gjson.ParseBytes([]byte(matches[1]))
+			token := instanceJson.Get("jwt").String()
+			// set up api requests to use the token in the Instance Header
+			apiCollector.OnRequest(func(r *colly.Request) {
+				r.Headers.Set("Instance", token)
+			})
+			apiCollector.Visit("https://site-api.project1service.com/v2/releases?type=scene&limit=100&offset=" + strconv.Itoa(offset))
+		}
+	})
+
+	apiCollector.OnResponse(func(r *colly.Response) {
+		db, _ := models.GetDB()
+		defer db.Close()
+
+		sceneListJson := gjson.ParseBytes(r.Body)
+		sceneCnt = int(sceneListJson.Get("meta.total").Int())
+		scenes := sceneListJson.Get("result")
+		scenes.ForEach(func(key, apiScene gjson.Result) bool {
+			id := strconv.Itoa(int(apiScene.Get("id").Int()))
+			title := apiScene.Get("title").String()
+			dateParts := strings.Split(apiScene.Get("dateReleased").String(), "T")
+			releasedDate := dateParts[0]
+			var scene models.Scene
+			scene.GetIfExist("bvr-" + id)
+			if scene.ID > 0 {
+				// get the next record, this one already matches the new id
+				return true
+			}
+			db.Where("scraper_id = ? and release_date_text = ?", "bvr", releasedDate).Find(&scene)
+			if scene.ID > 0 {
+				oldSceneId := scene.SceneID
+				log.Infof("Updating SceneId %s to %s ", oldSceneId, "bvr-"+id)
+				scene.LegacySceneID = scene.SceneID
+				scene.SceneID = "bvr-" + id
+				scene.SceneURL = "https://virtualporn.com/video/" + id + "/" + slugify.Slugify(strings.ReplaceAll(title, "'", ""))
+				scene.MemberURL = "https://site-ma.virtualporn.com/scene/" + id + "/" + slugify.Slugify(strings.ReplaceAll(title, "'", ""))
+
+				scene.Save()
+				result := db.Model(&models.Action{}).Where("scene_id = ?", oldSceneId).Update("scene_id", scene.SceneID)
+				if result.Error != nil {
+					log.Infof("Converting Actions for VirtualPorn Scene %s to %s failed, %s", oldSceneId, scene.SceneID, result.Error)
+				}
+				result = db.Model(&models.ExternalReferenceLink{}).Where("internal_table = 'scenes' and internal_name_id = ?", oldSceneId).Update("internal_name_id", scene.SceneID)
+				if result.Error != nil {
+					log.Infof("Converting External Reference Links for VirtualPorn Scene %s to %s failed, %s", oldSceneId, scene.SceneID, result.Error)
+				}
+			}
+			return true
+		})
+		offset += 100
+		if offset < sceneCnt {
+			apiCollector.Visit("https://site-api.project1service.com/v2/releases?type=scene&limit=24&offset=" + strconv.Itoa(offset))
+		}
+	})
+
+	collector.Visit("https://virtualporn.com/videos")
+
+	if sceneCnt > 0 {
+		return nil
+	} else {
+		return errors.New("No scenes updated")
+	}
+
 }
