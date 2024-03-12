@@ -804,6 +804,19 @@ func Migrate() {
 				return tx.AutoMigrate(ExternalReference{}).Error
 			},
 		},
+		{
+			ID: "0077-trailer-source-and-external-data-size-change",
+			Migrate: func(tx *gorm.DB) error {
+				if models.GetDBConn().Driver == "mysql" {
+					err := tx.Debug().Model(&models.Scene{}).ModifyColumn("trailer_source", "longtext").Error
+					if err != nil {
+						return err
+					}
+					return tx.Model(&models.ExternalReference{}).ModifyColumn("external_data", "longtext").Error
+				}
+				return nil
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below

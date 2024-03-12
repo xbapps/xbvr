@@ -26,7 +26,7 @@ type ExternalReference struct {
 	ExternalId     string                  `json:"external_id" gorm:"index" xbvrbackup:"external_id"`
 	ExternalURL    string                  `json:"external_url" gorm:"size:1000" xbvrbackup:"external_url"`
 	ExternalDate   time.Time               `json:"external_date" xbvrbackup:"external_date"`
-	ExternalData   string                  `json:"external_data" sql:"type:text;" xbvrbackup:"external_data"`
+	ExternalData   string                  `json:"external_data" sql:"type:longtext;" xbvrbackup:"external_data"`
 	UdfBool1       bool                    `json:"udf_bool1" xbvrbackup:"udf_bool1"` // user defined fields, use depends what type of data the extref is for.
 	UdfBool2       bool                    `json:"udf_bool2" xbvrbackup:"udf_bool2"`
 	UdfDatetime1   time.Time               `json:"udf_datetime1" xbvrbackup:"udf_datetime1"`
