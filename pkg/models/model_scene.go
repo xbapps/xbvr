@@ -101,7 +101,7 @@ type Scene struct {
 	NeedsUpdate   bool   `json:"needs_update" xbvrbackup:"-"`
 	EditsApplied  bool   `json:"edits_applied" gorm:"default:false" xbvrbackup:"-"`
 	TrailerType   string `json:"trailer_type" xbvrbackup:"trailer_type"`
-	TrailerSource string `gorm:"size:1000" json:"trailer_source" xbvrbackup:"trailer_source"`
+	TrailerSource string `json:"trailer_source" sql:"type:longtext;"  xbvrbackup:"trailer_source"`
 	ChromaKey     string `json:"passthrough" xbvrbackup:"passthrough"`
 	Trailerlist   bool   `json:"trailerlist" gorm:"default:false" xbvrbackup:"trailerlist"`
 	IsSubscribed  bool   `json:"is_subscribed" gorm:"default:false"`
