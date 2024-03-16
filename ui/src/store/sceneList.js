@@ -33,7 +33,7 @@ const state = {
   isLoading: false,
   offset: 0,
   total: 0,
-  limit: 80,
+  limit: 500,
   counts: {
     any: 0,
     available: 0,
