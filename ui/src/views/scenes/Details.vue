@@ -75,6 +75,7 @@
                   <div class="projection-mode-buttons">
                     <b-button class="btn01" @click="changeProjection('NONE')">flat</b-button>
                     <b-button class="btn01" @click="changeProjection('180')">180</b-button>
+                    <b-button class="btn01" @click="changeProjection('360_TB')">360_TB</b-button>
                     <b-button class="btn01" @click="setCurrentTime(500)">test</b-button>
                   </div>
                 </div>
@@ -415,6 +416,7 @@
 import ky from 'ky'
 import videojs from 'video.js'
 import 'videojs-vr/dist/videojs-vr.min.js'
+import 'videojs-thumbnail-sprite';
 import { format, formatDistance, parseISO } from 'date-fns'
 import prettyBytes from 'pretty-bytes'
 import VueLoadImage from 'vue-load-image'
@@ -743,9 +745,25 @@ watch:{
       this.player.play()
     },
 
+    setupSprite() {
+      this.player.thumbnailSprite({
+        sprites: [
+          {
+            url: "https://image.mux.com/XAUyVQNQUpHCFH2qXYgi3JOcmGs4xovhczrhHQsgqJ4/storyboard.jpg",
+            start: 0,
+            interval: 3,
+            width: 376,
+            height: 160,
+          },
+        ],
+      });
+    },
+
     setupPlayer() {
       this.setupPlayerWithAspect('4:3');
+      this.resizeColumnForAspect('4:3') 
     },
+
     setupPlayerWithAspectById (aspectRatio) {
       this.player = videojs('player', {
         aspectRatio: aspectRatio,
@@ -755,6 +773,8 @@ watch:{
         autoplay: false
       })
       this.currentAspect = aspectRatio
+
+      this.setupSprite()
 
       this.player.hotkeys({
         alwaysCaptureHotkeys: true,
@@ -797,6 +817,8 @@ watch:{
         muted: true,
         autoplay: false
       })
+
+      this.setupSprite()
 
       this.player.hotkeys({
         alwaysCaptureHotkeys: true,
@@ -945,6 +967,8 @@ watch:{
         type: 'is-danger',
         hasIcon: true,
         onConfirm: () => {
+          this.activeMedia = 0
+          this.updatePlayer(undefined, this.currentProjection)
           ky.delete(`/api/files/file/${file.id}`).json().then(data => {
             this.$store.commit('overlay/showDetails', { scene: data })
           })
