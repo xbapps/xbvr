@@ -78,6 +78,11 @@
                 {{subtitlesFilesCount(props.row)}}
               </b-tag>
             </b-table-column>
+            
+            <b-table-column field="scene_id" :label="$t('ID')" sortable nowrap v-slot="props">
+              {{ props.row.scene_id }}
+            </b-table-column>
+
             <b-table-column field="title" :label="$t('Title')" sortable v-slot="props">
               <p v-if="props.row.title">{{ props.row.title }}</p>
               <small>
@@ -90,9 +95,7 @@
             <b-table-column field="duration" :label="$t('Duration')" sortable nowrap v-slot="props">
               {{ props.row.duration > 0 ? props.row.duration + " min" : ""}}
             </b-table-column>
-            <b-table-column field="scene_id" :label="$t('ID')" sortable nowrap v-slot="props">
-              {{ props.row.scene_id }}
-            </b-table-column>
+
             <b-table-column field="_score" :label="$t('Score')" sortable v-slot="props">
               <b-progress show-value :value="props.row._score * 100"></b-progress>
             </b-table-column>
