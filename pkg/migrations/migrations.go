@@ -805,6 +805,16 @@ func Migrate() {
 			},
 		},
 
+		{
+			ID: "0076-thumbnail-flag",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					HasThumbnail bool `json:"has_thumbnail" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
 		// ===============================================================================================

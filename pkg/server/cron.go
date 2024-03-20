@@ -131,6 +131,27 @@ func generatePreviewCron() {
 	}
 	log.Println(fmt.Sprintf("Next Preview Generation Task at %v", cronInstance.Entry(previewTask).Next))
 }
+
+var thumbnailGenerateInProgress = false
+
+func generateThumbnailCron() {
+	if !session.HasActiveSession() || !thumbnailGenerateInProgress {
+		thumbnailGenerateInProgress = true
+		defer func() {
+			thumbnailGenerateInProgress = false
+		}()
+
+		if !config.Config.Cron.PreviewSchedule.UseRange {
+			tasks.GenerateThumnbnails(nil)
+		} else {
+			endTime := calcEndTime(config.Config.Cron.PreviewSchedule.HourStart, config.Config.Cron.PreviewSchedule.HourEnd, config.Config.Cron.PreviewSchedule.MinuteStart)
+			log.Infof("Preview Generation will stop at %v", endTime)
+			tasks.GenerateThumnbnails(&endTime)
+		}
+	}
+	log.Println(fmt.Sprintf("Next Thumbnail Generation Task at %v", cronInstance.Entry(previewTask).Next))
+}
+
 func formatCronSchedule(schedule config.CronSchedule) string {
 	// 	this routine will format a crontab range description, https://crontab.guru is a good tool to decode the range description generated
 	// 	if the start hour > end hour then the time range will extend across midnight into the next day

@@ -116,6 +116,8 @@ type Scene struct {
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
 
 	AlternateSource []ExternalReferenceLink `json:"alternate_source" xbvrbackup:"-"`
+
+	HasThumbnail bool `json:"has_thumbnail" gorm:"default:false" xbvrbackup:"-"`
 }
 
 type Image struct {
@@ -296,6 +298,16 @@ func (o *Scene) PreviewExists() bool {
 	return true
 }
 
+func (o *Scene) ThumbnailExists() bool {
+	
+	name := filepath.Base(o.Files[0].Filename)
+	nameWithoutExt := strings.TrimSuffix(name, filepath.Ext(name))
+	if _, err := os.Stat(filepath.Join(common.VideoThumbnailDir, fmt.Sprintf("%v.jpg", nameWithoutExt))); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
 func (o *Scene) UpdateStatus() {
 	// Check if file with scene association exists
 	files, err := o.GetFiles()
@@ -390,6 +402,16 @@ func (o *Scene) UpdateStatus() {
 
 	if !o.HasVideoPreview && o.PreviewExists() {
 		o.HasVideoPreview = true
+		changed = true
+	}
+
+	if o.HasThumbnail && !o.ThumbnailExists() {
+		o.HasThumbnail = false
+		changed = true
+	}
+
+	if !o.HasThumbnail && o.ThumbnailExists() {
+		o.HasThumbnail = true
 		changed = true
 	}
 

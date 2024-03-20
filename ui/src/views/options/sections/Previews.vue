@@ -67,6 +67,11 @@
             <b-field>
               <b-button type="is-primary" @click="startGenerating">Start generating previews</b-button>
             </b-field>
+
+            <b-field>
+              <b-button type="is-primary" @click="startThumbnailsGenerating">Start generating thumbnails</b-button>
+            </b-field
+
           </section>
         </div>
         <div class="column">
@@ -158,6 +163,9 @@ export default {
     },
     async startGenerating () {
       await ky.get('/api/task/preview/generate')
+    },
+    async startThumbnailsGenerating () {
+      await ky.get('/api/task/thumbnail/generate')
     },
     prettyBytes
   }
