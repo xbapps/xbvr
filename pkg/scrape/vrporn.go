@@ -145,7 +145,7 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 	siteCollector.OnHTML(`div.pagination a.next`, func(e *colly.HTMLElement) {
 		if !limitScraping {
 			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-			siteCollector.Visit(pageURL)
+			WaitBeforeVisit("vrporn.com", siteCollector.Visit, pageURL)
 		}
 	})
 
@@ -153,14 +153,14 @@ func VRPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 		// If scene exists in database, or the slternate source exists, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
+			WaitBeforeVisit("vrporn.com", sceneCollector.Visit, sceneURL)
 		}
 	})
 
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit(siteURL + "/?sort=newest")
+		WaitBeforeVisit("vrporn.com", siteCollector.Visit, siteURL+"/?sort=newest")
 	}
 
 	if updateSite {

@@ -266,10 +266,13 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 			}
 		})
 	}
+	url, _ := url.Parse(actorPage)
 	if rules.IsJson {
-		actorCollector.Request("GET", actorPage, nil, nil, nil)
+		ScraperRateLimiterWait(url.Host)
+		err := actorCollector.Request("GET", actorPage, nil, nil, nil)
+		ScraperRateLimiterCheckErrors(url.Host, err)
 	} else {
-		actorCollector.Visit(actorPage)
+		WaitBeforeVisit(url.Host, actorCollector.Visit, actorPage)
 	}
 	var extref models.ExternalReference
 	var extreflink models.ExternalReferenceLink

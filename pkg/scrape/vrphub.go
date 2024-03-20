@@ -191,7 +191,9 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			ctx := colly.NewContext()
 			ctx.Put("scene", &sc)
 
-			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+			ScraperRateLimiterWait("vrphub.com")
+			err := sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+			ScraperRateLimiterCheckErrors("vrphub.com", err)
 		}
 	})
 
@@ -201,7 +203,7 @@ func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		ctx.Put("scene", &sc)
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {
-		siteCollector.Visit(siteURL)
+		WaitBeforeVisit("vrphub.com", siteCollector.Visit, siteURL)
 	}
 
 	if updateSite {
