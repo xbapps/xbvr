@@ -78,6 +78,9 @@
                     <b-button class="btn01" @click="changeProjection('360_TB')">360_TB</b-button>
                     <b-button class="btn01" @click="setCurrentTime(500)">test</b-button>
                   </div>
+                  <div>
+                    <img v-if="thumbnail" :src="thumbnail" alt="Thumbnail">
+                  </div>
                 </div>
 
 
@@ -417,6 +420,7 @@ import ky from 'ky'
 import videojs from 'video.js'
 import 'videojs-vr/dist/videojs-vr.min.js'
 import 'videojs-thumbnail-sprite';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import { format, formatDistance, parseISO } from 'date-fns'
 import prettyBytes from 'pretty-bytes'
 import VueLoadImage from 'vue-load-image'
@@ -465,7 +469,8 @@ export default {
       currentAspect: '4:3',
       currentFileNo: 0,
       currentProjection: 'NONE',
-      currentDuraiton: 0
+      currentDuraiton: 0,
+      thumbnail: null
     }
   },
   computed: {
@@ -652,6 +657,17 @@ watch:{
   },
 },
   methods: {
+    async generateSprit(file) {
+      if (!file) return;
+
+      const cropOptions = 'iw/2:ih:iw/2:ih'; // 例として "iw/2:ih:iw/2:ih" を指定しています
+      ky.post(`/api/thumbs/generate`, {json:{file_id: file.id, crop: cropOptions}}).blob().then(data => {
+            //this.$store.commit('overlay/showDetails', { scene: data })
+            // this.$store.commit('sceneList/updateScene', data)
+            this.thumbnail = data
+          })
+    },
+
     calculateAspectRatio(aspectRatioString) {
       var aspectRatioArray = aspectRatioString.split(':');
       var width = parseInt(aspectRatioArray[0]);
@@ -745,23 +761,26 @@ watch:{
       this.player.play()
     },
 
-    setupSprite() {
+    setupSprite(file) {
+      const thumbnailUrl = '/api/dms/thumbnail/' + file.id
       this.player.thumbnailSprite({
         sprites: [
           {
-            url: "https://image.mux.com/XAUyVQNQUpHCFH2qXYgi3JOcmGs4xovhczrhHQsgqJ4/storyboard.jpg",
-            start: 0,
-            interval: 3,
-            width: 376,
-            height: 160,
+            url: thumbnailUrl,
+            duration: 6000,
+            start: 5,
+            interval: 30,
+            width: 200,
+            height: 200,
           },
         ],
       });
     },
 
     setupPlayer() {
-      this.setupPlayerWithAspect('4:3');
+      this.setupPlayerWithAspect('4:3')
       this.resizeColumnForAspect('4:3') 
+      // this.generateSprit(this.item.file[0])
     },
 
     setupPlayerWithAspectById (aspectRatio) {
@@ -774,7 +793,7 @@ watch:{
       })
       this.currentAspect = aspectRatio
 
-      this.setupSprite()
+      // this.setupSprite()
 
       this.player.hotkeys({
         alwaysCaptureHotkeys: true,
@@ -818,7 +837,7 @@ watch:{
         autoplay: false
       })
 
-      this.setupSprite()
+      // this.setupSprite()
 
       this.player.hotkeys({
         alwaysCaptureHotkeys: true,
@@ -943,6 +962,9 @@ watch:{
     playFile (file) {
       this.activeMedia = 1
       this.updatePlayer('/api/dms/file/' + file.id + '?dnt=true', (file.projection == 'flat' ? 'NONE' : '180'))
+      
+      this.setupSprite(file)
+      
       this.player.play()
       this.curerntFileNo = file.id
     },
@@ -1358,7 +1380,7 @@ watch:{
         this.$store.state.overlay.details.prevscene = this.$store.state.overlay.quickFind.selectedScene;
         this.$buefy.toast.open({ message: `The scene was unlinked and will not be relinked to any scene`, type: 'is-primary', duration: 3000 });
       }
-    },    
+    },
     format,
     parseISO,
     prettyBytes,
