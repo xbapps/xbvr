@@ -47,7 +47,17 @@ func (i DMSResource) WebService() *restful.WebService {
 		ContentEncodingEnabled(false).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/thumbnail/{file-id}").To(i.getThumbnail).
+		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		ContentEncodingEnabled(false).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+
 	return ws
+}
+func (i DMSResource) getThumbnail(req *restful.Request, resp *restful.Response) {
+	fileID := req.PathParameter("file-id")
+	http.ServeFile(resp.ResponseWriter, req.Request, filepath.Join(common.VideoThumbnailDir, fmt.Sprintf("%v.jpg", fileID)))
 }
 
 func (i DMSResource) getPreview(req *restful.Request, resp *restful.Response) {
