@@ -300,9 +300,9 @@ func (o *Scene) PreviewExists() bool {
 
 func (o *Scene) ThumbnailExists() bool {
 	
-	name := filepath.Base(o.Files[0].Filename)
-	nameWithoutExt := strings.TrimSuffix(name, filepath.Ext(name))
-	if _, err := os.Stat(filepath.Join(common.VideoThumbnailDir, fmt.Sprintf("%v.jpg", nameWithoutExt))); os.IsNotExist(err) {
+	// name := filepath.Base(o.Files[0].Filename)
+	// nameWithoutExt := strings.TrimSuffix(name, filepath.Ext(name))
+	if _, err := os.Stat(filepath.Join(common.VideoThumbnailDir, fmt.Sprintf("%v.jpg", strconv.FormatUint(uint64(o.Files[0].ID), 10)))); os.IsNotExist(err) {
 		return false
 	}
 	return true

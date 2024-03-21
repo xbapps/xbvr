@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/xbapps/xbvr/pkg/common"
@@ -36,10 +37,9 @@ func GenerateThumnbnails(endTime *time.Time) {
 					if files[i].Type == "video" {
 						log.Infof("Thumbnail Rendering %v", scene.SceneID)
 
-						name := filepath.Base(files[i].Filename)
-						nameWithoutExt := strings.TrimSuffix(name, filepath.Ext(name))
-
-						destFile := filepath.Join(common.VideoThumbnailDir, nameWithoutExt+".jpg")
+						//name := filepath.Base(files[i].Filename)
+						//nameWithoutExt := strings.TrimSuffix(name, filepath.Ext(name))
+						destFile := filepath.Join(common.VideoThumbnailDir,  strconv.FormatUint(uint64(files[i].ID), 10) +".jpg")
 						err := RenderThumnbnails(
 							files[i].GetPath(),
 							destFile,
@@ -90,7 +90,7 @@ func RenderThumnbnails(inputFile string, destFile string, videoProjection string
 	}
 	// Mono 360 crop args: (no way of accurately determining)
 	// "iw/2:ih:iw/4:ih"
-	vfArgs := fmt.Sprintf("crop=%v,scale=%v:-1:flags=lanczos,fps=fps=1/%v:round=down,tile=10x20", crop, resolution, 30)
+	vfArgs := fmt.Sprintf("crop=%v,scale=%v:-1:flags=lanczos,fps=fps=1/%v:round=down,tile=20x10", crop, 200, 30)
 
 	args := []string{}
 	if isCUDAEnabled() {
