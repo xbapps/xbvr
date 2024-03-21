@@ -36,6 +36,11 @@ func SetupCron() {
 		ps := formatCronSchedule(config.CronSchedule(config.Config.Cron.PreviewSchedule))
 		previewTask, _ = cronInstance.AddFunc(ps, generatePreviewCron)
 	}
+	if config.Config.Cron.ThumbnailSchedule.Enabled {
+		log.Println(fmt.Sprintf("Setup Thumbnail Generation Task %v", formatCronSchedule(config.CronSchedule(config.Config.Cron.ThumbnailSchedule))))
+		ps := formatCronSchedule(config.CronSchedule(config.Config.Cron.ThumbnailSchedule))
+		previewTask, _ = cronInstance.AddFunc(ps, generateThumbnailCron)
+	}
 	if config.Config.Cron.ActorRescrapeSchedule.Enabled {
 		log.Println(fmt.Sprintf("Setup Actor Rescrape Task %v", formatCronSchedule(config.CronSchedule(config.Config.Cron.ActorRescrapeSchedule))))
 		actorScrapeTask, _ = cronInstance.AddFunc(formatCronSchedule(config.CronSchedule(config.Config.Cron.ActorRescrapeSchedule)), actorRescrapeCron)
@@ -60,6 +65,9 @@ func SetupCron() {
 	}
 	if config.Config.Cron.PreviewSchedule.RunAtStartDelay > 0 {
 		time.AfterFunc(time.Duration(config.Config.Cron.PreviewSchedule.RunAtStartDelay)*time.Minute, generatePreviewCron)
+	}
+	if config.Config.Cron.ThumbnailSchedule.RunAtStartDelay > 0 {
+		time.AfterFunc(time.Duration(config.Config.Cron.ThumbnailSchedule.RunAtStartDelay)*time.Minute, generatePreviewCron)
 	}
 	if config.Config.Cron.ActorRescrapeSchedule.RunAtStartDelay > 0 {
 		time.AfterFunc(time.Duration(config.Config.Cron.ActorRescrapeSchedule.RunAtStartDelay)*time.Minute, actorRescrapeCron)
@@ -141,11 +149,11 @@ func generateThumbnailCron() {
 			thumbnailGenerateInProgress = false
 		}()
 
-		if !config.Config.Cron.PreviewSchedule.UseRange {
+		if !config.Config.Cron.ThumbnailSchedule.UseRange {
 			tasks.GenerateThumnbnails(nil)
 		} else {
-			endTime := calcEndTime(config.Config.Cron.PreviewSchedule.HourStart, config.Config.Cron.PreviewSchedule.HourEnd, config.Config.Cron.PreviewSchedule.MinuteStart)
-			log.Infof("Preview Generation will stop at %v", endTime)
+			endTime := calcEndTime(config.Config.Cron.ThumbnailSchedule.HourStart, config.Config.Cron.ThumbnailSchedule.HourEnd, config.Config.Cron.ThumbnailSchedule.MinuteStart)
+			log.Infof("Thumbnail Generation will stop at %v", endTime)
 			tasks.GenerateThumnbnails(&endTime)
 		}
 	}

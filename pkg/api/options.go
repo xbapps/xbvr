@@ -148,6 +148,7 @@ type RequestSaveOptionsTaskSchedule struct {
 	RescanHourStart      int  `json:"rescanHourStart"`
 	RescanHourEnd        int  `json:"rescanHourEnd"`
 	RescanStartDelay     int  `json:"rescanStartDelay"`
+
 	PreviewEnabled       bool `json:"previewEnabled"`
 	PreviewHourInterval  int  `json:"previewHourInterval"`
 	PreviewUseRange      bool `json:"previewUseRange"`
@@ -155,6 +156,14 @@ type RequestSaveOptionsTaskSchedule struct {
 	PreviewHourStart     int  `json:"previewHourStart"`
 	PreviewHourEnd       int  `json:"previewHourEnd"`
 	PreviewStartDelay    int  `json:"previewStartDelay"`
+
+	ThumbnailEnabled       bool `json:"thumbnailEnabled"`
+	ThumbnailHourInterval  int  `json:"thumbnailHourInterval"`
+	ThumbnailUseRange      bool `json:"thumbnailUseRange"`
+	ThumbnailMinuteStart   int  `json:"thumbnailMinuteStart"`
+	ThumbnailHourStart     int  `json:"thumbnailHourStart"`
+	ThumbnailHourEnd       int  `json:"thumbnailHourEnd"`
+	ThumbnailStartDelay    int  `json:"thumbnailStartDelay"`
 
 	ActorRescrapeEnabled      bool `json:"actorRescrapeEnabled"`
 	ActorRescrapeHourInterval int  `json:"actorRescrapeHourInterval"`
@@ -929,6 +938,14 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.Config.Cron.PreviewSchedule.HourStart = r.PreviewHourStart
 	config.Config.Cron.PreviewSchedule.HourEnd = r.PreviewHourEnd
 	config.Config.Cron.PreviewSchedule.RunAtStartDelay = r.PreviewStartDelay
+
+	config.Config.Cron.ThumbnailSchedule.Enabled = r.ThumbnailEnabled
+	config.Config.Cron.ThumbnailSchedule.HourInterval = r.ThumbnailHourInterval
+	config.Config.Cron.ThumbnailSchedule.UseRange = r.ThumbnailUseRange
+	config.Config.Cron.ThumbnailSchedule.MinuteStart = r.ThumbnailMinuteStart
+	config.Config.Cron.ThumbnailSchedule.HourStart = r.ThumbnailHourStart
+	config.Config.Cron.ThumbnailSchedule.HourEnd = r.ThumbnailHourEnd
+	config.Config.Cron.ThumbnailSchedule.RunAtStartDelay = r.ThumbnailStartDelay
 
 	config.Config.Cron.ActorRescrapeSchedule.Enabled = r.ActorRescrapeEnabled
 	config.Config.Cron.ActorRescrapeSchedule.HourInterval = r.ActorRescrapeHourInterval

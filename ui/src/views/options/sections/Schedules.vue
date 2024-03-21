@@ -11,6 +11,7 @@
             <b-tab-item label="Actor Rescrape"/>
             <b-tab-item label="Stashdb Rescrape"/>
             <b-tab-item :label="$t('Link Scenes')"/>
+            <b-tab-item label="Thumbnail Generation"/>
       </b-tabs>
       <div class="columns">
         <div class="column">
@@ -250,6 +251,50 @@
                 <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(linkScenesStartDelay) }}</div>
             </b-field>
           </div>
+          <div v-if="activeTab == 6">            
+              <b-field>
+                <b-switch v-model="thumbnailEnabled">Enable schedule</b-switch>
+              </b-field>
+              <b-field v-if="thumbnailEnabled">
+                <b-slider v-model="thumbnailHourInterval" :min="1" :max="23" :step="1" ></b-slider>
+                <div class="column is-one-third" style="margin-left:.75em">{{`Run every ${this.thumbnailHourInterval} hour${this.thumbnailHourInterval > 1 ? 's': ''}`}}</div>
+              </b-field>
+              <b-field>
+                <b-switch v-if="thumnbnailEnabled" v-model="useThumnbnailTimeRange">Limit time of day</b-switch>
+              </b-field>
+              <div v-if="useThumnbnailTimeRange && thumbnailEnabled">
+                <b-field>
+                  <b-slider v-model="thumbnailTimeRange" :min="0" :max="48" :step="1" :custom-formatter="val => timeRange[val]" @input="restrictThumbnailTo24Hours">
+                    <b-slider-tick :value="0">00:00</b-slider-tick>
+                    <b-slider-tick :value="6">06:00</b-slider-tick>
+                    <b-slider-tick :value="12">12:00</b-slider-tick>
+                    <b-slider-tick :value="18">18:00</b-slider-tick>
+                    <b-slider-tick :value="24">Midnight</b-slider-tick>
+                    <b-slider-tick :value="30">06:00</b-slider-tick>
+                    <b-slider-tick :value="36">12:00</b-slider-tick>
+                    <b-slider-tick :value="42">18:00</b-slider-tick>
+                    <b-slider-tick :value="48">00:00</b-slider-tick>
+                  </b-slider>
+                  <div class="column is-one-third" style="margin-left:.75em">{{`${this.timeRange[this.thumbnailTimeRange[0]]} - ${this.timeRange[this.thumbnailTimeRange[1]]}`}}</div>
+                </b-field>
+                <b-field>
+                  <b-slider v-model="thumbnailMinuteStart" :min="0" :max="60" :step="1" ></b-slider>
+                  <div class="column is-one-third" style="margin-left:.75em">{{ minutesStartMsg(thumbnailMinuteStart) }}</div>
+                </b-field>
+                <p>
+                  Thumbnail Generation of a scene will not start after the Time Window Ends
+                </p>
+              </div>
+              <br/>
+              <b-field label="Startup">
+                  <b-slider v-model="thumbnailStartDelay" :min="0" :max="60" :step="1" ></b-slider>
+                  <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(thumbnailStartDelay) }}</div>
+              </b-field>
+              <p>
+                BETA NOTE: Please note this is CPU-heavy process, if approriate limit the Time of Day the task runs                  
+              </p>                  
+            </div>
+
             <hr/>
               <b-field grouped>
                 <b-button type="is-primary" @click="saveSettings" style="margin-right:1em">Save settings</b-button>
@@ -293,6 +338,10 @@ export default {
       previewTimeRange:[0,23],
       previewHourInterval: 0,
       previewMinuteStart: 0,
+      thumbnailEnabled: false,
+      thumbnailTimeRange:[0,23],
+      thumbnailHourInterval: 0,
+      thumbnailMinuteStart: 0,
       lastPreviewTimeRange: [0,23],
       usePreviewTimeRange: false,      
       rescrapeStartDelay: 0,
@@ -393,10 +442,17 @@ export default {
           this.rescanHourInterval = data.config.cron.rescanSchedule.hourInterval
           this.useRescanTimeRange = data.config.cron.rescanSchedule.useRange
           this.rescanMinuteStart = data.config.cron.rescanSchedule.minuteStart
+
           this.previewEnabled = data.config.cron.previewSchedule.enabled
           this.previewHourInterval = data.config.cron.previewSchedule.hourInterval
           this.usePreviewTimeRange = data.config.cron.previewSchedule.useRange
           this.previewMinuteStart = data.config.cron.previewSchedule.minuteStart
+
+          this.thumbnailEnabled = data.config.cron.thumbnailSchedule.enabled
+          this.thumbnailHourInterval = data.config.cron.thumbnailSchedule.hourInterval
+          this.useThumbnailTimeRange = data.config.cron.thumbnailSchedule.useRange
+          this.thumbnailMinuteStart = data.config.cron.thumbnailSchedule.minuteStart
+
           this.actorRescrapeEnabled = data.config.cron.actorRescrapeSchedule.enabled
           this.actorRescrapeHourInterval = data.config.cron.actorRescrapeSchedule.hourInterval
           this.useActorRescrapeTimeRange = data.config.cron.actorRescrapeSchedule.useRange
@@ -424,6 +480,11 @@ export default {
           } else {
             this.previewTimeRange = [data.config.cron.previewSchedule.hourStart, data.config.cron.previewSchedule.hourEnd]            
           }
+          if (data.config.cron.thumbnailSchedule.hourStart > data.config.cron.thumbnailSchedule.hourEnd) {
+            this.thumbnailTimeRange = [data.config.cron.thumbnailSchedule.hourStart, data.config.cron.thumbnailSchedule.hourEnd + 24]
+          } else {
+            this.thumbnailTimeRange = [data.config.cron.thumbnailSchedule.hourStart, data.config.cron.thumbnailSchedule.hourEnd]            
+          }
           if (data.config.cron.actorRescrapeSchedule.hourStart > data.config.cron.actorRescrapeSchedule.hourEnd) {
             this.actorRescrapeTimeRange = [data.config.cron.actorRescrapeSchedule.hourStart, data.config.cron.actorRescrapeSchedule.hourEnd + 24]
           } else {
@@ -444,7 +505,8 @@ export default {
           
           this.rescrapeStartDelay = data.config.cron.rescrapeSchedule.runAtStartDelay
           this.rescanStartDelay = data.config.cron.rescanSchedule.runAtStartDelay          
-          this.previewStartDelay = data.config.cron.previewSchedule.runAtStartDelay
+          this.previewStartDelay = data.config.cron.previewSchedule.runAtStartDelay 
+          this.thumbnailStartDelay = data.config.cron.thumbnailSchedule.runAtStartDelay
           this.actorRescrapeStartDelay = data.config.cron.actorRescrapeSchedule.runAtStartDelay          
           this.stashdbRescrapeStartDelay = data.config.cron.stashdbRescrapeSchedule.runAtStartDelay          
           this.linkScenesStartDelay = data.config.cron.linkScenesSchedule.runAtStartDelay          
