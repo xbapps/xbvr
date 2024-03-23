@@ -468,7 +468,7 @@ export default {
       waitingForQuickFind: false,
       currentAspect: '4:3',
       currentFileNo: 0,
-      currentProjection: 'NONE',
+      currentProjection: '180',
       currentDuraiton: 0,
       thumbnail: null
     }
@@ -726,13 +726,11 @@ watch:{
       }, 0);
     },
 
-    changeProjection(projection) {
-      const parentElement = this.player.el().parentElement
-      const currentSource = this.player.currentSource();
-      const currentDuration = this.player.currentTime();
-      this.currentDuraiton = currentDuration
-      this.player.dispose()
+    restartPlayer(projection)
+    {
 
+      const parentElement = this.player.el().parentElement
+      this.player.dispose()
       const videoElement = document.createElement('video');
       videoElement.setAttribute('id', 'player');
       videoElement.setAttribute('controls', 'controls');
@@ -740,16 +738,22 @@ watch:{
       videoElement.setAttribute('preload', 'none');
       videoElement.setAttribute('class', 'video-js vjs-default-skin');
       parentElement.insertBefore(videoElement, parentElement.firstChild);
-
       this.setupPlayerWithAspectById(this.currentAspect)
-      this.updatePlayer(currentSource.src, projection)
-      this.currentProjection = projection
 
-      this.setCurrentTime(currentDuration)
-      this.player.play()
+
     },
 
+    changeProjection(projection) {
+      const currentSource = this.player.currentSource();
+      const currentDuration = this.player.currentTime();
+      this.currentDuraiton = currentDuration
+      this.restartPlayer(projection)
+      this.updatePlayer(currentSource.src, projection)
+      this.setCurrentTime(currentDuration)
+      this.currentProjection = projection
 
+      this.player.play()
+    },
 
     changeAspectRatio(aspectRatio) {
       const currentDuration = this.player.currentTime();
@@ -762,19 +766,39 @@ watch:{
     },
 
     setupSprite(file) {
+      if (this.player.hasOwnProperty('thumbnailSprite')) {
+        this.player.thumbnailSprite(false); // プラグインを解除する
+      }
       const thumbnailUrl = '/api/dms/thumbnail/' + file.id
-      this.player.thumbnailSprite({
-        sprites: [
-          {
-            url: thumbnailUrl,
-            duration: 6000,
-            start: 5,
-            interval: 30,
-            width: 200,
-            height: 200,
-          },
-        ],
-      });
+      const img = new Image();
+      img.onload = function(player) {
+        player.thumbnailSprite({
+          sprites: [
+            {
+              url: thumbnailUrl,
+              duration: 6000,
+              start: 25,
+              interval: 30,
+              width: 200,
+              height: 200,
+            },
+          ],
+        });
+      }(this.player);
+      img.src = thumbnailUrl;
+
+      // this.player.thumbnailSprite({
+      //   sprites: [
+      //     {
+      //       url: thumbnailUrl,
+      //       duration: 6000,
+      //       start: 5,
+      //       interval: 30,
+      //       width: 200,
+      //       height: 200,
+      //     },
+      //   ],
+      // });
     },
 
     setupPlayer() {
@@ -897,13 +921,13 @@ watch:{
     updatePlayer (src, projection) {
       this.player.reset()
       /* const vr = */ this.player.vr({
-        projection: projection,
-        forceCardboard: false,
-        autoplay: false
-      })
+          projection: projection,
+          forceCardboard: false,
+          autoplay: true
+        })
 
       this.player.on('loadedmetadata', function () {
-        // vr.camera.position.set(-1, 0, 2);
+        vr.camera.position.set(-1, 0, 2);
       })
 
       if (src) {
@@ -961,10 +985,9 @@ watch:{
     },
     playFile (file) {
       this.activeMedia = 1
+      this.restartPlayer(this.currentProjection)
       this.updatePlayer('/api/dms/file/' + file.id + '?dnt=true', (file.projection == 'flat' ? 'NONE' : '180'))
-      
       this.setupSprite(file)
-      
       this.player.play()
       this.curerntFileNo = file.id
     },

@@ -27,18 +27,20 @@ func GenerateThumnbnails(endTime *time.Time) {
 		db.Model(&models.Scene{}).Where("is_available = ?", true).Where("has_thumbnail = ?", false).Order("release_date desc").Find(&scenes)
 
 		for _, scene := range scenes {
+			log.Infof("Thumbnail Checking %v", scene.SceneID)
+
 			files, _ := scene.GetFiles()
 			if len(files) > 0 {
 				if endTime != nil && time.Now().After(*endTime) {
 					return
 				}
 				i := 0
+
+				log.Infof("Thumbnail Rendering %v", scene.SceneID)
+
 				for i < len(files) && files[i].Exists() {
 					if files[i].Type == "video" {
-						log.Infof("Thumbnail Rendering %v", scene.SceneID)
-
-						//name := filepath.Base(files[i].Filename)
-						//nameWithoutExt := strings.TrimSuffix(name, filepath.Ext(name))
+						log.Infof("Thumbnail Rendering File_ID %v", strconv.FormatUint(uint64(files[i].ID), 10))
 						destFile := filepath.Join(common.VideoThumbnailDir,  strconv.FormatUint(uint64(files[i].ID), 10) +".jpg")
 						err := RenderThumnbnails(
 							files[i].GetPath(),
@@ -51,9 +53,10 @@ func GenerateThumnbnails(endTime *time.Time) {
 							config.Config.Library.Preview.ExtraSnippet,
 						)
 						if err == nil {
+							log.Infof("Thumbnail Rendering File_ID %v - Finish", files[i].ID)
 							scene.HasThumbnail = true
 							scene.Save()
-							break
+							// break
 						} else {
 							log.Warn(err)
 						}
@@ -67,9 +70,6 @@ func GenerateThumnbnails(endTime *time.Time) {
 }
 
 func RenderThumnbnails(inputFile string, destFile string, videoProjection string, startTime int, snippetLength float64, snippetAmount int, resolution int, extraSnippet bool) error {
-	// tmpPath := filepath.Join(common.VideoThumbnailDir, "tmp")
-	// os.MkdirAll(tmpPath, os.ModePerm)
-	// defer os.RemoveAll(tmpPath)
 
 	os.MkdirAll(common.VideoThumbnailDir, os.ModePerm)
 
@@ -111,6 +111,7 @@ func RenderThumnbnails(inputFile string, destFile string, videoProjection string
 			//"-",
 			destFile,
 		}
+		log.Infof("Use Internal hwaccel decoders 'CUDA'")
 	} else {
 		args = []string{
 			"-y",

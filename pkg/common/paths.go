@@ -47,6 +47,7 @@ func InitPaths() {
 	imgproxy_dir := flag.String("imgproxy_dir", "", "Optional: path to the imageproxy directory")
 	search_dir := flag.String("search_dir", "", "Optional: path to the Search Index directory")
 	preview_dir := flag.String("preview_dir", "", "Optional: path to the Scraper Cache directory")
+	// thumnbnail_dir := flag.String("thumnbnail_dir", "", "Optional: path to the Thumbnail Image directory")
 	scriptsheatmap_dir := flag.String("scripts_heatmap_dir", "", "Optional: path to the scripts_heatmap directory")
 	myfiles_dir := flag.String("myfiles_dir", "", "Optional: path to the myfiles directory for serving users own content (eg images")
 	databaseurl := flag.String("database_url", "", "Optional: override default database path")
