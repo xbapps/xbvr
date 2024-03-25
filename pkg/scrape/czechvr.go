@@ -73,23 +73,23 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		})
 
 		// Tags
-		e.ForEach(`div.post div.tagyall div.tag`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div#info div.tagy div.tag`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 
 		// Cast
-		e.ForEach(`div.post div.featuring > a`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div#info div.modelky a span`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
 		})
 
 		// Date
-		e.ForEach(`div.post div.nazev div.datumDetail`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div#info div.datum`, func(id int, e *colly.HTMLElement) {
 			tmpDate, _ := goment.New(e.Text, "MMM DD, YYYY")
 			sc.Released = tmpDate.Format("YYYY-MM-DD")
 		})
 
 		// Duration
-		e.ForEach(`div.post div.nazev div.casDetail span.desktop`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div#info div.cas`, func(id int, e *colly.HTMLElement) {
 			tmpDuration, err := strconv.Atoi(strings.Split(e.Text, ":")[0])
 
 			if err == nil {
@@ -98,7 +98,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		})
 
 		if config.Config.Funscripts.ScrapeFunscripts {
-			e.ForEach(`div.interactive`, func(id int, e *colly.HTMLElement) {
+			e.ForEach(`div#interactive div.dlnew`, func(id int, e *colly.HTMLElement) {
 				sc.HasScriptDownload = true
 			})
 		}
@@ -113,7 +113,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		}
 
 		// Filenames
-		e.ForEach(`div.post div.download a.trailer`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div#download div.dlnew a`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				tmp := strings.Split(e.Attr("href"), "/")
 				parts := strings.Split(tmp[len(tmp)-1], "-")
