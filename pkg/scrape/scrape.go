@@ -40,9 +40,10 @@ func createCollector(domains ...string) *colly.Collector {
 		if Limiters == nil {
 			LoadScraperRateLimits()
 		}
-		if Limiters[domain] != nil {
-			randomdelay := Limiters[domain].maxDelay - Limiters[domain].minDelay
-			delay := Limiters[domain].minDelay
+		limiter := GetRateLimiter(domain)
+		if limiter != nil {
+			randomdelay := limiter.maxDelay - limiter.minDelay
+			delay := limiter.minDelay
 			c.Limit(&colly.LimitRule{
 				DomainGlob:  "*",
 				Delay:       delay,       // Delay between requests to domains matching the glob

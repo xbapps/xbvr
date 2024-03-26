@@ -16,46 +16,40 @@ import (
 // The ScraperRateLimiter is provides a way to limit visits across multiple instances of the same scraper.
 // The calls to the colly collector Visit function must first be passed to the ScraperRateLimiter which will then coridinate
 // between all instances and then call the colly Visit function
-var Limiters map[string]*ScraperRateLimiter
+var Limiters []*ScraperRateLimiter
 
 type ScraperRateLimiter struct {
+	id          string
 	mutex       sync.Mutex
 	lastRequest time.Time
 	minDelay    time.Duration
 	maxDelay    time.Duration
 }
 
-func CreateRateLimiter(minDelay time.Duration, maxDelay time.Duration) *ScraperRateLimiter {
-	return &ScraperRateLimiter{
-		minDelay: minDelay,
-		maxDelay: maxDelay,
-		//		response: true,
-	}
-}
-
 func ScraperRateLimiterWait(rateLimiter string) {
-	if Limiters[rateLimiter] == nil {
+	limiter := GetRateLimiter(rateLimiter)
+	if limiter == nil {
 		return
 	}
-	Limiters[rateLimiter].mutex.Lock()
-	defer Limiters[rateLimiter].mutex.Unlock()
+	limiter.mutex.Lock()
+	defer limiter.mutex.Unlock()
 
-	if Limiters[rateLimiter].lastRequest.IsZero() {
+	if limiter.lastRequest.IsZero() {
 		// no previous time, don't wait
-		Limiters[rateLimiter].lastRequest = time.Now()
+		limiter.lastRequest = time.Now()
 		return
 	}
-	timeSinceLast := time.Since(Limiters[rateLimiter].lastRequest)
+	timeSinceLast := time.Since(limiter.lastRequest)
 
-	delay := Limiters[rateLimiter].minDelay
-	if Limiters[rateLimiter].maxDelay > Limiters[rateLimiter].minDelay {
+	delay := limiter.minDelay
+	if limiter.maxDelay > limiter.minDelay {
 		// Introduce a random delay between minDelay and maxDelay
-		delay += time.Duration(rand.Int63n(int64(Limiters[rateLimiter].maxDelay - Limiters[rateLimiter].minDelay)))
+		delay += time.Duration(rand.Int63n(int64(limiter.maxDelay - limiter.minDelay)))
 	}
 	if timeSinceLast < delay {
 		time.Sleep(delay - timeSinceLast)
 	}
-	Limiters[rateLimiter].lastRequest = time.Now()
+	limiter.lastRequest = time.Now()
 }
 
 func WaitBeforeVisit(rateLimiter string, visitFunc func(string) error, pageURL string) {
@@ -64,22 +58,17 @@ func WaitBeforeVisit(rateLimiter string, visitFunc func(string) error, pageURL s
 	if err != nil {
 		// if an err is returned, then a html a call was not made by colly.  These are errors colly checks before calling the URL
 		//		ie the url has not been called.  No need to wait before the next call, as the site was never visited
-		if Limiters[rateLimiter] != nil {
-			Limiters[rateLimiter].lastRequest = time.Time{}
+		limiter := GetRateLimiter(rateLimiter)
+		if limiter != nil {
+			limiter.lastRequest = time.Time{}
 		}
 	}
 }
 func ScraperRateLimiterCheckErrors(domain string, err error) {
 	if err != nil {
-		Limiters[domain].lastRequest = time.Time{}
+		limiter := GetRateLimiter(domain)
+		limiter.lastRequest = time.Time{}
 	}
-
-}
-func AddScraperRateLimiter(key string, l *ScraperRateLimiter) {
-	if Limiters == nil {
-		LoadScraperRateLimits()
-	}
-	Limiters[key] = l
 }
 
 func LoadScraperRateLimits() {
@@ -87,7 +76,7 @@ func LoadScraperRateLimits() {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	limiters := make(map[string]*ScraperRateLimiter)
+	var limiters []*ScraperRateLimiter
 	commonDb, _ := models.GetCommonDB()
 	var kv models.KV
 	commonDb.Where(models.KV{Key: "scraper_rate_limits"}).Find(&kv)
@@ -100,9 +89,18 @@ func LoadScraperRateLimits() {
 			if maxDelay < minDelay {
 				maxDelay = minDelay
 			}
-			limiters[name] = &ScraperRateLimiter{minDelay: time.Duration(minDelay) * time.Millisecond, maxDelay: time.Duration(maxDelay) * time.Millisecond}
+			limiters = append(limiters, &ScraperRateLimiter{id: name, minDelay: time.Duration(minDelay) * time.Millisecond, maxDelay: time.Duration(maxDelay) * time.Millisecond})
 		}
-
 		Limiters = limiters
 	}
+}
+
+func GetRateLimiter(id string) *ScraperRateLimiter {
+	for _, limiter := range Limiters {
+		if limiter.id == id {
+			return limiter
+			break
+		}
+	}
+	return nil
 }
