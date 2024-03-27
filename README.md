@@ -136,17 +136,18 @@ left arrow - cycles backwards in gallery
 right arrow - cycles forward in gallery  
 esc - closes details pane
 
-#### using Command Line Arguments
-| Command line parameter | Type | Description |
-|------------------------|-------|--------------
-| `--enableLocalStorage` | boolean |Use local folder to store application data|
-|	`--app_dir` | String|path to the application directory|
-|	`--cache_dir` | String|path to the tempoarary scraper cache directory|
-|	`--imgproxy_dir` | String|path to the imageproxy directory|
-|	`--search_dir` | String| path to the Search Index directory|
-|	`--preview_dir` | String| path to the Scraper Cache directory|
-|	`--scriptsheatmap_dir` | String| path to the scripts_heatmap directory|
-|	`--myfiles_dir` | String| path to the myfiles directory for serving users own content (eg images|
-|	`--databaseurl` | String|override default database path|
-|	`--web_port` | Int| override default Web Page port 9999|
-|	`--ws_addr` | String| override default Websocket address from the default 0.0.0.0:9998|
+#### using Command Line Arguments/Environment Variables
+| Command line parameter | Environment Variable | Type | Description |
+|------------------------|--------------|------|-------------|
+| `--enableLocalStorage` | | boolean |Use local folder to store application data|
+|	`--app_dir` | XBVR_APPDIR | String|path to the application directory|
+|	`--cache_dir` | XBVR_CACHEDIR | String|path to the tempoarary scraper cache directory|
+|	`--imgproxy_dir` | XBVR_IMAGEPROXYDIR | String|path to the imageproxy directory|
+|	`--search_dir` | XBVR_SEARCHDIR | String| path to the Search Index directory|
+|	`--preview_dir` | XBVR_VIDEOPREVIEWDIR | String| path to the Scraper Cache directory|
+|	`--scriptsheatmap_dir` | XBVR_SCRIPTHEATMAPDIR | String| path to the scripts_heatmap directory|
+|	`--myfiles_dir` | XBVR_MYFILESDIR | String| path to the myfiles directory for serving users own content (eg images|
+|	`--databaseurl` | DATABASE_URL | String|override default database path|
+|	`--web_port` | XBVR_WEB_PORT | Int| override default Web Page port 9999|
+|	`--ws_addr` | DB_CONNECTION_POOL_SIZE | String| override default Websocket address from the default 0.0.0.0:9998|
+|	`--concurrent_scrapers` | CONCURRENT_SCRAPERS | String| set the number of scrapers that run concurrently default 9999|
