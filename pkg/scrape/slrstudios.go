@@ -304,7 +304,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	siteCollector.OnHTML(`div.c-pagination ul li a`, func(e *colly.HTMLElement) {
 		if !limitScraping {
 			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-			siteCollector.Visit(pageURL)
+			WaitBeforeVisit("www.sexlikereal.com", siteCollector.Visit, pageURL)
 		}
 	})
 
@@ -385,7 +385,9 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 				ctx := colly.NewContext()
 				ctx.Put("duration", duration)
 				ctx.Put("isTransScene", isTransScene)
-				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+				ScraperRateLimiterWait("www.sexlikereal.com")
+				err := sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+				ScraperRateLimiterCheckErrors("www.sexlikereal.com", err)
 			}
 		}
 	})
@@ -398,7 +400,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 
 	} else {
-		siteCollector.Visit(siteURL + "?sort=most_recent")
+		WaitBeforeVisit("www.sexlikereal.com", siteCollector.Visit, siteURL+"?sort=most_recent")
 	}
 
 	if updateSite {
