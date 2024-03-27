@@ -128,10 +128,7 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 				if site.ID == scraper.ID {
 					wg.Add(1)
 					go func(scraper models.Scraper) {
-						start := time.Now()
 						scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, site.LimitScraping)
-						duration := time.Since(start).Seconds()
-						log.Infof("time since %v", duration)
 						var site models.Site
 						err := site.GetIfExist(scraper.ID)
 						if err != nil {
