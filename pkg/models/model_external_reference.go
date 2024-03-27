@@ -518,7 +518,7 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 
 	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "virtualporn.com"
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `div.model__img-wrapper > img`, ResultType: "attr", Attribute: "src"})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `section[data-cy="actorProfilePicture"] img`, ResultType: "attr", Attribute: "src"})
 	scrapeRules.GenericActorScrapingConfig["bvr scrape"] = siteDetails
 
 	siteDetails = GenericScraperRuleSet{}
