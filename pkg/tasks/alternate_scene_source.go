@@ -231,7 +231,13 @@ func MatchAlternateSources() {
 			tmpAltSource.Save()
 			if len(searchResults.Hits) > 0 {
 				var scene models.Scene
-				scene.GetIfExist(searchResults.Hits[0].ID)
+				idx := 0
+				// check the scene found by search isn't deleted, ie scene.ID == 0
+				for idx < len(searchResults.Hits) && scene.ID == 0 {
+					scene.GetIfExist(searchResults.Hits[idx].ID)
+					idx += 1
+				}
+
 				if scene.ID > 0 {
 					// check not already linked, if we update unnessarily, it will mess up the sort by "Released on Alternate Sites" sort option
 					found := false
