@@ -35,7 +35,6 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 	commonDb, _ := models.GetCommonDB()
 
 	// RegEx Patterns
-	coverRegEx := regexp.MustCompile(`background(?:-image)?\s*?:\s*?url\s*?\(\s*?(.*?)\s*?\)`)
 	durationRegExForSceneCard := regexp.MustCompile(`^(?:(\d{2}):)?(\d{2}):(\d{2})$`)
 	durationRegExForScenePage := regexp.MustCompile(`^T(\d{0,2})H?(\d{2})M(\d{2})S$`)
 	filenameRegEx := regexp.MustCompile(`[:?]|( & )|( \\u0026 )`)
@@ -48,7 +47,7 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		sc.Site = siteID
 		sc.MasterSiteId = masterSiteId
 		if scraperID == "" {
-			// there maybe no site/studio if user is jusy scraping a scene url
+			// there maybe no site/studio if user is just scraping a scene url
 			e.ForEach(`div[data-qa="page-scene-studio-name"]`, func(id int, e *colly.HTMLElement) {
 				sc.Studio = strings.TrimSpace(e.Text)
 				sc.Site = strings.TrimSpace(e.Text)
@@ -153,26 +152,28 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			if len(coverURL) > 0 {
 				sc.Covers = append(sc.Covers, coverURL)
 			} else {
-				coverURL := e.ChildAttr(`.splash-screen > img`, "src")
-				if len(coverURL) > 0 {
-					sc.Covers = append(sc.Covers, coverURL)
-				} else {
-					m := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.c-webxr-splash-screen`, "style")))
-					if len(m) > 0 && len(m[1]) > 0 {
-						sc.Covers = append(sc.Covers, m[1])
-					}
-				}
+				e.ForEach(`link[as="image"]`, func(id int, e *colly.HTMLElement) {
+					sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("href")))
+				})
 			}
 		} else {
-			tcoverURL := e.ChildAttr(`.splash-screen > img`, "src")
-			if len(tcoverURL) > 0 {
-				sc.Covers = append(sc.Covers, tcoverURL)
-			} else {
-				m := coverRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`.c-webxr-splash-screen`, "style")))
-				if len(m) > 0 && len(m[1]) > 0 {
-					sc.Covers = append(sc.Covers, m[1])
+			posterURLFound := false
+			e.ForEach(`script[type="text/javascript"]`, func(id int, e *colly.HTMLElement) {
+				if posterURLFound {
+					return
 				}
-			}
+				scriptContent := e.Text
+				if strings.Contains(scriptContent, "posterURL") {
+					startIndex := strings.Index(scriptContent, `"posterURL":"`) + len(`"posterURL":"`)
+					endIndex := strings.Index(scriptContent[startIndex:], `"`)
+					if startIndex >= 0 && endIndex >= 0 {
+						posterURL := scriptContent[startIndex : startIndex+endIndex]
+						unescapedURL := strings.ReplaceAll(posterURL, `\`, "")
+						sc.Covers = append(sc.Covers, unescapedURL)
+						posterURLFound = true
+					}
+				}
+			})
 		}
 
 		// straight and trans videos use a different page structure
