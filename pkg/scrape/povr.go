@@ -126,21 +126,21 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 
 		// If scene exists in database, or the slternate source exists, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/join") {
-			sceneCollector.Visit(sceneURL)
+			WaitBeforeVisit("povr.com", sceneCollector.Visit, sceneURL)
 		}
 	})
 
 	siteCollector.OnHTML(`div.pagination a[class="pagination__page next"]`, func(e *colly.HTMLElement) {
 		if !limitScraping {
 			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-			siteCollector.Visit(pageURL)
+			WaitBeforeVisit("povr.com", siteCollector.Visit, pageURL)
 		}
 	})
 
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit(siteURL)
+		WaitBeforeVisit("povr.com", siteCollector.Visit, siteURL)
 	}
 
 	if updateSite {
