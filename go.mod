@@ -52,7 +52,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/thoas/go-funk v0.9.3
-	github.com/tidwall/gjson v1.17.0
+	github.com/tidwall/gjson v1.17.1
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.21.1
 	golang.org/x/crypto v0.19.0
@@ -147,7 +147,7 @@ require (
 	golang.org/x/image v0.10.0 // indirect
 	golang.org/x/term v0.17.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	willnorris.com/go/gifresize v1.0.0 // indirect
 )

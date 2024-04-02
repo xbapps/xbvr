@@ -114,7 +114,7 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		}
 
 		nuxtData := e.ChildText(`#__NUXT_DATA__`)
-		imageRegex := regexp.MustCompile(regexp.QuoteMeta(cdnSceneURL.String()) + `/photos/[^?"]*\.jpg`)
+		imageRegex := regexp.MustCompile(regexp.QuoteMeta(cdnSceneURL.String()) + `(/photos/[^?"]*\.jpg)\?width`)
 		sc.Gallery = imageRegex.FindAllString(nuxtData, -1)
 
 		// trailer details
