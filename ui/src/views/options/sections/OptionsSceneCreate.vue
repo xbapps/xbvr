@@ -1,87 +1,89 @@
 <template>
-  <div class="content">
-    <h3 class="title">{{$t('Import Japanese Adult VR (JAVR) Scene')}}</h3>
-    <div class="card">
-      <div class="card-content content">
-        <b-field grouped>
-          <b-select placeholder="Select scraper" v-model="javrScraper">
-            <option value="javdatabase">javdatabase.com</option>
-            <option value="r18d">r18.dev</option>
-            <option value="javlibrary">javlibrary.com</option>
-            <option value="javland">jav.land</option>
-          </b-select>
-          <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
-          <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
-        </b-field>
-        <span>R18.dev scraper works best with FANZA content ID, e.g. 84vrkm00139, but DVD-ID works too when maintained.</span>
-      </div>
-    </div>
-
-    <h3 class="title">{{$t('Import scene from TPDB')}}</h3>
-    <div class="card">
-      <div class="card-content content">
-        <h5 class="title">API Token</h5>
-        <b-field label="TPDB API Token" label-position="on-border" grouped>
-          <b-input v-model="tpdbApiToken" placeholder="TPDB API Token" type="search"></b-input>
-        </b-field>
-        <br>
-        <b-field label="TPDB Scene URL" label-position="on-border" grouped>
-          <b-input v-model="tpdbSceneUrl" placeholder="TPDB URL" type="search"></b-input>
-          <b-button class="button is-primary" v-on:click="scrapeTPDB()">{{$t('Go')}}</b-button>
-        </b-field>
-      </div>
-    </div>
-
-    <h3 class="title">{{$t('Create custom scene')}}</h3>
-    <div class="card">
-      <div class="card-content content">
-        <b-field label="Scene title" label-position="on-border">
-          <b-input v-model="customSceneTitle" placeholder="Stepsis stuck in washing machine" type="search"></b-input>
-        </b-field>
-        <b-field label="Scene ID" label-position="on-border" grouped>
-          <b-input v-model="customSceneID" placeholder="Can be empty" type="search"></b-input>
-          <b-button class="button is-primary" v-on:click="addScene(false)">{{$t('Create')}}</b-button>
-          <b-button class="button is-primary" v-on:click="addScene(true)" style="margin-left:0.2em">{{$t('Create and Edit')}}</b-button>
-        </b-field>
-      </div>
-    </div>
-    
-    <h3 class="title">{{$t('Scrape a scene')}}</h3>
-    <div class="card">
-      <div class="card-content content">
-        <b-field label="Scene URL" label-position="on-border">
-          <b-input v-model="scrapeUrl" placeholder="Scene Url - do not use links requiring a login" type="url"></b-input>
-        </b-field>
-        <b-tooltip :label="$t(`Warning: Ensure you are entering a link to a scene (best taken from viewing the scene). Links to something like a Category or Studio list may result in a corrupt scene you cannot delete. DO NOT USE links requiring logons. Use with caution`)" :delay="50" multilined type="is-danger">
-          <b-button class="button is-primary" v-on:click="scrapeSingleScene()">{{$t('Scrape')}}</b-button>
-        </b-tooltip>
-      </div>
-    </div>    
-
-    <b-modal :active.sync="isSingleScrapeModalActive"
-             has-modal-card
-             trap-focus
-             aria-role="dialog"
-             aria-modal>
-      <div class="modal-card" style="width: auto">
-        <header class="modal-card-head">
-          <p class="modal-card-title">{{$t('Scene Id Required')}}</p>
-        </header>
-        <section class="modal-card-body">          
-          <b-field label="Scene Id">
-            <b-input 
-              v-model='singleScrapeId'              
-              placeholder="eg 12345 (excl site prefix)"
-              >
-            </b-input>            
+  <div class="container">
+    <b-loading :is-full-page="false" :active.sync="isLoading"></b-loading>
+    <div class="content">
+      <h3 class="title">{{$t('Import Japanese Adult VR (JAVR) Scene')}}</h3>
+      <div class="card">
+        <div class="card-content content">
+          <b-field grouped>
+            <b-select placeholder="Select scraper" v-model="javrScraper">
+              <option value="javdatabase">javdatabase.com</option>
+              <option value="r18d">r18.dev</option>
+              <option value="javlibrary">javlibrary.com</option>
+              <option value="javland">jav.land</option>
+            </b-select>
+            <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
+            <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
           </b-field>
-        </section>
-        <footer class="modal-card-foot">
-          <button class="button is-primary" :disabled="this.singleScrapeId == ''" @click="scrapeSingleScene()">Continue</button>
-        </footer>
+          <span>R18.dev scraper works best with FANZA content ID, e.g. 84vrkm00139, but DVD-ID works too when maintained.</span>
+        </div>
       </div>
-    </b-modal>
-    
+
+      <h3 class="title">{{$t('Import scene from TPDB')}}</h3>
+      <div class="card">
+        <div class="card-content content">
+          <h5 class="title">API Token</h5>
+          <b-field label="TPDB API Token" label-position="on-border" grouped>
+            <b-input v-model="tpdbApiToken" placeholder="TPDB API Token" type="search"></b-input>
+          </b-field>
+          <br>
+          <b-field label="TPDB Scene URL" label-position="on-border" grouped>
+            <b-input v-model="tpdbSceneUrl" placeholder="TPDB URL" type="search"></b-input>
+            <b-button class="button is-primary" v-on:click="scrapeTPDB()">{{$t('Go')}}</b-button>
+          </b-field>
+        </div>
+      </div>
+
+      <h3 class="title">{{$t('Create custom scene')}}</h3>
+      <div class="card">
+        <div class="card-content content">
+          <b-field label="Scene title" label-position="on-border">
+            <b-input v-model="customSceneTitle" placeholder="Stepsis stuck in washing machine" type="search"></b-input>
+          </b-field>
+          <b-field label="Scene ID" label-position="on-border" grouped>
+            <b-input v-model="customSceneID" placeholder="Can be empty" type="search"></b-input>
+            <b-button class="button is-primary" v-on:click="addScene(false)">{{$t('Create')}}</b-button>
+            <b-button class="button is-primary" v-on:click="addScene(true)" style="margin-left:0.2em">{{$t('Create and Edit')}}</b-button>
+          </b-field>
+        </div>
+      </div>
+
+      <h3 class="title">{{$t('Scrape a scene')}}</h3>
+      <div class="card">
+        <div class="card-content content">
+          <b-field label="Scene URL" label-position="on-border">
+            <b-input v-model="scrapeUrl" placeholder="Scene Url - do not use links requiring a login" type="url"></b-input>
+          </b-field>
+          <b-tooltip :label="$t(`Warning: Ensure you are entering a link to a scene (best taken from viewing the scene). Links to something like a Category or Studio list may result in a corrupt scene you cannot delete. DO NOT USE links requiring logons. Use with caution`)" :delay="50" multilined type="is-danger">
+            <b-button class="button is-primary" v-on:click="scrapeSingleScene()">{{$t('Scrape')}}</b-button>
+          </b-tooltip>
+        </div>
+      </div>
+
+      <b-modal :active.sync="isSingleScrapeModalActive"
+              has-modal-card
+              trap-focus
+              aria-role="dialog"
+              aria-modal>
+        <div class="modal-card" style="width: auto">
+          <header class="modal-card-head">
+            <p class="modal-card-title">{{$t('Scene Id Required')}}</p>
+          </header>
+          <section class="modal-card-body">
+            <b-field label="Scene Id">
+              <b-input
+                v-model='singleScrapeId'
+                placeholder="eg 12345 (excl site prefix)"
+                >
+              </b-input>
+            </b-field>
+          </section>
+          <footer class="modal-card-foot">
+            <button class="button is-primary" :disabled="this.singleScrapeId == ''" @click="scrapeSingleScene()">Continue</button>
+          </footer>
+        </div>
+      </b-modal>
+    </div>
   </div>
 </template>
 
@@ -92,6 +94,7 @@ export default {
   name: 'OptionsCreateScene',
   data () {
     return {
+      isLoading: true,
       javrScraper: 'javdatabase',
       javrQuery: '',
       tpdbSceneUrl: '',
@@ -103,7 +106,8 @@ export default {
       additionalInfo: [],
     }
   },
-  mounted () {
+  async mounted () {
+    await this.loadState()
     this.$store.dispatch('optionsVendor/load')
 
     if (this.$store.state.optionsSceneCreate.scrapeScene!='') {
@@ -113,6 +117,15 @@ export default {
     } 
   },
   methods: {
+    async loadState () {
+      this.isLoading = true
+      await ky.get('/api/options/state')
+        .json()
+        .then(data => {
+          this.javrScraper = data.config.scraper_settings.javr.javrScraper
+          this.isLoading = false
+        })
+    },
     addScene(showEdit) {
       if (this.customSceneTitle !== '') {
         ky.post('/api/scene/create', { json: { title: this.customSceneTitle, id: this.customSceneID } })
