@@ -16,10 +16,10 @@ func ScrapeTPDB(knownScenes []string, out *[]models.ScrapedScene, apiToken strin
 	sc.SceneType = "VR"
 
 	// We accept 2 scene URL syntaxes:
-	// https://metadataapi.net/scenes/scene-title-1
+	// https://theporndb.net/scenes/scene-title-1
 	// or
-	// https://api.metadataapi.net/scenes/scene-title-1
-	re := regexp.MustCompile("metadataapi.net/scenes/(.+)")
+	// https://api.theporndb.net/scenes/scene-title-1
+	re := regexp.MustCompile("theporndb.net/scenes/(.+)")
 	subMatches := re.FindStringSubmatch(sceneUrl)
 	if subMatches == nil || len(subMatches) != 2 {
 		return errors.New("TPDB Url is malformed")
@@ -27,7 +27,7 @@ func ScrapeTPDB(knownScenes []string, out *[]models.ScrapedScene, apiToken strin
 
 	r, _ := resty.New().R().
 		SetAuthToken(apiToken).
-		Get(fmt.Sprintf("https://api.metadataapi.net/scenes/%v", subMatches[1]))
+		Get(fmt.Sprintf("https://api.theporndb.net/scenes/%v", subMatches[1]))
 
 	tpdbMetadata := r.String()
 
