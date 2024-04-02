@@ -73,7 +73,7 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		})
 
 		// Tags
-		e.ForEach(`div.post div#info div.tagy div.tag`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div.post div#info div#Tagy.tagy div.tag`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 
@@ -98,8 +98,10 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 		})
 
 		if config.Config.Funscripts.ScrapeFunscripts {
-			e.ForEach(`div#interactive div.dlnew`, func(id int, e *colly.HTMLElement) {
-				sc.HasScriptDownload = true
+			e.ForEach(`div.post div#info div#VideoTagy.tagy div.tag`, func(id int, e *colly.HTMLElement) {
+				if strings.TrimSpace(e.Text) == "Interactive" {
+					sc.HasScriptDownload = true
+				}
 			})
 		}
 
