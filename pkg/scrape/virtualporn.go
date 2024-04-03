@@ -2,7 +2,6 @@ package scrape
 
 import (
 	"encoding/json"
-	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -177,7 +176,7 @@ func init() {
 }
 
 // one off conversion routine called by migrations.go
-func UpdateVirtualPornIds() error {
+func UpdateVirtualPornIds() {
 	collector := createCollector("virtualporn.com")
 	apiCollector := createCollector("site-api.project1service.com")
 	offset := 0
@@ -245,10 +244,8 @@ func UpdateVirtualPornIds() error {
 
 	collector.Visit("https://virtualporn.com/videos")
 
-	if sceneCnt > 0 {
-		return nil
-	} else {
-		return errors.New("No scenes updated")
+	if sceneCnt == 0 {
+		log.Info("Unable to access VirtualPorn scenes, existing scenes could not be upgraded with new Scene Ids")
 	}
 
 }
