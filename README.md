@@ -149,5 +149,6 @@ esc - closes details pane
 |	`--myfiles_dir` | XBVR_MYFILESDIR | String| path to the myfiles directory for serving users own content (eg images|
 |	`--databaseurl` | DATABASE_URL | String|override default database path|
 |	`--web_port` | XBVR_WEB_PORT | Int| override default Web Page port 9999|
-|	`--ws_addr` | DB_CONNECTION_POOL_SIZE | String| override default Websocket address from the default 0.0.0.0:9998|
+|	`--ws_addr` | XBVR_WS_ADDR | String| override default Websocket address from the default 0.0.0.0:9998|
+|	`--db_connection_pool_size` | DB_CONNECTION_POOL_SIZE | Int| sets the connection pool size for mariadb databases|
 |	`--concurrent_scrapers` | CONCURRENT_SCRAPERS | String| set the number of scrapers that run concurrently default 9999|
