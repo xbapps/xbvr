@@ -1941,8 +1941,8 @@ func Migrate() {
 		{
 			ID: "0077-Update-VirtualPorn-ids",
 			Migrate: func(tx *gorm.DB) error {
-				err := scrape.UpdateVirtualPornIds()
-				return err
+				scrape.UpdateVirtualPornIds()
+				return nil
 			},
 		},
 	})
