@@ -23,7 +23,7 @@ jobs:
         node-version: '12'
 
     - name: Checkout code
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
 
     - name: Check code formatting using gofmt
       uses: Jerome1337/gofmt-action@v1.0.5
