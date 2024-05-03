@@ -161,12 +161,12 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 					coverURL := appCover
 					sc.Covers = append(sc.Covers, coverURL)
 					defer appCresp.Body.Close()
-					} else {
+				} else {
 					e.ForEach(`link[as="image"]`, func(id int, e *colly.HTMLElement) {
 						sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("href")))
-						})
-					}
+					})
 				}
+			}
 			defer desktopCresp.Body.Close()
 		} else {
 			posterURLFound := false
