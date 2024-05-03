@@ -151,23 +151,23 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		if !isTransScene {
 			appCover := gjson.Get(JsonMetadataA, "thumbnailUrl").String()
 			desktopCover := strings.Replace(gjson.Get(JsonMetadataA, "thumbnailUrl").String(), "app", "desktop", -1)
-			desktopCresp, desktopCerr := http.Head(desktopCover)
+			desktopCresp, _ := http.Head(desktopCover)
 			if desktopCresp.StatusCode == 200 {
 				coverURL := desktopCover
 				sc.Covers = append(sc.Covers, coverURL)
 			} else {
-				appCresp, appCerr := http.Head(appCover)
+				appCresp, _ := http.Head(appCover)
 				if appCresp.StatusCode == 200 {
 					coverURL := appCover
 					sc.Covers = append(sc.Covers, coverURL)
-					defer appResp.Body.Close()
+					defer appCresp.Body.Close()
 					} else {
 					e.ForEach(`link[as="image"]`, func(id int, e *colly.HTMLElement) {
 						sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("href")))
 						})
 					}
 				}
-			defer desktopResp.Body.Close()
+			defer desktopCresp.Body.Close()
 		} else {
 			posterURLFound := false
 			e.ForEach(`script[type="text/javascript"]`, func(id int, e *colly.HTMLElement) {
