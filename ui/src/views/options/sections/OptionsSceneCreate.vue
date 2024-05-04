@@ -15,7 +15,12 @@
             <b-input v-model="javrQuery" placeholder="ID (xxxx-001)" type="search"></b-input>
             <b-button class="button is-primary" v-on:click="scrapeJAVR()">{{$t('Go')}}</b-button>
           </b-field>
-          <span>R18.dev scraper works best with FANZA content ID, e.g. 84vrkm00139, but DVD-ID works too when maintained.</span>
+          <p style="font-size: 0.75em;">
+            <span style="color: red; font-weight: bold;">R18.dev:</span>
+            DVD-IDs like <span style="font-family: monospace;color:#7957d5">VRKM-139</span> will only work for scenes that were released on r18.com prior to 2022-06.
+            <br>
+            All newer scenes should be scraped using their full FANZA content ID, e.g. <span style="font-family: monospace;color:#7957d5">84vrkm00139</span> or using one of the other scrapers.
+          </p>
         </div>
       </div>
 
