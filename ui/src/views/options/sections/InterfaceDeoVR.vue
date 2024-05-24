@@ -55,7 +55,7 @@
               </div>
               <hr/>
               <div class="block">
-                <b-tooltip label="Specfy feilds if you wish control the sequence of the scenes video files" multilined :delay="750" >
+                <b-tooltip label="Specify fields if you wish to control the sequence of the scene's video files" multilined :delay="750" >
                   <b-field label="Video File Sorting">
                     <b-input v-model="videoSequence" disabled></b-input>
                   </b-field>
@@ -85,7 +85,7 @@
                     </b-dropdown>
                   </b-field>
                 </b-tooltip>
-                <b-tooltip label="Specfy feilds if you wish control the sequence of the scenes video files" multilined :delay="750" >
+                <b-tooltip label="Specify fields if you wish to control the sequence of the scene's script files" multilined :delay="750" >
                   <b-field label="Script File Sorting">
                     <b-input v-model="scriptSequence" disabled></b-input>
                   </b-field>
@@ -152,7 +152,7 @@
       <h3>Heresphere interface</h3>
       <hr/>
           <b-tooltip
-            label="WANRING: file deletes from Heresphere are permanent. ALL files associated with a scene will be deleted"
+            label="WANRING: File deletion from Heresphere is PERMANENT! ALL files associated with a scene will be deleted."
             size="is-large" type="is-danger" multilined :delay="250" >
             <b-field label="Allow File Deletion">
               <b-switch v-model="allowFileDeletions">
