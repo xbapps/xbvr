@@ -55,10 +55,29 @@ func (i FilesResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/unmatch").To(i.unmatchFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/file/{file-id}").To(i.getFile).
+		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.File{}))
+
 	ws.Route(ws.DELETE("/file/{file-id}").To(i.removeFile).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	return ws
+}
+
+func (i FilesResource) getFile(req *restful.Request, resp *restful.Response) {
+	var file models.File
+
+	id, err := strconv.Atoi(req.PathParameter("file-id"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	_ = file.GetIfExistByPK(uint(id))
+
+	resp.WriteHeaderAndEntity(http.StatusOK, file)
 }
 
 func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
