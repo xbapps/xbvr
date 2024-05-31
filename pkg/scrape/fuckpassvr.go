@@ -3,16 +3,14 @@ package scrape
 import (
 	"encoding/json"
 	"net/url"
-	"path"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
+	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
-	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -23,61 +21,77 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector("www.fuckpassvr.com")
+	siteCollector := createCollector("www.fuckpassvr.com")
 
 	client := resty.New()
 	client.SetHeader("User-Agent", UserAgent)
 
-	sceneCollector.OnResponse(func(r *colly.Response) {
-		if r.StatusCode != 200 {
-			return
-		}
-		res := gjson.ParseBytes(r.Body)
-		scenedata := res.Get("data.scene")
-		previewVideoURL := r.Ctx.Get("preview_video_url")
-
+	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "FuckPassVR"
 		sc.Site = siteID
+		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		slug := scenedata.Get("slug").String()
-		sc.HomepageURL = "https://www.fuckpassvr.com/video/" + slug
+		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
+				url := strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0]
+				re := regexp.MustCompile(`FPVR(\d+)`)
+				matches := re.FindStringSubmatch(url)
+				if len(matches) > 1 {
+					sc.SiteID = matches[1]
+					sc.SceneID = "fpvr-" + matches[1]
+				}
+			}
+		})
 
-		sc.SiteID = scenedata.Get("cms_id").String()
-		if sc.SiteID == "" || !strings.HasPrefix(sc.SiteID, "FPVR") {
-			return
-		}
-		sc.SceneID = "fpvr-" + strings.Replace(sc.SiteID, "FPVR", "", 1)
+		e.ForEach(`h2.video__title`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
+				sc.Title = strings.TrimSpace(e.Text)
+			}
+		})
 
-		sc.Released = scenedata.Get("active_schedule").String()[:10]
-		sc.Title = scenedata.Get("name").String()
-		sc.Duration = int(scenedata.Get("duration").Int())
-		sc.Covers = append(sc.Covers, scenedata.Get("thumbnail_url").String())
+		e.ForEach(`web-vr-video-player`, func(id int, e *colly.HTMLElement) {
+			sc.Covers = append(sc.Covers, strings.Trim(e.Attr("coverimage"), " '"))
+		})
 
-		desc := scenedata.Get("description").String()
-		desc = strings.ReplaceAll(desc, "<p>", "")
-		desc = strings.ReplaceAll(desc, "</p>", "\n\n")
-		re := regexp.MustCompile(`<(.|\n)*?>`) // strip_tags
-		sc.Synopsis = re.ReplaceAllString(desc, "")
+		e.ForEach(`div.profile__gallery a.profile__galleryElement`, func(id int, e *colly.HTMLElement) {
+			sc.Gallery = append(sc.Gallery, strings.TrimSpace(e.Attr("href")))
+		})
 
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		scenedata.Get("porn_star_lead").ForEach(func(_, star gjson.Result) bool {
-			name := star.Get("name").String()
-			sc.Cast = append(sc.Cast, name)
-			sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: "https://www.fuckpassvr.com/api/api/seo?porn_star_slug=" + star.Get("slug").String()}
-			return true
-		})
-		scenedata.Get("porn_star").ForEach(func(_, star gjson.Result) bool {
-			name := star.Get("name").String()
-			sc.Cast = append(sc.Cast, name)
-			sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: "https://www.fuckpassvr.com/api/api/seo?porn_star_slug=" + star.Get("slug").String()}
-			return true
+		e.ForEach(`div.models a`, func(id int, e *colly.HTMLElement) {
+			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Attr("title")))
+			sc.ActorDetails[strings.TrimSpace(e.Attr("title"))] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 		})
 
-		scenedata.Get("tag_input").ForEach(func(_, tag gjson.Result) bool {
-			sc.Tags = append(sc.Tags, tag.String())
-			return true
+		e.ForEach(`a.tag`, func(id int, e *colly.HTMLElement) {
+			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Attr("title")))
+		})
+
+		e.ForEach(`div.readMoreWrapper2`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.TrimSpace(e.Text)
+		})
+
+		e.ForEach(`div.video__addons p.wrapper__text`, func(id int, e *colly.HTMLElement) {
+			s := strings.TrimSpace(e.Text)
+			if strings.HasPrefix(s, "Released:") {
+				tmpDate, _ := goment.New(strings.TrimSpace(strings.TrimPrefix(s, "Released:")), "MMM DD YYYY")
+				sc.Released = tmpDate.Format("YYYY-MM-DD")
+			}
+		})
+
+		e.ForEach(`div.wrapper__download a.wrapper__downloadLink`, func(id int, e *colly.HTMLElement) {
+			url, err := url.Parse(e.Attr("href"))
+			if err == nil {
+				parts := strings.Split(url.Path, "/")
+				if len(parts) > 0 {
+					fn := parts[len(parts)-1]
+					fn = strings.Replace(fn, "2min", "FULL", -1)
+					sc.Filenames = append(sc.Filenames, fn)
+				}
+			}
 		})
 
 		// trailer details
@@ -86,82 +100,27 @@ func FuckPassVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 
-		resolutions := []string{"8kUHD", "8kHD", "4k", "2k", "1k"}
-		parsedFileNameURL, err := url.Parse(previewVideoURL)
-		if err == nil {
-			fileNameBase := path.Base(parsedFileNameURL.Path)
-			if strings.HasSuffix(strings.ToLower(fileNameBase), "_rollover.mp4") {
-				for i := range resolutions {
-					fn := fileNameBase[:len(fileNameBase)-len("_rollover.mp4")] + "-FULL_" + resolutions[i] + ".mp4"
-					sc.Filenames = append(sc.Filenames, fn)
-				}
-			}
-		} else {
-			log.Error(err)
-		}
-
-		resp, err := client.R().
-			SetQueryParams(map[string]string{
-				"scene_id": scenedata.Get("id").String(),
-			}).
-			Get("https://www.fuckpassvr.com/api/api/storyboard/show")
-
-		if err == nil {
-			res := gjson.ParseBytes(resp.Body())
-			res.Get("data.storyboards.#.image_origin_url").ForEach(func(_, url gjson.Result) bool {
-				sc.Gallery = append(sc.Gallery, url.String())
-				return true
-			})
-		} else {
-			log.Error(err)
-		}
-
 		out <- sc
 	})
 
-	var page int64 = 1
-	var lastPage int64 = 1
-	if limitScraping {
-		lastPage = 1
-	}
+	siteCollector.OnHTML(`section.pagination a`, func(e *colly.HTMLElement) {
+		if !limitScraping {
+			siteCollector.Visit(e.Attr("href"))
+		}
+	})
+
+	siteCollector.OnHTML(`div.videos__element a.videos__videoTitle`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+
+		if !funk.ContainsString(knownScenes, sceneURL) {
+			sceneCollector.Visit(sceneURL)
+		}
+	})
 
 	if singleSceneURL != "" {
-		ctx := colly.NewContext()
-		ctx.Put("preview_video_url", "")
-		slug := strings.Replace(singleSceneURL, "https://www.fuckpassvr.com/video/", "", 1)
-		sceneDetail := "https://www.fuckpassvr.com/api/api/scene/show?slug=" + slug
-		sceneCollector.Request("GET", sceneDetail, nil, ctx, nil)
+		sceneCollector.Visit(singleSceneURL)
 	} else {
-		for page <= lastPage {
-			resp, err := client.R().
-				SetQueryParams(map[string]string{
-					"size":   "24",
-					"sortBy": "newest",
-					"page":   strconv.FormatInt(page, 10),
-				}).
-				Get("https://www.fuckpassvr.com/api/api/scene")
-
-			if err == nil {
-				res := gjson.ParseBytes(resp.Body())
-				res.Get("data.scenes.data").ForEach(func(_, scenedata gjson.Result) bool {
-					ctx := colly.NewContext()
-					ctx.Put("preview_video_url", scenedata.Get("preview_video_url").String())
-
-					sceneURL := "https://www.fuckpassvr.com/video/" + scenedata.Get("slug").String()
-					sceneDetail := "https://www.fuckpassvr.com/api/api/scene/show?slug=" + scenedata.Get("slug").String()
-
-					if !funk.ContainsString(knownScenes, sceneURL) {
-						sceneCollector.Request("GET", sceneDetail, nil, ctx, nil)
-					}
-
-					return true
-				})
-				lastPage = res.Get("data.scenes.last_page").Int()
-				page = page + 1
-			} else {
-				log.Error(err)
-			}
-		}
+		siteCollector.Visit("https://www.fuckpassvr.com/destination")
 	}
 
 	if updateSite {
