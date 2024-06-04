@@ -20,7 +20,7 @@ import (
 // Script is the Funscript container type holding Launch data.
 type Script struct {
 	// Version of Launchscript
-	Version string `json:"version"`
+	Version interface{} `json:"version"`
 	// Inverted causes up and down movement to be flipped.
 	Inverted bool `json:"inverted,omitempty"`
 	// Range is the percentage of a full stroke to use.
@@ -262,6 +262,11 @@ func (funscript Script) getDuration() float64 {
 
 	if funscript.Metadata != nil && float64(funscript.Metadata.Duration) > duration {
 		duration = float64(funscript.Metadata.Duration)
+
+		if duration > 50000 {
+			// large values are likely in milliseconds
+			duration = duration / 1000.0
+		}
 	}
 	return duration
 }
