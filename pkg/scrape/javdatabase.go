@@ -95,7 +95,7 @@ func ScrapeJavDB(out *[]models.ScrapedScene, queryString string) {
 		})
 
 		html.ForEach(`p.mb-1`, func(id int, p *colly.HTMLElement) {
-			tr := strings.Split(p.Text,": ")
+			tr := strings.Split(p.Text, ": ")
 			label := tr[0]
 
 			if label == `Studio` {
