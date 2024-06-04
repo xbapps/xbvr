@@ -94,6 +94,66 @@ func ScrapeJavDB(out *[]models.ScrapedScene, queryString string) {
 
 		})
 
+		html.ForEach(`p.mb-1`, func(id int, p *colly.HTMLElement) {
+			tr := strings.Split(p.Text, ": ")
+			label := tr[0]
+
+			if label == `Studio` {
+				// Studio
+				sc.Studio = tr[1]
+
+			} else if label == `DVD ID` {
+				// Title, SceneID and SiteID all like 'VRKM-821' format
+				dvdId := strings.ToUpper(tr[1])
+				sc.Title = dvdId
+				sc.SceneID = dvdId
+				sc.SiteID = dvdId
+
+				// Set 'Site' to first part of the ID (e.g. `VRKM for `vrkm-821`)
+				siteParts := strings.Split(dvdId, `-`)
+				if len(siteParts) > 0 {
+					sc.Site = siteParts[0]
+				}
+
+			} else if label == `Release Date` {
+				// Release date
+				dateStr := tr[1]
+				tmpDate, _ := goment.New(strings.TrimSpace(dateStr), "YYYY-MM-DD")
+				sc.Released = tmpDate.Format("YYYY-MM-DD")
+
+			} else if label == `Genre(s)` {
+				// Tags
+				/* NOTE:
+				   "Tags are technically incomplete vs. what you'd get translating dmm.co.jp
+				   tags/correlating them back to their old equivalents on r18 using something
+				   like Javinizer's tag CSV"
+				*/
+				p.ForEach("a", func(id int, anchor *colly.HTMLElement) {
+					href := anchor.Attr("href")
+					if strings.Contains(href, "javdatabase.com/genres/") {
+						// Tags
+						tag := ProcessJavrTag(anchor.Text)
+
+						if tag != "" {
+							sc.Tags = append(sc.Tags, tag)
+						}
+					}
+				})
+
+			} else if label == `Translated Title` {
+				// Synopsis / description
+				sc.Synopsis = tr[1]
+
+			} else if label == `Content ID` {
+				contentId = tr[1]
+
+			} else if label == "Runtime" {
+				// Duration
+				sc.Duration, _ = strconv.Atoi(strings.Split(tr[1], " ")[0])
+			}
+
+		})
+
 		// Screenshots
 		html.ForEach("a[href]", func(_ int, anchor *colly.HTMLElement) {
 			linkHref := anchor.Attr(`href`)
