@@ -415,6 +415,10 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 	// Only shown for logged in users so need to generate them
 	// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
 	if !isTransScene {
+		// Force siteID when scraping individual scenes without a custom site
+		if siteID == "" {
+			siteID = gjson.Get(JsonMetadataA, "paysite.name").String()
+		}
 		viewAngle := gjson.Get(JsonMetadataA, "viewAngle").String()
 		projSuffix := "_LR_180.mp4"
 		if viewAngle == "190" || viewAngle == "200" || viewAngle == "220" {
