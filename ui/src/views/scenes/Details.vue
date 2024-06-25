@@ -125,6 +125,7 @@
                       <watched-button :item="item" v-if="!displayingAlternateSource"/>
                       <edit-button :item="item"/>
                       <refresh-button :item="item" v-if="!displayingAlternateSource"/>
+                      <rescrape-button :item="item" v-if="!displayingAlternateSource"/>
                     </div>
                   </div>
                 </div>
@@ -404,12 +405,13 @@ import WishlistButton from '../../components/WishlistButton'
 import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import RefreshButton from '../../components/RefreshButton'
+import RescrapeButton from '../../components/RescrapeButton'
 import TrailerlistButton from '../../components/TrailerlistButton'
 import HiddenButton from '../../components/HiddenButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton, HiddenButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, RefreshButton, RescrapeButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       index: 1,
