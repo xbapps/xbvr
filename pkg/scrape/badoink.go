@@ -62,7 +62,7 @@ func BadoinkSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			}
 		})
 		// Cover URLs for free videos
-		e.ForEach(`div#videoPreviewContainer dl8-video`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`div#videoPreviewContainer video`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
 				sc.Covers = append(sc.Covers, strings.Split(e.Attr("poster"), "?")[0])
 			}
