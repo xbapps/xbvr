@@ -20,7 +20,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.12.0
 	github.com/gammazero/nexus/v3 v3.2.2
 	github.com/getlantern/systray v1.2.2
-	github.com/go-openapi/spec v0.20.14
+	github.com/go-openapi/spec v0.21.0
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/go-test/deep v1.1.0
 	github.com/gocolly/colly/v2 v2.1.0
@@ -102,9 +102,9 @@ require (
 	github.com/getlantern/hex v0.0.0-20190417191902-c6586a6fe0b7 // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55 // indirect
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f // indirect
-	github.com/go-openapi/jsonpointer v0.20.2 // indirect
-	github.com/go-openapi/jsonreference v0.20.4 // indirect
-	github.com/go-openapi/swag v0.22.6 // indirect
+	github.com/go-openapi/jsonpointer v0.21.0 // indirect
+	github.com/go-openapi/jsonreference v0.21.0 // indirect
+	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
