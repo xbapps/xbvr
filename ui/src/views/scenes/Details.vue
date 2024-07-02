@@ -29,7 +29,7 @@
                 <b-carousel v-model="carouselSlide" @change="scrollToActiveIndicator" :autoplay="false" :indicator-inside="false">
                   <b-carousel-item v-for="(carousel, i) in images" :key="i">
                     <div class="image is-1by1 is-full"
-                         v-bind:style="{backgroundImage: `url(${getImageURL(carousel.url, '700,fit')})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat'}"></div>
+                         v-bind:style='{backgroundImage: `url("${getImageURL(carousel.url, "700,fit")}")`, backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat"}'></div>
                   </b-carousel-item>
                   <template slot="indicators" slot-scope="props">
                       <span class="al image" style="width:max-content;">
