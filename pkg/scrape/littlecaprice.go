@@ -1,8 +1,7 @@
 package scrape
 
 import (
-	"regexp"
-	"strconv"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -23,12 +22,7 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 	siteCollector := createCollector("www.littlecaprice-dreams.com")
 	galleryCollector := cloneCollector(sceneCollector)
 
-	// RegEx Patterns
-	coverRegEx := regexp.MustCompile(`\.vid_bg {\nbackground: url\('(.+?)'`)
-	durationRegEx := regexp.MustCompile(`(\d+):(\d+)`)
-	descriptionRegEx := regexp.MustCompile(`(?i)^e(?:nglish)?:`)
-
-	sceneCollector.OnHTML(`article.project`, func(e *colly.HTMLElement) {
+	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
@@ -37,52 +31,52 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - Generate randomly
-		sc.SiteID = strings.Split(e.Attr("id"), "-")[1]
+		e.ForEach(`link[rel="shortlink"]`, func(id int, e *colly.HTMLElement) {
+			link := e.Request.AbsoluteURL(e.Attr("href"))
+			tmpurl, _ := url.Parse(link)
+			sc.SiteID = tmpurl.Query().Get("p")
+		})
 		sc.SceneID = slugify.Slugify(sc.Site + "-" + sc.SiteID)
 
 		// Title
-		sc.Title = strings.TrimSpace(e.ChildText(`.vid_title`))
-
-		// Cover
-		cover := e.Request.Ctx.GetAny("cover").(string)
-		if len(cover) == 0 {
-			cover = coverRegEx.FindStringSubmatch(e.DOM.Find(`style`).Text())[1]
-		}
-		cover = strings.Replace(cover, "media.", "", -1)
-		sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(cover))
-
-		// Duration
-		minutes := durationRegEx.FindStringSubmatch(e.ChildText(`.vid_length`))[1]
-		sc.Duration, _ = strconv.Atoi(minutes)
-
-		// Released
-		dt, _ := time.Parse("January 2, 2006", e.ChildText(`.vid_date`))
-		sc.Released = dt.Format("2006-01-02")
-
-		// Synopsis
-		sc.Synopsis = strings.TrimSpace(
-			descriptionRegEx.ReplaceAllString( // Some scene descriptions include a redundant prefix. We remove it.
-				e.ChildText(`.vid_desc`), ""))
-
-		// Cast and tags
-		e.ForEach(`.vid_infos .vid_info_content a`, func(id int, e *colly.HTMLElement) {
-			if e.Attr("rel") == "tag" {
-				sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
-			} else {
-				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+		e.ForEach(`.project-header h1`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
+				sc.Title = strings.TrimSpace(e.Text)
 			}
 		})
 
+		// Cover
+		e.ForEach(`meta[name="og:image"]`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
+				sc.Covers = append(sc.Covers, strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0])
+			}
+		})
+
+		// Duration
+
+		// Released
+		e.ForEach(`meta[name="og:published_time"]`, func(id int, e *colly.HTMLElement) {
+			dt, _ := time.Parse("2006-01-02", e.Attr("content")[:10])
+			sc.Released = dt.Format("2006-01-02")
+		})
+
+		// Synopsis
+		e.ForEach(`.desc-text`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.TrimSpace(e.Text)
+		})
+
+		// Cast and tags
+		e.ForEach(`.project-models .list a`, func(id int, e *colly.HTMLElement) {
+			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+		})
+
+		// Tags
+		e.ForEach(`meta[name="og:video:tag"]`, func(id int, e *colly.HTMLElement) {
+			sc.Tags = append(sc.Tags, e.Attr("content"))
+		})
+
 		// Gallery
-		galleryPage, _ := e.DOM.Find(`.vid_buttons a[href*="project"]`).Attr("href")
-		ctx := colly.NewContext()
-		ctx.Put("scene", sc)
-
-		galleryCollector.Request("GET", galleryPage, nil, ctx, nil)
-
-		if galleryPage == "" {
-			out <- sc
-		}
+		out <- sc
 	})
 
 	galleryCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -96,16 +90,13 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`.et_pb_portfolio_item`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
+	siteCollector.OnHTML(`.project-preview`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		// If scene exists in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
-			ctx := colly.NewContext()
-			ctx.Put("cover", e.ChildAttr("img", "src"))
-
 			//sceneCollector.Visit(sceneURL)
-			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+			sceneCollector.Request("GET", sceneURL, nil, nil, nil)
 		}
 	})
 
@@ -114,7 +105,7 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		ctx.Put("cover", "")
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {
-		siteCollector.Visit("https://www.littlecaprice-dreams.com/virtual-reality-little-caprice-dreams/")
+		siteCollector.Visit("https://www.littlecaprice-dreams.com/collection/virtual-reality/")
 	}
 
 	// Missing "Me and You" (my-first-time) scene
@@ -124,7 +115,7 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 		ctx.Put("cover", "https://www.littlecaprice-dreams.com/wp-content/uploads/2021/08/wpp_Little-Caprice-Virtual-Reality_.jpg")
 
 		//sceneCollector.Visit(sceneURL)
-		sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+		sceneCollector.Visit(sceneURL)
 	}
 
 	if updateSite {
@@ -135,5 +126,5 @@ func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, ou
 }
 
 func init() {
-	registerScraper("littlecaprice", "Little Caprice Dreams", "https://littlecaprice-dreams.com/wp-content/uploads/2019/03/cropped-lcd-heart-180x180.png", "littlecaprice-dreams.com", LittleCaprice)
+	registerScraper("littlecaprice", "Little Caprice Dreams", "https://www.littlecaprice-dreams.com/wp-content/uploads/2019/03/cropped-lcd-heart-192x192.png", "littlecaprice-dreams.com", LittleCaprice)
 }
