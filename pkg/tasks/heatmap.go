@@ -260,12 +260,15 @@ func (funscript Script) getDuration() float64 {
 	maxts := funscript.Actions[len(funscript.Actions)-1].At
 	duration := float64(maxts) / 1000.0
 
-	if funscript.Metadata != nil && float64(funscript.Metadata.Duration) > duration {
-		duration = float64(funscript.Metadata.Duration)
+	if funscript.Metadata != nil {
+		metadataDuration := float64(funscript.Metadata.Duration)
 
-		if duration > 50000 {
+		if metadataDuration > 50000 {
 			// large values are likely in milliseconds
-			duration = duration / 1000.0
+			metadataDuration = metadataDuration / 1000.0
+		}
+		if metadataDuration > duration {
+			duration = metadataDuration
 		}
 	}
 	return duration
