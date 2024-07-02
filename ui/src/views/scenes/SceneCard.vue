@@ -69,13 +69,15 @@
         </span>        
       </span>
       <div class="image-row" v-if="getAlternateSceneSources != 0">
-        <div v-for="(altsrc, idx) in this.alternateSources" :key="idx" class="altsrc-image-wrapper">
-          <a :href="altsrc.url" target="_blank">
-            <vue-load-image>
-              <img slot="image" :src="getImageURL(altsrc.site_icon)" alt="Image" class="thumbnail" width="20" />
-              <b-icon slot="error" pack="mdi" icon="link" size="is-small" />
-            </vue-load-image>
-          </a>
+        <div v-for="(altsrc, idx) in alternateSourcesWithTitles" :key="idx" class="altsrc-image-wrapper">
+          <b-tooltip type="is-light" :label="altsrc.title" :delay="100">
+            <a :href="altsrc.url" target="_blank">
+              <vue-load-image>
+                <img slot="image" :src="getImageURL(altsrc.site_icon)" alt="Image" class="thumbnail" width="20" />
+                <b-icon slot="error" pack="mdi" icon="link" size="is-small" />
+              </vue-load-image>
+            </a>
+          </b-tooltip>
         </div>
       </div>    
     </div>
@@ -170,6 +172,15 @@ export default {
         return 0; // Return 0 or handle error as needed
       }
     },
+    alternateSourcesWithTitles() {
+      return this.alternateSources.map(altsrc => {
+        const extdata = JSON.parse(altsrc.external_data);
+        return {
+          ...altsrc,
+          title: extdata.scene?.title || 'No Title'
+        };
+      });
+    }
   },
   methods: {
     getImageURL (u) {

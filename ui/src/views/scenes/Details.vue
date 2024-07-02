@@ -125,15 +125,18 @@
                       <watched-button :item="item" v-if="!displayingAlternateSource"/>
                       <edit-button :item="item"/>
                       <refresh-button :item="item" v-if="!displayingAlternateSource"/>
+                      <rescrape-button :item="item" v-if="!displayingAlternateSource"/>
                     </div>
                   </div>
                 </div>
                 <div class="image-row is-flex is-pulled-right" v-if="getAlternateSceneSources != 0">
-                  <div v-for="(altsrc, idx) in this.alternateSources" :key="idx" class="altsrc-image-wrapper" @click="showExtRefScene(altsrc)">
+                  <div v-for="(altsrc, idx) in alternateSourcesWithTitles" :key="idx" class="altsrc-image-wrapper" @click="showExtRefScene(altsrc)">
+                    <b-tooltip type="is-light" :label="altsrc.title" :delay="100" append-to-body>
                       <vue-load-image>
                         <img slot="image" :src="getImageURL(altsrc.site_icon)" alt="Image" width="28px" />                        
                         <b-icon slot="error" pack="mdi" icon="link" size="is-small" />
                       </vue-load-image>
+                    </b-tooltip>
                   </div>
                 </div>
               </div>
@@ -402,12 +405,13 @@ import WishlistButton from '../../components/WishlistButton'
 import WatchedButton from '../../components/WatchedButton'
 import EditButton from '../../components/EditButton'
 import RefreshButton from '../../components/RefreshButton'
+import RescrapeButton from '../../components/RescrapeButton'
 import TrailerlistButton from '../../components/TrailerlistButton'
 import HiddenButton from '../../components/HiddenButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, RefreshButton, TrailerlistButton, HiddenButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, RefreshButton, RescrapeButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       index: 1,
@@ -576,6 +580,15 @@ export default {
     },
     quickFindOverlayState() {
       return this.$store.state.overlay.quickFind.show
+    },
+    alternateSourcesWithTitles() {
+      return this.alternateSources.map(altsrc => {
+        const extdata = JSON.parse(altsrc.external_data);
+        return {
+          ...altsrc,
+          title: extdata.scene?.title || 'No Title'
+        };
+      });
     }
   },
   mounted () {
