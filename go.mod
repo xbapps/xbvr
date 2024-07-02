@@ -17,7 +17,7 @@ require (
 	github.com/djherbis/times v1.6.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/emicklei/go-restful-openapi/v2 v2.10.2
-	github.com/emicklei/go-restful/v3 v3.12.0
+	github.com/emicklei/go-restful/v3 v3.12.1
 	github.com/gammazero/nexus/v3 v3.2.2
 	github.com/getlantern/systray v1.2.2
 	github.com/go-openapi/spec v0.21.0
