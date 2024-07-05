@@ -120,13 +120,13 @@ func RealJamSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 
 		// Filenames
 		fileMasktmp := strings.Split(sc.HomepageURL, "/")
-		fileMask := "RealJamVR-" + fileMasktmp[len(fileMasktmp)-1] + "-Full$res_$fps_LR_180.mp4"
+		fileMask := strings.Replace(sc.Site, " ", "", -1) + "-" + fileMasktmp[len(fileMasktmp)-1] + "-Full$res_$fps_LR_180.mp4"
 
 		// any "/join/" links on the public site will be for for the full movie
 		uniqueFilenames := make(map[string]bool)
 		e.ForEach(`a[href='/join/']`, func(id int, e *colly.HTMLElement) {
 			resolution := ""
-			fps := ""
+			fps := "60"
 			e.ForEach(`div div`, func(id int, e *colly.HTMLElement) {
 				txt := strings.TrimSpace(e.Text)
 				if strings.HasPrefix(txt, "Full ") {
