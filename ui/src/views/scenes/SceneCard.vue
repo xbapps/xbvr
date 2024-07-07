@@ -68,8 +68,8 @@
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
         </span>        
       </span>
-      <div class="image-row" v-if="getAlternateSceneSources != 0">
-        <div v-for="(altsrc, idx) in alternateSourcesWithTitles" :key="idx" class="altsrc-image-wrapper">
+      <div class="image-row" v-if="getAlternateSceneSourcesWithTitles != 0">
+        <div v-for="(altsrc, idx) in this.alternateSources" :key="idx" class="altsrc-image-wrapper">
           <b-tooltip type="is-light" :label="altsrc.title" :delay="100">
             <a :href="altsrc.url" target="_blank">
               <vue-load-image>
@@ -155,31 +155,34 @@ export default {
       }
       return this.$store.state.optionsWeb.web.isAvailOpacity / 100
     },
-    async getAlternateSceneSources() {
-      try {    
+    async getAlternateSceneSourcesWithTitles() {
+      try {
         const response = await ky.get('/api/scene/alternate_source/' + this.item.id).json();
         this.alternateSources = [];
-        if (response==null){
-          return 0
+        if (response == null) {
+          return 0;
         }
-        response.forEach(altsrc => {          
-          if (altsrc.external_source.startsWith("alternate scene ") || altsrc.external_source == "stashdb scene") {
-            this.alternateSources.push(altsrc)
-          }
-        });        
+
+        this.alternateSources = response
+          .filter(altsrc => altsrc.external_source.startsWith("alternate scene ") || altsrc.external_source == "stashdb scene")
+          .map(altsrc => {
+            const extdata = JSON.parse(altsrc.external_data);
+            let title;
+            if (altsrc.external_source.startsWith("alternate scene ")) {
+              title = extdata.scene?.title || 'No Title';
+            } else if (altsrc.external_source == "stashdb scene") {
+              title = extdata.title || 'No Title';
+            }
+            return {
+              ...altsrc,
+              title: title
+            };
+          });
+
         return this.alternateSources.length;
-      } catch (error) {        
+      } catch (error) {
         return 0; // Return 0 or handle error as needed
       }
-    },
-    alternateSourcesWithTitles() {
-      return this.alternateSources.map(altsrc => {
-        const extdata = JSON.parse(altsrc.external_data);
-        return {
-          ...altsrc,
-          title: extdata.scene?.title || 'No Title'
-        };
-      });
     }
   },
   methods: {
