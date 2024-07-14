@@ -280,11 +280,15 @@ func (o *Scene) GetHSPFiles() ([]File, error) {
 	return files, nil
 }
 
-func (o *Scene) GetSubtitlesFiles() ([]File, error) {
+func (o *Scene) GetSubtitlesFilesSorted(sort string) ([]File, error) {
 	commonDb, _ := GetCommonDB()
 
 	var files []File
-	commonDb.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "subtitles").Find(&files)
+	if sort == "" {
+		commonDb.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "subtitles").Find(&files)
+	} else {
+		commonDb.Preload("Volume").Where("scene_id = ? AND type = ?", o.ID, "subtitles").Order(sort).Find(&files)
+	}
 
 	return files, nil
 }

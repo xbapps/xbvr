@@ -419,7 +419,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 
 	var deoScriptFiles []DeoSceneScriptFile
 	var scriptFiles []models.File
-	scriptFiles, err = scene.GetScriptFiles()
+	scriptFiles, err = scene.GetScriptFilesSorted(config.Config.Interfaces.Players.ScriptSortSeq)
 	if err != nil {
 		log.Error(err)
 		return
