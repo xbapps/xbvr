@@ -34,9 +34,15 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID - get from URL
-		e.ForEach(`#player`, func(id int, e *colly.HTMLElement) {
-			sc.SiteID = strings.Split(e.Attr("data-poster-index"), ":")[0]
-			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		e.ForEach(`script`, func(id int, e *colly.HTMLElement) {
+			if strings.Contains(e.Text, "var video =") {
+				r := regexp.MustCompile(`id: (\d+),`)
+				m := r.FindStringSubmatch(e.Text)
+				if len(m) > 0 {
+					sc.SiteID = m[1]
+					sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+				}
+			}
 		})
 
 		// Title
@@ -107,7 +113,9 @@ func VirtualTaboo(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out
 			sc.Duration = tmpDuration
 		})
 
-		out <- sc
+		if sc.SiteID != "" {
+			out <- sc
+		}
 	})
 
 	siteCollector.OnHTML(`ul.pagination a`, func(e *colly.HTMLElement) {

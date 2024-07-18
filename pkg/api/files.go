@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -347,7 +349,7 @@ func removeFileByFileId(fileId uint) models.Scene {
 		switch file.Volume.Type {
 		case "local":
 			err := os.Remove(filepath.Join(file.Path, file.Filename))
-			if err == nil {
+			if err == nil || errors.Is(err, fs.ErrNotExist) {
 				deleted = true
 			} else {
 				log.Errorf("error deleting file: %v", err)

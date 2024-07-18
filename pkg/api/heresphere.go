@@ -229,7 +229,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
-				URL:        fmt.Sprintf("%v://%v/api/dms/file/%v/%v", getProto(req), req.Request.Host, file.ID, dnt),
+				URL:        fmt.Sprintf("%v://%v/api/dms/file/%v%v", getProto(req), req.Request.Host, file.ID, dnt),
 			},
 		},
 	})
@@ -344,7 +344,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 					Height:     height,
 					Width:      width,
 					Size:       file.Size,
-					URL:        fmt.Sprintf("%v://%v/api/dms/file/%v/%v", getProto(req), req.Request.Host, file.ID, dnt),
+					URL:        fmt.Sprintf("%v://%v/api/dms/file/%v%v", getProto(req), req.Request.Host, file.ID, dnt),
 				},
 			},
 		}

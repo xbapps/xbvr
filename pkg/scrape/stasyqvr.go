@@ -101,7 +101,6 @@ func StasyQVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 			base = strings.Replace(base, "\"", "", -1)
 			if !funk.ContainsString(sc.Filenames, base) {
 				sc.Filenames = append(sc.Filenames, base)
-				sc.Filenames = append(sc.Filenames, strings.Replace(base, "original_", "original_"+sc.SiteID, -1))
 			}
 		})
 
