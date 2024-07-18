@@ -110,6 +110,31 @@
                     </b-dropdown>
                   </b-field>
                 </b-tooltip>
+                <b-tooltip label="Specify fields if you wish to control the sequence of the scene's subtitle files" multilined :delay="750" >
+                  <b-field label="Subtitle File Sorting">
+                    <b-input v-model="subtitleSequence" disabled></b-input>
+                  </b-field>
+                  <b-field>
+                    <b-button label="Add Field" @click="addVideoField('subtitle')" />
+                    <b-button label="Clear Fields" @click="subtitleSequence=''" />
+                    <b-dropdown v-model="selectedSubtitleField" aria-role="list">
+                        <template #trigger>
+                            <b-button :label="selectedSubtitleField" icon-right="menu-down" />
+                        </template>
+                        <b-dropdown-item aria-role="listitem" value='Filename'>Filename</b-dropdown-item>
+                        <b-dropdown-item aria-role="listitem" value='Added'>Added</b-dropdown-item>
+                        <b-dropdown-item aria-role="listitem" value='Updated'>Updated</b-dropdown-item>
+                        <b-dropdown-item aria-role="listitem" value='Selected'>Selected</b-dropdown-item>
+                    </b-dropdown>
+                    <b-dropdown v-model="selectedSubtitleSequence" aria-role="list">
+                        <template #trigger>
+                            <b-button :label="selectedSubtitleSequence" icon-right="menu-down" />
+                        </template>
+                        <b-dropdown-item aria-role="listitem" value='Ascending'>Ascending</b-dropdown-item>
+                        <b-dropdown-item aria-role="listitem" value='Descending'>Descending</b-dropdown-item>
+                    </b-dropdown>
+                  </b-field>
+                </b-tooltip>
               </div>
             </div>
           </section>
@@ -248,7 +273,9 @@ export default {
       selectedVideoField: 'Filename',
       selectedVideoSequence: 'Ascending',
       selectedScriptField: 'Filename',
-      selectedScriptSequence: 'Ascending'
+      selectedScriptSequence: 'Ascending',
+      selectedSubtitleField: 'Filename',
+      selectedSubtitleSequence: 'Ascending'
     }
   },
   methods: {
@@ -269,8 +296,10 @@ export default {
     addVideoField(type) {      
       let dbfield=''
       let field=this.selectedVideoField            
-      if (type!='video'){        
+      if (type=='script') {
         field=this.selectedScriptField
+      } else if (type=='subtitle') {
+        field=this.selectedSubtitleField
       }
 
       switch (field) {
@@ -301,21 +330,26 @@ export default {
         default:
           dbfield = field.toLowerCase()
       }
-          
-      if (type=='video'){        
+
+      if (type=='video') {
         if (this.selectedVideoSequence=='Ascending') {
           this.videoSequence=[this.videoSequence, dbfield ].filter(Boolean).join(',')
-        }else{
+        } else {
           this.videoSequence=[this.videoSequence, dbfield+' desc' ].filter(Boolean).join(',')
         }
-      }else{
+      } else if (type=='script') {
         if (this.selectedScriptSequence=='Ascending') {
           this.scriptSequence=[this.scriptSequence, dbfield ].filter(Boolean).join(',')
-        }else{
+        } else {
           this.scriptSequence=[this.scriptSequence, dbfield+' desc' ].filter(Boolean).join(',')
         }
+      } else {
+        if (this.selectedSubtitleSequence=='Ascending') {
+          this.subtitleSequence=[this.subtitleSequence, dbfield ].filter(Boolean).join(',')
+        } else {
+          this.subtitleSequence=[this.subtitleSequence, dbfield+' desc' ].filter(Boolean).join(',')
+        }
       }
-
     }
   },
   computed: {
@@ -458,6 +492,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.players.script_sort_seq = value
+      },
+    },
+    subtitleSequence: {
+      get () {
+        return this.$store.state.optionsDeoVR.players.subtitle_sort_seq
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.players.subtitle_sort_seq = value
       },
     },
     multiTrackCastCuepoints: {

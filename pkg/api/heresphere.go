@@ -567,7 +567,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	var heresphereSubtitlesFiles []HeresphereSubtitles
 	var subtitlesFiles []models.File
-	subtitlesFiles, err = scene.GetSubtitlesFiles()
+	subtitlesFiles, err = scene.GetSubtitlesFilesSorted(config.Config.Interfaces.Players.SubtitleSortSeq)
 	if err != nil {
 		log.Error(err)
 		return
