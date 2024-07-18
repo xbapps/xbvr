@@ -3,7 +3,6 @@ package scrape
 import (
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -120,38 +119,23 @@ func RealJamSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		})
 
 		// Filenames
-		fileMask := ""
-		// any "download/" links on the public site will be for trailers, use one trailer to get the basis of the scenes filenames
-		e.ForEachWithBreak(`a[href^='download/']`, func(id int, e *colly.HTMLElement) bool {
-			trailerurl := sc.HomepageURL + "/" + e.Attr("href")
-			// url does not point directly to a file, need to resolve redirects with http.Head
-			resp, err := http.Head(trailerurl)
-			if err == nil {
-				params, err := url.ParseQuery(resp.Request.URL.RawQuery)
-				if err == nil {
-					if fileMaskTmp, ok := params["bcdn_filename"]; ok {
-						tmp := strings.Split(fileMaskTmp[0], "_")
-						if len(tmp) > 4 {
-							fileMask = strings.TrimSuffix(tmp[0], "-Trailer") + "-Full_$res_$fps_" + tmp[3] + "_" + tmp[4]
-							return false
-						}
-					}
-				}
-			}
-			return true
-		})
+		fileMasktmp := strings.Split(sc.HomepageURL, "/")
+		fileMask := strings.Replace(sc.Site, " ", "", -1) + "-" + fileMasktmp[len(fileMasktmp)-1] + "-Full$res_$fps_LR_180.mp4"
 
 		// any "/join/" links on the public site will be for for the full movie
 		uniqueFilenames := make(map[string]bool)
 		e.ForEach(`a[href='/join/']`, func(id int, e *colly.HTMLElement) {
 			resolution := ""
-			fps := ""
+			fps := "60"
 			e.ForEach(`div div`, func(id int, e *colly.HTMLElement) {
 				txt := strings.TrimSpace(e.Text)
 				if strings.HasPrefix(txt, "Full ") {
 					index := strings.Index(txt, "p")
 					if index != -1 {
-						resolution = txt[5:index]
+						resolution = "_" + txt[5:index]
+					}
+					if strings.HasSuffix(txt, "HBR") {
+						resolution = "-HBR" + resolution
 					}
 				} else {
 					if strings.HasSuffix(txt, "fps") {
