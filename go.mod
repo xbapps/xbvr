@@ -1,6 +1,8 @@
 module github.com/xbapps/xbvr
 
-go 1.21
+go 1.22
+
+toolchain go1.22.5
 
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
@@ -46,7 +48,7 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/putdotio/go-putio v1.7.1
-	github.com/robertkrimen/otto v0.3.0
+	github.com/robertkrimen/otto v0.4.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/cors v1.11.0
 	github.com/sirupsen/logrus v1.9.3
@@ -54,11 +56,11 @@ require (
 	github.com/thoas/go-funk v0.9.3
 	github.com/tidwall/gjson v1.17.1
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	github.com/xo/dburl v0.21.1
-	golang.org/x/crypto v0.23.0
-	golang.org/x/net v0.25.0
-	golang.org/x/oauth2 v0.20.0
-	golang.org/x/sys v0.20.0
+	github.com/xo/dburl v0.23.2
+	golang.org/x/crypto v0.25.0
+	golang.org/x/net v0.27.0
+	golang.org/x/oauth2 v0.21.0
+	golang.org/x/sys v0.22.0
 	golang.org/x/text v0.16.0
 	gopkg.in/gormigrate.v1 v1.6.0
 	willnorris.com/go/imageproxy v0.11.3-0.20240601234520-572ad2db78ed
@@ -148,7 +150,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/term v0.22.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
