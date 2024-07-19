@@ -77,15 +77,16 @@ func RescanVolumes(id int) {
 			filename := escape(unescapedFilename)
 			filename2 := strings.Replace(filename, ".funscript", ".mp4", -1)
 			filename3 := strings.Replace(filename, ".hsp", ".mp4", -1)
-			filename3 = strings.Replace(filename3, ".srt", ".mp4", -1)
-			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ? OR filenames_arr LIKE ?", `%"`+filename+`"%`, `%"`+filename2+`"%`, `%"`+filename3+`"%`).Find(&scenes).Error
+			filename4 := strings.Replace(filename, ".srt", ".mp4", -1)
+			filename5 := strings.Replace(filename, ".cmscript", ".mp4", -1)
+			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ? OR filenames_arr LIKE ? OR filenames_arr LIKE ? OR filenames_arr LIKE ?", `%"`+filename+`"%`, `%"`+filename2+`"%`, `%"`+filename3+`"%`, `%"`+filename4+`"%`, `%"`+filename5+`"%`).Find(&scenes).Error
 			if err != nil {
 				log.Error(err, " when matching "+unescapedFilename)
 			}
 			if len(scenes) == 0 && config.Config.Advanced.UseAltSrcInFileMatching {
 				// check if the filename matches in external_reference record
 
-				db.Preload("XbvrLinks").Where("external_source like 'alternate scene %' and external_data LIKE ? OR external_data LIKE ? OR external_data LIKE ?", `%"`+filename+`%`, `%"`+filename2+`%`, `%"`+filename3+`%`).Find(&extrefs)
+				db.Preload("XbvrLinks").Where("external_source like 'alternate scene %' and external_data LIKE ? OR external_data LIKE ? OR external_data LIKE ? OR external_data LIKE ? OR external_data LIKE ?", `%"`+filename+`%`, `%"`+filename2+`%`, `%"`+filename3+`%`, `%"`+filename4+`%`, `%"`+filename5+`%`).Find(&extrefs)
 				if len(extrefs) == 1 {
 					if len(extrefs[0].XbvrLinks) == 1 {
 						// the scene id will be the Internal DB Id from the associated link
@@ -226,7 +227,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 					}
 				}
 
-				if !strings.HasPrefix(filepath.Base(path), ".") && filepath.Ext(path) == ".funscript" {
+				if !strings.HasPrefix(filepath.Base(path), ".") && (filepath.Ext(path) == ".funscript" || filepath.Ext(path) == ".cmscript") {
 					scriptProcList = append(scriptProcList, path)
 				}
 				if !strings.HasPrefix(filepath.Base(path), ".") && filepath.Ext(path) == ".hsp" {

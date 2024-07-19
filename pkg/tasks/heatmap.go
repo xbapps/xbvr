@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/sirupsen/logrus"
@@ -69,21 +70,24 @@ func GenerateHeatmaps(tlog *logrus.Entry) {
 				tlog.Infof("Generating heatmaps (%v/%v)", i+1, len(scriptfiles))
 			}
 			if file.Exists() {
-				log.Infof("Rendering %v", file.Filename)
-				destFile := filepath.Join(common.ScriptHeatmapDir, fmt.Sprintf("heatmap-%d.png", file.ID))
-				err := RenderHeatmap(
-					file.GetPath(),
-					destFile,
-					1000,
-					10,
-					250,
-				)
-				if err == nil {
-					file.HasHeatmap = true
-					file.RefreshHeatmapCache = true
-					file.Save()
-				} else {
-					log.Warn(err)
+				path := file.GetPath()
+				if strings.HasSuffix(path, ".funscript") {
+					log.Infof("Rendering %v", file.Filename)
+					destFile := filepath.Join(common.ScriptHeatmapDir, fmt.Sprintf("heatmap-%d.png", file.ID))
+					err := RenderHeatmap(
+						path,
+						destFile,
+						1000,
+						10,
+						250,
+					)
+					if err == nil {
+						file.HasHeatmap = true
+						file.RefreshHeatmapCache = true
+						file.Save()
+					} else {
+						log.Warn(err)
+					}
 				}
 			}
 		}
@@ -275,6 +279,10 @@ func (funscript Script) getDuration() float64 {
 }
 
 func getFunscriptDuration(path string) (float64, error) {
+	if !strings.HasSuffix(path, ".funscript") {
+		return 0.0, fmt.Errorf("Not a funscript: %s", path)
+	}
+
 	funscript, err := LoadFunscriptData(path)
 	if err != nil {
 		return 0.0, err
