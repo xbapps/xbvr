@@ -426,10 +426,12 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 	}
 
 	for _, file := range scriptFiles {
-		deoScriptFiles = append(deoScriptFiles, DeoSceneScriptFile{
-			Title: file.Filename,
-			URL:   fmt.Sprintf("%v/api/dms/file/%v", session.DeoRequestHost, file.ID),
-		})
+		if strings.HasSuffix(file.Filename, ".funscript") {
+			deoScriptFiles = append(deoScriptFiles, DeoSceneScriptFile{
+				Title: file.Filename,
+				URL:   fmt.Sprintf("%v/api/dms/file/%v", session.DeoRequestHost, file.ID),
+			})
+		}
 	}
 
 	var deoHSPFiles []DeoSceneHSPFile
