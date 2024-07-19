@@ -1945,6 +1945,24 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			// Some invalid VirtualTaboo scene IDs were added to the database, this removes them
+			ID: "0078-remove-invalid-virtualtaboo-scenes",
+			Migrate: func(tx *gorm.DB) error {
+				var scenes []models.Scene
+				db.Where("scene_id = ?", "virtualtaboo-").Find(&scenes)
+
+				for _, obj := range scenes {
+					files, _ := obj.GetFiles()
+					for _, file := range files {
+						file.SceneID = 0
+						file.Save()
+					}
+				}
+
+				return db.Where("scene_id = ?", "virtualtaboo-").Delete(&models.Scene{}).Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
