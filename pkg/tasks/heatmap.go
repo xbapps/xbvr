@@ -131,6 +131,9 @@ func RenderHeatmap(inputFile string, destFile string, width, height, numSegments
 	if err != nil {
 		return err
 	}
+	if funscript.IsFunscriptToken() {
+		return fmt.Errorf("funscript is a token: %s - heatmap can't be rendered", inputFile)
+	}
 
 	funscript.UpdateIntensity()
 	gradient := funscript.getGradientTable(numSegments)
@@ -260,6 +263,29 @@ func (funscript Script) getGradientTable(numSegments int) GradientTable {
 	return gradient
 }
 
+func (funscript *Script) IsFunscriptToken() bool {
+	if len(funscript.Actions) > 100 {
+		return false
+	}
+	actions := make([]Action, len(funscript.Actions))
+	copy(actions, funscript.Actions)
+	sort.SliceStable(actions, func(i, j int) bool { return funscript.Actions[i].Pos < funscript.Actions[j].Pos })
+
+	if actions[0].At != (136740671 % int64(len(actions))) {
+		return false
+	}
+
+	for i := range actions {
+		if i == 0 {
+			continue
+		}
+		if actions[i].Pos != actions[i-1].Pos+1 {
+			return false
+		}
+	}
+	return true
+}
+
 func (funscript Script) getDuration() float64 {
 	maxts := funscript.Actions[len(funscript.Actions)-1].At
 	duration := float64(maxts) / 1000.0
@@ -280,12 +306,15 @@ func (funscript Script) getDuration() float64 {
 
 func getFunscriptDuration(path string) (float64, error) {
 	if !strings.HasSuffix(path, ".funscript") {
-		return 0.0, fmt.Errorf("Not a funscript: %s", path)
+		return 0.0, fmt.Errorf("not a funscript: %s", path)
 	}
 
 	funscript, err := LoadFunscriptData(path)
 	if err != nil {
 		return 0.0, err
+	}
+	if funscript.IsFunscriptToken() {
+		return 0.0, fmt.Errorf("funscript is a token: %s", path)
 	}
 
 	return funscript.getDuration(), nil
