@@ -58,7 +58,7 @@ require (
 	golang.org/x/crypto v0.23.0
 	golang.org/x/net v0.25.0
 	golang.org/x/oauth2 v0.20.0
-	golang.org/x/sys v0.20.0
+	golang.org/x/sys v0.22.0
 	golang.org/x/text v0.16.0
 	gopkg.in/gormigrate.v1 v1.6.0
 	willnorris.com/go/imageproxy v0.11.3-0.20240601234520-572ad2db78ed
