@@ -194,6 +194,15 @@ func (i ActorResource) getFilters(req *restful.Request, resp *restful.Response) 
 		outAttributes = append(outAttributes, "Breast Type "+r.Result)
 	}
 
+	db.Table("actors").
+		Where("IFNULL(gender,'') <> ''").
+		Select("distinct gender as result").
+		Order("gender").
+		Find(&results)
+	for _, r := range results {
+		outAttributes = append(outAttributes, "Gender "+r.Result)
+	}
+
 	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetActorFilters{
 		Attributes: outAttributes,
 		Cast:       outCast,

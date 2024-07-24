@@ -204,7 +204,7 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 		where := ""
 
 		countries := GetCountryList()
-		attributes := [][2]string{{"Cup Size ", "cup_size"}, {"Hair Color ", "hair_color"}, {"Eye Color ", "eye_color"}, {"Nationality ", "nationality"}, {"Ethnicity ", "ethnicity"}, {"Breast Type ", "breast_type"}}
+		attributes := [][2]string{{"Cup Size ", "cup_size"}, {"Hair Color ", "hair_color"}, {"Eye Color ", "eye_color"}, {"Nationality ", "nationality"}, {"Gender ", "gender"}, {"Ethnicity ", "ethnicity"}, {"Breast Type ", "breast_type"}}
 		for _, attribute := range attributes {
 			if strings.HasPrefix(fieldName, attribute[0]) {
 				value = fieldName[len(attribute[0]):]
