@@ -57,6 +57,7 @@
             <option value="last_opened_asc">↑ {{ $t("Last viewed date") }}</option>
             <option value="script_published_desc">↓ {{ $t("Published Script Added") }}</option>
             <option value="scene_id_desc">↓ {{ $t("Scene Id") }}</option>
+            <option value="site_asc">↑ {{ $t("Site") }}</option>
             <option value="alt_src_desc">↓ {{ $t("Linked to Alternate Sites") }}</option>
             <option value="random">↯ {{ $t("Random") }}</option>
           </select>
