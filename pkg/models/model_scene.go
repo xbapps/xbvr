@@ -433,16 +433,17 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 	var site Site
 	db.Where("id = ?", o.ScraperId).FirstOrInit(&site)
 	o.IsSubscribed = site.Subscribed
-	SaveWithRetry(db, &o)
 
 	// Clean & Associate Tags
 	var tags = o.Tags
 	db.Model(&o).Association("Tags").Clear()
-	for _, tag := range tags {
+	for idx, tag := range tags {
 		tmpTag := Tag{}
 		db.Where(&Tag{Name: tag.Name}).FirstOrCreate(&tmpTag)
-		db.Model(&o).Association("Tags").Append(tmpTag)
+		tags[idx] = tmpTag
 	}
+	o.Tags = tags
+	SaveWithRetry(db, &o)
 
 	// Clean & Associate Actors
 	db.Model(&o).Association("Cast").Clear()

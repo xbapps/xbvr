@@ -1963,6 +1963,14 @@ func Migrate() {
 				return db.Where("scene_id = ?", "virtualtaboo-").Delete(&models.Scene{}).Error
 			},
 		},
+		{
+			// remove unreferenced tags created due to an error
+			ID: "0079-remove-unreferenced-tags",
+			Migrate: func(tx *gorm.DB) error {
+				tasks.CountTags()
+				return tx.Model(&models.Tag{}).Exec("delete from tags where `count` = 0").Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
