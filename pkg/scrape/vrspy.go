@@ -55,50 +55,39 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 
 		sc.SceneID = scraperID + "-" + sc.SiteID
 
-		sc.Title = e.ChildText(`.video-content .header-container .section-header-container`)
-		sc.Synopsis = e.ChildText(`.video-description`)
-		sc.Tags = e.ChildTexts(`.video-categories .v-chip__content`)
+		sc.Title = e.ChildText(`.video-content .header-container .video-title .section-header-container`)
+		sc.Synopsis = e.ChildText(`.video-description-container`)
+		sc.Tags = e.ChildTexts(`.video-categories .chip`)
 
-		e.ForEach(`.video-details-row`, func(id int, e *colly.HTMLElement) {
-			parts := strings.SplitN(e.Text, ":", 2)
-			key, value := parts[0], parts[1]
-			switch strings.TrimSpace(key) {
-			case "Stars":
-				sc.ActorDetails = make(map[string]models.ActorDetails)
-				e.ForEach(`.stars-list a`, func(id int, e *colly.HTMLElement) {
-					sc.Cast = append(sc.Cast, e.Text)
-					sc.ActorDetails[e.Text] = models.ActorDetails{
-						Source:     scraperID + " scrape",
-						ProfileUrl: e.Request.AbsoluteURL(e.Attr(`href`)),
-					}
-				})
-			case "Duration":
-				durationParts := strings.Split(strings.SplitN(strings.TrimSpace(value), " ", 2)[0], ":")
-				if len(durationParts) == 3 {
-					hours, _ := strconv.Atoi(durationParts[0])
-					minutes, _ := strconv.Atoi(durationParts[1])
-					sc.Duration = hours*60 + minutes
+		sc.ActorDetails = make(map[string]models.ActorDetails)
+		e.ForEach(`.video-actor-item`, func(id int, e *colly.HTMLElement) {
+			sc.Cast = append(sc.Cast, e.Text)
+			e.ForEach(`a`, func(id int, a *colly.HTMLElement) {
+				sc.ActorDetails[e.Text] = models.ActorDetails{
+					Source:     scraperID + " scrape",
+					ProfileUrl: e.Request.AbsoluteURL(a.Attr(`href`)),
 				}
-			case "Release date":
-				tmpDate, _ := goment.New(strings.TrimSpace(value), "DD MMM YYYY")
-				sc.Released = tmpDate.Format("YYYY-MM-DD")
-			}
+
+			})
 		})
 
 		var durationParts []string
 		// Date & Duration
-		e.ForEach(`div.single-video-info__list-item`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.video-details-info-item`, func(id int, e *colly.HTMLElement) {
 			parts := strings.Split(e.Text, ":")
 			if len(parts) > 1 {
 				switch strings.TrimSpace(parts[0]) {
 				case "Release date":
-					tmpDate, _ := goment.New(strings.TrimSpace(parts[1]), "MMM D, YYYY")
+					tmpDate, _ := goment.New(strings.TrimSpace(parts[1]), "DD MMMM YYYY")
 					sc.Released = tmpDate.Format("YYYY-MM-DD")
 				case "Duration":
 					durationParts = strings.Split(strings.TrimSpace(parts[1]), " ")
 					tmpDuration, err := strconv.Atoi(durationParts[0])
+					mins := tmpDuration * 60
+					tmpDuration, err = strconv.Atoi(parts[2])
+					mins = mins + tmpDuration
 					if err == nil {
-						sc.Duration = tmpDuration
+						sc.Duration = mins
 					}
 				}
 			}
@@ -114,7 +103,7 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		}
 
 		nuxtData := e.ChildText(`#__NUXT_DATA__`)
-		imageRegex := regexp.MustCompile(regexp.QuoteMeta(cdnSceneURL.String()) + `(/photos/[^?"]*\.jpg)\?width`)
+		imageRegex := regexp.MustCompile(regexp.QuoteMeta(cdnSceneURL.String()) + `(/photos/[^?"]*\.jpg)`)
 		sc.Gallery = imageRegex.FindAllString(nuxtData, -1)
 
 		// trailer details
