@@ -139,6 +139,7 @@ func NaughtyAmericaVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string,
 				vm := otto.New()
 
 				script := e.Text
+				script = strings.ReplaceAll(script, "nanalytics.trackExperiment('scene_page_viewed', 'streaming_option_join_button');", "")
 				script = strings.Replace(script, "window.dataLayer", "dataLayer", -1)
 				script = strings.Replace(script, "dataLayer = dataLayer || []", "dataLayer = []", -1)
 				script = script + "\nout = []; dataLayer.forEach(function(v) { if (v.femaleStar) { out.push(v.femaleStar); } });"
