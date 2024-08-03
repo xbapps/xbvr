@@ -151,4 +151,4 @@ esc - closes details pane
 |	`--web_port` | XBVR_WEB_PORT | Int| override default Web Page port 9999|
 |	`--ws_addr` | XBVR_WS_ADDR | String| override default Websocket address from the default 0.0.0.0:9998|
 |	`--db_connection_pool_size` | DB_CONNECTION_POOL_SIZE | Int| sets the connection pool size for mariadb databases|
-|	`--concurrent_scrapers` | CONCURRENT_SCRAPERS | String| set the number of scrapers that run concurrently default 9999|
+|	`--concurrent_scrapers` | CONCURRENT_SCRAPERS | Int| set the number of scrapers that run concurrently default 9999|
