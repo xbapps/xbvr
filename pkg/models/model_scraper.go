@@ -54,6 +54,7 @@ type ActorDetails struct {
 	ImageUrl   string
 	ProfileUrl string
 	Source     string
+	StashData  string
 }
 type TrailerScrape struct {
 	SceneUrl       string `json:"scene_url"`        // url of the page to be scrapped

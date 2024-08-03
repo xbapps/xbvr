@@ -462,8 +462,12 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 			}
 		}
 		if ext.ActorDetails[name].ProfileUrl != "" {
-			if tmpActor.AddToActorUrlArray(ActorLink{Url: ext.ActorDetails[name].ProfileUrl, Type: ext.ActorDetails[name].Source}) {
-				saveActor = true
+			if strings.HasPrefix(ext.ActorDetails[name].ProfileUrl, "https://stashdb.org/performers/") {
+
+			} else {
+				if tmpActor.AddToActorUrlArray(ActorLink{Url: ext.ActorDetails[name].ProfileUrl, Type: ext.ActorDetails[name].Source}) {
+					saveActor = true
+				}
 			}
 		}
 		if saveActor {

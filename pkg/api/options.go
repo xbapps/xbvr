@@ -1008,6 +1008,7 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 	scrapers := make(map[string][]config.ScraperConfig)
 	scrapers["povr"] = scraperConfig.CustomScrapers.PovrScrapers
 	scrapers["slr"] = scraperConfig.CustomScrapers.SlrScrapers
+	scrapers["stashdb"] = scraperConfig.CustomScrapers.StashDbScrapers
 	scrapers["vrphub"] = scraperConfig.CustomScrapers.VrphubScrapers
 	scrapers["vrporn"] = scraperConfig.CustomScrapers.VrpornScrapers
 
@@ -1031,6 +1032,8 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 			scrapers["povr"] = append(scrapers["povr"], scraper)
 		case "sexlikereal":
 			scrapers["slr"] = append(scrapers["slr"], scraper)
+		case "stashdb":
+			scrapers["stashdb"] = append(scrapers["stashdb"], scraper)
 		case "vrphub":
 			scrapers["vrphub"] = append(scrapers["vrphub"], scraper)
 		case "vrporn":
@@ -1039,6 +1042,7 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 	}
 	scraperConfig.CustomScrapers.PovrScrapers = scrapers["povr"]
 	scraperConfig.CustomScrapers.SlrScrapers = scrapers["slr"]
+	scraperConfig.CustomScrapers.StashDbScrapers = scrapers["stashdb"]
 	scraperConfig.CustomScrapers.VrphubScrapers = scrapers["vrphub"]
 	scraperConfig.CustomScrapers.VrpornScrapers = scrapers["vrporn"]
 	fName := filepath.Join(common.AppDir, "scrapers.json")
