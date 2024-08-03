@@ -11,7 +11,7 @@ RUN export PATH=$(echo "$PATH" | sed -e 's|:/workspace/go/bin||' -e 's|:/home/gi
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
 RUN go install -v \
-  github.com/cosmtrek/air@latest && \
+  github.com/air-verse/air@latest && \
   sudo rm -rf $GOPATH/src && \
   sudo rm -rf $GOPATH/pkg
 # user Go packages
