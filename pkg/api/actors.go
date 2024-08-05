@@ -11,6 +11,7 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
 type ResponseGetActors struct {
@@ -755,6 +756,9 @@ func (i ActorResource) editActorExtRefs(req *restful.Request, resp *restful.Resp
 				ExternalReferenceID: extref.ID, ExternalSource: extref.ExternalSource, ExternalId: extref.ExternalId, MatchType: 0})
 			extref.Save()
 			models.AddActionActor(actor.ID, "edit_actor", "add", "external_reference_link", url)
+			if extref.ExternalSource == "stashdb performer" {
+				scrape.RefreshPerformer(extref.ExternalId)
+			}
 		} else {
 			// external reference exists, but check it is linked to this actor
 			found := false
@@ -770,6 +774,9 @@ func (i ActorResource) editActorExtRefs(req *restful.Request, resp *restful.Resp
 					ExternalReferenceID: extref.ID, ExternalSource: extref.ExternalSource, ExternalId: extref.ExternalId, MatchType: 0}
 				newLink.Save()
 				models.AddActionActor(actor.ID, "edit_actor", "add", "external_reference_link", url)
+				if extref.ExternalSource == "stashdb performer" {
+					scrape.RefreshPerformer(extref.ExternalId)
+				}
 			}
 		}
 	}
