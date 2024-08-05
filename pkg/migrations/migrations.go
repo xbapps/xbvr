@@ -53,6 +53,7 @@ func (i *RequestSceneList) ToJSON() string {
 }
 
 func Migrate() {
+	var retryMigration []string
 	db, _ := models.GetDB()
 
 	m := gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
@@ -1963,10 +1964,41 @@ func Migrate() {
 				return db.Where("scene_id = ?", "virtualtaboo-").Delete(&models.Scene{}).Error
 			},
 		},
+		{
+			// remove unreferenced tags created due to an error
+			ID: "0079-remove-unreferenced-tags",
+			Migrate: func(tx *gorm.DB) error {
+				// update tag counts
+				tasks.CountTags()
+
+				// check there are no Tags with a count of 0 that are in use, should not happen if CountTags is working properly,
+				//  but don't want to risk a referential integrity issue
+				type tagsInUse struct {
+					Cnt int
+				}
+				var result tagsInUse
+				db.Raw("select count(*) as cnt from scene_tags st join scenes s on s.id=st.scene_id join tags t on t.id=st.tag_id where t.`count` = 0 and s.deleted_at is NULL").Scan(&result)
+				if result.Cnt > 0 {
+					// this should never happen, but not deleting unreferenced tags will not break the system, so don't fail the migration, flag it to retry
+					retryMigration = append(retryMigration, "0079-remove-unreferenced-tags")
+					return nil
+				}
+				return tx.Model(&models.Tag{}).Exec("delete from tags where `count` = 0").Error
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
 		common.Log.Fatalf("Could not migrate: %v", err)
+	}
+	if len(retryMigration) > 0 {
+		for _, migration := range retryMigration {
+			common.Log.Warnf("*** MIGRATION WARNING ***: Could not migrate: '%v', this migration will retry the next time XBVR is started", migration)
+			err := db.Exec("DELETE FROM migrations WHERE id = ?", migration).Error
+			if err != nil {
+				common.Log.Fatalf("Failed to remove %v from the miigration table - will not be retried", err)
+			}
+		}
 	}
 	common.Log.Printf("Migration did run successfully")
 
