@@ -249,7 +249,8 @@ func checkMatchedScenes() {
 
 					// if len(ref.XbvrLinks) == 0 {
 					for _, xbvrActor := range xbvrScene.Cast {
-						if strings.EqualFold(strings.TrimSpace(simplifyName(xbvrActor.Name)), strings.TrimSpace(simplifyName(performer.Performer.Name))) {
+						if strings.EqualFold(strings.TrimSpace(simplifyName(xbvrActor.Name)), strings.TrimSpace(simplifyName(performer.Performer.Name))) ||
+							strings.EqualFold(strings.TrimSpace(simplifyName(xbvrActor.Name)), strings.TrimSpace(simplifyName(performer.As))) {
 							// check if actor already matched
 							exists := false
 							for _, link := range ref.XbvrLinks {
