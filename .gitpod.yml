@@ -2,7 +2,7 @@ image:
   file: .gitpod.dockerfile
 tasks:
   - name: Continuous Build
-    command: yarn config set ignore-engines true && yarn global add concurrently && go install github.com/cosmtrek/air@latest && cd /workspace/xbvr && go generate && go get && yarn && yarn dev
+    command: yarn config set ignore-engines true && yarn global add concurrently && go install github.com/air-verse/air@latest && cd /workspace/xbvr && go generate && go get && yarn && yarn dev
 ports:
   - port: 9999
     onOpen: open-preview

@@ -885,6 +885,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = `scenes.scene_id like "povr-%"`
 		case "SLR Scraper":
 			where = `scenes.scene_id like "slr-%"`
+		case "Has Image":
+			where = "cover_url not in ('','http://localhost/dont_cause_errors')"
 		case "VRPHub Scraper":
 			where = `scenes.scene_id like "vrphub-%"`
 		case "VRPorn Scraper":
