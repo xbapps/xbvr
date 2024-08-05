@@ -740,7 +740,7 @@ func (i ActorResource) editActorExtRefs(req *restful.Request, resp *restful.Resp
 	// add new links
 	for _, url := range urls {
 		var extref models.ExternalReference
-		extref.FindExternalUrl(extref.DetermineActorScraperByUrl(url), url)
+		commonDb.Preload("XbvrLinks").Where(&models.ExternalReference{ExternalURL: url}).First(&extref)
 		if extref.ID == 0 {
 			// create new extref + link
 			extref.ExternalSource = extref.DetermineActorScraperByUrl(url)
