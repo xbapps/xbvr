@@ -150,8 +150,8 @@ const mutations = {
 
 const actions = {
   async filters ({ state }) {
-    state.playlists = await ky.get('/api/playlist').json()
-    state.filterOpts = await ky.get('/api/scene/filters').json()
+    state.playlists = await ky.get('/api/playlist', {timeout: 300000}).json()
+    state.filterOpts = await ky.get('/api/scene/filters', {timeout: 300000}).json()
 
     // Reverse list of release months for display purposes
     state.filterOpts.release_month = state.filterOpts.release_month.reverse()

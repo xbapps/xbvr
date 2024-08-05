@@ -578,7 +578,7 @@ export default {
     },
     async fetchFilters() {
         this.filteredAttributes=['Loading attributes']
-        ky.get('/api/scene/filters').json().then(data => {
+        ky.get('/api/scene/filters', {timeout: 300000}).json().then(data => {
           this.filteredAttributes=data.attributes          
       })      
     }
