@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"fmt"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -21,6 +22,7 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 
 	sceneCollector := createCollector("wetvr.com")
 	siteCollector := createCollector("wetvr.com")
+	pageCnt := 1
 
 	sceneCollector.OnHTML(`div#trailer_player`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -89,12 +91,20 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`ul a.page-link`, func(e *colly.HTMLElement) {
+	//This p with Latest only exists on pages container sceneURLs. If the index page doesn't have this we have reached the end of sceneURLs
+	// Stop search for more siteURLs
+	siteCollector.OnHTML(`div:has(p:contains("Latest"))`, func(e *colly.HTMLElement) {
+		// Check to make sure we aren't getting multiple firings from pages we have already incremented the count on
 		if !limitScraping {
-			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+		if e.Request.URL.String() == `https://wetvr.com/?page=` + fmt.Sprint(pageCnt) {
+			pageCnt += 1
+		
+			pageURL := e.Request.AbsoluteURL(`https://wetvr.com/?page=` + fmt.Sprint(pageCnt))
 			siteCollector.Visit(pageURL)
 		}
+		}
 	})
+		
 
 	siteCollector.OnHTML(`div:has(p:contains("Latest")) div[id^="r-"]`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a", "href"))
@@ -133,8 +143,9 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 			ctx.Put("scene-date", "")
 		}
 		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
-	} else {
-		siteCollector.Visit("https://wetvr.com/")
+	} else if pageCnt == 1 {
+		// Only visit page 1 on start up of scraper
+		siteCollector.Visit("https://wetvr.com/?page=1")
 	}
 
 	if updateSite {
