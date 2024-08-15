@@ -101,7 +101,6 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			
 			// This should result in the correct model url for sinsVR but occasionally sins has yet to create the model url and will result in a 404
 			for _, name := range cast {
-				log.Infof(`https://xsinsvr.com/model/` + strings.ToLower(strings.ReplaceAll(name, " ", "-")))
 				sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(`https://xsinsvr.com/model/` + strings.ToLower(strings.ReplaceAll(name, " ", "-")))}
 			}
 		}
