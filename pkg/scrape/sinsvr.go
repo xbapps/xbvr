@@ -66,15 +66,18 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`.video-detail__specs div.cell`, func(id int, e *colly.HTMLElement) {
 			c := strings.TrimSpace(e.Text)
+
 			// Cast
 			if strings.Contains(c, "Starring") {
 				e.ForEach(`.cell a`, func(id int, e *colly.HTMLElement) {
+					
 					cast := strings.Split(e.Text, ",")
 					sc.Cast = append(sc.Cast, cast...)
 					if len(cast) > 1 {
 						sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 					}
 					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+					
 				})
 			} else {
 				// Released - Date Oct 19, 2019
@@ -84,6 +87,24 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 				}
 			}
 		})
+
+		// Fallback incase SinsVR forgets to add the actor to the scene. This uses the trailer URL which contains the models in the scene.
+		if len(sc.Cast) == 0 {
+			trailerURL := e.ChildAttr("div.video-player-container__player source", "src")
+			//The cast is the first part of the trailer file name in the URL
+			re := regexp.MustCompile(`https:\/\/public\.xsinsvr\.com\/video\/.+\/(?P<cast>[A-Za-z_-]+)_trailer`)
+			r := re.FindStringSubmatch(trailerURL)
+			castIndex := re.SubexpIndex("cast")
+			//sinsVR uses _ for whitespace and - to separate cast members
+			cast := strings.Split(strings.ReplaceAll(r[castIndex], "_"," "), "-")
+			sc.Cast = append(sc.Cast, cast...)
+			
+			// This should result in the correct model url for sinsVR but occasionally sins has yet to create the model url and will result in a 404
+			for _, name := range cast {
+				log.Infof(`https://xsinsvr.com/model/` + strings.ToLower(strings.ReplaceAll(name, " ", "-")))
+				sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(`https://xsinsvr.com/model/` + strings.ToLower(strings.ReplaceAll(name, " ", "-")))}
+			}
+		}
 
 		// Duration
 		durationText := e.ChildText(`div.video-player-container__info div.tn-video-props span`)
