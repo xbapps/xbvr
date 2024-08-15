@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"net/http"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -101,7 +102,14 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			
 			// This should result in the correct model url for sinsVR but occasionally sins has yet to create the model url and will result in a 404
 			for _, name := range cast {
-				sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(`https://xsinsvr.com/model/` + strings.ToLower(strings.ReplaceAll(name, " ", "-")))}
+				profileUrl := `https://xsinsvr.com/model/` + strings.ToLower(strings.ReplaceAll(name, " ", "-"))
+				profileUrlResp, err := http.Head(profileUrl)
+				if err != nil {
+					log.Errorf("Method Head Failed on profileUrlResp %s with error %s", profileUrlResp, err)
+				} else if profileUrlResp.StatusCode == 200 { //The url is not valid don't bother adding it to the ActorDetails
+					sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: profileUrl}
+				}
+				defer profileUrlResp.Body.Close()
 			}
 		}
 
