@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 ca-certificates && \
+    apt-get install -y --no-install-recommends python3 ca-certificates chromium-browser && \
     rm -rf /var/lib/apt/lists/*
 
 COPY xbvr /usr/bin/xbvr
