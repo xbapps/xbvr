@@ -107,9 +107,6 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 			}
 
 			if err := chromedp.Run(ctx,
-
-				// Prevents changes of class names depending on resolution
-				// chromedp.EmulateViewport(1920, 2000),
 				chromedp.Navigate(indexPage),
 				chromedp.ActionFunc(func(ctx context.Context) error {
 					// Do 5 loops as 12 cards are load in each scroll reliably
@@ -168,7 +165,7 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		sc.Studio = "Celestial Productions"
 		sc.HomepageURL = scene
 		log.Infoln("Visiting:", scene)
-		
+
 		// Site ID
 		sc.Site = siteID
 
@@ -176,10 +173,7 @@ func LethalHardcoreSite(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		var tagNode []*cdp.Node
 		var coverImage, sceneTitle, sceneDate, sceneActor, sceneActorImgUrl string
 		err := chromedp.Run(ctx,
-			// chromedp.EmulateViewport(1920, 2000),
 			chromedp.Navigate(scene),
-			//chromedp.WaitReady("//span[contains(@class, 'ScenePlayerHeaderDesktop-PlayIcon-Icon-Svg')]"),
-			// chromedp.Nodes("//div[contains(@class,'InfoContainer')]", &sceneNode), // Contains all scene info data
 			chromedp.Nodes("//a[contains(@class, 'ScenePlayerHeaderDesktop-Categories-Link')]", &tagNode), // All nodes for tags
 			chromedp.AttributeValue("//meta[@property='og:image']", "content", &coverImage, nil), // Contains the background cover image
 			chromedp.AttributeValue("//meta[@property='og:title']", "content", &sceneTitle, nil), // Contains the title
