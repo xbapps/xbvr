@@ -76,49 +76,53 @@ func StashDb() {
 	if config.Config.Advanced.StashApiKey == "" {
 		return
 	}
-	tlog := log.WithField("task", "scrape")
-	scraperID := "stashdb"
-	siteID := "stashdb"
-	logScrapeStart(scraperID, siteID)
+	if !models.CheckLock("scrape") {
+		models.CreateLock("scrape")
+		defer models.RemoveLock("scrape")
+		
+		t0 := time.Now()
+		tlog := log.WithField("task", "scrape")
+		tlog.Infof("StashDB Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
 
-	var sites []models.Site
-	db, _ := models.GetDB()
-	defer db.Close()
+		var sites []models.Site
+		db, _ := models.GetDB()
+		defer db.Close()
 
-	Config = models.BuildActorScraperRules()
-	db.Where(&models.Site{IsEnabled: true}).Order("id").Find(&sites)
+		Config = models.BuildActorScraperRules()
+		db.Where(&models.Site{IsEnabled: true}).Order("id").Find(&sites)
 
-	for _, site := range sites {
-		tlog.Infof("Scraping stash studio %s", site.Name)
-		sitename := site.Name
-		if i := strings.Index(sitename, " ("); i != -1 {
-			sitename = sitename[:i]
-		}
-		studio := findStudio(sitename, "name")
-
-		// check for a config entry if site not found
-		if studio.Data.Studio.ID == "" && Config.StashSceneMatching[site.ID].StashId != "" {
-			studio = findStudio(Config.StashSceneMatching[site.ID].StashId, "id")
-		}
-
-		if studio.Data.Studio.ID != "" {
-			siteConfig := Config.StashSceneMatching[site.ID]
-			var ext models.ExternalReference
-			ext.FindExternalId("stashdb studio", studio.Data.Studio.ID)
-			if ext.ID == 0 || studio.Data.Studio.Updated.UTC().Sub(ext.ExternalDate.UTC()).Seconds() > 1 {
-				jsonData, _ := json.MarshalIndent(studio.Data.Studio, "", "  ")
-				ext := models.ExternalReference{ExternalSource: "stashdb studio", ExternalURL: "https://stashdb.org/studios/" + studio.Data.Studio.ID,
-					ExternalId: studio.Data.Studio.ID, ExternalDate: studio.Data.Studio.Updated, ExternalData: string(jsonData),
-					XbvrLinks: []models.ExternalReferenceLink{{InternalTable: "sites", InternalNameId: site.ID, ExternalSource: "stashdb studio", ExternalId: studio.Data.Studio.ID}}}
-				ext.AddUpdateWithId()
+		for _, site := range sites {
+			tlog.Infof("Scraping stash studio %s", site.Name)
+			sitename := site.Name
+			if i := strings.Index(sitename, " ("); i != -1 {
+				sitename = sitename[:i]
 			}
-			processStudioPerformers(studio.Data.Studio.ID)
-			scenes := getScenes(studio.Data.Studio.ID, siteConfig.ParentId, siteConfig.TagIdFilter)
-			saveScenesToExternalReferences(scenes, studio.Data.Studio.ID)
-		} else {
-			log.Infof("No Stash Studio matching %v", site.Name)
+			studio := findStudio(sitename, "name")
+
+			// check for a config entry if site not found
+			if studio.Data.Studio.ID == "" && Config.StashSceneMatching[site.ID].StashId != "" {
+				studio = findStudio(Config.StashSceneMatching[site.ID].StashId, "id")
+			}
+
+			if studio.Data.Studio.ID != "" {
+				siteConfig := Config.StashSceneMatching[site.ID]
+				var ext models.ExternalReference
+				ext.FindExternalId("stashdb studio", studio.Data.Studio.ID)
+				if ext.ID == 0 || studio.Data.Studio.Updated.UTC().Sub(ext.ExternalDate.UTC()).Seconds() > 1 {
+					jsonData, _ := json.MarshalIndent(studio.Data.Studio, "", "  ")
+					ext := models.ExternalReference{ExternalSource: "stashdb studio", ExternalURL: "https://stashdb.org/studios/" + studio.Data.Studio.ID,
+						ExternalId: studio.Data.Studio.ID, ExternalDate: studio.Data.Studio.Updated, ExternalData: string(jsonData),
+						XbvrLinks: []models.ExternalReferenceLink{{InternalTable: "sites", InternalNameId: site.ID, ExternalSource: "stashdb studio", ExternalId: studio.Data.Studio.ID}}}
+					ext.AddUpdateWithId()
+				}
+				processStudioPerformers(studio.Data.Studio.ID)
+				scenes := getScenes(studio.Data.Studio.ID, siteConfig.ParentId, siteConfig.TagIdFilter)
+				saveScenesToExternalReferences(scenes, studio.Data.Studio.ID)
+			} else {
+				log.Infof("No Stash Studio matching %v", site.Name)
+			}
+			tlog.Info("Scrape of Stashdb completed")
 		}
-		tlog.Info("Scrape of Stashdb completed")
 	}
 }
 
