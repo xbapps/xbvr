@@ -2,11 +2,11 @@ package scrape
 
 import (
 	"encoding/json"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
-	"net/http"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -71,14 +71,14 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			// Cast
 			if strings.Contains(c, "Starring") {
 				e.ForEach(`.cell a`, func(id int, e *colly.HTMLElement) {
-					
+
 					cast := strings.Split(e.Text, ",")
 					sc.Cast = append(sc.Cast, cast...)
 					if len(cast) > 1 {
 						sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 					}
 					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
-					
+
 				})
 			} else {
 				// Released - Date Oct 19, 2019
@@ -97,9 +97,9 @@ func SinsVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<
 			r := re.FindStringSubmatch(trailerURL)
 			castIndex := re.SubexpIndex("cast")
 			//sinsVR uses _ for whitespace and - to separate cast members
-			cast := strings.Split(strings.ReplaceAll(r[castIndex], "_"," "), "-")
+			cast := strings.Split(strings.ReplaceAll(r[castIndex], "_", " "), "-")
 			sc.Cast = append(sc.Cast, cast...)
-			
+
 			// This should result in the correct model url for sinsVR but occasionally sins has yet to create the model url and will result in a 404
 			for _, name := range cast {
 				profileUrl := `https://xsinsvr.com/model/` + strings.ToLower(strings.ReplaceAll(name, " ", "-"))
