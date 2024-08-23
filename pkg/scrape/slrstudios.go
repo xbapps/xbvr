@@ -154,14 +154,14 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 			desktopCresp, err := http.Head(desktopCover)
 			if err != nil {
 				log.Errorf("Method Head Failed on desktopCover %s with error %s", desktopCover, err)
-			}else if desktopCresp.StatusCode == 200 {
+			} else if desktopCresp.StatusCode == 200 {
 				coverURL := desktopCover
 				sc.Covers = append(sc.Covers, coverURL)
 			} else {
 				appCresp, err := http.Head(appCover)
 				if err != nil {
 					log.Errorf("Method Head Failed on appCover %s with error %s", appCover, err)
-				}else if appCresp.StatusCode == 200 {
+				} else if appCresp.StatusCode == 200 {
 					coverURL := appCover
 					sc.Covers = append(sc.Covers, coverURL)
 				} else {
