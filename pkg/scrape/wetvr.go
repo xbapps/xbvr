@@ -2,10 +2,10 @@ package scrape
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
-	"fmt"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -96,15 +96,14 @@ func WetVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 	siteCollector.OnHTML(`div:has(p:contains("Latest"))`, func(e *colly.HTMLElement) {
 		// Check to make sure we aren't getting multiple firings from pages we have already incremented the count on
 		if !limitScraping {
-		if e.Request.URL.String() == `https://wetvr.com/?page=` + fmt.Sprint(pageCnt) {
-			pageCnt += 1
-		
-			pageURL := e.Request.AbsoluteURL(`https://wetvr.com/?page=` + fmt.Sprint(pageCnt))
-			siteCollector.Visit(pageURL)
-		}
+			if e.Request.URL.String() == `https://wetvr.com/?page=`+fmt.Sprint(pageCnt) {
+				pageCnt += 1
+
+				pageURL := e.Request.AbsoluteURL(`https://wetvr.com/?page=` + fmt.Sprint(pageCnt))
+				siteCollector.Visit(pageURL)
+			}
 		}
 	})
-		
 
 	siteCollector.OnHTML(`div:has(p:contains("Latest")) div[id^="r-"]`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a", "href"))
