@@ -79,7 +79,7 @@ func StashDb() {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
 		defer models.RemoveLock("scrape")
-		
+
 		t0 := time.Now()
 		tlog := log.WithField("task", "scrape")
 		tlog.Infof("StashDB Scraping started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
