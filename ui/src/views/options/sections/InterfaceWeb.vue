@@ -85,6 +85,11 @@
                 show All Heatmaps
               </b-switch>
             </b-field>
+            <b-field>
+              <b-switch v-model="openInNewWindow" type="is-dark">
+                show Open Tag in New Window
+              </b-switch>
+            </b-field>
             <b-field label="Opacity of unavailable scenes">
               <div class="columns">
                 <div class="column is-two-thirds">
@@ -239,6 +244,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.showSubtitlesFile = value
+      }
+    },
+    openInNewWindow: {
+      get () {
+        return this.$store.state.optionsWeb.web.showOpenInNewWindow
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.showOpenInNewWindow = value
       }
     },
     isAvailOpacity: {
