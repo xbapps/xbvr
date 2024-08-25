@@ -2,12 +2,33 @@ package models
 
 import (
 	"encoding/json"
-	"sync"
+	"sync/atomic"
 )
 
 var scrapers []Scraper
 
-type ScraperFunc func(*sync.WaitGroup, bool, []string, chan<- ScrapedScene, string, string, bool) error
+type ScrapeWG struct {
+	Count int64
+}
+
+func (wg *ScrapeWG) Add(n int64) {
+	atomic.AddInt64(&wg.Count, n)
+}
+
+func (wg *ScrapeWG) Done() {
+	wg.Add(-1)
+	if atomic.LoadInt64(&wg.Count) < 0 {
+		panic("negative wait group counter")
+	}
+}
+
+func (wg *ScrapeWG) Wait(n int64) {
+	for atomic.LoadInt64(&wg.Count) >= n && atomic.LoadInt64(&wg.Count) != 0 {
+		continue
+	}
+}
+
+type ScraperFunc func(*ScrapeWG, bool, []string, chan<- ScrapedScene, string, string, bool) error
 
 type Scraper struct {
 	ID           string      `json:"id"`
