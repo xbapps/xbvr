@@ -7,27 +7,6 @@ import (
 
 var scrapers []Scraper
 
-type ScrapeWG struct {
-	Count int64
-}
-
-func (wg *ScrapeWG) Add(n int64) {
-	atomic.AddInt64(&wg.Count, n)
-}
-
-func (wg *ScrapeWG) Done() {
-	wg.Add(-1)
-	if atomic.LoadInt64(&wg.Count) < 0 {
-		panic("negative wait group counter")
-	}
-}
-
-func (wg *ScrapeWG) Wait(n int64) {
-	for atomic.LoadInt64(&wg.Count) >= n && atomic.LoadInt64(&wg.Count) != 0 {
-		continue
-	}
-}
-
 type ScraperFunc func(*ScrapeWG, bool, []string, chan<- ScrapedScene, string, string, bool) error
 
 type Scraper struct {
@@ -110,4 +89,26 @@ func RegisterScraper(id string, name string, avatarURL string, domain string, f 
 	s.Scrape = f
 	s.MasterSiteId = masterSiteId
 	scrapers = append(scrapers, s)
+}
+
+// Custom wg functions, to allow access to the current count of waitgroups. This allows running scrapers at max count always
+type ScrapeWG struct {
+	Count int64
+}
+
+func (wg *ScrapeWG) Add(n int64) {
+	atomic.AddInt64(&wg.Count, n)
+}
+
+func (wg *ScrapeWG) Done() {
+	wg.Add(-1)
+	if atomic.LoadInt64(&wg.Count) < 0 {
+		panic("negative wait group counter")
+	}
+}
+
+func (wg *ScrapeWG) Wait(n int64) {
+	for atomic.LoadInt64(&wg.Count) >= n && atomic.LoadInt64(&wg.Count) != 0 {
+		continue
+	}
 }
