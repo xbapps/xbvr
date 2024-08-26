@@ -137,10 +137,10 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 						site.Save()
 					}(scraper)
 
-					if wg.Count >= concurrent_scrapers { // processing batches of 35 sites
+					if wg.Count() >= concurrent_scrapers { // processing batches of 35 sites
 						wg.Wait(concurrent_scrapers)
 					}
-					
+
 				}
 			}
 		}
