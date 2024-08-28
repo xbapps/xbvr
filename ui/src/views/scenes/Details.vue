@@ -160,13 +160,19 @@
 
             <div class="block-tags block" v-if="activeTab != 1">
               <b-taglist>
-                <a v-for="(c, idx) in item.cast" :key="'cast' + idx" @click='showCastScenes([c.name])'
-                   class="tag is-warning is-small">{{ c.name }} ({{ c.avail_count }}/{{ c.count }})</a>
-                <a @click='showSiteScenes([item.site])'
-                   class="tag is-primary is-small">{{ item.site }}</a>
-                <a v-for="(tag, idx) in item.tags" :key="'tag' + idx" @click='showTagScenes([tag.name])'
-                   class="tag is-info is-small">{{ tag.name }} ({{ tag.count }})</a>
-              </b-taglist>
+                <span v-for="(c, idx) in item.cast" :key="'cast' + idx" >
+                  <a class="tag is-warning is-small" @click='showCastScenes([c.name])' :style="showOpenInNewWindow ? 'margin-right: 0;': 'margin-right: .5em;'" >{{ c.name }} ({{ c.avail_count }}/{{ c.count }})</a>
+                  <a v-if="showOpenInNewWindow" class="tag is-warning is-small" :href='getCastScenesUrl([c.name])' target="_blank" style="margin-right: 0.5em;"><b-icon pack="mdi" icon="open-in-new" size="is-small"></b-icon></a>
+                </span>
+                <span>
+                  <a @click='showSiteScenes([item.site])' class="tag is-primary is-small" :style="showOpenInNewWindow ? 'margin-right: 0;': 'margin-right: .5em;'">{{ item.site }}</a>
+                  <a v-if="showOpenInNewWindow" class="tag is-primary is-small" :href='getSiteScenesUrl([item.site])' target="_blank" style="margin-right: 0.5em;"><b-icon pack="mdi" icon="open-in-new" size="is-small"></b-icon></a>
+                </span>
+                <span v-for="(tag, idx) in item.tags" :key="'tag' + idx">
+                  <a  @click='showTagScenes([tag.name])' class="tag is-info is-small" :style="showOpenInNewWindow ? 'margin-right: 0;': 'margin-right: .5em;'">{{ tag.name }} ({{ tag.count }})</a>
+                  <a v-if="showOpenInNewWindow" class="tag is-info is-small" :href='getTagScenesUrl([tag.name])' target="_blank" style="margin-right: 0.5em;"><b-icon pack="mdi" icon="open-in-new" size="is-small"></b-icon></a>
+                </span>
+              </b-taglist>              
             </div>
 
             <div class="block-tags block" v-if="activeTab == 1">
@@ -581,6 +587,9 @@ export default {
     quickFindOverlayState() {
       return this.$store.state.overlay.quickFind.show
     },
+    showOpenInNewWindow () {
+      return this.$store.state.optionsWeb.web.showOpenInNewWindow
+    },
     alternateSourcesWithTitles() {
       return this.alternateSources.map(altsrc => {
         const extdata = JSON.parse(altsrc.external_data);
@@ -714,6 +723,17 @@ watch:{
       })
       this.close()
     },
+    getCastScenesUrl(actor) {
+      let newfilters = Object.assign({}, this.$store.state.sceneList.filters);
+      newfilters.cast = actor;       
+      newfilters.sites = []
+      newfilters.tags = []
+      newfilters.attributes = []
+      return this.$router.resolve({
+        name: 'scenes',
+        query: { q: Buffer.from(JSON.stringify(newfilters)).toString('base64') }
+      }).href
+    },
     showTagScenes (tag) {
       this.$store.state.sceneList.filters.cast = []
       this.$store.state.sceneList.filters.sites = []
@@ -725,6 +745,17 @@ watch:{
       })
       this.close()
     },
+    getTagScenesUrl(tag) {
+      let newfilters = Object.assign({}, this.$store.state.sceneList.filters);      
+      newfilters.tags = tag;       
+      newfilters.cast = []       
+      newfilters.sites = []
+      newfilters.attributes = []
+      return this.$router.resolve({
+        name: 'scenes',
+        query: { q: Buffer.from(JSON.stringify(newfilters)).toString('base64') }
+      }).href
+    },
     showSiteScenes (site) {
       this.$store.state.sceneList.filters.cast = []
       this.$store.state.sceneList.filters.sites = site
@@ -735,6 +766,17 @@ watch:{
         query: { q: this.$store.getters['sceneList/filterQueryParams'] }
       })
       this.close()
+    },
+    getSiteScenesUrl(site) {
+      let newfilters = Object.assign({}, this.$store.state.sceneList.filters);
+      newfilters.sites = site;       
+      newfilters.cast = []       
+      newfilters.tags = []
+      newfilters.attributes = []
+      return this.$router.resolve({
+        name: 'scenes',
+        query: { q: Buffer.from(JSON.stringify(newfilters)).toString('base64') }
+      }).href
     },
     showActorDetail (actor_id) {
       ky.get('/api/actor/'+actor_id).json().then(data => {
