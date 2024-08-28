@@ -151,21 +151,25 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		if !isTransScene {
 			appCover := gjson.Get(JsonMetadataA, "thumbnailUrl").String()
 			desktopCover := strings.Replace(gjson.Get(JsonMetadataA, "thumbnailUrl").String(), "app", "desktop", -1)
-			desktopCresp, _ := http.Head(desktopCover)
-			if desktopCresp.StatusCode == 200 {
+			desktopCresp, err := http.Head(desktopCover)
+			if err != nil {
+				log.Errorf("Method Head Failed on desktopCover %s with error %s", desktopCover, err)
+			} else if desktopCresp.StatusCode == 200 {
 				coverURL := desktopCover
 				sc.Covers = append(sc.Covers, coverURL)
 			} else {
-				appCresp, _ := http.Head(appCover)
-				if appCresp.StatusCode == 200 {
+				appCresp, err := http.Head(appCover)
+				if err != nil {
+					log.Errorf("Method Head Failed on appCover %s with error %s", appCover, err)
+				} else if appCresp.StatusCode == 200 {
 					coverURL := appCover
 					sc.Covers = append(sc.Covers, coverURL)
-					defer appCresp.Body.Close()
 				} else {
 					e.ForEach(`link[as="image"]`, func(id int, e *colly.HTMLElement) {
 						sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("href")))
 					})
 				}
+				defer appCresp.Body.Close()
 			}
 			defer desktopCresp.Body.Close()
 		} else {
