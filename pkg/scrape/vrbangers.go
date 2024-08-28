@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
@@ -14,7 +15,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRBangersSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string, limitScraping bool) error {
+func VRBangersSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -174,19 +175,19 @@ func VRBangersSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	return nil
 }
 
-func VRBangers(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VRBangers(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "vrbangers", "VRBangers", "https://vrbangers.com/", limitScraping)
 }
-func VRBTrans(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VRBTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "vrbtrans", "VRBTrans", "https://vrbtrans.com/", limitScraping)
 }
-func VRBGay(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VRBGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "vrbgay", "VRBGay", "https://vrbgay.com/", limitScraping)
 }
-func VRConk(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VRConk(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "vrconk", "VRCONK", "https://vrconk.com/", limitScraping)
 }
-func BlowVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func BlowVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "blowvr", "BlowVR", "https://blowvr.com/", limitScraping)
 }
 
