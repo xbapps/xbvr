@@ -1,9 +1,9 @@
 package scrape
 
 import (
+	"context"
 	"regexp"
 	"strings"
-	"context"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
