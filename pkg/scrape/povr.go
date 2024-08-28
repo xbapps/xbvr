@@ -124,8 +124,8 @@ func POVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- 
 	siteCollector.OnHTML(`div.thumbnail-wrap div.thumbnail a.thumbnail__link`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
-		// If scene exists in database, or the slternate source exists, there's no need to scrape
-		if !funk.ContainsString(knownScenes, sceneURL) && !strings.Contains(sceneURL, "/join") {
+		// If scene exists in database, or the slternate source exists, there's no need to scrape. Also make sure we only grab valid scene links in the vr-porn directory
+		if !funk.ContainsString(knownScenes, sceneURL) && strings.Contains(sceneURL, "/vr-porn/") && !strings.Contains(sceneURL, "/join") {
 			WaitBeforeVisit("povr.com", sceneCollector.Visit, sceneURL)
 		}
 	})
