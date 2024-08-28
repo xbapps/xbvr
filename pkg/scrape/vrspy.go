@@ -38,7 +38,7 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		sc.Site = siteID
 		sc.HomepageURL = e.Request.URL.String()
 
-		ogimage := e.ChildAttr(`meta[property="og:image"]`, "content")
+		ogimage := e.ChildAttr(`meta[property="og:image"][content*="cover.jpg"]`, "content")
 		if ogimage != "" {
 			ogimageURL, err := url.Parse(ogimage)
 			if err == nil {
