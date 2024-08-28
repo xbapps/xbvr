@@ -1,7 +1,6 @@
 package scrape
 
 import (
-	"context"
 	"regexp"
 	"strings"
 
