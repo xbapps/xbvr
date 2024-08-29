@@ -6,8 +6,8 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/xbapps/xbvr/pkg/externalreference"
-	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
 func (i ExternalReference) refreshStashPerformer(req *restful.Request, resp *restful.Response) {
@@ -37,7 +37,7 @@ func StashdbRunAll() {
 		if !models.CheckLock("scrape") {
 			models.CreateLock("scrape")
 			defer models.RemoveLock("scrape")
-	
+
 			t0 := time.Now()
 			tlog := log.WithField("task", "scrape")
 			tlog.Infof("StashDB Refresh started at %s", t0.Format("Mon Jan _2 15:04:05 2006"))
