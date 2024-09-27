@@ -41,7 +41,6 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 
 		// Cover Url
 		coverURL := e.Request.Ctx.GetAny("coverURL").(string)
-		log.Infoln(coverURL)
 		sc.Covers = append(sc.Covers, coverURL)
 
 		// Title
@@ -115,7 +114,6 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 			sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 			if !funk.ContainsString(knownScenes, sceneURL) {
 				coverURL := e.ChildAttr("a.video-container__image img", "data-src")
-				log.Infoln("Scraped Cover", coverURL)
 				ctx := colly.NewContext()
 				ctx.Put("coverURL", coverURL)
 				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
