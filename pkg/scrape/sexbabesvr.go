@@ -31,12 +31,18 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		// Scene ID -
+		// Scene ID
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
-			sc.SiteID = e.Attr("data-scene")
+			posterURL := e.Request.AbsoluteURL(e.Attr("poster"))
+			tmp := strings.Split(posterURL, "/")
+			sc.SiteID = tmp[len(tmp)-2]
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
-			sc.Covers = append(sc.Covers, strings.Replace(e.Attr("poster"), "/videoDetail2x", "", -1))
 		})
+
+		// Cover Url
+		coverURL := e.Request.Ctx.GetAny("coverURL").(string)
+		log.Infoln(coverURL)
+		sc.Covers = append(sc.Covers, coverURL)
 
 		// Title
 		e.ForEach(`div.video-detail__description--container h1`, func(id int, e *colly.HTMLElement) {
@@ -105,10 +111,14 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	})
 
 	siteCollector.OnHTML(`div.videos__content`, func(e *colly.HTMLElement) {
-		e.ForEach(`a.video-container__description--title`, func(cnt int, e *colly.HTMLElement) {
+		e.ForEach(`a.video-container__image`, func(cnt int, e *colly.HTMLElement) {
 			sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 			if !funk.ContainsString(knownScenes, sceneURL) {
-				sceneCollector.Visit(sceneURL)
+				coverURL := e.ChildAttr("a.video-container__image img", "data-src")
+				log.Infoln("Scraped Cover", coverURL)
+				ctx := colly.NewContext()
+				ctx.Put("coverURL", coverURL)
+				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 			}
 		})
 	})
