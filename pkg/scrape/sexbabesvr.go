@@ -54,10 +54,22 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Synopsis
-		e.ForEach(`div.video-detail>div.container>p`, func(id int, e *colly.HTMLElement) {
-			// Handle blank <p></p> surrounding the synopsis
-			if strings.TrimSpace(e.Text) != "" {
-				sc.Synopsis = strings.TrimSpace(e.Text)
+		e.ForEach(`div.list-of-categories__p`, func(id int, e *colly.HTMLElement) {
+			synopsis := e.Text
+
+			if synopsis == "" {
+				synopsis = e.ChildText(`p.ql-align-justify`)
+
+				if synopsis == "" {
+					e.ForEach(`div`, func(id int, e *colly.HTMLElement) {
+						synopsis = synopsis + " " + strings.TrimSpace(e.Text)
+					})
+
+				}
+			}
+
+			if strings.TrimSpace(synopsis) != "" {
+				sc.Synopsis = strings.TrimSpace(synopsis)
 			}
 		})
 
