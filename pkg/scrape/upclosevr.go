@@ -1,14 +1,10 @@
 package scrape
 
 import (
-	// "encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
-	// "net/http"
-	// "io"
-	// "fmt"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
