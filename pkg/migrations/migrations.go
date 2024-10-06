@@ -2020,7 +2020,7 @@ func Migrate() {
 				}
 				for _, scene := range scenes {
 
-					if scene.Site == "sexbabesvr" {
+					if scene.Site == "SexBabesVR" {
 						sceneID, err := newSceneId(scene.Site, scene.SceneURL)
 						if err != nil {
 							return err
