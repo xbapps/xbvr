@@ -25,10 +25,10 @@ func UpCloseVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 	siteCollector := createCollector("www.upclosevr.com")
 
 	siteCollector.OnHTML(`script`, func(e *colly.HTMLElement) {
-		re := regexp.MustCompile(`"apiKey":"(.+)"}},"site`)
-		apiKey := re.FindStringSubmatch(e.Text)
-		re = regexp.MustCompile(`"applicationID":"(.+)","apiKey`)
-		applicationID := re.FindStringSubmatch(e.Text)
+		apiKeyRegex := regexp.MustCompile(`"apiKey":"(.+)"}},"site`)
+		applicationIDRegex := regexp.MustCompile(`"applicationID":"(.+)","apiKey`)
+		apiKey := apiKeyRegex.FindStringSubmatch(e.Text)
+		applicationID := applicationIDRegex.FindStringSubmatch(e.Text)
 
 		if len(apiKey) > 0 && len(applicationID) > 0 {
 			pageTotal := 1
@@ -36,14 +36,16 @@ func UpCloseVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 
 			for page := 0; page < pageTotal; page++ {
 
-				var payload = strings.NewReader("")
+				var payloadStr string
 				if singleSceneURL != "" {
 					tmp := strings.Split(singleSceneURL, "/")
 					sceneID := tmp[len(tmp)-1]
-					payload.Reset(`{"requests":[{"indexName":"all_scenes","params":"clickAnalytics=true&facetFilters=%5B%5B%22availableOnSite%3Aupclosevr%22%5D%2C%5B%22clip_id%3A` + sceneID + `%22%5D%5D&facets=%5B%5D&hitsPerPage=1&tagFilters="},{"indexName":"all_scenes","params":"analytics=false&clickAnalytics=false&facetFilters=%5B%5B%22clip_id%3A251717%22%5D%5D&facets=availableOnSite&hitsPerPage=0&page=0"},{"indexName":"all_scenes","params":"analytics=false&clickAnalytics=false&facetFilters=%5B%5B%22availableOnSite%3Aupclosevr%22%5D%5D&facets=clip_id&hitsPerPage=0&page=0"}]}`)
+					payloadStr = `{"requests":[{"indexName":"all_scenes","params":"clickAnalytics=true&facetFilters=%5B%5B%22availableOnSite%3Aupclosevr%22%5D%2C%5B%22clip_id%3A` + sceneID + `%22%5D%5D&facets=%5B%5D&hitsPerPage=1&tagFilters="}]}`
 				} else {
-					payload.Reset(`{"requests":[{"indexName":"all_scenes_latest_desc","params":"analytics=true&analyticsTags=%5B%22component%3Asearchlisting%22%2C%22section%3Afreetour%22%2C%22site%3Aupclosevr%22%2C%22context%3Avideos%22%2C%22device%3Adesktop%22%5D&clickAnalytics=true&facetingAfterDistinct=true&facets=%5B%22categories.name%22%5D&filters=(upcoming%3A'0')%20AND%20availableOnSite%3Aupclosevr&highlightPostTag=__%2Fais-highlight__&highlightPreTag=__ais-highlight__&hitsPerPage=60&maxValuesPerFacet=1000&page=` + strconv.Itoa(page) + `&query=&tagFilters="}]}`)
+					payloadStr = `{"requests":[{"indexName":"all_scenes_latest_desc","params":"analytics=true&analyticsTags=%5B%22component%3Asearchlisting%22%2C%22section%3Afreetour%22%2C%22site%3Aupclosevr%22%2C%22context%3Avideos%22%2C%22device%3Adesktop%22%5D&clickAnalytics=true&facetingAfterDistinct=true&facets=%5B%22categories.name%22%5D&filters=(upcoming%3A'0')%20AND%20availableOnSite%3Aupclosevr&highlightPostTag=__%2Fais-highlight__&highlightPreTag=__ais-highlight__&hitsPerPage=60&maxValuesPerFacet=1000&page=` + strconv.Itoa(page) + `&query=&tagFilters="}]}`
 				}
+
+				var payload = strings.NewReader(payloadStr)
 				resp, err := client.R().
 					SetHeader("Origin", "https://www.upclosevr.com").
 					SetHeader("Referer", "https://www.upclosevr.com/").
