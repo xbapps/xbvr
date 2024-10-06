@@ -75,7 +75,7 @@ func UpCloseVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 				for i, _ := range gjson.Get(jsonString, "results.0.hits").Array() {
 					queryStr := `results.0.hits.` + strconv.Itoa(i)
 
-					// Check to make sure we don't update scenes we have already collectoed
+					// Check to make sure we don't update scenes we have already collected
 					sceneID := gjson.Get(jsonString, queryStr+`.clip_id`).String()
 					sceneURL := `https://www.upclosevr.com/en/video/upclosevr/` + gjson.Get(jsonString, queryStr+`.url_title`).String() + `/` + sceneID
 					if !funk.ContainsString(knownScenes, sceneURL) || singleSceneURL != "" {
@@ -122,9 +122,10 @@ func UpCloseVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out ch
 						// Junk Tags we don't want to add to scene data
 						skiptags := map[string]bool{
 							"Original Series":     true,
-							"Adult Time Original": true, // Everything gets tagged 3D on SLR, even mono 360
+							"Adult Time Original": true,
 						}
 
+						// Tags
 						for _, name := range gjson.Get(jsonString, queryStr+`.categories.#.name`).Array() {
 							if !skiptags[name.String()] {
 								sc.Tags = append(sc.Tags, name.String())
