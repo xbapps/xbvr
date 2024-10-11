@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -14,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, nwID string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func CzechVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, nwID string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 	commonDb, _ := models.GetCommonDB()
@@ -199,14 +198,14 @@ func CzechVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan
 }
 
 func addCZVRScraper(id string, name string, nwid string, avatarURL string) {
-	registerScraper(id, name, avatarURL, "czechvrnetwork.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	registerScraper(id, name, avatarURL, "czechvrnetwork.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 		return CzechVR(wg, updateSite, knownScenes, out, singleSceneURL, id, name, nwid, singeScrapeAdditionalInfo, limitScraping)
 	})
 }
 
 func init() {
 	// scraper for scraping single scenes where only the url is provided
-	registerScraper("czechvr-single_scene", "Czech VR - Other Studios", "", "czechvrnetwork.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	registerScraper("czechvr-single_scene", "Czech VR - Other Studios", "", "czechvrnetwork.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 		return CzechVR(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "", limitScraping)
 	})
 	addCZVRScraper("czechvr", "Czech VR", "15", "https://www.czechvr.com/images/favicon/android-chrome-256x256.png")

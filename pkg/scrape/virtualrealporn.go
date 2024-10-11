@@ -8,7 +8,6 @@ import (
 	"image"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -17,7 +16,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, URL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 	page := 1
@@ -280,19 +279,19 @@ func VirtualRealPornSite(wg *sync.WaitGroup, updateSite bool, knownScenes []stri
 	return nil
 }
 
-func VirtualRealPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VirtualRealPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, singleSceneURL, "virtualrealporn", "VirtualRealPorn", "https://virtualrealporn.com/", singeScrapeAdditionalInfo, limitScraping)
 }
-func VirtualRealTrans(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VirtualRealTrans(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, singleSceneURL, "virtualrealtrans", "VirtualRealTrans", "https://virtualrealtrans.com/", singeScrapeAdditionalInfo, limitScraping)
 }
-func VirtualRealAmateur(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VirtualRealAmateur(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, singleSceneURL, "virtualrealamateur", "VirtualRealAmateurPorn", "https://virtualrealamateurporn.com/", singeScrapeAdditionalInfo, limitScraping)
 }
-func VirtualRealGay(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VirtualRealGay(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, singleSceneURL, "virtualrealgay", "VirtualRealGay", "https://virtualrealgay.com/", singeScrapeAdditionalInfo, limitScraping)
 }
-func VirtualRealPassion(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VirtualRealPassion(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VirtualRealPornSite(wg, updateSite, knownScenes, out, singleSceneURL, "virtualrealpassion", "VirtualRealPassion", "https://virtualrealpassion.com/", singeScrapeAdditionalInfo, limitScraping)
 }
 
