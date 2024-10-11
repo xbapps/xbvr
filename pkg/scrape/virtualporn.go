@@ -143,7 +143,6 @@ func Project1ServiceAPI(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		if len(matches) > 1 {
 			instanceJson := gjson.ParseBytes([]byte(matches[1]))
 			token := instanceJson.Get("jwt").String()
-			log.Infoln(token)
 			// set up api requests to use the token in the Instance Header
 			apiCollector.OnRequest(func(r *colly.Request) {
 				r.Headers.Set("Instance", token)
