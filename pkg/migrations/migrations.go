@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1991,12 +1992,18 @@ func Migrate() {
 			// Had to switch to a differnt sceneID source causing a shift in sceneIDs
 			ID: "0080-fix-SexBabesVR-ids",
 			Migrate: func(tx *gorm.DB) error {
-				newSceneId := func(site string, url string) (string, error) {
+				newSceneId := func(site string, url string) (string, int) {
 					sceneID := ""
+					statusCode := 200
 
 					sceneCollector := colly.NewCollector(
 						colly.AllowedDomains("sexbabesvr.com"),
 					)
+
+					sceneCollector.OnError(func(r *colly.Response, err error) {
+						common.Log.Errorf("Error visiting %s %s", r.Request.URL, err)
+						statusCode = r.StatusCode
+					})
 
 					sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 
@@ -2010,7 +2017,7 @@ func Migrate() {
 
 					sceneCollector.Visit(url)
 
-					return sceneID, nil
+					return sceneID, statusCode
 				}
 
 				var scenes []models.Scene
@@ -2020,28 +2027,40 @@ func Migrate() {
 				}
 				for _, scene := range scenes {
 
-					if scene.Site == "SexBabesVR" {
-						sceneID, err := newSceneId(scene.Site, scene.SceneURL)
-						if err != nil {
+					// Need both the siteID string and the sceneID has interger for logic
+					tmp := strings.Split(scene.SceneID, "-")
+					sceneIDint, _ := strconv.Atoi(tmp[1])
+
+					// Check to make we only are updating scenes orginating on SexbabsVR and only starting at scene 600, sc.SiteID is is not accurate in terms of alt sites
+					// Scene 600 is where the scene IDs start to merge when changing our scene ID source for SexBabesVR
+					if tmp[0] == "sexbabesvr" && sceneIDint >= 600 {
+
+						common.Log.Infoln("Checking sceneid:", scene.SceneID)
+						sceneID, statusCode := newSceneId(scene.Site, scene.SceneURL)
+
+						if statusCode != 200 {
 							return err
 						}
+
 						if sceneID == "" {
 							common.Log.Warnf("Could not update scene %s", scene.SceneID)
 							continue
 						}
 
-						// update all actions referring to this scene by its scene_id
-						err = tx.Model(&models.Action{}).Where("scene_id = ?", scene.SceneID).Update("scene_id", sceneID).Error
-						if err != nil {
-							return err
-						}
+						if scene.SceneID != sceneID {
+							// update all actions referring to this scene by its scene_id
+							err = tx.Model(&models.Action{}).Where("scene_id = ?", scene.SceneID).Update("scene_id", sceneID).Error
+							if err != nil {
+								return err
+							}
 
-						// update the scene itself
-						common.Log.Infoln("Updating sceneid:", scene.SceneID, "to", sceneID)
-						scene.SceneID = sceneID
-						err = tx.Save(&scene).Error
-						if err != nil {
-							return err
+							// update the scene itself
+							common.Log.Infoln("Updating sceneid:", scene.SceneID, "to", sceneID)
+							scene.SceneID = sceneID
+							err = tx.Save(&scene).Error
+							if err != nil {
+								return err
+							}
 						}
 
 					}
