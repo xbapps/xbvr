@@ -12,22 +12,23 @@ type ObjectState struct {
 		BoundIP []string `json:"bound_ip"`
 	} `json:"server"`
 	Web struct {
-		TagSort           string `json:"tagSort"`
-		SceneHidden       bool   `json:"sceneHidden"`
-		SceneWatchlist    bool   `json:"sceneWatchlist"`
-		SceneFavourite    bool   `json:"sceneFavourite"`
-		SceneWishlist     bool   `json:"sceneWishlist"`
-		SceneWatched      bool   `json:"sceneWatched"`
-		SceneEdit         bool   `json:"sceneEdit"`
-		SceneDuration     bool   `json:"sceneDuration"`
-		SceneCuepoint     bool   `json:"sceneCuepoint"`
-		ShowHspFile       bool   `json:"showHspFile"`
-		ShowSubtitlesFile bool   `json:"showSubtitlesFile"`
-		SceneTrailerlist  bool   `json:"sceneTrailerlist"`
-		ShowScriptHeatmap bool   `json:"showScriptHeatmap"`
-		ShowAllHeatmaps   bool   `json:"showAllHeatmaps"`
-		UpdateCheck       bool   `json:"updateCheck"`
-		IsAvailOpacity    int    `json:"isAvailOpacity"`
+		TagSort             string `json:"tagSort"`
+		SceneHidden         bool   `json:"sceneHidden"`
+		SceneWatchlist      bool   `json:"sceneWatchlist"`
+		SceneFavourite      bool   `json:"sceneFavourite"`
+		SceneWishlist       bool   `json:"sceneWishlist"`
+		SceneWatched        bool   `json:"sceneWatched"`
+		SceneEdit           bool   `json:"sceneEdit"`
+		SceneDuration       bool   `json:"sceneDuration"`
+		SceneCuepoint       bool   `json:"sceneCuepoint"`
+		ShowHspFile         bool   `json:"showHspFile"`
+		ShowSubtitlesFile   bool   `json:"showSubtitlesFile"`
+		SceneTrailerlist    bool   `json:"sceneTrailerlist"`
+		ShowScriptHeatmap   bool   `json:"showScriptHeatmap"`
+		ShowAllHeatmaps     bool   `json:"showAllHeatmaps"`
+		ShowOpenInNewWindow bool   `json:"showOpenInNewWindow"`
+		UpdateCheck         bool   `json:"updateCheck"`
+		IsAvailOpacity      int    `json:"isAvailOpacity"`
 	} `json:"web"`
 	DLNA struct {
 		Running  bool     `json:"running"`

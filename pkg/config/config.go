@@ -30,22 +30,23 @@ type ObjectConfig struct {
 		Password string `default:"" json:"password"`
 	} `json:"security"`
 	Web struct {
-		TagSort           string `default:"by-tag-count" json:"tagSort"`
-		SceneHidden       bool   `default:"true" json:"sceneHidden"`
-		SceneWatchlist    bool   `default:"true" json:"sceneWatchlist"`
-		SceneFavourite    bool   `default:"true" json:"sceneFavourite"`
-		SceneWishlist     bool   `default:"true" json:"sceneWishlist"`
-		SceneWatched      bool   `default:"false" json:"sceneWatched"`
-		SceneEdit         bool   `default:"false" json:"sceneEdit"`
-		SceneDuration     bool   `default:"false" json:"sceneDuration"`
-		SceneCuepoint     bool   `default:"true" json:"sceneCuepoint"`
-		ShowHspFile       bool   `default:"true" json:"showHspFile"`
-		ShowSubtitlesFile bool   `default:"true" json:"showSubtitlesFile"`
-		SceneTrailerlist  bool   `default:"true" json:"sceneTrailerlist"`
-		ShowScriptHeatmap bool   `default:"true" json:"showScriptHeatmap"`
-		ShowAllHeatmaps   bool   `default:"false" json:"showAllHeatmaps"`
-		UpdateCheck       bool   `default:"true" json:"updateCheck"`
-		IsAvailOpacity    int    `default:"40" json:"isAvailOpacity"`
+		TagSort             string `default:"by-tag-count" json:"tagSort"`
+		SceneHidden         bool   `default:"true" json:"sceneHidden"`
+		SceneWatchlist      bool   `default:"true" json:"sceneWatchlist"`
+		SceneFavourite      bool   `default:"true" json:"sceneFavourite"`
+		SceneWishlist       bool   `default:"true" json:"sceneWishlist"`
+		SceneWatched        bool   `default:"false" json:"sceneWatched"`
+		SceneEdit           bool   `default:"false" json:"sceneEdit"`
+		SceneDuration       bool   `default:"false" json:"sceneDuration"`
+		SceneCuepoint       bool   `default:"true" json:"sceneCuepoint"`
+		ShowHspFile         bool   `default:"true" json:"showHspFile"`
+		ShowSubtitlesFile   bool   `default:"true" json:"showSubtitlesFile"`
+		SceneTrailerlist    bool   `default:"true" json:"sceneTrailerlist"`
+		ShowScriptHeatmap   bool   `default:"true" json:"showScriptHeatmap"`
+		ShowAllHeatmaps     bool   `default:"false" json:"showAllHeatmaps"`
+		ShowOpenInNewWindow bool   `default:"true" json:"showOpenInNewWindow"`
+		UpdateCheck         bool   `default:"true" json:"updateCheck"`
+		IsAvailOpacity      int    `default:"40" json:"isAvailOpacity"`
 	} `json:"web"`
 	Advanced struct {
 		ShowInternalSceneId          bool      `default:"false" json:"showInternalSceneId"`

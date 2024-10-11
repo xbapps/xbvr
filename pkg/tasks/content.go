@@ -115,10 +115,9 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 		commonDb.Where(&models.Site{ID: toScrape}).Find(&sites)
 	}
 
-	var wg sync.WaitGroup
+	var wg models.ScrapeWG
 
-	sitecnt := 1
-	concurrent_scrapers := common.ConcurrentScrapers
+	concurrent_scrapers := int64(common.ConcurrentScrapers)
 	if concurrent_scrapers == 0 {
 		concurrent_scrapers = 99999
 	}
@@ -138,10 +137,10 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 						site.Save()
 					}(scraper)
 
-					if sitecnt%concurrent_scrapers == 0 { // processing batches of 35 sites
-						wg.Wait()
+					if wg.Count() >= concurrent_scrapers { // processing batches of 35 sites
+						wg.Wait(concurrent_scrapers)
 					}
-					sitecnt++
+
 				}
 			}
 		}
@@ -158,7 +157,7 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 		}
 	}
 
-	wg.Wait()
+	wg.Wait(0)
 	return nil
 }
 

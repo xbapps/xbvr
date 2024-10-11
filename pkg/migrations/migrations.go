@@ -9,10 +9,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/gocolly/colly/v2"
 	"github.com/jinzhu/gorm"
 	"github.com/markphelps/optional"
 	"github.com/mozillazg/go-slugify"
@@ -1984,6 +1986,90 @@ func Migrate() {
 					return nil
 				}
 				return tx.Model(&models.Tag{}).Exec("delete from tags where `count` = 0").Error
+			},
+		},
+		{
+			// Had to switch to a differnt sceneID source causing a shift in sceneIDs
+			ID: "0080-fix-SexBabesVR-ids",
+			Migrate: func(tx *gorm.DB) error {
+				newSceneId := func(site string, url string) (string, int) {
+					sceneID := ""
+					statusCode := 200
+
+					sceneCollector := colly.NewCollector(
+						colly.AllowedDomains("sexbabesvr.com"),
+					)
+
+					sceneCollector.OnError(func(r *colly.Response, err error) {
+						common.Log.Errorf("Error visiting %s %s", r.Request.URL, err)
+						statusCode = r.StatusCode
+					})
+
+					sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+
+						// Scene ID
+						e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
+							posterURL := e.Request.AbsoluteURL(e.Attr("poster"))
+							tmp := strings.Split(posterURL, "/")
+							sceneID = slugify.Slugify(site) + "-" + tmp[len(tmp)-2]
+						})
+					})
+
+					sceneCollector.Visit(url)
+
+					return sceneID, statusCode
+				}
+
+				var scenes []models.Scene
+				err := tx.Where("studio = ?", "SexBabesVR").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for _, scene := range scenes {
+
+					// Need both the siteID string and the sceneID has interger for logic
+					tmp := strings.Split(scene.SceneID, "-")
+					sceneIDint, _ := strconv.Atoi(tmp[1])
+
+					// Check to make we only are updating scenes orginating on SexbabsVR and only starting at scene 600, sc.SiteID is is not accurate in terms of alt sites
+					// Scene 600 is where the scene IDs start to merge when changing our scene ID source for SexBabesVR
+					if tmp[0] == "sexbabesvr" && sceneIDint >= 600 {
+
+						common.Log.Infoln("Checking sceneid:", scene.SceneID)
+						sceneID, statusCode := newSceneId(scene.Site, scene.SceneURL)
+
+						if statusCode != 200 {
+							return err
+						}
+
+						if sceneID == "" {
+							common.Log.Warnf("Could not update scene %s", scene.SceneID)
+							continue
+						}
+
+						if scene.SceneID != sceneID {
+							// update all actions referring to this scene by its scene_id
+							err = tx.Model(&models.Action{}).Where("scene_id = ?", scene.SceneID).Update("scene_id", sceneID).Error
+							if err != nil {
+								return err
+							}
+
+							// update the scene itself
+							common.Log.Infoln("Updating sceneid:", scene.SceneID, "to", sceneID)
+							scene.SceneID = sceneID
+							err = tx.Save(&scene).Error
+							if err != nil {
+								return err
+							}
+						}
+
+					}
+				}
+
+				// since scenes have new IDs, we need to re-index them
+				tasks.SearchIndex()
+
+				return nil
 			},
 		},
 	})

@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
@@ -23,7 +22,7 @@ const (
 	baseURL   = "https://" + domain
 )
 
-func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singleScrapeAdditionalInfo string, limitScraping bool) error {
+func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singleScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -38,18 +37,26 @@ func VRSpy(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<-
 		sc.Site = siteID
 		sc.HomepageURL = e.Request.URL.String()
 
-		ogimage := e.ChildAttr(`meta[property="og:image"]`, "content")
-		if ogimage != "" {
-			ogimageURL, err := url.Parse(ogimage)
-			if err == nil {
-				parts := strings.Split(ogimageURL.Path, "/")
-				if len(parts) > 2 {
-					sc.SiteID = parts[2]
+		e.ForEach(`meta[property="og:image"][content*="vrspy.com/videos"]`, func(id int, e *colly.HTMLElement) {
+			if sc.SiteID == "" {
+				ogimage := e.Attr("content")
+				if ogimage != "" {
+					ogimageURL, err := url.Parse(ogimage)
+					if err == nil {
+						parts := strings.Split(ogimageURL.Path, "/")
+						if len(parts) > 2 {
+							_, err := strconv.Atoi(parts[2])
+							if err == nil {
+								sc.SiteID = parts[2]
+							}
+						}
+					}
 				}
 			}
-		}
+		})
 
 		if sc.SiteID == "" {
+			log.Infof("Unable to determine a Scene Id for %s", e.Request.URL)
 			return
 		}
 

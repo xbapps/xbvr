@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 
 	"golang.org/x/net/html"
 
@@ -18,7 +17,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func VRAllure(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "vrallure"
 	siteID := "VRAllure"
@@ -37,6 +36,7 @@ func VRAllure(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out cha
 		sc.Studio = "VRAllure"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+		sc.MembersUrl = strings.Replace(sc.HomepageURL, "https://vrallure.com/scenes/", "https://ma.vrallure.com/scene/", 1)
 
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "/")

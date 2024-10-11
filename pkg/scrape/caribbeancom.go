@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/bregydoc/gtranslate"
 	"github.com/gocolly/colly/v2"
@@ -15,7 +14,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-func CariVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func CariVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "caribbeancomvr"
 	siteID := "CaribbeanCom VR"

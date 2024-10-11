@@ -7,7 +7,6 @@ import (
 	"path"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
@@ -29,7 +28,7 @@ func getVideoName(fileUrl string) (string, error) {
 	return filename, nil
 }
 
-func VRPHub(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, limitScraping bool, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
+func VRPHub(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, limitScraping bool, callback func(e *colly.HTMLElement, sc *models.ScrapedScene)) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -261,13 +260,13 @@ func addVRPHubScraper(id string, name string, company string, avatarURL string, 
 		avatarURL = "https://cdn.vrphub.com/wp-content/uploads/2016/08/vrphubnew.png"
 	}
 
-	registerScraper(id, suffixedName, avatarURL, "vrphub.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	registerScraper(id, suffixedName, avatarURL, "vrphub.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 		return VRPHub(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, callback)
 	})
 }
 
 func init() {
-	registerScraper("vrphub-single_scene", "VRPHub - Other Studios", "", "vrphub.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	registerScraper("vrphub-single_scene", "VRPHub - Other Studios", "", "vrphub.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 		return VRPHub(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "", singeScrapeAdditionalInfo, limitScraping, noop)
 	})
 	var scrapers config.ScraperList

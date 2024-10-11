@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gocolly/colly/v2"
@@ -14,7 +13,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func SexBabesVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "sexbabesvr"
 	siteID := "SexBabesVR"
@@ -31,12 +30,17 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		// Scene ID -
+		// Scene ID
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
-			sc.SiteID = e.Attr("data-scene")
+			posterURL := e.Request.AbsoluteURL(e.Attr("poster"))
+			tmp := strings.Split(posterURL, "/")
+			sc.SiteID = tmp[len(tmp)-2]
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
-			sc.Covers = append(sc.Covers, strings.Replace(e.Attr("poster"), "/videoDetail2x", "", -1))
 		})
+
+		// Cover Url
+		coverURL := e.Request.Ctx.GetAny("coverURL").(string)
+		sc.Covers = append(sc.Covers, coverURL)
 
 		// Title
 		e.ForEach(`div.video-detail__description--container h1`, func(id int, e *colly.HTMLElement) {
@@ -49,10 +53,22 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 		})
 
 		// Synopsis
-		e.ForEach(`div.video-detail>div.container>p`, func(id int, e *colly.HTMLElement) {
-			// Handle blank <p></p> surrounding the synopsis
-			if strings.TrimSpace(e.Text) != "" {
-				sc.Synopsis = strings.TrimSpace(e.Text)
+		e.ForEach(`div.list-of-categories__p`, func(id int, e *colly.HTMLElement) {
+			synopsis := e.Text
+
+			if synopsis == "" {
+				synopsis = e.ChildText(`p.ql-align-justify`)
+
+				if synopsis == "" {
+					e.ForEach(`div`, func(id int, e *colly.HTMLElement) {
+						synopsis = synopsis + " " + strings.TrimSpace(e.Text)
+					})
+
+				}
+			}
+
+			if strings.TrimSpace(synopsis) != "" {
+				sc.Synopsis = strings.TrimSpace(synopsis)
 			}
 		})
 
@@ -105,10 +121,13 @@ func SexBabesVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out c
 	})
 
 	siteCollector.OnHTML(`div.videos__content`, func(e *colly.HTMLElement) {
-		e.ForEach(`a.video-container__description--title`, func(cnt int, e *colly.HTMLElement) {
+		e.ForEach(`a.video-container__image`, func(cnt int, e *colly.HTMLElement) {
 			sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 			if !funk.ContainsString(knownScenes, sceneURL) {
-				sceneCollector.Visit(sceneURL)
+				coverURL := e.ChildAttr("a.video-container__image img", "data-src")
+				ctx := colly.NewContext()
+				ctx.Put("coverURL", coverURL)
+				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 			}
 		})
 	})

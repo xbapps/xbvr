@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
@@ -15,6 +14,7 @@ import (
 )
 
 func Project1ServiceAPI(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, scraperID string, siteID string, absoluteURL string, modelURL string, baseURL string, membersURL string, studio string, limitScraping bool) error {
+
 	// this scraper is non-standard in that it gathers info via an api rather than scraping html pages
 	defer wg.Done()
 

@@ -43,22 +43,23 @@ type VersionCheckResponse struct {
 }
 
 type RequestSaveOptionsWeb struct {
-	TagSort           string `json:"tagSort"`
-	SceneHidden       bool   `json:"sceneHidden"`
-	SceneWatchlist    bool   `json:"sceneWatchlist"`
-	SceneFavourite    bool   `json:"sceneFavourite"`
-	SceneWishlist     bool   `json:"sceneWishlist"`
-	SceneWatched      bool   `json:"sceneWatched"`
-	SceneEdit         bool   `json:"sceneEdit"`
-	SceneDuration     bool   `json:"sceneDuration"`
-	SceneCuepoint     bool   `json:"sceneCuepoint"`
-	ShowHspFile       bool   `json:"showHspFile"`
-	ShowSubtitlesFile bool   `json:"showSubtitlesFile"`
-	SceneTrailerlist  bool   `json:"sceneTrailerlist"`
-	ShowScriptHeatmap bool   `json:"showScriptHeatmap"`
-	ShowAllHeatmaps   bool   `json:"showAllHeatmaps"`
-	UpdateCheck       bool   `json:"updateCheck"`
-	IsAvailOpacity    int    `json:"isAvailOpacity"`
+	TagSort             string `json:"tagSort"`
+	SceneHidden         bool   `json:"sceneHidden"`
+	SceneWatchlist      bool   `json:"sceneWatchlist"`
+	SceneFavourite      bool   `json:"sceneFavourite"`
+	SceneWishlist       bool   `json:"sceneWishlist"`
+	SceneWatched        bool   `json:"sceneWatched"`
+	SceneEdit           bool   `json:"sceneEdit"`
+	SceneDuration       bool   `json:"sceneDuration"`
+	SceneCuepoint       bool   `json:"sceneCuepoint"`
+	ShowHspFile         bool   `json:"showHspFile"`
+	ShowSubtitlesFile   bool   `json:"showSubtitlesFile"`
+	SceneTrailerlist    bool   `json:"sceneTrailerlist"`
+	ShowScriptHeatmap   bool   `json:"showScriptHeatmap"`
+	ShowAllHeatmaps     bool   `json:"showAllHeatmaps"`
+	ShowOpenInNewWindow bool   `json:"showOpenInNewWindow"`
+	UpdateCheck         bool   `json:"updateCheck"`
+	IsAvailOpacity      int    `json:"isAvailOpacity"`
 }
 
 type RequestSaveOptionsAdvanced struct {
@@ -470,6 +471,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneTrailerlist = r.SceneTrailerlist
 	config.Config.Web.ShowScriptHeatmap = r.ShowScriptHeatmap
 	config.Config.Web.ShowAllHeatmaps = r.ShowAllHeatmaps
+	config.Config.Web.ShowOpenInNewWindow = r.ShowOpenInNewWindow
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.Config.Web.IsAvailOpacity = r.IsAvailOpacity
 	config.SaveConfig()

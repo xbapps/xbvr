@@ -3,7 +3,6 @@ package scrape
 import (
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gocolly/colly/v2"
@@ -12,7 +11,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func LittleCaprice(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func LittleCaprice(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	scraperID := "littlecaprice"
 	siteID := "Little Caprice Dreams"

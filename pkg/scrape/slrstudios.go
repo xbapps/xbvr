@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
@@ -26,7 +25,7 @@ func absolutegallery(match string) string {
 	return submatches[1] + submatches[3] + "_o.jpg" // construct new string with desired format
 }
 
-func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, limitScraping bool, masterSiteId string) error {
+func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, limitScraping bool, masterSiteId string) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
@@ -151,21 +150,25 @@ func SexLikeReal(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out 
 		if !isTransScene {
 			appCover := gjson.Get(JsonMetadataA, "thumbnailUrl").String()
 			desktopCover := strings.Replace(gjson.Get(JsonMetadataA, "thumbnailUrl").String(), "app", "desktop", -1)
-			desktopCresp, _ := http.Head(desktopCover)
-			if desktopCresp.StatusCode == 200 {
+			desktopCresp, err := http.Head(desktopCover)
+			if err != nil {
+				log.Errorf("Method Head Failed on desktopCover %s with error %s", desktopCover, err)
+			} else if desktopCresp.StatusCode == 200 {
 				coverURL := desktopCover
 				sc.Covers = append(sc.Covers, coverURL)
 			} else {
-				appCresp, _ := http.Head(appCover)
-				if appCresp.StatusCode == 200 {
+				appCresp, err := http.Head(appCover)
+				if err != nil {
+					log.Errorf("Method Head Failed on appCover %s with error %s", appCover, err)
+				} else if appCresp.StatusCode == 200 {
 					coverURL := appCover
 					sc.Covers = append(sc.Covers, coverURL)
-					defer appCresp.Body.Close()
 				} else {
 					e.ForEach(`link[as="image"]`, func(id int, e *colly.HTMLElement) {
 						sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("href")))
 					})
 				}
+				defer appCresp.Body.Close()
 			}
 			defer desktopCresp.Body.Close()
 		} else {
@@ -534,11 +537,11 @@ func addSLRScraper(id string, name string, company string, avatarURL string, cus
 	}
 
 	if masterSiteId == "" {
-		registerScraper(id, suffixedName, avatarURL, "sexlikereal.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		registerScraper(id, suffixedName, avatarURL, "sexlikereal.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return SexLikeReal(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, "")
 		})
 	} else {
-		registerAlternateScraper(id, suffixedName, avatarURL, "sexlikereal.com", masterSiteId, func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		registerAlternateScraper(id, suffixedName, avatarURL, "sexlikereal.com", masterSiteId, func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return SexLikeReal(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, masterSiteId)
 		})
 	}
@@ -547,7 +550,7 @@ func addSLRScraper(id string, name string, company string, avatarURL string, cus
 func init() {
 	var scrapers config.ScraperList
 	// scraper for single scenes with no existing scraper for the studio
-	registerScraper("slr-single_scene", "SLR - Other Studios", "", "sexlikereal.com", func(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	registerScraper("slr-single_scene", "SLR - Other Studios", "", "sexlikereal.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 		return SexLikeReal(wg, updateSite, knownScenes, out, singleSceneURL, "", "", "", "", singeScrapeAdditionalInfo, limitScraping, "")
 	})
 
