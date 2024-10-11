@@ -175,11 +175,11 @@ func Project1ServiceAPI(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 
 func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	//																									scraperID	siteID				absoluteURL					modelURL	  					baseURL					MembersUrl						Studio
-	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, "bvr", "VirtualPorn", "https://virtualporn.com/", "https://virtualporn.com/model/", "virtualporn.com", `https://site-ma.virtualporn.com/scene/`,"BangBros", limitScraping)
+	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, "bvr", "VirtualPorn", "https://virtualporn.com/", "https://virtualporn.com/model/", "virtualporn.com", `https://site-ma.virtualporn.com/scene/`, "BangBros", limitScraping)
 }
 
 func BrazzersVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
-//																											scraperID		siteID				absoluteURL							modelURL	  						baseURL		MembersUrl	TODO UPDATE THIS TO CORRECT LINK	Studio
+	//																										scraperID		siteID				absoluteURL							modelURL	  					baseURL			MembersUrl	TODO UPDATE THIS TO CORRECT LINK	Studio
 	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, "brazzersvr", "BrazzersVR", "https://www.brazzersvr.com/", "https://www.brazzersvr.com/pornstar/", "www.brazzersvr.com", `https://site-ma.brazzersvr.com.com/scene/`, "Brazzers", limitScraping)
 }
 
