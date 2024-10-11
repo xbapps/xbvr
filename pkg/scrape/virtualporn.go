@@ -13,14 +13,14 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func Project1ServiceAPI(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, scraperID string, siteID string, absoluteURL string, modelURL string, baseURL string, membersURL string, studio string, limitScraping bool) error {
+func Project1ServiceAPI(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, scraperID string, siteID string, modelDIR string, baseURL string, membersURL string, studio string, limitScraping bool) error {
 
 	// this scraper is non-standard in that it gathers info via an api rather than scraping html pages
 	defer wg.Done()
 
 	logScrapeStart(scraperID, siteID)
 	nextApiUrl := ""
-
+	absoluteURL := `https://` + baseURL + `/`
 	siteCollector := createCollector(baseURL)
 	apiCollector := createCollector("site-api.project1service.com")
 	offset := 0
@@ -39,10 +39,8 @@ func Project1ServiceAPI(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 
 			sc.Title = scene.Get("title").String()
 			sc.HomepageURL = absoluteURL + `video/` + id + "/" + slugify.Slugify(strings.ReplaceAll(sc.Title, "'", ""))
-			// TODO update this to include bazzersVR members link if any for now just skip bazzers members link
-			if siteID == "VirtualPorn" {
-				sc.MembersUrl = membersURL + id + "/" + slugify.Slugify(strings.ReplaceAll(sc.Title, "'", ""))
-			}
+			sc.MembersUrl = membersURL + `scene/` + id + "/" + slugify.Slugify(strings.ReplaceAll(sc.Title, "'", ""))
+
 			sc.Synopsis = scene.Get("description").String()
 			dateParts := strings.Split(scene.Get("dateReleased").String(), "T")
 			sc.Released = dateParts[0]
@@ -74,7 +72,7 @@ func Project1ServiceAPI(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 				if actor.Get("gender").String() == "female" {
 					sc.Cast = append(sc.Cast, name)
 				}
-				sc.ActorDetails[actor.Get("name").String()] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: modelURL + strconv.Itoa(int(actor.Get("id").Int())) + "/" + slugify.Slugify(name)}
+				sc.ActorDetails[actor.Get("name").String()] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: absoluteURL + modelDIR + `/` + strconv.Itoa(int(actor.Get("id").Int())) + "/" + slugify.Slugify(name)}
 				return true
 			})
 
@@ -143,9 +141,12 @@ func Project1ServiceAPI(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 		if len(matches) > 1 {
 			instanceJson := gjson.ParseBytes([]byte(matches[1]))
 			token := instanceJson.Get("jwt").String()
+			log.Infoln(absoluteURL, token)
 			// set up api requests to use the token in the Instance Header
 			apiCollector.OnRequest(func(r *colly.Request) {
 				r.Headers.Set("Instance", token)
+				r.Headers.Set("Referer", absoluteURL)
+				r.Headers.Set("Origin", absoluteURL)
 			})
 			apiCollector.Visit(nextApiUrl)
 		}
@@ -173,14 +174,14 @@ func Project1ServiceAPI(wg *sync.WaitGroup, updateSite bool, knownScenes []strin
 	return nil
 }
 
-func VirtualPorn(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
-	//																									scraperID	siteID				absoluteURL					modelURL	  					baseURL					MembersUrl						Studio
-	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, "bvr", "VirtualPorn", "https://virtualporn.com/", "https://virtualporn.com/model/", "virtualporn.com", `https://site-ma.virtualporn.com/scene/`, "BangBros", limitScraping)
+func VirtualPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	//																									scraperID	siteID		modelDIR	  	baseURL					MembersUrl						Studio
+	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, "bvr", "VirtualPorn", "model", "virtualporn.com", `https://site-ma.virtualporn.com/`, "BangBros", limitScraping)
 }
 
-func BrazzersVR(wg *sync.WaitGroup, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
-	//																										scraperID		siteID				absoluteURL							modelURL	  					baseURL			MembersUrl	TODO UPDATE THIS TO CORRECT LINK	Studio
-	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, "brazzersvr", "BrazzersVR", "https://www.brazzersvr.com/", "https://www.brazzersvr.com/pornstar/", "www.brazzersvr.com", `https://site-ma.brazzersvr.com.com/scene/`, "Brazzers", limitScraping)
+func BrazzersVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	//																										scraperID		siteID		modelDIR	  		baseURL				MembersUrl							Studio
+	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, "brazzersvr", "BrazzersVR", "pornstar", "www.brazzersvr.com", `https://site-ma.brazzersvr.com/`, "Brazzers", limitScraping)
 }
 
 func init() {
