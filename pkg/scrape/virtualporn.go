@@ -185,7 +185,7 @@ type siteMetaData struct {
 }
 
 func VirtualPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
-	vpMetaData := siteMetaData{
+	bvrMetaData := siteMetaData{
 		scraperID:   "bvr",
 		siteID:      "VirtualPorn",
 		modelURL:    "https://virtualporn.com/model/",
@@ -194,12 +194,11 @@ func VirtualPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		membersURL:  `https://site-ma.virtualporn.com/`,
 		studio:      "BangBros",
 	}
-	//																									scraperID	siteID		modelDIR	  	baseURL					MembersUrl						Studio
-	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, &vpMetaData, limitScraping)
+	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, &bvrMetaData, limitScraping)
 }
 
 func BrazzersVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
-	brazzersMetaData := siteMetaData{
+	zzvrMetaData := siteMetaData{
 		scraperID:   "zzvr",
 		siteID:      "BrazzersVR",
 		modelURL:    "https://www.brazzersvr.com/pornstar/",
@@ -208,8 +207,7 @@ func BrazzersVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 		membersURL:  `https://site-ma.brazzersvr.com/`,
 		studio:      "Brazzers",
 	}
-	//																										scraperID		siteID		modelDIR	  		baseURL				MembersUrl							Studio
-	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, &brazzersMetaData, limitScraping)
+	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, &zzvrMetaData, limitScraping)
 }
 
 func init() {
