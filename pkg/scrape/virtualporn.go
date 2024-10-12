@@ -13,33 +13,32 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-func VirtualPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+func Project1ServiceAPI(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, siteData *siteMetaData, limitScraping bool) error {
+
 	// this scraper is non-standard in that it gathers info via an api rather than scraping html pages
 	defer wg.Done()
-	scraperID := "bvr"
-	siteID := "VirtualPorn"
-	logScrapeStart(scraperID, siteID)
-	nextApiUrl := ""
 
-	siteCollector := createCollector("virtualporn.com")
+	logScrapeStart(siteData.scraperID, siteData.siteID)
+	nextApiUrl := ""
+	siteCollector := createCollector(siteData.baseURL)
 	apiCollector := createCollector("site-api.project1service.com")
 	offset := 0
-
 	apiCollector.OnResponse(func(r *colly.Response) {
 		sceneListJson := gjson.ParseBytes(r.Body)
 
 		processScene := func(scene gjson.Result) {
 			sc := models.ScrapedScene{}
-			sc.ScraperID = scraperID
+			sc.ScraperID = siteData.scraperID
 			sc.SceneType = "VR"
-			sc.Studio = "BangBros"
-			sc.Site = siteID
+			sc.Studio = siteData.studio
+			sc.Site = siteData.siteID
 			id := strconv.Itoa(int(scene.Get("id").Int()))
-			sc.SceneID = "bvr-" + id
+			sc.SceneID = slugify.Slugify(sc.ScraperID) + "-" + id
 
 			sc.Title = scene.Get("title").String()
-			sc.HomepageURL = "https://virtualporn.com/video/" + id + "/" + slugify.Slugify(strings.ReplaceAll(sc.Title, "'", ""))
-			sc.MembersUrl = "https://site-ma.virtualporn.com/scene/" + id + "/" + slugify.Slugify(strings.ReplaceAll(sc.Title, "'", ""))
+			sc.HomepageURL = siteData.absoluteURL + `video/` + id + "/" + slugify.Slugify(strings.ReplaceAll(sc.Title, "'", ""))
+			sc.MembersUrl = siteData.membersURL + id + "/" + slugify.Slugify(strings.ReplaceAll(sc.Title, "'", ""))
+
 			sc.Synopsis = scene.Get("description").String()
 			dateParts := strings.Split(scene.Get("dateReleased").String(), "T")
 			sc.Released = dateParts[0]
@@ -71,7 +70,7 @@ func VirtualPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 				if actor.Get("gender").String() == "female" {
 					sc.Cast = append(sc.Cast, name)
 				}
-				sc.ActorDetails[actor.Get("name").String()] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: "https://virtualporn.com/model/" + strconv.Itoa(int(actor.Get("id").Int())) + "/" + slugify.Slugify(name)}
+				sc.ActorDetails[actor.Get("name").String()] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: siteData.modelURL + strconv.Itoa(int(actor.Get("id").Int())) + "/" + slugify.Slugify(name)}
 				return true
 			})
 
@@ -112,12 +111,15 @@ func VirtualPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		scenes := sceneListJson.Get("result")
 		if strings.Contains(r.Request.URL.RawQuery, "offset=") {
 			scenes.ForEach(func(key, scene gjson.Result) bool {
-				// check if we have the scene already
-				matches := funk.Filter(knownScenes, func(s string) bool {
-					return strings.Contains(s, scene.Get("id").String())
-				})
-				if funk.IsEmpty(matches) {
-					processScene(scene)
+				// For some reason, the API will occasionally return results belonging to other studios filter them out
+				if scene.Get("brand").String() == strings.ToLower(siteData.studio) {
+					// check if we have the scene already
+					matches := funk.Filter(knownScenes, func(s string) bool {
+						return strings.Contains(s, scene.Get("id").String())
+					})
+					if funk.IsEmpty(matches) {
+						processScene(scene)
+					}
 				}
 				return true
 			})
@@ -143,6 +145,8 @@ func VirtualPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			// set up api requests to use the token in the Instance Header
 			apiCollector.OnRequest(func(r *colly.Request) {
 				r.Headers.Set("Instance", token)
+				r.Headers.Set("Referer", siteData.absoluteURL)
+				r.Headers.Set("Origin", siteData.absoluteURL)
 			})
 			apiCollector.Visit(nextApiUrl)
 		}
@@ -155,23 +159,60 @@ func VirtualPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		id := urlParts[len(urlParts)-2]
 		offset = 9999 // do read more pages, we only need 1
 		nextApiUrl = "https://site-api.project1service.com/v2/releases/" + id
-		siteCollector.Visit("https://virtualporn.com/videos")
+		siteCollector.Visit(siteData.absoluteURL + `videos`)
 
 	} else {
 		// call virtualporn.com, this is just to get the instance token to use the api for this session
 		nextApiUrl = "https://site-api.project1service.com/v2/releases?type=scene&limit=24&offset=" + strconv.Itoa(offset)
-		siteCollector.Visit("https://virtualporn.com/videos")
+		siteCollector.Visit(siteData.absoluteURL + `videos`)
 	}
 
 	if updateSite {
-		updateSiteLastUpdate(scraperID)
+		updateSiteLastUpdate(siteData.scraperID)
 	}
-	logScrapeFinished(scraperID, siteID)
+	logScrapeFinished(siteData.scraperID, siteData.siteID)
 	return nil
+}
+
+type siteMetaData struct {
+	scraperID   string
+	siteID      string
+	modelURL    string
+	absoluteURL string
+	baseURL     string
+	membersURL  string
+	studio      string
+}
+
+func VirtualPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	bvrMetaData := siteMetaData{
+		scraperID:   "bvr",
+		siteID:      "VirtualPorn",
+		modelURL:    "https://virtualporn.com/model/",
+		absoluteURL: "https://virtualporn.com/",
+		baseURL:     "virtualporn.com",
+		membersURL:  `https://site-ma.virtualporn.com/`,
+		studio:      "BangBros",
+	}
+	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, &bvrMetaData, limitScraping)
+}
+
+func BrazzersVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	zzvrMetaData := siteMetaData{
+		scraperID:   "zzvr",
+		siteID:      "BrazzersVR",
+		modelURL:    "https://www.brazzersvr.com/pornstar/",
+		absoluteURL: "https://www.brazzersvr.com/",
+		baseURL:     "www.brazzersvr.com",
+		membersURL:  `https://site-ma.brazzersvr.com/`,
+		studio:      "Brazzers",
+	}
+	return Project1ServiceAPI(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, &zzvrMetaData, limitScraping)
 }
 
 func init() {
 	registerScraper("bvr", "VirtualPorn", "https://images.cn77nd.com/members/bangbros/favicon/apple-icon-60x60.png", "virtualporn.com", VirtualPorn)
+	registerScraper("zzvr", "BrazzersVR", "https://images-assets-ht.project1content.com/BrazzersVR/Common/Favicon/63e2a8fdbdbe16.78976344.jpg", "brazzersvr.com", BrazzersVR)
 }
 
 // one off conversion routine called by migrations.go
