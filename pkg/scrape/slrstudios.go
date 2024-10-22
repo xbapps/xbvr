@@ -149,28 +149,39 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		// Cover
 		if !isTransScene {
 			appCover := gjson.Get(JsonMetadataA, "thumbnailUrl").String()
-			desktopCover := strings.Replace(gjson.Get(JsonMetadataA, "thumbnailUrl").String(), "app", "desktop", -1)
-			desktopCresp, err := http.Head(desktopCover)
-			if err != nil {
-				log.Errorf("Method Head Failed on desktopCover %s with error %s", desktopCover, err)
-			} else if desktopCresp.StatusCode == 200 {
-				coverURL := desktopCover
-				sc.Covers = append(sc.Covers, coverURL)
-			} else {
-				appCresp, err := http.Head(appCover)
+
+			if appCover != "" {
+
+				desktopCover := strings.Replace(appCover, "app", "desktop", -1)
+				desktopCresp, err := http.Head(desktopCover)
+
 				if err != nil {
-					log.Errorf("Method Head Failed on appCover %s with error %s", appCover, err)
-				} else if appCresp.StatusCode == 200 {
-					coverURL := appCover
-					sc.Covers = append(sc.Covers, coverURL)
+					log.Errorln("Method Head Failed on desktopCover", desktopCover, "with error", err)
 				} else {
-					e.ForEach(`link[as="image"]`, func(id int, e *colly.HTMLElement) {
-						sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("href")))
-					})
+					if desktopCresp.StatusCode == 200 {
+						coverURL := desktopCover
+						sc.Covers = append(sc.Covers, coverURL)
+					} else {
+						appCresp, err := http.Head(appCover)
+						if err != nil {
+							log.Errorln("Method Head Failed on appCover", appCover, "with error", err)
+						} else {
+							if appCresp.StatusCode == 200 {
+								coverURL := appCover
+								sc.Covers = append(sc.Covers, coverURL)
+							} else {
+								e.ForEach(`link[as="image"]`, func(id int, e *colly.HTMLElement) {
+									sc.Covers = append(sc.Covers, e.Request.AbsoluteURL(e.Attr("href")))
+								})
+							}
+							defer appCresp.Body.Close()
+						}
+					}
+					defer desktopCresp.Body.Close()
 				}
-				defer appCresp.Body.Close()
+			} else {
+				log.Errorln("No thumnailURL available")
 			}
-			defer desktopCresp.Body.Close()
 		} else {
 			posterURLFound := false
 			e.ForEach(`script[type="text/javascript"]`, func(id int, e *colly.HTMLElement) {
