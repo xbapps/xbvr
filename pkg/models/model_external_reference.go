@@ -124,6 +124,12 @@ func (o *ExternalReferenceLink) FindByInternalName(internalTable string, interna
 	commonDb.Preload("ExternalReference").Where(&ExternalReferenceLink{InternalTable: internalTable, InternalNameId: internalName}).Find(&refs)
 	return refs
 }
+func (o *ExternalReferenceLink) FindByExternalSource(internalTable string, internalId uint, externalSource string) []ExternalReferenceLink {
+	commonDb, _ := GetCommonDB()
+	var refs []ExternalReferenceLink
+	commonDb.Preload("ExternalReference").Where(&ExternalReferenceLink{InternalTable: internalTable, InternalDbId: internalId, ExternalSource: externalSource}).Find(&refs)
+	return refs
+}
 func (o *ExternalReferenceLink) FindByExternaID(externalSource string, externalId string) {
 	commonDb, _ := GetCommonDB()
 	commonDb.Preload("ExternalReference").Where(&ExternalReferenceLink{ExternalSource: externalSource, ExternalId: externalId}).Find(&o)
