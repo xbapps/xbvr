@@ -179,13 +179,18 @@
       <hr />
       <b-field v-if="isImport">
         <b-tooltip
+          label="Select if import source is a file or url. Large bundle files should be imported via a url."
+          size="is-large" type="is-primary is-light" multilined :delay="1000">
+          <b-switch v-model="fileBundleSource"><p>{{ fileBundleSource ? 'Import bundle from file' : 'Import bundle from url' }}</p></b-switch>
+        </b-tooltip>
+        <b-tooltip
           label="Activate to overwite existing data, otherwise only new records will be added"
           size="is-large" type="is-primary is-light" multilined :delay="1000">
           <b-switch v-model="overwrite"><p>Overwrite existing data</p></b-switch>
         </b-tooltip>
       </b-field>
       <b-field>
-        <b-tooltip v-if="isImport"
+        <b-tooltip v-if="isImport && fileBundleSource"
             label="Select a file to import."
             size="is-large" type="is-primary is-light" multilined :delay="1000">
           <b-field class="file is-primary" :class="{'has-name': !!file}">
@@ -200,6 +205,14 @@
             </b-upload>
           </b-field>
         </b-tooltip>
+        <b-field v-if="isImport && !fileBundleSource">
+          <b-input type="url" v-model="bundleUrl" placeholder="eg https://localhost:9999/myfiles/xbvr-content-bundle.json"
+            @input="validateUrl" :class="{ 'is-danger': urlError }">
+          </b-input>
+          <b-help :text="urlError" v-if="urlError"></b-help>
+          <b-button type="is-primary" @click="restoreContent" :disabled="urlError!='' || bundleUrl==''">Import</b-button>
+        </b-field>
+
           <b-tooltip  v-if="activeTab == 1"
             label="Generating the data for a large number of scenes is time consuming, montior progress in the status messages in the top right of the browser."
             size="is-large" type="is-primary is-light" multilined :delay="1000">
@@ -221,7 +234,7 @@
             </b-upload>
           </b-field>
         </b-tooltip>
-      </b-field>
+      </b-field>    
     </div>
   </div>
 </template>
@@ -250,6 +263,9 @@ export default {
       includeActors: true,
       inclActorActions: true,
       overwrite: true,
+      fileBundleSource: true,
+      bundleUrl: '',
+      urlError: "",
       allSites: "true",
       onlyIncludeOfficalSites: false,
       currentPlaylist: '0',
@@ -322,14 +338,21 @@ export default {
   },
   methods: {
     restoreContent () {
-      if (this.uploadData !== '') {
+      if (this.uploadData !== '' || this.bundleUrl!='') {
         // put up a starting msg, as large files can cause it to appear to hang
+        let data = '{}'
+        let url=''
+        if (this.fileBundleSource) {
+            data=this.uploadData
+        }else{
+          url=this.bundleUrl
+        }
         this.$store.state.messages.lastScrapeMessage = 'Starting restore'
         ky.post('/api/task/bundle/restore', {
           json: { allSites: this.allSites == "true", onlyIncludeOfficalSites: this.onlyIncludeOfficalSites, inclScenes: this.includeScenes, inclHistory: this.includeHistory, 
           inclLinks: this.includeFileLinks, inclCuepoints: this.includeCuepoints, inclActions: this.includeActions, inclPlaylists: this.includePlaylists, inclActorAkas: this.includeActorAkas, inclTagGroups: this.includeTagGroups, 
-          inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclActors: this.includeActors,inclActorActions: this.inclActorActions, 
-          inclConfig: this.includeConfig, extRefSubset: this.extRefSubset, overwrite: this.overwrite, uploadData: this.uploadData }
+          inclVolumes: this.includeVolumes, inclExtRefs: this.includeExternalReferences, inclSites: this.includeSites, inclSqlCmds: this.includeSqlCommands, inclActors: this.includeActors,inclActorActions: this.inclActorActions, 
+          inclConfig: this.includeConfig, extRefSubset: this.extRefSubset, overwrite: this.overwrite, uploadData: data, bundleUrl: url }
         })
         this.file = null
       }
@@ -363,6 +386,17 @@ export default {
       this.includeSites=!this.includeSites
       this.includeExternalReferences = !this.includeExternalReferences
       this.includeConfig=!this.includeConfig
+    },
+    validateUrl() {
+      // Simple URL validation regex
+
+      try {
+  const decodedUrl = decodeURIComponent(this.bundleUrl);
+  const url = new URL(decodedUrl);
+  this.urlError = '';
+} catch (error) {
+  this.urlError = 'Please enter a valid URL.';
+}
     },
   }
 }
