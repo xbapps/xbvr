@@ -98,7 +98,7 @@ func BadoinkSitev2(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	})
 
 	siteCollector.OnHTML(`div.video-grid-view a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+		sceneURL, _ := strings.CutSuffix(e.Request.AbsoluteURL(e.Attr("href")), "/")
 		// If scene exist in database, there's no need to scrape
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
