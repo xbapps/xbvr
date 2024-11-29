@@ -122,5 +122,5 @@ func KinkVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 }
 
 func init() {
-	registerScraper("kinkvr", "KinkVR", "https://kinkvr.com/icons/kinkvr/apple-touch-icon.png", "kinkvr.com", KinkVR)
+	registerScraper("kinkvr", "KinkVR", "https://static.rlcontent.com/shared/KINK/skins/web-10/branding/favicon.png", "kinkvr.com", KinkVR)
 }
