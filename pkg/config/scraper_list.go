@@ -168,11 +168,12 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 	if len(scenes) != 0 {
 		common.Log.Infoln(name + ` Scenes found migration needed`)
 
+		// Determine the new id from the URL using the same template as the scraper list code
 		tmp := strings.TrimRight(url, "/")
 		newId := strings.ToLower(tmp[strings.LastIndex(tmp, "/")+1:]) + `-` + customId
+
 		// Update scene data to reflect change
 		for _, scene := range scenes {
-			//Needed due to weried VRPHub scrapers
 			scene.ScraperId = newId
 			scene.Site = name + " " + suffix
 			scene.NeedsUpdate = true
@@ -184,14 +185,15 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 			}
 		}
 
-		// Load the custom scrapers
 		var scraperConfig ScraperList
 		scraperConfig.Load()
 
-		// Data taken from offical SLR scraper, updated to fix url change
+		// Data taken from offical scraper list
 		scraper := ScraperConfig{URL: url, Name: name, Company: company, AvatarUrl: avatarUrl}
 
-		// Needed in case the site we are updating was a master site for others
+		exists := false
+
+		// Update any alt sites that is using the old id to the new id
 		updateMasterSite := func(sites []ScraperConfig) {
 			for idx, site := range sites {
 				if site.MasterSiteId == id {
@@ -199,21 +201,32 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 				}
 			}
 		}
+
 		updateMasterSite(scraperConfig.CustomScrapers.SlrScrapers)
 		updateMasterSite(scraperConfig.CustomScrapers.PovrScrapers)
 		updateMasterSite(scraperConfig.CustomScrapers.VrpornScrapers)
 		updateMasterSite(scraperConfig.CustomScrapers.VrphubScrapers)
 
-		// Add the to the SLR list the new custom PS-Porn site
-		switch customId {
-		case "slr":
-			scraperConfig.CustomScrapers.SlrScrapers = append(scraperConfig.CustomScrapers.SlrScrapers, scraper)
-		case "povr":
-			scraperConfig.CustomScrapers.PovrScrapers = append(scraperConfig.CustomScrapers.PovrScrapers, scraper)
-		case "vrporn":
-			scraperConfig.CustomScrapers.VrpornScrapers = append(scraperConfig.CustomScrapers.VrpornScrapers, scraper)
-		case "vrphub":
-			scraperConfig.CustomScrapers.VrphubScrapers = append(scraperConfig.CustomScrapers.VrphubScrapers, scraper)
+		if exists == false {
+			// Append our scraper to the the Custom Scraper list unless its new id already exists
+			switch customId {
+			case "slr":
+				if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.SlrScrapers) == false {
+					scraperConfig.CustomScrapers.SlrScrapers = append(scraperConfig.CustomScrapers.SlrScrapers, scraper)
+				}
+			case "povr":
+				if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.PovrScrapers) == false {
+					scraperConfig.CustomScrapers.PovrScrapers = append(scraperConfig.CustomScrapers.PovrScrapers, scraper)
+				}
+			case "vrporn":
+				if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.VrpornScrapers) == false {
+					scraperConfig.CustomScrapers.VrpornScrapers = append(scraperConfig.CustomScrapers.VrpornScrapers, scraper)
+				}
+			case "vrphub":
+				if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.VrphubScrapers) == false {
+					scraperConfig.CustomScrapers.VrphubScrapers = append(scraperConfig.CustomScrapers.VrphubScrapers, scraper)
+				}
+			}
 		}
 
 		// Save the new list file
@@ -225,7 +238,7 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 
 	} else {
 
-		common.Log.Infoln(`No ` + name + ` Scenes found no migration needed`)
+		common.Log.Infoln(`No ` + name + ` Scenes found no migration needed. Removing DB entry`)
 
 	}
 
