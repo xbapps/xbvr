@@ -162,7 +162,6 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 	db, _ := models.GetDB()
 	defer db.Close()
 
-	// Check to see if we even have PS-Porn data. Other wise there is no need to add a custom site entry
 	var scenes []models.Scene
 	db.Where("scraper_id = ?", id).Find(&scenes)
 	if len(scenes) != 0 {
