@@ -168,10 +168,12 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 	if len(scenes) != 0 {
 		common.Log.Infoln(name + ` Scenes found migration needed`)
 
+		tmp := strings.TrimRight(url, "/")
+		newId := strings.ToLower(tmp[strings.LastIndex(tmp, "/")+1:]) + `-` + customId
 		// Update scene data to reflect change
 		for _, scene := range scenes {
 			//Needed due to weried VRPHub scrapers
-			scene.ScraperId = strings.TrimPrefix(id, "vrphub-"+`-`+customId)
+			scene.ScraperId = newId
 			scene.Site = name + " " + suffix
 			scene.NeedsUpdate = true
 
@@ -188,17 +190,32 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 
 		// Data taken from offical SLR scraper, updated to fix url change
 		scraper := ScraperConfig{URL: url, Name: name, Company: company, AvatarUrl: avatarUrl}
+		
+		// Needed in case the site we are updating was a master site for others
+		updateMasterSite := func(sites []ScraperConfig) {
+			for idx, site := range sites{
+				if site.MasterSiteId == id {
+					sites[idx].MasterSiteId = newId
+				}
+			}
+		}
+		updateMasterSite(scraperConfig.CustomScrapers.SlrScrapers)
+		updateMasterSite(scraperConfig.CustomScrapers.PovrScrapers)
+		updateMasterSite(scraperConfig.CustomScrapers.VrpornScrapers)
+		updateMasterSite(scraperConfig.CustomScrapers.VrphubScrapers)
+
 		// Add the to the SLR list the new custom PS-Porn site
 		switch customId {
-		case "slr":
+		case "slr":	
 			scraperConfig.CustomScrapers.SlrScrapers = append(scraperConfig.CustomScrapers.SlrScrapers, scraper)
-		case "povr":
+		case "povr":			
 			scraperConfig.CustomScrapers.PovrScrapers = append(scraperConfig.CustomScrapers.PovrScrapers, scraper)
 		case "vrporn":
 			scraperConfig.CustomScrapers.VrpornScrapers = append(scraperConfig.CustomScrapers.VrpornScrapers, scraper)
 		case "vrphub":
 			scraperConfig.CustomScrapers.VrphubScrapers = append(scraperConfig.CustomScrapers.VrphubScrapers, scraper)
 		}
+
 		// Save the new list file
 		fName := filepath.Join(common.AppDir, "scrapers.json")
 		list, _ := json.MarshalIndent(scraperConfig, "", "  ")
