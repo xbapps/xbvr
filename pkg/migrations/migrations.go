@@ -2072,6 +2072,14 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0091-PS-Porn-Offical-Removal",
+			Migrate: func(tx *gorm.DB) error {
+				
+				return config.MigrateFromOfficalToCustom("ps-porn", "https://www.sexlikereal.com/studios/ps-porn-vr", "PS-Porn", "Paula Shy", "https://mcdn.vrporn.com/files/20201221090642/PS-Porn-400x400.jpg")
+	
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {
