@@ -190,10 +190,10 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 
 		// Data taken from offical SLR scraper, updated to fix url change
 		scraper := ScraperConfig{URL: url, Name: name, Company: company, AvatarUrl: avatarUrl}
-		
+
 		// Needed in case the site we are updating was a master site for others
 		updateMasterSite := func(sites []ScraperConfig) {
-			for idx, site := range sites{
+			for idx, site := range sites {
 				if site.MasterSiteId == id {
 					sites[idx].MasterSiteId = newId
 				}
@@ -206,9 +206,9 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 
 		// Add the to the SLR list the new custom PS-Porn site
 		switch customId {
-		case "slr":	
+		case "slr":
 			scraperConfig.CustomScrapers.SlrScrapers = append(scraperConfig.CustomScrapers.SlrScrapers, scraper)
-		case "povr":			
+		case "povr":
 			scraperConfig.CustomScrapers.PovrScrapers = append(scraperConfig.CustomScrapers.PovrScrapers, scraper)
 		case "vrporn":
 			scraperConfig.CustomScrapers.VrpornScrapers = append(scraperConfig.CustomScrapers.VrpornScrapers, scraper)
