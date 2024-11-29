@@ -158,20 +158,20 @@ func SetSiteId(configList *[]ScraperConfig, customId string) {
 }
 
 func MigrateFromOfficalToCustom(id string, url string, name string, company string, avatarUrl string, customId string, suffix string) error {
-	
+
 	db, _ := models.GetDB()
 	defer db.Close()
-	
+
 	// Check to see if we even have PS-Porn data. Other wise there is no need to add a custom site entry
 	var scenes []models.Scene
 	db.Where("scraper_id = ?", id).Find(&scenes)
 	if len(scenes) != 0 {
 		common.Log.Infoln(name + ` Scenes found migration needed`)
-		
+
 		// Update scene data to reflect change
-		for _, scene := range scenes {				
-								//Needed due to weried VRPHub scrapers
-			scene.ScraperId = strings.TrimPrefix(id, "vrphub-" + `-` + customId)
+		for _, scene := range scenes {
+			//Needed due to weried VRPHub scrapers
+			scene.ScraperId = strings.TrimPrefix(id, "vrphub-"+`-`+customId)
 			scene.Site = name + " " + suffix
 			scene.NeedsUpdate = true
 
@@ -182,8 +182,6 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 			}
 		}
 
-		
-
 		// Load the custom scrapers
 		var scraperConfig ScraperList
 		scraperConfig.Load()
@@ -191,7 +189,7 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 		// Data taken from offical SLR scraper, updated to fix url change
 		scraper := ScraperConfig{URL: url, Name: name, Company: company, AvatarUrl: avatarUrl}
 		// Add the to the SLR list the new custom PS-Porn site
-		switch customId{
+		switch customId {
 		case "slr":
 			scraperConfig.CustomScrapers.SlrScrapers = append(scraperConfig.CustomScrapers.SlrScrapers, scraper)
 		case "povr":
