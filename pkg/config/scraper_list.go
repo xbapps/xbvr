@@ -191,8 +191,6 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 		// Data taken from offical scraper list
 		scraper := ScraperConfig{URL: url, Name: name, Company: company, AvatarUrl: avatarUrl}
 
-		exists := false
-
 		// Update any alt sites that is using the old id to the new id
 		updateMasterSite := func(sites []ScraperConfig) {
 			for idx, site := range sites {
@@ -207,25 +205,23 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 		updateMasterSite(scraperConfig.CustomScrapers.VrpornScrapers)
 		updateMasterSite(scraperConfig.CustomScrapers.VrphubScrapers)
 
-		if exists == false {
-			// Append our scraper to the the Custom Scraper list unless its new id already exists
-			switch customId {
-			case "slr":
-				if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.SlrScrapers) == false {
-					scraperConfig.CustomScrapers.SlrScrapers = append(scraperConfig.CustomScrapers.SlrScrapers, scraper)
-				}
-			case "povr":
-				if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.PovrScrapers) == false {
-					scraperConfig.CustomScrapers.PovrScrapers = append(scraperConfig.CustomScrapers.PovrScrapers, scraper)
-				}
-			case "vrporn":
-				if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.VrpornScrapers) == false {
-					scraperConfig.CustomScrapers.VrpornScrapers = append(scraperConfig.CustomScrapers.VrpornScrapers, scraper)
-				}
-			case "vrphub":
-				if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.VrphubScrapers) == false {
-					scraperConfig.CustomScrapers.VrphubScrapers = append(scraperConfig.CustomScrapers.VrphubScrapers, scraper)
-				}
+		// Append our scraper to the the Custom Scraper list unless its new id already exists
+		switch customId {
+		case "slr":
+			if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.SlrScrapers) == false {
+				scraperConfig.CustomScrapers.SlrScrapers = append(scraperConfig.CustomScrapers.SlrScrapers, scraper)
+			}
+		case "povr":
+			if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.PovrScrapers) == false {
+				scraperConfig.CustomScrapers.PovrScrapers = append(scraperConfig.CustomScrapers.PovrScrapers, scraper)
+			}
+		case "vrporn":
+			if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.VrpornScrapers) == false {
+				scraperConfig.CustomScrapers.VrpornScrapers = append(scraperConfig.CustomScrapers.VrpornScrapers, scraper)
+			}
+		case "vrphub":
+			if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.VrphubScrapers) == false {
+				scraperConfig.CustomScrapers.VrphubScrapers = append(scraperConfig.CustomScrapers.VrphubScrapers, scraper)
 			}
 		}
 
