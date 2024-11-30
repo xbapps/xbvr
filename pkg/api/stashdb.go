@@ -70,7 +70,7 @@ func (i ExternalReference) linkScene2Stashdb(req *restful.Request, resp *restful
 
 	var xbrLink []models.ExternalReferenceLink
 	xbrLink = append(xbrLink, models.ExternalReferenceLink{InternalTable: "scenes", InternalDbId: scene.ID, InternalNameId: scene.SceneID, ExternalSource: "stashdb scene", ExternalId: stashdbId, MatchType: 5})
-	ext := models.ExternalReference{ExternalSource: "stashdb scene", ExternalURL: "https://stashdb.org/scenes/" + stashdbId, ExternalId: stashdbId, ExternalDate: stashScene.Data.Scene.Updated, ExternalData: string(jsonData),
+	ext := models.ExternalReference{ExternalSource: "stashdb scene", ExternalURL: "https://stashdb.org/scenes/" + stashdbId, ExternalId: stashdbId, ExternalDate: time.Date(1980, time.January, 1, 0, 0, 0, 0, time.UTC), ExternalData: string(jsonData),
 		XbvrLinks: xbrLink}
 	ext.AddUpdateWithId()
 
@@ -204,7 +204,7 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 		return
 	}
 
-	var performers []string
+	var xbvrperformers []string
 	for _, actor := range scene.Cast {
 		var stashlinks []models.ExternalReferenceLink
 		db.Preload("ExternalReference").Where(&models.ExternalReferenceLink{InternalTable: "actors", InternalDbId: actor.ID, ExternalSource: "stashdb performer"}).Find(&stashlinks)
@@ -212,7 +212,7 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 			warnings = append(warnings, actor.Name+" is not linked to Stashdb")
 		} else {
 			for _, stashPerformer := range stashlinks {
-				performers = append(performers, `"`+stashPerformer.ExternalId+`"`)
+				xbvrperformers = append(xbvrperformers, `"`+stashPerformer.ExternalId+`"`)
 			}
 		}
 	}
@@ -251,40 +251,38 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 				}
 			}
 
+			foundActorBump := -5
 			for _, sp := range stashscene.Performers {
-				foundBump := -5
 				for _, xp := range performers {
 					if strings.Contains(xp, sp.Performer.ID) {
 						if sp.Performer.Gender == "FEMALE" {
-							foundBump += 10
+							foundActorBump += 10
 						} else {
-							foundBump += 5
+							foundActorBump += 5
 						}
 					}
 				}
 			}
 			// we have checked if stash performers match xbvr, now check for xbvr performers not matched in stash
-			for _, xp := range performers {
-				foundBump := -5
+			for _, xp := range xbvrperformers {
 				for _, sp := range stashscene.Performers {
 					if strings.Contains(xp, sp.Performer.ID) {
 						if sp.Performer.Gender == "FEMALE" {
-							foundBump += 10
+							foundActorBump += 15
 						} else {
-							foundBump += 5
+							foundActorBump += 5
 						}
 					}
 				}
 			}
 			// check actor matches using names and aliases
 			for _, actor := range scene.Cast {
-				foundBump := -5
 				for _, sp := range stashscene.Performers {
 					if strings.EqualFold(actor.Name, sp.Performer.Name) || strings.EqualFold(actor.Name, sp.As) {
 						if sp.Performer.Gender == "FEMALE" {
-							foundBump += 10
+							foundActorBump += 15
 						} else {
-							foundBump += 5
+							foundActorBump += 5
 						}
 						continue
 					}
@@ -292,9 +290,9 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 					for _, alias := range sp.Performer.Aliases {
 						if strings.EqualFold(alias, actor.Name) {
 							if sp.Performer.Gender == "FEMALE" {
-								foundBump += 10
+								foundActorBump += 15
 							} else {
-								foundBump += 5
+								foundActorBump += 5
 							}
 							continue
 						}
@@ -302,10 +300,10 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 				}
 			}
 			if mapEntry, exists := results[stashscene.ID]; exists {
-				mapEntry.Weight += weightIncrement + scoreBump
+				mapEntry.Weight += weightIncrement + scoreBump + foundActorBump
 				results[stashscene.ID] = mapEntry
 			} else {
-				results[stashscene.ID] = setupStashSearchResult(stashscene, weightIncrement+scoreBump)
+				results[stashscene.ID] = setupStashSearchResult(stashscene, weightIncrement+scoreBump+foundActorBump)
 			}
 		}
 	}
@@ -330,7 +328,7 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 				}
 			}`
 		stashScenes := scrape.GetScenePage(fingerprintQuery)
-		scoreResults(stashScenes, 400, performers, stashStudioIds)
+		scoreResults(stashScenes, 400, xbvrperformers, stashStudioIds)
 	}
 
 	stashScenes := scrape.QueryScenesResult{}
@@ -347,11 +345,11 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 				}
 			}`
 		stashScenes = scrape.GetScenePage(titleQuery)
-		scoreResults(stashScenes, 150, performers, stashStudioIds)
+		scoreResults(stashScenes, 150, xbvrperformers, stashStudioIds)
 	}
 
-	if len(performers) > 0 {
-		performerList := strings.Join(performers, ",")
+	if len(xbvrperformers) > 0 {
+		performerList := strings.Join(xbvrperformers, ",")
 		for _, studio := range stashStudioIds {
 			performerQuery := `
 			{"input":{
@@ -365,11 +363,11 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 					}
 				}`
 			stashScenes = scrape.GetScenePage(performerQuery)
-			scoreResults(stashScenes, 200, performers, stashStudioIds)
+			scoreResults(stashScenes, 200, xbvrperformers, stashStudioIds)
 			if len(stashScenes.Data.QueryScenes.Scenes) == 0 {
 				performerQuery = strings.ReplaceAll(performerQuery, "INCLUDES_ALL", "INCLUDES")
 				stashScenes := scrape.GetScenePage(performerQuery)
-				scoreResults(stashScenes, 100, performers, stashStudioIds)
+				scoreResults(stashScenes, 100, xbvrperformers, stashStudioIds)
 			}
 		}
 	}
@@ -388,7 +386,7 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 				}
 			}`
 			stashScenes = scrape.GetScenePage(titleQuery)
-			scoreResults(stashScenes, 150, performers, stashStudioIds)
+			scoreResults(stashScenes, 150, xbvrperformers, stashStudioIds)
 			page := 2
 			for i := 101; i < stashScenes.Data.QueryScenes.Count && page <= 5; {
 				titleQuery := `
@@ -402,7 +400,7 @@ func (i ExternalReference) searchForStashdbScene(req *restful.Request, resp *res
 							}
 						}`
 				stashScenes = scrape.GetScenePage(titleQuery)
-				scoreResults(stashScenes, 150, performers, stashStudioIds)
+				scoreResults(stashScenes, 150, xbvrperformers, stashStudioIds)
 				i = i + 100
 				page += 1
 			}
@@ -452,6 +450,11 @@ func (i ExternalReference) linkActor2Stashdb(req *restful.Request, resp *restful
 	scrape.RefreshPerformer(stashPerformerId)
 	var actorRef models.ExternalReference
 	actorRef.FindExternalId("stashdb performer", stashPerformerId)
+	// change the External Date, this is used to find the most recent change and query
+	// stash for changes since then. If wew manually load an actor, we may miss other updates
+	actorRef.ExternalDate = time.Date(1980, time.January, 1, 0, 0, 0, 0, time.UTC)
+	actorRef.Save()
+
 	var performer models.StashPerformer
 	json.Unmarshal([]byte(actorRef.ExternalData), &performer)
 
