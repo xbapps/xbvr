@@ -164,25 +164,16 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 
 	var scenes []models.Scene
 	db.Where("scraper_id = ?", id).Find(&scenes)
+	
 	if len(scenes) != 0 {
 		common.Log.Infoln(name + ` Scenes found migration needed`)
+
+		// Update scene data to reflect change
+		db.Model(&models.Scene{}).Where("scraper_id = ?", id).Update("needs_update", true)
 
 		// Determine the new id from the URL using the same template as the scraper list code
 		tmp := strings.TrimRight(url, "/")
 		newId := strings.ToLower(tmp[strings.LastIndex(tmp, "/")+1:]) + `-` + customId
-
-		// Update scene data to reflect change
-		for _, scene := range scenes {
-			scene.ScraperId = newId
-			scene.Site = name + " " + suffix
-			scene.NeedsUpdate = true
-
-			err := db.Save(&scene).Error
-
-			if err != nil {
-				return err
-			}
-		}
 
 		var scraperConfig ScraperList
 		scraperConfig.Load()
