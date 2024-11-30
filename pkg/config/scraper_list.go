@@ -164,7 +164,7 @@ func MigrateFromOfficalToCustom(id string, url string, name string, company stri
 
 	var scenes []models.Scene
 	db.Where("scraper_id = ?", id).Find(&scenes)
-	
+
 	if len(scenes) != 0 {
 		common.Log.Infoln(name + ` Scenes found migration needed`)
 
