@@ -1027,7 +1027,7 @@ func (i SceneResource) getSceneAlternateSources(req *restful.Request, resp *rest
 		var site models.Site
 
 		if ref.ExternalSource == "stashdb scene" {
-			ressults = append(ressults, ResponseGetAlternateSources{Url: ref.ExternalReference.ExternalURL, Icon: "https://docs.stashapp.cc/favicon.ico", ExternalSource: ref.ExternalReference.ExternalSource, ExternalId: ref.ExternalReference.ExternalId, ExternalData: ref.ExternalReference.ExternalData})
+			ressults = append(ressults, ResponseGetAlternateSources{Url: ref.ExternalReference.ExternalURL, Icon: "https://guidelines.stashdb.org/favicon.ico", ExternalSource: ref.ExternalReference.ExternalSource, ExternalId: ref.ExternalReference.ExternalId, ExternalData: ref.ExternalReference.ExternalData})
 		} else {
 			json.Unmarshal([]byte(ref.ExternalReference.ExternalData), &altscene)
 			site.GetIfExist(altscene.Scene.ScraperId)
