@@ -112,6 +112,7 @@ studio{
 	id
 	name
 	updated
+	parent { id }
 }
 images{
   url
@@ -350,12 +351,17 @@ func getStudioSceneQueryVariable(studioId string, page int, count int) string {
 // Builds a query variable to get scenes from the Parent Studio
 // Uses the tagId to filter just scenes tag as Virtual Reality
 func getParentSceneQueryVariable(parentId string, tagId string, page int, count int) string {
-	return `
-	{"input":{
+	tag := ""
+	if tagId != "" {
+		tag = `
 		"tags": {					
 			"value": "` + tagId + `",
 			"modifier": "INCLUDES"
 		},
+		`
+	}
+	return `
+	{"input":{` + tag + ` 
 		"parentStudio": "` + parentId + `",				 
 		
 		"page": ` + strconv.Itoa(page) + `,
@@ -629,6 +635,13 @@ func GetStashPerformerFull(performer string) FindPerformerScenesResult {
       width
       height
       }  
+  studios {
+    scene_count
+    studio { 
+	  name 
+	  id
+	}
+  }
   deleted
   created
   updated
@@ -642,12 +655,10 @@ func GetStashPerformerFull(performer string) FindPerformerScenesResult {
 		id
 		name		
 	}
-	studios { 
 		studio {
 			name 
 			id
 			}
-		}
 	images{
 		url
 		width
