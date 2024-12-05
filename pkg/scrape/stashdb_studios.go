@@ -59,7 +59,12 @@ func processScrapedScene(stashScene models.StashScene, masterSiteId string, comm
 	sc.HomepageURL = "https://stashdb.org/scenes/" + stashScene.ID
 	sc.SceneID = "stash-" + stashScene.ID
 
-	sc.MembersUrl = sc.HomepageURL
+	for _, urldata := range stashScene.URLs {
+		if urldata.Type == "STUDIO" {
+			sc.MembersUrl = urldata.URL
+			continue
+		}
+	}
 	sc.Released = stashScene.Date
 	sc.Title = stashScene.Title
 	sc.Synopsis = stashScene.Details
@@ -87,6 +92,8 @@ func processScrapedScene(stashScene models.StashScene, masterSiteId string, comm
 		commonDb.Where(&models.Actor{Name: strings.Replace(modelName, ".", "", -1)}).FirstOrCreate(&tmpActor)
 		externalreference.UpdateXbvrActor(model.Performer, tmpActor.ID)
 	}
+
+	sc.Duration = stashScene.Duration / 60
 	return sc
 }
 

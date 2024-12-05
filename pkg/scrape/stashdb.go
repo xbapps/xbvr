@@ -77,6 +77,60 @@ type Image struct {
 	Height int    `json:"height"`
 }
 
+const sceneFieldList = `
+id
+title
+details
+release_date
+date
+updated
+urls{
+  url
+  type
+  site {
+	  id
+	  name
+	  description
+	  url
+	  regex
+	  valid_types
+  }
+}
+studio{
+	id
+	name
+	updated
+	parent { id }
+}
+images{
+  url
+  width
+  height
+}
+performers{
+  performer{
+	id
+	updated
+	gender
+	name
+	aliases
+  }
+  as
+}
+fingerprints{
+  hash
+  duration
+  submissions
+}
+duration
+  tags {
+    id
+	name
+}
+code  
+deleted
+`
+
 var Config models.ActorScraperConfig
 
 func StashDb() {
