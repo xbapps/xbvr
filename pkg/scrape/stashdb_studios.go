@@ -89,8 +89,12 @@ func processScrapedScene(stashScene models.StashScene, masterSiteId string, comm
 		sc.Cast = append(sc.Cast, modelName)
 
 		tmpActor := models.Actor{}
-		commonDb.Where(&models.Actor{Name: strings.Replace(modelName, ".", "", -1)}).FirstOrCreate(&tmpActor)
-		externalreference.UpdateXbvrActor(model.Performer, tmpActor.ID)
+		commonDb.Where(&models.Actor{Name: strings.Replace(modelName, ".", "", -1)}).First(&tmpActor)
+		if tmpActor.ID == 0 {
+			commonDb.Where(&models.Actor{Name: strings.Replace(modelName, ".", "", -1)}).FirstOrCreate(&tmpActor)
+			stashPerformer := GetStashPerformer(model.Performer.ID)
+			externalreference.UpdateXbvrActor(stashPerformer.Data.Performer, tmpActor.ID)
+		}
 	}
 
 	sc.Duration = stashScene.Duration / 60
