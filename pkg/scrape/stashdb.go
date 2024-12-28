@@ -166,7 +166,7 @@ func StashDb() {
 		studio := FindStashdbStudio(sitename, "name")
 
 		sitecfg, cfgExists := Config.StashSceneMatching[site.ID]
-		if !cfgExists {
+		if !cfgExists && studio.Data.Studio.ID != "" {
 			sitecfg = []models.StashSiteConfig{models.StashSiteConfig{StashId: studio.Data.Studio.ID}}
 		}
 
