@@ -355,7 +355,6 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	if len(videoFiles) == 0 && config.Config.Web.SceneTrailerlist && requestData.NeedsMediaSource.OrElse(true) {
-		log.Infof("Get Trailer details for %s scene %s", scene.TrailerType, scene.SceneID)
 		switch scene.TrailerType {
 		case "heresphere":
 			heresphereScene := LoadHeresphereScene(scene.TrailerSource)
