@@ -815,7 +815,9 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 }
 
 func RestoreBundle(request RequestRestore) {
+	tlog := log.WithField("task", "scrape")
 	if request.BundleUrl != "" {
+		tlog.Infof("Downloading data from %s", request.BundleUrl)
 		data, _ := downloadBundle(request.BundleUrl)
 		request.UploadData = data
 	}
@@ -827,8 +829,6 @@ func RestoreBundle(request RequestRestore) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
 		defer models.RemoveLock("scrape")
-
-		tlog := log.WithField("task", "scrape")
 
 		var json = jsoniter.Config{
 			EscapeHTML:             true,
