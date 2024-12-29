@@ -62,7 +62,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 
 		sc.SceneID = scraperID + "-" + sc.SiteID
 
-		sc.Title = e.ChildText(`.video-content .header-container .video-title .section-header-container`)
+		sc.Title = e.ChildText(`div.video-title > h1`)
 		sc.Synopsis = e.ChildText(`.video-description-container`)
 		sc.Tags = e.ChildTexts(`.video-categories .chip`)
 
