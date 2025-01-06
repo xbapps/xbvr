@@ -47,11 +47,13 @@ func BadoinkSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		// Scene ID - get from URL
 		tmp := strings.Split(sc.HomepageURL, "-")
 		sc.SiteID = strings.Replace(tmp[len(tmp)-1], "/", "", -1)
-		if ogSite {
-			sc.SceneID = scraperID + "-" + sc.SiteID
-		} else {
-			sc.SceneID = "realvr" + "-" + sc.SiteID
+
+		idPrefix := scraperID
+		if !ogSite {
+			idPrefix = "realvr"
 		}
+
+		sc.SceneID = idPrefix + "-" + sc.SiteID
 
 		// Title
 		e.ForEach(`h1.video-title`, func(id int, e *colly.HTMLElement) {
@@ -106,7 +108,7 @@ func BadoinkSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`a.video-actor-link`, func(id int, e *colly.HTMLElement) {
 			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: idPrefix + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 		})
 
 		// Date

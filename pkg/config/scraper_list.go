@@ -149,8 +149,12 @@ func CheckMatchingSiteID(findSite ScraperConfig, searchList []ScraperConfig) boo
 func SetSiteId(configList *[]ScraperConfig, customId string) {
 	for idx, siteconfig := range *configList {
 		if siteconfig.FileID == "" || customId != "" {
-			id := strings.TrimRight(siteconfig.URL, "/")
-			siteconfig.ID = strings.ToLower(id[strings.LastIndex(id, "/")+1:])
+			temp := strings.TrimRight(siteconfig.URL, "/")
+			id := temp[strings.LastIndex(temp, "/")+1:]
+			if customId == "realvr" {
+				id = id[:strings.Index(id, "-")-1]
+			}
+			siteconfig.ID = strings.ToLower(id)
 		} else {
 			siteconfig.ID = strings.ToLower(siteconfig.FileID)
 		}
