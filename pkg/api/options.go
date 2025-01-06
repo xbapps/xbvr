@@ -1010,6 +1010,7 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 	scrapers["slr"] = scraperConfig.CustomScrapers.SlrScrapers
 	scrapers["vrphub"] = scraperConfig.CustomScrapers.VrphubScrapers
 	scrapers["vrporn"] = scraperConfig.CustomScrapers.VrpornScrapers
+	scrapers["realvr"] = scraperConfig.CustomScrapers.RealVRScrapers
 
 	exists := false
 	for key, group := range scrapers {
@@ -1035,12 +1036,15 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 			scrapers["vrphub"] = append(scrapers["vrphub"], scraper)
 		case "vrporn":
 			scrapers["vrporn"] = append(scrapers["vrporn"], scraper)
+		case "realvr":
+			scrapers["realvr"] = append(scrapers["realvr"], scraper)
 		}
 	}
 	scraperConfig.CustomScrapers.PovrScrapers = scrapers["povr"]
 	scraperConfig.CustomScrapers.SlrScrapers = scrapers["slr"]
 	scraperConfig.CustomScrapers.VrphubScrapers = scrapers["vrphub"]
 	scraperConfig.CustomScrapers.VrpornScrapers = scrapers["vrporn"]
+	scraperConfig.CustomScrapers.RealVRScrapers = scrapers["realvr"]
 	fName := filepath.Join(common.AppDir, "scrapers.json")
 	list, _ := json.MarshalIndent(scraperConfig, "", "  ")
 	os.WriteFile(fName, list, 0644)

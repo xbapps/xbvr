@@ -25,12 +25,14 @@ type XbvrScrapers struct {
 	SlrScrapers    []ScraperConfig `json:"slr"`
 	VrpornScrapers []ScraperConfig `json:"vrporn"`
 	VrphubScrapers []ScraperConfig `json:"vrphub"`
+	RealVRScrapers []ScraperConfig `json:"realvr"`
 }
 type CustomScrapers struct {
 	PovrScrapers   []ScraperConfig `json:"povr"`
 	SlrScrapers    []ScraperConfig `json:"slr"`
 	VrpornScrapers []ScraperConfig `json:"vrporn"`
 	VrphubScrapers []ScraperConfig `json:"vrphub"`
+	RealVRScrapers []ScraperConfig `json:"realvr"`
 }
 type ScraperConfig struct {
 	ID           string `json:"-"`
@@ -73,16 +75,19 @@ func (o *ScraperList) Load() error {
 	SetSiteId(&o.XbvrScrapers.SlrScrapers, "")
 	SetSiteId(&o.XbvrScrapers.VrphubScrapers, "")
 	SetSiteId(&o.XbvrScrapers.VrpornScrapers, "")
+	SetSiteId(&o.XbvrScrapers.RealVRScrapers, "")
 	SetSiteId(&o.CustomScrapers.PovrScrapers, "povr")
 	SetSiteId(&o.CustomScrapers.SlrScrapers, "slr")
 	SetSiteId(&o.CustomScrapers.VrphubScrapers, "vrphub")
 	SetSiteId(&o.CustomScrapers.VrpornScrapers, "vrporn")
+	SetSiteId(&o.CustomScrapers.RealVRScrapers, "realvr")
 
 	// remove custom sites that are now offical for the same aggregation site
 	o.CustomScrapers.PovrScrapers = RemoveCustomListNowOffical(o.CustomScrapers.PovrScrapers, o.XbvrScrapers.PovrScrapers)
 	o.CustomScrapers.SlrScrapers = RemoveCustomListNowOffical(o.CustomScrapers.SlrScrapers, o.XbvrScrapers.SlrScrapers)
 	o.CustomScrapers.VrphubScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrphubScrapers, o.XbvrScrapers.VrphubScrapers)
 	o.CustomScrapers.VrpornScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrpornScrapers, o.XbvrScrapers.VrpornScrapers)
+	o.CustomScrapers.RealVRScrapers = RemoveCustomListNowOffical(o.CustomScrapers.RealVRScrapers, o.XbvrScrapers.RealVRScrapers)
 
 	list, err := json.MarshalIndent(o, "", "  ")
 	if err == nil {

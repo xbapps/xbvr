@@ -13,7 +13,8 @@
       "povr": [],
       "slr": [],
       "vrporn": [],
-      "vrphub": []
+      "vrphub": [],
+      "realvr": []
     },
     "xbvr": {
       "povr": [
@@ -516,6 +517,13 @@
           "name": "StripzVR - VRP Hub",
           "company": "StripzVR",
           "avatar_url": "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg"
+        }
+      ],
+      "realvr": [
+        {
+          "url": "https://realvr.com/vrpornstudio/passthroughvr-33",
+          "name": "PassthroughVR",
+          "company": "Badoink"
         }
       ]
     }
