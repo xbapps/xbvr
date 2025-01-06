@@ -710,8 +710,6 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	scrapeRules.GenericActorScrapingConfig["vrcosplayx scrape"] = siteDetails
 	siteDetails.Domain = "18vr.com"
 	scrapeRules.GenericActorScrapingConfig["18vr scrape"] = siteDetails
-	siteDetails.Domain = "kinkvr.com"
-	scrapeRules.GenericActorScrapingConfig["kinkvr scrape"] = siteDetails
 
 	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "darkroomvr.com"

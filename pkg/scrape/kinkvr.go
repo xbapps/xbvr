@@ -58,7 +58,7 @@ func KinkVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 			e.ForEach(`tr:nth-child(1) a`, func(id int, e *colly.HTMLElement) {
 				if strings.TrimSpace(e.Text) != "" {
 					sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 				}
 			})
 
