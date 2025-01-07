@@ -293,6 +293,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 					} else if ffdata.Format.DurationSeconds > 0.0 {
 						fl.VideoDuration = ffdata.Format.DurationSeconds
 					}
+					fl.HasAlpha = false
 
 					if vs.Height*2 == vs.Width || vs.Width > vs.Height {
 						fl.VideoProjection = "180_sbs"
@@ -310,6 +311,15 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 							} else if i < len(nameparts)-1 && (part+"_"+nameparts[i+1] == "360_mono" || part+"_"+nameparts[i+1] == "180_mono") {
 								fl.VideoProjection = part + "_mono"
 								break
+							}
+						}
+						if fl.VideoProjection == "mkx200" || fl.VideoProjection == "mkx220" || fl.VideoProjection == "rf52" || fl.VideoProjection == "fisheye190" || fl.VideoProjection == "vrca220" {
+							// alpha passthrough only works with fisheye projections
+							for _, part := range nameparts {
+								if part == "alpha" {
+									fl.HasAlpha = true
+									break
+								}
 							}
 						}
 					}

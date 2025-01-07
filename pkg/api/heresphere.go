@@ -704,7 +704,10 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	}
 
 	var alphaPackedSettings *HereSphereAlphaPackedSettings = nil
-	if gjson.Valid(scene.ChromaKey) {
+	if videoFiles[0].HasAlpha {
+		alphaPackedSettings = &HereSphereAlphaPackedSettings{DefaultSettings: true}
+		addFeatureTag("Is Alpha Passthrough")
+	} else if gjson.Valid(scene.ChromaKey) {
 		result := gjson.Get(scene.ChromaKey, "hasAlpha")
 		if result.Exists() && result.Bool() {
 			alphaPackedSettings = &HereSphereAlphaPackedSettings{DefaultSettings: true}
