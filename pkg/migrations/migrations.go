@@ -2073,7 +2073,18 @@ func Migrate() {
 			},
 		},
 		{
-			ID: "0081-upgrade_actor_scraper_config",
+			ID: "0081-Offical-Site-Removals-With-Main-Site-Aviable",
+			Migrate: func(tx *gorm.DB) error {
+
+				err := config.MigrateFromOfficalToCustom("ps-porn", "https://www.sexlikereal.com/studios/ps-porn-vr", "PS-Porn", "Paula Shy", "https://mcdn.vrporn.com/files/20201221090642/PS-Porn-400x400.jpg", "slr", "(SLR)")
+				err = config.MigrateFromOfficalToCustom("fuckpassvr", "https://www.sexlikereal.com/studios/fuckpassvr", "FuckPassVR", "FuckPassVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/352/logo_crop_1635153994.png", "slr", "(SLR)")
+				err = config.MigrateFromOfficalToCustom("vrphub-vrhush", "https://vrphub.com/category/vr-hush", "VRHush", "VRHush", "https://cdn-nexpectation.secure.yourpornpartner.com/sites/vrh/favicon/apple-touch-icon-180x180.png", "vrphub", "(VRP Hub)")
+				err = config.MigrateFromOfficalToCustom("vrphub-stripzvr", "https://vrphub.com/category/stripzvr/", "StripzVR - VRP Hub", "StripzVR", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", "vrphub", "(VRP Hub)")
+				return err
+			},
+		},
+		{
+			ID: "0082-upgrade_actor_scraper_config",
 			Migrate: func(tx *gorm.DB) error {
 				type actorScraperConfig struct {
 					StashSceneMatching         map[string]models.StashSiteConfig
@@ -2124,17 +2135,6 @@ func Migrate() {
 				out, _ := json.MarshalIndent(newCustomScrapeRules, "", "  ")
 				e = os.WriteFile(fName, out, 0644)
 				return e
-      },
-    },
-    {
-			ID: "0081-Offical-Site-Removals-With-Main-Site-Aviable",
-			Migrate: func(tx *gorm.DB) error {
-
-				err := config.MigrateFromOfficalToCustom("ps-porn", "https://www.sexlikereal.com/studios/ps-porn-vr", "PS-Porn", "Paula Shy", "https://mcdn.vrporn.com/files/20201221090642/PS-Porn-400x400.jpg", "slr", "(SLR)")
-				err = config.MigrateFromOfficalToCustom("fuckpassvr", "https://www.sexlikereal.com/studios/fuckpassvr", "FuckPassVR", "FuckPassVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/352/logo_crop_1635153994.png", "slr", "(SLR)")
-				err = config.MigrateFromOfficalToCustom("vrphub-vrhush", "https://vrphub.com/category/vr-hush", "VRHush", "VRHush", "https://cdn-nexpectation.secure.yourpornpartner.com/sites/vrh/favicon/apple-touch-icon-180x180.png", "vrphub", "(VRP Hub)")
-				err = config.MigrateFromOfficalToCustom("vrphub-stripzvr", "https://vrphub.com/category/stripzvr/", "StripzVR - VRP Hub", "StripzVR", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", "vrphub", "(VRP Hub)")
-				return err
 			},
 		},
 	})
