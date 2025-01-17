@@ -130,5 +130,5 @@ func FuckPassVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 }
 
 func init() {
-	registerScraper("fuckpassvr-native", "FuckPassVR", "https://www.fuckpassvr.com/_nuxt/img/logo_bw.1fac7d1.png", "fuckpassvr.com", FuckPassVR)
+	registerScraper("fuckpassvr-native", "FuckPassVR", "https://www.fuckpassvr.com/favicon.png", "fuckpassvr.com", FuckPassVR)
 }
