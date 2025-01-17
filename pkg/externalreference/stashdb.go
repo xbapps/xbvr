@@ -253,7 +253,6 @@ func matchSceneOnRules(sitename string, config models.StashSiteConfig) {
 
 func simplystring(str string) string {
 	str = strings.TrimSpace(str)
-	str = strings.ReplaceAll(str, " and ", "&")
 	str = strings.ReplaceAll(str, " ", "")
 	str = strings.ReplaceAll(str, ".", "")
 	str = strings.ReplaceAll(str, ":", "")
@@ -262,6 +261,7 @@ func simplystring(str string) string {
 	str = strings.ReplaceAll(str, ";", "")
 	str = strings.ReplaceAll(str, ",", "")
 	str = strings.ReplaceAll(str, "#", "")
+	str = strings.ReplaceAll(str, " and ", "&")
 	str = strings.ReplaceAll(str, "@", "")
 	str = strings.ReplaceAll(str, "$", "")
 	str = strings.ReplaceAll(str, "%", "")

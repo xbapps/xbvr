@@ -12,6 +12,7 @@
       @keydown.shift.w="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'watched'})"
       @keydown.t="$store.commit('sceneList/toggleSceneList', {scene_id: item.scene_id, list: 'trailerlist'})"
       @keydown.e="$store.commit('overlay/editDetails', {scene: item})"
+      @keydown.s="$store.commit('overlay/showSearchStashdbScenes', {scene: item})"
       @keydown.g="toggleGallery"
       @keydown.48="setRating(0)"
     />
@@ -126,6 +127,7 @@
                       <edit-button :item="item"/>
                       <refresh-button :item="item" v-if="!displayingAlternateSource"/>
                       <rescrape-button :item="item" v-if="!displayingAlternateSource"/>
+                      <link-stashdb-button :item="item" objectType="scene" />
                     </div>
                   </div>
                 </div>
@@ -406,6 +408,7 @@ import VueLoadImage from 'vue-load-image'
 import GlobalEvents from 'vue-global-events'
 import StarRating from 'vue-star-rating'
 import FavouriteButton from '../../components/FavouriteButton'
+import LinkStashdbButton from '../../components/LinkStashdbButton'
 import WatchlistButton from '../../components/WatchlistButton'
 import WishlistButton from '../../components/WishlistButton'
 import WatchedButton from '../../components/WatchedButton'
@@ -417,7 +420,7 @@ import HiddenButton from '../../components/HiddenButton'
 
 export default {
   name: 'Details',
-  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, WishlistButton, WatchedButton, EditButton, RefreshButton, RescrapeButton, TrailerlistButton, HiddenButton },
+  components: { VueLoadImage, GlobalEvents, StarRating, WatchlistButton, FavouriteButton, LinkStashdbButton, WishlistButton, WatchedButton, EditButton, RefreshButton, RescrapeButton, TrailerlistButton, HiddenButton },
   data () {
     return {
       index: 1,
@@ -584,6 +587,9 @@ export default {
         return 0; // Return 0 or handle error as needed
       }
     },
+    changeDetailsTab() {      
+      return this.$store.state.overlay.changeDetailsTab
+    },
     quickFindOverlayState() {
       return this.$store.state.overlay.quickFind.show
     },
@@ -632,6 +638,13 @@ watch:{
       }
     }
   },
+  changeDetailsTab(newVal, oldVal){
+    if (newVal == -1 ) {
+      return
+    }
+    this.activeTab = newVal
+    this.$store.commit('overlay/changeDetailsTab', { tab: -1 })
+  }
 },
   methods: {
     setupPlayer () {
