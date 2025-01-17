@@ -21,18 +21,20 @@ type ScraperList struct {
 	XbvrScrapers   XbvrScrapers   `json:"xbvr"`
 }
 type XbvrScrapers struct {
-	PovrScrapers   []ScraperConfig `json:"povr"`
-	SlrScrapers    []ScraperConfig `json:"slr"`
-	VrpornScrapers []ScraperConfig `json:"vrporn"`
-	VrphubScrapers []ScraperConfig `json:"vrphub"`
-	RealVRScrapers []ScraperConfig `json:"realvr"`
+	PovrScrapers    []ScraperConfig `json:"povr"`
+	SlrScrapers     []ScraperConfig `json:"slr"`
+	StashDbScrapers []ScraperConfig `json:"stashdb"`
+  RealVRScrapers  []ScraperConfig `json:"realvr"`
+	VrpornScrapers  []ScraperConfig `json:"vrporn"`
+	VrphubScrapers  []ScraperConfig `json:"vrphub"`
 }
 type CustomScrapers struct {
-	PovrScrapers   []ScraperConfig `json:"povr"`
-	SlrScrapers    []ScraperConfig `json:"slr"`
-	VrpornScrapers []ScraperConfig `json:"vrporn"`
-	VrphubScrapers []ScraperConfig `json:"vrphub"`
-	RealVRScrapers []ScraperConfig `json:"realvr"`
+	PovrScrapers    []ScraperConfig `json:"povr"`
+	SlrScrapers     []ScraperConfig `json:"slr"`
+	StashDbScrapers []ScraperConfig `json:"stashdb"`
+  RealVRScrapers  []ScraperConfig `json:"realvr"`
+	VrpornScrapers  []ScraperConfig `json:"vrporn"`
+	VrphubScrapers  []ScraperConfig `json:"vrphub"`
 }
 type ScraperConfig struct {
 	ID           string `json:"-"`
@@ -73,11 +75,13 @@ func (o *ScraperList) Load() error {
 
 	SetSiteId(&o.XbvrScrapers.PovrScrapers, "")
 	SetSiteId(&o.XbvrScrapers.SlrScrapers, "")
+	SetSiteId(&o.XbvrScrapers.StashDbScrapers, "")
 	SetSiteId(&o.XbvrScrapers.VrphubScrapers, "")
 	SetSiteId(&o.XbvrScrapers.VrpornScrapers, "")
 	SetSiteId(&o.XbvrScrapers.RealVRScrapers, "")
 	SetSiteId(&o.CustomScrapers.PovrScrapers, "povr")
 	SetSiteId(&o.CustomScrapers.SlrScrapers, "slr")
+	SetSiteId(&o.CustomScrapers.StashDbScrapers, "stashdb")
 	SetSiteId(&o.CustomScrapers.VrphubScrapers, "vrphub")
 	SetSiteId(&o.CustomScrapers.VrpornScrapers, "vrporn")
 	SetSiteId(&o.CustomScrapers.RealVRScrapers, "realvr")
@@ -85,6 +89,7 @@ func (o *ScraperList) Load() error {
 	// remove custom sites that are now offical for the same aggregation site
 	o.CustomScrapers.PovrScrapers = RemoveCustomListNowOffical(o.CustomScrapers.PovrScrapers, o.XbvrScrapers.PovrScrapers)
 	o.CustomScrapers.SlrScrapers = RemoveCustomListNowOffical(o.CustomScrapers.SlrScrapers, o.XbvrScrapers.SlrScrapers)
+	o.CustomScrapers.StashDbScrapers = RemoveCustomListNowOffical(o.CustomScrapers.StashDbScrapers, o.XbvrScrapers.StashDbScrapers)
 	o.CustomScrapers.VrphubScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrphubScrapers, o.XbvrScrapers.VrphubScrapers)
 	o.CustomScrapers.VrpornScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrpornScrapers, o.XbvrScrapers.VrpornScrapers)
 	o.CustomScrapers.RealVRScrapers = RemoveCustomListNowOffical(o.CustomScrapers.RealVRScrapers, o.XbvrScrapers.RealVRScrapers)

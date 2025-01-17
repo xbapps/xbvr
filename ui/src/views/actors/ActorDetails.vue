@@ -10,6 +10,7 @@
       @keydown.f="$store.commit('actorList/toggleActorList', {actor_id: actor.id, list: 'favourite'})"
       @keydown.exact.w="$store.commit('actorList/toggleActorList', {actor_id: actor.id, list: 'watchlist'})"
       @keydown.e="$store.commit('overlay/editActorDetails', {actor: actor})"
+      @keydown.s="$store.commit('overlay/showSearchStashdbActors', {actor: item})"
       @keydown.48="setRating(0)"
     />
 
@@ -91,6 +92,7 @@
                       <actor-favourite-button :actor="actor"/>&nbsp;
                       <actor-watchlist-button :actor="actor"/>&nbsp;
                       <actor-edit-button :actor="actor"/>&nbsp;
+                      <link-stashdb-button :item="actor" objectType="actor" />
                     </div>
                   </div>
                 </div>
@@ -266,12 +268,13 @@ import StarRating from 'vue-star-rating'
 import ActorFavouriteButton from '../../components/ActorFavouriteButton'
 import ActorWatchlistButton from '../../components/ActorWatchlistButton'
 import ActorEditButton from '../../components/ActorEditButton'
+import LinkStashdbButton from '../../components/LinkStashdbButton'
 import SceneCard from '../scenes/SceneCard'
 import ActorCard from './ActorCard'
 
 export default {
   name: 'ActorDetails',
-  components: { VueLoadImage, GlobalEvents, StarRating, ActorWatchlistButton, ActorFavouriteButton, SceneCard, ActorEditButton,  ActorCard },
+  components: { VueLoadImage, GlobalEvents, StarRating, ActorWatchlistButton, ActorFavouriteButton, SceneCard, ActorEditButton,  ActorCard, LinkStashdbButton },
   data () {
     return {
       index: 1,

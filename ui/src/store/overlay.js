@@ -40,6 +40,15 @@ const state = {
     show:false,
     site: '',
   },
+  searchStashDbScenes: {
+    show: false,
+    scene: null
+  },
+  searchStashDbActors: {
+    show: false,
+    actor: null
+  },
+  changeDetailsTab: -1,
 }
 
 const mutations = {
@@ -134,6 +143,25 @@ const mutations = {
   },
   hideSceneMatchParams (state, payload) {
     state.sceneMatchParams.show = false
+  },
+  showSearchStashdbScenes (state, payload) {
+    state.searchStashDbScenes.scene = payload.item
+    state.searchStashDbScenes.show = true
+  },
+  hideSearchStashdbScenes (state) {
+    state.searchStashDbScenes.scene = null
+    state.searchStashDbScenes.show = false
+  },
+  showSearchStashdbActors (state, payload) {
+    state.searchStashDbActors.actor = payload.item
+    state.searchStashDbActors.show = true
+  },
+  hideSearchStashdbActors (state) {
+    state.searchStashDbActors.actor = null
+    state.searchStashDbActors.show = false
+  },
+  changeDetailsTab (state, payload) {
+    state.changeDetailsTab = payload.tab
   },
 }
 
