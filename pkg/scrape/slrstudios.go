@@ -470,7 +470,7 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 		for _, name := range encodings.Array() {
 			resolutions = append(resolutions, "_"+name.String()+"p_")
 		}
-		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
+		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(strings.ReplaceAll(sc.Title, ":", ";"), "_")
 		switch videotype {
 		case "360°":
 			for i := range resolutions {
@@ -490,7 +490,7 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 		}
 	} else {
 		resolutions := []string{"_6400p_", "_4096p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_3000p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
-		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
+		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(strings.ReplaceAll(sc.Title, ":", ";"), "_")
 		switch videotype {
 		case "360°": // Sadly can't determine if TB or MONO so have to add both
 			for i := range resolutions {

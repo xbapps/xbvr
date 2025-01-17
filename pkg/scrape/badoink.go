@@ -26,8 +26,8 @@ func BadoinkSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com")
-	siteCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "kinkvr.com")
+	sceneCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com")
+	siteCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com")
 	trailerCollector := cloneCollector(sceneCollector)
 
 	commonDb, _ := models.GetCommonDB()
@@ -283,14 +283,9 @@ func BabeVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 	return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, "babevr", "BabeVR", "https://babevr.com/vrpornvideos?order=newest", singeScrapeAdditionalInfo, limitScraping)
 }
 
-func KinkVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
-	return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, "kinkvr", "KinkVR", "https://kinkvr.com/bdsm-vr-videos?order=newest", singeScrapeAdditionalInfo, limitScraping)
-}
-
 func init() {
 	registerScraper("badoinkvr", "BadoinkVR", "https://pbs.twimg.com/profile_images/618071358933610497/QaMV81nF_200x200.png", "badoinkvr.com", BadoinkVR)
 	registerScraper("18vr", "18VR", "https://pbs.twimg.com/profile_images/989481761783545856/w-iKqgqV_200x200.jpg", "18vr.com", B18VR)
 	registerScraper("vrcosplayx", "VRCosplayX", "https://pbs.twimg.com/profile_images/900675974039298049/ofMytpkQ_200x200.jpg", "vrcosplayx.com", VRCosplayX)
 	registerScraper("babevr", "BabeVR", "https://babevr.com/icons/babevr/apple-touch-icon.png", "babevr.com", BabeVR)
-	registerScraper("kinkvr", "KinkVR", "https://kinkvr.com/icons/kinkvr/apple-touch-icon.png", "kinkvr.com", KinkVR)
 }
