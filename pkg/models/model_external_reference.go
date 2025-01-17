@@ -49,7 +49,7 @@ type ExternalReferenceLink struct {
 }
 
 type ActorScraperConfig struct {
-	StashSceneMatching         map[string]StashSiteConfig
+	StashSceneMatching         map[string][]StashSiteConfig
 	GenericActorScrapingConfig map[string]GenericScraperRuleSet
 }
 type GenericScraperRuleSet struct {
@@ -308,7 +308,7 @@ func (o *ExternalReference) DetermineActorScraperBySiteId(siteId string) string 
 func BuildActorScraperRules() ActorScraperConfig {
 	var config ActorScraperConfig
 	config.GenericActorScrapingConfig = make(map[string]GenericScraperRuleSet)
-	config.StashSceneMatching = map[string]StashSiteConfig{}
+	config.StashSceneMatching = map[string][]StashSiteConfig{}
 	config.loadActorScraperRules()
 	return config
 }
@@ -1028,7 +1028,7 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 		if _, err := os.Stat(fName); os.IsNotExist(err) {
 			// create a dummy template
 			exampleConfig := ActorScraperConfig{
-				StashSceneMatching:         make(map[string]StashSiteConfig),
+				StashSceneMatching:         make(map[string][]StashSiteConfig),
 				GenericActorScrapingConfig: make(map[string]GenericScraperRuleSet),
 			}
 
@@ -1054,10 +1054,10 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 				XbvrField:                "Enter xbvr field you are matching to, scene_url or scene_id",
 				XbvrMatch:                "Enter regex express to extract value from field to match on",
 				XbvrMatchResultPosition:  0,
-				StashRule:                "enter regex expression to extract watch to match from the stash url",
+				StashRule:                "Enter rule name, ie title, title/date, studio_code or regex expression to extract value to match from the stash url",
 				StashMatchResultPosition: 0,
 			}}
-			exampleConfig.StashSceneMatching["siteid"] = stashMatch
+			exampleConfig.StashSceneMatching["siteid"] = []StashSiteConfig{stashMatch}
 
 			out, _ := json.MarshalIndent(exampleConfig, "", "  ")
 			os.WriteFile(fName, out, 0644)
@@ -1067,6 +1067,7 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 		var customScrapeRules ActorScraperConfig
 		b, err := os.ReadFile(fName)
 		if err != nil {
+			log.Infof("Error reading actor_scraper_custom_config %s", err.Error())
 			return
 		}
 		json.Unmarshal(b, &customScrapeRules)
@@ -1084,110 +1085,109 @@ func (scrapeRules ActorScraperConfig) getSiteUrlMatchingRules() {
 	var sites []Site
 
 	// if the scene_url in xbvr and stash typically matches, then no special rules required
-	scrapeRules.StashSceneMatching["allvrporn-vrporn"] = StashSiteConfig{StashId: "44fd483b-85eb-4b22-b7f2-c92c1a50923a"}
-	scrapeRules.StashSceneMatching["bvr"] = StashSiteConfig{StashId: "1ffbd972-7d69-4ccb-b7da-c6342a9c3d70"}
-	scrapeRules.StashSceneMatching["cuties-vr"] = StashSiteConfig{StashId: "1e5240a8-29b3-41ed-ae28-fc9231eac449"}
-	scrapeRules.StashSceneMatching["czechvrintimacy"] = StashSiteConfig{StashId: "ddff31bc-e9d0-475e-9c5b-1cc151eda27b"}
-	scrapeRules.StashSceneMatching["darkroomvr"] = StashSiteConfig{StashId: "e57f0b82-a8d0-4904-a611-71e95f9b9248"}
-	scrapeRules.StashSceneMatching["ellielouisevr"] = StashSiteConfig{StashId: "47764349-fb49-42b9-8445-7fa4fb13f9e1"}
-	scrapeRules.StashSceneMatching["emilybloom"] = StashSiteConfig{StashId: "b359a2fe-dcf0-46e2-8ace-a684df52573e"}
-	scrapeRules.StashSceneMatching["herpovr"] = StashSiteConfig{StashId: "7d94a83d-2b0b-4076-9e4c-fd9dc6222b8a"}
-	scrapeRules.StashSceneMatching["jimmydraws"] = StashSiteConfig{StashId: "bf7b7b9a-b96a-401d-8412-ec3f52bcfb6c"}
-	scrapeRules.StashSceneMatching["kinkygirlsberlin"] = StashSiteConfig{StashId: "7d892a03-dfbe-4476-917d-4940be13fb24"}
-	scrapeRules.StashSceneMatching["lethalhardcorevr"] = StashSiteConfig{StashId: "3a9883f6-9642-4be1-9a65-d8d13eadbdf0"}
-	scrapeRules.StashSceneMatching["lustreality"] = StashSiteConfig{StashId: "f31021ba-f4c3-46eb-89c5-b114478d88d2"}
-	scrapeRules.StashSceneMatching["mongercash"] = StashSiteConfig{StashId: "96ee2435-0b0f-4fb4-8b53-8c929aa493bd"}
-	scrapeRules.StashSceneMatching["only3xvr"] = StashSiteConfig{StashId: "57391302-bac4-4f15-a64d-7cd9a9c152e0"}
-	scrapeRules.StashSceneMatching["povcentralvr"] = StashSiteConfig{StashId: "57391302-bac4-4f15-a64d-7cd9a9c152e0"}
-	scrapeRules.StashSceneMatching["realhotvr"] = StashSiteConfig{StashId: "cf3510db-5fe5-4212-b5da-da27b5352d1c"}
-	scrapeRules.StashSceneMatching["realitylovers"] = StashSiteConfig{StashId: "3463e72d-6af3-497f-b841-9119065d2916"}
-	scrapeRules.StashSceneMatching["sinsvr"] = StashSiteConfig{StashId: "805820d0-8fb2-4b04-8c0c-6e392842131b"}
-	scrapeRules.StashSceneMatching["squeeze-vr"] = StashSiteConfig{StashId: "b2d048da-9180-4e43-b41a-bdb4d265c8ec"}
-	scrapeRules.StashSceneMatching["swallowbay"] = StashSiteConfig{StashId: "17ff0143-3961-4d38-a80a-fe72407a274d"}
-	scrapeRules.StashSceneMatching["tonightsgirlfriend"] = StashSiteConfig{StashId: "69a66a95-15de-4b0a-9537-7f15b358392f"}
-	scrapeRules.StashSceneMatching["virtualrealamateur"] = StashSiteConfig{StashId: "cac0470b-7802-4946-b5ef-e101e166cdaf"}
-	scrapeRules.StashSceneMatching["virtualtaboo"] = StashSiteConfig{StashId: "1e6defb1-d3a4-4f0c-8616-acd5c343ca2b"}
-	scrapeRules.StashSceneMatching["virtualxporn"] = StashSiteConfig{StashId: "d55815ac-955f-45a0-a0fa-f6ad335e212d"}
-	scrapeRules.StashSceneMatching["vrallure"] = StashSiteConfig{StashId: "bb904923-c028-46b7-b269-49dfa54b5332"}
-	scrapeRules.StashSceneMatching["vrbangers"] = StashSiteConfig{StashId: "f8a826f6-89c2-4db0-a899-1229d11865b3"}
-	scrapeRules.StashSceneMatching["vrconk"] = StashSiteConfig{StashId: "b038d55c-1e94-41ff-938a-e6aafb0b1759"}
-	scrapeRules.StashSceneMatching["vrmansion-slr"] = StashSiteConfig{StashId: "a01012bc-42e9-4372-9c25-58f0f94e316b"}
-	scrapeRules.StashSceneMatching["vrsexygirlz"] = StashSiteConfig{StashId: "b346fe21-5d12-407f-9f50-837f067956d7"}
-	scrapeRules.StashSceneMatching["vrsolos"] = StashSiteConfig{StashId: "b2d048da-9180-4e43-b41a-bdb4d265c8ec"}
-	scrapeRules.StashSceneMatching["vrspy"] = StashSiteConfig{StashId: "513001ef-dff4-476d-840d-e22ef27e81ed"}
-	scrapeRules.StashSceneMatching["wankitnowvr"] = StashSiteConfig{StashId: "acb1ed8f-4967-4c5a-b16a-7025bdeb75c5"}
-	scrapeRules.StashSceneMatching["porncornvr"] = StashSiteConfig{StashId: "9ecb1d29-64e8-4336-9bd2-5dda53341e29"}
+	scrapeRules.StashSceneMatching["allvrporn-vrporn"] = []StashSiteConfig{StashSiteConfig{StashId: "44fd483b-85eb-4b22-b7f2-c92c1a50923a"}}
+	scrapeRules.StashSceneMatching["bvr"] = []StashSiteConfig{StashSiteConfig{StashId: "1ffbd972-7d69-4ccb-b7da-c6342a9c3d70"}}
+	scrapeRules.StashSceneMatching["cuties-vr"] = []StashSiteConfig{StashSiteConfig{StashId: "1e5240a8-29b3-41ed-ae28-fc9231eac449"}}
+	scrapeRules.StashSceneMatching["czechvrintimacy"] = []StashSiteConfig{StashSiteConfig{StashId: "ddff31bc-e9d0-475e-9c5b-1cc151eda27b"}}
+	scrapeRules.StashSceneMatching["darkroomvr"] = []StashSiteConfig{StashSiteConfig{StashId: "e57f0b82-a8d0-4904-a611-71e95f9b9248"}}
+	scrapeRules.StashSceneMatching["ellielouisevr"] = []StashSiteConfig{StashSiteConfig{StashId: "47764349-fb49-42b9-8445-7fa4fb13f9e1"}}
+	scrapeRules.StashSceneMatching["emilybloom"] = []StashSiteConfig{StashSiteConfig{StashId: "b359a2fe-dcf0-46e2-8ace-a684df52573e"}}
+	scrapeRules.StashSceneMatching["herpovr"] = []StashSiteConfig{StashSiteConfig{StashId: "7d94a83d-2b0b-4076-9e4c-fd9dc6222b8a"}}
+	scrapeRules.StashSceneMatching["jimmydraws"] = []StashSiteConfig{StashSiteConfig{StashId: "bf7b7b9a-b96a-401d-8412-ec3f52bcfb6c"}}
+	scrapeRules.StashSceneMatching["kinkygirlsberlin"] = []StashSiteConfig{StashSiteConfig{StashId: "7d892a03-dfbe-4476-917d-4940be13fb24"}}
+	scrapeRules.StashSceneMatching["lethalhardcorevr"] = []StashSiteConfig{StashSiteConfig{StashId: "3a9883f6-9642-4be1-9a65-d8d13eadbdf0"}}
+	scrapeRules.StashSceneMatching["lustreality"] = []StashSiteConfig{StashSiteConfig{StashId: "f31021ba-f4c3-46eb-89c5-b114478d88d2"}}
+	scrapeRules.StashSceneMatching["mongercash"] = []StashSiteConfig{StashSiteConfig{StashId: "96ee2435-0b0f-4fb4-8b53-8c929aa493bd"}}
+	scrapeRules.StashSceneMatching["only3xvr"] = []StashSiteConfig{StashSiteConfig{StashId: "57391302-bac4-4f15-a64d-7cd9a9c152e0"}}
+	scrapeRules.StashSceneMatching["povcentralvr"] = []StashSiteConfig{StashSiteConfig{StashId: "57391302-bac4-4f15-a64d-7cd9a9c152e0"}}
+	scrapeRules.StashSceneMatching["realhotvr"] = []StashSiteConfig{StashSiteConfig{StashId: "cf3510db-5fe5-4212-b5da-da27b5352d1c"}}
+	scrapeRules.StashSceneMatching["realitylovers"] = []StashSiteConfig{StashSiteConfig{StashId: "3463e72d-6af3-497f-b841-9119065d2916"}}
+	scrapeRules.StashSceneMatching["sinsvr"] = []StashSiteConfig{StashSiteConfig{StashId: "805820d0-8fb2-4b04-8c0c-6e392842131b"}}
+	scrapeRules.StashSceneMatching["squeeze-vr"] = []StashSiteConfig{StashSiteConfig{StashId: "b2d048da-9180-4e43-b41a-bdb4d265c8ec"}}
+	scrapeRules.StashSceneMatching["swallowbay"] = []StashSiteConfig{StashSiteConfig{StashId: "17ff0143-3961-4d38-a80a-fe72407a274d"}}
+	scrapeRules.StashSceneMatching["tonightsgirlfriend"] = []StashSiteConfig{StashSiteConfig{StashId: "69a66a95-15de-4b0a-9537-7f15b358392f"}}
+	scrapeRules.StashSceneMatching["virtualrealamateur"] = []StashSiteConfig{StashSiteConfig{StashId: "cac0470b-7802-4946-b5ef-e101e166cdaf"}}
+	scrapeRules.StashSceneMatching["virtualtaboo"] = []StashSiteConfig{StashSiteConfig{StashId: "1e6defb1-d3a4-4f0c-8616-acd5c343ca2b"}}
+	scrapeRules.StashSceneMatching["virtualxporn"] = []StashSiteConfig{StashSiteConfig{StashId: "d55815ac-955f-45a0-a0fa-f6ad335e212d"}}
+	scrapeRules.StashSceneMatching["vrbangers"] = []StashSiteConfig{StashSiteConfig{StashId: "f8a826f6-89c2-4db0-a899-1229d11865b3"}}
+	scrapeRules.StashSceneMatching["vrconk"] = []StashSiteConfig{StashSiteConfig{StashId: "b038d55c-1e94-41ff-938a-e6aafb0b1759"}}
+	scrapeRules.StashSceneMatching["vrmansion-slr"] = []StashSiteConfig{StashSiteConfig{StashId: "a01012bc-42e9-4372-9c25-58f0f94e316b"}}
+	scrapeRules.StashSceneMatching["vrsexygirlz"] = []StashSiteConfig{StashSiteConfig{StashId: "b346fe21-5d12-407f-9f50-837f067956d7"}}
+	scrapeRules.StashSceneMatching["vrsolos"] = []StashSiteConfig{StashSiteConfig{StashId: "b2d048da-9180-4e43-b41a-bdb4d265c8ec"}}
+	scrapeRules.StashSceneMatching["vrspy"] = []StashSiteConfig{StashSiteConfig{StashId: "513001ef-dff4-476d-840d-e22ef27e81ed"}}
+	scrapeRules.StashSceneMatching["wankitnowvr"] = []StashSiteConfig{StashSiteConfig{StashId: "acb1ed8f-4967-4c5a-b16a-7025bdeb75c5"}}
+	scrapeRules.StashSceneMatching["porncornvr"] = []StashSiteConfig{StashSiteConfig{StashId: "9ecb1d29-64e8-4336-9bd2-5dda53341e29"}}
 
-	scrapeRules.StashSceneMatching["wetvr"] = StashSiteConfig{StashId: "981887d6-da48-4dfc-88d1-7ed13a2754f2"}
+	scrapeRules.StashSceneMatching["wetvr"] = []StashSiteConfig{StashSiteConfig{StashId: "981887d6-da48-4dfc-88d1-7ed13a2754f2"}}
 
 	// setup special rules to match scenes in xbvr and stashdb, rather than assuming scene_urls match
-	scrapeRules.StashSceneMatching["wankzvr"] = StashSiteConfig{
+	scrapeRules.StashSceneMatching["wankzvr"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "b04bca51-15ea-45ab-80f6-7b002fd4a02d",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(povr|wankzvr).com\/(.*)(-\d*?)\/?$`, StashMatchResultPosition: 3}},
-	}
-	scrapeRules.StashSceneMatching["naughtyamericavr"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["naughtyamericavr"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "049c167b-0cf3-4965-aae5-f5150122a928", ParentId: "2be8463b-0505-479e-a07d-5abc7a6edd54", TagIdFilter: "6458e5cf-4f65-400b-9067-582141e2a329",
 		Rules: []SceneMatchRule{{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(naughtyamerica).com\/(.*)(-\d*?)\/?$`, StashMatchResultPosition: 3}},
-	}
-	scrapeRules.StashSceneMatching["povr-originals"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["povr-originals"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "b95c0ee4-2e95-46cf-aa67-45c82bdcd5fc",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(povr|wankzvr).com\/(.*)(-\d*?)\/?$`, StashMatchResultPosition: 3}},
-	}
-	scrapeRules.StashSceneMatching["brasilvr"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["brasilvr"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "511e41c8-5063-48b8-a8d9-4e18852da338",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(brasilvr|povr|wankzvr).com\/(.*)(-\d*?)\/?$`, StashMatchResultPosition: 3}},
-	}
-	scrapeRules.StashSceneMatching["milfvr"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["milfvr"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "38382977-9f5e-42fb-875b-2f4dd1272b11",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(milfvr|povr|wankzvr).com\/(.*)(-\d*?)\/?$`, StashMatchResultPosition: 3}},
-	}
+	}}
 
-	scrapeRules.StashSceneMatching["czechvr"] = StashSiteConfig{
+	scrapeRules.StashSceneMatching["czechvr"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "a9ed3948-5263-46f6-a3f0-e0dfc059ee73",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `(czechvrnetwork|czechvr|czechvrcasting|czechvrfetish|vrintimacy).com\/([^\/]+)\/?$`, XbvrMatchResultPosition: 2, StashRule: `(czechvrnetwork|czechvr|czechvrcasting|czechvrfetish|vrintimacy).com\/([^\/]+)\/?$`, StashMatchResultPosition: 2}},
-	}
-	scrapeRules.StashSceneMatching["czechvrcasting"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["czechvrcasting"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "2fa76fba-ccd7-457d-bc7c-ebc1b09e580b",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `(czechvrnetwork|czechvr|czechvrcasting|czechvrfetish|vrintimacy).com\/([^\/]+)\/?$`, XbvrMatchResultPosition: 2, StashRule: `(czechvrnetwork|czechvr|czechvrcasting|czechvrfetish|vrintimacy).com\/([^\/]+)\/?$`, StashMatchResultPosition: 2}},
-	}
-	scrapeRules.StashSceneMatching["czechvrfetish"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["czechvrfetish"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "19399096-7b83-4404-b960-f8f8c641a93e",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `(czechvrnetwork|czechvr|czechvrcasting|czechvrfetish|vrintimacy).com\/([^\/]+)\/?$`, XbvrMatchResultPosition: 2, StashRule: `(czechvrnetwork|czechvr|czechvrcasting|czechvrfetish|vrintimacy).com\/([^\/]+)\/?$`, StashMatchResultPosition: 2}},
-	}
-	scrapeRules.StashSceneMatching["czechvrintimacy"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["czechvrintimacy"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "ddff31bc-e9d0-475e-9c5b-1cc151eda27b",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `(czechvrnetwork|czechvr|czechvrcasting|czechvrfetish|vrintimacy).com\/([^\/]+)\/?$`, XbvrMatchResultPosition: 2, StashRule: `(czechvrnetwork|czechvr|czechvrcasting|czechvrfetish|vrintimacy).com\/([^\/]+)\/?$`, StashMatchResultPosition: 2}},
-	}
-	scrapeRules.StashSceneMatching["tmwvrnet"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["tmwvrnet"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "fd1a7f1d-9cc3-4d30-be0d-1c05b2a8b9c3",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `(teenmegaworld.net|tmwvrnet.com)(\/trailers)?\/([^\/]+)\/?$`, XbvrMatchResultPosition: 3, StashRule: `(teenmegaworld.net|tmwvrnet.com)(\/trailers)?\/([^\/]+)\/?$`, StashMatchResultPosition: 3}},
-	}
-	scrapeRules.StashSceneMatching["virtualrealporn"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["virtualrealporn"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "191ba106-00d3-4f01-8c57-0cf0e88a2a50",
 		Rules: []SceneMatchRule{
 			{XbvrField: "scene_url", XbvrMatch: `virtualrealporn`, XbvrMatchResultPosition: 3, StashRule: `(\/[^\/]+)\/?$`, StashMatchResultPosition: 1},
 			{XbvrField: "scene_url", XbvrMatch: `virtualrealporn`, XbvrMatchResultPosition: 3, StashRule: `(\/[^\/]+)(-\d{3,10}?)\/?$`, StashMatchResultPosition: 1},
 		},
-	}
-	scrapeRules.StashSceneMatching["realjamvr"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["realjamvr"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "2059fbf9-94fe-4986-8565-2a7cc199636a",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `(realjamvr.com)(.*)\/(\d*-?)([^\/]+)\/?$`, XbvrMatchResultPosition: 4, StashRule: `(realjamvr.com)(.*)\/(\d*-?)([^\/]+)\/?$`, StashMatchResultPosition: 4}},
-	}
-	scrapeRules.StashSceneMatching["vrhush"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["vrhush"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "c85a3d13-c1b9-48d0-986e-3bfceaf0afe5",
 		// ignores optional /vrh999_ from old urls
 		Rules: []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `\/([^\/]+)$`, XbvrMatchResultPosition: 4, StashRule: `\/((vrh\d+)_)?([^\/?]+)(?:\?.*)?$`, StashMatchResultPosition: 3}, // handle trailing query params
 			{XbvrField: "scene_url", XbvrMatch: `\/([^\/]+)$`, XbvrMatchResultPosition: 4, StashRule: `\/((vrh\d+)_)?([^\/?]+)(?:_180.*)?$`, StashMatchResultPosition: 3}, // handle _180 suffix now gone from urls
 		},
-	}
-	scrapeRules.StashSceneMatching["sexbabesvr"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["sexbabesvr"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "b80d419c-4a81-44c9-ae79-d9614dd30351",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `(sexbabesvr.com)(.*)\/([^\/]+)\/?$`, XbvrMatchResultPosition: 3, StashRule: `(sexbabesvr.com)(.*)\/([^\/]+)\/?$`, StashMatchResultPosition: 3}},
-	}
-	scrapeRules.StashSceneMatching["lethalhardcorevr"] = StashSiteConfig{
+	}}
+	scrapeRules.StashSceneMatching["lethalhardcorevr"] = []StashSiteConfig{StashSiteConfig{
 		StashId: "3a9883f6-9642-4be1-9a65-d8d13eadbdf0",
 		Rules:   []SceneMatchRule{{XbvrField: "scene_url", XbvrMatch: `(lethalhardcorevr.com).*\/(\d{6,8})\/.*`, XbvrMatchResultPosition: 2, StashRule: `(lethalhardcorevr.com).*\/(\d{6,8})\/.*`, StashMatchResultPosition: 2}},
-	}
+	}}
 
 	commonDb.Where(&Site{IsEnabled: true}).Order("id").Find(&sites)
 	for _, site := range sites {
@@ -1196,17 +1196,19 @@ func (scrapeRules ActorScraperConfig) getSiteUrlMatchingRules() {
 				siteConfig := scrapeRules.StashSceneMatching[site.ID]
 				extRefLink := ExternalReferenceLink{}
 				extRefLink.Find("stashdb studio", site.ID)
-				siteConfig.StashId = extRefLink.ExternalId
-				siteConfig.Rules = append(siteConfig.Rules, SceneMatchRule{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(sexlikereal).com\/[^0-9]*(-\d*)`, StashMatchResultPosition: 2})
+				siteConfig = []StashSiteConfig{StashSiteConfig{}}
+				siteConfig[0].StashId = extRefLink.ExternalId
+				siteConfig[0].Rules = append(siteConfig[0].Rules, SceneMatchRule{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(sexlikereal).com\/[^0-9]*(-\d*)`, StashMatchResultPosition: 2})
 				scrapeRules.StashSceneMatching[site.ID] = siteConfig
 			}
 			if strings.HasSuffix(site.Name, "POVR)") {
 				siteConfig := scrapeRules.StashSceneMatching[site.ID]
 				extRefLink := ExternalReferenceLink{}
 				extRefLink.Find("stashdb studio", site.ID)
-				siteConfig.StashId = extRefLink.ExternalId
-				if len(siteConfig.Rules) == 0 {
-					siteConfig.Rules = append(siteConfig.Rules, SceneMatchRule{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(povr|wankzvr).com\/(.*)(-\d*?)\/?$`, StashMatchResultPosition: 2})
+				siteConfig = []StashSiteConfig{StashSiteConfig{}}
+				siteConfig[0].StashId = extRefLink.ExternalId
+				if len(siteConfig[0].Rules) == 0 {
+					siteConfig[0].Rules = append(siteConfig[0].Rules, SceneMatchRule{XbvrField: "scene_id", XbvrMatch: `-\d+$`, XbvrMatchResultPosition: 0, StashRule: `(povr|wankzvr).com\/(.*)(-\d*?)\/?$`, StashMatchResultPosition: 2})
 					scrapeRules.StashSceneMatching[site.ID] = siteConfig
 				}
 			}

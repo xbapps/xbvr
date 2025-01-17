@@ -96,12 +96,14 @@ func StashDb() {
 		}
 		studio := findStudio(sitename, "name")
 
-		// check for a config entry if site not found
-		if studio.Data.Studio.ID == "" && Config.StashSceneMatching[site.ID].StashId != "" {
-			studio = findStudio(Config.StashSceneMatching[site.ID].StashId, "id")
+		sitecfg, cfgExists := Config.StashSceneMatching[site.ID]
+		if !cfgExists && studio.Data.Studio.ID != "" {
+			sitecfg = []models.StashSiteConfig{models.StashSiteConfig{StashId: studio.Data.Studio.ID}}
 		}
 
-		if studio.Data.Studio.ID != "" {
+		// check for a config entry if site not found
+		for _, cfgEntry := range sitecfg {
+			studio = findStudio(cfgEntry.StashId, "id")
 			siteConfig := Config.StashSceneMatching[site.ID]
 			var ext models.ExternalReference
 			ext.FindExternalId("stashdb studio", studio.Data.Studio.ID)
@@ -113,12 +115,20 @@ func StashDb() {
 				ext.AddUpdateWithId()
 			}
 			processStudioPerformers(studio.Data.Studio.ID)
-			scenes := getScenes(studio.Data.Studio.ID, siteConfig.ParentId, siteConfig.TagIdFilter)
+			parentId := ""
+			tagFilterId := ""
+			if siteConfig != nil {
+				parentId = siteConfig[0].ParentId
+				tagFilterId = siteConfig[0].TagIdFilter
+			}
+			scenes := getScenes(studio.Data.Studio.ID, parentId, tagFilterId)
 			saveScenesToExternalReferences(scenes, studio.Data.Studio.ID)
-		} else {
-			log.Infof("No Stash Studio matching %v", site.Name)
 		}
-		tlog.Info("Scrape of Stashdb completed")
+		if sitecfg == nil {
+			log.Infof("No Stash Studio matching %v", site.Name)
+		} else {
+			tlog.Info("Scrape of Stashdb completed")
+		}
 	}
 }
 
