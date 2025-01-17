@@ -139,7 +139,7 @@ func POVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<-
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		WaitBeforeVisit("povr.com", siteCollector.Visit, siteURL)
+		WaitBeforeVisit("povr.com", siteCollector.Visit, siteURL+"?o=d")
 	}
 
 	if updateSite {
