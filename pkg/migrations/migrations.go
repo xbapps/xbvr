@@ -820,6 +820,19 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0082-scrape-stash-flag",
+			Migrate: func(tx *gorm.DB) error {
+				type Site struct {
+					ScrapeStash bool `json:"scrape_stash" xbvrbackup:"scrape_stash"`
+				}
+				err := tx.AutoMigrate(Site{}).Error
+				if err != nil {
+					return err
+				}
+				return tx.Exec("update sites set scrape_stash = is_enabled").Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below

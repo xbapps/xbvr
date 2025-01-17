@@ -86,7 +86,7 @@ func StashDb() {
 	defer db.Close()
 
 	Config = models.BuildActorScraperRules()
-	db.Where(&models.Site{IsEnabled: true}).Order("id").Find(&sites)
+	db.Where(&models.Site{ScrapeStash: true}).Order("id").Find(&sites)
 
 	for _, site := range sites {
 		tlog.Infof("Scraping stash studio %s", site.Name)
