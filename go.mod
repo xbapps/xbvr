@@ -9,7 +9,7 @@ require (
 	github.com/anacrolix/ffprobe v1.1.0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/avast/retry-go/v4 v4.6.0
-	github.com/blevesearch/bleve/v2 v2.4.1
+	github.com/blevesearch/bleve/v2 v2.4.4
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
 	github.com/creasty/defaults v1.7.0
 	github.com/darwayne/go-timecode v1.1.0
@@ -65,8 +65,8 @@ require (
 )
 
 require (
-	github.com/blevesearch/go-faiss v1.0.19 // indirect
-	github.com/blevesearch/zapx/v16 v16.1.4 // indirect
+	github.com/blevesearch/go-faiss v1.0.24 // indirect
+	github.com/blevesearch/zapx/v16 v16.1.9-0.20241217210638-a0519e7caf3b // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
@@ -78,12 +78,12 @@ require (
 	github.com/antchfx/xpath v1.1.10 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.12.0 // indirect
-	github.com/blevesearch/bleve_index_api v1.1.9
+	github.com/blevesearch/bleve_index_api v1.1.12
 	github.com/blevesearch/geo v0.1.20 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
 	github.com/blevesearch/gtreap v0.1.1 // indirect
 	github.com/blevesearch/mmap-go v1.0.4 // indirect
-	github.com/blevesearch/scorch_segment_api/v2 v2.2.14 // indirect
+	github.com/blevesearch/scorch_segment_api/v2 v2.2.16 // indirect
 	github.com/blevesearch/segment v0.9.1 // indirect
 	github.com/blevesearch/snowballstem v0.9.0 // indirect
 	github.com/blevesearch/upsidedown_store_api v1.0.2 // indirect
@@ -92,7 +92,7 @@ require (
 	github.com/blevesearch/zapx/v12 v12.3.10 // indirect
 	github.com/blevesearch/zapx/v13 v13.3.10 // indirect
 	github.com/blevesearch/zapx/v14 v14.3.10 // indirect
-	github.com/blevesearch/zapx/v15 v15.3.13 // indirect
+	github.com/blevesearch/zapx/v15 v15.3.16 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/fcjr/aia-transport-go v1.2.2
