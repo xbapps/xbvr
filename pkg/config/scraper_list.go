@@ -24,7 +24,7 @@ type XbvrScrapers struct {
 	PovrScrapers    []ScraperConfig `json:"povr"`
 	SlrScrapers     []ScraperConfig `json:"slr"`
 	StashDbScrapers []ScraperConfig `json:"stashdb"`
-  RealVRScrapers  []ScraperConfig `json:"realvr"`
+	RealVRScrapers  []ScraperConfig `json:"realvr"`
 	VrpornScrapers  []ScraperConfig `json:"vrporn"`
 	VrphubScrapers  []ScraperConfig `json:"vrphub"`
 }
@@ -32,7 +32,7 @@ type CustomScrapers struct {
 	PovrScrapers    []ScraperConfig `json:"povr"`
 	SlrScrapers     []ScraperConfig `json:"slr"`
 	StashDbScrapers []ScraperConfig `json:"stashdb"`
-  RealVRScrapers  []ScraperConfig `json:"realvr"`
+	RealVRScrapers  []ScraperConfig `json:"realvr"`
 	VrpornScrapers  []ScraperConfig `json:"vrporn"`
 	VrphubScrapers  []ScraperConfig `json:"vrphub"`
 }
