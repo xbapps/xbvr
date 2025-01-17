@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -93,6 +95,7 @@ type RequestRestore struct {
 	InclActorActions bool   `json:"inclActorActions"`
 	InclConfig       bool   `json:"inclConfig"`
 	ExtRefSubset     string `json:"extRefSubset"`
+	BundleUrl        string `json:"bundleUrl"`
 }
 
 func CleanTags() {
@@ -812,6 +815,13 @@ func BackupBundle(inclAllSites bool, onlyIncludeOfficalSites bool, inclScenes bo
 }
 
 func RestoreBundle(request RequestRestore) {
+	tlog := log.WithField("task", "scrape")
+	if request.BundleUrl != "" {
+		tlog.Infof("Downloading data from %s", request.BundleUrl)
+		data, _ := downloadBundle(request.BundleUrl)
+		request.UploadData = data
+	}
+
 	if strings.Contains(request.UploadData, "\"bundleVersion\":\"1\"") {
 		ImportBundle(request.UploadData)
 		return
@@ -819,8 +829,6 @@ func RestoreBundle(request RequestRestore) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
 		defer models.RemoveLock("scrape")
-
-		tlog := log.WithField("task", "scrape")
 
 		var json = jsoniter.Config{
 			EscapeHTML:             true,
@@ -1732,4 +1740,26 @@ func UpdateSceneStatus(db *gorm.DB) {
 			tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
 		}
 	}
+}
+
+func downloadBundle(url string) (string, error) {
+	// Get the response
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// Check for a successful response
+	if resp.StatusCode != http.StatusOK {
+		return "", err
+	}
+
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
 }

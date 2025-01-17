@@ -102,13 +102,14 @@ type HereSphereAlphaPackedSettings struct {
 }
 
 type HereSphereAuthRequest struct {
-	Username    string           `json:"username"`
-	Password    string           `json:"password"`
-	Rating      *float64         `json:"rating"`
-	IsFavorite  *bool            `json:"isFavorite"`
-	Hsp         *string          `json:"hsp"`
-	Tags        *[]HeresphereTag `json:"tags"`
-	DeleteFiles *bool            `json:"deleteFile"`
+	Username         string           `json:"username"`
+	Password         string           `json:"password"`
+	Rating           *float64         `json:"rating"`
+	IsFavorite       *bool            `json:"isFavorite"`
+	Hsp              *string          `json:"hsp"`
+	Tags             *[]HeresphereTag `json:"tags"`
+	DeleteFiles      *bool            `json:"deleteFile"`
+	NeedsMediaSource optional.Bool    `json:"needsMediaSource"`
 }
 
 var RequestBody []byte
@@ -353,7 +354,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 		videoLength = file.VideoDuration
 	}
 
-	if len(videoFiles) == 0 && config.Config.Web.SceneTrailerlist {
+	if len(videoFiles) == 0 && config.Config.Web.SceneTrailerlist && requestData.NeedsMediaSource.OrElse(true) {
 		switch scene.TrailerType {
 		case "heresphere":
 			heresphereScene := LoadHeresphereScene(scene.TrailerSource)

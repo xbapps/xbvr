@@ -27,6 +27,7 @@ func BadoinkSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 	sceneCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "realvr.com")
 	siteCollector := createCollector("badoinkvr.com", "babevr.com", "vrcosplayx.com", "18vr.com", "realvr.com")
+
 	trailerCollector := cloneCollector(sceneCollector)
 
 	commonDb, _ := models.GetCommonDB()

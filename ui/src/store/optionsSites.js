@@ -20,6 +20,9 @@ const actions = {
   async toggleLimitScraping ({ state }, params) {
     state.items = await ky.put(`/api/options/sites/limit_scraping/${params.id}`, { json: {} }).json()
   },
+  async toggleScrapeStash ({ state }, params) {
+    state.items = await ky.put(`/api/options/sites/scrape_stash/${params.id}`, { json: {} }).json()
+  },
 }
 
 export default {

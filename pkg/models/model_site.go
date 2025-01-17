@@ -19,6 +19,7 @@ type Site struct {
 	LimitScraping  bool      `json:"limit_scraping" xbvrbackup:"limit_scraping"`
 	MasterSiteID   string    `json:"master_site_id" xbvrbackup:"master_site_id"`
 	MatchingParams string    `json:"matching_params" gorm:"size:1000" xbvrbackup:"matching_params"`
+	ScrapeStash    bool      `json:"scrape_stash" xbvrbackup:"scrape_stash"`
 }
 
 func (i *Site) Save() error {

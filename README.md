@@ -141,7 +141,7 @@ esc - closes details pane
 |------------------------|--------------|------|-------------|
 | `--enableLocalStorage` | | boolean |Use local folder to store application data|
 |	`--app_dir` | XBVR_APPDIR | String|path to the application directory|
-|	`--cache_dir` | XBVR_CACHEDIR | String|path to the tempoarary scraper cache directory|
+|	`--cache_dir` | XBVR_CACHEDIR | String|path to the temporary scraper cache directory|
 |	`--imgproxy_dir` | XBVR_IMAGEPROXYDIR | String|path to the imageproxy directory|
 |	`--search_dir` | XBVR_SEARCHDIR | String| path to the Search Index directory|
 |	`--preview_dir` | XBVR_VIDEOPREVIEWDIR | String| path to the Scraper Cache directory|
