@@ -273,9 +273,9 @@ func init() {
 	scrapers.Load()
 	for _, scraper := range scrapers.XbvrScrapers.VrphubScrapers {
 		switch scraper.ID {
-		case "vrphub-vrhush":
+		case "vr-hush-vrphub":
 			addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL, vrhushCallback)
-		case "vrphub-stripzvr":
+		case "stripzvr-vrphub":
 			addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL, stripzvrCallback)
 		}
 		addVRPHubScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, false, scraper.URL, noop)

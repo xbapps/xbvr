@@ -717,8 +717,6 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	scrapeRules.GenericActorScrapingConfig["vrcosplayx scrape"] = siteDetails
 	siteDetails.Domain = "18vr.com"
 	scrapeRules.GenericActorScrapingConfig["18vr scrape"] = siteDetails
-	siteDetails.Domain = "kinkvr.com"
-	scrapeRules.GenericActorScrapingConfig["kinkvr scrape"] = siteDetails
 
 	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "darkroomvr.com"
@@ -1064,7 +1062,7 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 				XbvrMatch:                "Enter regex express to extract value from field to match on",
 				XbvrMatchResultPosition:  0,
 				StashField:               "Enter the stash field to cmpare, default Url",
-				StashRule:                "enter regex expression to extract watch to match from the stash url",
+				StashRule:                "Enter rule name, ie title, title/date, studio_code or regex expression to extract value to match from the stash url",
 				StashMatchResultPosition: 0,
 			}}
 			exampleConfig.StashSceneMatching["siteid"] = []StashSiteConfig{stashMatch}
@@ -1085,6 +1083,9 @@ func (scrapeRules ActorScraperConfig) getCustomRules() {
 			if key != " scrape" {
 				scrapeRules.GenericActorScrapingConfig[key] = rule
 			}
+		}
+		for key, matchrule := range customScrapeRules.StashSceneMatching {
+			scrapeRules.StashSceneMatching[key] = matchrule
 		}
 	}
 }

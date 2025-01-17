@@ -141,5 +141,5 @@ func SexBabesVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 }
 
 func init() {
-	registerScraper("sexbabesvr", "SexBabesVR", "https://sexbabesvr.com/assets/front/assets/logo.png", "sexbabesvr.com", SexBabesVR)
+	registerScraper("sexbabesvr", "SexBabesVR", "https://sexbabesvr.com/static/images/favicons/favicon-32x32.png", "sexbabesvr.com", SexBabesVR)
 }

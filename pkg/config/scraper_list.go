@@ -156,3 +156,77 @@ func SetSiteId(configList *[]ScraperConfig, customId string) {
 	}
 
 }
+
+func MigrateFromOfficalToCustom(id string, url string, name string, company string, avatarUrl string, customId string, suffix string) error {
+
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var scenes []models.Scene
+	db.Where("scraper_id = ?", id).Find(&scenes)
+
+	if len(scenes) != 0 {
+		common.Log.Infoln(name + ` Scenes found migration needed`)
+
+		// Update scene data to reflect change
+		db.Model(&models.Scene{}).Where("scraper_id = ?", id).Update("needs_update", true)
+
+		// Determine the new id from the URL using the same template as the scraper list code
+		tmp := strings.TrimRight(url, "/")
+		newId := strings.ToLower(tmp[strings.LastIndex(tmp, "/")+1:]) + `-` + customId
+
+		var scraperConfig ScraperList
+		scraperConfig.Load()
+
+		// Data taken from offical scraper list
+		scraper := ScraperConfig{URL: url, Name: name, Company: company, AvatarUrl: avatarUrl}
+
+		// Update any alt sites that is using the old id to the new id
+		updateMasterSite := func(sites []ScraperConfig) {
+			for idx, site := range sites {
+				if site.MasterSiteId == id {
+					sites[idx].MasterSiteId = newId
+				}
+			}
+		}
+
+		updateMasterSite(scraperConfig.CustomScrapers.SlrScrapers)
+		updateMasterSite(scraperConfig.CustomScrapers.PovrScrapers)
+		updateMasterSite(scraperConfig.CustomScrapers.VrpornScrapers)
+		updateMasterSite(scraperConfig.CustomScrapers.VrphubScrapers)
+
+		// Append our scraper to the the Custom Scraper list unless its new id already exists
+		switch customId {
+		case "slr":
+			if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.SlrScrapers) == false {
+				scraperConfig.CustomScrapers.SlrScrapers = append(scraperConfig.CustomScrapers.SlrScrapers, scraper)
+			}
+		case "povr":
+			if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.PovrScrapers) == false {
+				scraperConfig.CustomScrapers.PovrScrapers = append(scraperConfig.CustomScrapers.PovrScrapers, scraper)
+			}
+		case "vrporn":
+			if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.VrpornScrapers) == false {
+				scraperConfig.CustomScrapers.VrpornScrapers = append(scraperConfig.CustomScrapers.VrpornScrapers, scraper)
+			}
+		case "vrphub":
+			if CheckMatchingSite(scraper, scraperConfig.CustomScrapers.VrphubScrapers) == false {
+				scraperConfig.CustomScrapers.VrphubScrapers = append(scraperConfig.CustomScrapers.VrphubScrapers, scraper)
+			}
+		}
+
+		// Save the new list file
+		fName := filepath.Join(common.AppDir, "scrapers.json")
+		list, _ := json.MarshalIndent(scraperConfig, "", "  ")
+		os.WriteFile(fName, list, 0644)
+
+		common.Log.Infoln(name + ` migration complete. Please restart XBVR and run ` + name + ` scraper to complete migration`)
+
+	} else {
+
+		common.Log.Infoln(`No ` + name + ` Scenes found no migration needed. Removing DB entry`)
+
+	}
+
+	return db.Delete(&models.Site{ID: id}).Error
+}
