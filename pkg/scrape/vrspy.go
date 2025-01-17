@@ -62,7 +62,8 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 
 		sc.SceneID = scraperID + "-" + sc.SiteID
 
-		sc.Title = e.ChildText(`.video-content .header-container .video-title .section-header-container`)
+		sc.Title = strings.TrimSuffix(strings.TrimSuffix(e.ChildText(`div.video-title .section-header-container`), " Scene"), " - VR Porn")
+
 		sc.Synopsis = e.ChildText(`.video-description-container`)
 		sc.Tags = e.ChildTexts(`.video-categories .chip`)
 

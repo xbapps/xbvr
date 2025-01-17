@@ -35,6 +35,13 @@ type QueryScenesData struct {
 type QueryScenesResult struct {
 	Data QueryScenesData `json:"data"`
 }
+type FindScenesData struct {
+	Scene models.StashScene `json:"findScene"`
+}
+type FindScenesResult struct {
+	Data FindScenesData `json:"data"`
+}
+
 type FindStudioResponse struct {
 	Studio models.StashStudio `json:"studio"`
 }
@@ -51,6 +58,12 @@ type FindPerformerResult struct {
 }
 type FindPerformerData struct {
 	Performer models.StashPerformer `json:"findPerformer"`
+}
+type SearchPerformerResult struct {
+	Data SearchPerformerData `json:"data"`
+}
+type SearchPerformerData struct {
+	Performers []models.StashPerformer `json:"searchPerformer"`
 }
 
 type QueryPerformerResult struct {
@@ -69,7 +82,12 @@ type FindSceneResult struct {
 type FindSceneData struct {
 	Scene models.StashScene `json:"findScene"`
 }
-
+type FindPerformerScenesData struct {
+	Performer models.StashPerformer `json:"findPerformer"`
+}
+type FindPerformerScenesResult struct {
+	Data FindPerformerScenesData `json:"data"`
+}
 type Image struct {
 	ID     string `json:"id"`
 	Url    string `json:"url"`
@@ -127,6 +145,7 @@ duration
     id
 	name
 }
+=======
 code  
 deleted
 `
@@ -147,7 +166,7 @@ func StashDb() {
 	defer db.Close()
 
 	Config = models.BuildActorScraperRules()
-	db.Where(&models.Site{IsEnabled: true}).Order("id").Find(&sites)
+	db.Where(&models.Site{ScrapeStash: true}).Order("id").Find(&sites)
 
 	for _, site := range sites {
 		tlog.Infof("Scraping stash studio %s", site.Name)
@@ -155,14 +174,16 @@ func StashDb() {
 		if i := strings.Index(sitename, " ("); i != -1 {
 			sitename = sitename[:i]
 		}
-		studio := findStudio(sitename, "name")
+		studio := FindStashdbStudio(sitename, "name")
 
-		// check for a config entry if site not found
-		if studio.Data.Studio.ID == "" && Config.StashSceneMatching[site.ID].StashId != "" {
-			studio = findStudio(Config.StashSceneMatching[site.ID].StashId, "id")
+		sitecfg, cfgExists := Config.StashSceneMatching[site.ID]
+		if !cfgExists && studio.Data.Studio.ID != "" {
+			sitecfg = []models.StashSiteConfig{models.StashSiteConfig{StashId: studio.Data.Studio.ID}}
 		}
 
-		if studio.Data.Studio.ID != "" {
+		// check for a config entry if site not found
+		for _, cfgEntry := range sitecfg {
+			studio = FindStashdbStudio(cfgEntry.StashId, "id")
 			siteConfig := Config.StashSceneMatching[site.ID]
 			var ext models.ExternalReference
 			ext.FindExternalId("stashdb studio", studio.Data.Studio.ID)
@@ -174,16 +195,46 @@ func StashDb() {
 				ext.AddUpdateWithId()
 			}
 			processStudioPerformers(studio.Data.Studio.ID)
-			scenes := getScenes(studio.Data.Studio.ID, siteConfig.ParentId, siteConfig.TagIdFilter)
+			parentId := ""
+			tagFilterId := ""
+			if siteConfig != nil {
+				parentId = siteConfig[0].ParentId
+				tagFilterId = siteConfig[0].TagIdFilter
+			}
+			scenes := getScenes(studio.Data.Studio.ID, parentId, tagFilterId)
 			saveScenesToExternalReferences(scenes, studio.Data.Studio.ID)
-		} else {
-			log.Infof("No Stash Studio matching %v", site.Name)
 		}
-		tlog.Info("Scrape of Stashdb completed")
+		if sitecfg == nil {
+			log.Infof("No Stash Studio matching %v", site.Name)
+		} else {
+			tlog.Info("Scrape of Stashdb completed")
+		}
 	}
 }
 
-func findStudio(studio string, field string) FindStudioResult {
+func GetStashDbScene(stashId string) FindScenesResult {
+	var result FindScenesResult
+	if config.Config.Advanced.StashApiKey == "" {
+		return result
+	}
+	tlog := log.WithField("task", "scrape")
+	tlog.Infof("Scraping stash studio %s", stashId)
+	query := `
+		query  findScene($id: ID!) {
+			findScene(id: $id) {
+	` + sceneFieldList + `
+		  }
+		  }
+		  `
+	variables := `{"id": "` + stashId + `"}`
+	resp := CallStashDb(query, variables)
+	json.Unmarshal(resp, &result)
+
+	tlog.Info("Scrape of Stashdb completed")
+	return result
+}
+
+func FindStashdbStudio(studio string, field string) FindStudioResult {
 	fieldType := "String"
 	if field == "id" {
 		fieldType = "ID"
@@ -226,7 +277,7 @@ func processStudioPerformers(studioId string) {
 	}
 
 	for _, performer := range performerList.Data.QueryPerformers.Performers {
-		updatePerformer(performer)
+		UpdatePerformer(performer)
 	}
 }
 func getPerformersPage(studioId string, page int) QueryPerformerResult {
@@ -311,12 +362,17 @@ func getStudioSceneQueryVariable(studioId string, page int, count int) string {
 // Builds a query variable to get scenes from the Parent Studio
 // Uses the tagId to filter just scenes tag as Virtual Reality
 func getParentSceneQueryVariable(parentId string, tagId string, page int, count int) string {
-	return `
-	{"input":{
+	tag := ""
+	if tagId != "" {
+		tag = `
 		"tags": {					
 			"value": "` + tagId + `",
 			"modifier": "INCLUDES"
 		},
+		`
+	}
+	return `
+	{"input":{` + tag + ` 
 		"parentStudio": "` + parentId + `",				 
 		
 		"page": ` + strconv.Itoa(page) + `,
@@ -512,7 +568,7 @@ func saveScenesToExternalReferences(scenes QueryScenesResult, studioId string) {
 
 		// chek if we have the performers, may not in the case of loading scenes from the parent studio
 		for _, performer := range scene.Performers {
-			updatePerformer(performer.Performer)
+			UpdatePerformer(performer.Performer)
 		}
 
 		// see if we can link to an xbvr scene based on the urls
@@ -538,7 +594,7 @@ func saveScenesToExternalReferences(scenes QueryScenesResult, studioId string) {
 	}
 }
 
-func updatePerformer(newPerformer models.StashPerformer) {
+func UpdatePerformer(newPerformer models.StashPerformer) {
 	var ext models.ExternalReference
 	ext.FindExternalId("stashdb performer", newPerformer.ID)
 	var oldPerformer models.StashPerformer
@@ -640,6 +696,127 @@ func GetStashPerformer(performer string) FindPerformerResult {
 
 	// Define the variables needed for your query as a Go map
 	var data FindPerformerResult
+	variables := `{"id": "` + performer + `"}`
+	resp := CallStashDb(query, variables)
+	err := json.Unmarshal(resp, &data)
+	if err != nil {
+		log.Errorf("Eror extracting actor json")
+	}
+	return data
+}
+func SearchStashPerformer(performer string) SearchPerformerResult {
+
+	query := `
+	query SearchAll($term: String!, $limit: Int = 100) 
+		{ searchPerformer(term: $term, limit: $limit) {
+  id
+  name
+  disambiguation
+  aliases
+  gender
+  birth_date
+  age
+  ethnicity
+  country
+  eye_color
+  hair_color
+  height
+  cup_size
+  band_size
+  waist_size
+  hip_size
+  breast_type
+  career_start_year
+  career_end_year
+  studios {
+    scene_count
+    studio { 
+	  name 
+	  id
+	}
+}
+  images{
+      id
+      url
+      width
+      height
+      }
+  
+  deleted
+  merged_ids
+  created
+  updated
+
+	  }
+	  }
+	`
+
+	// Define the variables needed for your query as a Go map
+	var data SearchPerformerResult
+	variables := `{"term": "` + performer + `"}`
+	resp := CallStashDb(query, variables)
+	err := json.Unmarshal(resp, &data)
+	if err != nil {
+		log.Errorf("Eror extracting actor json")
+	}
+	return data
+}
+
+func GetStashPerformerFull(performer string) FindPerformerScenesResult {
+
+	query := `
+	query  findPerformer($id: ID!) {
+		findPerformer(id: $id) {
+  id
+  name
+  disambiguation
+  aliases
+  gender
+  birth_date
+  images{
+      id
+      url
+      width
+      height
+      }  
+  studios {
+    scene_count
+    studio { 
+	  name 
+	  id
+	}
+  }
+  deleted
+  created
+  updated
+  scenes {
+  	id
+	title
+	details
+	release_date
+	date	
+	studio{
+		id
+		name		
+	}
+		studio {
+			name 
+			id
+			}
+	images{
+		url
+		width
+		height
+	}
+	duration
+	deleted
+	}
+}
+ }
+`
+
+	// Define the variables needed for your query as a Go map
+	var data FindPerformerScenesResult
 	variables := `{"id": "` + performer + `"}`
 	resp := CallStashDb(query, variables)
 	err := json.Unmarshal(resp, &data)

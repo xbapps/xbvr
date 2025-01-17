@@ -50,6 +50,11 @@
           <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
         </b-tooltip>
       </b-table-column>
+      <b-table-column field="scrape_stash" :label="$t('Scrape Stash')" v-slot="props" width="60" sortable>
+        <b-tooltip class="is-info" :label="$t('Enables scraping Stashdb for Actors')" :delay="250" >
+          <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.scrape_stash" @input="$store.dispatch('optionsSites/toggleScrapeStash', {id: props.row.id})"/></span>
+        </b-tooltip>
+      </b-table-column>
       <b-table-column field="options" v-slot="props" width="30">
         <div class="menu">
           <b-dropdown aria-role="list" class="is-pulled-right" position="is-bottom-left">

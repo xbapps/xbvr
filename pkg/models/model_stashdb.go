@@ -15,6 +15,10 @@ type StashStudio struct {
 	Parent  IdName    `json:"parent"`
 	Updated time.Time `json:"updated"`
 }
+type StashPerformerStudio struct {
+	SceneCount int         `json:"scene_count"`
+	Studio     StashStudio `json:"studio"`
+}
 
 type StashPerformer struct {
 	ID              string                  `json:"id"`
@@ -44,6 +48,7 @@ type StashPerformer struct {
 	MergedIds       []string                `json:"merged_ids"`
 	Created         string                  `json:"created"`
 	Updated         time.Time               `json:"updated"`
+	Studios         []StashPerformerStudio  `json:"studios"`
 }
 
 type StashBodyModification struct {
@@ -92,4 +97,9 @@ type DELETEStashPerformerMin struct {
 	Updated string `json:"updated"`
 	Gender  string `json:"gender"`
 	Name    string `json:"name"`
+}
+type StashImage struct {
+	Url    StashPerformer `json:"url"`
+	Width  int            `json:"width"`
+	Height int            `json:"height"`
 }

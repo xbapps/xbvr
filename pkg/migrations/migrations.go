@@ -820,6 +820,19 @@ func Migrate() {
 				return nil
 			},
 		},
+		{
+			ID: "0082-scrape-stash-flag",
+			Migrate: func(tx *gorm.DB) error {
+				type Site struct {
+					ScrapeStash bool `json:"scrape_stash" xbvrbackup:"scrape_stash"`
+				}
+				err := tx.AutoMigrate(Site{}).Error
+				if err != nil {
+					return err
+				}
+				return tx.Exec("update sites set scrape_stash = is_enabled").Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below
@@ -2070,6 +2083,71 @@ func Migrate() {
 				tasks.SearchIndex()
 
 				return nil
+			},
+		},
+		{
+			ID: "0081-Offical-Site-Removals-With-Main-Site-Aviable",
+			Migrate: func(tx *gorm.DB) error {
+
+				err := config.MigrateFromOfficalToCustom("ps-porn", "https://www.sexlikereal.com/studios/ps-porn-vr", "PS-Porn", "Paula Shy", "https://mcdn.vrporn.com/files/20201221090642/PS-Porn-400x400.jpg", "slr", "(SLR)")
+				err = config.MigrateFromOfficalToCustom("fuckpassvr", "https://www.sexlikereal.com/studios/fuckpassvr", "FuckPassVR", "FuckPassVR", "https://cdn-vr.sexlikereal.com/images/studio_creatives/logotypes/1/352/logo_crop_1635153994.png", "slr", "(SLR)")
+				err = config.MigrateFromOfficalToCustom("vrphub-vrhush", "https://vrphub.com/category/vr-hush", "VRHush", "VRHush", "https://cdn-nexpectation.secure.yourpornpartner.com/sites/vrh/favicon/apple-touch-icon-180x180.png", "vrphub", "(VRP Hub)")
+				err = config.MigrateFromOfficalToCustom("vrphub-stripzvr", "https://vrphub.com/category/stripzvr/", "StripzVR - VRP Hub", "StripzVR", "https://www.stripzvr.com/wp-content/uploads/2018/09/cropped-favicon-192x192.jpg", "vrphub", "(VRP Hub)")
+				return err
+			},
+		},
+		{
+			ID: "0082-upgrade_actor_scraper_config",
+			Migrate: func(tx *gorm.DB) error {
+				type actorScraperConfig struct {
+					StashSceneMatching         map[string]models.StashSiteConfig
+					GenericActorScrapingConfig map[string]models.GenericScraperRuleSet
+				}
+
+				fName := filepath.Join(common.AppDir, "actor_scraper_custom_config.json")
+				if _, err := os.Stat(fName); os.IsNotExist(err) {
+					return nil
+				}
+
+				var newCustomScrapeRules models.ActorScraperConfig
+				b, err := os.ReadFile(fName)
+				if err != nil {
+					return err
+				}
+				// make a backup, just in case, but don't fail the upgrade if a copy cannot be made
+				bakName := filepath.Join(common.AppDir, "actor_scraper_custom_config.pre_0433.json")
+				if _, err := os.Stat(bakName); os.IsNotExist(err) {
+					err := os.WriteFile(bakName, b, 0644)
+					if err != nil {
+						common.Log.Warnf("Warning: unable to create backup copy of actor_scraper_custom_config.json %s, proceeding", err)
+					}
+				}
+
+				e := json.Unmarshal(b, &newCustomScrapeRules)
+				if e == nil {
+					// if we can read the file with the new model, it has already been converted
+					common.Log.Info("Ignoring migration of actor_scraper_custom_config.json, already appears to have been done")
+					return nil
+				}
+
+				var oldCustomScrapeRules actorScraperConfig
+				e = json.Unmarshal(b, &oldCustomScrapeRules)
+				if e != nil {
+					// can't read the old layout either ?
+					return e
+				}
+
+				newCustomScrapeRules = models.ActorScraperConfig{}
+				newCustomScrapeRules.GenericActorScrapingConfig = oldCustomScrapeRules.GenericActorScrapingConfig
+				newCustomScrapeRules.StashSceneMatching = map[string][]models.StashSiteConfig{}
+				for key, _ := range oldCustomScrapeRules.StashSceneMatching {
+					newScraperCofig := oldCustomScrapeRules.StashSceneMatching[key]
+					newCustomScrapeRules.StashSceneMatching[key] = []models.StashSiteConfig{}
+					newCustomScrapeRules.StashSceneMatching[key] = append(newCustomScrapeRules.StashSceneMatching[key], newScraperCofig)
+				}
+				out, _ := json.MarshalIndent(newCustomScrapeRules, "", "  ")
+				e = os.WriteFile(fName, out, 0644)
+				return e
 			},
 		},
 	})
