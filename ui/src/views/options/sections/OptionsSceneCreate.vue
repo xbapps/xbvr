@@ -186,6 +186,7 @@ export default {
       }
       if (this.scrapeUrl.toLowerCase().includes("realvr.com")) {
         site = "realvr-single_scene"
+      }
       if (this.scrapeUrl.toLowerCase().includes("stashdb.org")) {
         site = "single_scene-stashdb"
       }
