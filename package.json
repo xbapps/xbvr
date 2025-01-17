@@ -20,7 +20,7 @@
     "date-fns": "3.6.0",
     "ky": "0.30.0",
     "pretty-bytes": "6.1.1",
-    "videojs-hotkeys": "0.2.28",
+    "videojs-hotkeys": "0.2.30",
     "videojs-vr": "1.8.0",
     "vue": "2.7.16",
     "vue-debounce": "4.0.1",

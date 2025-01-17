@@ -8321,10 +8321,10 @@ videojs-font@3.2.0:
   resolved "https://registry.yarnpkg.com/videojs-font/-/videojs-font-3.2.0.tgz#212c9d3f4e4ec3fa7345167d64316add35e92232"
   integrity sha512-g8vHMKK2/JGorSfqAZQUmYYNnXmfec4MLhwtEFS+mMs2IDY398GLysy6BH6K+aS1KMNu/xWZ8Sue/X/mdQPliA==
 
-videojs-hotkeys@0.2.28:
-  version "0.2.28"
-  resolved "https://registry.yarnpkg.com/videojs-hotkeys/-/videojs-hotkeys-0.2.28.tgz#73d7d7b43ff62b046e6b93a0ce71c6ed5fcac105"
-  integrity sha512-M8rlD5OSB3EDRdbS4MRNlGKFpA2sSIStmUPvy5zfl/NigzWaN6r4wnb32rEN0v97GiQwmUfXSmqrPNrXhiFQmQ==
+videojs-hotkeys@0.2.30:
+  version "0.2.30"
+  resolved "https://registry.yarnpkg.com/videojs-hotkeys/-/videojs-hotkeys-0.2.30.tgz#23a663cd2eb81ba1f070456938f0349b4327760b"
+  integrity sha512-G8kEQZPapoWDoEajh2Nroy4bCN1qVEul5AuzZqBS7ZCG45K7hqTYKgf1+fmYvG8m8u84sZmVMUvSWZBjaFW66Q==
 
 videojs-vr@1.8.0:
   version "1.8.0"
