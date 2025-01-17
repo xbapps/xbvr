@@ -184,6 +184,9 @@ export default {
       if (this.scrapeUrl.toLowerCase().includes("vrphub.com")) {
         site = "vrphub-single_scene"
       }
+      if (this.scrapeUrl.toLowerCase().includes("stashdb.org")) {
+        site = "single_scene-stashdb"
+      }
       if (site == "") {
         this.$buefy.toast.open({message: `No scrapers exist for this domain`, type: 'is-danger', duration: 5000})      
         return

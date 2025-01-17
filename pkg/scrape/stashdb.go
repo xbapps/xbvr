@@ -76,6 +76,12 @@ type QueryPerformerResultType struct {
 	Count      int                     `json:"count"`
 	Performers []models.StashPerformer `json:"performers"`
 }
+type FindSceneResult struct {
+	Data FindSceneData `json:"data"`
+}
+type FindSceneData struct {
+	Scene models.StashScene `json:"findScene"`
+}
 type FindPerformerScenesData struct {
 	Performer models.StashPerformer `json:"findPerformer"`
 }
@@ -135,6 +141,11 @@ fingerprints{
   submissions
 }
 duration
+  tags {
+    id
+	name
+}
+=======
 code  
 deleted
 `
@@ -379,7 +390,65 @@ func GetScenePage(variables string) QueryScenesResult {
 		queryScenes(input: $input) {
 		  count
 		 scenes{
-` + sceneFieldList + `
+		  id
+		  title
+		  details
+		  release_date
+		  date
+		  updated
+		  urls{
+			url
+			type
+			site {
+                id
+                name
+                description
+                url
+                regex
+                valid_types
+            }
+		  }
+		  studio{
+			  id
+			  name
+			  updated
+			  parent {
+				id
+				name  
+			  }
+		  }
+		  images{
+			url
+			width
+			height
+		  }
+		  performers{
+			performer{
+			  id
+			  updated
+			  gender
+			  name
+			  aliases
+			  images{
+				url
+				width
+				height
+			  }
+			}
+			as
+		  }
+		  fingerprints{
+			hash
+			duration
+			submissions
+		  }
+		  tags {
+			id
+			name
+		  }
+		  duration
+		  code  
+		  deleted
 		}
 	  }
 	  }
@@ -390,6 +459,81 @@ func GetScenePage(variables string) QueryScenesResult {
 	var data QueryScenesResult
 	json.Unmarshal(resp, &data)
 	return data
+}
+
+func GetSceneFromStash(sceneId string) models.StashScene {
+	variables := `{"id": "` + sceneId + `"} `
+	query := `
+	 query  findScene($id: ID!) {
+		findScene(id: $id) {
+			id
+		   title
+		   details
+		   release_date
+		   date
+		   updated
+		   urls{
+			 url
+			 type
+			 site {
+				 id
+				 name
+				 description
+				 url
+				 regex
+				 valid_types
+			 }
+		   }
+		   studio{
+			   id
+			   name
+			   updated
+			   parent {
+				 id
+				 name  
+			   }
+		   }
+		   images{
+			 url
+			 width
+			 height
+		   }
+		   performers{
+			 performer{
+			   id
+			   updated
+			   gender
+			   name
+			   aliases
+			   images{
+				 url
+				 width
+				 height
+			   }
+			 }
+			 as
+		   }
+		   fingerprints{
+			 hash
+			 duration
+			 submissions
+		   }
+		   tags {
+			 id
+			 name
+		   }
+		   duration
+		   code  
+		   deleted
+		 }
+	   }
+	   `
+
+	// Define the variables needed for your query as a Go map
+	resp := CallStashDb(query, variables)
+	var data FindSceneResult
+	json.Unmarshal(resp, &data)
+	return data.Data.Scene
 }
 
 func saveScenesToExternalReferences(scenes QueryScenesResult, studioId string) {

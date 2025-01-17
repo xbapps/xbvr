@@ -91,22 +91,39 @@ func matchOnSceneUrl() {
 		var xbvrId uint
 		var xbvrSceneId string
 
+		for _, unmatchedXbvrScene := range unmatchedXbvrScenes {
+			stashId := strings.TrimPrefix(unmatchedXbvrScene.SceneID, "stash-")
+			if stashId == stashScene.ExternalId {
+				// xbvrLink := models.ExternalReferenceLink{InternalTable: "scenes", InternalDbId: scene.ID, InternalNameId: scene.SceneID,
+				// 	ExternalReferenceID: stashScene.ID, ExternalSource: stashScene.ExternalSource, ExternalId: stashScene.ExternalId, MatchType: 20}
+				//stashScene.XbvrLinks = append(stashScene.XbvrLinks, xbvrLink)
+				//stashScene.Save()
+				//var externalData models.StashScene
+				//json.Unmarshal([]byte(stashScene.ExternalData), &externalData)
+				//matchPerformerName(externalData, scene, 20)
+				xbvrId = unmatchedXbvrScene.ID
+				xbvrSceneId = unmatchedXbvrScene.SceneID
+			}
+		}
+
 		// see if we can link to an xbvr scene based on the urls
-		for _, url := range scene.URLs {
-			if url.Type == "STUDIO" {
-				var xbvrScene models.Scene
-				for _, scene := range unmatchedXbvrScenes {
-					sceneurl := removeQueryFromURL(scene.SceneURL)
-					tmpurl := removeQueryFromURL(url.URL)
-					sceneurl = simplifyUrl(sceneurl)
-					tmpurl = simplifyUrl(tmpurl)
-					if strings.EqualFold(sceneurl, tmpurl) {
-						xbvrScene = scene
+		if xbvrId == 0 {
+			for _, url := range scene.URLs {
+				if url.Type == "STUDIO" {
+					var xbvrScene models.Scene
+					for _, scene := range unmatchedXbvrScenes {
+						sceneurl := removeQueryFromURL(scene.SceneURL)
+						tmpurl := removeQueryFromURL(url.URL)
+						sceneurl = simplifyUrl(sceneurl)
+						tmpurl = simplifyUrl(tmpurl)
+						if strings.EqualFold(sceneurl, tmpurl) {
+							xbvrScene = scene
+						}
 					}
-				}
-				if xbvrScene.ID != 0 {
-					xbvrId = xbvrScene.ID
-					xbvrSceneId = xbvrScene.SceneID
+					if xbvrScene.ID != 0 {
+						xbvrId = xbvrScene.ID
+						xbvrSceneId = xbvrScene.SceneID
+					}
 				}
 			}
 		}
