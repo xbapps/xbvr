@@ -1,16 +1,13 @@
 package scrape
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
+	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
-	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -18,129 +15,134 @@ func RealityLoversSite(wg *models.ScrapeWG, updateSite bool, knownScenes []strin
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("realitylovers.com", "engine.realitylovers.com", "tsvirtuallovers.com", "engine.tsvirtuallovers.com")
+	sceneCollector := createCollector(domain)
+	siteCollector := createCollector(domain)
 
-	sceneCollector.OnResponse(func(r *colly.Response) {
-		if r.StatusCode != 200 {
-			return
-		}
-		json := gjson.ParseBytes(r.Body)
+	// These cookies are needed for age verification.
+	siteCollector.OnRequest(func(r *colly.Request) {
+		r.Headers.Set("Cookie", "agreedToDisclaimer=true")
+	})
 
+	sceneCollector.OnRequest(func(r *colly.Request) {
+		r.Headers.Set("Cookie", "agreedToDisclaimer=true")
+	})
+
+	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
 		sc.Studio = "RealityLovers"
 		sc.Site = siteID
-		sc.HomepageURL = r.Request.Ctx.Get("sceneURL")
+		sc.SiteID = ""
+		sc.HomepageURL, _ = strings.CutSuffix(e.Request.URL.String(), "/")
 
-		// Scene ID
-		sc.SiteID = json.Get("contentId").String()
-		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		// Cover Url
+		coverURL := e.Request.Ctx.GetAny("coverURL").(string)
+		sc.Covers = append(sc.Covers, coverURL)
 
-		sc.Title = json.Get("title").String()
-		sc.Synopsis = json.Get("description").String()
+		// Gallery
+		e.ForEach(`div.owl-carousel div.item`, func(id int, e *colly.HTMLElement) {
+			sc.Gallery = append(sc.Gallery, e.ChildAttr("img", "src"))
+		})
 
-		covers := json.Get("mainImages.0.imgSrcSet").String()
-		sc.Covers = append(sc.Covers, strings.Fields(covers)[0])
-
-		sc.Released = json.Get("releaseDate").String()
+		// Incase we scrape a single scene use one of the gallery images for the cover
+		if singleSceneURL != "" {
+			sc.Covers = append(sc.Covers, sc.Gallery[0])
+		}
 
 		// Cast
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		json.Get("starring").ForEach(func(_, star gjson.Result) bool {
-			name := star.Get("name").String()
-			sc.Cast = append(sc.Cast, name)
-			sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: "https://" + domain + "/" + star.Get("uri").String()}
-			return true
-		})
-
-		// Gallery
-		json.Get("screenshots").ForEach(func(_, screenshot gjson.Result) bool {
-			imgset := screenshot.Get("galleryImgSrcSet").String()
-			images := strings.Split(imgset, ",")
-			selectedImage := ""
-			for _, image := range images {
-				parts := strings.Fields(image)
-				if selectedImage == "" {
-					selectedImage = parts[0]
+		e.ForEach(`table.video-description-list tbody`, func(id int, e *colly.HTMLElement) {
+			// Cast
+			e.ForEach(`tr:nth-child(1) a`, func(id int, e *colly.HTMLElement) {
+				if strings.TrimSpace(e.Text) != "" {
+					sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 				}
-				if parts[1] == "1920w" {
-					selectedImage = parts[0]
-				}
-			}
-			sc.Gallery = append(sc.Gallery, selectedImage)
-			return true
+			})
+
+			// Tags
+			e.ForEach(`tr:nth-child(2) a`, func(id int, e *colly.HTMLElement) {
+				tag := strings.TrimSpace(e.Text)
+
+				// Standardize the resolution tags
+				tag, _ = strings.CutSuffix(strings.ToLower(tag), " vr porn")
+				tag, _ = strings.CutSuffix(tag, " ts")
+				sc.Tags = append(sc.Tags, tag)
+			})
+
+			// Date
+			tmpDate, _ := goment.New(strings.TrimSpace(e.ChildText(`tr:nth-child(3) td:last-child`)), "MMMM DD, YYYY")
+			sc.Released = tmpDate.Format("YYYY-MM-DD")
 		})
 
-		// Tags
-		json.Get("categories").ForEach(func(_, category gjson.Result) bool {
-			sc.Tags = append(sc.Tags, category.Get("name").String())
-			return true
-		})
+		// Synposis
+		sc.Synopsis = strings.TrimSpace(e.ChildText("div.accordion-body"))
 
-		sc.TrailerType = "url"
-		sc.TrailerSrc = json.Get("trailerUrl").String()
+		tmp := strings.Split(sc.HomepageURL, "/")
 
-		out <- sc
+		// Title
+		sc.Title = e.Request.Ctx.GetAny("title").(string)
+
+		//Fall back incase single scene scraping
+		if sc.Title == "" {
+			sc.Title = strings.ReplaceAll(tmp[len(tmp)-1], "-", " ")
+		}
+
+		// Scene ID
+		sc.SiteID = tmp[len(tmp)-2]
+
+		if sc.SiteID != "" {
+			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+
+			// save only if we got a SceneID
+			out <- sc
+		}
 	})
 
-	// Request scenes via REST API
-	if singleSceneURL == "" {
-		page := 0
-		for {
-			url := fmt.Sprintf("https://engine.%s/content/videos?max=12&page=%v&pornstar=&category=&perspective=&sort=NEWEST", domain, page)
-			log.Infoln("visiting", url)
-			r, err := resty.New().R().
-				SetHeader("User-Agent", UserAgent).
-				Get(url)
-
-			if err != nil {
-				log.Errorf("Error fetching BaberoticaVR feed: %s", err)
-				logScrapeFinished(scraperID, siteID)
-				return nil
-			}
-
-			scenecnt := 0
-			if err == nil || r.StatusCode() == 200 {
-				result := gjson.Get(r.String(), "contents")
-				result.ForEach(func(key, value gjson.Result) bool {
-					scenecnt++
-					sceneURL := "https://" + domain + "/" + value.Get("videoUri").String()
-					sceneID := value.Get("id").String()
-					if !funk.ContainsString(knownScenes, sceneURL) {
-						ctx := colly.NewContext()
-						ctx.Put("sceneURL", sceneURL)
-						sceneCollector.Request("GET", "https://engine."+domain+"/content/videoDetail?contentId="+sceneID, nil, ctx, nil)
-					}
-					return true
-				})
-			}
-			if err != nil {
-				log.Errorf("Error visiting %s %s", url, err)
-			}
-			if r.StatusCode() != 200 {
-				log.Errorf("Return code visiting %s %v", url, r.StatusCode())
-			}
-
-			if scenecnt < 12 {
-				break
-			}
-			page++
-			if limitScraping {
-				break
-			}
-			// have seen instances of status 404, so make sure we don't span will calls
-			time.Sleep(time.Second)
+	siteCollector.OnHTML(`a.page-link[aria-label="Next"]:not(.disabled)`, func(e *colly.HTMLElement) {
+		if !limitScraping {
+			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
+			siteCollector.Visit(pageURL)
 		}
+	})
+
+	siteCollector.OnHTML(`div#gridView`, func(e *colly.HTMLElement) {
+
+		e.ForEach("div.video-grid-view", func(id int, e *colly.HTMLElement) {
+
+			re := regexp.MustCompile(`.+[jJ][pP][gG]`)
+			tmp := strings.Split(e.ChildAttr("img", "srcset"), ",")
+			r := re.FindStringSubmatch(tmp[len(tmp)-1])
+			coverURL := ""
+
+			if len(r) > 0 {
+				coverURL = strings.TrimSpace(r[0])
+			} else {
+				log.Warnln("Couldn't Find Cover Img in srcset:", tmp)
+			}
+
+			title := e.ChildText("p.card-title")
+
+			sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a", "href"))
+
+			// If scene exist in database, there's no need to scrape
+			if !funk.ContainsString(knownScenes, sceneURL) {
+				ctx := colly.NewContext()
+				ctx.Put("coverURL", coverURL)
+				ctx.Put("title", title)
+				sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
+			}
+		})
+	})
+
+	if singleSceneURL != "" {
+		ctx := colly.NewContext()
+		ctx.Put("coverURL", "")
+		ctx.Put("title", "")
+		sceneCollector.Request("GET", singleSceneURL, nil, ctx, nil)
 	} else {
-		re := regexp.MustCompile(`.com\/vd\/(\d+)\/`)
-		match := re.FindStringSubmatch(singleSceneURL)
-		if len(match) >= 2 {
-			ctx := colly.NewContext()
-			ctx.Put("sceneURL", singleSceneURL)
-			sceneCollector.Request("GET", "https://engine."+domain+"/content/videoDetail?contentId="+match[1], nil, ctx, nil)
-		}
-
+		siteCollector.Visit("https://" + domain + "/videos/page1")
 	}
 
 	if updateSite {
