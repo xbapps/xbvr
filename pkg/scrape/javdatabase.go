@@ -24,7 +24,7 @@ func ScrapeJavDB(out *[]models.ScrapedScene, queryString string) {
 		sc.Tags = append(sc.Tags, `javdatabase`)
 
 		// Cast
-		html.ForEach("h2.subhead", func(id int, h2 *colly.HTMLElement) {
+		html.ForEach("h4.subhead", func(id int, h2 *colly.HTMLElement) {
 			if strings.HasSuffix(h2.Text, "Actress/Idols") {
 				h2.DOM.Parent().Find("div.card-body a.cut-text").Each(func(i int, anchor *goquery.Selection) {
 					href, exists := anchor.Attr("href")
