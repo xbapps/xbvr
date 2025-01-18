@@ -48,6 +48,9 @@ export default {
           if (this.item.scene_url.toLowerCase().includes("vrporn.com")) {
             site = "vrporn-single_scene"
           }
+          if (this.item.scene_url.toLowerCase().includes("realvr.com")) {
+            site = "realvr-single_scene"
+          }
           if (this.item.scene_url.toLowerCase().includes("vrphub.com")) {
             site = "vrphub-single_scene"
           }

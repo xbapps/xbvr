@@ -24,6 +24,7 @@ type XbvrScrapers struct {
 	PovrScrapers    []ScraperConfig `json:"povr"`
 	SlrScrapers     []ScraperConfig `json:"slr"`
 	StashDbScrapers []ScraperConfig `json:"stashdb"`
+	RealVRScrapers  []ScraperConfig `json:"realvr"`
 	VrpornScrapers  []ScraperConfig `json:"vrporn"`
 	VrphubScrapers  []ScraperConfig `json:"vrphub"`
 }
@@ -31,6 +32,7 @@ type CustomScrapers struct {
 	PovrScrapers    []ScraperConfig `json:"povr"`
 	SlrScrapers     []ScraperConfig `json:"slr"`
 	StashDbScrapers []ScraperConfig `json:"stashdb"`
+	RealVRScrapers  []ScraperConfig `json:"realvr"`
 	VrpornScrapers  []ScraperConfig `json:"vrporn"`
 	VrphubScrapers  []ScraperConfig `json:"vrphub"`
 }
@@ -76,11 +78,13 @@ func (o *ScraperList) Load() error {
 	SetSiteId(&o.XbvrScrapers.StashDbScrapers, "")
 	SetSiteId(&o.XbvrScrapers.VrphubScrapers, "")
 	SetSiteId(&o.XbvrScrapers.VrpornScrapers, "")
+	SetSiteId(&o.XbvrScrapers.RealVRScrapers, "")
 	SetSiteId(&o.CustomScrapers.PovrScrapers, "povr")
 	SetSiteId(&o.CustomScrapers.SlrScrapers, "slr")
 	SetSiteId(&o.CustomScrapers.StashDbScrapers, "stashdb")
 	SetSiteId(&o.CustomScrapers.VrphubScrapers, "vrphub")
 	SetSiteId(&o.CustomScrapers.VrpornScrapers, "vrporn")
+	SetSiteId(&o.CustomScrapers.RealVRScrapers, "realvr")
 
 	// remove custom sites that are now offical for the same aggregation site
 	o.CustomScrapers.PovrScrapers = RemoveCustomListNowOffical(o.CustomScrapers.PovrScrapers, o.XbvrScrapers.PovrScrapers)
@@ -88,6 +92,7 @@ func (o *ScraperList) Load() error {
 	o.CustomScrapers.StashDbScrapers = RemoveCustomListNowOffical(o.CustomScrapers.StashDbScrapers, o.XbvrScrapers.StashDbScrapers)
 	o.CustomScrapers.VrphubScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrphubScrapers, o.XbvrScrapers.VrphubScrapers)
 	o.CustomScrapers.VrpornScrapers = RemoveCustomListNowOffical(o.CustomScrapers.VrpornScrapers, o.XbvrScrapers.VrpornScrapers)
+	o.CustomScrapers.RealVRScrapers = RemoveCustomListNowOffical(o.CustomScrapers.RealVRScrapers, o.XbvrScrapers.RealVRScrapers)
 
 	list, err := json.MarshalIndent(o, "", "  ")
 	if err == nil {
@@ -149,8 +154,12 @@ func CheckMatchingSiteID(findSite ScraperConfig, searchList []ScraperConfig) boo
 func SetSiteId(configList *[]ScraperConfig, customId string) {
 	for idx, siteconfig := range *configList {
 		if siteconfig.FileID == "" || customId != "" {
-			id := strings.TrimRight(siteconfig.URL, "/")
-			siteconfig.ID = strings.ToLower(id[strings.LastIndex(id, "/")+1:])
+			temp := strings.TrimRight(siteconfig.URL, "/")
+			id := temp[strings.LastIndex(temp, "/")+1:]
+			if customId == "realvr" {
+				id = id[:strings.Index(id, "-")-1]
+			}
+			siteconfig.ID = strings.ToLower(id)
 		} else {
 			siteconfig.ID = strings.ToLower(siteconfig.FileID)
 		}

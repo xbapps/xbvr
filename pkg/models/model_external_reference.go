@@ -306,7 +306,10 @@ func (o *ExternalReference) DetermineActorScraperBySiteId(siteId string) string 
 		return "vrphub scrape"
 	}
 	if strings.HasSuffix(site.Name, "VRPorn)") {
-		return "slr scrape"
+		return "vrporn scrape"
+	}
+	if strings.HasSuffix(site.Name, "RealVR)") {
+		return "realvr scrape"
 	}
 	return siteId + " scrape"
 }
@@ -717,6 +720,8 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	scrapeRules.GenericActorScrapingConfig["vrcosplayx scrape"] = siteDetails
 	siteDetails.Domain = "18vr.com"
 	scrapeRules.GenericActorScrapingConfig["18vr scrape"] = siteDetails
+	siteDetails.Domain = "realvr.com"
+	scrapeRules.GenericActorScrapingConfig["realvr scrape"] = siteDetails
 
 	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "darkroomvr.com"

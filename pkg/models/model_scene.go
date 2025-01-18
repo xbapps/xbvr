@@ -895,6 +895,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = `scenes.scene_id like "vrphub-%"`
 		case "VRPorn Scraper":
 			where = `scenes.scene_id like "vrporn-%"`
+		case "RealVR Scraper":
+			where = `scenes.scene_id like "realvr-%"`
 		case "Has Script Download":
 			// querying the scenes in from alternate sources (stored in external_reference) has a performance impact, so it's user choice
 			if config.Advanced.UseAltSrcInFileMatching {
@@ -924,6 +926,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and external_id like 'povr-%' and internal_db_id = scenes.id)"
 		case "Available from VRPorn":
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and external_id like 'vrporn-%' and internal_db_id = scenes.id)"
+		case "Available from RealVR":
+			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and external_id like 'realvr-%' and internal_db_id = scenes.id)"
 		case "Available from SLR":
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and external_id like 'slr-%' and internal_db_id = scenes.id)"
 		case "Available from Alternate Sites":

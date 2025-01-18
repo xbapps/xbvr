@@ -195,7 +195,7 @@ export default {
       this.scraperFieldsValid=false
       if (this.scraperName != "") {
         if (this.scraperUrl.startsWith("https://") || this.scraperUrl.startsWith("http://") ) {
-          if (this.scraperUrl.includes("povr.com") || this.scraperUrl.includes("sexlikereal.com") || this.scraperUrl.includes("vrphub.com") || this.scraperUrl.includes("vrporn.com") || this.scraperUrl.includes("stashdb.org")) {
+          if (this.scraperUrl.includes("povr.com") || this.scraperUrl.includes("sexlikereal.com") || this.scraperUrl.includes("vrphub.com") || this.scraperUrl.includes("vrporn.com") || this.scraperUrl.includes("stashdb.org") || this.scraperUrl.includes("realvr.com")) {
             this.scraperFieldsValid=true
           }
         }
