@@ -37,6 +37,7 @@ type File struct {
 	VideoCodecName       string  `json:"video_codec_name" xbvrbackup:"video_codec_name"`
 	VideoDuration        float64 `json:"duration" xbvrbackup:"duration"`
 	VideoProjection      string  `json:"projection" xbvrbackup:"projection"`
+	HasAlpha             bool    `json:"has_alpha" xbvrbackup:"has_alpha"`
 
 	HasHeatmap          bool `json:"has_heatmap" xbvrbackup:"-"`
 	IsSelectedScript    bool `json:"is_selected_script" xbvrbackup:"is_selected_script"`

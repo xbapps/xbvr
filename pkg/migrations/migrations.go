@@ -833,6 +833,15 @@ func Migrate() {
 				return tx.Exec("update sites set scrape_stash = is_enabled").Error
 			},
 		},
+		{
+			ID: "0083-file-has-alpha",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					HasAlpha bool `json:"has_alpha" gorm:"default:false"`
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below

@@ -460,6 +460,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		return cuepoints[i].TS < cuepoints[j].TS
 	})
 
+	var hasAlpha bool = false
+
 	// Set Scene projection IF either single video or all videos have same projection type
 	if sceneMultiProjection {
 		if videoFiles[0].VideoProjection == "mkx200" ||
@@ -496,6 +498,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 			stereoMode = "off"
 			screenType = "dome"
 		}
+
+		hasAlpha = videoFiles[0].HasAlpha
 	}
 
 	title := scene.Title
@@ -522,6 +526,8 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 			fmt.Println("Error:", err)
 		}
 		chromaKey = gjson.ParseBytes(ckup)
+	} else if hasAlpha {
+		chromaKey = gjson.Parse(`{"enabled":true,"hasAlpha":true,"h":0,"opacity":0,"s":0,"threshold":0,"v":0}`)
 	}
 
 	// set date to EPOCH in case it is missing or 0001-01-01
@@ -561,7 +567,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		deoScene.VideoPreview = fmt.Sprintf("%v/api/dms/preview/%v", session.DeoRequestHost, scene.SceneID)
 	}
 
-	if gjson.Valid(scene.ChromaKey) {
+	if gjson.Valid(scene.ChromaKey) || hasAlpha {
 		deoPtScene := DeoScenePassthrough{
 			ID:               scene.ID,
 			Authorized:       1,
@@ -587,8 +593,16 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 			Categories:       categories,
 			Fleshlight:       deoScriptFiles,
 			HSProfile:        deoHSPFiles,
-			ChromaKey:        DeoSceneChromaKey{Enabled: chromaKey.Get("enabled").String(), HasAlpha: chromaKey.Get("hasAlpha").String(), H: chromaKey.Get("h").Float(), Opacity: chromaKey.Get("opacity").Float(), S: chromaKey.Get("s").Float(), Threshold: chromaKey.Get("threshold").Float(), V: chromaKey.Get("v").Float()},
-			VideoPreview:     deoScene.VideoPreview,
+			ChromaKey: DeoSceneChromaKey{
+				Enabled:   chromaKey.Get("enabled").String(),
+				HasAlpha:  chromaKey.Get("hasAlpha").String(),
+				H:         chromaKey.Get("h").Float(),
+				Opacity:   chromaKey.Get("opacity").Float(),
+				S:         chromaKey.Get("s").Float(),
+				Threshold: chromaKey.Get("threshold").Float(),
+				V:         chromaKey.Get("v").Float(),
+			},
+			VideoPreview: deoScene.VideoPreview,
 		}
 		resp.WriteHeaderAndEntity(http.StatusOK, deoPtScene)
 	} else {
