@@ -11,7 +11,7 @@ require (
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/blevesearch/bleve/v2 v2.4.4
 	github.com/bregydoc/gtranslate v0.0.0-20200913051839-1bd07f6c1fc5
-	github.com/creasty/defaults v1.7.0
+	github.com/creasty/defaults v1.8.0
 	github.com/darwayne/go-timecode v1.1.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/djherbis/times v1.6.0
