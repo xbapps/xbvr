@@ -314,6 +314,8 @@ func (o *Scene) UpdateStatus() {
 	if len(files) > 0 {
 		var newestFileDate time.Time
 		var totalFileSize int64
+		anyVideoAccessible := false
+
 		for j := range files {
 			totalFileSize = totalFileSize + files[j].Size
 
@@ -329,17 +331,10 @@ func (o *Scene) UpdateStatus() {
 				videos = videos + 1
 
 				if files[j].Exists() {
+					anyVideoAccessible = true
+
 					if files[j].CreatedTime.After(newestFileDate) || newestFileDate.IsZero() {
 						newestFileDate = files[j].CreatedTime
-					}
-					if !o.IsAccessible {
-						o.IsAccessible = true
-						changed = true
-					}
-				} else {
-					if o.IsAccessible {
-						o.IsAccessible = false
-						changed = true
 					}
 				}
 			}
@@ -357,6 +352,11 @@ func (o *Scene) UpdateStatus() {
 
 		if scripts == 0 && o.IsScripted {
 			o.IsScripted = false
+			changed = true
+		}
+
+		if anyVideoAccessible != o.IsAccessible {
+			o.IsAccessible = anyVideoAccessible
 			changed = true
 		}
 
