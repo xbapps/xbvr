@@ -25,6 +25,7 @@ type ScrapeHttpConfig struct {
 	Headers []ScrapeHttpKeyValue     `json:"headers"`
 	Cookies []ScrapeHttpCookieDetail `json:"cookies"`
 	Body    string                   `json:"body"`
+	Other   []ScrapeHttpKeyValue     `json:"other"`
 }
 
 func SetupHtmlRequest(kvKey string, req *http.Request) *http.Request {
