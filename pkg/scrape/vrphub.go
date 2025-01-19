@@ -7,6 +7,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"strconv"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
@@ -132,6 +133,20 @@ func VRPHub(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 
 		// Duration
 		sc.Duration = 0
+		reDuration := regexp.MustCompile(`^WATCH FULL VIDEO ([0-9}+:*[0-9}*) MIN$`)
+		e.ForEach(`maxbutton-7 maxbutton maxbutton-get-the-full-video-now`, func(id int, e *colly.HTMLElement) {
+			tmpDuration, err := reDuration.FindStringSubmatch(e.Text)
+			if err != nil {
+				return
+			}
+			if tmpDuration != null {
+				intDuration, err := strconv.Atoi(strings.Split(tmpDuration[1],":")[0])
+				if err != nil {
+					sc.Duration = intDuration
+					return
+				}
+			}
+		})
 
 		// There are 2 places we can find filenames from - one is in the video
 		// previews, and one is in the trailer download section. Some posts
