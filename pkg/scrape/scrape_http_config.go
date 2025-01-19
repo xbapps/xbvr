@@ -45,10 +45,14 @@ func SetupHtmlRequest(kvKey string, req *http.Request) *http.Request {
 func SetupCollector(kvKey string, collector *colly.Collector) *colly.Collector {
 	conf := GetScrapeHttpConfig(kvKey)
 	// setup header for the OnRequest Function
-	if len(conf.Headers) > 0 {
+	if len(conf.Headers) > 0 || conf.Body != "" {
 		collector.OnRequest(func(r *colly.Request) {
 			for _, header := range conf.Headers {
 				r.Headers.Set(header.Key, header.Value)
+			}
+			if conf.Body != "" {
+				body := strings.NewReader(conf.Body)
+				r.Body = io.NopCloser(body)
 			}
 		})
 	}
