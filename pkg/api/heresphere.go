@@ -90,7 +90,7 @@ type HeresphereMedia struct {
 }
 
 type HeresphereSource struct {
-	Resolution int    `json:"resolution"`
+	Resolution string `json:"resolution"`
 	Height     int    `json:"height"`
 	Width      int    `json:"width"`
 	Size       int64  `json:"size"`
@@ -214,11 +214,11 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
-	resolution := file.VideoHeight
+	resolution := strconv.Itoa(file.VideoHeight)
 	height := file.VideoHeight
 	width := file.VideoWidth
 	if file.VideoProjection == "360_tb" {
-		resolution = resolution / 2
+		resolution = strconv.Itoa(file.VideoHeight / 2)
 	}
 
 	var media []HeresphereMedia
@@ -322,11 +322,11 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	for i, file := range videoFiles {
 		height := file.VideoHeight
 		width := file.VideoWidth
-		resolution := file.VideoHeight
+		resolution := strconv.Itoa(file.VideoHeight)
 		vertresolution := file.VideoWidth
 
 		if file.VideoProjection == "360_tb" {
-			resolution = resolution / 2
+			resolution = strconv.Itoa(file.VideoHeight / 2)
 			vertresolution = vertresolution * 2
 		}
 
@@ -366,7 +366,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 				if len(encoding.VideoSources) > 0 {
 					hsp.Name = encoding.Name
 					for _, source := range encoding.VideoSources {
-						hspSource := HeresphereSource(source)
+						hspSource := HeresphereSource(HeresphereSource{Resolution: strconv.Itoa(source.Resolution), Height: source.Height, Width: source.Width, Size: source.Size, URL: source.URL})
 						hsp.Sources = append(hsp.Sources, hspSource)
 					}
 					media = append(media, hsp)

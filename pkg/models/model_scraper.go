@@ -65,6 +65,7 @@ type TrailerScrape struct {
 	ContentPath    string `json:"content_path"`     // points to the content url uses jsonpath syntax
 	EncodingPath   string `json:"encoding_path"`    // optional, points to the encoding for the source using jsonpath syntax, eg h264, h265
 	QualityPath    string `json:"quality_path"`     // points to the quality using jsonpath syntax, eg 1440p, 5k
+	KVHttpConfig   string `json:"kv_http_config"`
 }
 
 func (s *ScrapedScene) ToJSON() ([]byte, error) {
