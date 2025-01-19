@@ -25,7 +25,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: Build UI
-        run:  cd ui && yarn install && yarn build
+        run:  cd ui && yarn install --ignore-engines && yarn build
 
       - name: Setup release environment
         run: |-
