@@ -137,7 +137,7 @@ func VRPHub(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 		e.ForEach(`a.maxbutton-get-the-full-video-now`, func(id int, e *colly.HTMLElement) {
 			tmpDuration := reDuration.FindStringSubmatch(e.Text)
 			if tmpDuration != nil {
-				intDuration, err := strconv.Atoi(strings.Split(tmpDuration[1],":")[0])
+				intDuration, err := strconv.Atoi(strings.Split(tmpDuration[1], ":")[0])
 				if err == nil {
 					sc.Duration = intDuration
 				}
