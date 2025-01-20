@@ -133,17 +133,13 @@ func VRPHub(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 
 		// Duration
 		sc.Duration = 0
-		reDuration := regexp.MustCompile(`^WATCH FULL VIDEO ([0-9}+:*[0-9}*) MIN$`)
-		e.ForEach(`maxbutton-7 maxbutton maxbutton-get-the-full-video-now`, func(id int, e *colly.HTMLElement) {
-			tmpDuration, err := reDuration.FindStringSubmatch(e.Text)
-			if err != nil {
-				return
-			}
-			if tmpDuration != null {
+		reDuration := regexp.MustCompile(`^WATCH FULL VIDEO ([0-9]+:*[0-9]*) MIN$`)
+		e.ForEach(`a.maxbutton-get-the-full-video-now`, func(id int, e *colly.HTMLElement) {
+			tmpDuration := reDuration.FindStringSubmatch(e.Text)
+			if tmpDuration != nil {
 				intDuration, err := strconv.Atoi(strings.Split(tmpDuration[1],":")[0])
-				if err != nil {
+				if err == nil {
 					sc.Duration = intDuration
-					return
 				}
 			}
 		})
