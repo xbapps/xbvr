@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"path"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
@@ -132,6 +132,7 @@ func VRPHub(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 		})
 
 		// Duration
+		sc.Duration = 0
 		reDuration := regexp.MustCompile(`^WATCH FULL VIDEO ([0-9]+:*[0-9]*) MIN$`)
 		e.ForEach(`a.maxbutton-get-the-full-video-now`, func(id int, e *colly.HTMLElement) {
 			tmpDuration := reDuration.FindStringSubmatch(e.Text)
