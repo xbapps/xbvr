@@ -34,7 +34,7 @@ func RealityLoversSite(wg *models.ScrapeWG, updateSite bool, knownScenes []strin
 		sc.Studio = "RealityLovers"
 		sc.Site = siteID
 		sc.SiteID = ""
-		sc.HomepageURL, _ = strings.CutSuffix(e.Request.URL.String(), "/")
+		sc.HomepageURL = strings.TrimSuffix(e.Request.URL.String(), "/")
 
 		// Cover Url
 		coverURL := e.Request.Ctx.GetAny("coverURL").(string)
@@ -124,7 +124,7 @@ func RealityLoversSite(wg *models.ScrapeWG, updateSite bool, knownScenes []strin
 
 			title := e.ChildText("p.card-title")
 
-			sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a", "href"))
+			sceneURL := strings.TrimSuffix(e.Request.AbsoluteURL(e.ChildAttr("a", "href")), "/")
 
 			// If scene exist in database, there's no need to scrape
 			if !funk.ContainsString(knownScenes, sceneURL) {
