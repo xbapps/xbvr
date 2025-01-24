@@ -101,9 +101,13 @@ func VRPHub(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 
 		// Cast
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`div.td-post-header header.td-post-title span.td-post-date2 a.ftlink`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, e.Text)
-			sc.ActorDetails[e.Text] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Attr("href")}
+		e.ForEach(`div.td-post-header header.td-post-title span.td-post-date2`, func(id int, e *colly.HTMLElement) {
+			if strings.Contains(e.Text, "Featuring") {
+				e.ForEach(`a.ftlink`, func(id int, e *colly.HTMLElement) {
+					sc.Cast = append(sc.Cast, e.Text)
+					sc.ActorDetails[e.Text] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Attr("href")}
+				})
+			}
 		})
 
 		// Gallery
