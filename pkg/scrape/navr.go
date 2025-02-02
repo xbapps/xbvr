@@ -139,6 +139,7 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 
 				script := e.Text
 				script = strings.ReplaceAll(script, "nanalytics.trackExperiment('scene_page_viewed', 'streaming_option_join_button');", "")
+				script = strings.ReplaceAll(script, "nanalytics.trackExperiment('scene_page_viewed', 'yearly_option_first');", "")
 				script = strings.Replace(script, "window.dataLayer", "dataLayer", -1)
 				script = strings.Replace(script, "dataLayer = dataLayer || []", "dataLayer = []", -1)
 				script = script + "\nout = []; dataLayer.forEach(function(v) { if (v.femaleStar) { out.push(v.femaleStar); } });"
