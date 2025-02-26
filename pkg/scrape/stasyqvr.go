@@ -67,7 +67,7 @@ func StasyQVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out ch
 
 		// trailer details
 		sc.TrailerType = "deovr"
-		params := models.TrailerScrape{SceneUrl: `http://stasyqvr.com/deovr_feed/json/id/` + sc.SiteID, KVHttpConfig: "stasyqvr-trailers"}
+		params := models.TrailerScrape{SceneUrl: `http://stasyqvr.com/deovr_feed/json/id/` + sc.SiteID}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 

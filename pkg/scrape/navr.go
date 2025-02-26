@@ -87,7 +87,7 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 		})
 
 		sc.TrailerType = "heresphere"
-		params := models.TrailerScrape{SceneUrl: "https://api.naughtyapi.com/heresphere/" + sc.SiteID, KVHttpConfig: "navr-trailers"}
+		params := models.TrailerScrape{SceneUrl: "https://api.naughtyapi.com/heresphere/" + sc.SiteID}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 

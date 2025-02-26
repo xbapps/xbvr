@@ -240,5 +240,6 @@
   "Linked to Alternate Sites":"Linked to Alternate Sites",
   "Go": "Go",
   "Limit scraping to newest scenes on the website. Turn off if you are missing scenes.": "Limit scraping to newest scenes on the website. Turn off if you are missing scenes.",
-  "Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter": "Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter"
+  "Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter": "Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter",
+  "Cookies/Headers":"Cookies/Headers"
 }

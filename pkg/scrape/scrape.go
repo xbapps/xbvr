@@ -37,7 +37,7 @@ func createCollector(domains ...string) *colly.Collector {
 
 	// see if the domain has a limit and set it
 	for _, domain := range domains {
-		SetupCollector(GetCoreDomain(domain)+"-collector", c)
+		SetupCollector(GetCoreDomain(domain)+"-scraper", c)
 		if Limiters == nil {
 			LoadScraperRateLimits()
 		}

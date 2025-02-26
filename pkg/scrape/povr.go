@@ -109,7 +109,7 @@ func POVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<-
 
 		// trailer details
 		sc.TrailerType = "heresphere"
-		params := models.TrailerScrape{SceneUrl: "https://www.povr.com/heresphere/" + sc.SiteID, KVHttpConfig: "povr-trailers"}
+		params := models.TrailerScrape{SceneUrl: "https://www.povr.com/heresphere/" + sc.SiteID}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 

@@ -28,6 +28,11 @@ type ScrapeHttpConfig struct {
 	Other   []ScrapeHttpKeyValue     `json:"other"`
 }
 
+type ScrapeHttpKeyAndConfig struct {
+	Id     string           `json:"domain_key"`
+	Config ScrapeHttpConfig `json:"config"`
+}
+
 func SetupHtmlRequest(kvKey string, req *http.Request) *http.Request {
 	conf := GetScrapeHttpConfig(kvKey)
 	for _, header := range conf.Headers {
@@ -83,4 +88,18 @@ func SaveScrapeHttpConfig(kvKey string, config ScrapeHttpConfig) {
 	jsonStr, _ := json.MarshalIndent(config, "", "  ")
 	kv.Value = string(jsonStr)
 	kv.Save()
+}
+
+func GetAllScrapeHttpConfigs() []ScrapeHttpKeyAndConfig {
+	db, _ := models.GetCommonDB()
+
+	c := ScrapeHttpConfig{}
+	configList := []ScrapeHttpKeyAndConfig{}
+	var kvs []models.KV
+	db.Where("(`value` like '%headers%' and `value` like '%cookies%') or (`key` like '%-scraper' and `key` like '%-trailers')").Find(&kvs)
+	for _, kv := range kvs {
+		json.Unmarshal([]byte(kv.Value), &c)
+		configList = append(configList, ScrapeHttpKeyAndConfig{kv.Key, c})
+	}
+	return configList
 }

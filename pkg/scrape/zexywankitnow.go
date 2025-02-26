@@ -88,7 +88,7 @@ func TwoWebMediaSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string,
 
 		// trailer details
 		sc.TrailerType = "deovr"
-		params := models.TrailerScrape{SceneUrl: strings.Replace(URL, `/videos/`, ``, 1) + `/deovr/video/` + sc.SiteID, KVHttpConfig: "zexyvr-trailers"}
+		params := models.TrailerScrape{SceneUrl: strings.Replace(URL, `/videos/`, ``, 1) + `/deovr/video/` + sc.SiteID}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 
