@@ -33,6 +33,7 @@ func LoadHeresphereScene(scrapeParams string) HeresphereVideo {
 	if params.KVHttpConfig == "" {
 		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
 	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
 	scrape.SetupHtmlRequest(params.KVHttpConfig, req)
 	response, err := client.Do(req)
 
@@ -70,6 +71,7 @@ func LoadDeovrScene(scrapeParams string) DeoScene {
 	if params.KVHttpConfig == "" {
 		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
 	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
 	scrape.SetupHtmlRequest(params.KVHttpConfig, req)
 
 	response, err := client.Do(req)
@@ -102,6 +104,7 @@ func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
 	if params.KVHttpConfig == "" {
 		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
 	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
 	scrape.SetupCollector(params.KVHttpConfig, c)
 
 	var srcs []models.VideoSource
@@ -144,6 +147,7 @@ func ScrapeJson(scrapeParams string) models.VideoSourceResponse {
 	if params.KVHttpConfig == "" {
 		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
 	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
 	scrape.SetupCollector(params.KVHttpConfig, c)
 	var srcs []models.VideoSource
 	c.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -182,6 +186,7 @@ func LoadJson(scrapeParams string) models.VideoSourceResponse {
 	if params.KVHttpConfig == "" {
 		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
 	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
 	scrape.SetupHtmlRequest(params.KVHttpConfig, req)
 	response, err := client.Do(req)
 

@@ -325,6 +325,7 @@ func (i ConfigResource) WebService() *restful.WebService {
 	// "Collector Config endpoints"
 	ws.Route(ws.GET("/collector-config-list").To(i.getCollectorConfigs))
 	ws.Route(ws.POST("/save-collector-config").To(i.saveCollectorConfigs))
+	ws.Route(ws.DELETE("/delete-collector-config").To(i.deleteCollectorConfig))
 
 	return ws
 }
@@ -1116,4 +1117,22 @@ func (i ConfigResource) saveCollectorConfigs(req *restful.Request, resp *restful
 	config.Body = r.Body
 	config.Other = r.Other
 	scrape.SaveScrapeHttpConfig(r.DomainKey, config)
+}
+func (i ConfigResource) deleteCollectorConfig(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveCollectorConfig
+
+	if err := req.ReadEntity(&r); err != nil {
+		APIError(req, resp, http.StatusInternalServerError, err)
+		log.Error(err)
+		return
+	}
+
+	if r.DomainKey == "" {
+		APIError(req, resp, http.StatusInternalServerError, nil)
+		log.Error("Could not delete collector config - name for config not found")
+		return
+	}
+	var kv models.KV
+	kv.Key = r.DomainKey
+	kv.Delete()
 }

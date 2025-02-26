@@ -191,6 +191,7 @@
                   </b-field>
                 </b-tooltip>
                 <b-button v-if="showConfigField" type="is-primary" style="margin-left: 1em;" @click="saveCollectorConfig">Save</b-button>
+                <b-button v-if="showConfigField" type="is-primary" style="margin-left: 1em;" @click="deleteCollectorConfig" icon-right="delete"></b-button>
               </b-field>
               <b-autocomplete v-model="kvName" ref="autocompleteconfig" :data="filteredCollectorConfigList" :open-on-focus="true" :clearable="true" 
                 placeholder="e.g. domainname-scraper or domainname-trailers " 
@@ -361,7 +362,6 @@ export default {
       }      
       this.body= matched.config.body
       this.showCollectorConfigFields = true
-      console.log("in showConfigField", this.showCollectorConfigFields )
     },
     addHeaderRow(){
       this.headers.push({ key: "", value: "" });
@@ -373,8 +373,6 @@ export default {
       this.cookies.push({ name: "", value: "", domain: "", path: "", host:"" });
     },
     delCookieRow(props){      
-      console.log("deleteing ", props.row)
-      console.log("deleteing ", props.index)
       this.cookies.splice(props.index,1)
     },
     saveCollectorConfig() {
@@ -387,15 +385,6 @@ export default {
           other: [],
         }
       })
-      console.log("saving",
-      {
-          domain_key: this.kvName,
-          body: this.body,
-          cookies: this.cookies,
-          headers: this.headers,
-          other: [],
-        }
-      )      
       let row = this.$store.state.optionsAdvanced.advanced.collectorConfigs.find((config) => {
         return config.domain_key
           .toString()
@@ -406,7 +395,6 @@ export default {
       row.config.cookies = this.cookies
       row.config.headers=this.headers
       row.config.body = this.body      
-      console.log("updated",this.$store.state.optionsAdvanced.advanced.collectorConfigs)
     },
     showAddCollectorConfig() {
       this.$buefy.dialog.prompt({
@@ -417,14 +405,11 @@ export default {
                     value: this.kvName
                 },
                 confirmText: 'Add',
-                onConfirm: (value) => {
-                  console.log(this.$store.state.optionsAdvanced.advanced.collectorConfigs)
+                onConfirm: (value) => {                  
                     this.kvName=value
-                    this.$store.state.optionsAdvanced.advanced.collectorConfigs.push({config: {body: "", cookies: [], headers: [],  other: ""},domain_key: value} )
-                    console.log(this.$store.state.optionsAdvanced.advanced.collectorConfigs)
+                    this.$store.state.optionsAdvanced.advanced.collectorConfigs.push({config: {body: "", cookies: [], headers: [],  other: ""},domain_key: value} )                    
                     this.$refs.autocompleteconfig.setSelected(value)
-                    this.showCollectorConfigFields = true
-                    console.log("in showAddCollectorConfig confirm", this.showCollectorConfigFields )
+                    this.showCollectorConfigFields = true                    
                 }
       })
     },
@@ -441,6 +426,15 @@ export default {
         this.file = null
         this.$store.dispatch('optionsAdvanced/load')
       }
+    },
+    async deleteCollectorConfig() {
+      const response = await ky.delete('/api/options/delete-collector-config', {
+        json: {
+          domain_key: this.kvName,
+        }
+      })
+      this.kvName=""
+      this.$store.dispatch('optionsAdvanced/load')
     },
   },
   computed: {
@@ -566,11 +560,9 @@ export default {
       } else {
         this.showCollectorConfigFields = false
       }
-      console.log("in filteredCollectorConfigList", this.showCollectorConfigFields, this.kvName )
       return matched.map(item => item.domain_key)
     },
     showConfigField () {
-      console.log("in showConfigField", this.showCollectorConfigFields)
       return this.showCollectorConfigFields
     },
     isLoading: function () {
