@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -45,8 +47,90 @@ type File struct {
 	RefreshHeatmapCache bool `json:"refresh_heatmap_cache" xbvrbackup:"-"`
 }
 
+// MarshalJSON customizes the JSON output for File
+func (f File) MarshalJSON() ([]byte, error) {
+	type Alias File
+
+	// Create a copy of the file
+	fileCopy := &struct {
+		Alias
+		Path string `json:"path"`
+	}{
+		Alias: Alias(f),
+		Path:  f.Path,
+	}
+
+	// For Debrid-Link files, modify the path to hide the file ID
+	if strings.Contains(f.Path, "||") {
+		parts := strings.Split(f.Path, "||")
+		fileCopy.Path = parts[0]
+	}
+
+	return json.Marshal(fileCopy)
+}
+
 func (f *File) GetPath() string {
+	if f.Volume.Type == "debridlink" {
+		// Extract the file ID stored in f.Path (format: "displayPath||fileID")
+		fileID := f.Path
+		if strings.Contains(f.Path, "||") {
+			parts := strings.Split(f.Path, "||")
+			if len(parts) > 1 {
+				fileID = parts[1]
+			}
+		}
+
+		// Create HTTP client and request the file list from Debrid-Link API
+		client := &http.Client{}
+		httpReq, err := http.NewRequest("GET", "https://debrid-link.com/api/v2/seedbox/list", nil)
+		if err != nil {
+			return ""
+		}
+		httpReq.Header.Add("Authorization", "Bearer "+f.Volume.Metadata)
+
+		httpResp, err := client.Do(httpReq)
+		if err != nil {
+			return ""
+		}
+		defer httpResp.Body.Close()
+
+		var filesResponse struct {
+			Success bool `json:"success"`
+			Value   []struct {
+				Files []struct {
+					ID          string `json:"id"`
+					DownloadURL string `json:"downloadUrl"`
+				} `json:"files"`
+			} `json:"value"`
+		}
+
+		if err := json.NewDecoder(httpResp.Body).Decode(&filesResponse); err != nil {
+			return ""
+		}
+
+		for _, torrent := range filesResponse.Value {
+			for _, file := range torrent.Files {
+				if file.ID == fileID {
+					return file.DownloadURL
+				}
+			}
+		}
+		return ""
+	}
+
 	return filepath.Join(f.Path, f.Filename)
+}
+
+// GetDisplayPath returns the path to be displayed in the UI
+func (f *File) GetDisplayPath() string {
+	// For Debrid-Link files, only show the display part of the path (before "||")
+	if f.Volume.Type == "debridlink" && strings.Contains(f.Path, "||") {
+		parts := strings.Split(f.Path, "||")
+		return parts[0]
+	}
+
+	// For other file types, return the full path
+	return f.Path
 }
 
 func (f *File) Save() error {
@@ -85,7 +169,8 @@ func (f *File) Exists() bool {
 		}
 		return true
 	case "putio":
-		// NOTE: we're assuming files weren't removed via Put.io web UI, so there's no need to check
+		return true
+	case "debridlink":
 		return true
 	default:
 		return false

@@ -142,7 +142,7 @@ export default {
   data () {
     return {
       volumes: [],
-      serviceOpts: [{ name: 'Put.io', id: 'putio' }],
+      serviceOpts: [{ name: 'Put.io', id: 'putio' }, { name: 'Debrid-Link', id: 'debridlink' }],
       serviceToken: '',
       serviceSelected: null,
       newVolumePath: '',

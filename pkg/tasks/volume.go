@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/djherbis/times"
@@ -26,6 +28,14 @@ import (
 )
 
 var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
+
+func extractDebridFileID(p string) string {
+	if strings.Contains(p, "||") {
+		parts := strings.Split(p, "||")
+		return parts[1]
+	}
+	return p
+}
 
 func RescanVolumes(id int) {
 	if !models.CheckLock("rescan") {
@@ -55,6 +65,8 @@ func RescanVolumes(id int) {
 				scanLocalVolume(vol[i], db, tlog)
 			case "putio":
 				scanPutIO(vol[i], db, tlog)
+			case "debridlink":
+				scanDebridLink(vol[i], db, tlog)
 			}
 		}
 
@@ -222,7 +234,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 					var fl models.File
 					err = db.Where(&models.File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
 
-					if err == gorm.ErrRecordNotFound || fl.VolumeID == 0 || fl.VideoDuration == 0 || fl.VideoProjection == "" || fl.Size != f.Size() || fl.OsHash == "" {
+					if err == gorm.ErrRecordNotFound || fl.VolumeID == 0 || fl.Size != f.Size() || fl.OsHash == "" || fl.VideoWidth == 0 || fl.VideoHeight == 0 || fl.VideoDuration == 0 {
 						videoProcList = append(videoProcList, path)
 					}
 				}
@@ -459,6 +471,249 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 	vol.LastScan = time.Now()
 	vol.Save()
 }
+
+func scanDebridLink(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
+	// Create HTTP client with authorization header
+	client := &http.Client{}
+
+	// First verify account is valid
+	httpReq, err := http.NewRequest("GET", "https://debrid-link.com/api/v2/account/infos", nil)
+	if err != nil {
+		vol.IsAvailable = false
+		vol.Save()
+		return
+	}
+	httpReq.Header.Add("Authorization", "Bearer "+vol.Metadata)
+
+	// Make request to verify token
+	httpResp, err := client.Do(httpReq)
+	if err != nil {
+		vol.IsAvailable = false
+		vol.Save()
+		return
+	}
+	defer httpResp.Body.Close()
+
+	// Parse response
+	var accountInfo struct {
+		Success bool `json:"success"`
+		Value   struct {
+			Username string `json:"username"`
+		} `json:"value"`
+	}
+
+	if err := json.NewDecoder(httpResp.Body).Decode(&accountInfo); err != nil {
+		vol.IsAvailable = false
+		vol.Save()
+		return
+	}
+
+	if !accountInfo.Success {
+		vol.IsAvailable = false
+		vol.Save()
+		return
+	}
+
+	// Initialize concurrency control for ffprobe calls
+	sem := make(chan struct{}, 10)
+	var wg sync.WaitGroup
+	processedFiles := 0
+
+	// Get files list with pagination
+	page := 0
+	var currentFileID []string
+
+	for {
+		// Log the current page being scanned
+		tlog.Infof("Debrid-Link: Scanning page %d", page)
+		// Fetch files for current page
+		listURL := fmt.Sprintf("https://debrid-link.com/api/v2/seedbox/list?perPage=100&page=%d", page)
+		httpReq, err := http.NewRequest("GET", listURL, nil)
+		if err != nil {
+			break
+		}
+		httpReq.Header.Add("Authorization", "Bearer "+vol.Metadata)
+
+		httpResp, err := client.Do(httpReq)
+		if err != nil {
+			break
+		}
+
+		// Parse response
+		var filesResponse struct {
+			Success bool `json:"success"`
+			Value   []struct {
+				ID        string `json:"id"`
+				Name      string `json:"name"`
+				TotalSize int64  `json:"totalSize"`
+				Files     []struct {
+					ID              string `json:"id"`
+					Name            string `json:"name"`
+					Size            int64  `json:"size"`
+					DownloadURL     string `json:"downloadUrl"`
+					DownloadPercent int    `json:"downloadPercent"`
+				} `json:"files"`
+				Created int64 `json:"created"`
+			} `json:"value"`
+			Pagination struct {
+				Page  int `json:"page"`
+				Pages int `json:"pages"`
+				Next  int `json:"next"`
+			} `json:"pagination"`
+		}
+
+		if err := json.NewDecoder(httpResp.Body).Decode(&filesResponse); err != nil {
+			httpResp.Body.Close()
+			break
+		}
+		httpResp.Body.Close()
+
+		if !filesResponse.Success {
+			break
+		}
+
+		// Process files
+		for _, torrent := range filesResponse.Value {
+			for _, file := range torrent.Files {
+				if funk.Contains(allowedVideoExt, strings.ToLower(filepath.Ext(file.Name))) && file.DownloadPercent == 100 {
+					processedFiles++
+					tlog.Infof("Debrid-Link: Processing file %d: torrent '%s' - file '%s'", processedFiles, torrent.Name, file.Name)
+					// Use a friendly display path and store original file ID in the Path field using '||' as separator
+					displayPath := "Debrid-Link (" + accountInfo.Value.Username + ")/Seedbox"
+					var fl models.File
+					err = db.Where("path LIKE ? AND filename = ?", "%||"+file.ID, file.Name).First(&fl).Error
+					if err == gorm.ErrRecordNotFound {
+						var newFile models.File
+						db.Where("path LIKE ? AND filename = ?", "%||"+file.ID, file.Name).FirstOrCreate(&newFile)
+						// Store file ID in a hidden format that doesn't affect display path
+						newFile.Path = displayPath + "||" + file.ID
+						newFile.Filename = file.Name
+						newFile.VideoProjection = "180_sbs"
+						newFile.Size = file.Size
+						newFile.Type = "video"
+						newFile.CreatedTime = time.Unix(torrent.Created, 0)
+						newFile.UpdatedTime = time.Now()
+						newFile.VolumeID = vol.ID
+						newFile.Save()
+						fl = newFile
+					} else {
+						// Update display path if needed and ensure filename is set
+						fl.Path = displayPath + "||" + file.ID
+						fl.Filename = file.Name
+						fl.Save()
+					}
+					currentFileID = append(currentFileID, file.ID)
+
+					// Spawn a goroutine to extract metadata via ffprobe in parallel if metadata is not already present
+					if fl.VideoDuration > 0 {
+						tlog.Infof("Debrid-Link: Skipping ffprobe for file '%s' as metadata already exists.", file.Name)
+					} else {
+						wg.Add(1)
+						go func(downloadURL string, fileID uint, fileName string) {
+							defer wg.Done()
+							sem <- struct{}{}
+							defer func() { <-sem }()
+
+							tlog.Infof("Debrid-Link: Starting ffprobe for file '%s' (ID: %d)", fileName, fileID)
+
+							// Create a context with timeout to prevent hanging
+							ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+							defer cancel()
+
+							// Use a channel to signal completion
+							done := make(chan bool, 1)
+							var ffdata *ffprobe.ProbeData
+							var ffErr error
+
+							go func() {
+								ffdata, ffErr = ffprobe.GetProbeData(downloadURL, 10*time.Second)
+								done <- true
+							}()
+
+							// Wait for either completion or timeout
+							select {
+							case <-done:
+								if ffErr != nil {
+									tlog.Errorf("Debrid-Link: ffprobe error for file '%s': %v", fileName, ffErr)
+									return
+								}
+							case <-ctx.Done():
+								tlog.Errorf("Debrid-Link: ffprobe timeout for file '%s'", fileName)
+								return
+							}
+
+							if ffdata == nil {
+								tlog.Errorf("Debrid-Link: No ffprobe data for file '%s'", fileName)
+								return
+							}
+
+							vs := ffdata.GetFirstVideoStream()
+							if vs == nil {
+								tlog.Errorf("Debrid-Link: No video stream found for file '%s'", fileName)
+								return
+							}
+
+							updates := map[string]interface{}{}
+							updates["video_width"] = vs.Width
+							updates["video_height"] = vs.Height
+							if vs.BitRate != "" {
+								if br, err := strconv.Atoi(vs.BitRate); err == nil {
+									updates["video_bit_rate"] = br
+								}
+							}
+							if dur, err := strconv.ParseFloat(vs.Duration, 64); err == nil {
+								updates["video_duration"] = dur
+							} else if ffdata.Format.DurationSeconds > 0.0 {
+								updates["video_duration"] = ffdata.Format.DurationSeconds
+							}
+							if vs.AvgFrameRate != "" {
+								if fps, err := strconv.ParseFloat(vs.AvgFrameRate, 64); err == nil {
+									updates["video_avg_frame_rate_val"] = fps
+								}
+							}
+
+							err := db.Model(&models.File{}).Where("id = ?", fileID).Updates(updates).Error
+							if err != nil {
+								tlog.Errorf("Debrid-Link: Failed to update metadata for file '%s': %v", fileName, err)
+							} else {
+								tlog.Infof("Debrid-Link: Successfully updated metadata for file '%s'", fileName)
+							}
+						}(file.DownloadURL, fl.ID, file.Name)
+					}
+				}
+			}
+		}
+
+		if filesResponse.Pagination.Next == -1 {
+			break
+		}
+		page = filesResponse.Pagination.Next
+	}
+
+	// Wait for all parallel ffprobe metadata extraction routines to finish
+	wg.Wait()
+
+	// Check if local files are present in listing
+	var scene models.Scene
+	allFiles := vol.Files()
+	for i := range allFiles {
+		if !funk.ContainsString(currentFileID, extractDebridFileID(allFiles[i].Path)) {
+			log.Info(allFiles[i].GetPath())
+			db.Delete(&allFiles[i])
+			if allFiles[i].SceneID != 0 {
+				scene.GetIfExistByPK(allFiles[i].SceneID)
+				scene.UpdateStatus()
+			}
+		}
+	}
+
+	// Update volume info
+	vol.IsAvailable = true
+	vol.Path = "Debrid-Link (" + accountInfo.Value.Username + ")"
+	vol.LastScan = time.Now()
+	vol.Save()
+}
+
 func RefreshSceneStatuses() {
 	// refreshes the status of all scenes
 	tlog := log.WithFields(logrus.Fields{"task": "rescan"})
@@ -478,6 +733,7 @@ func RefreshSceneStatuses() {
 
 	tlog.Infof("Scene status refresh complete")
 }
+
 func ScanLocalHspFile(path string, volID uint, sceneId uint) {
 	db, _ := models.GetDB()
 	defer db.Close()
@@ -525,4 +781,84 @@ func ScanLocalSubtitlesFile(path string, volID uint, sceneId uint) {
 		fl.SceneID = sceneId
 	}
 	fl.Save()
+}
+
+// FixDebridLinkPaths updates all Debrid-Link file paths to use the correct format
+func FixDebridLinkPaths() {
+	tlog := log.WithFields(logrus.Fields{"task": "fix-paths"})
+	tlog.Infof("Fixing Debrid-Link file paths")
+
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	// Get all volumes of type debridlink
+	var volumes []models.Volume
+	db.Where("type = ?", "debridlink").Find(&volumes)
+
+	for _, vol := range volumes {
+		// Get account info to construct the correct path
+		client := &http.Client{}
+		httpReq, err := http.NewRequest("GET", "https://debrid-link.com/api/v2/account/infos", nil)
+		if err != nil {
+			tlog.Errorf("Error creating request: %v", err)
+			continue
+		}
+		httpReq.Header.Add("Authorization", "Bearer "+vol.Metadata)
+
+		httpResp, err := client.Do(httpReq)
+		if err != nil {
+			tlog.Errorf("Error getting account info: %v", err)
+			continue
+		}
+
+		var accountInfo struct {
+			Success bool `json:"success"`
+			Value   struct {
+				Username string `json:"username"`
+			} `json:"value"`
+		}
+
+		if err := json.NewDecoder(httpResp.Body).Decode(&accountInfo); err != nil {
+			httpResp.Body.Close()
+			tlog.Errorf("Error decoding response: %v", err)
+			continue
+		}
+		httpResp.Body.Close()
+
+		if !accountInfo.Success {
+			tlog.Errorf("API returned error for volume %d", vol.ID)
+			continue
+		}
+
+		// Construct the new base path
+		basePath := "Debrid-Link (" + accountInfo.Value.Username + ")/Seedbox"
+
+		// Get all files for this volume
+		var files []models.File
+		db.Where("volume_id = ?", vol.ID).Find(&files)
+
+		updatedCount := 0
+		for _, file := range files {
+			// Extract the file ID from the current path
+			fileID := ""
+			if strings.Contains(file.Path, "||") {
+				parts := strings.Split(file.Path, "||")
+				if len(parts) > 1 {
+					fileID = parts[1]
+
+					// Update the path to the new format
+					newPath := basePath + "||" + fileID
+					if file.Path != newPath {
+						file.Path = newPath
+						db.Save(&file)
+						updatedCount++
+					}
+				}
+			}
+		}
+
+		tlog.Infof("Updated %d files for volume %d", updatedCount, vol.ID)
+	}
+
+	tlog.Infof("Finished fixing Debrid-Link file paths")
 }

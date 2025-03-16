@@ -259,6 +259,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/storage").To(i.addStorage).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.POST("/storage/fix-debridlink-paths").To(i.fixDebridLinkPaths).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.DELETE("/storage/{storage-id}").To(i.removeStorage).
 		Param(ws.PathParameter("storage-id", "Storage ID").DataType("int")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
@@ -636,6 +639,62 @@ func (i ConfigResource) addStorage(req *restful.Request, resp *restful.Response)
 		}
 
 		nv := models.Volume{Path: "Put.io (" + acct.Username + ")", IsEnabled: true, IsAvailable: true, Metadata: r.Token, Type: r.Type}
+		nv.Save()
+
+		tlog.Info("Added new cloud storage ", nv.Path)
+
+	case "debridlink":
+		// Create HTTP client with authorization header
+		client := &http.Client{}
+		httpReq, err := http.NewRequest("GET", "https://debrid-link.com/api/v2/account/infos", nil)
+		if err != nil {
+			tlog.Error("Failed to create request")
+			APIError(req, resp, 400, errors.New("Failed to create request"))
+			return
+		}
+		httpReq.Header.Add("Authorization", "Bearer "+r.Token)
+
+		// Make request to verify token
+		httpResp, err := client.Do(httpReq)
+		if err != nil {
+			tlog.Error("Can't verify token")
+			APIError(req, resp, 400, errors.New("Can't verify token"))
+			return
+		}
+		defer httpResp.Body.Close()
+
+		// Parse response
+		var accountInfo struct {
+			Success bool `json:"success"`
+			Value   struct {
+				Username string `json:"username"`
+			} `json:"value"`
+		}
+
+		if err := json.NewDecoder(httpResp.Body).Decode(&accountInfo); err != nil {
+			tlog.Error("Failed to parse response")
+			APIError(req, resp, 400, errors.New("Failed to parse response"))
+			return
+		}
+
+		if !accountInfo.Success {
+			tlog.Error("Invalid token")
+			APIError(req, resp, 400, errors.New("Invalid token"))
+			return
+		}
+
+		// Check if volume already exists
+		var vol []models.Volume
+		db.Where(&models.Volume{Metadata: r.Token}).Find(&vol)
+
+		if len(vol) > 0 {
+			tlog.Error("Cloud storage already exists")
+			APIError(req, resp, 400, errors.New("Cloud storage already exists"))
+			return
+		}
+
+		// Create new volume
+		nv := models.Volume{Path: "Debrid-Link (" + accountInfo.Value.Username + ")", IsEnabled: true, IsAvailable: true, Metadata: r.Token, Type: r.Type}
 		nv.Save()
 
 		tlog.Info("Added new cloud storage ", nv.Path)
@@ -1065,6 +1124,9 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 	resp.WriteHeader(http.StatusOK)
 }
 func (i ConfigResource) saveOptionsStorage(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
 	var r RequestSaveOptionsStorage
 	err := req.ReadEntity(&r)
 	if err != nil {
@@ -1076,4 +1138,9 @@ func (i ConfigResource) saveOptionsStorage(req *restful.Request, resp *restful.R
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+
+func (i ConfigResource) fixDebridLinkPaths(req *restful.Request, resp *restful.Response) {
+	go tasks.FixDebridLinkPaths()
+	resp.WriteHeaderAndEntity(http.StatusOK, map[string]interface{}{"status": "started"})
 }

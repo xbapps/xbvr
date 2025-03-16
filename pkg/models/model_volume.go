@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"io"
+	"net/http"
 	"os"
 	"time"
 
@@ -53,6 +54,8 @@ func (o *Volume) IsMounted() bool {
 		return true
 	case "putio":
 		return true
+	case "debridlink":
+		return true
 	default:
 		return false
 	}
@@ -91,6 +94,11 @@ func (o *Volume) GetPutIOClient() *putio.Client {
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: o.Metadata})
 	oauthClient := oauth2.NewClient(context.Background(), tokenSource)
 	return putio.NewClient(oauthClient)
+}
+
+func (o *Volume) GetDebridLinkClient() *http.Client {
+	client := &http.Client{}
+	return client
 }
 
 func CheckVolumes() {
