@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"io/fs"
 	"net/http"
 	"os"
@@ -79,7 +81,157 @@ func (i FilesResource) getFile(req *restful.Request, resp *restful.Response) {
 
 	_ = file.GetIfExistByPK(uint(id))
 
-	resp.WriteHeaderAndEntity(http.StatusOK, file)
+	switch file.Volume.Type {
+	case "local":
+		// Local file
+		resp.Header().Set("Content-Disposition", "attachment; filename="+file.Filename)
+		http.ServeFile(resp.ResponseWriter, req.Request, file.GetPath())
+	case "putio":
+		// Put.io file
+		id, err := strconv.ParseInt(file.Path, 10, 64)
+		if err != nil {
+			return
+		}
+		client := file.Volume.GetPutIOClient()
+		url, err := client.Files.URL(context.Background(), id, false)
+		if err != nil {
+			return
+		}
+		http.Redirect(resp.ResponseWriter, req.Request, url, http.StatusFound)
+	case "debridlink":
+		// Debrid-Link file
+		// Create HTTP client with authorization header
+		client := &http.Client{}
+
+		// Extract the file ID from the path (which is stored as "displayPath||fileID")
+		fileID := file.Path
+		if strings.Contains(file.Path, "||") {
+			parts := strings.Split(file.Path, "||")
+			if len(parts) > 1 {
+				fileID = parts[1]
+			}
+		}
+
+		// Get file details to get download URL
+		httpReq, err := http.NewRequest("GET", "https://debrid-link.com/api/v2/seedbox/list", nil)
+		if err != nil {
+			http.Error(resp.ResponseWriter, "Failed to create request", http.StatusInternalServerError)
+			return
+		}
+		httpReq.Header.Add("Authorization", "Bearer "+file.Volume.Metadata)
+
+		// Make request to get file list
+		httpResp, err := client.Do(httpReq)
+		if err != nil {
+			http.Error(resp.ResponseWriter, "Failed to get file list", http.StatusInternalServerError)
+			return
+		}
+		defer httpResp.Body.Close()
+
+		// Parse response to find the file
+		var filesResponse struct {
+			Success bool `json:"success"`
+			Value   []struct {
+				Files []struct {
+					ID          string `json:"id"`
+					DownloadURL string `json:"downloadUrl"`
+				} `json:"files"`
+			} `json:"value"`
+		}
+
+		if err := json.NewDecoder(httpResp.Body).Decode(&filesResponse); err != nil {
+			http.Error(resp.ResponseWriter, "Failed to parse response", http.StatusInternalServerError)
+			return
+		}
+
+		// Find the file with matching ID
+		var downloadURL string
+		for _, torrent := range filesResponse.Value {
+			for _, fileItem := range torrent.Files {
+				if fileItem.ID == fileID {
+					downloadURL = fileItem.DownloadURL
+					break
+				}
+			}
+			if downloadURL != "" {
+				break
+			}
+		}
+
+		if downloadURL == "" {
+			http.Error(resp.ResponseWriter, "File not found", http.StatusNotFound)
+			return
+		}
+
+		// Log the URL for debugging
+		log.Infof("Proxying Debrid-Link URL: %s", downloadURL)
+
+		// Create a new request to the download URL
+		proxyReq, err := http.NewRequest("GET", downloadURL, nil)
+		if err != nil {
+			http.Error(resp.ResponseWriter, "Failed to create proxy request", http.StatusInternalServerError)
+			return
+		}
+
+		// Copy original request headers
+		for header, values := range req.Request.Header {
+			for _, value := range values {
+				proxyReq.Header.Add(header, value)
+			}
+		}
+
+		// If the request has a Range header, pass it through
+		if rangeHeader := req.Request.Header.Get("Range"); rangeHeader != "" {
+			proxyReq.Header.Set("Range", rangeHeader)
+		}
+
+		// Make the request to debrid-link
+		proxyResp, err := client.Do(proxyReq)
+		if err != nil {
+			http.Error(resp.ResponseWriter, "Failed to proxy request", http.StatusInternalServerError)
+			return
+		}
+		defer proxyResp.Body.Close()
+
+		// Set content type to video/mp4 if not specified
+		contentType := proxyResp.Header.Get("Content-Type")
+		if contentType == "" || contentType == "application/octet-stream" {
+			contentType = "video/mp4"
+		}
+		resp.Header().Set("Content-Type", contentType)
+
+		// Set content length if available
+		if proxyResp.ContentLength > 0 {
+			resp.Header().Set("Content-Length", fmt.Sprintf("%d", proxyResp.ContentLength))
+		}
+
+		// Enable byte range requests
+		resp.Header().Set("Accept-Ranges", "bytes")
+
+		// Copy other relevant headers
+		for _, header := range []string{"Content-Range", "ETag", "Last-Modified"} {
+			if value := proxyResp.Header.Get(header); value != "" {
+				resp.Header().Set(header, value)
+			}
+		}
+
+		// Set status code
+		resp.WriteHeader(proxyResp.StatusCode)
+
+		// Copy the body from the proxy response to our response
+		_, err = io.Copy(resp.ResponseWriter, proxyResp.Body)
+		if err != nil {
+			// Check if it's a broken pipe error (client disconnected)
+			if strings.Contains(err.Error(), "broken pipe") || strings.Contains(err.Error(), "connection reset by peer") {
+				// This is normal when client stops the video or closes the page
+				log.Debugf("Client disconnected during streaming: %v", err)
+			} else {
+				// Log other errors as errors
+				log.Errorf("Error copying proxy response: %v", err)
+			}
+			return
+		}
+	}
 }
 
 func (i FilesResource) listFiles(req *restful.Request, resp *restful.Response) {
@@ -334,8 +486,8 @@ func (i FilesResource) removeFile(req *restful.Request, resp *restful.Response) 
 	scene := removeFileByFileId(uint(fileId))
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }
-func removeFileByFileId(fileId uint) models.Scene {
 
+func removeFileByFileId(fileId uint) models.Scene {
 	var scene models.Scene
 	var file models.File
 	db, _ := models.GetDB()
@@ -343,7 +495,6 @@ func removeFileByFileId(fileId uint) models.Scene {
 
 	err := db.Preload("Volume").Where(&models.File{ID: fileId}).First(&file).Error
 	if err == nil {
-
 		log.Infof("Deleting file %s", filepath.Join(file.Path, file.Filename))
 		deleted := false
 		switch file.Volume.Type {
@@ -365,6 +516,59 @@ func removeFileByFileId(fileId uint) models.Scene {
 				deleted = true
 			} else {
 				log.Errorf("error deleting file %v", err)
+			}
+		case "debridlink":
+			// Extract the torrent ID from the file path (format: "displayPath||fileID")
+			fileID := file.Path
+			if strings.Contains(file.Path, "||") {
+				parts := strings.Split(file.Path, "||")
+				if len(parts) > 1 {
+					fileID = parts[1]
+				}
+			}
+
+			// Extract the torrent ID without the file suffix (e.g., "s5ng7xbxtitk4gg008socg8-1" -> "s5ng7xbxtitk4gg008socg8")
+			torrentID := fileID
+			if strings.Contains(fileID, "-") {
+				parts := strings.Split(fileID, "-")
+				torrentID = parts[0]
+			}
+
+			// Create HTTP client with authorization header
+			client := &http.Client{}
+
+			// Create DELETE request to remove the torrent
+			deleteURL := fmt.Sprintf("https://debrid-link.com/api/v2/seedbox/%s/remove", torrentID)
+			httpReq, err := http.NewRequest("DELETE", deleteURL, nil)
+			if err != nil {
+				log.Errorf("error creating DELETE request: %v", err)
+				return scene
+			}
+			httpReq.Header.Add("Authorization", "Bearer "+file.Volume.Metadata)
+
+			// Execute the request
+			httpResp, err := client.Do(httpReq)
+			if err != nil {
+				log.Errorf("error deleting file from Debrid-Link: %v", err)
+				return scene
+			}
+			defer httpResp.Body.Close()
+
+			// Check response
+			if httpResp.StatusCode >= 200 && httpResp.StatusCode < 300 {
+				deleted = true
+				log.Infof("Successfully deleted torrent %s from Debrid-Link", torrentID)
+			} else {
+				var errorResponse struct {
+					Success bool   `json:"success"`
+					Error   string `json:"error"`
+				}
+
+				if err := json.NewDecoder(httpResp.Body).Decode(&errorResponse); err == nil {
+					log.Errorf("Debrid-Link API error: %s", errorResponse.Error)
+				} else {
+					log.Errorf("error deleting file from Debrid-Link, status code: %d", httpResp.StatusCode)
+				}
 			}
 		}
 
