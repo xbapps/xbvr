@@ -53,6 +53,7 @@ type ObjectConfig struct {
 		ShowHSPApiLink               bool      `default:"false" json:"showHSPApiLink"`
 		ShowSceneSearchField         bool      `default:"false" json:"showSceneSearchField"`
 		StashApiKey                  string    `default:"" json:"stashApiKey"`
+		ScraperProxy                 string    `default:"" json:"scraperProxy"`
 		ScrapeActorAfterScene        bool      `default:"true" json:"scrapeActorAfterScene"`
 		UseImperialEntry             bool      `default:"false" json:"useImperialEntry"`
 		ProgressTimeInterval         int       `default:"15" json:"progressTimeInterval"`
@@ -205,6 +206,8 @@ func LoadConfig() {
 }
 
 func SaveConfig() {
+	common.Log.Infof("Scrapper proxy is %s", Config.Advanced.ScraperProxy)
+
 	data, err := json.Marshal(Config)
 	if err == nil {
 		obj := models.KV{Key: "config", Value: string(data)}
