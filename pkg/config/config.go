@@ -206,8 +206,6 @@ func LoadConfig() {
 }
 
 func SaveConfig() {
-	common.Log.Infof("Scrapper proxy is %s", Config.Advanced.ScraperProxy)
-
 	data, err := json.Marshal(Config)
 	if err == nil {
 		obj := models.KV{Key: "config", Value: string(data)}
