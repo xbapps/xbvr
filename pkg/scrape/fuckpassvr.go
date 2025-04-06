@@ -51,8 +51,8 @@ func FuckPassVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 			}
 		})
 
-		e.ForEach(`web-vr-video-player`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, strings.Trim(e.Attr("coverimage"), " '"))
+		e.ForEach(`div.video__videoWrapper pornhall-player`, func(id int, e *colly.HTMLElement) {
+			sc.Covers = append(sc.Covers, strings.Trim(e.Attr("poster"), " '"))
 		})
 
 		e.ForEach(`div.profile__gallery a.profile__galleryElement`, func(id int, e *colly.HTMLElement) {
