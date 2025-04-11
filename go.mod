@@ -1,10 +1,12 @@
 module github.com/xbapps/xbvr
 
-go 1.22
+go 1.23.0
+
+toolchain go1.24.2
 
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
-	github.com/PuerkitoBio/goquery v1.9.2
+	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/abbot/go-http-auth v0.4.0
 	github.com/anacrolix/ffprobe v1.1.0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
@@ -55,11 +57,11 @@ require (
 	github.com/tidwall/gjson v1.18.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	github.com/xo/dburl v0.23.2
-	golang.org/x/crypto v0.32.0
-	golang.org/x/net v0.34.0
+	golang.org/x/crypto v0.37.0
+	golang.org/x/net v0.39.0
 	golang.org/x/oauth2 v0.25.0
-	golang.org/x/sys v0.29.0
-	golang.org/x/text v0.21.0
+	golang.org/x/sys v0.32.0
+	golang.org/x/text v0.24.0
 	gopkg.in/gormigrate.v1 v1.6.0
 	willnorris.com/go/imageproxy v0.11.3-0.20240601234520-572ad2db78ed
 )
@@ -72,7 +74,7 @@ require (
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.3 // indirect
-	github.com/andybalholm/cascadia v1.3.2 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/antchfx/htmlquery v1.2.3 // indirect
 	github.com/antchfx/xmlquery v1.3.1 // indirect
 	github.com/antchfx/xpath v1.1.10 // indirect
@@ -148,7 +150,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/term v0.28.0 // indirect
+	golang.org/x/term v0.31.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
