@@ -18,7 +18,7 @@ func VRBangersSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com, "arporn.com")
+	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com", "arporn.com")
 	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com", "arporn.com")
 	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com", "arporn.com")
 	ajaxCollector.CacheDir = ""
