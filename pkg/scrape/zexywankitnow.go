@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
@@ -87,7 +88,9 @@ func TwoWebMediaSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string,
 
 		// trailer details
 		sc.TrailerType = "deovr"
-		sc.TrailerSrc = strings.Replace(URL, `/videos/`, ``, 1) + `/deovr/video/` + sc.SiteID
+		params := models.TrailerScrape{SceneUrl: strings.Replace(URL, `/videos/`, ``, 1) + `/deovr/video/` + sc.SiteID}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		// Cast & Tags
 		// Note: Cast/Tags links are currently all inside the same div element...

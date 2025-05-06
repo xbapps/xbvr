@@ -37,6 +37,8 @@ func createCollector(domains ...string) *colly.Collector {
 
 	// see if the domain has a limit and set it
 	for _, domain := range domains {
+		SetupCollector(GetCoreDomain(domain)+"-scraper", c)
+		log.Debugf("Using Header/Cookies from %s", GetCoreDomain(domain)+"-scraper")
 		if Limiters == nil {
 			LoadScraperRateLimits()
 		}
@@ -190,4 +192,17 @@ func getTextFromHTMLWithSelector(data string, sel string) string {
 }
 func CreateCollector(domains ...string) *colly.Collector {
 	return createCollector(domains...)
+}
+
+func GetCoreDomain(domain string) string {
+	if strings.HasPrefix(domain, "http") {
+		parsedURL, _ := url.Parse(domain)
+		domain = parsedURL.Hostname()
+	}
+	parts := strings.Split(domain, ".")
+	if len(parts) > 2 && parts[0] == "www" {
+		parts = parts[1:]
+	}
+
+	return strings.Join(parts[:len(parts)-1], ".")
 }

@@ -2159,7 +2159,96 @@ func Migrate() {
 				return e
 			},
 		},
-	})
+		{
+			ID: "0084-Migrate-Trailer-Sources",
+			Migrate: func(tx *gorm.DB) error {
+				// declare common update function
+				updateScenesWithTrailer := func(scenes []models.Scene, trailerType string) error {
+					for _, scene := range scenes {
+						scene.TrailerType = trailerType
+						params := models.TrailerScrape{SceneUrl: scene.TrailerSource}
+						strParams, _ := json.Marshal(params)
+						scene.TrailerSource = string(strParams)
+
+						if err := scene.Save(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}
+				var scenes []models.Scene
+				// naughty america
+				err := db.Where("scene_id like ?", "naughtyamerica-%").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for _, scene := range scenes {
+					scene.TrailerType = "heresphere"
+					params := models.TrailerScrape{SceneUrl: "https://api.naughtyapi.com/heresphere/" + strings.TrimLeft(scene.SceneID, "naughtyamerica-vr-")}
+					strParams, _ := json.Marshal(params)
+					scene.TrailerSource = string(strParams)
+					err = scene.Save()
+					if err != nil {
+						return err
+					}
+				}
+				// czech network
+				err = db.Where("trailer_type='heresphere' and trailer_source like 'https://www.czechvrnetwork.com/heresphere%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "heresphere")
+				if err != nil {
+					return err
+				}
+				// povr
+				err = db.Where("trailer_type='heresphere' and trailer_source like 'https://www.povr.com/heresphere%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "heresphere")
+				if err != nil {
+					return err
+				}
+				// stasyqvr
+				err = db.Where("trailer_type='deovr' and trailer_source like 'http://stasyqvr.com/deovr%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "deovr")
+				if err != nil {
+					return err
+				}
+				// zexyvr
+				err = db.Where("trailer_type='deovr' and trailer_source like 'https://zexyvr.com/deovr%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "deovr")
+				if err != nil {
+					return err
+				}
+				// wankitnowvr
+				err = db.Where("trailer_type='deovr' and trailer_source like 'https://wankitnowvr.com/deovr%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "deovr")
+				if err != nil {
+					return err
+				}
+				// slr
+				err = db.Where("trailer_type='slr'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "slr")
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+		}})
 
 	if err := m.Migrate(); err != nil {
 		common.Log.Fatalf("Could not migrate: %v", err)

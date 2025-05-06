@@ -9,6 +9,7 @@
             <b-tab-item label="Actor Settings"/>
             <b-tab-item label="Create Custom Site"/>
             <b-tab-item :label="$t('Alternate Sites')"/>
+            <b-tab-item :label="$t('Cookies/Headers')"/>
       </b-tabs>
 
       <!-- Screen Details Tab -->
@@ -165,6 +166,90 @@
         </div>
       </div>
 
+      <!-- Heaaders/Cookies tab -->
+      <div class="columns" v-if="activeTab == 4">
+        <div class="column">
+          <section>            
+            <b-field>
+              <p>
+                <b><a href="https://github.com/xbapps/xbvr/wiki/Setting-Request-Headers,-Cookies-and-Body" target="_blank" rel="noreferrer">Domain Config</a></b>
+                <a href="https://github.com/xbapps/xbvr/wiki/Setting-Request-Headers,-Cookies-and-Body" target="_blank" rel="noreferrer" style="margin-left: 1em;">Wiki</a>
+              </p>
+              <b-field>
+                <b-tooltip label="Select a file to import config for a scraper or trailers"
+                  type="is-primary is-light" :delay="1000" style="margin-left: 1em;" >
+                  <b-field class="file is-primary" :class="{'has-name': !!file}">
+                    <b-upload v-model="file" class="file-label" icon-left="upload" size="is-small">
+                        <span class="file-cta">
+                            <b-icon class="file-icon" icon="upload" size="is-small"></b-icon>
+                            <span class="file-label">Import</span>
+                        </span>
+                        <span class="file-name" v-if="file">
+                            {{ file.name }}
+                        </span>
+                    </b-upload>
+                  </b-field>
+                </b-tooltip>
+                <b-button v-if="showConfigField" type="is-primary" style="margin-left: 1em;" @click="saveCollectorConfig">Save</b-button>
+                <b-button v-if="showConfigField" type="is-primary" style="margin-left: 1em;" @click="deleteCollectorConfig" icon-right="delete"></b-button>
+              </b-field>
+              <b-autocomplete v-model="kvName" ref="autocompleteconfig" :data="filteredCollectorConfigList" :open-on-focus="true" :clearable="true" 
+                placeholder="e.g. domainname-scraper or domainname-trailers " 
+                @select="option => showConfigDetails(option)" 
+                @select-header="showAddCollectorConfig"
+                :selectable-header="true" >
+                <template #header>
+                    <a><span> Add new... </span></a>
+                </template>
+              </b-autocomplete>
+            </b-field>
+            <b-field v-if="showConfigField">
+              <p><b>Headers</b><b-button style="margin-left: 1em;" @click="addHeaderRow" size="is-small"><b-icon pack="mdi" icon="plus" size="is-small"></b-icon></b-button></p>              
+            </b-field>
+            <b-table v-if="showConfigField" :data="headers" >
+              <b-table-column field="key" :label="$t('Key')" width="200" v-slot="props">
+                <b-input v-model="props.row.key" ></b-input>                
+              </b-table-column>
+              <b-table-column field="value" :label="$t('Value')" v-slot="props">
+                <b-input v-model="props.row.value" ></b-input>                
+              </b-table-column>
+              <b-table-column field="value" v-slot="props">
+                <b-button @click="delHeaderRow(props)"><b-icon pack="fas" icon="trash" ></b-icon></b-button>  
+              </b-table-column>
+            </b-table>
+
+            <b-field v-if="showConfigField" >
+              <p><b>Cookies</b><b-button style="margin-left: 1em;"@click="addCookieRow" size="is-small"><b-icon pack="mdi" icon="plus" size="is-small"></b-icon></b-button></p>              
+            </b-field>
+            <b-table v-if="showConfigField" :data="cookies" >
+              <b-table-column field="name" :label="$t('Key')" width="200" v-slot="props">
+                <b-input v-model="props.row.name" ></b-input>                
+              </b-table-column>
+              <b-table-column field="value" :label="$t('Value')" v-slot="props">
+                <b-input v-model="props.row.value" ></b-input>                
+              </b-table-column>
+              <b-table-column field="domain" :label="$t('Domain')" v-slot="props">
+                <b-input v-model="props.row.domain" ></b-input>                
+              </b-table-column>
+              <b-table-column field="path" :label="$t('Path')" width="100" v-slot="props">
+                <b-input v-model="props.row.path" ></b-input>                
+              </b-table-column>
+              <b-table-column field="host" :label="$t('Host')" v-slot="props">
+                <b-input v-model="props.row.host" ></b-input>                
+              </b-table-column>
+              <b-table-column v-slot="props">
+                <b-button @click="delCookieRow(props)"><b-icon pack="fas" icon="trash" ></b-icon></b-button>  
+              </b-table-column>
+            </b-table>
+
+            <b-field  v-if="showConfigField" label="Request Body">
+              <b-input v-model="body" type="textarea"></b-input>                
+            </b-field>
+
+          </section>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -185,7 +270,35 @@ export default {
       scraperAvatar: '',
       scraperFieldsValid: false,
       masterSiteId: '',
+      kvName: "",
+      headers: [],
+      cookies: [],
+      body: "",
+      showCollectorConfigFields: false,
+      file: null,
+      uploadData: '',
+    }
+  },
+  watch: {
+    // when a file is selected, then this will fire the upload process
+    file: function (o, n) {
+      try {
+        if (this.file != null) {
+          const reader = new FileReader()
+          reader.onload = (event) => {
+            try {
+              this.uploadData = JSON.stringify(JSON.parse(event.target.result))
+              this.restoreCollectorConfig()
+            } catch (error) {
+              this.$buefy.toast.open({message: `Error:  ${error.message}`, type: 'is-danger', duration: 30000})    
+            }
+          }
+          reader.readAsText(this.file)
+        }
+      } catch (error) {        
+        this.$buefy.toast.open({message: `Error:  ${error.message}`, type: 'is-danger', duration: 30000})    
       }
+    },
   },
   methods: {
     save () {      
@@ -227,6 +340,101 @@ export default {
     },
     relinkAltSrc () {
       ky.get('/api/task/relink_alt_aource_scenes')
+    },
+    showConfigDetails(option) {      
+      let matched = this.$store.state.optionsAdvanced.advanced.collectorConfigs.find((config) => {
+        return config.domain_key
+          .toString()
+          .toLowerCase()
+          .trim()
+          .indexOf(option.toLowerCase()) >= 0
+      })
+      if (matched == null ) return
+      if (matched.config.headers==null) {
+        this.headers = []
+      } else {
+        this.headers = matched.config.headers
+      }
+      if (matched.config.cookies==null) {
+        this.cookies = []
+      } else {
+        this.cookies = matched.config.cookies
+      }      
+      this.body= matched.config.body
+      this.showCollectorConfigFields = true
+    },
+    addHeaderRow(){
+      this.headers.push({ key: "", value: "" });
+    },
+    delHeaderRow(props){      
+      this.headers.splice(props.index,1)
+    },
+    addCookieRow(){
+      this.cookies.push({ name: "", value: "", domain: "", path: "", host:"" });
+    },
+    delCookieRow(props){      
+      this.cookies.splice(props.index,1)
+    },
+    saveCollectorConfig() {
+      ky.post('/api/options/save-collector-config', {
+        json: {
+          domain_key: this.kvName,
+          body: this.body,
+          cookies: this.cookies,
+          headers: this.headers,
+          other: [],
+        }
+      })
+      let row = this.$store.state.optionsAdvanced.advanced.collectorConfigs.find((config) => {
+        return config.domain_key
+          .toString()
+          .toLowerCase()
+          .trim()
+          .indexOf(this.kvName.toString().toLowerCase()) >= 0
+      })
+      row.config.cookies = this.cookies
+      row.config.headers=this.headers
+      row.config.body = this.body      
+    },
+    showAddCollectorConfig() {
+      this.$buefy.dialog.prompt({
+                message: `Add new config`,
+                inputAttrs: {
+                    placeholder: 'domainname-scraper or domainname-trailers e.g. naughtyamerica-trailers',
+                    maxlength: 20,
+                    value: this.kvName
+                },
+                confirmText: 'Add',
+                onConfirm: (value) => {                  
+                    this.kvName=value
+                    this.$store.state.optionsAdvanced.advanced.collectorConfigs.push({config: {body: "", cookies: [], headers: [],  other: ""},domain_key: value} )                    
+                    this.$refs.autocompleteconfig.setSelected(value)
+                    this.showCollectorConfigFields = true                    
+                }
+      })
+    },
+    async restoreCollectorConfig () {
+      if (this.uploadData !== '') {
+        try {
+          const response = await ky.post('/api/options/save-collector-config', {
+            json: JSON.parse(this.uploadData)
+          })
+        } catch (error) {
+          this.$buefy.toast.open({message: `Error:  Failed to import file`, type: 'is-danger', duration: 30000})
+          return
+        }
+        this.file = null
+        this.$store.dispatch('optionsAdvanced/load')
+      }
+    },
+    async deleteCollectorConfig() {
+      const response = await ky.delete('/api/options/delete-collector-config', {
+        json: {
+          domain_key: this.kvName,
+        }
+      })
+      this.kvName=""
+      this.$store.dispatch('optionsAdvanced/load')
     },
   },
   computed: {
@@ -311,7 +519,7 @@ export default {
       },
       set (value) {
         this.$store.state.optionsAdvanced.advanced.ignoreReleasedBefore = value
-      }
+      },
     },
     listOfMainSites: {
       get () {
@@ -335,6 +543,27 @@ export default {
     },
     showMatchParamsOverlay () {
       return this.$store.state.overlay.sceneMatchParams.show
+    },
+    filteredCollectorConfigList () {
+      // filter the list based on what has been entered so far
+      if (this.$store.state.optionsAdvanced.advanced.collectorConfigs.length==0) return
+
+      let matched = this.$store.state.optionsAdvanced.advanced.collectorConfigs.filter((config) => {
+        return config.domain_key
+          .toLowerCase()
+          .trim()
+          .indexOf(this.kvName.toLowerCase()) >= 0
+      })
+      if (matched.length == 1 && matched[0].domain_key.toLowerCase() == this.kvName.toLowerCase()){
+        this.showCollectorConfigFields = true
+        this.showConfigDetails(this.kvName)
+      } else {
+        this.showCollectorConfigFields = false
+      }
+      return matched.map(item => item.domain_key)
+    },
+    showConfigField () {
+      return this.showCollectorConfigFields
     },
     isLoading: function () {
       return this.$store.state.optionsAdvanced.loading

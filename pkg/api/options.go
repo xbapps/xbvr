@@ -27,6 +27,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/tasks"
 )
 
@@ -205,6 +206,14 @@ type RequestSaveOptionsStorage struct {
 	MatchOhash bool `json:"match_ohash"`
 }
 
+type RequestSaveCollectorConfig struct {
+	DomainKey string                          `json:"domain_key"`
+	Headers   []scrape.ScrapeHttpKeyValue     `json:"headers"`
+	Cookies   []scrape.ScrapeHttpCookieDetail `json:"cookies"`
+	Body      string                          `json:"body"`
+	Other     []scrape.ScrapeHttpKeyValue     `json:"other"`
+}
+
 type ConfigResource struct{}
 
 func (i ConfigResource) WebService() *restful.WebService {
@@ -312,6 +321,11 @@ func (i ConfigResource) WebService() *restful.WebService {
 	// "Cuepoints section endpoints"
 	ws.Route(ws.PUT("/custom-sites/create").To(i.createCustomSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// "Collector Config endpoints"
+	ws.Route(ws.GET("/collector-config-list").To(i.getCollectorConfigs))
+	ws.Route(ws.POST("/save-collector-config").To(i.saveCollectorConfigs))
+	ws.Route(ws.DELETE("/delete-collector-config").To(i.deleteCollectorConfig))
 
 	return ws
 }
@@ -1076,4 +1090,49 @@ func (i ConfigResource) saveOptionsStorage(req *restful.Request, resp *restful.R
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+
+func (i ConfigResource) getCollectorConfigs(req *restful.Request, resp *restful.Response) {
+	list := scrape.GetAllScrapeHttpConfigs()
+	resp.WriteHeaderAndEntity(http.StatusOK, &list)
+}
+
+func (i ConfigResource) saveCollectorConfigs(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveCollectorConfig
+
+	if err := req.ReadEntity(&r); err != nil {
+		APIError(req, resp, http.StatusInternalServerError, err)
+		log.Error(err)
+		return
+	}
+
+	if r.DomainKey == "" {
+		APIError(req, resp, http.StatusInternalServerError, nil)
+		log.Error("Could not save collector config - name for config not found")
+		return
+	}
+	var config scrape.ScrapeHttpConfig
+	config.Cookies = r.Cookies
+	config.Headers = r.Headers
+	config.Body = r.Body
+	config.Other = r.Other
+	scrape.SaveScrapeHttpConfig(r.DomainKey, config)
+}
+func (i ConfigResource) deleteCollectorConfig(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveCollectorConfig
+
+	if err := req.ReadEntity(&r); err != nil {
+		APIError(req, resp, http.StatusInternalServerError, err)
+		log.Error(err)
+		return
+	}
+
+	if r.DomainKey == "" {
+		APIError(req, resp, http.StatusInternalServerError, nil)
+		log.Error("Could not delete collector config - name for config not found")
+		return
+	}
+	var kv models.KV
+	kv.Key = r.DomainKey
+	kv.Delete()
 }

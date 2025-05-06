@@ -89,12 +89,13 @@ type HeresphereMedia struct {
 	Sources []HeresphereSource `json:"sources"`
 }
 
+type StringOrInt string
 type HeresphereSource struct {
-	Resolution int    `json:"resolution"`
-	Height     int    `json:"height"`
-	Width      int    `json:"width"`
-	Size       int64  `json:"size"`
-	URL        string `json:"url"`
+	Resolution StringOrInt `json:"resolution"`
+	Height     int         `json:"height"`
+	Width      int         `json:"width"`
+	Size       int64       `json:"size"`
+	URL        string      `json:"url"`
 }
 
 type HereSphereAlphaPackedSettings struct {
@@ -214,11 +215,11 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 	var file models.File
 	db.Where(&models.File{ID: uint(fileId)}).First(&file)
 
-	resolution := file.VideoHeight
+	resolution := strconv.Itoa(file.VideoHeight)
 	height := file.VideoHeight
 	width := file.VideoWidth
 	if file.VideoProjection == "360_tb" {
-		resolution = resolution / 2
+		resolution = strconv.Itoa(file.VideoHeight / 2)
 	}
 
 	var media []HeresphereMedia
@@ -226,7 +227,7 @@ func (i HeresphereResource) getHeresphereFile(req *restful.Request, resp *restfu
 		Name: fmt.Sprintf("File 1/1 %vp - %v", resolution, humanize.Bytes(uint64(file.Size))),
 		Sources: []HeresphereSource{
 			{
-				Resolution: resolution,
+				Resolution: StringOrInt(resolution),
 				Height:     height,
 				Width:      width,
 				Size:       file.Size,
@@ -322,11 +323,11 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 	for i, file := range videoFiles {
 		height := file.VideoHeight
 		width := file.VideoWidth
-		resolution := file.VideoHeight
+		resolution := strconv.Itoa(file.VideoHeight)
 		vertresolution := file.VideoWidth
 
 		if file.VideoProjection == "360_tb" {
-			resolution = resolution / 2
+			resolution = strconv.Itoa(file.VideoHeight / 2)
 			vertresolution = vertresolution * 2
 		}
 
@@ -341,7 +342,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 			Name: fmt.Sprintf("File %v/%v %vp - %v", i+1, len(videoFiles), resolution, humanize.Bytes(uint64(file.Size))),
 			Sources: []HeresphereSource{
 				{
-					Resolution: resolution,
+					Resolution: StringOrInt(resolution),
 					Height:     height,
 					Width:      width,
 					Size:       file.Size,
@@ -366,7 +367,7 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 				if len(encoding.VideoSources) > 0 {
 					hsp.Name = encoding.Name
 					for _, source := range encoding.VideoSources {
-						hspSource := HeresphereSource(source)
+						hspSource := HeresphereSource(HeresphereSource{Resolution: StringOrInt(strconv.Itoa(source.Resolution)), Height: source.Height, Width: source.Width, Size: source.Size, URL: source.URL})
 						hsp.Sources = append(hsp.Sources, hspSource)
 					}
 					media = append(media, hsp)
@@ -1098,4 +1099,21 @@ func getTrackAssignment(name string, trackAssignments *[]string) int {
 	}
 	*trackAssignments = append(*trackAssignments, name)
 	return len(*trackAssignments)
+}
+
+func (fs *StringOrInt) UnmarshalJSON(data []byte) error {
+	var str string
+	// Try to unmarshal as a string
+	if err := json.Unmarshal(data, &str); err == nil {
+		*fs = StringOrInt(str)
+		return nil
+	}
+	// Try to unmarshal as an int
+	var num int
+	if err := json.Unmarshal(data, &num); err == nil {
+		*fs = StringOrInt(fmt.Sprintf("%d", num))
+		return nil
+	}
+	// Return an error if neither worked
+	return fmt.Errorf("invalid resolution format: %s", data)
 }

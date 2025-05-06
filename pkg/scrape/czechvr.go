@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
@@ -110,7 +111,9 @@ func CzechVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out cha
 		r := re.FindStringSubmatch(sc.HomepageURL)
 		if len(r) > 0 {
 			sc.TrailerType = "heresphere"
-			sc.TrailerSrc = "https://www.czechvrnetwork.com/heresphere/videoID" + r[1]
+			params := models.TrailerScrape{SceneUrl: "https://www.czechvrnetwork.com/heresphere/videoID" + r[1]}
+			strParams, _ := json.Marshal(params)
+			sc.TrailerSrc = string(strParams)
 		}
 
 		// Filenames
