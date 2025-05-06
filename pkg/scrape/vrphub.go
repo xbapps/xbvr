@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
@@ -100,9 +101,13 @@ func VRPHub(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 
 		// Cast
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`div.td-post-header header.td-post-title span.td-post-date2 a.ftlink`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, e.Text)
-			sc.ActorDetails[e.Text] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Attr("href")}
+		e.ForEach(`div.td-post-header header.td-post-title span.td-post-date2`, func(id int, e *colly.HTMLElement) {
+			if strings.Contains(e.Text, "Featuring") {
+				e.ForEach(`a.ftlink`, func(id int, e *colly.HTMLElement) {
+					sc.Cast = append(sc.Cast, e.Text)
+					sc.ActorDetails[e.Text] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Attr("href")}
+				})
+			}
 		})
 
 		// Gallery
@@ -131,7 +136,16 @@ func VRPHub(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 		})
 
 		// Duration
-		sc.Duration = 0
+		reDuration := regexp.MustCompile(`^WATCH FULL VIDEO ([0-9]+:*[0-9]*) MIN$`)
+		e.ForEach(`a.maxbutton-get-the-full-video-now`, func(id int, e *colly.HTMLElement) {
+			tmpDuration := reDuration.FindStringSubmatch(e.Text)
+			if tmpDuration != nil {
+				intDuration, err := strconv.Atoi(strings.Split(tmpDuration[1], ":")[0])
+				if err == nil {
+					sc.Duration = intDuration
+				}
+			}
+		})
 
 		// There are 2 places we can find filenames from - one is in the video
 		// previews, and one is in the trailer download section. Some posts
