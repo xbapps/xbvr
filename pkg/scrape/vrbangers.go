@@ -18,9 +18,9 @@ func VRBangersSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com")
-	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com")
-	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com")
+	sceneCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com", "arporn.com")
+	siteCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com", "arporn.com")
+	ajaxCollector := createCollector("vrbangers.com", "vrbtrans.com", "vrbgay.com", "vrconk.com", "blowvr.com", "arporn.com")
 	ajaxCollector.CacheDir = ""
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -92,7 +92,7 @@ func VRBangersSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		// Cover URLs
 		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
 			tmpCover := strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0]
-			if tmpCover != "https://vrbangers.com/wp-content/uploads/2020/03/VR-Bangers-Logo.jpg" && tmpCover != "https://vrbgay.com/wp-content/uploads/2020/03/VRB-Gay-Logo.jpg" && tmpCover != "https://vrbtrans.com/wp-content/uploads/2020/03/VRB-Trans-Logo.jpg" {
+			if tmpCover != "https://vrbangers.com/wp-content/uploads/2020/03/VR-Bangers-Logo.jpg" && tmpCover != "https://vrbgay.com/wp-content/uploads/2020/03/VRB-Gay-Logo.jpg" && tmpCover != "https://vrbtrans.com/wp-content/uploads/2020/03/VRB-Trans-Logo.jpg" && tmpCover != "https://arporn.com/wp-content/uploads/2020/03/ARPORN-logo.jpg" {
 				sc.Covers = append(sc.Covers, tmpCover)
 			}
 		})
@@ -189,6 +189,9 @@ func VRConk(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 func BlowVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "blowvr", "BlowVR", "https://blowvr.com/", limitScraping)
 }
+func ARPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "arporn", "ARPorn", "https://arporn.com/", limitScraping)
+}
 
 func init() {
 	registerScraper("vrbangers", "VRBangers", "https://vrbangers.com/favicon/apple-touch-icon-144x144.png", "vrbangers.com", VRBangers)
@@ -196,4 +199,5 @@ func init() {
 	registerScraper("vrbgay", "VRBGay", "https://vrbgay.com/favicon/apple-touch-icon-144x144.png", "vrbgay.com", VRBGay)
 	registerScraper("vrconk", "VRCONK", "https://vrconk.com/favicon/apple-touch-icon-144x144.png", "vrconk.com", VRConk)
 	registerScraper("blowvr", "BlowVR", "https://blowvr.com/favicon/apple-touch-icon-144x144.png", "blowvr.com", BlowVR)
+	registerScraper("arporn", "ARPorn", "https://arporn.com/favicon/apple-touch-icon-144x144.png", "arporn.com", ARPorn)
 }
