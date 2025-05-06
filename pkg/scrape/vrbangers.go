@@ -92,7 +92,7 @@ func VRBangersSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		// Cover URLs
 		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
 			tmpCover := strings.Split(e.Request.AbsoluteURL(e.Attr("content")), "?")[0]
-			if tmpCover != "https://vrbangers.com/wp-content/uploads/2020/03/VR-Bangers-Logo.jpg" && tmpCover != "https://vrbgay.com/wp-content/uploads/2020/03/VRB-Gay-Logo.jpg" && tmpCover != "https://vrbtrans.com/wp-content/uploads/2020/03/VRB-Trans-Logo.jpg"  && tmpCover != "https://arporn.com/wp-content/uploads/2020/03/ARPORN-logo.jpg" {
+			if tmpCover != "https://vrbangers.com/wp-content/uploads/2020/03/VR-Bangers-Logo.jpg" && tmpCover != "https://vrbgay.com/wp-content/uploads/2020/03/VRB-Gay-Logo.jpg" && tmpCover != "https://vrbtrans.com/wp-content/uploads/2020/03/VRB-Trans-Logo.jpg" && tmpCover != "https://arporn.com/wp-content/uploads/2020/03/ARPORN-logo.jpg" {
 				sc.Covers = append(sc.Covers, tmpCover)
 			}
 		})
@@ -192,7 +192,6 @@ func BlowVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 func ARPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 	return VRBangersSite(wg, updateSite, knownScenes, out, singleSceneURL, "arporn", "ARPorn", "https://arporn.com/", limitScraping)
 }
-
 
 func init() {
 	registerScraper("vrbangers", "VRBangers", "https://vrbangers.com/favicon/apple-touch-icon-144x144.png", "vrbangers.com", VRBangers)
