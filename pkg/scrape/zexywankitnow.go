@@ -53,7 +53,8 @@ func TwoWebMediaSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string,
 		// Gallery
 		e.ForEach(`div.gallery > div`, func(id int, e *colly.HTMLElement) {
 			if id > 0 {
-				sc.Gallery = append(sc.Gallery, e.ChildAttr("div.view > a > img", "src"))
+
+				sc.Gallery = append(sc.Gallery, strings.Split(e.ChildAttr("div.view > a > img", "src"), "?")[0]+"?h=900")
 			}
 		})
 
