@@ -2251,7 +2251,7 @@ func Migrate() {
 		},
 		{
 			// Had to switch to a differnt sceneID source that's consistent through every scene. so all scenes have to be renumbered.
-			ID: "0085-fix-realjam-ids",
+			ID: "0085-update-realjamvr-ids",
 			Migrate: func(tx *gorm.DB) error {
 				newSceneId := func(site string, url string) (string, int) {
 					sceneID := ""
@@ -2282,6 +2282,7 @@ func Migrate() {
 				if err != nil {
 					return err
 				}
+				scene_renum := 0
 				for _, scene := range scenes {
 
 					// Need both the siteID string and the sceneID has interger for logic
@@ -2317,13 +2318,16 @@ func Migrate() {
 							if err != nil {
 								return err
 							}
+							scene_renum++
 						}
 
 					}
 				}
 
-				// since scenes have new IDs, we need to re-index them
-				tasks.SearchIndex()
+				// since scenes have new IDs, we need to re-index them (only if we actually changed any)
+				if scene_renum != 0 {
+					tasks.SearchIndex()
+				}
 
 				return nil
 			},

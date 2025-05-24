@@ -37,6 +37,7 @@ func RealJamSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		sc.Site = siteID
 		sc.HomepageURL = strings.TrimSuffix(strings.Split(e.Request.URL.String(), "?")[0], "/")
 
+		// web code split
 		// PornCorn sources the scene_id from the trailer URL. RealJam sources the scene_id from the trailer data-id
 		trailerId := ""
 		if scraperID == "realjamvr" {
@@ -69,12 +70,20 @@ func RealJamSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		sc.TrailerSrc = string(strParams)
 
 		// Cast
+		// RealJamVR & PornCorn web code split
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`div.scene-view > a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
-		})
 
+		if scraperID == "realjamvr" {
+			e.ForEach(`div.mb-1 > a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
+				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+				sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+			})
+		} else {
+			e.ForEach(`div.scene-view > a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
+				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+				sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+			})
+		}
 		// Released
 		e.ForEach(`.bi-calendar3`, func(id int, e *colly.HTMLElement) {
 			p := e.DOM.Parent().Next()
