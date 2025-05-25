@@ -127,7 +127,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 		s, _ := resty.New().R().
 			SetHeader("User-Agent", UserAgent).
-			Get(sc.TrailerSrc)
+			Get(gjson.Get(sc.TrailerSrc, "scene_url").String())
 		JsonMetadataA := s.String()
 
 		isTransScene := e.Request.Ctx.GetAny("isTransScene").(bool)
