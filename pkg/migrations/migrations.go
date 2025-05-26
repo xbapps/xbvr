@@ -2311,6 +2311,14 @@ func Migrate() {
 								return err
 							}
 
+							// rename preview if it exists
+							if scene.HasVideoPreview {
+								err := os.Rename(filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4"), filepath.Join(common.VideoPreviewDir, sceneID+".mp4"))
+								if err != nil {
+									common.Log.Warnf("Could not update preview %s", scene.SceneID)
+								}
+							}
+
 							// update the scene itself
 							common.Log.Infoln("Updating sceneid:", scene.SceneID, "to", sceneID)
 							scene.SceneID = sceneID
