@@ -2248,7 +2248,99 @@ func Migrate() {
 				}
 				return nil
 			},
-		}})
+		},
+		{
+			// Had to switch to a differnt sceneID source that's consistent through every scene. so all scenes have to be renumbered.
+			ID: "0085-update-realjamvr-ids",
+			Migrate: func(tx *gorm.DB) error {
+				newSceneId := func(site string, url string) (string, int) {
+					sceneID := ""
+					statusCode := 200
+
+					sceneCollector := colly.NewCollector(
+						colly.AllowedDomains("realjamvr.com"),
+					)
+
+					sceneCollector.OnError(func(r *colly.Response, err error) {
+						common.Log.Errorf("Error visiting %s %s", r.Request.URL, err)
+						statusCode = r.StatusCode
+					})
+
+					sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+
+						// Scene ID. filename & scene URL not consistent through entire site so use data-id
+						sceneID = slugify.Slugify(site) + "-" + e.ChildAttr(`div.ms-5`, "data-id")
+					})
+
+					sceneCollector.Visit(url)
+
+					return sceneID, statusCode
+				}
+
+				var scenes []models.Scene
+				err := tx.Where("studio = ?", "Real Jam Network").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				scene_renum := 0
+				for _, scene := range scenes {
+
+					// Need both the siteID string and the sceneID has interger for logic
+					tmp := strings.Split(scene.SceneID, "-")
+					//sceneIDint, _ := strconv.Atoi(tmp[2])
+
+					// Don't change PornCorn. It is using scene URL.
+					if tmp[0] == "realjam" {
+
+						common.Log.Infoln("Checking sceneid:", scene.SceneID)
+						sceneID, statusCode := newSceneId(scene.Site, scene.SceneURL)
+
+						if statusCode != 200 {
+							return err
+						}
+
+						if sceneID == "" {
+							common.Log.Warnf("Could not update scene %s", scene.SceneID)
+							continue
+						}
+
+						if scene.SceneID != sceneID {
+							// update all actions referring to this scene by its scene_id
+							err = tx.Model(&models.Action{}).Where("scene_id = ?", scene.SceneID).Update("scene_id", sceneID).Error
+							if err != nil {
+								return err
+							}
+
+							// rename preview if it exists
+							if scene.HasVideoPreview {
+								err := os.Rename(filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4"), filepath.Join(common.VideoPreviewDir, sceneID+".mp4"))
+								if err != nil {
+									common.Log.Warnf("Could not update preview %s", scene.SceneID)
+								}
+							}
+
+							// update the scene itself
+							common.Log.Infoln("Updating sceneid:", scene.SceneID, "to", sceneID)
+							scene.SceneID = sceneID
+							err = tx.Save(&scene).Error
+							if err != nil {
+								return err
+							}
+							scene_renum++
+						}
+
+					}
+				}
+
+				// since scenes have new IDs, we need to re-index them (only if we actually changed any)
+				if scene_renum != 0 {
+					tasks.SearchIndex()
+				}
+
+				return nil
+			},
+		},
+	})
 
 	if err := m.Migrate(); err != nil {
 		common.Log.Fatalf("Could not migrate: %v", err)
