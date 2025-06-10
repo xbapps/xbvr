@@ -35,8 +35,8 @@
     "wampy": "6.4.2"
   },
   "devDependencies": {
-    "@babel/core": "7.26.0",
-    "@babel/eslint-parser": "7.26.5",
+    "@babel/core": "7.27.4",
+    "@babel/eslint-parser": "7.27.5",
     "@vue/cli-plugin-babel": "5.0.8",
     "@vue/cli-plugin-eslint": "5.0.8",
     "@vue/cli-service": "5.0.8",
