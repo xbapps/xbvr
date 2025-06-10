@@ -45,9 +45,9 @@ func FuckPassVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 			}
 		})
 
-		e.ForEach(`h2.video__title`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`meta[property="og:title"]`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				sc.Title = strings.TrimSpace(e.Text)
+				sc.Title = strings.TrimSpace(e.Attr("content"))
 			}
 		})
 
