@@ -734,3 +734,5 @@ willnorris.com/go/gifresize v1.0.0 h1:GKS68zjNhHMqkgNTv4iFAO/j/sNcVSOHQ7SqmDAIAm
 willnorris.com/go/gifresize v1.0.0/go.mod h1:eBM8gogBGCcaH603vxSpnfjwXIpq6nmnj/jauBDKtAk=
 willnorris.com/go/imageproxy v0.11.3-0.20240601234520-572ad2db78ed h1:/fAfb8NTgCj4tjPkOfkCTM+SrSzxf0j7wVQJRs+ZJXk=
 willnorris.com/go/imageproxy v0.11.3-0.20240601234520-572ad2db78ed/go.mod h1:whpQpsPSZ1Ud3zkAWbyTr5nXPhs3SNFyHNRWHNVn/mo=
+willnorris.com/go/imageproxy v0.12.0 h1:LwJX0MxTLI5U6le7ptVhXW7qZm6ZC1bWlfix6QDq2Ds=
+willnorris.com/go/imageproxy v0.12.0/go.mod h1:whpQpsPSZ1Ud3zkAWbyTr5nXPhs3SNFyHNRWHNVn/mo=
