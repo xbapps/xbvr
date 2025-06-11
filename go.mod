@@ -63,7 +63,7 @@ require (
 	golang.org/x/sys v0.33.0
 	golang.org/x/text v0.26.0
 	gopkg.in/gormigrate.v1 v1.6.0
-	willnorris.com/go/imageproxy v0.11.3-0.20240601234520-572ad2db78ed
+	willnorris.com/go/imageproxy v0.12.0
 )
 
 require (
