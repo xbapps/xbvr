@@ -53,6 +53,7 @@ type ObjectConfig struct {
 		ShowHSPApiLink               bool      `default:"false" json:"showHSPApiLink"`
 		ShowSceneSearchField         bool      `default:"false" json:"showSceneSearchField"`
 		StashApiKey                  string    `default:"" json:"stashApiKey"`
+		ScraperProxy                 string    `default:"" json:"scraperProxy"`
 		ScrapeActorAfterScene        bool      `default:"true" json:"scrapeActorAfterScene"`
 		UseImperialEntry             bool      `default:"false" json:"useImperialEntry"`
 		ProgressTimeInterval         int       `default:"15" json:"progressTimeInterval"`

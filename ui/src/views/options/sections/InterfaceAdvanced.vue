@@ -9,6 +9,7 @@
             <b-tab-item label="Actor Settings"/>
             <b-tab-item label="Create Custom Site"/>
             <b-tab-item :label="$t('Alternate Sites')"/>
+            <b-tab-item :label="$t('Proxy')"/>
             <b-tab-item :label="$t('Cookies/Headers')"/>
       </b-tabs>
 
@@ -39,7 +40,6 @@
           </section>
         </div>
       </div>
-      
       <!-- Actor Related Settings -->
       <div class="columns" v-if="activeTab == 1">
         <div class="column">
@@ -89,7 +89,7 @@
             </b-field>
             <b-field :label="$t('Avatar Url')" label-position="on-border">
               <b-input v-model="scraperAvatar" :placeholder="$t('Optional')"></b-input>
-            </b-field>  
+            </b-field>
             <b-field :label="$t('Main Site')" label-position="on-border" :addons="true" class="field-extra">
               <b-tooltip :label="$t('Leave blank, unless you want to link scenes from the new custom site to scenes on an existing studio site, e.g. VRHush on SLR or VRPorn to the main VRHush site')" :delay="500" multilined >
                   <div class="control is-expanded">
@@ -135,7 +135,7 @@
                 </b-switch>
               </b-tooltip>
             </b-field>
-            <b-tooltip :label="$t('Do not link scenes prior to the specified date.  The quality of metadata of older scenes is often poor and causes mismatches')" 
+            <b-tooltip :label="$t('Do not link scenes prior to the specified date.  The quality of metadata of older scenes is often poor and causes mismatches')"
                 :delay="500" type="is-primary" multilined size="is-large" position="is-bottom">
                 <b-field label="Ignore Scenes Released Prior To">
                   <b-datepicker v-model="ignoreReleasedBefore" :icon-right="ignoreReleasedBefore ? 'close-circle' : ''" icon-right-clickable @icon-right-click="ignoreReleasedBefore = null">
@@ -154,7 +154,7 @@
                   </b-datepicker>
                 </b-field>
               </b-tooltip>
-            <b-field>              
+            <b-field>
               <b-button type="is-primary" @click="clearAltSrcKeepEdits" style="margin-right: 1em;">Clear scene links - keep edits</b-button>
               <b-button type="is-primary" @click="clearAltSrc" style="margin-right: 1em;">Clear scene links</b-button>
               <b-button type="is-primary" @click="relinkAltSrc" style="margin-right: 1em;">Re-link scenes</b-button>
@@ -166,6 +166,17 @@
         </div>
       </div>
 
+      <!-- Proxy for scraper-->
+      <div class="columns" v-if="activeTab == 4">
+        <div class="column">
+          <section>
+
+            <b-field :label="$t('Proxy')" label-position="on-border">
+              <b-input v-model="scraperProxy" :placeholder="$t('Optional: http proxy')"></b-input>
+            </b-field>
+            <b-field>
+              <b-button type="is-primary" @click="save">Save</b-button>
+            </b-field>
       <!-- Heaaders/Cookies tab -->
       <div class="columns" v-if="activeTab == 4">
         <div class="column">
@@ -258,8 +269,8 @@
 import ky from 'ky'
 export default {
   name: 'InterfaceAdvanced',
-  mounted () {    
-    this.$store.dispatch('optionsAdvanced/load')    
+  mounted () {
+    this.$store.dispatch('optionsAdvanced/load')
   },
   data () {
     return {
@@ -301,10 +312,10 @@ export default {
     },
   },
   methods: {
-    save () {      
+    save () {
       this.$store.dispatch('optionsAdvanced/save')
     },
-    validateScraperFields() {      
+    validateScraperFields() {
       this.scraperFieldsValid=false
       if (this.scraperName != "") {
         if (this.scraperUrl.startsWith("https://") || this.scraperUrl.startsWith("http://") ) {
@@ -447,7 +458,7 @@ export default {
       }
     },
     showHSPApiLink: {
-      get () {        
+      get () {
         return this.$store.state.optionsAdvanced.advanced.showHSPApiLink
       },
       set (value) {
@@ -461,6 +472,14 @@ export default {
       set (value) {
         this.$store.state.optionsAdvanced.advanced.showSceneSearchField = value
       },
+    },
+    scraperProxy: {
+      get () {
+        return this.$store.state.optionsAdvanced.advanced.scraperProxy
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.scraperProxy = value
+      }
     },
     stashApiKey: {
       get () {
@@ -528,14 +547,14 @@ export default {
         for (let i=0; i < items.length; i++) {
           if (items[i].master_site_id == '') {
             sites.push(items[i].name)
-          }      
+          }
         }
         return sites
       },
       set (value) {
         if (value == "") {
           this.masterSiteId=""
-        } else {          
+        } else {
           const siteFound  = this.$store.state.optionsSites.items.find(site => site.master_site_id == '' && site.name==value);
           this.masterSiteId=siteFound.id
         }
