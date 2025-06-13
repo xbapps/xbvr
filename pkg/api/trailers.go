@@ -17,41 +17,78 @@ import (
 	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
-func LoadHeresphereScene(url string) HeresphereVideo {
-	response, err := http.Get(url)
+func LoadHeresphereScene(scrapeParams string) HeresphereVideo {
+	var params models.TrailerScrape
+	if strings.HasPrefix(scrapeParams, "http") {
+		// keep backwards compatible with just url
+		params.SceneUrl = scrapeParams
+	} else {
+		json.Unmarshal([]byte(scrapeParams), &params)
+	}
+
+	method := "POST"
+	client := &http.Client{}
+	req, _ := http.NewRequest(method, params.SceneUrl, nil)
+
+	if params.KVHttpConfig == "" {
+		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
+	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
+	scrape.SetupHtmlRequest(params.KVHttpConfig, req)
+	response, err := client.Do(req)
+
 	if err != nil {
 		return HeresphereVideo{}
 	}
 
 	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Errorf("Error from %s %s", url, err)
+		log.Errorf("Error from %s %s", params.SceneUrl, err)
 	}
 
 	var video HeresphereVideo
 	err = json.Unmarshal(responseData, &video)
 	if err != nil {
-		log.Errorf("Error from %s %s", url, err)
+		log.Errorf("Error from %s %s", params.SceneUrl, err)
 	}
 
 	return video
 }
 
-func LoadDeovrScene(url string) DeoScene {
-	response, err := http.Get(url)
+func LoadDeovrScene(scrapeParams string) DeoScene {
+	var params models.TrailerScrape
+	if strings.HasPrefix(scrapeParams, "http") {
+		// keep backwards compatible with just url
+		params.SceneUrl = scrapeParams
+	} else {
+		json.Unmarshal([]byte(scrapeParams), &params)
+	}
+
+	method := "GET"
+	client := &http.Client{}
+	req, _ := http.NewRequest(method, params.SceneUrl, nil)
+
+	if params.KVHttpConfig == "" {
+		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
+	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
+	scrape.SetupHtmlRequest(params.KVHttpConfig, req)
+
+	response, err := client.Do(req)
+
 	if err != nil {
 		return DeoScene{}
 	}
 
 	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Errorf("Error from %s %s", url, err)
+		log.Errorf("Error from %s %s", params.SceneUrl, err)
 	}
 
 	var video DeoScene
 	err = json.Unmarshal(responseData, &video)
 	if err != nil {
-		log.Errorf("Error from %s %s", url, err)
+		log.Errorf("Error from %s %s response: %s", params.SceneUrl, err, string(responseData))
 	}
 
 	db, _ := models.GetDB()
@@ -64,6 +101,11 @@ func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
 	c := colly.NewCollector(colly.UserAgent(scrape.UserAgent))
 	var params models.TrailerScrape
 	json.Unmarshal([]byte(scrapeParams), &params)
+	if params.KVHttpConfig == "" {
+		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
+	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
+	scrape.SetupCollector(params.KVHttpConfig, c)
 
 	var srcs []models.VideoSource
 	c.OnHTML(`html`, func(e *colly.HTMLElement) {
@@ -102,7 +144,11 @@ func ScrapeJson(scrapeParams string) models.VideoSourceResponse {
 	c := colly.NewCollector(colly.UserAgent(scrape.UserAgent))
 	var params models.TrailerScrape
 	json.Unmarshal([]byte(scrapeParams), &params)
-
+	if params.KVHttpConfig == "" {
+		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
+	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
+	scrape.SetupCollector(params.KVHttpConfig, c)
 	var srcs []models.VideoSource
 	c.OnHTML(`html`, func(e *colly.HTMLElement) {
 		e.ForEach(params.HtmlElement, func(id int, e *colly.HTMLElement) {
@@ -133,7 +179,17 @@ func LoadJson(scrapeParams string) models.VideoSourceResponse {
 	var params models.TrailerScrape
 	json.Unmarshal([]byte(scrapeParams), &params)
 
-	response, err := http.Get(params.SceneUrl)
+	method := "GET"
+	client := &http.Client{}
+	req, err := http.NewRequest(method, params.SceneUrl, nil)
+
+	if params.KVHttpConfig == "" {
+		params.KVHttpConfig = scrape.GetCoreDomain(params.SceneUrl) + "-trailers"
+	}
+	log.Debugf("Using Header/Cookies from %s", params.KVHttpConfig)
+	scrape.SetupHtmlRequest(params.KVHttpConfig, req)
+	response, err := client.Do(req)
+
 	if err != nil {
 		return models.VideoSourceResponse{}
 	}

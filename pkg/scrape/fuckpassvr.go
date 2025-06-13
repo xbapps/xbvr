@@ -45,14 +45,14 @@ func FuckPassVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 			}
 		})
 
-		e.ForEach(`h2.video__title`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`meta[property="og:title"]`, func(id int, e *colly.HTMLElement) {
 			if id == 0 {
-				sc.Title = strings.TrimSpace(e.Text)
+				sc.Title = strings.TrimSpace(e.Attr("content"))
 			}
 		})
 
-		e.ForEach(`web-vr-video-player`, func(id int, e *colly.HTMLElement) {
-			sc.Covers = append(sc.Covers, strings.Trim(e.Attr("coverimage"), " '"))
+		e.ForEach(`pornhall-player`, func(id int, e *colly.HTMLElement) {
+			sc.Covers = append(sc.Covers, strings.Trim(e.Attr("poster"), " '"))
 		})
 
 		e.ForEach(`div.profile__gallery a.profile__galleryElement`, func(id int, e *colly.HTMLElement) {
@@ -95,7 +95,7 @@ func FuckPassVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 
 		// trailer details
 		sc.TrailerType = "scrape_html"
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "web-vr-video-player source", ContentPath: "src", QualityPath: "data-quality"}
+		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "pornhall-player source", ContentPath: "src", QualityPath: "data-quality"}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 

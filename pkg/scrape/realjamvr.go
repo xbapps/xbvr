@@ -37,25 +37,30 @@ func RealJamSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		sc.Site = siteID
 		sc.HomepageURL = strings.TrimSuffix(strings.Split(e.Request.URL.String(), "?")[0], "/")
 
-		// source the scene_id from the trailer filename.  This is not the best appraoch but the only id source we have
+		// web code split
+		// PornCorn sources the scene_id from the trailer URL. RealJam sources the scene_id from the trailer data-id
 		trailerId := ""
-		e.ForEach(`dl8-video source[src]`, func(id int, e *colly.HTMLElement) {
-			re := regexp.MustCompile(`/([0-9]+)_[0-9]+p.mp4.`)
-			match := re.FindStringSubmatch(e.Attr("src"))
-			if len(match) > 0 {
-				if trailerId != "" {
-					if trailerId != match[1] {
-						// don't trust trailer files, make sure they all return the same id
-						trailerId = "mismatch"
+		if scraperID == "realjamvr" {
+			trailerId = e.ChildAttr(`div.ms-5`, "data-id")
+		} else {
+			e.ForEach(`dl8-video source[src]`, func(id int, e *colly.HTMLElement) {
+				re := regexp.MustCompile(`\/([0-9]+)\/`)
+				match := re.FindStringSubmatch(e.Attr("src"))
+				if len(match) > 0 {
+					if trailerId != "" {
+						if trailerId != match[1] {
+							// don't trust trailer files, make sure they all return the same id
+							trailerId = "mismatch"
+						}
+					}
+					_, err := strconv.Atoi(match[1])
+					if err == nil {
+						// only assign the id if it's a valid number
+						trailerId = match[1]
 					}
 				}
-				_, err := strconv.Atoi(match[1])
-				if err == nil {
-					// only assign the id if it's a valid number
-					trailerId = match[1]
-				}
-			}
-		})
+			})
+		}
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + trailerId
 
 		// trailer details
@@ -65,12 +70,20 @@ func RealJamSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		sc.TrailerSrc = string(strParams)
 
 		// Cast
+		// RealJamVR & PornCorn web code split
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`div.scene-view > a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
-		})
 
+		if scraperID == "realjamvr" {
+			e.ForEach(`div.mb-1 > a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
+				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+				sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+			})
+		} else {
+			e.ForEach(`div.scene-view > a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
+				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+				sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+			})
+		}
 		// Released
 		e.ForEach(`.bi-calendar3`, func(id int, e *colly.HTMLElement) {
 			p := e.DOM.Parent().Next()

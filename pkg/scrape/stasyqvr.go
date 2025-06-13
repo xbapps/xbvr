@@ -1,6 +1,7 @@
 package scrape
 
 import (
+	"encoding/json"
 	"net/url"
 	"strconv"
 	"strings"
@@ -66,7 +67,9 @@ func StasyQVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out ch
 
 		// trailer details
 		sc.TrailerType = "deovr"
-		sc.TrailerSrc = `http://stasyqvr.com/deovr_feed/json/id/` + sc.SiteID
+		params := models.TrailerScrape{SceneUrl: `http://stasyqvr.com/deovr_feed/json/id/` + sc.SiteID}
+		strParams, _ := json.Marshal(params)
+		sc.TrailerSrc = string(strParams)
 
 		// Cast
 		sc.ActorDetails = make(map[string]models.ActorDetails)

@@ -2159,6 +2159,187 @@ func Migrate() {
 				return e
 			},
 		},
+		{
+			ID: "0084-Migrate-Trailer-Sources",
+			Migrate: func(tx *gorm.DB) error {
+				// declare common update function
+				updateScenesWithTrailer := func(scenes []models.Scene, trailerType string) error {
+					for _, scene := range scenes {
+						scene.TrailerType = trailerType
+						params := models.TrailerScrape{SceneUrl: scene.TrailerSource}
+						strParams, _ := json.Marshal(params)
+						scene.TrailerSource = string(strParams)
+
+						if err := scene.Save(); err != nil {
+							return err
+						}
+					}
+					return nil
+				}
+				var scenes []models.Scene
+				// naughty america
+				err := db.Where("scene_id like ?", "naughtyamerica-%").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				for _, scene := range scenes {
+					scene.TrailerType = "heresphere"
+					params := models.TrailerScrape{SceneUrl: "https://api.naughtyapi.com/heresphere/" + strings.TrimLeft(scene.SceneID, "naughtyamerica-vr-")}
+					strParams, _ := json.Marshal(params)
+					scene.TrailerSource = string(strParams)
+					err = scene.Save()
+					if err != nil {
+						return err
+					}
+				}
+				// czech network
+				err = db.Where("trailer_type='heresphere' and trailer_source like 'https://www.czechvrnetwork.com/heresphere%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "heresphere")
+				if err != nil {
+					return err
+				}
+				// povr
+				err = db.Where("trailer_type='heresphere' and trailer_source like 'https://www.povr.com/heresphere%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "heresphere")
+				if err != nil {
+					return err
+				}
+				// stasyqvr
+				err = db.Where("trailer_type='deovr' and trailer_source like 'http://stasyqvr.com/deovr%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "deovr")
+				if err != nil {
+					return err
+				}
+				// zexyvr
+				err = db.Where("trailer_type='deovr' and trailer_source like 'https://zexyvr.com/deovr%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "deovr")
+				if err != nil {
+					return err
+				}
+				// wankitnowvr
+				err = db.Where("trailer_type='deovr' and trailer_source like 'https://wankitnowvr.com/deovr%'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "deovr")
+				if err != nil {
+					return err
+				}
+				// slr
+				err = db.Where("trailer_type='slr'").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				err = updateScenesWithTrailer(scenes, "slr")
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+		},
+		{
+			// Had to switch to a differnt sceneID source that's consistent through every scene. so all scenes have to be renumbered.
+			ID: "0085-update-realjamvr-ids",
+			Migrate: func(tx *gorm.DB) error {
+				newSceneId := func(site string, url string) (string, int) {
+					sceneID := ""
+					statusCode := 200
+
+					sceneCollector := colly.NewCollector(
+						colly.AllowedDomains("realjamvr.com"),
+					)
+
+					sceneCollector.OnError(func(r *colly.Response, err error) {
+						common.Log.Errorf("Error visiting %s %s", r.Request.URL, err)
+						statusCode = r.StatusCode
+					})
+
+					sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+
+						// Scene ID. filename & scene URL not consistent through entire site so use data-id
+						sceneID = slugify.Slugify(site) + "-" + e.ChildAttr(`div.ms-5`, "data-id")
+					})
+
+					sceneCollector.Visit(url)
+
+					return sceneID, statusCode
+				}
+
+				var scenes []models.Scene
+				err := tx.Where("studio = ?", "Real Jam Network").Find(&scenes).Error
+				if err != nil {
+					return err
+				}
+				scene_renum := 0
+				for _, scene := range scenes {
+
+					// Need both the siteID string and the sceneID has interger for logic
+					tmp := strings.Split(scene.SceneID, "-")
+					//sceneIDint, _ := strconv.Atoi(tmp[2])
+
+					// Don't change PornCorn. It is using scene URL.
+					if tmp[0] == "realjam" {
+
+						common.Log.Infoln("Checking sceneid:", scene.SceneID)
+						sceneID, statusCode := newSceneId(scene.Site, scene.SceneURL)
+
+						if statusCode != 200 {
+							return err
+						}
+
+						if sceneID == "" {
+							common.Log.Warnf("Could not update scene %s", scene.SceneID)
+							continue
+						}
+
+						if scene.SceneID != sceneID {
+							// update all actions referring to this scene by its scene_id
+							err = tx.Model(&models.Action{}).Where("scene_id = ?", scene.SceneID).Update("scene_id", sceneID).Error
+							if err != nil {
+								return err
+							}
+
+							// rename preview if it exists
+							if scene.HasVideoPreview {
+								err := os.Rename(filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4"), filepath.Join(common.VideoPreviewDir, sceneID+".mp4"))
+								if err != nil {
+									common.Log.Warnf("Could not update preview %s", scene.SceneID)
+								}
+							}
+
+							// update the scene itself
+							common.Log.Infoln("Updating sceneid:", scene.SceneID, "to", sceneID)
+							scene.SceneID = sceneID
+							err = tx.Save(&scene).Error
+							if err != nil {
+								return err
+							}
+							scene_renum++
+						}
+
+					}
+				}
+
+				// since scenes have new IDs, we need to re-index them (only if we actually changed any)
+				if scene_renum != 0 {
+					tasks.SearchIndex()
+				}
+
+				return nil
+			},
+		},
 	})
 
 	if err := m.Migrate(); err != nil {

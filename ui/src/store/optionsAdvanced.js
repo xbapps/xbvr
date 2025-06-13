@@ -13,6 +13,7 @@ const state = {
     useAltSrcInFileMatching: true,
     useAltSrcInScriptFilters: true,
     ignoreReleasedBefore: null,
+    collectorConfigs: null,
   }
 }
 
@@ -21,6 +22,11 @@ const mutations = {}
 const actions = {
   async load ({ state }) {
     state.loading = true
+    ky.get('/api/options/collector-config-list')
+      .json()
+      .then(data => {
+        state.advanced.collectorConfigs = data
+      })
     ky.get('/api/options/state')
       .json()
       .then(data => {
