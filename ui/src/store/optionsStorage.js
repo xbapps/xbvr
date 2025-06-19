@@ -4,22 +4,41 @@ const state = {
   items: [],
   options: {
     match_ohash: false,
+    video_ext: []
   },  
+  loading: false,
 }
 
 const mutations = {
+  setItems(state, payload) {
+    state.items = payload;
+  },
+  setOptions(state, payload) {
+    state.options = payload;
+  },
+  setLoading(state, payload) {
+    state.loading = payload;
+  },
 }
 
 const actions = {
-  async load ({ state }, params) {
-    await ky.get('/api/options/storage').json()
-    .then(data => {
-      state.items = data.volumes
-      state.options.match_ohash = data.match_ohash
-    })
+  async load({commit}) {
+    commit('setLoading', true);
+    const data = await ky.get(`/api/options/storage`).json();
+    commit('setItems', data.volumes || []);
+    commit('setOptions', {
+      match_ohash: data.match_ohash || false,
+      video_ext: data.video_ext || []
+    });
+    commit('setLoading', false);
   },
-  async save ({ state }, enabled) { 
-    ky.put('/api/options/storage', { json: { ...state.options } })      
+  async save({state}) {
+    await ky.put("/api/options/storage", {
+      json: {
+        match_ohash: state.options.match_ohash,
+        video_ext: state.options.video_ext
+      }
+    });
   },  
 }
 

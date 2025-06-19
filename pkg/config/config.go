@@ -170,7 +170,8 @@ type ObjectConfig struct {
 		} `json:"linkScenesSchedule"`
 	} `json:"cron"`
 	Storage struct {
-		MatchOhash bool `default:"false" json:"match_ohash"`
+		MatchOhash bool   `default:"false" json:"match_ohash"`
+		VideoExt   []string `json:"video_ext"`
 	} `json:"storage"`
 	ScraperSettings struct {
 		TMWVRNet struct {
@@ -216,4 +217,9 @@ func SaveConfig() {
 func init() {
 	defaults.Set(&Config)
 	RecentIPAddresses = []string{}
+
+	// Set default values
+	if Config.Storage.VideoExt == nil || len(Config.Storage.VideoExt) == 0 {
+		Config.Storage.VideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv", ".m4v"}
+	}
 }

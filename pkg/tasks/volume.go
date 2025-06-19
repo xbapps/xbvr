@@ -25,7 +25,15 @@ import (
 	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
-var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
+// Default video extensions, used only when config is not available
+var defaultVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv", ".m4v"}
+
+func getVideoExtensions() []string {
+	if config.Config.Storage.VideoExt != nil && len(config.Config.Storage.VideoExt) > 0 {
+		return config.Config.Storage.VideoExt
+	}
+	return defaultVideoExt
+}
 
 func RescanVolumes(id int) {
 	if !models.CheckLock("rescan") {
@@ -63,7 +71,7 @@ func RescanVolumes(id int) {
 		var scenes []models.Scene
 		var extrefs []models.ExternalReference
 
-		tlog.Infof("Matching Scenes to known filenames")
+		tlog.Infof("Matching files to known filenames")
 		db.Model(&models.File{}).Where("files.scene_id = 0").Find(&files)
 
 		escape := func(s string) string {
@@ -72,33 +80,33 @@ func RescanVolumes(id int) {
 			return buffer.String()
 		}
 
-		for i := range files {
-			unescapedFilename := path.Base(files[i].Filename)
-			filename := escape(unescapedFilename)
-			filename2 := strings.Replace(filename, ".funscript", ".mp4", -1)
-			filename3 := strings.Replace(filename, ".hsp", ".mp4", -1)
-			filename4 := strings.Replace(filename, ".srt", ".mp4", -1)
-			filename5 := strings.Replace(filename, ".cmscript", ".mp4", -1)
-			err := db.Where("filenames_arr LIKE ? OR filenames_arr LIKE ? OR filenames_arr LIKE ? OR filenames_arr LIKE ? OR filenames_arr LIKE ?", `%"`+filename+`"%`, `%"`+filename2+`"%`, `%"`+filename3+`"%`, `%"`+filename4+`"%`, `%"`+filename5+`"%`).Find(&scenes).Error
-			if err != nil {
-				log.Error(err, " when matching "+unescapedFilename)
-			}
-			if len(scenes) == 0 && config.Config.Advanced.UseAltSrcInFileMatching {
-				// check if the filename matches in external_reference record
+		// Helper function to get base filename without extension
+		getBaseFilename := func(filename string) string {
+			return strings.TrimSuffix(path.Base(filename), filepath.Ext(filename))
+		}
 
-				db.Preload("XbvrLinks").Where("external_source like 'alternate scene %' and external_data LIKE ? OR external_data LIKE ? OR external_data LIKE ? OR external_data LIKE ? OR external_data LIKE ?", `%"`+filename+`%`, `%"`+filename2+`%`, `%"`+filename3+`%`, `%"`+filename4+`%`, `%"`+filename5+`%`).Find(&extrefs)
-				if len(extrefs) == 1 {
-					if len(extrefs[0].XbvrLinks) == 1 {
-						// the scene id will be the Internal DB Id from the associated link
-						var scene models.Scene
-						scene.GetIfExistByPK(extrefs[0].XbvrLinks[0].InternalDbId)
-						// Add File to the list of Scene filenames
-						var pfTxt []string
-						err = json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt)
-						if err != nil {
-							continue
-						}
-						pfTxt = append(pfTxt, files[i].Filename)
+		// Helper function to match file to scene using FilenamesArr
+		matchFileToScene := func(file *models.File, tlog *logrus.Entry) bool {
+			baseFilename := getBaseFilename(file.Filename)
+			// Search for any filename in FilenamesArr that has the same base name (ignoring extension)
+			err := db.Where("filenames_arr LIKE ?", `%"`+escape(baseFilename)+`.%`).Find(&scenes).Error
+			if err != nil {
+				log.Error(err, " when matching "+file.Filename)
+				return false
+			}
+
+			// If no direct match and alt source matching is enabled, try that
+			if len(scenes) == 0 && config.Config.Advanced.UseAltSrcInFileMatching {
+				db.Preload("XbvrLinks").Where("external_source like 'alternate scene %' and external_data LIKE ?", `%"`+escape(baseFilename)+`.%`).Find(&extrefs)
+				if len(extrefs) == 1 && len(extrefs[0].XbvrLinks) == 1 {
+					var scene models.Scene
+					scene.GetIfExistByPK(extrefs[0].XbvrLinks[0].InternalDbId)
+					
+					// Add File to the list of Scene filenames
+					var pfTxt []string
+					err = json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt)
+					if err == nil {
+						pfTxt = append(pfTxt, file.Filename)
 						tmp, err := json.Marshal(pfTxt)
 						if err == nil {
 							scene.FilenamesArr = string(tmp)
@@ -108,58 +116,107 @@ func RescanVolumes(id int) {
 					}
 				}
 			}
+
 			if len(scenes) == 1 {
-				files[i].SceneID = scenes[0].ID
-				files[i].Save()
+				file.SceneID = scenes[0].ID
+				file.Save()
 				scenes[0].UpdateStatus()
-			} else {
-				if config.Config.Storage.MatchOhash && config.Config.Advanced.StashApiKey != "" {
-					hash := files[i].OsHash
-					if len(hash) < 16 {
-						// the has in xbvr is sometiomes < 16 pad with zeros
-						paddingLength := 16 - len(hash)
-						hash = strings.Repeat("0", paddingLength) + hash
-					}
-					queryVariable := `
-				{"input":{
-					"fingerprints": {					
-						"value": "` + hash + `",
-						"modifier": "INCLUDES"
-					},				
-					"page": 1
+				tlog.Infof("Matched file %v to scene %v using filename", file.Filename, scenes[0].SceneID)
+				return true
+			}
+
+			return false
+		}
+
+		for i, file := range files {
+			// Try to match using FilenamesArr first
+			if matchFileToScene(&file, tlog) {
+				continue
+			}
+
+			// If no match found and it's a video/script file, try to find a matching video/script
+			if file.Type == "video" || file.Type == "script" {
+				baseFilename := getBaseFilename(file.Filename)
+				var matchingFile models.File
+				
+				// If this is a video, look for a script, and vice versa
+				searchType := "script"
+				if file.Type == "script" {
+					searchType = "video"
 				}
-				}`
-					// call Stashdb graphql searching for os_hash
-					stashMatches := scrape.GetScenePage(queryVariable)
-					for _, match := range stashMatches.Data.QueryScenes.Scenes {
-						if match.ID != "" {
-							var externalRefLink models.ExternalReferenceLink
-							db.Where(&models.ExternalReferenceLink{ExternalSource: "stashdb scene", ExternalId: match.ID}).First(&externalRefLink)
-							if externalRefLink.ID != 0 {
-								files[i].SceneID = externalRefLink.InternalDbId
-								files[i].Save()
-								var scene models.Scene
-								scene.GetIfExistByPK(externalRefLink.InternalDbId)
 
-								// add filename tyo the array
-								var pfTxt []string
-								json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt)
-								pfTxt = append(pfTxt, files[i].Filename)
-								tmp, _ := json.Marshal(pfTxt)
-								scene.FilenamesArr = string(tmp)
-								scene.Save()
-								models.AddAction(scene.SceneID, "match", "filenames_arr", scene.FilenamesArr)
+				err := db.Where("type = ? AND scene_id != 0 AND filename LIKE ?", 
+					searchType, 
+					baseFilename+".%").
+					First(&matchingFile).Error
 
-								scene.UpdateStatus()
-								log.Infof("File %s matched to Scene %s matched using stashdb hash %s", path.Base(files[i].Filename), scene.SceneID, hash)
-							}
+				if err == nil && matchingFile.SceneID != 0 {
+					file.SceneID = matchingFile.SceneID
+					file.Save()
+
+					// Add filename to scene's FilenamesArr
+					var scene models.Scene
+					scene.GetIfExistByPK(matchingFile.SceneID)
+					
+					var pfTxt []string
+					if err := json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt); err == nil {
+						pfTxt = append(pfTxt, file.Filename)
+						if tmp, err := json.Marshal(pfTxt); err == nil {
+							scene.FilenamesArr = string(tmp)
+							scene.Save()
+							scene.UpdateStatus()
+						}
+					}
+					
+					tlog.Infof("Auto-matched %v to scene %v via matching %v", file.Filename, scene.SceneID, matchingFile.Filename)
+					continue
+				}
+			}
+
+			// If still no match and we have StashDB integration, try that
+			if file.Type == "video" && config.Config.Storage.MatchOhash && config.Config.Advanced.StashApiKey != "" {
+				hash := file.OsHash
+				if len(hash) < 16 {
+					paddingLength := 16 - len(hash)
+					hash = strings.Repeat("0", paddingLength) + hash
+				}
+				queryVariable := `
+			{"input":{
+				"fingerprints": {					
+					"value": "` + hash + `",
+					"modifier": "INCLUDES"
+				},				
+				"page": 1
+			}
+			}`
+				stashMatches := scrape.GetScenePage(queryVariable)
+				for _, match := range stashMatches.Data.QueryScenes.Scenes {
+					if match.ID != "" {
+						var externalRefLink models.ExternalReferenceLink
+						db.Where(&models.ExternalReferenceLink{ExternalSource: "stashdb scene", ExternalId: match.ID}).First(&externalRefLink)
+						if externalRefLink.ID != 0 {
+							file.SceneID = externalRefLink.InternalDbId
+							file.Save()
+							var scene models.Scene
+							scene.GetIfExistByPK(externalRefLink.InternalDbId)
+
+							var pfTxt []string
+							json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt)
+							pfTxt = append(pfTxt, file.Filename)
+							tmp, _ := json.Marshal(pfTxt)
+							scene.FilenamesArr = string(tmp)
+							scene.Save()
+							models.AddAction(scene.SceneID, "match", "filenames_arr", scene.FilenamesArr)
+
+							scene.UpdateStatus()
+							tlog.Infof("File %s matched to Scene %s using stashdb hash %s", path.Base(file.Filename), scene.SceneID, hash)
 						}
 					}
 				}
 			}
 
 			if (i % 50) == 0 {
-				tlog.Infof("Matching Scenes to known filenames (%v/%v)", i+1, len(files))
+				tlog.Infof("Matching files to known filenames (%v/%v)", i+1, len(files))
 			}
 		}
 
@@ -218,7 +275,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			}
 			if !f.Mode().IsDir() {
 				// Make sure the filename should be considered
-				if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(allowedVideoExt, strings.ToLower(filepath.Ext(path))) {
+				if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(getVideoExtensions(), strings.ToLower(filepath.Ext(path))) {
 					var fl models.File
 					err = db.Where(&models.File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
 
@@ -367,6 +424,40 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			fl.CreatedTime = fTimes.ModTime()
 			fl.UpdatedTime = fTimes.ModTime()
 			fl.VolumeID = vol.ID
+
+			// Auto-match funscript with video if names match
+			if fl.SceneID == 0 {
+				// Get base filename without extension
+				baseName := strings.TrimSuffix(fl.Filename, filepath.Ext(fl.Filename))
+				
+				// Look for matching video file
+				var matchingVideo models.File
+				err := db.Where("type = ? AND scene_id != 0 AND filename LIKE ?", 
+					"video", 
+					baseName+".%").
+					First(&matchingVideo).Error
+
+				if err == nil && matchingVideo.SceneID != 0 {
+					fl.SceneID = matchingVideo.SceneID
+					
+					// Add funscript to scene's FilenamesArr
+					var scene models.Scene
+					scene.GetIfExistByPK(matchingVideo.SceneID)
+					
+					var pfTxt []string
+					if err := json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt); err == nil {
+						pfTxt = append(pfTxt, fl.Filename)
+						if tmp, err := json.Marshal(pfTxt); err == nil {
+							scene.FilenamesArr = string(tmp)
+							scene.Save()
+							scene.UpdateStatus()
+						}
+					}
+					
+					tlog.Infof("Auto-matched funscript %v to scene %v", fl.Filename, scene.SceneID)
+				}
+			}
+
 			fl.Save()
 		}
 
@@ -415,7 +506,7 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 	// Walk
 	var currentFileID []string
 	for i := range files {
-		if !files[i].IsDir() && funk.Contains(allowedVideoExt, strings.ToLower(filepath.Ext(files[i].Name))) {
+		if !files[i].IsDir() && funk.Contains(getVideoExtensions(), strings.ToLower(filepath.Ext(files[i].Name))) {
 			var fl models.File
 			err = db.Where(&models.File{Path: strconv.FormatInt(files[i].ID, 10), Filename: files[i].Name}).First(&fl).Error
 

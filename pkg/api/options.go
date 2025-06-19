@@ -200,10 +200,12 @@ type RequestSCustomSiteCreate struct {
 
 type GetStorageResponse struct {
 	Volumes    []models.Volume `json:"volumes"`
-	MatchOhash bool            `json:"match_ohash"`
+	MatchOhash bool           `json:"match_ohash"`
+	VideoExt   []string       `json:"video_ext"`
 }
 type RequestSaveOptionsStorage struct {
-	MatchOhash bool `json:"match_ohash"`
+	MatchOhash bool     `json:"match_ohash"`
+	VideoExt   []string `json:"video_ext"`
 }
 
 type RequestSaveCollectorConfig struct {
@@ -588,6 +590,7 @@ func (i ConfigResource) listStorage(req *restful.Request, resp *restful.Response
 	var out GetStorageResponse
 	out.Volumes = vol
 	out.MatchOhash = config.Config.Storage.MatchOhash
+	out.VideoExt = config.Config.Storage.VideoExt
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
 }
 
@@ -1087,6 +1090,7 @@ func (i ConfigResource) saveOptionsStorage(req *restful.Request, resp *restful.R
 	}
 
 	config.Config.Storage.MatchOhash = r.MatchOhash
+	config.Config.Storage.VideoExt = r.VideoExt
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
