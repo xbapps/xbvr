@@ -4,13 +4,17 @@ xbvr.exe
 go.mod
 go.sum
 main.db
+test.db
+/test_cache
 
 # Dependencies
 node_modules/
 /dist
 /ui/dist
+/ui/public/static/bundle.*
 
 # IDE and editor files
+/.idea
 .idea/
 .vscode/
 *.swp
@@ -27,6 +31,8 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+.release-env
+.docker-creds
 
 # Package files
 package-lock.json
@@ -45,10 +51,3 @@ yarn.lock
 
 # Local development
 *.local
-
-test.db
-/test_cache
-
-/dist/
-
-/ui/public/static/bundle.*
