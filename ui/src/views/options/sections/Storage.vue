@@ -114,19 +114,33 @@
 
     <hr/>
 
-  <div>
-    <h3 class="title">{{ $t('Options') }}</h3>
-    <b-field>
-      <b-switch v-model="match_ohash" type="is-default">
-        Match StashDB Hashes
-      </b-switch>
-    </b-field>
-    <b-field>
-      <b-button type="is-primary" @click="save">Save options</b-button>
-    </b-field>
+    <div>
+      <h3 class="title">{{ $t('Options') }}</h3>
+      <b-field>
+        <b-switch v-model="match_ohash" type="is-default">
+          Match StashDB Hashes
+        </b-switch>
+      </b-field>
 
+      <b-field label="Video File Extensions">
+        <b-taginput
+          v-model="video_ext"
+          :data="[]"
+          autocomplete
+          allow-new
+          open-on-focus
+          clear-on-select
+          :before-adding="(ext) => beforeAddingExt(ext)"
+          placeholder="Add extension (e.g., .mp4)"
+          icon="file-video">
+        </b-taginput>
+      </b-field>
+      <p class="help">Enter file extensions including the dot (e.g., .mp4). These files will be scanned and matched to scenes.</p>
 
-  </div>
+      <b-field>
+        <b-button type="is-primary" @click="save">Save options</b-button>
+      </b-field>
+    </div>
 
   </div>
 
@@ -155,6 +169,14 @@ export default {
     this.$store.dispatch('optionsStorage/load')
   },
   methods: {
+    beforeAddingExt(ext) {
+      // Ensure extension starts with a dot
+      if (!ext.startsWith('.')) {
+        ext = '.' + ext
+      }
+      // Convert to lowercase for consistency
+      return ext.toLowerCase()
+    },
     taskRescan: function () {
       ky.get('/api/task/rescan')
     },
@@ -190,6 +212,14 @@ export default {
       set (value) {
         this.$store.state.optionsStorage.options.match_ohash = value
       },
+    },
+    video_ext: {
+      get () {
+        return this.$store.state.optionsStorage.options.video_ext || []
+      },
+      set (value) {
+        this.$store.state.optionsStorage.options.video_ext = value
+      }
     },
     total () {
       let files = 0; let unmatched = 0; let size = 0
