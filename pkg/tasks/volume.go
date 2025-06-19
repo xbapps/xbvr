@@ -135,23 +135,35 @@ func RescanVolumes(id int) {
 			}
 
 			// If no match found and it's a video/script file, try to find a matching video/script
-			if file.Type == "video" || file.Type == "script" {
+			if file.Type == "video" || file.Type == "script" || file.Type == "hsp" || strings.HasPrefix(file.Type, "subtitle") {
 				baseFilename := getBaseFilename(file.Filename)
 				var matchingFile models.File
 				
-				// If this is a video, look for a script, and vice versa
-				searchType := "script"
-				if file.Type == "script" {
+				// If this is a video, look for associated files, and vice versa
+				var searchType string
+				switch file.Type {
+				case "video":
+					// Look for any non-video file
+					err := db.Where("type != ? AND scene_id != 0 AND filename LIKE ?", 
+						"video", 
+						baseFilename+".%").
+						First(&matchingFile).Error
+					if err == nil && matchingFile.SceneID != 0 {
+						file.SceneID = matchingFile.SceneID
+					}
+				default:
+					// For non-video files, look for a video
 					searchType = "video"
+					err := db.Where("type = ? AND scene_id != 0 AND filename LIKE ?", 
+						searchType, 
+						baseFilename+".%").
+						First(&matchingFile).Error
+					if err == nil && matchingFile.SceneID != 0 {
+						file.SceneID = matchingFile.SceneID
+					}
 				}
 
-				err := db.Where("type = ? AND scene_id != 0 AND filename LIKE ?", 
-					searchType, 
-					baseFilename+".%").
-					First(&matchingFile).Error
-
-				if err == nil && matchingFile.SceneID != 0 {
-					file.SceneID = matchingFile.SceneID
+				if file.SceneID != 0 {
 					file.Save()
 
 					// Add filename to scene's FilenamesArr
