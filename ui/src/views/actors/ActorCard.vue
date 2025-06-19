@@ -130,6 +130,9 @@ export default {
     overflow: hidden;
     padding: 0;
     line-height: 0;
+    position: relative;
+    width: 100%;
+    min-height: 100px; /* Ensure minimum height for XS cards */
   }
 
   .bbox:not(:hover) > video {
@@ -173,5 +176,23 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-bottom: 0.25rem; /* Add some spacing below title */
+  }
+
+  .card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem; /* Add some spacing between cards */
+  }
+
+  .card-image {
+    flex: 1;
+    min-height: 100px; /* Ensure minimum height for XS cards */
+  }
+
+  /* Adjust text size for XS cards */
+  .is-1 .scene_title {
+    font-size: 11px;
   }
 </style>
