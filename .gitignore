@@ -1,17 +1,54 @@
-/.idea
-.DS_Store
+# Binaries and build artifacts
+xbvr.exe
+.lock
+go.mod
+go.sum
+main.db
+
+# Dependencies
+node_modules/
+/dist
+/ui/dist
+
+# IDE and editor files
+.idea/
 .vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs and databases
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Package files
+package-lock.json
+yarn.lock
+
+# Go specific
+/vendor/
+*.test
+/coverage
+*.out
+
+# Cache directories
+.npm/
+.eslintcache
+.cache/
+
+# Local development
+*.local
 
 test.db
 /test_cache
 
 /dist/
 
-node_modules/
-/ui/dist/
 /ui/public/static/bundle.*
-npm-debug.log
-yarn-error.log
-
-.release-env
-.docker-creds
