@@ -201,9 +201,12 @@ type RequestSCustomSiteCreate struct {
 type GetStorageResponse struct {
 	Volumes    []models.Volume `json:"volumes"`
 	MatchOhash bool            `json:"match_ohash"`
+	VideoExt   []string        `json:"video_ext"`
+	ForbiddenVideoExt []string `json:"forbidden_video_ext"`
 }
 type RequestSaveOptionsStorage struct {
 	MatchOhash bool `json:"match_ohash"`
+	VideoExt   []string `json:"video_ext"`
 }
 
 type RequestSaveCollectorConfig struct {
@@ -578,6 +581,7 @@ func (i ConfigResource) listStorage(req *restful.Request, resp *restful.Response
 	db, _ := models.GetDB()
 	defer db.Close()
 
+
 	var vol []models.Volume
 	db.Raw(`select id, path, last_scan,is_available, is_enabled, type,
        	(select count(*) from files where files.volume_id = volumes.id) as file_count,
@@ -588,6 +592,13 @@ func (i ConfigResource) listStorage(req *restful.Request, resp *restful.Response
 	var out GetStorageResponse
 	out.Volumes = vol
 	out.MatchOhash = config.Config.Storage.MatchOhash
+	out.VideoExt = config.Config.Storage.VideoExt
+	out.ForbiddenVideoExt = config.ForbiddenVideoExtensions
+
+	if len(out.VideoExt) == 0 {
+		out.VideoExt = config.DefaultVideoExtensions
+	}
+
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
 }
 
@@ -1087,12 +1098,32 @@ func (i ConfigResource) saveOptionsStorage(req *restful.Request, resp *restful.R
 	}
 
 	config.Config.Storage.MatchOhash = r.MatchOhash
+
+	// Filter out forbidden extensions
+	var allowedExt []string
+	for _, ext := range r.VideoExt {
+		isForbidden := false
+		for _, forbidden := range config.ForbiddenVideoExtensions {
+			if strings.EqualFold(ext, forbidden) {
+				isForbidden = true
+				break
+			}
+		}
+		if !isForbidden {
+			allowedExt = append(allowedExt, ext)
+		}
+	}
+
+	config.Config.Storage.VideoExt = allowedExt
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }
 
 func (i ConfigResource) getCollectorConfigs(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
 	list := scrape.GetAllScrapeHttpConfigs()
 	resp.WriteHeaderAndEntity(http.StatusOK, &list)
 }

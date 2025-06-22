@@ -121,6 +121,16 @@
         Match StashDB Hashes
       </b-switch>
     </b-field>
+    <b-field label="Video File Extensions">
+      <b-tooltip label="Do not add .funscript or other non-video extensions to the list" position="is-top" style="width: 100%;">
+        <b-taginput
+            v-model="video_ext"
+            :allow-new="true"
+            @add="OnExtAdded"
+            placeholder="Add a video extension (e.g. .mp4)">
+        </b-taginput>
+      </b-tooltip>
+    </b-field>
     <b-field>
       <b-button type="is-primary" @click="save">Save options</b-button>
     </b-field>
@@ -155,6 +165,58 @@ export default {
     this.$store.dispatch('optionsStorage/load')
   },
   methods: {
+    // This is a custom function to add a video extension to the list with error correction.
+    OnExtAdded (tag) {
+      // When the tag is already in 'this.video_ext', remove it
+      const index = this.video_ext.indexOf(tag)
+      if (index > -1) {
+        this.video_ext.splice(index, 1)
+      }
+
+      // Trim whitespace and convert to lowercase
+      let cleanTag = tag.trim().toLowerCase()
+
+      // Reject if it contains whitespace in the middle
+      if (/\s/.test(cleanTag)) {
+        this.$buefy.dialog.alert({
+          title: 'Invalid Extension',
+          message: 'File extensions cannot contain whitespace.',
+          type: 'is-danger',
+          hasIcon: true,
+          ariaRole: 'alertdialog',
+          ariaModal: true
+        })
+        return // Prevent adding
+      }
+
+      // Reject if it's empty or just a dot
+      if (cleanTag.length === 0 || cleanTag === '.') {
+        return // Prevent adding
+      }
+
+      // Prepend dot if missing
+      if (!cleanTag.startsWith('.')) {
+        cleanTag = '.' + cleanTag
+      }
+
+      // Reject if it's a forbidden extension
+      if (this.forbidden_video_ext.includes(cleanTag)) {
+        this.$buefy.dialog.alert({
+          title: 'Invalid Extension',
+          message: `The file extension <strong>${cleanTag}</strong> is reserved for non-video files and cannot be added.`,
+          type: 'is-danger',
+          hasIcon: true,
+          ariaRole: 'alertdialog',
+          ariaModal: true
+        })
+        return // Prevent adding
+      }
+
+      // Add the processed tag back, only if not a duplicate
+      if (!this.video_ext.includes(cleanTag)) {
+        this.video_ext.push(cleanTag)
+      }
+    },
     taskRescan: function () {
       ky.get('/api/task/rescan')
     },
@@ -189,6 +251,22 @@ export default {
       },
       set (value) {
         this.$store.state.optionsStorage.options.match_ohash = value
+      },
+    },
+    video_ext: {
+      get () {
+        return this.$store.state.optionsStorage.options.video_ext
+      },
+      set (value) {
+        this.$store.state.optionsStorage.options.video_ext = value
+      },
+    },
+    forbidden_video_ext: {
+      get () {
+        return this.$store.state.optionsStorage.options.forbidden_video_ext
+      },
+      set (value) {
+        this.$store.state.optionsStorage.options.forbidden_video_ext = value
       },
     },
     total () {

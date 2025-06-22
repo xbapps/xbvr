@@ -25,8 +25,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/scrape"
 )
 
-var allowedVideoExt = []string{".mp4", ".avi", ".wmv", ".mpeg4", ".mov", ".mkv"}
-
 func RescanVolumes(id int) {
 	if !models.CheckLock("rescan") {
 		models.CreateLock("rescan")
@@ -218,7 +216,8 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 			}
 			if !f.Mode().IsDir() {
 				// Make sure the filename should be considered
-				if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(allowedVideoExt, strings.ToLower(filepath.Ext(path))) {
+				// Video file extensions are defined in the config.Storage.VideoExt array with error correction and fallback list
+				if !strings.HasPrefix(filepath.Base(path), ".") && funk.Contains(config.Config.Storage.VideoExt, strings.ToLower(filepath.Ext(path))) {
 					var fl models.File
 					err = db.Where(&models.File{Path: filepath.Dir(path), Filename: filepath.Base(path)}).First(&fl).Error
 
@@ -415,7 +414,7 @@ func scanPutIO(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 	// Walk
 	var currentFileID []string
 	for i := range files {
-		if !files[i].IsDir() && funk.Contains(allowedVideoExt, strings.ToLower(filepath.Ext(files[i].Name))) {
+		if !files[i].IsDir() && funk.Contains(config.Config.Storage.VideoExt, strings.ToLower(filepath.Ext(files[i].Name))) {
 			var fl models.File
 			err = db.Where(&models.File{Path: strconv.FormatInt(files[i].ID, 10), Filename: files[i].Name}).First(&fl).Error
 
