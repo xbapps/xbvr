@@ -39,12 +39,15 @@
           <b-field>
             <span class="list-header-label">{{$t('Card size')}}</span>
             <b-radio-button v-model="cardSize" native-value="1" size="is-small">
-              S
+              XS
             </b-radio-button>
             <b-radio-button v-model="cardSize" native-value="2" size="is-small">
-              M
+              S
             </b-radio-button>
             <b-radio-button v-model="cardSize" native-value="3" size="is-small">
+              M
+            </b-radio-button>
+            <b-radio-button v-model="cardSize" native-value="4" size="is-small">
               L
             </b-radio-button>
           </b-field>
@@ -153,12 +156,15 @@ export default {
         this.$store.state.actorList.filters.cardSize = value
         switch (value){
           case "1":
-            this.limit=18
+            this.limit=36
             break
           case "2":
-            this.limit=10
+            this.limit=18
             break
           case "3":
+            this.limit=10
+            break
+          case "4":
             this.limit=8
             break
             }            
@@ -193,10 +199,12 @@ export default {
     cardSizeClass () {
       switch (this.$store.state.actorList.filters.cardSize) {
         case '1':
-          return 'is-2'
+          return 'is-1'
         case '2':
-          return 'is-one-fifth'
+          return 'is-2'
         case '3':
+          return 'is-one-fifth'
+        case '4':
           return 'is-one-quarter'
         default:
           return 'is-2'

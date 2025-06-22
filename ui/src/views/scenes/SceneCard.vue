@@ -246,6 +246,16 @@ export default {
     margin-right: 3px;
   }
 
+  .card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-image {
+    flex: 1;
+  }
+
   .bbox {
     flex: 1 0 calc(25%);
     background: #f0f0f0;
@@ -255,6 +265,8 @@ export default {
     overflow: hidden;
     padding: 0;
     line-height: 0;
+    position: relative;
+    width: 100%;
   }
 
   .bbox:not(:hover) > video {
@@ -307,23 +319,41 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    width: 100%;
   }
 
-.heatmapFunscript {
-  width: auto;
-}
+  .image-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
 
-.heatmapFunscript img {
-  border: 1px #888 solid;
-  width: 100%;
-  height: 15px;
-  border-radius: 0.25rem;
-}
+  .altsrc-image-wrapper {
+    display: inline-block;
+    margin-right: 5px;
+    margin-top: 3px;
+  }
 
-.altsrc-image-wrapper {
-  display: inline-block;
-  margin-right: 5px;
-  margin-top: 3px;
-}
+  .thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 
+  .heatmapFunscript {
+    width: auto;
+  }
+
+  .heatmapFunscript img {
+    border: 1px #888 solid;
+    width: 100%;
+    height: 15px;
+    border-radius: 0.25rem;
+  }
+
+  /* Fix for XS card width */
+  :deep(.column.is-one-sixth) {
+    flex: 0 0 16.666%;
+  }
 </style>

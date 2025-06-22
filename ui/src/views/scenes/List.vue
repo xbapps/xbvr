@@ -31,12 +31,15 @@
           <b-field>
             <span class="list-header-label">{{$t('Card size')}}</span>
             <b-radio-button v-model="cardSize" native-value="1" size="is-small">
-              S
+              XS
             </b-radio-button>
             <b-radio-button v-model="cardSize" native-value="2" size="is-small">
-              M
+              S
             </b-radio-button>
             <b-radio-button v-model="cardSize" native-value="3" size="is-small">
+              M
+            </b-radio-button>
+            <b-radio-button v-model="cardSize" native-value="4" size="is-small">
               L
             </b-radio-button>
           </b-field>
@@ -79,10 +82,12 @@ export default {
     cardSizeClass () {
       switch (this.$store.state.sceneList.filters.cardSize) {
         case '1':
-          return 'is-one-fifth'
+          return 'is-one-sixth'
         case '2':
-          return 'is-one-quarter'
+          return 'is-one-fifth'
         case '3':
+          return 'is-one-quarter'
+        case '4':
           return 'is-one-third'
         default:
           return 'is-one-fifth'
@@ -171,5 +176,17 @@ export default {
 <style scoped>
   .list-header-label {
     padding-right: 1em;
+  }
+
+  /* Add Bulma-style one-sixth column */
+  .column.is-one-sixth {
+    flex: none;
+    width: 16.66666%;
+  }
+
+  @media screen and (max-width: 768px) {
+    .column.is-one-sixth {
+      width: 50%;
+    }
   }
 </style>
