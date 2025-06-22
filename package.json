@@ -42,7 +42,7 @@
     "@vue/cli-service": "5.0.8",
     "@vue/eslint-config-standard": "9.0.1",
     "buffer": "6.0.3",
-    "concurrently": "7.6.0",
+    "concurrently": "9.2.0",
     "eslint": "9.28.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-n": "17.19.0",
