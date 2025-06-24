@@ -56,7 +56,10 @@
       </div>
     </div>
 
-    <div class="column is-full" v-if="items.length < total">
+    <!-- InfiniteScroll trigger element -->
+    <div ref="infiniteScrollTrigger" class="infiniteScroll-trigger"></div>
+
+    <div class="column is-full" v-if="items.length < total && !infiniteScrollEnabled">
       <a class="button is-fullwidth" v-on:click="loadMore()">{{$t('Load more')}}</a>
     </div>
 
@@ -70,7 +73,16 @@ import ky from 'ky'
 export default {
   name: 'List',
   components: { SceneCard },
+  data() {
+    return {
+      infiniteScrollObserver: null,
+      loadMoreDebounceTimer: null
+    }
+  },
   computed: {
+    infiniteScrollEnabled() {
+      return this.$parent ? this.$parent.infiniteScrollEnabled : true
+    },
     cardSize: {
       get () {
         return this.$store.state.sceneList.filters.cardSize
@@ -157,7 +169,49 @@ export default {
       return this.$store.state.sceneList.show_scene_id
     }
   },
+  watch: {
+    infiniteScrollEnabled(newVal) {
+      if (newVal && this.$refs.infiniteScrollTrigger && !this.infiniteScrollObserver) {
+        this.setupInfiniteScroll()
+      } else if (!newVal && this.infiniteScrollObserver) {
+        this.cleanupInfiniteScroll()
+      }
+    }
+  },
+  mounted() {
+    this.setupInfiniteScroll()
+  },
+  beforeDestroy() {
+    this.cleanupInfiniteScroll()
+    if (this.loadMoreDebounceTimer) {
+      clearTimeout(this.loadMoreDebounceTimer)
+    }
+  },
   methods: {
+    setupInfiniteScroll() {
+      if (!this.$refs.infiniteScrollTrigger) return
+      
+      this.infiniteScrollObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting && this.infiniteScrollEnabled && !this.isLoading && this.items.length < this.total) {
+              this.loadMore()
+            }
+          })
+        },
+        {
+          rootMargin: '500px' // Start loading when trigger is 500px from viewport (increased from 300px)
+        }
+      )
+      
+      this.infiniteScrollObserver.observe(this.$refs.infiniteScrollTrigger)
+    },
+    cleanupInfiniteScroll() {
+      if (this.infiniteScrollObserver) {
+        this.infiniteScrollObserver.disconnect()
+        this.infiniteScrollObserver = null
+      }
+    },
     reloadList () {
       this.$router.push({
         name: 'scenes',
@@ -167,7 +221,21 @@ export default {
       })
     },
     async loadMore () {
-      this.$store.dispatch('sceneList/load', { offset: this.$store.state.sceneList.offset })
+      // Clear any existing debounce timer
+      if (this.loadMoreDebounceTimer) {
+        clearTimeout(this.loadMoreDebounceTimer)
+      }
+      
+      // Store current scroll position
+      const scrollPosition = window.scrollY
+      
+      // Set a new debounce timer (300ms delay)
+      this.loadMoreDebounceTimer = setTimeout(async () => {
+        await this.$store.dispatch('sceneList/load', { offset: this.$store.state.sceneList.offset })
+        
+        // Restore scroll position after content is loaded
+        window.scrollTo(0, scrollPosition)
+      }, 300)
     }
   }
 }
@@ -188,5 +256,10 @@ export default {
     .column.is-one-sixth {
       width: 50%;
     }
+  }
+
+  .infiniteScroll-trigger {
+    height: 1px;
+    width: 100%;
   }
 </style>
