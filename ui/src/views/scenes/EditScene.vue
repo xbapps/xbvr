@@ -21,8 +21,9 @@
               <b-input type="text" v-model="scene.title" @blur="blur('title')"/>
             </b-field>
 
-            <b-field :label="$t('Multipart scene')">
-              <b-checkbox v-model="scene.is_multipart"/>
+            <b-field>
+              <!-- Cleaner UI for multipart scene checkbox -->
+              <b-checkbox v-model="scene.is_multipart">{{ $t('Multipart scene') }}</b-checkbox>
             </b-field>
 
             <b-field grouped group-multiline>
@@ -85,22 +86,24 @@
             <ListEditor :list="this.scene.files" type="files" :blurFn="() => blur('files')"/>
           </b-tab-item>
 
-          <b-tab-item :label="$t('Covers')">
-            <ListEditor :list="this.scene.covers" type="covers" :blurFn="() => blur('covers')"/>
-          </b-tab-item>
+          <!-- The Covers tab has been consolidated into the Gallery tab with dynamic drag-and-drop functionality and cover image selection. We no longer need to show the Covers tab. -->
 
           <b-tab-item :label="$t('Gallery')">
-            <ListEditor :list="this.scene.gallery" type="gallery" :blurFn="() => blur('gallery')"/>
+            <GalleryEditor
+              :list.sync="scene.gallery"
+              :blurFn="() => blur('gallery')"
+              :coverUrl="this.scene.cover_url"
+              @setCover="setCoverImage"
+            />
           </b-tab-item>
         </b-tabs>
 
       </section>
 
-      <footer class="modal-card-foot">
-        <b-field v-if="this.scene.id != 0">
-          <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
-          <b-button type="is-danger" outlined @click="deletescene">{{ $t('Delete Scene') }}</b-button>
-        </b-field>
+      <!-- Sepperated the Save and Delete buttons on opposite sides of the footer. It's a litle safer and visually cleaner -->
+      <footer class="modal-card-foot is-justify-content-space-between">
+        <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
+        <b-button v-if="this.scene.id != 0" type="is-danger" outlined @click="deletescene">{{ $t('Delete Scene') }}</b-button>
       </footer>
     </div>
   </div>
@@ -110,10 +113,12 @@
 import ky from 'ky'
 import GlobalEvents from 'vue-global-events'
 import ListEditor from '../../components/ListEditor'
+import GalleryEditor from '../../components/GalleryEditor'
+// GalleryEditor is a new component that allows for dynamic drag-and-drop functionality, cover image selection, and now shows images in a grid view instead of a list of paths/urls. Users no longer need to memorize the order of images in the gallery when making changes.
 
 export default {
   name: 'EditScene',
-  components: { ListEditor, GlobalEvents },
+  components: { ListEditor, GlobalEvents, GalleryEditor },
   data () {
     /*
     title: string,
@@ -131,21 +136,26 @@ export default {
     const scene = Object.assign({}, this.$store.state.overlay.edit.scene)
     scene.castArray = scene.cast.map(c => c.name)
     scene.tagsArray = scene.tags.map(t => t.name)
-    let images;
+    let images
     try {
       images = JSON.parse(scene.images)
     } catch {
       images = []
-    }    
-    try {
-      scene.covers = images.filter(i => i.type === 'cover').map(i => i.url)
-      scene.gallery = images.filter(i => i.type === 'gallery').map(i => i.url)
     }
-    catch {
-      scene.covers = []
-      scene.gallery = []
-    }    
+
     try {
+      // map all scene images into the gallery list
+      scene.gallery = images.map(i => i.url)
+      // -If- there is -no- explicit cover_url, set the first image as cover
+      if (!scene.cover_url && scene.gallery.length > 0) {
+        scene.cover_url = scene.gallery[0]
+      }
+    } catch { 
+      scene.gallery = []
+    }
+
+    try {
+      // Fetch the image filenames
       scene.files = JSON.parse(scene.filenames_arr)
       if (scene.files == null) {
         scene.files = []
@@ -153,15 +163,17 @@ export default {
     } catch {
       scene.files = []
     }
+
     return {
       scene,
-      // A shallow copy won't work, need a deep copy
+      // A shallow copy won't work, need a deep copy. (Determine if changes have been made)
       source: JSON.parse(JSON.stringify(scene)),
       filteredCast: [],
       filteredTags: [],
       changesMade: false
     }
   },
+
   methods: {
     getFilteredCast (text) {
       this.filteredCast = this.filters.cast.filter(option => (
@@ -190,34 +202,80 @@ export default {
       this.$store.commit('overlay/hideEditDetails')
     },
     save () {
+      // Move selected cover image to the front of gallery list
+      // Doing this first to avoid any issues with the backend (e.g. missmatching metadata)
+      const coverUrl = this.scene.cover_url
+      if (coverUrl) {
+        const gallery = this.scene.gallery.filter(url => url !== coverUrl)
+        gallery.unshift(coverUrl)
+        this.scene.gallery = gallery
+      }
+
+      // Load original image metadata (from DB) to preserve type and orientation
+      let originalImages = []
+      try {
+        originalImages = JSON.parse(this.source.images)
+      } catch {
+        originalImages = []
+      }
+
       const images = []
-      this.scene.covers.forEach(url => {
-        images.push({
-          url,
-          type: 'cover',
-          orientation: ''
-        })
-      })
+
+      // NEW: Track URLs already processed to avoid duplicates
+      const seen = new Set()
+      // Go through image list (covers + gallery)
       this.scene.gallery.forEach(url => {
-        images.push({
-          url,
-          type: 'gallery',
-          orientation: ''
-        })
+        if (seen.has(url)) return
+        seen.add(url)
+
+        const existing = originalImages.find(img => img.url === url)
+        let type = existing?.type
+        const orientation = existing?.orientation || ''
+
+        // If type is undefined (new image), it gets assigned based on whether it's the cover
+        // If type is 'cover' or 'gallery', it's preserved
+        // If type is anything else (invalid), it gets corrected
+        if (type !== 'cover' && type !== 'gallery') {
+          type = (url === coverUrl) ? 'cover' : 'gallery'
+        }
+
+        // PRESERVE: Don't override existing types unless specified in logic above
+        images.push({ url, type, orientation })
       })
+
+      // SAVE IMAGE DATA
       this.scene.images = JSON.stringify(images)
-      this.scene.cover_url = this.scene.covers[0]
+
+      // Save cover_url for scene card display
+      this.scene.cover_url = coverUrl
+
+      // UNCHANGED: Serialize files and normalize duration
       this.scene.filenames_arr = JSON.stringify(this.scene.files)
-      this.scene.duration = String(this.scene.duration)  // force to a string, if no change the UI sends an int, otherwise a string, nust be constant
+      this.scene.duration = String(this.scene.duration)
 
-      ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } }).json().then(data => {
-            this.$store.commit('sceneList/updateScene', data)
-            this.$store.commit('overlay/showDetails', { scene: data })
+      // Push to backend with proper error handling
+      ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } })
+        .json()
+        .then(data => {
+          this.$store.commit('sceneList/updateScene', data)
+          this.$store.commit('overlay/showDetails', { scene: data })
+          
+          // Reset changesMade flag after successful save
+          this.changesMade = false
+          this.close()
+        })
+        // Don't reset changesMade flag or close modal on error
+        // User can try saving again
+        .catch(error => {
+          console.error('Failed to save scene:', error)
+          
+          // Show user-friendly error message
+          this.$buefy.toast.open({
+            message: 'Failed to save scene changes. Please try again.',
+            type: 'is-danger',
+            duration: 5000
           })
-
-      this.changesMade = false
-
-      this.close()
+        })
     },
     deletescene () {
       this.$buefy.dialog.confirm({
@@ -237,7 +295,9 @@ export default {
     },
     blur (field) {
       if (this.changesMade) return // Changes have already been made. No point to check any further
-      if (['castArray', 'tagsArray', 'files', 'covers', 'gallery'].includes(field)) {
+      
+      // Removed 'covers'as this is now handled in the GalleryEditor component
+      if (['castArray', 'tagsArray', 'files', 'gallery'].includes(field)) {
         if (this.scene[field].length !== this.source[field].length) {
           this.changesMade = true
         } else {
@@ -251,6 +311,11 @@ export default {
       } else if (this.scene[field] !== this.source[field]) {
         this.changesMade = true
       }
+    },
+    // Update displayed cover image in the UI
+    setCoverImage (url) {
+      this.scene.cover_url = url
+      this.changesMade = true
     }
   },
   computed: {

@@ -581,7 +581,6 @@ func (i ConfigResource) listStorage(req *restful.Request, resp *restful.Response
 	db, _ := models.GetDB()
 	defer db.Close()
 
-
 	var vol []models.Volume
 	db.Raw(`select id, path, last_scan,is_available, is_enabled, type,
        	(select count(*) from files where files.volume_id = volumes.id) as file_count,
@@ -1121,9 +1120,6 @@ func (i ConfigResource) saveOptionsStorage(req *restful.Request, resp *restful.R
 }
 
 func (i ConfigResource) getCollectorConfigs(req *restful.Request, resp *restful.Response) {
-	db, _ := models.GetDB()
-	defer db.Close()
-
 	list := scrape.GetAllScrapeHttpConfigs()
 	resp.WriteHeaderAndEntity(http.StatusOK, &list)
 }
