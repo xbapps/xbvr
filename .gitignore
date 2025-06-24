@@ -1,3 +1,10 @@
+/.idea
+.DS_Store
+.vscode/
+
+test.db
+/test_cache
+
 /dist/
 
 node_modules/
