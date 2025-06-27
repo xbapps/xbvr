@@ -146,15 +146,10 @@ func BadoinkSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			if id == 0 {
 
 				// This now needs to be made case insensitive (_trailer is now _Trailer)
-				origURLtmp := e.Attr("src")
-				origURL := strings.ToLower(origURLtmp)
+				origURL := strings.ToLower(e.Attr("src"))
 
 				// Some scenes had different trailer name "templates". Some videos didn't have trailers and one VRCosplayX (Death Note) was was missing "_" in the name
-
-				fpName3m := strings.Split(strings.Split(strings.Split(origURL, "_trailer")[0], "_3m")[0], "3m")[0]
-				fpName2m := strings.Split(strings.Split(fpName3m, "_trailer")[0], "_2m")[0]
-				fpName := strings.Split(strings.Split(fpName2m, "_trailer")[0], "_1m")[0]
-
+				fpName := regexp.MustCompile(`_trailer|_1m|_2m|_3m|_4m|_5m|3m_`).Split(origURL, -1)[0]
 				fragmentName := strings.Split(fpName, "/")
 				baseName := fragmentName[len(fragmentName)-1]
 
@@ -186,7 +181,7 @@ func BadoinkSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 				// Get release date from trailer's creation date if it wasn't on the scene page (BabeVR)
 				if sc.Released == "" {
-					if trailerURL, err := url.Parse(origURLtmp); err == nil {
+					if trailerURL, err := url.Parse(origURL); err == nil {
 						trailerPath := filepath.Join(common.CacheDir, filepath.Base(trailerURL.Path))
 						// 200kB should be enough to include the relevant metadata
 						if r, err := resty.New().R().SetOutput(trailerPath).SetHeader("Range", "bytes=0-200000").Get(trailerURL.String()); err == nil {
