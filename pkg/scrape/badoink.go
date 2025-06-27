@@ -149,7 +149,7 @@ func BadoinkSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 				origURL := strings.ToLower(e.Attr("src"))
 
 				// Some scenes had different trailer name "templates". Some videos didn't have trailers and one VRCosplayX (Death Note) was was missing "_" in the name
-				fpName := regexp.MustCompile(`_trailer|_1m|_2m|_3m|_4m|_5m`).Split(origURL, -1)[0]
+				fpName := regexp.MustCompile(`_trailer|_1m|_2m|_3m|_4m|_5m|3m_`).Split(origURL, -1)[0]
 				fragmentName := strings.Split(fpName, "/")
 				baseName := fragmentName[len(fragmentName)-1]
 
