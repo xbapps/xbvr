@@ -10,7 +10,7 @@ function defaultValue (v, d) {
 
 const defaultFilterState = {
   dlState: 'available',
-  cardSize: '1',
+  cardSize: '2',  // 1 is now XS and 2 is now S
 
   lists: [],
   cast: [],
