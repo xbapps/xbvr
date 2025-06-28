@@ -85,22 +85,21 @@
             <ListEditor :list="this.scene.files" type="files" :blurFn="() => blur('files')"/>
           </b-tab-item>
 
-          <b-tab-item :label="$t('Covers')">
-            <ListEditor :list="this.scene.covers" type="covers" :blurFn="() => blur('covers')"/>
-          </b-tab-item>
-
           <b-tab-item :label="$t('Gallery')">
-            <ListEditor :list="this.scene.gallery" type="gallery" :blurFn="() => blur('gallery')"/>
+            <GalleryEditor
+              :list.sync="scene.gallery"
+              :blurFn="() => blur('gallery')"
+              :coverUrl="this.scene.cover_url"
+              @setCover="setCoverImage"
+            />
           </b-tab-item>
         </b-tabs>
 
       </section>
 
-      <footer class="modal-card-foot">
-        <b-field v-if="this.scene.id != 0">
-          <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
-          <b-button type="is-danger" outlined @click="deletescene">{{ $t('Delete Scene') }}</b-button>
-        </b-field>
+      <footer class="modal-card-foot is-justify-content-space-between">
+        <b-button type="is-primary" @click="save">{{ $t('Save Scene Details') }}</b-button>
+        <b-button v-if="this.scene.id != 0" type="is-danger" outlined @click="deletescene">{{ $t('Delete Scene') }}</b-button>
       </footer>
     </div>
   </div>
@@ -110,10 +109,11 @@
 import ky from 'ky'
 import GlobalEvents from 'vue-global-events'
 import ListEditor from '../../components/ListEditor'
+import GalleryEditor from '../../components/GalleryEditor'
 
 export default {
   name: 'EditScene',
-  components: { ListEditor, GlobalEvents },
+  components: { ListEditor, GlobalEvents, GalleryEditor },
   data () {
     /*
     title: string,
@@ -131,21 +131,26 @@ export default {
     const scene = Object.assign({}, this.$store.state.overlay.edit.scene)
     scene.castArray = scene.cast.map(c => c.name)
     scene.tagsArray = scene.tags.map(t => t.name)
-    let images;
+    let images
     try {
       images = JSON.parse(scene.images)
     } catch {
       images = []
-    }    
-    try {
-      scene.covers = images.filter(i => i.type === 'cover').map(i => i.url)
-      scene.gallery = images.filter(i => i.type === 'gallery').map(i => i.url)
     }
-    catch {
-      scene.covers = []
-      scene.gallery = []
-    }    
+
     try {
+      // map all scene images into the gallery list
+      scene.gallery = images.map(i => i.url)
+      // -If- there is -no- explicit cover_url, set the first image as cover
+      if (!scene.cover_url && scene.gallery.length > 0) {
+        scene.cover_url = scene.gallery[0]
+      }
+    } catch { 
+      scene.gallery = []
+    }
+
+    try {
+      // Fetch the image filenames
       scene.files = JSON.parse(scene.filenames_arr)
       if (scene.files == null) {
         scene.files = []
@@ -190,34 +195,62 @@ export default {
       this.$store.commit('overlay/hideEditDetails')
     },
     save () {
-      const images = []
-      this.scene.covers.forEach(url => {
-        images.push({
-          url,
-          type: 'cover',
-          orientation: ''
+      // If there are images in the gallery, ensure a cover is set and gallery is normalized
+      if (this.scene.gallery.length > 0) {
+        // If no cover is set, use the first image as cover
+        let coverUrl = this.scene.cover_url || this.scene.gallery[0];
+        this.scene.cover_url = coverUrl;
+        // Normalize gallery: cover first, no duplicates
+        this.scene.gallery = [coverUrl, ...this.scene.gallery.filter(url => url !== coverUrl)];
+      }
+
+      // Load original image metadata (from DB) to preserve type and orientation
+      let originalImages = [];
+      try {
+        originalImages = JSON.parse(this.source.images);
+      } catch {
+        originalImages = [];
+      }
+
+      // Build images metadata array
+      const seen = new Set();
+      const images = this.scene.gallery.reduce((arr, url) => {
+        if (seen.has(url)) return arr;
+        seen.add(url);
+        const existing = originalImages.find(img => img.url === url);
+        let type = existing?.type;
+        const orientation = existing?.orientation || '';
+        if (type !== 'cover' && type !== 'gallery') {
+          type = (url === this.scene.cover_url) ? 'cover' : 'gallery';
+        }
+        arr.push({ url, type, orientation });
+        return arr;
+      }, []);
+      this.scene.images = JSON.stringify(images);
+
+      this.scene.filenames_arr = JSON.stringify(this.scene.files);
+      this.scene.duration = String(this.scene.duration);
+
+      // Push to backend with proper error handling
+      ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } })
+        .json()
+        .then(data => {
+          this.$store.commit('sceneList/updateScene', data);
+          this.$store.commit('overlay/showDetails', { scene: data });
+          // Reset changesMade flag after successful save
+          this.changesMade = false;
+          this.close();
         })
-      })
-      this.scene.gallery.forEach(url => {
-        images.push({
-          url,
-          type: 'gallery',
-          orientation: ''
-        })
-      })
-      this.scene.images = JSON.stringify(images)
-      this.scene.cover_url = this.scene.covers[0]
-      this.scene.filenames_arr = JSON.stringify(this.scene.files)
-      this.scene.duration = String(this.scene.duration)  // force to a string, if no change the UI sends an int, otherwise a string, nust be constant
-
-      ky.post(`/api/scene/edit/${this.scene.id}`, { json: { ...this.scene } }).json().then(data => {
-            this.$store.commit('sceneList/updateScene', data)
-            this.$store.commit('overlay/showDetails', { scene: data })
-          })
-
-      this.changesMade = false
-
-      this.close()
+        // On error, don't reset changesMade flag or close modal.User can try saving again
+        .catch(error => {
+          console.error('Failed to save scene:', error);
+          // Show user-friendly error message
+          this.$buefy.toast.open({
+            message: 'Failed to save scene changes. Please try again.',
+            type: 'is-danger',
+            duration: 5000
+          });
+        });
     },
     deletescene () {
       this.$buefy.dialog.confirm({
@@ -237,7 +270,9 @@ export default {
     },
     blur (field) {
       if (this.changesMade) return // Changes have already been made. No point to check any further
-      if (['castArray', 'tagsArray', 'files', 'covers', 'gallery'].includes(field)) {
+      
+      // Removed 'covers'as this is now handled in the GalleryEditor component
+      if (['castArray', 'tagsArray', 'files', 'gallery'].includes(field)) {
         if (this.scene[field].length !== this.source[field].length) {
           this.changesMade = true
         } else {
@@ -251,6 +286,11 @@ export default {
       } else if (this.scene[field] !== this.source[field]) {
         this.changesMade = true
       }
+    },
+    // Update displayed cover image in the UI
+    setCoverImage (url) {
+      this.scene.cover_url = url
+      this.changesMade = true
     }
   },
   computed: {
