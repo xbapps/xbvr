@@ -2,7 +2,6 @@ package scrape
 
 import (
 	"encoding/json"
-	"strconv"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -69,25 +68,20 @@ func VRBangersSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 
 		sc.Filenames = filenames
 
-		var durationParts []string
-		// Date & Duration
+		// Date
 		e.ForEach(`div.single-video-info__list-item`, func(id int, e *colly.HTMLElement) {
 			parts := strings.Split(e.Text, ":")
-			if len(parts) > 1 {
-				switch strings.TrimSpace(parts[0]) {
-				case "Release date":
-					tmpDate, _ := goment.New(strings.TrimSpace(parts[1]), "MMM D, YYYY")
-					sc.Released = tmpDate.Format("YYYY-MM-DD")
-				case "Duration":
-					durationParts = strings.Split(strings.TrimSpace(parts[1]), " ")
-					tmpDuration, err := strconv.Atoi(durationParts[0])
-					if err == nil {
-						sc.Duration = tmpDuration
-					}
-				}
+			if len(parts) > 1 && strings.TrimSpace(parts[0]) == "Release date" {
+				tmpDate, _ := goment.New(strings.TrimSpace(parts[1]), "MMM D, YYYY")
+				sc.Released = tmpDate.Format("YYYY-MM-DD")
 			}
-
 		})
+
+		// Duration from API (seconds to minutes)
+		apiDuration := gjson.Get(JsonMetadata, "data.item.videoSettings.duration").Int()
+		if apiDuration > 0 {
+			sc.Duration = int(apiDuration / 60)
+		}
 
 		// Cover URLs
 		e.ForEach(`meta[property="og:image"]`, func(id int, e *colly.HTMLElement) {
