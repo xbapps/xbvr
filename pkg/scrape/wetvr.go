@@ -50,6 +50,10 @@ func fetchJSON(url string, target interface{}) error {
 		return err
 	}
 
+	httpConfig := GetCoreDomain(url) + "-scraper"
+	log.Debugf("Using Header/Cookies from %s", httpConfig)
+	SetupHtmlRequest(httpConfig, req)
+
 	req.Header.Set("x-site", "wetvr.com")
 	resp, err := client.Do(req)
 	if err != nil {
