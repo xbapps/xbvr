@@ -310,9 +310,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 	siteCollector.OnHTML(`body`, func(e *colly.HTMLElement) {
 		// Check if we need to go to the next page
 		currentPage, _ := strconv.Atoi(e.Request.URL.Query().Get("page"))
-		if currentPage == 0 {
-			currentPage = 1
-		}
+		// Do not force currentPage to 1 if 0; allow 0 as a valid page
 
 		if !limitScraping {
 			// Check if there are videos on this page before going to the next page
@@ -356,7 +354,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		log.Infof("visiting %s", singleSceneURL)
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		listingURL := baseURL + "/videos?sort=all&page=1"
+		listingURL := baseURL + "/videos?sort=all&page=0"
 		log.Infof("visiting %s", listingURL)
 		siteCollector.Visit(listingURL)
 	}
