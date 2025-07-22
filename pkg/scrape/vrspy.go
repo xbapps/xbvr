@@ -42,12 +42,14 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 	}
 
 	sceneCollector.OnRequest(func(r *colly.Request) {
+		r.Headers.Set("User-Agent", UserAgent)
 		for _, c := range cookies {
 			r.Headers.Set("Cookie", c.Name+"="+c.Value)
 		}
 	})
 
 	siteCollector.OnRequest(func(r *colly.Request) {
+		r.Headers.Set("User-Agent", UserAgent)
 		for _, c := range cookies {
 			r.Headers.Set("Cookie", c.Name+"="+c.Value)
 		}
@@ -61,17 +63,17 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		sc.Site = siteID
 		sc.HomepageURL = e.Request.URL.String()
 
-		// Extract scene ID using the most reliable method first
+		// Extract scene ID using most reliable method first
 		pageHTML, _ := e.DOM.Html()
 
-		// 1. Try image URLs with pattern cdn.vrspy.com/videos/{id}/ or cdn.vrspy.com/films/{id}/
+		// Try image URLs with pattern cdn.vrspy.com/videos/{id}/ or cdn.vrspy.com/films/{id}/
 		imageRegex := regexp.MustCompile(`cdn\.vrspy\.com/(?:videos|films)/(\d+)/`)
 		imageMatches := imageRegex.FindStringSubmatch(pageHTML)
 		if len(imageMatches) > 1 {
 			sc.SiteID = imageMatches[1]
 		}
 
-		// 2. Try og:image extraction if ID not found
+		// Try og:image extraction if ID not found
 		if sc.SiteID == "" {
 			e.ForEach(`meta[property="og:image"][content*="vrspy.com/videos"], meta[property="og:image"][content*="vrspy.com/films"]`, func(id int, e *colly.HTMLElement) {
 				if sc.SiteID == "" {
@@ -99,33 +101,42 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 
 		sc.SceneID = scraperID + "-" + sc.SiteID
 
-		// Updated title selector based on reference scrapers
+		// Title selector based on reference scrapers
 		title := e.ChildText(`h1.section-header-container`)
 		if title == "" {
 			title = e.ChildText(`div.video-title .section-header-container`)
 		}
-		// Clean up the title
+		// Title cleanup
 		title = strings.TrimSpace(title)
 		title = strings.TrimSuffix(title, " Scene")
 		title = strings.TrimSuffix(title, " - VR Porn")
 		title = strings.TrimSuffix(title, " - Vr Porn")
 		sc.Title = title
 
-		// Updated synopsis selector
+		// Generate original filenames based on scene slug + resolution
+		pathParts := strings.Split(e.Request.URL.Path, "/")
+		if titleSlug := pathParts[len(pathParts)-1]; titleSlug != "" {
+			resolutions := []string{"original", "8k", "6k", "5k", "4k", "3k", "2k"}
+			for _, res := range resolutions {
+				sc.Filenames = append(sc.Filenames, titleSlug+"_"+res+"_lr_180_full.mp4")
+			}
+		}
+
+		// Synopsis selector
 		synopsis := e.ChildText(`.show-more-text p`)
 		if synopsis == "" {
 			synopsis = e.ChildText(`.video-description-container`)
 		}
 		sc.Synopsis = synopsis
 
-		// Updated tags selector
+		// Tags selector
 		tags := e.ChildTexts(`.video-categories a`)
 		if len(tags) == 0 {
 			tags = e.ChildTexts(`.video-categories .chip`)
 		}
 		sc.Tags = tags
 
-		// Updated cast selector
+		// Cast selector
 		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`.video-actor-item`, func(id int, e *colly.HTMLElement) {
 			actorName := strings.TrimSpace(e.Text)
@@ -140,7 +151,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 			}
 		})
 
-		// Updated date and duration extraction
+		// Date and duration extraction
 		e.ForEach(`.video-details-info-item`, func(id int, e *colly.HTMLElement) {
 			infoText := e.Text
 
@@ -213,8 +224,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 
 		sc.Covers = []string{cover}
 
-		// Try to find gallery images with the CDN image processing format and direct CDN URLs
-		// Updated to support both /videos/ and /films/ paths
+		// Find gallery images
 		cdnImageRegex := regexp.MustCompile(`https://vrspy\.com/cdn-cgi/image/w=\d+/https://cdn\.vrspy\.com/(?:videos|films)/\d+/photos/([^"\s]+\.jpg)`)
 		directImageRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/\d+/photos/([^"\s]+\.jpg)`)
 
@@ -251,7 +261,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 			}
 		}
 
-		// Deduplicate images by filename and standardize to w=960
+		// Deduplicate gallery images and transform to 960px in any direction
 		cleanGallery := make([]string, 0)
 		seenFilenames := make(map[string]bool)
 
@@ -275,15 +285,15 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 				// Remove any fragments
 				directURL = strings.Split(directURL, "#")[0]
 
-				// Add both direct URL and CDN-transformed URL as fallback if CDN transformation fails
-				cleanGallery = append(cleanGallery, directURL)
+				// Use CloudFlare image processing to constrain to 960px max in any direction, maintaining aspect ratio
+				transformedURL := "https://vrspy.com/cdn-cgi/image/w=960,h=960,fit=scale-down,format=auto/" + directURL
+				cleanGallery = append(cleanGallery, transformedURL)
 			}
 		}
 
 		sc.Gallery = cleanGallery
 
-		// Extract trailer URLs - Updated to support both /videos/ and /films/ paths
-		// First try to find trailer URLs directly in the HTML
+		// Extract trailer URLs
 		trailerRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/\d+/trailers/\w+\.mp4\?token=[^"&]+`)
 		trailerMatches := trailerRegex.FindAllString(pageHTMLStr, -1)
 
@@ -306,28 +316,36 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		out <- sc
 	})
 
-	// Handle pagination
 	siteCollector.OnHTML(`body`, func(e *colly.HTMLElement) {
-		// Check if we need to go to the next page
-		currentPage, _ := strconv.Atoi(e.Request.URL.Query().Get("page"))
-		// Do not force currentPage to 1 if 0; allow 0 as a valid page
-
 		if !limitScraping {
-			// Check if there are videos on this page before going to the next page
+			// Get current page number from URL
+			currentPage := 1
+			if pageParam := e.Request.URL.Query().Get("page"); pageParam != "" {
+				if p, err := strconv.Atoi(pageParam); err == nil {
+					currentPage = p
+				}
+			}
+
+			// Check if there are videos on this page
 			hasVideos := false
 			e.ForEach(`.item-wrapper .photo a`, func(id int, e *colly.HTMLElement) {
 				hasVideos = true
 			})
 
+			// If we found videos on this page, try the next page
 			if hasVideos {
-				// Visit the next page
-				nextPage := currentPage + 1
-				siteCollector.Visit(fmt.Sprintf("%s/videos?sort=all&page=%d", baseURL, nextPage))
+				var nextURL string
+				if e.Request.URL.Query().Get("page") == "" {
+					nextURL = fmt.Sprintf("%s/videos?sort=new&page=-1", baseURL)
+				} else {
+					nextPage := currentPage + 1
+					nextURL = fmt.Sprintf("%s/videos?sort=new&page=%d", baseURL, nextPage)
+				}
+				siteCollector.Visit(nextURL)
 			}
 		}
 	})
 
-	// Find and visit scene pages
 	siteCollector.OnHTML(`.item-wrapper .photo a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 		if !funk.ContainsString(knownScenes, sceneURL) {
@@ -354,7 +372,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		log.Infof("visiting %s", singleSceneURL)
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		listingURL := baseURL + "/videos?sort=all&page=0"
+		listingURL := baseURL + "/videos"
 		log.Infof("visiting %s", listingURL)
 		siteCollector.Visit(listingURL)
 	}
