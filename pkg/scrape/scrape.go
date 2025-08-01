@@ -13,6 +13,7 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/xbapps/xbvr/pkg/common"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"golang.org/x/net/html"
 )
@@ -27,6 +28,11 @@ func createCollector(domains ...string) *colly.Collector {
 		colly.CacheDir(getScrapeCacheDir()),
 		colly.UserAgent(UserAgent),
 	)
+	// use proxy if configured
+	if config.Config.Advanced.ScraperProxy != "" {
+		common.Log.Infof("Using proxy for scraping: %s.", config.Config.Advanced.ScraperProxy)
+		c.SetProxy(config.Config.Advanced.ScraperProxy)
+	}
 
 	// Set error handler
 	c.OnError(func(r *colly.Response, err error) {
