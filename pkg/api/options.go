@@ -200,15 +200,15 @@ type RequestSCustomSiteCreate struct {
 }
 
 type GetStorageResponse struct {
-	Volumes    []models.Volume `json:"volumes"`
-	MatchOhash bool            `json:"match_ohash"`
-	VideoExt          []string `json:"video_ext"`
-	ForbiddenVideoExt []string `json:"forbidden_video_ext"`
-	DefaultVideoExt   []string `json:"default_video_ext"`
+	Volumes           []models.Volume `json:"volumes"`
+	MatchOhash        bool            `json:"match_ohash"`
+	VideoExt          []string        `json:"video_ext"`
+	ForbiddenVideoExt []string        `json:"forbidden_video_ext"`
+	DefaultVideoExt   []string        `json:"default_video_ext"`
 }
 type RequestSaveOptionsStorage struct {
-	MatchOhash bool `json:"match_ohash"`
-	VideoExt []string `json:"video_ext"`
+	MatchOhash bool     `json:"match_ohash"`
+	VideoExt   []string `json:"video_ext"`
 }
 
 type RequestSaveCollectorConfig struct {
