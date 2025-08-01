@@ -31,7 +31,7 @@
     "vue-router": "3.6.5",
     "vue-slider-component": "3.2.24",
     "vue-star-rating": "1.7.0",
-    "vuedraggable": "2.24.3",
+    "vuedraggable": "^2.24.3",
     "vuex": "3.6.2",
     "wampy": "6.4.2"
   },
@@ -59,6 +59,9 @@
     "vue-i18n-extract": "2.0.7",
     "vue-template-compiler": "2.7.16",
     "webpack": "5.99.9"
+  },
+  "resolutions": {
+    "@achrinza/node-ipc": "9.2.9"
   },
   "eslintConfig": {
     "root": true,
