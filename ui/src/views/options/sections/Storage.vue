@@ -121,15 +121,28 @@
         Match StashDB Hashes
       </b-switch>
     </b-field>
-    <b-field>
-      <b-button type="is-primary" @click="save">Save options</b-button>
+
+    <hr/>
+
+    <b-field label="Video File Extensions">
+      <b-tooltip label="Only add video file extensions!" position="is-top" style="width: 100%;">
+        <b-taginput
+            ref="videoExtInput"
+            v-model="video_ext"
+            :allow-new="true"
+            @add="OnExtAdded"
+            @remove="saveExtensions"
+            placeholder="Add a video extension (e.g. .mp4)">
+        </b-taginput>
+      </b-tooltip>
     </b-field>
-
-
+    <b-field>
+      <b-tooltip label="This only resets the Video File Extensions list." position="is-right">
+        <b-button type="is-warning" @click="resetToDefaults">Reset</b-button>
+      </b-tooltip>
+    </b-field>
   </div>
-
   </div>
-
 </template>
 
 <script>
@@ -148,15 +161,29 @@ export default {
       newVolumePath: '',
       prettyBytes,
       parseISO,
-      formatDistanceToNow
+      formatDistanceToNow,
+      lastAddedTag: null,
+      lastAddedTime: 0
     }
   },
   mounted () {
     this.$store.dispatch('optionsStorage/load')
   },
   methods: {
-    taskRescan: function () {
-      ky.get('/api/task/rescan')
+    async taskRescan () {
+      try {
+        await this.$store.dispatch('optionsStorage/save');
+        await ky.get('/api/task/rescan');
+      } catch (e) {
+        this.$buefy.dialog.alert({
+          title: 'Error',
+          message: 'Failed to save options. Rescan was not started.',
+          type: 'is-danger',
+          hasIcon: true,
+          ariaRole: 'alertdialog',
+          ariaModal: true
+        });
+      }
     },
     addFolder: async function () {
       await ky.post('/api/options/storage', { json: { path: this.newVolumePath, type: 'local' } })
@@ -178,8 +205,96 @@ export default {
     rescanFolder: function (folder) {
       ky.get(`/api/task/rescan/${folder.id}`)
     },
-    save () {
+    saveExtensions () {
       this.$store.dispatch('optionsStorage/save')
+    },
+    OnExtAdded(tag) {
+      // Debounce the add event as it also triggers on blur
+      const now = Date.now();
+      if (this.lastAddedTag === tag && now - this.lastAddedTime < 200) {
+        return;
+      }
+      this.lastAddedTag = tag;
+      this.lastAddedTime = now;
+
+      // Always remove the raw tag to sanitize in logic below
+      const index = this.video_ext.indexOf(tag);
+      if (index > -1) {
+        this.video_ext.splice(index, 1);
+      }
+
+      // Trim whitespace and convert to lowercase
+      let cleanTag = tag.trim().toLowerCase();
+
+      // Reject if it contains whitespace in the middle
+      if (/\s/.test(cleanTag)) {
+        this.$buefy.dialog.alert({
+          title: 'Invalid Extension',
+          message: 'File extensions cannot contain whitespace.',
+          type: 'is-danger',
+          hasIcon: true,
+          ariaRole: 'alertdialog',
+          ariaModal: true
+        });
+        // Clear the taginput's input field
+        if (this.$refs.videoExtInput) {
+          this.$refs.videoExtInput.newTag = '';
+        }
+        return;
+      }
+
+      // Reject if it's empty or just a dot
+      if (cleanTag.length === 0 || cleanTag === '.') {
+        return;
+      }
+
+      // Prepend dot if missing
+      if (!cleanTag.startsWith('.')) {
+        cleanTag = '.' + cleanTag;
+      }
+
+      // Reject if it's a forbidden extension
+      if (this.forbidden_video_ext && this.forbidden_video_ext.includes(cleanTag)) {
+        this.$buefy.dialog.alert({
+          title: 'Invalid Extension',
+          message: `The file extension <strong>${cleanTag}</strong> is a reserved extension and cannot be added.`,
+          type: 'is-danger',
+          hasIcon: true,
+          ariaRole: 'alertdialog',
+          ariaModal: true
+        });
+        // Clear the taginput's input field
+        if (this.$refs.videoExtInput) {
+          this.$refs.videoExtInput.newTag = '';
+        }
+        return;
+      }
+
+      // Only allow extensions that are a dot followed by alphanumeric characters
+      if (!/^\.[a-z0-9]+$/.test(cleanTag)) {
+        this.$buefy.dialog.alert({
+          title: 'Invalid Extension',
+          message: 'File extensions must only contain letters and numbers after the dot.',
+          type: 'is-danger',
+          hasIcon: true,
+          ariaRole: 'alertdialog',
+          ariaModal: true
+        });
+        if (this.$refs.videoExtInput) {
+          this.$refs.videoExtInput.newTag = '';
+        }
+        return;
+      }
+
+      // Add the sanitized tag back, if not a duplicate
+      if (!this.video_ext.includes(cleanTag)) {
+        this.video_ext.push(cleanTag);
+        this.saveExtensions();
+      }
+    },
+    resetToDefaults () {
+      this.video_ext = this.default_video_ext.slice()
+      this.saveExtensions()
     },
   },
   computed: {
@@ -202,7 +317,17 @@ export default {
     },
     items () {
       return this.$store.state.optionsStorage.items
-    }
+    },
+    video_ext: {
+      get () {return this.$store.state.optionsStorage.options.video_ext},
+      set (value) {this.$store.state.optionsStorage.options.video_ext = value},
+    },
+    forbidden_video_ext: {
+      get () {return this.$store.state.optionsStorage.options.forbidden_video_ext}
+    },
+    default_video_ext: {
+      get () {return this.$store.state.optionsStorage.options.default_video_ext}
+    },
   }
 }
 </script>
