@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div ref="scrollContainer">
     <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
 
     <div class="columns is-multiline is-full">
@@ -56,10 +56,12 @@
       </div>
     </div>
 
-    <div class="column is-full" v-if="items.length < total">
-      <a class="button is-fullwidth" v-on:click="loadMore()">{{$t('Load more')}}</a>
+    <div class="column is-full" v-if="isLoadingMore">
+      <b-loading :is-full-page="false" :active="true"></b-loading>
     </div>
-
+    <div class="column is-full" v-if="!infiniteScrollEnabled && items.length < total">
+      <b-button type="is-primary" @click="loadMore" :loading="isLoadingMore" expanded>{{$t('Load More')}}</b-button>
+    </div>
   </div>
 </template>
 
@@ -70,6 +72,19 @@ import ky from 'ky'
 export default {
   name: 'List',
   components: { SceneCard },
+  props: {
+    infiniteScrollEnabled: {
+      type: Boolean,
+      default: true
+    }
+  },
+  data() {
+    return {
+      isLoadingMore: false,
+      scrollHandler: null,
+      debounceTimeout: null
+    }
+  },
   computed: {
     cardSize: {
       get () {
@@ -167,7 +182,43 @@ export default {
       })
     },
     async loadMore () {
-      this.$store.dispatch('sceneList/load', { offset: this.$store.state.sceneList.offset })
+      if (this.isLoadingMore || this.items.length >= this.total) return
+      this.isLoadingMore = true
+      await this.$store.dispatch('sceneList/load', { offset: this.$store.state.sceneList.offset })
+      this.isLoadingMore = false
+    },
+    handleScroll () {
+      if (this.debounceTimeout) clearTimeout(this.debounceTimeout)
+      this.debounceTimeout = setTimeout(() => {
+        const scrollY = window.scrollY || window.pageYOffset
+        const viewportHeight = window.innerHeight
+        const fullHeight = document.documentElement.scrollHeight
+        // If user is within 600px of the bottom, load more
+        if (scrollY + viewportHeight + 600 >= fullHeight) {
+          this.loadMore()
+        }
+      }, 100)
+    }
+  },
+  mounted () {
+    this.scrollHandler = this.handleScroll.bind(this)
+    if (this.infiniteScrollEnabled) {
+      window.addEventListener('scroll', this.scrollHandler)
+    }
+  },
+  beforeDestroy () {
+    if (this.infiniteScrollEnabled && this.scrollHandler) {
+      window.removeEventListener('scroll', this.scrollHandler)
+    }
+    if (this.debounceTimeout) clearTimeout(this.debounceTimeout)
+  },
+  watch: {
+    infiniteScrollEnabled(newVal) {
+      if (newVal) {
+        window.addEventListener('scroll', this.scrollHandler)
+      } else {
+        window.removeEventListener('scroll', this.scrollHandler)
+      }
     }
   }
 }
