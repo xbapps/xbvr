@@ -177,7 +177,12 @@
             <b-field>
               <b-button type="is-primary" @click="save">Save</b-button>
             </b-field>
-      <!-- Heaaders/Cookies tab -->
+
+          </section>
+        </div>
+      </div>
+
+      <!-- Headers/Cookies tab -->
       <div class="columns" v-if="activeTab == 4">
         <div class="column">
           <section>            
