@@ -139,16 +139,18 @@ esc - closes details pane
 #### using Command Line Arguments/Environment Variables
 | Command line parameter | Environment Variable | Type | Description |
 |------------------------|--------------|------|-------------|
-| `--enableLocalStorage` | | boolean |Use local folder to store application data|
-|	`--app_dir` | XBVR_APPDIR | String|path to the application directory|
-|	`--cache_dir` | XBVR_CACHEDIR | String|path to the temporary scraper cache directory|
-|	`--imgproxy_dir` | XBVR_IMAGEPROXYDIR | String|path to the imageproxy directory|
-|	`--search_dir` | XBVR_SEARCHDIR | String| path to the Search Index directory|
-|	`--preview_dir` | XBVR_VIDEOPREVIEWDIR | String| path to the Scraper Cache directory|
+| `--enableLocalStorage` | | boolean | Use local folder to store application data|
+|	`--app_dir` | XBVR_APPDIR | String | path to the application directory|
+|	`--cache_dir` | XBVR_CACHEDIR | String | path to the temporary scraper cache directory|
+|	`--imgproxy_dir` | XBVR_IMAGEPROXYDIR | String | path to the imageproxy directory|
+|	`--search_dir` | XBVR_SEARCHDIR | String | path to the Search Index directory|
+|	`--preview_dir` | XBVR_VIDEOPREVIEWDIR | String | path to the Scraper Cache directory|
 |	`--scriptsheatmap_dir` | XBVR_SCRIPTHEATMAPDIR | String| path to the scripts_heatmap directory|
-|	`--myfiles_dir` | XBVR_MYFILESDIR | String| path to the myfiles directory for serving users own content (eg images|
-|	`--databaseurl` | DATABASE_URL | String|override default database path|
-|	`--web_port` | XBVR_WEB_PORT | Int| override default Web Page port 9999|
-|	`--ws_addr` | XBVR_WS_ADDR | String| override default Websocket address from the default 0.0.0.0:9998|
-|	`--db_connection_pool_size` | DB_CONNECTION_POOL_SIZE | Int| sets the connection pool size for mariadb databases|
-|	`--concurrent_scrapers` | CONCURRENT_SCRAPERS | Int| set the number of scrapers that run concurrently default 9999|
+|	`--myfiles_dir` | XBVR_MYFILESDIR | String | path to the myfiles directory for serving users own content (eg images|
+|	`--databaseurl` | DATABASE_URL | String | override default database path|
+|	`--web_port` | XBVR_WEB_PORT | Int | override default Web Page port 9999|
+|	`--ws_addr` | XBVR_WS_ADDR | String | override default Websocket address from the default 0.0.0.0:9998|
+|	`--db_connection_pool_size` | DB_CONNECTION_POOL_SIZE | Int | sets the connection pool size for mariadb databases|
+|	`--concurrent_scrapers` | CONCURRENT_SCRAPERS | Int | set the number of scrapers that run concurrently default 9999|
+| | UI_USERNAME | String | set the username for UI authentication
+| | UI_PASSWORD | String | set the password for UI authentications
