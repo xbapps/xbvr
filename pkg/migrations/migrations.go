@@ -1657,13 +1657,6 @@ func Migrate() {
 					{"randysroadstop", "vrporn"},
 					{"realteensvr", "vrporn"},
 					{"vrclubz", "vrporn"},
-					{"VR Playful", "vrporn"},
-					{"BS-Production", "vrporn"},
-					{"LethalHardcoreVR", "vrporn"},
-					{"VRTeenrs", "vrporn"},
-					{"All Anal VR", "vrporn"},
-					{"VRHARD", "vrporn"},
-					{"VRmassaged", "vrporn"},
 				}
 
 				isOfficalSite := func(siteList []SiteChange, siteID string) bool {
