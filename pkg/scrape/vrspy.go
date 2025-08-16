@@ -361,6 +361,14 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
+	// Homepage scene link selectors 
+	siteCollector.OnHTML(`a[href*="/video/"]`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+		if !funk.ContainsString(knownScenes, sceneURL) {
+			sceneCollector.Visit(sceneURL)
+		}
+	})
+
 	if singleSceneURL != "" {
 		// Ensure single scene URL uses www subdomain
 		if !strings.Contains(singleSceneURL, "www.") && strings.Contains(singleSceneURL, "://") {
@@ -372,6 +380,12 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		log.Infof("visiting %s", singleSceneURL)
 		sceneCollector.Visit(singleSceneURL)
 	} else {
+		// Check homepage for new scenes first
+		homepageURL := baseURL
+		log.Infof("checking homepage %s for new scenes", homepageURL)
+		siteCollector.Visit(homepageURL)
+
+		// Then check /videos 
 		listingURL := baseURL + "/videos"
 		log.Infof("visiting %s", listingURL)
 		siteCollector.Visit(listingURL)
