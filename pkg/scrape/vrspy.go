@@ -361,7 +361,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		}
 	})
 
-	// Homepage scene link selectors 
+	// Homepage scene link selectors
 	siteCollector.OnHTML(`a[href*="/video/"]`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 		if !funk.ContainsString(knownScenes, sceneURL) {
