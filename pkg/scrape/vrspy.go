@@ -385,7 +385,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		log.Infof("checking homepage %s for new scenes", homepageURL)
 		siteCollector.Visit(homepageURL)
 
-		// Then check /videos 
+		// Then check /videos
 		listingURL := baseURL + "/videos"
 		log.Infof("visiting %s", listingURL)
 		siteCollector.Visit(listingURL)
