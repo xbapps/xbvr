@@ -44,23 +44,27 @@ type VersionCheckResponse struct {
 }
 
 type RequestSaveOptionsWeb struct {
-	TagSort             string `json:"tagSort"`
-	SceneHidden         bool   `json:"sceneHidden"`
-	SceneWatchlist      bool   `json:"sceneWatchlist"`
-	SceneFavourite      bool   `json:"sceneFavourite"`
-	SceneWishlist       bool   `json:"sceneWishlist"`
-	SceneWatched        bool   `json:"sceneWatched"`
-	SceneEdit           bool   `json:"sceneEdit"`
-	SceneDuration       bool   `json:"sceneDuration"`
-	SceneCuepoint       bool   `json:"sceneCuepoint"`
-	ShowHspFile         bool   `json:"showHspFile"`
-	ShowSubtitlesFile   bool   `json:"showSubtitlesFile"`
-	SceneTrailerlist    bool   `json:"sceneTrailerlist"`
-	ShowScriptHeatmap   bool   `json:"showScriptHeatmap"`
-	ShowAllHeatmaps     bool   `json:"showAllHeatmaps"`
-	ShowOpenInNewWindow bool   `json:"showOpenInNewWindow"`
-	UpdateCheck         bool   `json:"updateCheck"`
-	IsAvailOpacity      int    `json:"isAvailOpacity"`
+	TagSort              string `json:"tagSort"`
+	SceneHidden          bool   `json:"sceneHidden"`
+	SceneWatchlist       bool   `json:"sceneWatchlist"`
+	SceneFavourite       bool   `json:"sceneFavourite"`
+	SceneWishlist        bool   `json:"sceneWishlist"`
+	SceneWatched         bool   `json:"sceneWatched"`
+	SceneEdit            bool   `json:"sceneEdit"`
+	SceneDuration        bool   `json:"sceneDuration"`
+	SceneCuepoint        bool   `json:"sceneCuepoint"`
+	ShowHspFile          bool   `json:"showHspFile"`
+	ShowSubtitlesFile    bool   `json:"showSubtitlesFile"`
+	SceneTrailerlist     bool   `json:"sceneTrailerlist"`
+	ShowScriptHeatmap    bool   `json:"showScriptHeatmap"`
+	ShowAllHeatmaps      bool   `json:"showAllHeatmaps"`
+	ShowOpenInNewWindow  bool   `json:"showOpenInNewWindow"`
+	UpdateCheck          bool   `json:"updateCheck"`
+	IsAvailOpacity       int    `json:"isAvailOpacity"`
+	SceneCardAspectRatio string `json:"sceneCardAspectRatio"`
+	SceneCardScaleToFit  bool   `json:"sceneCardScaleToFit"`
+	ActorCardAspectRatio string `json:"actorCardAspectRatio"`
+	ActorCardScaleToFit  bool   `json:"actorCardScaleToFit"`
 }
 
 type RequestSaveOptionsAdvanced struct {
@@ -502,6 +506,10 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.ShowOpenInNewWindow = r.ShowOpenInNewWindow
 	config.Config.Web.UpdateCheck = r.UpdateCheck
 	config.Config.Web.IsAvailOpacity = r.IsAvailOpacity
+	config.Config.Web.SceneCardAspectRatio = r.SceneCardAspectRatio
+	config.Config.Web.SceneCardScaleToFit = r.SceneCardScaleToFit
+	config.Config.Web.ActorCardAspectRatio = r.ActorCardAspectRatio
+	config.Config.Web.ActorCardScaleToFit = r.ActorCardScaleToFit
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)

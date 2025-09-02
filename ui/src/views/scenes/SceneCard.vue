@@ -2,7 +2,7 @@
   <div class="card is-shadowless">
     <div class="card-image">
       <div class="bbox"
-           v-bind:style='{backgroundImage: `url("${getImageURL(item.cover_url)}")`, backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat", opacity:item.is_available ? 1.0 : this.isAvailOpactiy}'
+           v-bind:style='{backgroundImage: `url("${getImageURL(item.cover_url)}")`, backgroundSize: this.sceneCardScale, backgroundPosition: "center", backgroundRepeat: "no-repeat", opacity:item.is_available ? 1.0 : this.isAvailOpactiy, aspectRatio: this.sceneCardAspectRatio}'
            @click="showDetails(item)"
            @mouseover="preview = true"
            @mouseleave="preview = false">
@@ -157,6 +157,22 @@ export default {
         return .4
       }
       return this.$store.state.optionsWeb.web.isAvailOpacity / 100
+    },
+    sceneCardAspectRatio () {
+      if (this.$store.state.optionsWeb.web.sceneCardAspectRatio == "3:2") {
+        return 3 / 2
+      } else if (this.$store.state.optionsWeb.web.sceneCardAspectRatio == "16:9") {
+        return 16 / 9
+      } else {
+        return 1
+      }
+    },
+    sceneCardScale () {
+      if (this.$store.state.optionsWeb.web.sceneCardScaleToFit) {
+        return "contain"
+      } else {
+        return "cover"
+      }
     },
     async getAlternateSceneSourcesWithTitles() {
       this.stashLinkExists = false
