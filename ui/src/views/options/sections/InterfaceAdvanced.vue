@@ -170,15 +170,18 @@
       <div class="columns" v-if="activeTab == 4">
         <div class="column">
           <section>
-
             <b-field :label="$t('Proxy')" label-position="on-border">
               <b-input v-model="scraperProxy" :placeholder="$t('Optional: http proxy')"></b-input>
             </b-field>
             <b-field>
               <b-button type="is-primary" @click="save">Save</b-button>
             </b-field>
-      <!-- Heaaders/Cookies tab -->
-      <div class="columns" v-if="activeTab == 4">
+          </section>
+        </div>
+      </div>
+
+      <!-- Headers/Cookies tab -->
+      <div class="columns" v-if="activeTab == 5">
         <div class="column">
           <section>            
             <b-field>
