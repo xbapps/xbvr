@@ -143,7 +143,7 @@ export default {
       this.$store.commit('overlay/hideSearchStashdbActors')
     },
     searchStashdb() {
-      this.$buefy.toast.open({message: `Searching Actots`, type: 'is-primary', duration: 5000})
+      this.$buefy.toast.open({message: `Searching Actors`, type: 'is-primary', duration: 5000})
         ky.get('/api/extref/stashdb/searchactor/' + this.actor.id + "?q=" + this.queryString, {timeout: 6e6}).json().then(data => {
             this.searchResults = Object.values(data.Results).sort((a, b) => b.Weight - a.Weight)
             this.isModalActive = true
