@@ -192,29 +192,30 @@ func setDeoPlayerHost(req *restful.Request) {
 
 func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	if isDeoAuthEnabled() {
-		var authorized bool
+		authState := "0"
 
-		u, err := req.BodyParameter("login")
-		if err != nil {
-			authorized = false
+		username, _ := req.BodyParameter("login")
+		password, _ := req.BodyParameter("password")
+
+		if username != "" && password != "" {
+			cmpErr := bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(password))
+			if username == config.Config.Interfaces.DeoVR.Username && cmpErr == nil {
+				authState = "1"
+			} else {
+				authState = "-1"
+			}
 		}
 
-		p, err := req.BodyParameter("password")
-		if err != nil {
-			authorized = false
-		}
-
-		err = bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(p))
-		if u == config.Config.Interfaces.DeoVR.Username && err == nil {
-			authorized = true
-		}
-
-		if !authorized {
+		if authState != "1" {
+			msg := "Login Required"
+			if authState == "-1" {
+				msg = "Login Failed"
+			}
 			unauthLib := DeoLibrary{
-				Authorized: "-1",
+				Authorized: authState,
 				Scenes: []DeoListScenes{
 					{
-						Name: "Login Required",
+						Name: msg,
 						List: nil,
 					},
 				},
