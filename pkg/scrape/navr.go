@@ -40,7 +40,9 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Title
-		sc.Title = strings.TrimSpace(e.ChildText(`div.scene-info a.site-title`)) + " - " + strings.TrimSpace(e.ChildText(`Title`))
+		//		e.ForEach(`div.scene-info`, func(id int, e *colly.HTMLElement) {
+		sc.Title = strings.TrimSpace(e.ChildText(`div.scene-info a.site-title`)) + " - " + strings.TrimSpace(e.ChildText(`div.scene-info h1.scene-title`))
+		//		})
 
 		// Date
 		e.ForEach(`div.date-tags span.entry-date`, func(id int, e *colly.HTMLElement) {
@@ -63,28 +65,31 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 		// Filenames & Covers
 		// There's a different video element for the four most recent scenes
 		// New video element
+		base := strings.Split(strings.Replace(e.ChildAttr(`div.contain-start-card a img`, "src"), "//", "", -1), "/")
+
 		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
 			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
-			base := strings.Split(strings.Replace(e.Attr("poster"), "//", "", -1), "/")
+			base = strings.Split(strings.Replace(e.Attr("poster"), "//", "", -1), "/")
 			if len(base) < 7 {
 				return
 			}
-			baseName := base[5] + base[6]
-			defaultBaseName := "nam" + base[6]
+			/*			baseName := base[5] + base[6]
+						defaultBaseName := "nam" + base[6]
 
-			filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_6kvr264.mp4", "_6kvr265.mp4", "_8kvr265.mp4"}
+						filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_6kvr264.mp4", "_6kvr265.mp4", "_8kvr265.mp4"}
 
-			for i := range filenames {
-				sc.Filenames = append(sc.Filenames, baseName+filenames[i], defaultBaseName+filenames[i])
-			}
+						for i := range filenames {
+							sc.Filenames = append(sc.Filenames, baseName+filenames[i], defaultBaseName+filenames[i])
+						}
 
-			base[8] = "horizontal"
-			base[9] = "1182x777c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+						base[8] = "horizontal"
+						base[9] = "1182x777c.jpg"
+						sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 
-			base[8] = "vertical"
-			base[9] = "1182x1788c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+						base[8] = "vertical"
+						base[9] = "1182x1788c.jpg"
+						sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+			*/
 		})
 
 		sc.TrailerType = "heresphere"
@@ -94,32 +99,51 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 
 		// Old video element
 		e.ForEach(`a.play-trailer img.start-card.desktop-only`, func(id int, e *colly.HTMLElement) {
+			// images2.naughtycdn.com/cms/nacmscontent/v1/scenes/nargn/psexselinasamcutout/scene/horizontal/1279x852c.jpg
 			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
 			srcset := e.Attr("data-srcset")
 			if srcset == "" {
 				srcset = e.Attr("srcset")
 			}
-			base := strings.Split(strings.Replace(srcset, "//", "", -1), "/")
+			base = strings.Split(strings.Replace(srcset, "//", "", -1), "/")
 			if len(base) < 7 {
 				return
 			}
-			baseName := base[5] + base[6]
-			defaultBaseName := "nam" + base[6]
+			/*			baseName := base[5] + base[6]
+						defaultBaseName := "nam" + base[6]
 
-			filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_6kvr264.mp4", "_6kvr265.mp4", "_8kvr265.mp4"}
+						filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_6kvr264.mp4", "_6kvr265.mp4", "_8kvr265.mp4"}
 
-			for i := range filenames {
-				sc.Filenames = append(sc.Filenames, baseName+filenames[i], defaultBaseName+filenames[i])
-			}
+						for i := range filenames {
+							sc.Filenames = append(sc.Filenames, baseName+filenames[i], defaultBaseName+filenames[i])
+						}
 
-			base[8] = "horizontal"
-			base[9] = "1182x777c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+						base[8] = "horizontal"
+						base[9] = "1182x777c.jpg"
+						sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 
-			base[8] = "vertical"
-			base[9] = "1182x1788c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+						base[8] = "vertical"
+						base[9] = "1182x1788c.jpg"
+						sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+			*/
 		})
+
+		baseName := base[5] + base[6]
+		defaultBaseName := "nam" + base[6]
+
+		filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_6kvr264.mp4", "_6kvr265.mp4", "_8kvr265.mp4"}
+
+		for i := range filenames {
+			sc.Filenames = append(sc.Filenames, baseName+filenames[i], defaultBaseName+filenames[i])
+		}
+
+		base[8] = "horizontal"
+		base[9] = "1182x777c.jpg"
+		sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+
+		base[8] = "vertical"
+		base[9] = "1182x1788c.jpg"
+		sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 
 		// Gallery
 		e.ForEach(`div.contain-scene-images.desktop-only a.thumbnail`, func(id int, e *colly.HTMLElement) {
