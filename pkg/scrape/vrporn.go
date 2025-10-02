@@ -101,8 +101,7 @@ func VRPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 				return true
 			})
 
-			createdAt := scene.Get("createdAt").Int()
-			sc.Released = time.Unix(createdAt, 0).Format("2006-01-02")
+			sc.Released = time.Unix(scene.Get("publishedAt").Int(), 0).Format("2006-01-02")
 			sc.Duration = int(scene.Get("paidTime").Int() / 60)
 
 			// trailer details
