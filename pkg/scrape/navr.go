@@ -2,15 +2,12 @@ package scrape
 
 import (
 	"encoding/json"
-	"html"
-	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
-	"github.com/robertkrimen/otto"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -111,32 +108,11 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 			sc.Tags = append(sc.Tags, e.Text)
 		})
 
-		// Cast (extract from JavaScript)
-		re := regexp.MustCompile(`nanalytics.trackExperiment.*\);`)
-		e.ForEach(`script`, func(id int, e *colly.HTMLElement) {
-			if strings.Contains(e.Text, "femaleStar") {
-				vm := otto.New()
-
-				script := e.Text
-				script = re.ReplaceAllString(script, "")
-				script = strings.Replace(script, "window.dataLayer", "dataLayer", -1)
-				script = strings.Replace(script, "dataLayer = dataLayer || []", "dataLayer = []", -1)
-				script = script + "\nout = []; dataLayer.forEach(function(v) { if (v.femaleStar) { out.push(v.femaleStar); } if (v.maleStar) { out.push(v.maleStar); } });"
-				vm.Run(script)
-
-				out, _ := vm.Get("out")
-				outs, _ := out.ToString()
-
-				sc.Cast = strings.Split(html.UnescapeString(outs), ",")
-			}
-		})
+		// Cast
 		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`a.scene-title`, func(id int, e *colly.HTMLElement) {
-			for _, actor := range sc.Cast {
-				if strings.EqualFold(actor, e.Text) {
-					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: strings.SplitN(e.Request.AbsoluteURL(e.Attr("href")), "?", 2)[0]}
-				}
-			}
+			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: strings.SplitN(e.Request.AbsoluteURL(e.Attr("href")), "?", 2)[0]}
 		})
 
 		out <- sc
