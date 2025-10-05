@@ -41,7 +41,7 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		var tmpCast []string
+		//		var tmpCast []string
 
 		// Scene ID - get from JavaScript
 		e.ForEach(`script[id="virtualreal_video-streaming-js-extra"]`, func(id int, e *colly.HTMLElement) {
@@ -97,7 +97,7 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 			sc.Tags = append(sc.Tags, "Gay")
 		}
 
-		// Duration / Release date / Synopsis
+		// Duration / Release date / Synopsis / Cast
 		e.ForEach(`div script[type='application/ld+json']`, func(id int, e *colly.HTMLElement) {
 			var jsonResult map[string]interface{}
 			json.Unmarshal([]byte(e.Text), &jsonResult)
@@ -119,10 +119,14 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 
 			sc.Synopsis = html.UnescapeString(jsonResult["description"].(string))
 
-			cast := jsonResult["actors"].([]interface{})
-			for _, v := range cast {
-				m := v.(map[string]interface{})
-				tmpCast = append(tmpCast, e.Request.AbsoluteURL(m["url"].(string)))
+			sc.ActorDetails = make(map[string]models.ActorDetails)
+			cast, ok := jsonResult["actors"].([]interface{})
+			if ok && len(cast) > 0 {
+				for _, v := range cast {
+					m := v.(map[string]interface{})
+					sc.Cast = append(sc.Cast, m["name"].(string))
+					sc.ActorDetails[m["name"].(string)] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(m["url"].(string))}
+				}
 			}
 		})
 
@@ -209,38 +213,9 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 		ctx := colly.NewContext()
 		ctx.Put("scene", &sc)
 
-		sc.ActorDetails = make(map[string]models.ActorDetails)
-		for i := range tmpCast {
-			castCollector.Request("GET", tmpCast[i], nil, ctx, nil)
-		}
-
 		if sc.SceneID != "" {
 			out <- sc
 		}
-	})
-
-	castCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
-
-		var name string
-		var gender string
-		e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
-			JsonMetadata := strings.TrimSpace(e.Text)
-
-			// skip non Cast Metadata
-			if gjson.Get(JsonMetadata, "@type").String() == "Person" {
-				name = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "name").String()))
-				gender = strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "gender").String()))
-
-				if gender == "Female" || gender == "Transgender" || gender == "Female Trans" {
-					sc.Cast = append(sc.Cast, name)
-					sc.ActorDetails[name] = models.ActorDetails{Source: scraperID + " scrape", ImageUrl: strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "image").String())), ProfileUrl: e.Request.URL.String()}
-				} else if sc.Site == "VirtualRealGay" || sc.Site == "VirtualRealPassion" {
-					sc.Cast = append(sc.Cast, name)
-					sc.ActorDetails[name] = models.ActorDetails{Source: scraperID + " scrape", ImageUrl: strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "image").String())), ProfileUrl: e.Request.URL.String()}
-				}
-			}
-		})
 	})
 
 	siteCollector.OnHTML(`.searchBox option`, func(e *colly.HTMLElement) {

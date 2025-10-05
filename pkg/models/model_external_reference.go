@@ -437,16 +437,12 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Selector: `table[id="table_about"] tr th:contains('Waist')+td`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Selector: `table[id="table_about"] tr th:contains('Hips')+td`})
 	scrapeRules.GenericActorScrapingConfig["virtualrealporn scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealtrans.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealtrans scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealgay.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealgay scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealpassion.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealpassion scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealamateurporn.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealamateurporn scrape"] = siteDetails
 
