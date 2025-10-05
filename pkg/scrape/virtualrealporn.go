@@ -24,8 +24,6 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 	imageCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
-	castCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
-	castCollector.AllowURLRevisit = true
 
 	imageCollector.OnResponse(func(r *colly.Response) {
 		if _, _, err := image.Decode(bytes.NewReader(r.Body)); err == nil {
@@ -40,8 +38,6 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 		sc.Studio = "VirtualRealPorn"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
-
-		//		var tmpCast []string
 
 		// Scene ID - get from JavaScript
 		e.ForEach(`script[id="virtualreal_video-streaming-js-extra"]`, func(id int, e *colly.HTMLElement) {
@@ -89,7 +85,6 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 		})
 
 		// Tags
-		//		e.ForEach(`a[href*="/tag/"] span`, func(id int, e *colly.HTMLElement) {
 		e.ForEach(`div.metaSingleData a span`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
