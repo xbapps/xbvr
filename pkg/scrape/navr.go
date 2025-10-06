@@ -118,7 +118,7 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`ul[class=pagination] li a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`ul[class=pagination] li a:has(i.fa.fa-angle-right)`, func(e *colly.HTMLElement) {
 		if !limitScraping {
 			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 			siteCollector.Visit(pageURL)
