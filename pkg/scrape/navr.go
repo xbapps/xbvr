@@ -63,14 +63,14 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 		// Filenames & Covers
 		// Three different video elements possible to deliver cover image and base filename
 
-		base := strings.Split(strings.Replace(e.ChildAttr(`div.contain-start-card a img`, "data-srcset"), "//", "", -1), "/")
+		base := strings.Split(strings.Replace(e.ChildAttr(`img.start-card.desktop-only`, "data-srcset"), "//", "", -1), "/")
 		if len(base) < 7 {
 			base = strings.Split(strings.Replace(e.ChildAttr(`dl8-video`, "poster"), "//", "", -1), "/")
-		}
-		if len(base) < 7 {
-			base = strings.Split(strings.Replace(e.ChildAttr(`div.contain-start-card a img`, "src"), "//", "", -1), "/")
 			if len(base) < 7 {
-				return
+				base = strings.Split(strings.Replace(e.ChildAttr(`div.contain-start-card a#vr-player img`, "src"), "//", "", -1), "/")
+				if len(base) < 7 {
+					return
+				}
 			}
 		}
 
