@@ -248,7 +248,7 @@ func matchSceneOnRules(sitename string, config models.StashSiteConfig) {
 			case "studio_code":
 				matchCnt := 0
 				for _, scene := range xbrScenes {
-					if data.Code != "" && strings.Contains(scene.SceneID, data.Code) {
+					if data.Code != "" && strings.HasSuffix(scene.SceneID, "-"+data.Code) {
 						xbvrScene = scene
 						matchCnt += 1
 					}
@@ -296,6 +296,7 @@ func simplystring(str string) string {
 	str = strings.ReplaceAll(str, "'", "")
 	str = strings.ReplaceAll(str, `""`, "")
 	str = strings.ReplaceAll(str, "`", "")
+	str = strings.ReplaceAll(str, "’", "")
 	return strings.ToLower(str)
 }
 
