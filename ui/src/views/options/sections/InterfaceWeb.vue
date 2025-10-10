@@ -98,6 +98,32 @@
               </div>
             </b-field>
 
+            <b-field label="Scene card aspect ratio">
+              <b-select placeholder="Select aspect ratio" v-model="sceneCardAspectRatio">
+                <option>1:1</option>
+                <option>3:2</option>
+                <option>16:9</option>
+              </b-select>
+            </b-field>
+            <b-field>
+              <b-switch v-model="sceneCardScaleToFit" type="is-dark">
+                Scale cover to fit
+              </b-switch>
+            </b-field>
+
+            <b-field label="Actor card aspect ratio">
+              <b-select placeholder="Select aspect ratio" v-model="actorCardAspectRatio">
+                <option>1:1</option>
+                <option>2:3</option>
+                <option>9:16</option>
+              </b-select>
+            </b-field>
+            <b-field>
+              <b-switch v-model="actorCardScaleToFit" type="is-dark">
+                Scale cover to fit
+              </b-switch>
+            </b-field>
+
             <b-field label="Automatically Check for Updates">
               <b-switch v-model="updateCheck">
                 Enabled
@@ -265,9 +291,41 @@ export default {
         this.$store.state.optionsWeb.web.isAvailOpacity = value
       }
     },
+    sceneCardAspectRatio: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneCardAspectRatio
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneCardAspectRatio = value
+      }
+    },
+    sceneCardScaleToFit: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneCardScaleToFit
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneCardScaleToFit = value
+      }
+    },
+    actorCardAspectRatio: {
+      get () {
+        return this.$store.state.optionsWeb.web.actorCardAspectRatio
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.actorCardAspectRatio = value
+      }
+    },
+    actorCardScaleToFit: {
+      get () {
+        return this.$store.state.optionsWeb.web.actorCardScaleToFit
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.actorCardScaleToFit = value
+      }
+    },
     isLoading: function () {
       return this.$store.state.optionsWeb.loading
-    }    
+    }
   }
 }
 </script>
