@@ -48,6 +48,7 @@ type ScrapedScene struct {
 
 	ActorDetails map[string]ActorDetails `json:"actor_details"`
 	MasterSiteId string                  `json:"master_site_id"`
+	Timestamps   string                  `json:"timestamps"`
 }
 
 type ActorDetails struct {
