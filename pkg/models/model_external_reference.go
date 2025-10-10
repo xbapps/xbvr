@@ -517,44 +517,6 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 	scrapeRules.GenericActorScrapingConfig["groobyvr scrape"] = siteDetails
 
 	siteDetails = GenericScraperRuleSet{}
-	siteDetails.Domain = "www.hologirlsvr.com"
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
-		XbvrField: "height", Selector: `.starBio`,
-		PostProcessing: []PostProcessing{
-			{Function: "RegexString", Params: []string{`\d+\s*ft\s*\d+\s*in`, "0"}},
-			{Function: "Replace", Params: []string{" ft ", `'`}},
-			{Function: "Replace", Params: []string{" in", `"`}},
-			{Function: "Feet+Inches to cm", Params: []string{`(\d+)\'(\d+)\"`, "1", "2"}},
-		},
-	})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
-		XbvrField: "band_size", Selector: `.starBio`,
-		PostProcessing: []PostProcessing{
-			{Function: "RegexString", Params: []string{`(\d{2,3}).{1,2}-\d{2,3}-\d{2,3}`, "1"}},
-			{Function: "inch to cm"},
-		},
-	})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
-		XbvrField: "cup_size", Selector: `.starBio`,
-		PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`\d{2,3}(.{1,2})-\d{2,3}-\d{2,3}`, "1"}}},
-	})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
-		XbvrField: "waist_size", Selector: `.starBio`,
-		PostProcessing: []PostProcessing{
-			{Function: "RegexString", Params: []string{`\d{2,3}.{1,2}-(\d{2,3})-\d{2,3}`, "1"}},
-			{Function: "inch to cm"},
-		},
-	})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
-		XbvrField: "hip_size", Selector: `.starBio`,
-		PostProcessing: []PostProcessing{
-			{Function: "RegexString", Params: []string{`\d{2,3}.{1,2}-\d{2,3}-(\d{2,3})`, "1"}},
-			{Function: "inch to cm"},
-		},
-	})
-	scrapeRules.GenericActorScrapingConfig["hologirlsvr scrape"] = siteDetails
-
-	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "vrbangers.com"
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `div.single-model-profile__image > img`, ResultType: "attr", Attribute: "src"})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `div.single-model-biography__content div.toggle-content__text`, First: optional.NewInt(1), Last: optional.NewInt(1)})
