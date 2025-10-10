@@ -117,38 +117,34 @@ func CzechVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out cha
 		}
 
 		// Filenames
-		e.ForEach(`div.post div#download div.dlnew a`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				tmp := strings.Split(e.Attr("href"), "/")
-				parts := strings.Split(tmp[len(tmp)-1], "-")
-				base := parts[0] + "-" + parts[1] + "-" + parts[2]
+		tmp := strings.Split(e.Request.AbsoluteURL(e.ChildAttr(`div.post dl8-video`, "poster")), "/")
+		parts := strings.Split(tmp[len(tmp)-1], "-")
+		base := parts[0] + "-" + parts[1] + "-3d"
 
-				filenames := []string{
-					"1920x960-30fps-smartphone_lq",
-					"1920x960-60fps-psvr_med_h264_180_sbs",
-					"1920x960-60fps-smartphone_hq",
-					"2160x1080-60fps-smartphone_hq",
-					"2880x1440-60fps-gearvr_hq_h264-180x180_3dh",
-					"2880x1440-60fps-gearvr_lq_h264-180x180_3dh",
-					"2880x1440-60fps-gearvr_med_h264-180x180_3dh",
-					"2880x1440-60fps-oculusrift_hq_h264",
-					"2880x1440-60fps-psvr_hq_h264_180_sbs",
-					"3840x1920-60fps-gearvr_hq_h264-180x180_3dh",
-					"3840x1920-60fps-gearvr_med_h264-180x180_3dh",
-					"3840x1920-60fps-oculusrift_hq_h264",
-					"3840x1920-60fps-oculusrift_med_h264",
-					"5400x2700-60fps-gearvr_hq_h265-180x180_3dh",
-					"5400x2700-60fps-oculusrift_hq_h265",
-					"7680x3840-60fps-oculusrift_uhq_h265",
-				}
+		filenames := []string{
+			"1920x960-30fps-smartphone_lq",
+			"1920x960-60fps-psvr_med_h264_180_sbs",
+			"1920x960-60fps-smartphone_hq",
+			"2160x1080-60fps-smartphone_hq",
+			"2880x1440-60fps-gearvr_hq_h264-180x180_3dh",
+			"2880x1440-60fps-gearvr_lq_h264-180x180_3dh",
+			"2880x1440-60fps-gearvr_med_h264-180x180_3dh",
+			"2880x1440-60fps-oculusrift_hq_h264",
+			"2880x1440-60fps-psvr_hq_h264_180_sbs",
+			"3840x1920-60fps-gearvr_hq_h264-180x180_3dh",
+			"3840x1920-60fps-gearvr_med_h264-180x180_3dh",
+			"3840x1920-60fps-oculusrift_hq_h264",
+			"3840x1920-60fps-oculusrift_med_h264",
+			"5400x2700-60fps-gearvr_hq_h265-180x180_3dh",
+			"5400x2700-60fps-oculusrift_hq_h265",
+			"7680x3840-60fps-oculusrift_uhq_h265",
+		}
 
-				for i := range filenames {
-					filenames[i] = base + "-" + filenames[i] + ".mp4"
-				}
+		for i := range filenames {
+			filenames[i] = base + "-" + filenames[i] + ".mp4"
+		}
 
-				sc.Filenames = filenames
-			}
-		})
+		sc.Filenames = filenames
 
 		out <- sc
 	})

@@ -2,15 +2,12 @@ package scrape
 
 import (
 	"encoding/json"
-	"html"
-	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
-	"github.com/robertkrimen/otto"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -40,7 +37,7 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Title
-		sc.Title = strings.TrimSpace(e.ChildText(`div.scene-info a.site-title`)) + " - " + strings.TrimSpace(e.ChildText(`Title`))
+		sc.Title = strings.TrimSpace(e.ChildText(`div.scene-info a.site-title`)) + " - " + strings.TrimSpace(e.ChildText(`div.scene-info h1.scene-title`))
 
 		// Date
 		e.ForEach(`div.date-tags span.entry-date`, func(id int, e *colly.HTMLElement) {
@@ -58,68 +55,41 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 		})
 
 		// trailer details
-		sc.TrailerType = "url"
-
-		// Filenames & Covers
-		// There's a different video element for the four most recent scenes
-		// New video element
-		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
-			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
-			base := strings.Split(strings.Replace(e.Attr("poster"), "//", "", -1), "/")
-			if len(base) < 7 {
-				return
-			}
-			baseName := base[5] + base[6]
-			defaultBaseName := "nam" + base[6]
-
-			filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_6kvr264.mp4", "_6kvr265.mp4", "_8kvr265.mp4"}
-
-			for i := range filenames {
-				sc.Filenames = append(sc.Filenames, baseName+filenames[i], defaultBaseName+filenames[i])
-			}
-
-			base[8] = "horizontal"
-			base[9] = "1182x777c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
-
-			base[8] = "vertical"
-			base[9] = "1182x1788c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
-		})
-
 		sc.TrailerType = "heresphere"
 		params := models.TrailerScrape{SceneUrl: "https://api.naughtyapi.com/heresphere/" + sc.SiteID}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 
-		// Old video element
-		e.ForEach(`a.play-trailer img.start-card.desktop-only`, func(id int, e *colly.HTMLElement) {
-			// images5.naughtycdn.com/cms/nacmscontent/v1/scenes/2cst/nikkijaclynmarco/scene/horizontal/1252x708c.jpg
-			srcset := e.Attr("data-srcset")
-			if srcset == "" {
-				srcset = e.Attr("srcset")
-			}
-			base := strings.Split(strings.Replace(srcset, "//", "", -1), "/")
+		// Filenames & Covers
+		// Three different video elements possible to deliver cover image and base filename
+
+		base := strings.Split(strings.Replace(e.ChildAttr(`img.start-card.desktop-only`, "data-srcset"), "//", "", -1), "/")
+		if len(base) < 7 {
+			base = strings.Split(strings.Replace(e.ChildAttr(`dl8-video`, "poster"), "//", "", -1), "/")
 			if len(base) < 7 {
-				return
+				base = strings.Split(strings.Replace(e.ChildAttr(`div.contain-start-card a#vr-player img`, "src"), "//", "", -1), "/")
+				if len(base) < 7 {
+					return
+				}
 			}
-			baseName := base[5] + base[6]
-			defaultBaseName := "nam" + base[6]
+		}
 
-			filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_6kvr264.mp4", "_6kvr265.mp4", "_8kvr265.mp4"}
+		baseName := base[5] + base[6]
+		defaultBaseName := "nam" + base[6]
 
-			for i := range filenames {
-				sc.Filenames = append(sc.Filenames, baseName+filenames[i], defaultBaseName+filenames[i])
-			}
+		filenames := []string{"_180x180_3dh.mp4", "_smartphonevr60.mp4", "_smartphonevr30.mp4", "_vrdesktopsd.mp4", "_vrdesktophd.mp4", "_180_sbs.mp4", "_6kvr264.mp4", "_6kvr265.mp4", "_8kvr265.mp4"}
 
-			base[8] = "horizontal"
-			base[9] = "1182x777c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+		for i := range filenames {
+			sc.Filenames = append(sc.Filenames, baseName+filenames[i], defaultBaseName+filenames[i])
+		}
 
-			base[8] = "vertical"
-			base[9] = "1182x1788c.jpg"
-			sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
-		})
+		base[8] = "horizontal"
+		base[9] = "1182x777c.jpg"
+		sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
+
+		base[8] = "vertical"
+		base[9] = "1182x1788c.jpg"
+		sc.Covers = append(sc.Covers, "https://"+strings.Join(base, "/"))
 
 		// Gallery
 		e.ForEach(`div.contain-scene-images.desktop-only a.thumbnail`, func(id int, e *colly.HTMLElement) {
@@ -138,38 +108,17 @@ func NaughtyAmericaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string
 			sc.Tags = append(sc.Tags, e.Text)
 		})
 
-		// Cast (extract from JavaScript)
-		re := regexp.MustCompile(`nanalytics.trackExperiment.*\);`)
-		e.ForEach(`script`, func(id int, e *colly.HTMLElement) {
-			if strings.Contains(e.Text, "femaleStar") {
-				vm := otto.New()
-
-				script := e.Text
-				script = re.ReplaceAllString(script, "")
-				script = strings.Replace(script, "window.dataLayer", "dataLayer", -1)
-				script = strings.Replace(script, "dataLayer = dataLayer || []", "dataLayer = []", -1)
-				script = script + "\nout = []; dataLayer.forEach(function(v) { if (v.femaleStar) { out.push(v.femaleStar); } });"
-				vm.Run(script)
-
-				out, _ := vm.Get("out")
-				outs, _ := out.ToString()
-
-				sc.Cast = strings.Split(html.UnescapeString(outs), ",")
-			}
-		})
+		// Cast
 		sc.ActorDetails = make(map[string]models.ActorDetails)
 		e.ForEach(`a.scene-title`, func(id int, e *colly.HTMLElement) {
-			for _, actor := range sc.Cast {
-				if strings.EqualFold(actor, e.Text) {
-					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: strings.SplitN(e.Request.AbsoluteURL(e.Attr("href")), "?", 2)[0]}
-				}
-			}
+			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: strings.SplitN(e.Request.AbsoluteURL(e.Attr("href")), "?", 2)[0]}
 		})
 
 		out <- sc
 	})
 
-	siteCollector.OnHTML(`ul[class=pagination] li a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`ul[class=pagination] li a:has(i.fa.fa-angle-right)`, func(e *colly.HTMLElement) {
 		if !limitScraping {
 			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
 			siteCollector.Visit(pageURL)

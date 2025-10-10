@@ -25,6 +25,7 @@ import (
 
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/tasks"
 )
 
@@ -118,24 +119,30 @@ var RequestBody []byte
 func HeresphereAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	RequestBody, _ = io.ReadAll(req.Request.Body)
 	if isDeoAuthEnabled() {
-		var authorized bool
+		authState := 0
 		var requestData HereSphereAuthRequest
 
-		if err := json.Unmarshal(RequestBody, &requestData); err != nil {
-			authorized = false
-		} else {
-			err := bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(requestData.Password))
-			if requestData.Username == config.Config.Interfaces.DeoVR.Username && err == nil {
-				authorized = true
+		if err := json.Unmarshal(RequestBody, &requestData); err == nil {
+			if requestData.Username != "" && requestData.Password != "" {
+				cmpErr := bcrypt.CompareHashAndPassword([]byte(config.Config.Interfaces.DeoVR.Password), []byte(requestData.Password))
+				if requestData.Username == config.Config.Interfaces.DeoVR.Username && cmpErr == nil {
+					authState = 1
+				} else {
+					authState = -1
+				}
 			}
 		}
 
-		if !authorized {
+		if authState != 1 {
+			msg := "Login Required"
+			if authState == -1 {
+				msg = "Login Failed"
+			}
 			unauthLib := HeresphereLibrary{
-				Access: -1,
+				Access: authState,
 				Library: []HeresphereListScenes{
 					{
-						Name: "Login Required",
+						Name: msg,
 						List: nil,
 					},
 				},
@@ -390,6 +397,9 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 			media = copyVideoSourceResponse(sources, media)
 		case "load_json":
 			sources := LoadJson(scene.TrailerSource)
+			media = copyVideoSourceResponse(sources, media)
+		case "vrporn":
+			sources := scrape.VRPornTrailer(scene.TrailerSource)
 			media = copyVideoSourceResponse(sources, media)
 		}
 	}

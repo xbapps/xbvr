@@ -568,12 +568,16 @@ func substr(s string, start, end int) string {
 }
 
 func getCountryCode(countryName string) string {
+	countryName = strings.Trim(countryName, " ")
 	switch strings.ToLower(countryName) {
-	case "united states", "american":
+	case "united states", "american", "us":
 		return "US"
 	case "english", "scottish":
 		return "GB"
 	default:
+		if countryName == "" {
+			return ""
+		}
 		code, err := lookupCountryCode(countryName)
 		if err != nil {
 			return countryName

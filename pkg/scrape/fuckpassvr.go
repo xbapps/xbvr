@@ -55,6 +55,10 @@ func FuckPassVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 			sc.Covers = append(sc.Covers, strings.Trim(e.Attr("poster"), " '"))
 		})
 
+		e.ForEach(`#sfwVideo img`, func(id int, e *colly.HTMLElement) {
+			sc.Covers = append(sc.Covers, strings.Trim(e.Attr("src"), " '"))
+		})
+
 		e.ForEach(`div.profile__gallery a.profile__galleryElement`, func(id int, e *colly.HTMLElement) {
 			sc.Gallery = append(sc.Gallery, strings.TrimSpace(e.Attr("href")))
 		})

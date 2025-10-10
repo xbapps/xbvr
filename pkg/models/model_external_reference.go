@@ -404,15 +404,63 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 
 	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "vrporn.com"
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "birth_date", Selector: `li:contains('Birthdate:')`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`^(Birthdate: )(.+)`, "2"}}, {Function: "Parse Date", Params: []string{"02/01/2006"}}}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "nationality", Selector: `li:contains('Country of origin:')`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`^(Country of origin: )(.+)`, "2"}}, {Function: "Lookup Country"}}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "height", Selector: `li:contains('Height:')`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`^(Height: )(\d{2,3})`, "2"}}}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "weight", Selector: `li:contains('Weight:')`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`^(Weight: )(\d{2,3})`, "2"}}}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Selector: `li:contains('Breast Size:')`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`^(Breast Size: )(\d{2,3})`, "2"}}, {Function: "inch to cm"}}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "cup_size", Selector: `li:contains('Breast Size:')`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`^(Breast Size: )(\d{2,3})(.+)`, "3"}}}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `li:contains('Hair color:')`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`^(Hair color: )(.+)`, "2"}}}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "eye_color", Selector: `li:contains('Eye color:')`, PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`^(Eye color: )(.+)`, "2"}}}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "aliases", Selector: `div.list_aliases_pornstar li`})
+	siteDetails.IsJson = true
+	// vrporn attribute hnaming and use is not consistant, need to try multiple attribute keys, eg eye-color and eye-color
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "nationality", Selector: `data.item.attributes.#(key=="country_of_origin").value`, PostProcessing: []PostProcessing{{Function: "Lookup Country"}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+		XbvrField: "nationality", Selector: `data.item.attributes.#(key=="birth_place").value`,
+		PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`([^,]+$)`, "1"}}, {Function: "Lookup Country"}},
+	})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+		XbvrField: "nationality", Selector: `data.item.attributes.#(key=="birth_place").value`,
+		PostProcessing: []PostProcessing{{Function: "Lookup Country"}},
+	})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+		XbvrField: "nationality", Selector: `data.item.attributes.#(key=="place-of-birth").value`,
+		PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`([^,]+$)`, "1"}}, {Function: "Lookup Country"}},
+	})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+		XbvrField: "nationality", Selector: `data.item.attributes.#(key=="place-of-birth").value`,
+		PostProcessing: []PostProcessing{{Function: "Lookup Country"}},
+	})
+
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "birth_date", Selector: `data.item.attributes.#(key=="birthday").value`, PostProcessing: []PostProcessing{{Function: "Parse Date", Params: []string{"20060102"}}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+		XbvrField: "height", Selector: `data.item.attributes.#(key=="height").value`,
+		PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`(\d{2,3}) cm`, "1"}}},
+	})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "height", Selector: `data.item.attributes.#(key=="height").value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+		XbvrField: "weight", Selector: `data.item.attributes.#(key=="weight").value`,
+		PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`(\d{2,3}) kg`, "1"}}},
+	})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "weight", Selector: `data.item.attributes.#(key=="weight").value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "ethnicity", Selector: `data.item.attributes.#(key=="ethnicity").value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "eye_color", Selector: `data.item.attributes.#(key=="eye-color").value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "eye_color", Selector: `data.item.attributes.#(key=="eyecolor").value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "eye_color", Selector: `data.item.attributes.#(key=="eye_color").value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `data.item.attributes.#(key=="hair-color").value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `data.item.attributes.#(key=="hair_color").value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `data.item.attributes.#(key=="haircolor").value`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+		XbvrField: "band_size", Selector: `data.item.attributes.#(key=="measurements").value`,
+		PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`(\d{2,3})-\d{2,3}-\d{2,3}`, "1"}}, {Function: "inch to cm"}},
+	})
+	//	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+	//		XbvrField: "cup_size", Selector: `data.seo.porn_star.measurement`,
+	//		PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`\d{2,3}(.{1,2})(?:\s?-|\s-\s)\d{2,3}(?:\s?-|\s-\s)\d{2,3}`, "1"}}},
+	//	})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+		XbvrField: "waist_size", Selector: `data.item.attributes.#(key=="measurements").value`,
+		PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`\d{2,3}-(\d{2,3})-\d{2,3}`, "1"}}, {Function: "inch to cm"}},
+	})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
+		XbvrField: "hip_size", Selector: `data.item.attributes.#(key=="measurements").value`,
+		PostProcessing: []PostProcessing{{Function: "RegexString", Params: []string{`\d{2,3}-\d{2,3}-(\d{2,3})`, "1"}}, {Function: "inch to cm"}},
+	})
+
+	scrapeRules.GenericActorScrapingConfig["fuckpassvr-native scrape"] = siteDetails
+
 	scrapeRules.GenericActorScrapingConfig["vrporn scrape"] = siteDetails
 
 	siteDetails = GenericScraperRuleSet{}
@@ -428,26 +476,21 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 		XbvrField: "nationality", Selector: `script[type="application/ld+json"][class!='yoast-schema-graph']`,
 		PostProcessing: []PostProcessing{{Function: "jsonString", Params: []string{"birthPlace"}}, {Function: "Lookup Country"}},
 	})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
-		XbvrField: "image_url", Selector: `script[type="application/ld+json"][class!='yoast-schema-graph']`,
-		PostProcessing: []PostProcessing{{Function: "jsonString", Params: []string{"image"}}},
-	})
+
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `div.feature_img_model > img`, ResultType: "attr", Attribute: "src"})
+
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "eye_color", Selector: `table[id="table_about"] tr th:contains('Eyes Color')+td`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `table[id="table_about"] tr th:contains('Hair Color')+td`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Selector: `table[id="table_about"] tr th:contains('Bust')+td`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Selector: `table[id="table_about"] tr th:contains('Waist')+td`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Selector: `table[id="table_about"] tr th:contains('Hips')+td`})
 	scrapeRules.GenericActorScrapingConfig["virtualrealporn scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealtrans.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealtrans scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealgay.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealgay scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealpassion.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealpassion scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealamateurporn.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealamateurporn scrape"] = siteDetails
 
