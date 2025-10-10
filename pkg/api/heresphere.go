@@ -25,6 +25,7 @@ import (
 
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/tasks"
 )
 
@@ -390,6 +391,9 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 			media = copyVideoSourceResponse(sources, media)
 		case "load_json":
 			sources := LoadJson(scene.TrailerSource)
+			media = copyVideoSourceResponse(sources, media)
+		case "vrporn":
+			sources := scrape.VRPornTrailer(scene.TrailerSource)
 			media = copyVideoSourceResponse(sources, media)
 		}
 	}

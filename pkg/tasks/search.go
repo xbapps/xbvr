@@ -200,6 +200,42 @@ func IndexScenes(scenes *[]models.Scene) {
 	}
 }
 
+func DeleteIndexScenes(scenes *[]models.Scene) {
+	if !models.CheckLock("index") {
+		models.CreateLock("index")
+		defer models.RemoveLock("index")
+
+		tlog := log.WithFields(logrus.Fields{"task": "scrape"})
+
+		idx, err := NewIndex("scenes")
+		if err != nil {
+			log.Error(err)
+			models.RemoveLock("index")
+			return
+		}
+
+		tlog.Infof("Deleting scenes from search index...")
+
+		total := 0
+		lastMessage := time.Now()
+		for i := range *scenes {
+			if time.Since(lastMessage) > time.Duration(config.Config.Advanced.ProgressTimeInterval)*time.Second {
+				tlog.Infof("Deleting scene index %v of %v scenes", total, len(*scenes))
+				lastMessage = time.Now()
+			}
+			scene := (*scenes)[i]
+			if idx.Exist(scene.SceneID) {
+				// Remove old index, as data may have been updated
+				idx.Bleve.Delete(scene.SceneID)
+			}
+		}
+
+		idx.Bleve.Close()
+
+		tlog.Infof("Indexed %v scenes", total)
+	}
+}
+
 /**
  * Update search index for all of the specified scrapedScenes.
  * This method will first read the scraped scenes from the DB, after

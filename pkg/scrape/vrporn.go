@@ -2,13 +2,17 @@ package scrape
 
 import (
 	"encoding/json"
-	"regexp"
+	"io"
+	"net/http"
+	"path"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/thoas/go-funk"
+	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -17,149 +21,142 @@ func VRPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("vrporn.com")
-	siteCollector := createCollector("vrporn.com")
+	apiCollector := createCollector("vrporn.com")
 
-	// RegEx Patterns
-	sceneIDRegEx := regexp.MustCompile(`^post-(\d+)`)
-	dateRegEx := regexp.MustCompile(`(?i)^VideoPosted (?:on Premium )?on (.+)$`)
+	page := 1
+	apiCollector.OnResponse(func(r *colly.Response) {
+		jsonData := gjson.ParseBytes(r.Body)
 
-	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		if !dateRegEx.MatchString(e.ChildText(`div.content-box.posted-by-box.posted-by-box-sub span.footer-titles`)) {
-			// VRPorn hosts VR games, apparently
-			return
-		}
+		processScene := func(scene gjson.Result) {
+			sc := models.ScrapedScene{}
+			sc.SiteID = scene.Get("id").String()
+			slug := scene.Get("slug").String()
+			sc.SceneID = "vrporn-" + sc.SiteID
 
-		sc := models.ScrapedScene{}
-		sc.ScraperID = scraperID
-		sc.SceneType = "VR"
-		sc.Studio = company
-		sc.Site = siteID
-		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
-		sc.MasterSiteId = masterSiteId
+			sc.ScraperID = scraperID
+			sc.SceneType = "VR"
+			sc.Studio = company
+			sc.Site = siteID
+			sc.HomepageURL = "https://vrporn.com/" + slug + "/"
 
-		if scraperID == "" {
-			// there maybe no site/studio if user is jusy scraping a scene url
-			e.ForEach(`div.studio a[id="studio-logo"]`, func(id int, e *colly.HTMLElement) {
-				studioId := strings.TrimSuffix(strings.ReplaceAll(e.Attr("href"), "https://vrporn.com/studio/", ""), "/")
-				sc.Studio = strings.TrimSpace(e.Text)
-				sc.Site = sc.Studio
+			sc.MasterSiteId = masterSiteId
+
+			if scraperID == "" {
+				// there maybe no site/studio if user is just scraping a scene url
+				studioId := scene.Get("studio.slug").String()
 				// see if we can find the site record, there may not be
 				commonDb, _ := models.GetCommonDB()
 				var site models.Site
-				commonDb.Where("name like ?", sc.Studio+"%VRPorn) or id = ?", sc.Studio, studioId).First(&site)
-				if site.ID != "" {
-					sc.ScraperID = site.ID
+				commonDb.Where(&models.Site{ID: sc.SiteID}).First(&site)
+
+				site.GetIfExist(studioId)
+				if site.Name != "" {
+					log.Info("no vrporn scraper id using database %s", site.Name)
+					// the user has setup a custom site, use the name they specified
+					sc.Studio = site.Name
+				} else {
+					// the user has not setup a custom site, use the name from the api
+					sc.Studio = scene.Get("studio.name").String()
+					log.Info("no vrporn scraper id using api %s", sc.Studio)
 				}
-			})
-		}
-		// Scene ID - get from page HTML
-		id := sceneIDRegEx.FindStringSubmatch(strings.TrimSpace(e.ChildAttr(`article.post`, "class")))[1]
-		sc.SiteID = id
-		sc.SceneID = "vrporn-" + sc.SiteID
-
-		// Title
-		e.ForEach(`h1.content-title`, func(id int, e *colly.HTMLElement) {
-			sc.Title = strings.TrimSpace(e.Text)
-		})
-
-		// Cover
-		coverURL := e.ChildAttr("#dl8videoplayer", "poster")
-		if len(coverURL) > 0 {
-			sc.Covers = append(sc.Covers, coverURL)
-		}
-
-		// Gallery
-		e.ForEach(`.vrp-gallery-pro a`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
-		})
-
-		// Synopsis
-		e.ForEach(`.entry-content.post-video-description`, func(id int, e *colly.HTMLElement) {
-			sc.Synopsis = strings.TrimSpace(e.Text)
-		})
-
-		// Skipping some very generic and useless tags
-		skiptags := map[string]bool{
-			"3D":     true,
-			"60 FPS": true,
-			"HD":     true,
-		}
-
-		// Tags
-		e.ForEach(`.tag-box a[rel="tag"]`, func(id int, e *colly.HTMLElement) {
-			trimmed := strings.TrimSpace(e.Text)
-			if !skiptags[trimmed] {
-				sc.Tags = append(sc.Tags, trimmed)
 			}
-		})
 
-		// Cast
-		e.ForEach(`.name_pornstar`, func(id int, e *colly.HTMLElement) {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-		})
+			sc.Title = scene.Get("name").String()
+			sc.Covers = append(sc.Covers, scene.Get("previewImage.path").String())
+			sc.Synopsis = scene.Get("description").String()
 
-		// Actor Images
-		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`.lav_item_pornstar a`, func(id int, e *colly.HTMLElement) {
-			var src string
-			e.ForEach(`.avatar_pornstar img`, func(id int, e *colly.HTMLElement) {
-				src = e.Attr("src")
-				if strings.HasSuffix(src, "black1.gif") {
-					src = e.Attr("data-wpfc-original-src")
+			// Skipping some very generic and useless tags
+			skiptags := map[string]bool{
+				"3D":     true,
+				"60 FPS": true,
+				"HD":     true,
+			}
+
+			tagList := scene.Get("categories")
+			tagList.ForEach(func(_, tag gjson.Result) bool {
+				tagname := tag.Get("name").String()
+				if !skiptags[tagname] {
+					sc.Tags = append(sc.Tags, tagname)
 				}
+				return true
 			})
-			name := e.Attr("title")
-			profileUrl := e.Attr("href")
-			if name != "" && src != "" {
-				sc.ActorDetails[name] = models.ActorDetails{Source: "vrporn scrape", ImageUrl: src, ProfileUrl: profileUrl}
-			} else {
-				sc.ActorDetails[name] = models.ActorDetails{Source: "vrporn scrape", ProfileUrl: profileUrl}
+
+			// Cast
+			cast := scene.Get("models")
+			sc.ActorDetails = make(map[string]models.ActorDetails)
+			cast.ForEach(func(_, model gjson.Result) bool {
+				model_gender := model.Get("gender").String()
+				if model_gender != "male" {
+					modelName := model.Get("name").String()
+					modelSlug := model.Get("slug").String()
+					sc.Cast = append(sc.Cast, modelName)
+					modelImage := model.Get("image")
+					actorApiUrl := "https://vrporn.com/proxy/api/content/v1/models/"
+					if modelImage.Exists() {
+						sc.ActorDetails[modelName] = models.ActorDetails{Source: "vrporn scrape", ImageUrl: modelImage.Get("path").String(), ProfileUrl: actorApiUrl + modelSlug}
+					} else {
+						sc.ActorDetails[modelName] = models.ActorDetails{Source: "vrporn scrape", ProfileUrl: actorApiUrl + modelSlug}
+					}
+				}
+				return true
+			})
+
+			sc.Released = time.Unix(scene.Get("publishedAt").Int(), 0).Format("2006-01-02")
+			sc.Duration = int(scene.Get("paidTime").Int() / 60)
+
+			// trailer details
+			sc.TrailerType = "vrporn"
+			params := models.TrailerScrape{SceneUrl: "https://vrporn.com/proxy/api/content/v1/post/" + slug}
+			strParams, _ := json.Marshal(params)
+			sc.TrailerSrc = string(strParams)
+
+			// gallery
+			r, _ := resty.New().R().Get("https://vrporn.com/proxy/api/content/v1/videos/" + sc.SiteID + "/gallery")
+			galleryJson := r.String()
+			images := gjson.Get(galleryJson, "data")
+			images.ForEach(func(_, image gjson.Result) bool {
+				sc.Gallery = append(sc.Gallery, image.Get("path").String())
+				return true
+			})
+
+			// Filenames need to build
+			//see https://vrporn.com/sweet-teen-luci-shows-her-young-body-in-bleu-jeans/ as example of less resolutions
+			out <- sc
+		}
+
+		// check if a single scene was returned or an array
+		item := jsonData.Get("data.item")
+		if item.Exists() {
+			// single scene
+			processScene(item)
+		} else {
+			// page list
+			itemList := jsonData.Get("data.items")
+			itemList.ForEach(func(_, scene gjson.Result) bool {
+				slug := scene.Get("slug").String()
+				if !funk.ContainsString(knownScenes, "https://vrporn.com/"+slug+"/") {
+					apiCollector.Visit("https://vrporn.com/proxy/api/content/v1/post/" + slug)
+				}
+				return true
+			})
+			pages := jsonData.Get("data.pages").Int()
+			if page < int(pages) && !limitScraping {
+				page++
+				slug := strings.TrimSuffix(strings.ReplaceAll(siteURL, "https://vrporn.com/studio/", ""), "/")
+				url := "https://vrporn.com/proxy/api/content/v1/videos/studio/" + slug + "?page=" + strconv.Itoa(page) + "&limit=32&sort=new"
+				WaitBeforeVisit("vrporn.com", apiCollector.Visit, url)
 			}
-		})
-
-		// trailer details
-		sc.TrailerType = "scrape_html"
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "dl8-video source", ContentPath: "src", QualityPath: "quality"}
-		strParams, _ := json.Marshal(params)
-		sc.TrailerSrc = string(strParams)
-
-		// Release Date
-		date := dateRegEx.FindStringSubmatch(e.ChildText(`div.content-box.posted-by-box.posted-by-box-sub span.footer-titles`))[1]
-		if len(date) > 0 {
-			dt, _ := time.Parse("January 02, 2006", date)
-			sc.Released = dt.Format("2006-01-02")
-		}
-
-		// Duration
-		e.ForEachWithBreak(`meta[property='og:duration']`, func(id int, e *colly.HTMLElement) bool {
-			secs, _ := strconv.Atoi(e.Attr("content"))
-			sc.Duration = secs / 60
-			return sc.Duration == 0
-		})
-
-		out <- sc
-	})
-
-	siteCollector.OnHTML(`div.pagination a.next`, func(e *colly.HTMLElement) {
-		if !limitScraping {
-			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-			WaitBeforeVisit("vrporn.com", siteCollector.Visit, pageURL)
-		}
-	})
-
-	siteCollector.OnHTML(`body.tax-studio article.post div.tube-post a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-		// If scene exists in database, or the slternate source exists, there's no need to scrape
-		if !funk.ContainsString(knownScenes, sceneURL) {
-			WaitBeforeVisit("vrporn.com", sceneCollector.Visit, sceneURL)
 		}
 	})
 
 	if singleSceneURL != "" {
-		sceneCollector.Visit(singleSceneURL)
+		url := "https://vrporn.com/proxy/api/content/v1/post/" + path.Base(singleSceneURL)
+		apiCollector.Visit(url)
 	} else {
-		WaitBeforeVisit("vrporn.com", siteCollector.Visit, siteURL+"/?sort=newest")
+		slug := strings.TrimSuffix(strings.ReplaceAll(siteURL, "https://vrporn.com/studio/", ""), "/")
+		//url:="https://vrporn.com/proxy/api/content/v1/videos/studio/"+slug+"?page=1&limit=32&sort=new&is-toys=true&is-ar=true"
+		url := "https://vrporn.com/proxy/api/content/v1/videos/studio/" + slug + "?page=" + strconv.Itoa(page) + "&limit=32&sort=new"
+		WaitBeforeVisit("vrporn.com", apiCollector.Visit, url)
 	}
 
 	if updateSite {
@@ -179,7 +176,7 @@ func addVRPornScraper(id string, name string, company string, avatarURL string, 
 		suffixedName += " (VRPorn)"
 	}
 	if avatarURL == "" {
-		avatarURL = "https://vrporn.com/assets/favicon.png"
+		avatarURL = "https://vrporn.com/favicon.ico"
 	}
 
 	if masterSiteId == "" {
@@ -206,4 +203,45 @@ func init() {
 	for _, scraper := range scrapers.CustomScrapers.VrpornScrapers {
 		addVRPornScraper(scraper.ID, scraper.Name, scraper.Company, scraper.AvatarUrl, true, scraper.URL, scraper.MasterSiteId)
 	}
+}
+
+func VRPornTrailer(trailerConfig string) models.VideoSourceResponse {
+	var videolist models.VideoSourceResponse
+	var params models.TrailerScrape
+	json.Unmarshal([]byte(trailerConfig), &params)
+
+	// setup a request and get cookies/headers
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", params.SceneUrl, nil)
+	if err != nil {
+		log.Infof("Error getting trailer info for %s, error %s", params.SceneUrl, err)
+		return videolist
+	}
+
+	if params.KVHttpConfig == "" {
+		params.KVHttpConfig = GetCoreDomain(params.SceneUrl) + "-trailers"
+	}
+	SetupHtmlRequest(params.KVHttpConfig, req)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Infof("Error getting trailer info for %s, error %s", params.SceneUrl, err)
+		return videolist
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	sceneJson := string(body)
+	statusMsg := gjson.Get(sceneJson, "status.message").String()
+	if statusMsg == "Ok" {
+		sources := gjson.Get(sceneJson, "data.item.sources")
+		sources.ForEach(func(sourceName, sourceValue gjson.Result) bool {
+			group := sourceName.String()
+			sourceValue.ForEach(func(videoName, video gjson.Result) bool {
+				videolUrl := video.Get("path").String()
+				videolist.VideoSources = append(videolist.VideoSources, models.VideoSource{URL: videolUrl, Quality: group + " - " + videoName.String()})
+				return true // keep iterating
+			})
+			return true // keep iterating
+		})
+	}
+	return videolist
 }
