@@ -476,26 +476,21 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 		XbvrField: "nationality", Selector: `script[type="application/ld+json"][class!='yoast-schema-graph']`,
 		PostProcessing: []PostProcessing{{Function: "jsonString", Params: []string{"birthPlace"}}, {Function: "Lookup Country"}},
 	})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{
-		XbvrField: "image_url", Selector: `script[type="application/ld+json"][class!='yoast-schema-graph']`,
-		PostProcessing: []PostProcessing{{Function: "jsonString", Params: []string{"image"}}},
-	})
+
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `div.feature_img_model > img`, ResultType: "attr", Attribute: "src"})
+
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "eye_color", Selector: `table[id="table_about"] tr th:contains('Eyes Color')+td`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `table[id="table_about"] tr th:contains('Hair Color')+td`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "band_size", Selector: `table[id="table_about"] tr th:contains('Bust')+td`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "waist_size", Selector: `table[id="table_about"] tr th:contains('Waist')+td`})
 	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hip_size", Selector: `table[id="table_about"] tr th:contains('Hips')+td`})
 	scrapeRules.GenericActorScrapingConfig["virtualrealporn scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealtrans.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealtrans scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealgay.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealgay scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealpassion.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealpassion scrape"] = siteDetails
-
 	siteDetails.Domain = "virtualrealamateurporn.com"
 	scrapeRules.GenericActorScrapingConfig["virtualrealamateurporn scrape"] = siteDetails
 
