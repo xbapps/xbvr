@@ -53,11 +53,15 @@ func StartServer(version, commit, branch, date string) {
 
 	config.LoadConfig()
 
-	// First setup
-	migrations.Migrate()
-
 	// Remove old locks
 	models.RemoveAllLocks()
+
+	// Run migrations in background
+	go func() {
+		config.State.Migration.IsRunning = true
+		migrations.Migrate()
+		config.CompleteMigration()
+	}()
 
 	go tasks.CheckDependencies()
 	models.CheckVolumes()

@@ -144,6 +144,12 @@ func SearchIndex() {
 			}
 			tlog.Infof("Indexed %v/%v scenes", current, total)
 
+			// Update migration status if migration is running
+			if config.State.Migration.IsRunning {
+				msg := fmt.Sprintf("Reindexing scenes: %v/%v", current, total)
+				config.UpdateMigrationStatus(config.State.Migration.Current, current, total, msg)
+			}
+
 			offset = offset + 100
 		}
 

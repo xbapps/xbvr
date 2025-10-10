@@ -11,6 +11,13 @@ type ObjectState struct {
 	Server struct {
 		BoundIP []string `json:"bound_ip"`
 	} `json:"server"`
+	Migration struct {
+		IsRunning bool   `json:"is_running"`
+		Current   string `json:"current"`
+		Total     int    `json:"total"`
+		Progress  int    `json:"progress"`
+		Message   string `json:"message"`
+	} `json:"migration"`
 	Web struct {
 		TagSort             string `json:"tagSort"`
 		SceneHidden         bool   `json:"sceneHidden"`
@@ -64,4 +71,20 @@ func SaveState() {
 		obj.Save()
 		common.Log.Info("Saved state")
 	}
+}
+
+func UpdateMigrationStatus(current string, progress int, total int, message string) {
+	State.Migration.Current = current
+	State.Migration.Progress = progress
+	State.Migration.Total = total
+	State.Migration.Message = message
+	State.Migration.IsRunning = true
+}
+
+func CompleteMigration() {
+	State.Migration.IsRunning = false
+	State.Migration.Current = ""
+	State.Migration.Progress = 0
+	State.Migration.Total = 0
+	State.Migration.Message = ""
 }

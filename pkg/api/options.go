@@ -754,7 +754,10 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {
 	var out GetStateResponse
 
-	tasks.UpdateState()
+	// Only update DLNA state if not migrating to avoid constant DB writes
+	if !config.State.Migration.IsRunning {
+		tasks.UpdateState()
+	}
 
 	out.Config = config.Config
 	out.CurrentState = config.State

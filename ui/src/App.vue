@@ -17,6 +17,7 @@
     <SearchStashdbActors v-if="showSearchStashdbActors" />
 
     <QuickFind/>
+    <MigrationOverlay/>
 
     <Socket/>
   </div>
@@ -34,9 +35,10 @@ import ActorDetails from './views/actors/ActorDetails'
 import EditActor from './views/actors/EditActor'
 import SearchStashdbScenes from './views/scenes/SearchStashdbScenes'
 import SearchStashdbActors from './views/actors/SearchStashdbActors'
+import MigrationOverlay from './components/MigrationOverlay'
 
 export default {
-  components: { Navbar, Socket, QuickFind, GlobalEvents, Details, EditScene, ActorDetails, EditActor, SearchStashdbScenes,SearchStashdbActors },
+  components: { Navbar, Socket, QuickFind, GlobalEvents, Details, EditScene, ActorDetails, EditActor, SearchStashdbScenes, SearchStashdbActors, MigrationOverlay },
   computed: {
     showOverlay () {
       return this.$store.state.overlay.details.show
