@@ -1,8 +1,12 @@
 root = '.'
 tmp_dir = 'dist'
 
+[env]
+DEBUG = "1"
+CGO_ENABLED = "1"
+
 [build]
 cmd = 'go build -o dist/xbvr -tags="json1" main.go'
-full_bin = 'DEBUG=1 ./dist/xbvr'
+full_bin = 'dist/xbvr'
 include_ext = ['go']
 exclude_dir = ['node_modules', 'cache', 'dist', 'ui', 'tmp']

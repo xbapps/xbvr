@@ -17,12 +17,11 @@ func TransVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out cha
 	defer wg.Done()
 	scraperID := "transvr"
 	siteID := "TransVR"
-	allowedDomains := []string{"transvr.com", "www.transvr.com"}
+	allowedDomains := []string{"transvr.com", "www.transvr.com", "www.groobyod.com"}
 	logScrapeStart(scraperID, siteID)
 
 	sceneCollector := createCollector(allowedDomains...)
 	siteCollector := createCollector(allowedDomains...)
-	vodCollector := createCollector(allowedDomains...)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -31,6 +30,11 @@ func TransVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out cha
 		sc.Studio = "TransVR"
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
+
+		// https://www.transvr.com/tour/trailers/Peri-Faye-Is-In-My-Bed.html
+		// https://www.groobyod.com/ondemand/scenes/Peri-Faye-Is-In-My-Bed_vids.html
+		t := strings.NewReplacer("transvr.com/tour/trailers", "groobyod.com/ondemand/scenes", ".html", "_vids.html")
+		trailerURL := t.Replace(sc.HomepageURL)
 
 		// Title
 		sc.Title = strings.Replace(e.ChildText(`title`), "Trans VR: ", "", -1)
@@ -43,7 +47,7 @@ func TransVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out cha
 		})
 
 		// Cover URL
-		coverURL := e.Request.AbsoluteURL(e.ChildAttr("div.player-thumb img", "src"))
+		coverURL := e.Request.Ctx.Get("cover")
 		sc.Covers = append(sc.Covers, coverURL)
 
 		// Scene ID - get from URL
@@ -53,7 +57,7 @@ func TransVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out cha
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Synopsis
-		sc.Synopsis = strings.TrimSpace(e.ChildText(`div.trailerblock p`))
+		sc.Synopsis = strings.TrimSpace(e.ChildText(`div.trailerpage_description p`))
 
 		// Date
 		dateString := strings.Replace(e.ChildText(`div.set_meta`), "Added ", "", -1)
@@ -71,45 +75,31 @@ func TransVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out cha
 		}
 		sc.Duration = duration
 
+		// Gallery
+		sc.Gallery = e.ChildAttrs("div.trailerpage_photoblock_fullsize img", "href")
+
+		// Tags
+		e.ForEach(`div.set_tags a`, func(id int, e *colly.HTMLElement) {
+			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
+		})
+
+		// https://www.groobyod.com/ondemand/content//upload/Peri_Faye_is_in_My_Bed/250911/trailer/perifaye.mattyiceee.ns.tvr.PREVIEW.mp4
 		sc.TrailerType = "scrape_html"
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: "dl8-video source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: `https://www.transvr.com`}
+		params := models.TrailerScrape{SceneUrl: trailerURL, HtmlElement: "dl8-video source", ContentPath: "src", QualityPath: "quality", ContentBaseUrl: "https://www.groobyod.com"}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
-
-		// Pull data from vod page - not every scene has a vod link
-		ctx := colly.NewContext()
-		ctx.Put("scene", &sc)
-		vodURL := e.ChildAttr("a.downBtnbuy", "href")
-		if !strings.Contains(vodURL, "/tour") {
-			vodCollector.Request("GET", vodURL, nil, ctx, nil)
-		}
 
 		out <- sc
 	})
 
-	vodCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
-		sc := e.Request.Ctx.GetAny("scene").(*models.ScrapedScene)
-
-		// Gallery
-		sc.Gallery = e.ChildAttrs("div.gallery-group img", "data-orig-file")
-
-		// Tags
-		e.ForEach(`span.meta-tag a`, func(id int, e *colly.HTMLElement) {
-			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
-		})
-
-		// Not every page has tags so use categories as well
-		e.ForEach(`span.meta-cat a`, func(id int, e *colly.HTMLElement) {
-			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
-		})
-
-	})
-
-	siteCollector.OnHTML(`div.videohere a`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
+	siteCollector.OnHTML(`div.videohere`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.ChildAttr("a", "href"))
+		cvr := e.Request.AbsoluteURL(e.ChildAttr("img", "src"))
 
 		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
+			ctx := colly.NewContext()
+			ctx.Put("cover", cvr)
+			sceneCollector.Request("GET", sceneURL, nil, ctx, nil)
 		}
 	})
 

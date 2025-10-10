@@ -19,23 +19,27 @@ type ObjectState struct {
 		Message   string `json:"message"`
 	} `json:"migration"`
 	Web struct {
-		TagSort             string `json:"tagSort"`
-		SceneHidden         bool   `json:"sceneHidden"`
-		SceneWatchlist      bool   `json:"sceneWatchlist"`
-		SceneFavourite      bool   `json:"sceneFavourite"`
-		SceneWishlist       bool   `json:"sceneWishlist"`
-		SceneWatched        bool   `json:"sceneWatched"`
-		SceneEdit           bool   `json:"sceneEdit"`
-		SceneDuration       bool   `json:"sceneDuration"`
-		SceneCuepoint       bool   `json:"sceneCuepoint"`
-		ShowHspFile         bool   `json:"showHspFile"`
-		ShowSubtitlesFile   bool   `json:"showSubtitlesFile"`
-		SceneTrailerlist    bool   `json:"sceneTrailerlist"`
-		ShowScriptHeatmap   bool   `json:"showScriptHeatmap"`
-		ShowAllHeatmaps     bool   `json:"showAllHeatmaps"`
-		ShowOpenInNewWindow bool   `json:"showOpenInNewWindow"`
-		UpdateCheck         bool   `json:"updateCheck"`
-		IsAvailOpacity      int    `json:"isAvailOpacity"`
+		TagSort              string `json:"tagSort"`
+		SceneHidden          bool   `json:"sceneHidden"`
+		SceneWatchlist       bool   `json:"sceneWatchlist"`
+		SceneFavourite       bool   `json:"sceneFavourite"`
+		SceneWishlist        bool   `json:"sceneWishlist"`
+		SceneWatched         bool   `json:"sceneWatched"`
+		SceneEdit            bool   `json:"sceneEdit"`
+		SceneDuration        bool   `json:"sceneDuration"`
+		SceneCuepoint        bool   `json:"sceneCuepoint"`
+		ShowHspFile          bool   `json:"showHspFile"`
+		ShowSubtitlesFile    bool   `json:"showSubtitlesFile"`
+		SceneTrailerlist     bool   `json:"sceneTrailerlist"`
+		ShowScriptHeatmap    bool   `json:"showScriptHeatmap"`
+		ShowAllHeatmaps      bool   `json:"showAllHeatmaps"`
+		ShowOpenInNewWindow  bool   `json:"showOpenInNewWindow"`
+		UpdateCheck          bool   `json:"updateCheck"`
+		IsAvailOpacity       int    `json:"isAvailOpacity"`
+		SceneCardAspectRatio string `json:"sceneCardAspectRatio"`
+		SceneCardScaleToFit  bool   `json:"sceneCardScaleToFit"`
+		ActorCardAspectRatio string `json:"actorCardAspectRatio"`
+		ActorCardScaleToFit  bool   `json:"actorCardScaleToFit"`
 	} `json:"web"`
 	DLNA struct {
 		Running  bool     `json:"running"`

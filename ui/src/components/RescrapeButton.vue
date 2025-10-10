@@ -36,6 +36,9 @@ export default {
             }
           }
 
+          if (this.item.scene_url.toLowerCase().includes("naughtyamerica.com")) {
+            site = "naughtyamericavr"
+          }
           if (this.item.scene_url.toLowerCase().includes("sexlikereal.com")) {
             site = "slr-single_scene"
           }

@@ -483,6 +483,40 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		db.Delete(&extref)
 	}
 
+	// Process timestamps and save to cuepoints table
+	if ext.Timestamps != "" {
+		// Parse timestamps JSON array
+		var timestamps []map[string]interface{}
+		if err := json.Unmarshal([]byte(ext.Timestamps), &timestamps); err == nil {
+			// Clear existing cuepoints for this scene
+			db.Where("scene_id = ?", o.ID).Delete(&SceneCuepoint{})
+
+			// Process each timestamp and create cuepoint
+			for _, ts := range timestamps {
+				for name, value := range ts {
+					var cuepoint SceneCuepoint
+					cuepoint.SceneID = o.ID
+					cuepoint.Name = name
+
+					// Parse the value - can be either a number (start time only) or string "start:end"
+					switch v := value.(type) {
+					case float64:
+						cuepoint.TimeStart = v
+					case string:
+						// Parse "start:end" format
+						var start, end float64
+						if _, err := fmt.Sscanf(v, "%f:%f", &start, &end); err == nil {
+							cuepoint.TimeStart = start
+							cuepoint.TimeEnd = end
+						}
+					}
+
+					db.Create(&cuepoint)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 

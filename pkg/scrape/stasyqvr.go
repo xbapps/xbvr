@@ -147,5 +147,5 @@ func StasyQVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out ch
 }
 
 func init() {
-	registerScraper("stasyqvr", "StasyQVR", "https://stasyqvr.com/s/images/apple-touch-icon.png", "stasyqvr.com", StasyQVR)
+	registerScraper("stasyqvr", "StasyQVR", "https://stasyqvr.com/img/logo.svg", "stasyqvr.com", StasyQVR)
 }

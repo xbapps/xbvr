@@ -23,6 +23,7 @@ func VirtualTaboo(wg *models.ScrapeWG, updateSite bool, knownScenes []string, ou
 	siteCollector := createCollector("virtualtaboo.com")
 
 	durationRegEx := regexp.MustCompile(`(?:(\d+) hour(?:s)? )?(\d+) min`)
+	filenameRegEx := regexp.MustCompile(`^(.*)-vt\w+$`)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
@@ -51,6 +52,10 @@ func VirtualTaboo(wg *models.ScrapeWG, updateSite bool, knownScenes []string, ou
 
 		// Filenames
 		base := strings.Split(e.Request.URL.Path, "/")[2]
+		filenameMatch := filenameRegEx.FindStringSubmatch(base)
+		if len(filenameMatch) == 2 {
+			base = filenameMatch[1]
+		}
 		sc.Filenames = append(sc.Filenames, base+"-files-smartphone_180_LR.mp4")
 		sc.Filenames = append(sc.Filenames, base+"-files-gear_180_LR.mp4")
 		sc.Filenames = append(sc.Filenames, base+"-files-psvr_180_sbs.mp4")

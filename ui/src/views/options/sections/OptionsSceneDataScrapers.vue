@@ -22,9 +22,9 @@
               </vue-load-image>
             </span>
       </b-table-column>
-      <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">        
+      <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">
         <b-tooltip class="is-warning" :active="props.row.has_scraper == false" :label="$t('Scraper does not exist')"  :delay="250" >
-          <span :class="[props.row.has_scraper ? '' : 'has-text-danger']">{{ props.row.sitename }}</span>
+          <a @click="navigateToStudio(props.row.sitename)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
         </b-tooltip>
       </b-table-column>
       <b-table-column field="source" :label="$t('Source')" sortable searchable v-slot="props">
@@ -333,8 +333,18 @@ export default {
     getMasterSiteName(siteId){
       if (siteId=="") {
         return ""
-      }      
+      }
       return  this.scraperList.find(element => element.id === siteId).name;
+    },
+    navigateToStudio(studioName) {
+      // Set the site filter and navigate to scenes page
+      this.$store.state.sceneList.filters.sites = [studioName]
+      this.$store.state.sceneList.filters.tags = []
+      this.$store.state.sceneList.filters.attributes = []
+      this.$router.push({
+        name: 'scenes',
+        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
+      })
     },
     parseISO,
     formatDistanceToNow

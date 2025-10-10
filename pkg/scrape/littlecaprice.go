@@ -125,5 +125,5 @@ func LittleCaprice(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 }
 
 func init() {
-	registerScraper("littlecaprice", "Little Caprice Dreams", "https://www.littlecaprice-dreams.com/wp-content/uploads/2019/03/cropped-lcd-heart-192x192.png", "littlecaprice-dreams.com", LittleCaprice)
+	registerScraper("littlecaprice", "Little Caprice Dreams", "https://www.littlecaprice-dreams.com/wp-content/uploads/2021/05/wpp_LittleCapriceDreasms_Logo.png", "littlecaprice-dreams.com", LittleCaprice)
 }

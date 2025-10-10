@@ -102,7 +102,7 @@ func processScrapedScene(stashScene models.StashScene, masterSiteId string, comm
 }
 
 func init() {
-	addStashScraper("single_scene", "Stashdb - Other", "", "", "")
+	addStashScraper("single_scene", "Stashdb - Other", "https://stashapp.cc/images/stash.svg", "", "")
 	var scrapers config.ScraperList
 	scrapers.Load()
 	for _, scraper := range scrapers.XbvrScrapers.StashDbScrapers {
