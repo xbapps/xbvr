@@ -304,6 +304,12 @@ func QueryActors(r RequestActorList, enablePreload bool) ResponseActorList {
 			} else {
 				where = "piercings in ('','[]')"
 			}
+		case "No Cup Size":
+			if truefalse {
+				where = "cup_size is null or cup_size = ''"
+			} else {
+				where = "cup_size is not null and cup_size <> ''"
+			}
 		}
 		switch firstchar := string(attribute.OrElse(" ")[0]); firstchar {
 		case "&", "!":
