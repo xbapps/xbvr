@@ -102,9 +102,6 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 	apiWG := sync.WaitGroup{}
 	sem := make(chan struct{}, 8) // hard-coded concurrency limit
 
-	// RegEx Patterns
-	filenameRegEx := regexp.MustCompile(`[?:]`)
-
 	// API-based scene processing function
 	processSceneFromAPI := func(sceneID string, sceneLabel string, isTransScene bool, duration int) {
 		// Use v3 API endpoint with scene label for better data including gallery images
@@ -327,7 +324,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 		// Filenames - need to convert sceneData back to JSON string for legacy function
 		sceneDataJSON := sceneData.String()
-		appendFilenames(&sc, siteID, filenameRegEx, videotype, FB360, alphA, sceneDataJSON, isTransScene)
+		appendFilenames(&sc, siteID, videotype, FB360, alphA, sceneDataJSON, isTransScene)
 
 		// Funscript data
 		if config.Config.Funscripts.ScrapeFunscripts {
@@ -575,9 +572,24 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 	return nil
 }
 
-func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *regexp.Regexp, videotype string, FB360 string, AlphA string, JsonMetadataA string, isTransScene bool) {
+func appendFilenames(sc *models.ScrapedScene, siteID string, videotype string, FB360 string, AlphA string, JsonMetadataA string, isTransScene bool) {
 	// Only shown for logged in users so need to generate them
 	// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
+
+	// Filename sanitation map
+	filenameReplacements := map[string]string{
+		":": ";",
+		"/": "⁄",
+		"|": "¦",
+		"*": "#",
+		"?": "¿",
+	}
+
+	titleSanitized := sc.Title
+	for old, new := range filenameReplacements {
+		titleSanitized = strings.ReplaceAll(titleSanitized, old, new)
+	}
+
 	if !isTransScene {
 		// Force siteID when scraping individual scenes without a custom site
 		if siteID == "" {
@@ -593,7 +605,7 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 			}
 			resolutions = append(resolutions, "_"+resolution+"p_")
 		}
-		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
+		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + titleSanitized
 
 		projSuffix := "_LR.mp4"
 		viewAngle := gjson.Get(JsonMetadataA, "viewAngle").String()
@@ -618,7 +630,7 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 		}
 	} else {
 		resolutions := []string{"_6400p_", "_4096p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_3000p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
-		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
+		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + titleSanitized
 		switch videotype {
 		case "360°": // Can't determine if TB or MONO so have to add both
 			for i := range resolutions {
