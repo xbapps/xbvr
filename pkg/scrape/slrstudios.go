@@ -111,9 +111,15 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		apiURL := "https://api.sexlikereal.com/v3/scenes/" + sceneLabel
 
 		// Fetch scene data from API
-		resp, err := resty.New().R().
+		req := resty.New().R().
 			SetHeader("User-Agent", UserAgent).
-			SetHeader("Client-Type", "web").
+			SetHeader("Client-Type", "web")
+
+		reqconfig := GetCoreDomain(apiURL) + "-scraper"
+		log.Debugf("Using Header/Cookies from %s", reqconfig)
+		SetupHtmlRequest(reqconfig, req.RawRequest)
+
+		resp, err := req.
 			Get(apiURL)
 
 		if err != nil {
@@ -403,9 +409,15 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		for hasMore && (!limitScraping || page == 1) {
 			apiURL := "https://api.sexlikereal.com/v3/scenes?studios=" + studioCode + "&perPage=" + strconv.Itoa(perPage) + "&sort=mostRecent&page=" + strconv.Itoa(page)
 
-			resp, err := resty.New().R().
+			req := resty.New().R().
 				SetHeader("User-Agent", UserAgent).
-				SetHeader("Client-Type", "web").
+				SetHeader("Client-Type", "web")
+
+			reqconfig := GetCoreDomain(apiURL) + "-scraper"
+			log.Debugf("Using Header/Cookies from %s", reqconfig)
+			SetupHtmlRequest(reqconfig, req.RawRequest)
+
+			resp, err := req.
 				Get(apiURL)
 
 			if err != nil {
