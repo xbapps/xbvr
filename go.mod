@@ -81,7 +81,7 @@ require (
 	github.com/antchfx/xpath v1.3.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
-	github.com/blevesearch/bleve_index_api v1.2.8
+	github.com/blevesearch/bleve_index_api v1.2.11
 	github.com/blevesearch/geo v0.2.3 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
 	github.com/blevesearch/gtreap v0.1.1 // indirect
