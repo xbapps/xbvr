@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -40,6 +41,20 @@ func SetupHtmlRequest(kvKey string, req *http.Request) *http.Request {
 	}
 	for _, cookie := range conf.Cookies {
 		req.AddCookie(&http.Cookie{Name: cookie.Name, Value: cookie.Value, Domain: cookie.Domain, Path: cookie.Path})
+	}
+	if conf.Body != "" {
+		body := strings.NewReader(conf.Body)
+		req.Body = io.NopCloser(body)
+	}
+	return req
+}
+func SetupRestyRequest(kvKey string, req *resty.Request) *resty.Request {
+	conf := GetScrapeHttpConfig(kvKey)
+	for _, header := range conf.Headers {
+		req.SetHeader(header.Key, header.Value)
+	}
+	for _, cookie := range conf.Cookies {
+		req.SetCookie(&http.Cookie{Name: cookie.Name, Value: cookie.Value, Domain: cookie.Domain, Path: cookie.Path})
 	}
 	if conf.Body != "" {
 		body := strings.NewReader(conf.Body)
