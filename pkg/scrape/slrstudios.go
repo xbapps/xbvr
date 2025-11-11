@@ -412,7 +412,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 			reqconfig := GetCoreDomain(apiURL) + "-scraper"
 			log.Debugf("Using Header/Cookies from %s", reqconfig)
-			SetupHtmlRequest(reqconfig, req.RawRequest)
+			SetupRestyRequest(reqconfig, req)
 
 			resp, err := req.
 				Get(apiURL)
