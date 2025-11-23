@@ -12,6 +12,7 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/gosimple/slug"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -31,7 +32,7 @@ func BaberoticaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, ou
 	})
 
 	resp, err := resty.New().R().
-		SetHeader("User-Agent", UserAgent).
+		SetHeader("User-Agent", config.Config.Advanced.ScraperUserAgent).
 		SetDoNotParseResponse(true).
 		Get("https://baberoticavr.com/feed/csv/")
 

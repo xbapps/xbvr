@@ -7,6 +7,7 @@ const state = {
     showHSPApiLink: false,
     showSceneSearchField: false,
     stashApiKey: '',
+    scraperUserAgent: '',
     scrapeActorAfterScene: 'true',
     useImperialEntry: 'false',
     linkScenesAfterSceneScraping: true,
@@ -35,6 +36,7 @@ const actions = {
         state.advanced.showSceneSearchField = data.config.advanced.showSceneSearchField
         state.advanced.stashApiKey = data.config.advanced.stashApiKey
         state.advanced.scraperProxy = data.config.advanced.scraperProxy
+        state.advanced.scraperUserAgent = data.config.advanced.scraperUserAgent
         state.advanced.scrapeActorAfterScene = data.config.advanced.scrapeActorAfterScene
         state.advanced.useImperialEntry = data.config.advanced.useImperialEntry
         state.advanced.linkScenesAfterSceneScraping = data.config.advanced.linkScenesAfterSceneScraping
@@ -54,6 +56,7 @@ const actions = {
         state.advanced.showSceneSearchField = data.showSceneSearchField
         state.advanced.stashApiKey = data.stashApiKey
         state.advanced.scraperProxy = data.scraperProxy
+        state.advanced.scraperUserAgent = data.scraperUserAgent
         state.advanced.scrapeActorAfterScene = data.scrapeActorAfterScene
         state.advanced.useImperialEntry = data.useImperialEntry
         state.advanced.linkScenesAfterSceneScraping = data.linkScenesAfterSceneScraping

@@ -10,6 +10,7 @@ import (
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -40,7 +41,7 @@ func VRBangersSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		contentURL := strings.Replace(URL, "//", "//content.", 1)
 
 		r, _ := resty.New().R().
-			SetHeader("User-Agent", UserAgent).
+			SetHeader("User-Agent", config.Config.Advanced.ScraperUserAgent).
 			Get("https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id)
 
 		JsonMetadata := r.String()

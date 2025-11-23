@@ -11,6 +11,7 @@
             <b-tab-item :label="$t('Alternate Sites')"/>
             <b-tab-item :label="$t('Proxy')"/>
             <b-tab-item :label="$t('Cookies/Headers')"/>
+            <b-tab-item :label="$t('Scrapers')"/>
       </b-tabs>
 
       <!-- Screen Details Tab -->
@@ -264,6 +265,20 @@
         </div>
       </div>
 
+      <!-- Scrapers tab -->
+      <div class="columns" v-if="activeTab == 6">
+        <div class="column">
+          <section>
+            <b-field :label="$t('User Agent')" label-position="on-border">
+              <b-input v-model="scraperUserAgent" :placeholder="$t('Custom User Agent for scrapers (default: Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0)')"></b-input>
+            </b-field>
+            <b-field>
+              <b-button type="is-primary" @click="save">Save</b-button>
+            </b-field>
+          </section>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -482,6 +497,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsAdvanced.advanced.scraperProxy = value
+      }
+    },
+    scraperUserAgent: {
+      get () {
+        return this.$store.state.optionsAdvanced.advanced.scraperUserAgent
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.scraperUserAgent = value
       }
     },
     stashApiKey: {

@@ -58,6 +58,7 @@ type ObjectConfig struct {
 		ShowSceneSearchField         bool      `default:"false" json:"showSceneSearchField"`
 		StashApiKey                  string    `default:"" json:"stashApiKey"`
 		ScraperProxy                 string    `default:"" json:"scraperProxy"`
+		ScraperUserAgent             string    `default:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36" json:"scraperUserAgent"`
 		ScrapeActorAfterScene        bool      `default:"true" json:"scrapeActorAfterScene"`
 		UseImperialEntry             bool      `default:"false" json:"useImperialEntry"`
 		ProgressTimeInterval         int       `default:"15" json:"progressTimeInterval"`

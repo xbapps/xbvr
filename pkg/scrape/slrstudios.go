@@ -109,7 +109,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 		// Fetch scene data from API
 		req := resty.New().R().
-			SetHeader("User-Agent", UserAgent).
+			SetHeader("User-Agent", config.Config.Advanced.ScraperUserAgent).
 			SetHeader("Client-Type", "web")
 
 		reqconfig := GetCoreDomain(apiURL) + "-scraper"
@@ -407,7 +407,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			apiURL := "https://api.sexlikereal.com/v3/scenes?studios=" + studioCode + "&perPage=" + strconv.Itoa(perPage) + "&sort=mostRecent&page=" + strconv.Itoa(page)
 
 			req := resty.New().R().
-				SetHeader("User-Agent", UserAgent).
+				SetHeader("User-Agent", config.Config.Advanced.ScraperUserAgent).
 				SetHeader("Client-Type", "web")
 
 			reqconfig := GetCoreDomain(apiURL) + "-scraper"

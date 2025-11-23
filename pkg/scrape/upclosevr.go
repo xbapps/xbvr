@@ -11,6 +11,7 @@ import (
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -48,7 +49,7 @@ func UpCloseVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out c
 				resp, err := client.R().
 					SetHeader("Origin", "https://www.upclosevr.com").
 					SetHeader("Referer", "https://www.upclosevr.com/").
-					SetHeader("User-Agent", UserAgent).
+					SetHeader("User-Agent", config.Config.Advanced.ScraperUserAgent).
 					SetHeader("x-algolia-api-key", apiKey[1]).
 					SetHeader("x-algolia-application-id", applicationID[1]).
 					SetBody(payload).
