@@ -10,6 +10,7 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -23,7 +24,7 @@ func FuckPassVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 	siteCollector := createCollector("www.fuckpassvr.com")
 
 	client := resty.New()
-	client.SetHeader("User-Agent", UserAgent)
+	client.SetHeader("User-Agent", config.Config.Advanced.ScraperUserAgent)
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}

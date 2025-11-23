@@ -928,7 +928,7 @@ func Migrate() {
 						queryParams := "page=1&type=videos&sort=latest&show_custom_video=1&bonus-video=1&limit=1000"
 						url := fmt.Sprintf("https://content.%s.com/api/content/v1/videos?%s", strings.ToLower(site), queryParams)
 
-						r, err := resty.New().R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
+						r, err := resty.New().R().SetHeader("User-Agent", config.Config.Advanced.ScraperUserAgent).Get(url)
 						if err != nil {
 							return "", err
 						}
@@ -1031,7 +1031,7 @@ func Migrate() {
 						mapping = map[string]string{}
 						queryParams := "page=1&type=videos&sort=latest&show_custom_video=1&bonus-video=1&limit=1000"
 						url := fmt.Sprintf("https://content.%s.com/api/content/v1/videos?%s", strings.ToLower(site), queryParams)
-						r, err := resty.New().R().SetHeader("User-Agent", scrape.UserAgent).Get(url)
+						r, err := resty.New().R().SetHeader("User-Agent", config.Config.Advanced.ScraperUserAgent).Get(url)
 						if err != nil {
 							return "", err
 						}

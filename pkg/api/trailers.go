@@ -13,6 +13,7 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/tidwall/gjson"
 
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
 )
@@ -98,7 +99,7 @@ func LoadDeovrScene(scrapeParams string) DeoScene {
 }
 
 func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
-	c := colly.NewCollector(colly.UserAgent(scrape.UserAgent))
+	c := colly.NewCollector(colly.UserAgent(config.Config.Advanced.ScraperUserAgent))
 	var params models.TrailerScrape
 	json.Unmarshal([]byte(scrapeParams), &params)
 	if params.KVHttpConfig == "" {
@@ -141,7 +142,7 @@ func ScrapeHtml(scrapeParams string) models.VideoSourceResponse {
 }
 
 func ScrapeJson(scrapeParams string) models.VideoSourceResponse {
-	c := colly.NewCollector(colly.UserAgent(scrape.UserAgent))
+	c := colly.NewCollector(colly.UserAgent(config.Config.Advanced.ScraperUserAgent))
 	var params models.TrailerScrape
 	json.Unmarshal([]byte(scrapeParams), &params)
 	if params.KVHttpConfig == "" {

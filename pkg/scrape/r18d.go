@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -18,7 +19,7 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 		sc.SceneType = "VR"
 
 		req := resty.New().R()
-		req.SetHeader("User-Agent", UserAgent)
+		req.SetHeader("User-Agent", config.Config.Advanced.ScraperUserAgent)
 		res := getByContentId(req, v)
 
 		if res.StatusCode() == 404 {
