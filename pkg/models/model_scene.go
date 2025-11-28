@@ -488,8 +488,9 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		// Parse timestamps JSON array
 		var timestamps []map[string]interface{}
 		if err := json.Unmarshal([]byte(ext.Timestamps), &timestamps); err == nil {
-			// Clear existing cuepoints for this scene
-			db.Where("scene_id = ?", o.ID).Delete(&SceneCuepoint{})
+			// Clear existing cuepoints for this scene where the track is null
+			// 	cuepoints where there is a non-null track have probably come from manual entry in heresphere
+			db.Where("scene_id = ? and track is null", o.ID).Delete(&SceneCuepoint{})
 
 			// Process each timestamp and create cuepoint
 			for _, ts := range timestamps {
