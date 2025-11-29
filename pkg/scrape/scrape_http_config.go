@@ -93,11 +93,11 @@ func SaveScrapeHttpConfig(kvKey string, config ScrapeHttpConfig) {
 func GetAllScrapeHttpConfigs() []ScrapeHttpKeyAndConfig {
 	db, _ := models.GetCommonDB()
 
-	c := ScrapeHttpConfig{}
 	configList := []ScrapeHttpKeyAndConfig{}
 	var kvs []models.KV
 	db.Where("(`value` like '%headers%' and `value` like '%cookies%') or (`key` like '%-scraper' and `key` like '%-trailers')").Find(&kvs)
 	for _, kv := range kvs {
+		c := ScrapeHttpConfig{}
 		json.Unmarshal([]byte(kv.Value), &c)
 		configList = append(configList, ScrapeHttpKeyAndConfig{kv.Key, c})
 	}
