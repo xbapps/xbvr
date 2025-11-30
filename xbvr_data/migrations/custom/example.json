@@ -1,0 +1,16 @@
+{
+	"comment":[
+		"You can find the existing scene using either oldId to lookup the old scene_id or oldUrl to find using the old scene_url.",
+		"You can specify a newId for the new scene_id and and newUrl to update the scene_url",
+		"If you do not specify a newId, just the sceneUrl will be updated",
+        "Set flag_scene_for_rescrape to true to flag scenes to be rescraped next time scrappers are run, this is useful to refresh other field values, eg images, trailers, etc",
+        "If you you are overwriting a standard mapping file, leave custom_mappings set to false"
+	],
+  "custom_mappings": true,
+  "flag_scene_for_rescrape": true,
+  "processed": true,
+  "mappings": [
+
+	{ "oldUrl": "https://test.com/old url/", "newId": "test-5764b145-fc67-50df-ae01-fcce3f344834", "newUrl": "https://newsite/new_scene"}
+  ]
+}

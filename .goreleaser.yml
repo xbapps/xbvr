@@ -97,6 +97,9 @@ dockers:
   -
     use: buildx
     dockerfile: Dockerfile
+    extra_files:
+      - xbvr_data
+      - README.md
     goos: linux
     goarch: amd64
     image_templates:
@@ -112,6 +115,9 @@ dockers:
   -
     use: buildx
     dockerfile: Dockerfile
+    extra_files:
+      - xbvr_data
+      - README.md
     goos: linux
     goarch: arm64
     image_templates:
@@ -127,6 +133,9 @@ dockers:
   -
     use: buildx
     dockerfile: Dockerfile
+    extra_files:
+      - xbvr_data
+      - README.md
     goos: linux
     goarch: arm
     goarm: 7
@@ -163,12 +172,18 @@ archives:
       {{ .ProjectName }}_{{ .Version }}_Linux_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else }}{{ .Arch }}{{ end }}
+  files:
+    - xbvr_data/**
+    - README.md
 - id: archive-win
   builds:
     - xbvr-windows
   format: zip
   name_template: >-
       {{ .ProjectName }}_{{ .Version }}_Windows_{{ .Arch }}
+  files:
+    - xbvr_data/**
+    - README.md
 - id: archive-mac
   builds:
     - xbvr-mac-intel
@@ -179,6 +194,9 @@ archives:
       {{- if eq .Arch "amd64" }}intel
       {{- else if eq .Arch "arm64" }}m1
       {{- else }}{{ .Arch }}{{ end }}
+  files:
+    - xbvr_data/**
+    - README.md
 
 #  files:
 #    - XBVR.app/Contents/Resources/XBVR.icns

@@ -67,17 +67,7 @@ export default {
     migrationPhase() {
       if (!this.migrationState.message) return null
 
-      // Check if reindexing
-      if (this.migrationState.message.toLowerCase().includes('reindex')) {
-        return 'Reindexing scenes'
-      }
-
-      // Check if migrating scenes
-      if (this.migrationState.message.toLowerCase().includes('scene')) {
-        return 'Migrating scene IDs'
-      }
-
-      return null
+      return this.migrationState.message
     },
     showETA() {
       // Show ETA for all progress including reindexing

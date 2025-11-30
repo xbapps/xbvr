@@ -3,6 +3,7 @@ package common
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -148,4 +149,88 @@ func getPath(commandLinePath string, environmentName string, directoryName strin
 		return os.Getenv(environmentName)
 	}
 	return filepath.Join(AppDir, directoryName)
+}
+
+func CopyXbvrData() {
+	exePath, err := os.Executable()
+	if err != nil {
+		Log.Warnf("Error setting up xbvr_data %s", err)
+		return
+	}
+	exeDir := filepath.Dir(exePath)
+
+	sourceDir := filepath.Join(exeDir, "xbvr_data") // directory next to executable
+	destDir := filepath.Join(AppDir, "xbvr_data")
+
+	if sourceDir == destDir {
+		// a normal install your xbvr executable and xbvr_data are installed seperate from your appdir
+		//		if they are they same (eg a development environment) you may need to manually update your xbvr_data directory
+		_, err := os.Stat(sourceDir)
+		if err != nil {
+			// Warning if xbvr_data doesn't exist
+			Log.Warnf("Warning: data from xbvr_data is missing, setup manually if required.")
+		} else {
+			// Warning if xbvr_data exists, but it could be old and needs to be updated
+			Log.Warnf("Not updating xbvr_data, your xbvr install location is the same as your Xbvr data directory, update xbvr_data manually if required.")
+		}
+		return
+	}
+	if err := CopyDirSkipExisting(sourceDir, destDir); err != nil {
+		Log.Warnf("Error setting up xbvr_data %s", err)
+		return
+	}
+}
+func CopyDirSkipExisting(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Compute the relative path from src → path
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		targetPath := filepath.Join(dst, rel)
+
+		// If it's a directory, ensure it exists
+		if info.IsDir() {
+			return os.MkdirAll(targetPath, 0755)
+		}
+
+		destInfo, err := os.Stat(targetPath)
+		if err == nil {
+			// File exists → only copy if source is newer
+			if !info.ModTime().After(destInfo.ModTime()) {
+				return nil // skip
+			}
+		}
+
+		// Copy file
+		return copyFile(path, targetPath)
+	})
+}
+
+func copyFile(src, dst string) error {
+	Log.Infof("Copying Xbvr data: %s to %s", src, dst)
+	// Ensure parent directory exists
+	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+		return err
+	}
+
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	return err
 }
