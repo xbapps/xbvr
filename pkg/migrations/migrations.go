@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -52,11 +53,6 @@ func (i *RequestSceneList) ToJSON() string {
 		return ""
 	}
 	return string(b)
-}
-
-// getVRPornSlugToIDMap returns the hardcoded slug-to-ID mapping
-func getVRPornSlugToIDMap() (map[string]string, error) {
-	return getVRPornSlugToID(), nil
 }
 
 func Migrate() {
@@ -2353,60 +2349,32 @@ func Migrate() {
 			ID: "0086-update-vrporn-ids",
 			Migrate: func(tx *gorm.DB) error {
 				common.Log.Info("Running migration 0086-update-vrporn-ids to convert VRPorn Scene Ids, this may take a while, check for completion message")
-
-				// Load the hardcoded slug-to-ID mapping
-				slugToID, err := getVRPornSlugToIDMap()
-				if err != nil {
-					common.Log.Errorf("Migration 0086-update-vrporn-ids failed to load slug-to-ID mapping: %v", err)
-					return err
+				var customConverter = func(scene *models.Scene) {
+					slug := path.Base(scene.SceneURL)
+					params := models.TrailerScrape{SceneUrl: "https://vrporn.com/proxy/api/content/v1/post/" + slug}
+					strParams, _ := json.Marshal(params)
+					scene.TrailerType = "vrporn"
+					scene.TrailerSource = string(strParams)
 				}
-				common.Log.Infof("Migration 0086-update-vrporn-ids loaded %d slug-to-ID mappings", len(slugToID))
+				// var customSceneLookup = func(url string) models.Scene {
+				// 	var scene models.Scene
+				// 	scene.GetIfExistURL("https://vrporn.com" + url)
+				// 	return scene
+				// }
 
 				var scenes []models.Scene
-				var deleteSceneList []models.Scene
-				err = tx.Where("scene_id like 'vrporn-%'").Find(&scenes).Error
+				err := tx.Where("scene_id like 'vrporn-%'").Find(&scenes).Error
 				if err != nil {
 					return err
 				}
-				reindexRequired := false
-				for cnt, scene := range scenes {
-					// check if the scene has the old id, ie vrporn-9999999, new id has a guid eg vrporn-dd46fb64-8739-11f0-bcbc-17646356a97f
-					if strings.Count(scene.SceneID, "-") == 1 {
-						slug := path.Base(scene.SceneURL)
+				if len(scenes) == 0 {
+					return nil
+				}
+				err = RenameSceneIdsFromFile(tx, 1, "0086-update-vrporn-ids", "0086-update-vrporn-ids.json", scenes, false, customConverter, nil)
+				if err != nil {
+					return err
+				}
 
-						// Look up the new ID from the hardcoded mapping
-						newID, found := slugToID["/"+slug+"/"]
-						if !found {
-							common.Log.Infof("VRPorn %s (%s) - site deleted this scene", scene.SceneID, slug)
-						} else {
-							sceneID := "vrporn-" + newID
-							if scene.SceneID != sceneID {
-								deleteSceneList = append(deleteSceneList, scene)
-								params := models.TrailerScrape{SceneUrl: "https://vrporn.com/proxy/api/content/v1/post/" + slug}
-								strParams, _ := json.Marshal(params)
-								scene.TrailerType = "vrporn"
-								scene.TrailerSource = string(strParams)
-								scene.Save()
-								MigrationRenameSceneId(tx, scene, sceneID, 1)
-								reindexRequired = true
-							}
-						}
-					}
-					if cnt%10 == 0 {
-						msg := fmt.Sprintf("Migration 0086-update-vrporn-ids has migrated %v scenes of %v", cnt+1, len(scenes))
-						config.UpdateMigrationStatus("0086-update-vrporn-ids", cnt+1, len(scenes), msg)
-						// Only log every 100 to reduce console spam
-						if cnt%100 == 0 {
-							common.Log.WithField("task", "migration").Infof(msg)
-						}
-					}
-				}
-				if reindexRequired {
-					config.UpdateMigrationStatus("0086-update-vrporn-ids", len(scenes), len(scenes), "Reindexing scenes...")
-					common.Log.Info("Migration 0086-update-vrporn-ids reindexing scenes...")
-					tasks.DeleteIndexScenes(&deleteSceneList) // remove the old scene id entries
-					tasks.SearchIndex()
-				}
 				common.Log.Info("Migration 0086-update-vrporn-ids has completed")
 				return nil
 			},
@@ -2453,12 +2421,184 @@ func Migrate() {
 	db.Close()
 }
 
-func MigrationRenameSceneId(tx *gorm.DB, scene models.Scene, newSceneID string, version int) error {
+func ProcessCustomSceneRemappingFiles() {
+	dirName := filepath.Join(common.AppDir, "xbvr_data", "migrations", "custom")
+	entries, err := os.ReadDir(dirName)
+	if err != nil {
+		return
+	}
+
+	db, _ := models.GetDB()
+	for _, e := range entries {
+		fName := filepath.Join(common.AppDir, "xbvr_data", "migrations", "custom", e.Name())
+		b, err := os.ReadFile(fName)
+		if err == nil {
+			jsonData := string(b)
+			var data map[string]interface{}
+			err := json.Unmarshal(b, &data)
+			if err == nil {
+				isCustom, _ := data["custom_mappings"].(bool)
+				if isCustom {
+					processed, _ := data["processed"].(bool)
+					if !processed {
+						err = RenameSceneIdsFromFile(db, 1, "Custom Scene Mapping", e.Name(), nil, gjson.Get(jsonData, "flag_scene_for_rescrape").Bool(), nil, nil)
+						if err == nil {
+							data["processed"] = true
+							b, err := json.MarshalIndent(data, "", "  ")
+							if err == nil {
+								os.WriteFile(fName, b, 0644)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+func RenameSceneIdsFromFile(tx *gorm.DB, version int, migration string, filename string, scenes []models.Scene, needs_update bool, customConverter func(*models.Scene), sceneLookup func(string) models.Scene) error {
+	fName := filepath.Join(common.AppDir, "xbvr_data", "migrations", "custom", filename)
+
+	// if a custom version of the file exists, use that one first
+	if _, err := os.Stat(fName); os.IsNotExist(err) {
+		fName = filepath.Join(common.AppDir, "xbvr_data", "migrations", "release", filename)
+		if _, err := os.Stat(fName); os.IsNotExist(err) {
+			return errors.New("Mapping file " + filename + " not found")
+		}
+	}
+	reindexRequired := false
+	var deleteSceneList []models.Scene
+
+	b, err := os.ReadFile(fName)
+	if err != nil {
+		return err
+	}
+	mappings := gjson.Get(string(b), "mappings")
+	if !mappings.Exists() {
+		return errors.New("No mappings found")
+	}
+	totalRecords := len(mappings.Array())
+	common.Log.Infof("Migrating Scene Ids for %s - %d mappings", migration, totalRecords)
+	lastProgressUpdate := time.Now()
+	sceneCnt := len(mappings.Array())
+
+	type MappingFields struct {
+		oldId  string
+		oldUrl string
+		newId  string
+		newUrl string
+	}
+
+	var mappingsMap map[string]MappingFields
+	mappingsMap = make(map[string]MappingFields)
+
+	if scenes != nil {
+		// if a list of scenes was provided loop through them and lookup the mapping
+
+		// create a map to hold mapping data from the file
+		for _, sceneMapping := range mappings.Array() {
+			oldId := sceneMapping.Get("oldId").String()
+			oldUrl := sceneMapping.Get("oldUrl").String()
+			newId := sceneMapping.Get("newId").String()
+			newUrl := sceneMapping.Get("newUrl").String()
+			if oldId != "" {
+				mappingsMap[oldId] = MappingFields{oldId, oldUrl, newId, newUrl}
+			} else {
+				mappingsMap[oldUrl] = MappingFields{oldId, oldUrl, newId, newUrl}
+			}
+		}
+		sceneCnt = len(scenes)
+		for cnt, scene := range scenes {
+			mapping, exists := mappingsMap[scene.SceneID]
+			if !exists {
+				mapping = mappingsMap[scene.SceneURL]
+			}
+			MigrationRenameSceneId(tx, scene, mapping.newId, mapping.newUrl, version, needs_update, customConverter)
+			deleteSceneList = append(deleteSceneList, scene)
+			reindexRequired = true
+
+			if time.Since(lastProgressUpdate) > time.Duration(15*time.Second) {
+				msg := fmt.Sprintf("Migration %s has migrated %v scenes of %v", migration, cnt, sceneCnt)
+				config.UpdateMigrationStatus(migration, cnt+1, sceneCnt, msg)
+				lastProgressUpdate = time.Now()
+			}
+		}
+	}
+	if scenes == nil {
+		// if a list of scenes was NOT provided, loop through mappings and find the scene
+		for cnt, sceneMapping := range mappings.Array() {
+			var scene models.Scene
+			var err error
+			lookUpId := sceneMapping.Get("oldId").String()
+			lookUpUrl := sceneMapping.Get("oldUrl").String()
+			// check if we should use a custom code to lookup the scene
+			if sceneLookup == nil {
+				// use standard lookup for the scene
+				if lookUpId == "" {
+					err = scene.GetIfExistURL(lookUpUrl)
+				} else {
+					err = scene.GetIfExist(lookUpId)
+				}
+			} else {
+				// use custom lookup for the scene
+				if lookUpId == "" {
+					scene = sceneLookup(lookUpUrl)
+				} else {
+					scene = sceneLookup(lookUpId)
+				}
+			}
+
+			if err == nil && scene.ID != 0 {
+				MigrationRenameSceneId(tx, scene, sceneMapping.Get("newId").String(), sceneMapping.Get("newUrl").String(), version, needs_update, customConverter)
+				deleteSceneList = append(deleteSceneList, scene)
+				reindexRequired = true
+			}
+			if time.Since(lastProgressUpdate) > time.Duration(15*time.Second) {
+				msg := fmt.Sprintf("Migration %s has migrated %v scenes of %v", migration, cnt, sceneCnt)
+				config.UpdateMigrationStatus(migration, cnt+1, sceneCnt, msg)
+				lastProgressUpdate = time.Now()
+			}
+		}
+	}
+	if reindexRequired {
+		config.UpdateMigrationStatus(migration, sceneCnt, sceneCnt, "Reindexing scenes...")
+		common.Log.Infof("Migration %s reindexing scenes...", migration)
+		tasks.DeleteIndexScenes(&deleteSceneList) // remove the old scene id entries
+		tasks.SearchIndex()
+	}
+	return nil
+}
+
+func MigrationRenameSceneId(tx *gorm.DB, scene models.Scene, newSceneID string, newSceneUrl string, version int, needs_update bool, customConverter func(*models.Scene)) error {
 	// Common function to rename a scene id, if database changes require this function to do additional processing, use a new version
 	// to maintain backwards compatibility
 
-	if scene.SceneID == newSceneID {
+	// Use customConverter to pass a function to make additional changes to the scene specific to your migration,
+	// 	 eg trailers or to flag scenes to be rescraped, optional can be nil
+
+	// check we need to change something
+	if newSceneID == "" && newSceneUrl == "" {
 		return nil
+	}
+	if newSceneID != "" && scene.SceneID == newSceneID {
+		return nil
+	}
+	if newSceneID == "" && newSceneUrl != "" && scene.SceneURL == newSceneUrl {
+		return nil
+	}
+
+	scene.NeedsUpdate = needs_update
+	if newSceneID == "" && newSceneUrl != "" {
+		// we just want a new url
+		scene.SceneURL = newSceneUrl
+		scene.Save()
+		return nil
+	}
+
+	// check the new scene id isn't already used
+	var newscene models.Scene
+	err := tx.Model(&models.Scene{}).Where("scene_id = ?", newSceneID).First(&newscene).Error
+	if err == nil {
+		return errors.New("Scene already exists for " + newSceneID)
 	}
 	switch version {
 	case 1:
@@ -2485,6 +2625,12 @@ func MigrationRenameSceneId(tx *gorm.DB, scene models.Scene, newSceneID string, 
 
 		// update the scene itself
 		scene.SceneID = newSceneID
+		if newSceneUrl != "" {
+			scene.SceneURL = newSceneUrl
+		}
+		if customConverter != nil {
+			customConverter(&scene)
+		}
 		err = tx.Save(&scene).Error
 		if err != nil {
 			return err
