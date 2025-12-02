@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	auth "github.com/abbot/go-http-auth"
@@ -141,6 +142,8 @@ func StartServer(version, commit, branch, date string) {
 	// If the client request has a cache-control header (such as 'no-cache'), pass them
 	// onto the imageproxy so that this can be respected.
 	p.PassRequestHeaders = append(p.PassRequestHeaders, "Cache-Control")
+	u, _ := url.Parse("http://127.0.0.1:" + strconv.Itoa(config.Config.Server.Port))
+	p.DefaultBaseURL = u
 	r.PathPrefix("/img/").Handler(ForceShortCacheHandler(http.StripPrefix("/img", p)))
 	hmp := NewHeatmapThumbnailProxy(p, diskCache(filepath.Join(common.AppDir, "heatmapthumbnailproxy")))
 	r.PathPrefix("/imghm/").Handler(http.StripPrefix("/imghm", hmp))
