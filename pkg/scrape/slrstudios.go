@@ -401,9 +401,9 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 		page := 1
 		perPage := 36
-		hasMore := true
+		totalPages := 0 // Add this
 
-		for hasMore && (!limitScraping || page == 1) {
+		for (!limitScraping || page == 1) && (totalPages == 0 || page <= totalPages) {
 			apiURL := "https://api.sexlikereal.com/v3/scenes?studios=" + studioCode + "&perPage=" + strconv.Itoa(perPage) + "&sort=mostRecent&page=" + strconv.Itoa(page)
 
 			req := resty.New().R().
@@ -429,6 +429,12 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 			apiData := resp.String()
 			scenes := gjson.Get(apiData, "data")
+
+			// Get total pages from metadata
+			if totalPages == 0 {
+				totalPages = int(gjson.Get(apiData, "meta.pagination.totalPages").Int())
+				log.Infoln("Total pages for studio", studioCode, ":", totalPages)
+			}
 
 			if !scenes.Exists() || !scenes.IsArray() {
 				break
@@ -521,12 +527,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 				return true
 			})
 
-			// Check if there are more pages
-			if sceneCount < perPage {
-				hasMore = false
-			} else {
-				page++
-			}
+			page++
 		}
 	}
 
