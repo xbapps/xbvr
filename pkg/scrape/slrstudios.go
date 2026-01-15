@@ -14,6 +14,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -114,7 +115,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 		reqconfig := GetCoreDomain(apiURL) + "-scraper"
 		log.Debugf("Using Header/Cookies from %s", reqconfig)
-		SetupHtmlRequest(reqconfig, req.RawRequest)
+		SetupRestyRequest(reqconfig, req)
 
 		resp, err := req.
 			Get(apiURL)
@@ -216,6 +217,8 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		var FB360 string
 		alphA := "false"
 
+		flatVideo := false
+		stereo := false
 		categories := sceneData.Get("categories")
 		if categories.Exists() {
 			categories.ForEach(func(key, value gjson.Result) bool {
@@ -233,9 +236,19 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 					if tagName == "Passthrough" || tagName == "Passthrough hack" || tagName == "Passthrough AR" || tagName == "Passthrough AI" {
 						alphA = "PT"
 					}
+					if strings.ToLower(tagName) == "immersive flat" {
+						flatVideo = true
+						sc.SceneType = "2D"
+					}
+					if strings.ToLower(tagName) == "stereo ai (3d)" {
+						stereo = true
+					}
 				}
 				return true
 			})
+		}
+		if stereo {
+			sc.SceneType = "VR"
 		}
 
 		// Process timestamps from API and save as JSON array
@@ -310,6 +323,12 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
 
+		sc.TrailerType = "load_json"
+		jsonRequest := models.TrailerScrape{SceneUrl: "https://api.sexlikereal.com/v3/scenes/" + sc.SiteID + "/files", HtmlElement: "", ExtractRegex: "",
+			RecordPath: "data.encodings.1.videoSources", ContentPath: "url", EncodingPath: "resolution", QualityPath: "resolution", ContentBaseUrl: ""}
+		jsonStr, _ := json.Marshal(jsonRequest)
+		sc.TrailerSrc = string(jsonStr)
+
 		// Passthrough/ChromaKey data
 		if alphA == "PT" {
 			if sceneData.Get("passthrough").Exists() {
@@ -354,7 +373,22 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			}
 		}
 
-		out <- sc
+		if common.IncludeFlat == "" {
+			out <- sc
+		}
+		switch common.IncludeFlat {
+		case "include":
+			if flatVideo {
+				out <- sc
+			}
+		case "exclude":
+			if !flatVideo {
+				out <- sc
+			}
+
+		default:
+			out <- sc
+		}
 	}
 
 	// Function to extract studio code from URL
