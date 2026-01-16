@@ -144,6 +144,7 @@ func (i ActorResource) getFilters(req *restful.Request, resp *restful.Response) 
 	for _, r := range results {
 		outAttributes = append(outAttributes, "Cup Size "+r.Result)
 	}
+	outAttributes = append(outAttributes, "No Cup Size")
 
 	db.Table("actors").
 		Where("IFNULL(hair_color,'') <> ''").
