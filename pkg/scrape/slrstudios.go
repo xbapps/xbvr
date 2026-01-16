@@ -14,7 +14,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
-	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -300,7 +299,6 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		var FB360 string
 		alphA := "false"
 
-		flatVideo := false
 		stereo := false
 		categories := sceneData.Get("categories")
 		if categories.Exists() {
@@ -328,7 +326,6 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 						alphA = "PT"
 					}
 					if strings.ToLower(tagName) == "immersive flat" {
-						flatVideo = true
 						sc.SceneType = "2D"
 					}
 					if strings.ToLower(tagName) == "stereo ai (3d)" {
@@ -492,22 +489,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			}
 		}
 
-		if common.IncludeFlat == "" {
-			out <- sc
-		}
-		switch common.IncludeFlat {
-		case "include":
-			if flatVideo {
-				out <- sc
-			}
-		case "exclude":
-			if !flatVideo {
-				out <- sc
-			}
-
-		default:
-			out <- sc
-		}
+		out <- sc
 	}
 
 	// Function to extract studio code from URL
