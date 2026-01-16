@@ -6,11 +6,26 @@
         <h3 class="title">{{$t('Scrape scenes from studios')}}</h3>
       </div>
       <div class="column buttons" align="right">
+        <b-dropdown aria-role="list" position="is-bottom-left">
+          <template slot="trigger">
+            <b-button icon-left="cog" />
+          </template>
+          <b-dropdown-item aria-role="listitem" custom>
+            <div class="field">
+              <b-checkbox v-model="$store.state.optionsAdvanced.advanced.autoLimitScraping" @input="saveAdvancedSettings">
+                {{$t('Auto Limit Scraping')}}
+              </b-checkbox>
+            </div>
+          </b-dropdown-item>
+        </b-dropdown>
+        <a class="button" :class="[$store.state.optionsWeb.web.showAllScrapers ? 'is-info' : '']" v-on:click="toggleEnabledFilter">
+          {{$store.state.optionsWeb.web.showAllScrapers ? $t('Show all scrapers') : $t('Show enabled only')}}
+        </a>
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
     </div>
     <b-table :data="scraperList" ref="scraperTable">
-      <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="60" sortable>
+      <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="80" sortable>
           <span><b-switch v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
       </b-table-column>
       <b-table-column field="icon" width="50" v-slot="props" cell-class="narrow">
@@ -24,7 +39,7 @@
       </b-table-column>
       <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">
         <b-tooltip class="is-warning" :active="props.row.has_scraper == false" :label="$t('Scraper does not exist')"  :delay="250" >
-          <a @click="navigateToStudio(props.row.sitename)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
+          <a @click="navigateToStudio(props.row.name)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
         </b-tooltip>
       </b-table-column>
       <b-table-column field="source" :label="$t('Source')" sortable searchable v-slot="props">
@@ -33,8 +48,8 @@
       <b-table-column field="last_update" :label="$t('Last scrape')" sortable v-slot="props">
             <span :class="[runningScrapers.includes(props.row.id) ? 'invisible' : '']">
               <span v-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
-                {{formatDistanceToNow(parseISO(props.row.last_update))}} ago</span>
-              <span v-else>{{$t('Never scraped')}}</span>
+                {{formatCompactTime(props.row.last_update)}}</span>
+              <span v-else>-</span>
             </span>
             <span :class="[runningScrapers.includes(props.row.id) ? '' : 'invisible']">
               <span class="pulsate is-info">{{$t('Scraping now...')}}</span>
@@ -54,6 +69,11 @@
         <b-tooltip class="is-info" :label="$t('Enables scraping Stashdb for Actors')" :delay="250" >
           <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.scrape_stash" @input="$store.dispatch('optionsSites/toggleScrapeStash', {id: props.row.id})"/></span>
         </b-tooltip>
+      </b-table-column>
+      <b-table-column field="scene_count" :label="$t('Scenes')" v-slot="props" width="40" sortable numeric>
+        <a @click="navigateToStudio(props.row.name)" style="cursor: pointer;">
+          <span class="tag is-info is-light is-medium"><strong>{{ props.row.scene_count }}</strong></span>
+        </a>
       </b-table-column>
       <b-table-column field="options" v-slot="props" width="30">
         <div class="menu">
@@ -162,6 +182,8 @@ export default {
   },
   mounted () {
     this.$store.dispatch('optionsSites/load')
+    this.$store.dispatch('optionsAdvanced/load')
+    this.$store.dispatch('optionsWeb/load')
   },
   methods: {
     getImageURL (u) {
@@ -266,6 +288,7 @@ export default {
       this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`)
     },
     deleteScenes (site) {
+      const self = this
       this.$buefy.dialog.confirm({
         title: this.$t('Delete scraped scenes'),
         message: `You're about to delete scraped scenes for <strong>${site.name}</strong>.`,
@@ -275,11 +298,15 @@ export default {
           if (site.master_site_id==""){
             ky.post('/api/options/scraper/delete-scenes', {
               json: { scraper_id: site.id }
+            }).then(() => {
+              self.$store.dispatch('optionsSites/load')
             })
           } else {
             const external_source = 'alternate scene ' + site.id
             ky.delete(`/api/extref/delete_extref_source`, {
               json: {external_source: external_source}
+            }).then(() => {
+              self.$store.dispatch('optionsSites/load')
             });
           }
         }
@@ -337,14 +364,47 @@ export default {
       return  this.scraperList.find(element => element.id === siteId).name;
     },
     navigateToStudio(studioName) {
+      // Handle different scraper types:
+      // - Built-in scrapers (e.g., "AstroDomina (SLR)"): scenes use just "AstroDomina"
+      // - Custom scrapers (e.g., "LethalhardcoreVR (Custom SLR)"): scenes use "LethalhardcoreVR (SLR)"
+      let siteName = studioName
+
+      // Handle custom scrapers from any aggregator
+      const customMatch = siteName.match(/^(.+) \(Custom ([A-Z]+)\)$/)
+      if (customMatch) {
+        // Custom scrapers: replace "(Custom XXX)" with "(XXX)"
+        siteName = customMatch[1] + ' (' + customMatch[2] + ')'
+      } else {
+        // Handle built-in scrapers with aggregator suffix
+        const builtinMatch = siteName.match(/^(.+) \(([A-Z]+)\)$/)
+        if (builtinMatch) {
+          // Built-in scrapers: remove aggregator suffix
+          siteName = builtinMatch[1]
+        }
+      }
+
       // Set the site filter and navigate to scenes page
-      this.$store.state.sceneList.filters.sites = [studioName]
+      this.$store.state.sceneList.filters.sites = [siteName]
       this.$store.state.sceneList.filters.tags = []
       this.$store.state.sceneList.filters.attributes = []
       this.$router.push({
         name: 'scenes',
         query: { q: this.$store.getters['sceneList/filterQueryParams'] }
       })
+    },
+    toggleEnabledFilter() {
+      this.$store.state.optionsWeb.web.showAllScrapers = !this.$store.state.optionsWeb.web.showAllScrapers
+      this.$store.dispatch('optionsWeb/save')
+    },
+    saveAdvancedSettings() {
+      this.$store.dispatch('optionsAdvanced/save')
+    },
+    formatCompactTime(isoString) {
+      const date = parseISO(isoString)
+      const month = date.getMonth() + 1
+      const day = date.getDate()
+      const year = date.getFullYear()
+      return `${month}/${day}/${year}`
     },
     parseISO,
     formatDistanceToNow
@@ -363,6 +423,12 @@ export default {
           items[i].source = m[2];
         }
       }
+
+      // Filter by enabled status if the filter is active
+      if (this.$store.state.optionsWeb.web.showAllScrapers) {
+        items = items.filter(item => item.is_enabled === true);
+      }
+
       return items;
     },
     items () {
@@ -380,6 +446,17 @@ export default {
   .running {
     opacity: 0.6;
     pointer-events: none;
+  }
+
+  .tag.is-medium {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    transition: background-color 0.2s ease;
+  }
+
+  a:hover .tag.is-medium {
+    background-color: #3273dc !important;
+    color: white !important;
   }
 
   .card {
@@ -430,5 +507,9 @@ export default {
   .content table td.narrow{
     padding-top: 5px;
     padding-bottom: 2px;
+  }
+
+  .content table th .icon {
+    display: none;
   }
 </style>

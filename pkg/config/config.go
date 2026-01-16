@@ -51,6 +51,7 @@ type ObjectConfig struct {
 		SceneCardScaleToFit  bool   `default:"true" json:"sceneCardScaleToFit"`
 		ActorCardAspectRatio string `default:"1:1" json:"actorCardAspectRatio"`
 		ActorCardScaleToFit  bool   `default:"true" json:"actorCardScaleToFit"`
+		ShowAllScrapers      bool   `default:"false" json:"showAllScrapers"`
 	} `json:"web"`
 	Advanced struct {
 		ShowInternalSceneId          bool      `default:"false" json:"showInternalSceneId"`
@@ -64,6 +65,7 @@ type ObjectConfig struct {
 		LinkScenesAfterSceneScraping bool      `default:"true" json:"linkScenesAfterSceneScraping"`
 		UseAltSrcInFileMatching      bool      `default:"true" json:"useAltSrcInFileMatching"`
 		UseAltSrcInScriptFilters     bool      `default:"true" json:"useAltSrcInScriptFilters"`
+		AutoLimitScraping            bool      `default:"true" json:"autoLimitScraping"`
 		IgnoreReleasedBefore         time.Time `json:"ignoreReleasedBefore"`
 	} `json:"advanced"`
 	Funscripts struct {

@@ -65,6 +65,7 @@ type RequestSaveOptionsWeb struct {
 	SceneCardScaleToFit  bool   `json:"sceneCardScaleToFit"`
 	ActorCardAspectRatio string `json:"actorCardAspectRatio"`
 	ActorCardScaleToFit  bool   `json:"actorCardScaleToFit"`
+	ShowAllScrapers      bool   `json:"showAllScrapers"`
 }
 
 type RequestSaveOptionsAdvanced struct {
@@ -78,6 +79,7 @@ type RequestSaveOptionsAdvanced struct {
 	LinkScenesAfterSceneScraping bool      `json:"linkScenesAfterSceneScraping"`
 	UseAltSrcInFileMatching      bool      `json:"useAltSrcInFileMatching"`
 	UseAltSrcInScriptFilters     bool      `json:"useAltSrcInScriptFilters"`
+	AutoLimitScraping            bool      `json:"autoLimitScraping"`
 	IgnoreReleasedBefore         time.Time `json:"ignoreReleasedBefore"`
 }
 
@@ -434,6 +436,10 @@ func (i ConfigResource) listSitesWithDB(req *restful.Request, resp *restful.Resp
 				sites[idx].HasScraper = true
 			}
 		}
+		// Get scene count for this site
+		var count int
+		db.Model(&models.Scene{}).Where("scraper_id = ?", site.ID).Count(&count)
+		sites[idx].SceneCount = count
 	}
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }
@@ -510,6 +516,7 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneCardScaleToFit = r.SceneCardScaleToFit
 	config.Config.Web.ActorCardAspectRatio = r.ActorCardAspectRatio
 	config.Config.Web.ActorCardScaleToFit = r.ActorCardScaleToFit
+	config.Config.Web.ShowAllScrapers = r.ShowAllScrapers
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -533,6 +540,7 @@ func (i ConfigResource) saveOptionsAdvanced(req *restful.Request, resp *restful.
 	config.Config.Advanced.LinkScenesAfterSceneScraping = r.LinkScenesAfterSceneScraping
 	config.Config.Advanced.UseAltSrcInFileMatching = r.UseAltSrcInFileMatching
 	config.Config.Advanced.UseAltSrcInScriptFilters = r.UseAltSrcInScriptFilters
+	config.Config.Advanced.AutoLimitScraping = r.AutoLimitScraping
 	config.Config.Advanced.IgnoreReleasedBefore = r.IgnoreReleasedBefore
 	config.SaveConfig()
 
@@ -757,6 +765,13 @@ func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Respons
 	}
 
 	db.Where("scraper_id = ?", r.ScraperId).Delete(&models.Scene{})
+
+	// Disable limit scraping when deleting scenes to allow full re-scrape
+	var site models.Site
+	if err := db.Where(&models.Site{ID: r.ScraperId}).First(&site).Error; err == nil {
+		site.LimitScraping = false
+		site.Save()
+	}
 }
 
 func (i ConfigResource) getState(req *restful.Request, resp *restful.Response) {

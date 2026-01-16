@@ -20,6 +20,7 @@ type Site struct {
 	MasterSiteID   string    `json:"master_site_id" xbvrbackup:"master_site_id"`
 	MatchingParams string    `json:"matching_params" gorm:"size:1000" xbvrbackup:"matching_params"`
 	ScrapeStash    bool      `json:"scrape_stash" xbvrbackup:"scrape_stash"`
+	SceneCount     int       `gorm:"-" json:"scene_count" xbvrbackup:"-"`
 }
 
 func (i *Site) Save() error {
