@@ -436,6 +436,10 @@ func (i ConfigResource) listSitesWithDB(req *restful.Request, resp *restful.Resp
 				sites[idx].HasScraper = true
 			}
 		}
+		// Get scene count for this site
+		var count int
+		db.Model(&models.Scene{}).Where("scraper_id = ?", site.ID).Count(&count)
+		sites[idx].SceneCount = count
 	}
 	resp.WriteHeaderAndEntity(http.StatusOK, sites)
 }

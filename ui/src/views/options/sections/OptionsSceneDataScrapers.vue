@@ -25,7 +25,7 @@
       </div>
     </div>
     <b-table :data="scraperList" ref="scraperTable">
-      <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="60" sortable>
+      <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="80" sortable>
           <span><b-switch v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
       </b-table-column>
       <b-table-column field="icon" width="50" v-slot="props" cell-class="narrow">
@@ -48,8 +48,8 @@
       <b-table-column field="last_update" :label="$t('Last scrape')" sortable v-slot="props">
             <span :class="[runningScrapers.includes(props.row.id) ? 'invisible' : '']">
               <span v-if="props.row.last_update !== '0001-01-01T00:00:00Z'">
-                {{formatDistanceToNow(parseISO(props.row.last_update))}} ago</span>
-              <span v-else>{{$t('Never scraped')}}</span>
+                {{formatCompactTime(props.row.last_update)}}</span>
+              <span v-else>-</span>
             </span>
             <span :class="[runningScrapers.includes(props.row.id) ? '' : 'invisible']">
               <span class="pulsate is-info">{{$t('Scraping now...')}}</span>
@@ -69,6 +69,11 @@
         <b-tooltip class="is-info" :label="$t('Enables scraping Stashdb for Actors')" :delay="250" >
           <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.scrape_stash" @input="$store.dispatch('optionsSites/toggleScrapeStash', {id: props.row.id})"/></span>
         </b-tooltip>
+      </b-table-column>
+      <b-table-column field="scene_count" :label="$t('Scenes')" v-slot="props" width="40" sortable numeric>
+        <a @click="navigateToStudio(props.row.name)" style="cursor: pointer;">
+          <span class="tag is-info is-light is-medium"><strong>{{ props.row.scene_count }}</strong></span>
+        </a>
       </b-table-column>
       <b-table-column field="options" v-slot="props" width="30">
         <div class="menu">
@@ -394,6 +399,13 @@ export default {
     saveAdvancedSettings() {
       this.$store.dispatch('optionsAdvanced/save')
     },
+    formatCompactTime(isoString) {
+      const date = parseISO(isoString)
+      const month = date.getMonth() + 1
+      const day = date.getDate()
+      const year = date.getFullYear()
+      return `${month}/${day}/${year}`
+    },
     parseISO,
     formatDistanceToNow
   },
@@ -434,6 +446,17 @@ export default {
   .running {
     opacity: 0.6;
     pointer-events: none;
+  }
+
+  .tag.is-medium {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    transition: background-color 0.2s ease;
+  }
+
+  a:hover .tag.is-medium {
+    background-color: #3273dc !important;
+    color: white !important;
   }
 
   .card {
@@ -484,5 +507,9 @@ export default {
   .content table td.narrow{
     padding-top: 5px;
     padding-bottom: 2px;
+  }
+
+  .content table th .icon {
+    display: none;
   }
 </style>
