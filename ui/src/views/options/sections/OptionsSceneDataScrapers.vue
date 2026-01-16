@@ -6,6 +6,9 @@
         <h3 class="title">{{$t('Scrape scenes from studios')}}</h3>
       </div>
       <div class="column buttons" align="right">
+        <a class="button" :class="[showEnabledOnly ? 'is-info' : '']" v-on:click="toggleEnabledFilter">
+          {{showEnabledOnly ? $t('Show all scrapers') : $t('Show enabled only')}}
+        </a>
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
     </div>
@@ -24,7 +27,7 @@
       </b-table-column>
       <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">
         <b-tooltip class="is-warning" :active="props.row.has_scraper == false" :label="$t('Scraper does not exist')"  :delay="250" >
-          <a @click="navigateToStudio(props.row.sitename)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
+          <a @click="navigateToStudio(props.row.name)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
         </b-tooltip>
       </b-table-column>
       <b-table-column field="source" :label="$t('Source')" sortable searchable v-slot="props">
@@ -158,6 +161,7 @@ export default {
       currentScraper: '',
       scraperwarning: '',
       scraperwarning2: '',
+      showEnabledOnly: false,
     }
   },
   mounted () {
@@ -337,14 +341,36 @@ export default {
       return  this.scraperList.find(element => element.id === siteId).name;
     },
     navigateToStudio(studioName) {
+      // Handle different scraper types:
+      // - Built-in scrapers (e.g., "AstroDomina (SLR)"): scenes use just "AstroDomina"
+      // - Custom scrapers (e.g., "LethalhardcoreVR (Custom SLR)"): scenes use "LethalhardcoreVR (SLR)"
+      let siteName = studioName
+
+      // Handle custom scrapers from any aggregator
+      const customMatch = siteName.match(/^(.+) \(Custom ([A-Z]+)\)$/)
+      if (customMatch) {
+        // Custom scrapers: replace "(Custom XXX)" with "(XXX)"
+        siteName = customMatch[1] + ' (' + customMatch[2] + ')'
+      } else {
+        // Handle built-in scrapers with aggregator suffix
+        const builtinMatch = siteName.match(/^(.+) \(([A-Z]+)\)$/)
+        if (builtinMatch) {
+          // Built-in scrapers: remove aggregator suffix
+          siteName = builtinMatch[1]
+        }
+      }
+
       // Set the site filter and navigate to scenes page
-      this.$store.state.sceneList.filters.sites = [studioName]
+      this.$store.state.sceneList.filters.sites = [siteName]
       this.$store.state.sceneList.filters.tags = []
       this.$store.state.sceneList.filters.attributes = []
       this.$router.push({
         name: 'scenes',
         query: { q: this.$store.getters['sceneList/filterQueryParams'] }
       })
+    },
+    toggleEnabledFilter() {
+      this.showEnabledOnly = !this.showEnabledOnly
     },
     parseISO,
     formatDistanceToNow
@@ -363,6 +389,12 @@ export default {
           items[i].source = m[2];
         }
       }
+
+      // Filter by enabled status if the filter is active
+      if (this.showEnabledOnly) {
+        items = items.filter(item => item.is_enabled === true);
+      }
+
       return items;
     },
     items () {
