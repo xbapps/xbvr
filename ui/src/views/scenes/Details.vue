@@ -872,6 +872,7 @@ watch:{
       } catch {
         return u
       }
+      return u
     },
     getIndicatorURL (idx) {
       if (this.images[idx] !== undefined) {
