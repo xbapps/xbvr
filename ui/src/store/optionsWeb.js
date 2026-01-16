@@ -24,6 +24,7 @@ const state = {
     sceneCardScaleToFit: true,
     actorCardAspectRatio: "1:1",
     actorCardScaleToFit: true,
+    showAllScrapers: false,
     updateCheck: true
   }
 }
@@ -51,12 +52,13 @@ const actions = {
         state.web.showScriptHeatmap = data.config.web.showScriptHeatmap
         state.web.showAllHeatmaps = data.config.web.showAllHeatmaps
         state.web.updateCheck = data.config.web.updateCheck
-        state.web.isAvailOpacity = data.config.web.isAvailOpacity 
+        state.web.isAvailOpacity = data.config.web.isAvailOpacity
         state.web.showOpenInNewWindow = data.config.web.showOpenInNewWindow
         state.web.sceneCardAspectRatio = data.config.web.sceneCardAspectRatio
         state.web.sceneCardScaleToFit = data.config.web.sceneCardScaleToFit
         state.web.actorCardAspectRatio = data.config.web.actorCardAspectRatio
         state.web.actorCardScaleToFit = data.config.web.actorCardScaleToFit
+        state.web.showAllScrapers = data.config.web.showAllScrapers
         state.loading = false
       })
   },
@@ -86,6 +88,7 @@ const actions = {
         state.web.sceneCardScaleToFit = data.sceneCardScaleToFit
         state.web.actorCardAspectRatio = data.actorCardAspectRatio
         state.web.actorCardScaleToFit = data.actorCardScaleToFit
+        state.web.showAllScrapers = data.showAllScrapers
         state.loading = false
       })
   }

@@ -13,13 +13,13 @@
           <b-dropdown-item aria-role="listitem" custom>
             <div class="field">
               <b-checkbox v-model="$store.state.optionsAdvanced.advanced.autoLimitScraping" @input="saveAdvancedSettings">
-                {{$t('Auto Enable Limit Scraping')}}
+                {{$t('Auto Limit Scraping')}}
               </b-checkbox>
             </div>
           </b-dropdown-item>
         </b-dropdown>
-        <a class="button" :class="[showEnabledOnly ? 'is-info' : '']" v-on:click="toggleEnabledFilter">
-          {{showEnabledOnly ? $t('Show all scrapers') : $t('Show enabled only')}}
+        <a class="button" :class="[$store.state.optionsWeb.web.showAllScrapers ? 'is-info' : '']" v-on:click="toggleEnabledFilter">
+          {{$store.state.optionsWeb.web.showAllScrapers ? $t('Show all scrapers') : $t('Show enabled only')}}
         </a>
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
@@ -173,12 +173,12 @@ export default {
       currentScraper: '',
       scraperwarning: '',
       scraperwarning2: '',
-      showEnabledOnly: false,
     }
   },
   mounted () {
     this.$store.dispatch('optionsSites/load')
     this.$store.dispatch('optionsAdvanced/load')
+    this.$store.dispatch('optionsWeb/load')
   },
   methods: {
     getImageURL (u) {
@@ -283,6 +283,7 @@ export default {
       this.$buefy.toast.open(`Scenes from ${site} will be updated on next scrape`)
     },
     deleteScenes (site) {
+      const self = this
       this.$buefy.dialog.confirm({
         title: this.$t('Delete scraped scenes'),
         message: `You're about to delete scraped scenes for <strong>${site.name}</strong>.`,
@@ -292,11 +293,15 @@ export default {
           if (site.master_site_id==""){
             ky.post('/api/options/scraper/delete-scenes', {
               json: { scraper_id: site.id }
+            }).then(() => {
+              self.$store.dispatch('optionsSites/load')
             })
           } else {
             const external_source = 'alternate scene ' + site.id
             ky.delete(`/api/extref/delete_extref_source`, {
               json: {external_source: external_source}
+            }).then(() => {
+              self.$store.dispatch('optionsSites/load')
             });
           }
         }
@@ -383,7 +388,8 @@ export default {
       })
     },
     toggleEnabledFilter() {
-      this.showEnabledOnly = !this.showEnabledOnly
+      this.$store.state.optionsWeb.web.showAllScrapers = !this.$store.state.optionsWeb.web.showAllScrapers
+      this.$store.dispatch('optionsWeb/save')
     },
     saveAdvancedSettings() {
       this.$store.dispatch('optionsAdvanced/save')
@@ -407,7 +413,7 @@ export default {
       }
 
       // Filter by enabled status if the filter is active
-      if (this.showEnabledOnly) {
+      if (this.$store.state.optionsWeb.web.showAllScrapers) {
         items = items.filter(item => item.is_enabled === true);
       }
 
