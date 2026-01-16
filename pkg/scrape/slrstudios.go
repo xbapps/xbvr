@@ -732,6 +732,20 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 	// Wait for all API processing to complete before finishing
 	apiWG.Wait()
 
+	// Auto-enable limit scraping after successful full scrape if config option is enabled
+	if !limitScraping && scraperID != "" && config.Config.Advanced.AutoLimitScraping {
+		db, _ := models.GetDB()
+		defer db.Close()
+
+		var site models.Site
+		err := db.Where(&models.Site{ID: scraperID}).First(&site).Error
+		if err == nil && !site.LimitScraping {
+			site.LimitScraping = true
+			site.Save()
+			log.Infof("Auto-enabled limit scraping for %s after successful full scrape", scraperID)
+		}
+	}
+
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
 	}

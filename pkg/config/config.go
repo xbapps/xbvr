@@ -64,6 +64,7 @@ type ObjectConfig struct {
 		LinkScenesAfterSceneScraping bool      `default:"true" json:"linkScenesAfterSceneScraping"`
 		UseAltSrcInFileMatching      bool      `default:"true" json:"useAltSrcInFileMatching"`
 		UseAltSrcInScriptFilters     bool      `default:"true" json:"useAltSrcInScriptFilters"`
+		AutoLimitScraping            bool      `default:"true" json:"autoLimitScraping"`
 		IgnoreReleasedBefore         time.Time `json:"ignoreReleasedBefore"`
 	} `json:"advanced"`
 	Funscripts struct {

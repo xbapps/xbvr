@@ -6,6 +6,18 @@
         <h3 class="title">{{$t('Scrape scenes from studios')}}</h3>
       </div>
       <div class="column buttons" align="right">
+        <b-dropdown aria-role="list" position="is-bottom-left">
+          <template slot="trigger">
+            <b-button icon-left="cog" />
+          </template>
+          <b-dropdown-item aria-role="listitem" custom>
+            <div class="field">
+              <b-checkbox v-model="$store.state.optionsAdvanced.advanced.autoLimitScraping" @input="saveAdvancedSettings">
+                {{$t('Auto Enable Limit Scraping')}}
+              </b-checkbox>
+            </div>
+          </b-dropdown-item>
+        </b-dropdown>
         <a class="button" :class="[showEnabledOnly ? 'is-info' : '']" v-on:click="toggleEnabledFilter">
           {{showEnabledOnly ? $t('Show all scrapers') : $t('Show enabled only')}}
         </a>
@@ -166,6 +178,7 @@ export default {
   },
   mounted () {
     this.$store.dispatch('optionsSites/load')
+    this.$store.dispatch('optionsAdvanced/load')
   },
   methods: {
     getImageURL (u) {
@@ -371,6 +384,9 @@ export default {
     },
     toggleEnabledFilter() {
       this.showEnabledOnly = !this.showEnabledOnly
+    },
+    saveAdvancedSettings() {
+      this.$store.dispatch('optionsAdvanced/save')
     },
     parseISO,
     formatDistanceToNow
