@@ -48,7 +48,6 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/putdotio/go-putio v1.7.2
-	github.com/robertkrimen/otto v0.5.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/cors v1.11.1
 	github.com/sirupsen/logrus v1.9.3
@@ -71,6 +70,7 @@ require (
 	github.com/blevesearch/go-faiss v1.0.25 // indirect
 	github.com/blevesearch/zapx/v16 v16.2.4 // indirect
 	github.com/nlnwa/whatwg-url v0.6.1 // indirect
+	github.com/robertkrimen/otto v0.5.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
@@ -146,7 +146,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
-	github.com/ulikunitz/xz v0.5.14 // indirect
+	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
 	golang.org/x/image v0.18.0 // indirect
