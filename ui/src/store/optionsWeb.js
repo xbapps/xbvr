@@ -24,7 +24,6 @@ const state = {
     sceneCardScaleToFit: true,
     actorCardAspectRatio: "1:1",
     actorCardScaleToFit: true,
-    showAllScrapers: false,
     updateCheck: true
   }
 }
@@ -58,7 +57,6 @@ const actions = {
         state.web.sceneCardScaleToFit = data.config.web.sceneCardScaleToFit
         state.web.actorCardAspectRatio = data.config.web.actorCardAspectRatio
         state.web.actorCardScaleToFit = data.config.web.actorCardScaleToFit
-        state.web.showAllScrapers = data.config.web.showAllScrapers
         state.loading = false
       })
   },
@@ -88,7 +86,6 @@ const actions = {
         state.web.sceneCardScaleToFit = data.sceneCardScaleToFit
         state.web.actorCardAspectRatio = data.actorCardAspectRatio
         state.web.actorCardScaleToFit = data.actorCardScaleToFit
-        state.web.showAllScrapers = data.showAllScrapers
         state.loading = false
       })
   }

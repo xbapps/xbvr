@@ -18,8 +18,8 @@
             </div>
           </b-dropdown-item>
         </b-dropdown>
-        <a class="button" :class="[$store.state.optionsWeb.web.showAllScrapers ? 'is-info' : '']" v-on:click="toggleEnabledFilter">
-          {{$store.state.optionsWeb.web.showAllScrapers ? $t('Show all scrapers') : $t('Show enabled only')}}
+        <a class="button" :class="[showAllScrapers ? '' : 'is-info']" v-on:click="toggleEnabledFilter">
+          {{showAllScrapers ? $t('Show enabled only') : $t('Show all scrapers')}}
         </a>
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
@@ -178,6 +178,7 @@ export default {
       currentScraper: '',
       scraperwarning: '',
       scraperwarning2: '',
+      showAllScrapers: true,
     }
   },
   mounted () {
@@ -393,8 +394,7 @@ export default {
       })
     },
     toggleEnabledFilter() {
-      this.$store.state.optionsWeb.web.showAllScrapers = !this.$store.state.optionsWeb.web.showAllScrapers
-      this.$store.dispatch('optionsWeb/save')
+      this.showAllScrapers = !this.showAllScrapers
     },
     saveAdvancedSettings() {
       this.$store.dispatch('optionsAdvanced/save')
@@ -425,7 +425,7 @@ export default {
       }
 
       // Filter by enabled status if the filter is active
-      if (this.$store.state.optionsWeb.web.showAllScrapers) {
+      if (!this.showAllScrapers) {
         items = items.filter(item => item.is_enabled === true);
       }
 

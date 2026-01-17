@@ -18,12 +18,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-var (
-	// Compile regex patterns once for reuse
-	// Note: Intentionally matches 3+ consecutive dashes to preserve double dashes in URLs
-	multiDashRegex = regexp.MustCompile(`-{3,}`)
-)
-
 func absolutegallery(match string) string {
 	re := regexp.MustCompile(`(https:\/\/cdn-vr\.sexlikereal\.com\/images\/\d+\/)vr-porn-[\w\-]+?-(\d+)-original(\.webp|\.jpg)`)
 	submatches := re.FindStringSubmatch(match)
@@ -33,32 +27,8 @@ func absolutegallery(match string) string {
 	return submatches[1] + submatches[3] + "_o.jpg" // construct new string with desired format
 }
 
-// normalizeSLRSlug takes a title/slug segment and removes nonstandard characters,
-// leaving only lowercase ascii letters, digits, and single dashes.
-func normalizeSLRSlug(s string) string {
-	s = strings.ToLower(s)
-	// Replace spaces with dashes first
-	s = strings.ReplaceAll(s, " ", "-")
-	// Keep only [a-z0-9-]; drop other characters (e.g., accented letters, punctuation)
-	var b strings.Builder
-	b.Grow(len(s))
-	for _, r := range s {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
-			b.WriteRune(r)
-		} else {
-			// drop nonstandard characters
-		}
-	}
-	s = b.String()
-	// Collapse 3+ consecutive dashes to single dash (preserves double dashes)
-	s = multiDashRegex.ReplaceAllString(s, "-")
-	// Trim leading/trailing dashes
-	s = strings.Trim(s, "-")
-	return s
-}
-
-// normalizeSLRSceneURL reconstructs a clean SLR scene URL by decoding percent encodings,
-// sanitizing the slug, and preserving the numeric ID and trans/gay prefix.
+// normalizeSLRSceneURL cleans up an SLR scene URL by decoding percent encodings
+// and removing query parameters, while preserving the original slug structure.
 func normalizeSLRSceneURL(u string) string {
 	// Detect and preserve trans/gay prefix
 	urlPrefix := "https://www.sexlikereal.com/"
@@ -68,40 +38,25 @@ func normalizeSLRSceneURL(u string) string {
 		urlPrefix += "gay/"
 	}
 
-	// Extract ID: last segment after last '-'
-	parts := strings.Split(u, "-")
-	if len(parts) == 0 {
-		return u
-	}
-	id := parts[len(parts)-1]
-	// Remove any trailing query/fragment from id
-	if idx := strings.IndexAny(id, "?#"); idx != -1 {
-		id = id[:idx]
-	}
-	// Extract slug portion between '/scenes/' and '-<id>'
+	// Extract the scene path after /scenes/
 	slug := ""
 	if i := strings.Index(u, "/scenes/"); i != -1 {
-		after := u[i+len("/scenes/"):]
-		if j := strings.LastIndex(after, "-"+id); j != -1 {
-			slug = after[:j]
-		} else {
-			// Fallback: remove trailing id by trimming after last '-'
-			if k := strings.LastIndex(after, "-"); k != -1 {
-				slug = after[:k]
-			} else {
-				slug = after
-			}
+		slug = u[i+len("/scenes/"):]
+		// Remove any trailing query/fragment
+		if idx := strings.IndexAny(slug, "?#"); idx != -1 {
+			slug = slug[:idx]
 		}
 	}
+
 	// URL-decode percent encodings in slug
 	if unescaped, err := url.PathUnescape(slug); err == nil {
 		slug = unescaped
 	}
-	clean := normalizeSLRSlug(slug)
-	if clean == "" || id == "" {
+
+	if slug == "" {
 		return u
 	}
-	return urlPrefix + "scenes/" + clean + "-" + id
+	return urlPrefix + "scenes/" + slug
 }
 
 func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, limitScraping bool, masterSiteId string) error {
@@ -394,7 +349,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			}
 		}
 
-		// Homepage URL construction with sanitation
+		// Homepage URL construction using the label from API (already URL-safe)
 		// Add appropriate prefix for trans/gay content
 		urlPrefix := "https://www.sexlikereal.com/"
 		if isGayScene {
@@ -403,12 +358,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			urlPrefix += "trans/"
 		}
 
-		if sc.Title != "" {
-			cleanTitle := normalizeSLRSlug(sc.Title)
-			sc.HomepageURL = urlPrefix + "scenes/" + cleanTitle + "-" + sceneID
-		} else {
-			sc.HomepageURL = urlPrefix + "scenes/scene-" + sceneID
-		}
+		sc.HomepageURL = urlPrefix + "scenes/" + sceneLabel
 
 		// Gallery images from API
 		images := sceneData.Get("images")
@@ -626,10 +576,8 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 					})
 				}
 
-				// Build scene URL for knownScenes check
-				title := scene.Get("title").String()
-				cleanTitle := normalizeSLRSlug(title)
-				sceneURL := "https://www.sexlikereal.com/scenes/" + cleanTitle + "-" + sceneID
+				// Build scene URL for knownScenes check using the label from API (already URL-safe)
+				sceneURL := "https://www.sexlikereal.com/scenes/" + sceneLabel
 
 				// Handle funscript updates for existing scenes
 				if config.Config.Funscripts.ScrapeFunscripts {
@@ -696,6 +644,9 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		}
 	}
 
+	// Track whether scrape was successful (studio code found and scenes fetched)
+	scrapeSuccessful := false
+
 	if singleSceneURL != "" {
 		// Detect if it's a Trans or Gay scene BEFORE normalization (which removes /trans and /gay)
 		isTransScene := strings.Contains(singleSceneURL, ".com/trans")
@@ -740,6 +691,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			isTransStudio := strings.Contains(siteURL, "/trans")
 			isGayStudio := strings.Contains(siteURL, "/gay")
 			fetchScenesFromAPI(studioCode, isTransStudio, isGayStudio)
+			scrapeSuccessful = true
 		} else {
 			log.Errorln("Failed to get studio code from URL:", siteURL)
 		}
@@ -749,7 +701,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 	apiWG.Wait()
 
 	// Auto-enable limit scraping after successful full scrape if config option is enabled
-	if !limitScraping && scraperID != "" && config.Config.Advanced.AutoLimitScraping {
+	if scrapeSuccessful && !limitScraping && scraperID != "" && config.Config.Advanced.AutoLimitScraping {
 		db, _ := models.GetDB()
 		defer db.Close()
 
