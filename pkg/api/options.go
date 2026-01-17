@@ -65,7 +65,6 @@ type RequestSaveOptionsWeb struct {
 	SceneCardScaleToFit  bool   `json:"sceneCardScaleToFit"`
 	ActorCardAspectRatio string `json:"actorCardAspectRatio"`
 	ActorCardScaleToFit  bool   `json:"actorCardScaleToFit"`
-	ShowAllScrapers      bool   `json:"showAllScrapers"`
 }
 
 type RequestSaveOptionsAdvanced struct {
@@ -516,7 +515,6 @@ func (i ConfigResource) saveOptionsWeb(req *restful.Request, resp *restful.Respo
 	config.Config.Web.SceneCardScaleToFit = r.SceneCardScaleToFit
 	config.Config.Web.ActorCardAspectRatio = r.ActorCardAspectRatio
 	config.Config.Web.ActorCardScaleToFit = r.ActorCardScaleToFit
-	config.Config.Web.ShowAllScrapers = r.ShowAllScrapers
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
@@ -738,6 +736,15 @@ func (i ConfigResource) forceSiteUpdate(req *restful.Request, resp *restful.Resp
 	defer db.Close()
 
 	db.Model(&models.Scene{}).Where("scraper_id = ?", r.ScraperId).Update("needs_update", true)
+
+	// Disable limit scraping when forcing update to allow full re-scrape
+	var site models.Site
+	if err := db.Where(&models.Site{ID: r.ScraperId}).First(&site).Error; err == nil {
+		if site.LimitScraping {
+			site.LimitScraping = false
+			site.Save()
+		}
+	}
 }
 
 func (i ConfigResource) deleteScenes(req *restful.Request, resp *restful.Response) {
