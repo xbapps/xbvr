@@ -51,7 +51,6 @@ type ObjectConfig struct {
 		SceneCardScaleToFit  bool   `default:"true" json:"sceneCardScaleToFit"`
 		ActorCardAspectRatio string `default:"1:1" json:"actorCardAspectRatio"`
 		ActorCardScaleToFit  bool   `default:"true" json:"actorCardScaleToFit"`
-		ShowAllScrapers      bool   `default:"false" json:"showAllScrapers"`
 	} `json:"web"`
 	Advanced struct {
 		ShowInternalSceneId          bool      `default:"false" json:"showInternalSceneId"`
