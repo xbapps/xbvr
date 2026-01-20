@@ -488,8 +488,9 @@ func SceneCreateUpdateFromExternal(db *gorm.DB, ext ScrapedScene) error {
 		// Parse timestamps JSON array
 		var timestamps []map[string]interface{}
 		if err := json.Unmarshal([]byte(ext.Timestamps), &timestamps); err == nil {
-			// Clear existing cuepoints for this scene
-			db.Where("scene_id = ?", o.ID).Delete(&SceneCuepoint{})
+			// Clear existing cuepoints for this scene where the track is null
+			// 	cuepoints where there is a non-null track have probably come from manual entry in heresphere
+			db.Where("scene_id = ? and track is null", o.ID).Delete(&SceneCuepoint{})
 
 			// Process each timestamp and create cuepoint
 			for _, ts := range timestamps {
@@ -903,6 +904,14 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "exists (select 1 from files where files.scene_id = scenes.id and files.`type` = 'video' and files.video_projection = 'mkx220')"
 		case "VRCA220":
 			where = "exists (select 1 from files where files.scene_id = scenes.id and files.`type` = 'video' and files.video_projection = 'vrca220')"
+		case "Has No Cup Size":
+			where = "exists (select * from scene_cast join actors on actors.id=scene_cast.actor_id where actors.cup_size = '' and UPPER(actors.gender) = 'FEMALE' and scene_cast.scene_id=scenes.id)"
+		case "Has AA Cup Size":
+			where = "exists (select * from scene_cast join actors on actors.id=scene_cast.actor_id where actors.cup_size = 'AA' and scene_cast.scene_id=scenes.id)"
+		case "Has A Cup Size":
+			where = "exists (select * from scene_cast join actors on actors.id=scene_cast.actor_id where actors.cup_size = 'A' and scene_cast.scene_id=scenes.id)"
+		case "Has B Cup Size":
+			where = "exists (select * from scene_cast join actors on actors.id=scene_cast.actor_id where actors.cup_size = 'B' and scene_cast.scene_id=scenes.id)"
 		case "Codec":
 			where = "exists (select 1 from files where files.scene_id = scenes.id and files.`type` = 'video' and files.video_codec_name = '" + value + "')"
 		case "In Watchlist":

@@ -145,7 +145,6 @@ duration
     id
 	name
 }
-=======
 code  
 deleted
 `

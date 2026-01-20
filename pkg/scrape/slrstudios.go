@@ -27,70 +27,36 @@ func absolutegallery(match string) string {
 	return submatches[1] + submatches[3] + "_o.jpg" // construct new string with desired format
 }
 
-// normalizeSLRSlug takes a title/slug segment and removes nonstandard characters,
-// leaving only lowercase ascii letters, digits, and single dashes.
-func normalizeSLRSlug(s string) string {
-	s = strings.ToLower(s)
-	// Replace spaces with dashes first
-	s = strings.ReplaceAll(s, " ", "-")
-	// Keep only [a-z0-9-]; drop other characters (e.g., accented letters, punctuation)
-	var b strings.Builder
-	b.Grow(len(s))
-	for _, r := range s {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
-			b.WriteRune(r)
-		} else {
-			// drop nonstandard characters
-		}
-	}
-	s = b.String()
-	// Collapse multiple dashes
-	dash := regexp.MustCompile(`-+`)
-	s = dash.ReplaceAllString(s, "-")
-	// Trim leading/trailing dashes
-	s = strings.Trim(s, "-")
-	return s
-}
-
-// normalizeSLRSceneURL reconstructs a clean SLR scene URL by decoding percent encodings,
-// sanitizing the slug, and preserving the numeric ID.
+// normalizeSLRSceneURL cleans up an SLR scene URL by decoding percent encodings
+// and removing query parameters, while preserving the original slug structure.
 func normalizeSLRSceneURL(u string) string {
-	// Best-effort: ensure we operate on expected path
-	const base = "https://www.sexlikereal.com/scenes/"
-	// Extract ID: last segment after last '-'
-	parts := strings.Split(u, "-")
-	if len(parts) == 0 {
-		return u
+	// Detect and preserve trans/gay prefix
+	urlPrefix := "https://www.sexlikereal.com/"
+	if strings.Contains(u, ".com/trans/") {
+		urlPrefix += "trans/"
+	} else if strings.Contains(u, ".com/gay/") {
+		urlPrefix += "gay/"
 	}
-	id := parts[len(parts)-1]
-	// Remove any trailing query/fragment from id
-	if idx := strings.IndexAny(id, "?#"); idx != -1 {
-		id = id[:idx]
-	}
-	// Extract slug portion between '/scenes/' and '-<id>'
+
+	// Extract the scene path after /scenes/
 	slug := ""
 	if i := strings.Index(u, "/scenes/"); i != -1 {
-		after := u[i+len("/scenes/"):]
-		if j := strings.LastIndex(after, "-"+id); j != -1 {
-			slug = after[:j]
-		} else {
-			// Fallback: remove trailing id by trimming after last '-'
-			if k := strings.LastIndex(after, "-"); k != -1 {
-				slug = after[:k]
-			} else {
-				slug = after
-			}
+		slug = u[i+len("/scenes/"):]
+		// Remove any trailing query/fragment
+		if idx := strings.IndexAny(slug, "?#"); idx != -1 {
+			slug = slug[:idx]
 		}
 	}
+
 	// URL-decode percent encodings in slug
 	if unescaped, err := url.PathUnescape(slug); err == nil {
 		slug = unescaped
 	}
-	clean := normalizeSLRSlug(slug)
-	if clean == "" || id == "" {
+
+	if slug == "" {
 		return u
 	}
-	return base + clean + "-" + id
+	return urlPrefix + "scenes/" + slug
 }
 
 func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, scraperID string, siteID string, company string, siteURL string, singeScrapeAdditionalInfo string, limitScraping bool, masterSiteId string) error {
@@ -102,18 +68,36 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 	apiWG := sync.WaitGroup{}
 	sem := make(chan struct{}, 8) // hard-coded concurrency limit
 
+	// Create reusable HTTP client
+	client := resty.New()
+
 	// RegEx Patterns
 	filenameRegEx := regexp.MustCompile(`[?:]`)
 
 	// API-based scene processing function
-	processSceneFromAPI := func(sceneID string, sceneLabel string, isTransScene bool, duration int) {
+	processSceneFromAPI := func(sceneID string, sceneLabel string, isTransScene bool, isGayScene bool, duration int) {
 		// Use v3 API endpoint with scene label for better data including gallery images
 		apiURL := "https://api.sexlikereal.com/v3/scenes/" + sceneLabel
 
+		// Determine project header: 1 = main site, 3 = trans, 4 = gay
+		projectHeader := "1"
+		if isGayScene {
+			projectHeader = "4"
+		} else if isTransScene {
+			projectHeader = "3"
+		}
+
 		// Fetch scene data from API
-		resp, err := resty.New().R().
+		req := client.R().
 			SetHeader("User-Agent", UserAgent).
 			SetHeader("Client-Type", "web").
+			SetHeader("project", projectHeader)
+
+		reqconfig := GetCoreDomain(apiURL) + "-scraper"
+		log.Debugf("Using Header/Cookies from %s", reqconfig)
+		SetupRestyRequest(reqconfig, req)
+
+		resp, err := req.
 			Get(apiURL)
 
 		if err != nil {
@@ -121,18 +105,51 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			return
 		}
 
-		if resp.StatusCode() != 200 {
-			log.Errorln("API returned non-200 status for scene", sceneID, ":", resp.StatusCode())
-			return
+		// Fallback to project=0 if project=1 fails with 404
+		if resp.StatusCode() == 404 && projectHeader == "1" {
+			log.Infoln("Retrying scene", sceneID, "with project=0 fallback")
+			resp, err = client.R().
+				SetHeader("User-Agent", UserAgent).
+				SetHeader("Client-Type", "web").
+				SetHeader("project", "0").
+				Get(apiURL)
+
+			if err != nil {
+				log.Errorln("Failed to fetch API data for scene", sceneID, "with fallback:", err)
+				return
+			}
 		}
 
-		apiData := resp.String()
+		// Fallback to legacy /virtualreality/video/id/ endpoint if v3 fails
+		var sceneData gjson.Result
+		var apiData string
+		isLegacyAPI := false
 
-		// v3 API wraps scene data in a "data" object
-		sceneData := gjson.Get(apiData, "data")
-		if !sceneData.Exists() {
-			log.Errorln("No data field in API response for scene", sceneID)
-			return
+		if resp.StatusCode() != 200 {
+			log.Infoln("V3 API failed for scene", sceneID, "- trying legacy API endpoint")
+			legacyURL := "https://api.sexlikereal.com/virtualreality/video/id/" + sceneID
+			resp, err = client.R().
+				SetHeader("User-Agent", UserAgent).
+				SetHeader("Client-Type", "web").
+				SetHeader("project", projectHeader).
+				Get(legacyURL)
+
+			if err != nil || resp.StatusCode() != 200 {
+				log.Errorln("Both v3 and legacy API failed for scene", sceneID)
+				return
+			}
+
+			isLegacyAPI = true
+			apiData = resp.String()
+			sceneData = gjson.Parse(apiData)
+		} else {
+			apiData = resp.String()
+			// v3 API wraps scene data in a "data" object
+			sceneData = gjson.Get(apiData, "data")
+			if !sceneData.Exists() {
+				log.Errorln("No data field in API response for scene", sceneID)
+				return
+			}
 		}
 
 		// Parse scene data from API response
@@ -145,22 +162,39 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		sc.SiteID = sceneID
 		sc.SceneID = "slr-" + sceneID
 
-		if isTransScene {
+		if isGayScene {
+			sc.SceneID = "slr-gay-" + sceneID
+		} else if isTransScene {
 			sc.SceneID = "slr-trans-" + sceneID
 		}
 
 		// Get studio info from API if available
-		if sceneData.Get("studio.name").Exists() {
-			studioName := sceneData.Get("studio.name").String()
-			if studioName != "" && scraperID == "" {
-				sc.Studio = studioName
-				sc.Site = studioName
-			}
+		// Legacy API uses different field structure
+		var studioName string
+		if isLegacyAPI {
+			studioName = sceneData.Get("studioName").String()
+		} else {
+			studioName = sceneData.Get("studio.name").String()
+		}
+		if studioName != "" && scraperID == "" {
+			sc.Studio = studioName
+			sc.Site = studioName
 		}
 
 		// Basic scene information from API
 		sc.Title = strings.TrimSpace(html.UnescapeString(sceneData.Get("title").String()))
-		sc.Synopsis = strings.TrimSpace(sceneData.Get("description").String())
+
+		// Legacy API may use different field name for description
+		var synopsis string
+		if isLegacyAPI {
+			synopsis = sceneData.Get("description").String()
+			if synopsis == "" {
+				synopsis = sceneData.Get("synopsis").String()
+			}
+		} else {
+			synopsis = sceneData.Get("description").String()
+		}
+		sc.Synopsis = strings.TrimSpace(synopsis)
 
 		// Log that we're scraping this scene
 		log.Infoln("Scraping " + "[" + sc.SceneID + "] " + sc.Title)
@@ -209,14 +243,30 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			"3D":      true,
 		}
 
+		passthroughTags := map[string]bool{
+			"Passthrough":      true,
+			"Passthrough hack": true,
+			"Passthrough AR":   true,
+			"Passthrough AI":   true,
+		}
+
 		var videotype string
 		var FB360 string
 		alphA := "false"
 
+		stereo := false
 		categories := sceneData.Get("categories")
 		if categories.Exists() {
 			categories.ForEach(func(key, value gjson.Result) bool {
-				tagName := strings.TrimSpace(value.Get("name").String())
+				// Legacy API has nested structure: categories[].tag.name
+				// V3 API has flat structure: categories[].name
+				var tagName string
+				if isLegacyAPI {
+					tagName = strings.TrimSpace(value.Get("tag.name").String())
+				} else {
+					tagName = strings.TrimSpace(value.Get("name").String())
+				}
+
 				if tagName != "" && !skiptags[strings.ToLower(tagName)] {
 					sc.Tags = append(sc.Tags, tagName)
 
@@ -227,20 +277,39 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 					if tagName == "Spatial audio" {
 						FB360 = "_FB360.MKV"
 					}
-					if tagName == "Passthrough" || tagName == "Passthrough hack" || tagName == "Passthrough AR" || tagName == "Passthrough AI" {
+					if passthroughTags[tagName] {
 						alphA = "PT"
+					}
+					if strings.ToLower(tagName) == "immersive flat" {
+						sc.SceneType = "2D"
+					}
+					if strings.ToLower(tagName) == "stereo ai (3d)" {
+						stereo = true
 					}
 				}
 				return true
 			})
 		}
+		if stereo {
+			sc.SceneType = "VR"
+		}
 
 		// Process timestamps from API and save as JSON array
 		timeStamps := sceneData.Get("timestamps")
+		if !timeStamps.Exists() {
+			// Legacy API uses "timeStamps" (camelCase) instead of "timestamps"
+			timeStamps = sceneData.Get("timeStamps")
+		}
 		if timeStamps.Exists() && timeStamps.IsArray() {
 			var timestampMap []map[string]interface{}
 			timeStamps.ForEach(func(key, value gjson.Result) bool {
-				ts := value.Get("timestamp").Int()
+				// Legacy API uses "ts" field, v3 uses "timestamp"
+				var ts int64
+				if isLegacyAPI {
+					ts = value.Get("ts").Int()
+				} else {
+					ts = value.Get("timestamp").Int()
+				}
 				name := strings.TrimSpace(value.Get("name").String())
 				if name != "" {
 					timestampEntry := map[string]interface{}{
@@ -280,13 +349,16 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			}
 		}
 
-		// Homepage URL construction with sanitation
-		if sc.Title != "" {
-			cleanTitle := normalizeSLRSlug(sc.Title)
-			sc.HomepageURL = "https://www.sexlikereal.com/scenes/" + cleanTitle + "-" + sceneID
-		} else {
-			sc.HomepageURL = "https://www.sexlikereal.com/scenes/scene-" + sceneID
+		// Homepage URL construction using the label from API (already URL-safe)
+		// Add appropriate prefix for trans/gay content
+		urlPrefix := "https://www.sexlikereal.com/"
+		if isGayScene {
+			urlPrefix += "gay/"
+		} else if isTransScene {
+			urlPrefix += "trans/"
 		}
+
+		sc.HomepageURL = urlPrefix + "scenes/" + sceneLabel
 
 		// Gallery images from API
 		images := sceneData.Get("images")
@@ -306,6 +378,12 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		params := models.TrailerScrape{SceneUrl: apiURL}
 		strParams, _ := json.Marshal(params)
 		sc.TrailerSrc = string(strParams)
+
+		sc.TrailerType = "load_json"
+		jsonRequest := models.TrailerScrape{SceneUrl: "https://api.sexlikereal.com/v3/scenes/" + sc.SiteID + "/files", HtmlElement: "", ExtractRegex: "",
+			RecordPath: "data.encodings.1.videoSources", ContentPath: "url", EncodingPath: "resolution", QualityPath: "resolution", ContentBaseUrl: ""}
+		jsonStr, _ := json.Marshal(jsonRequest)
+		sc.TrailerSrc = string(jsonStr)
 
 		// Passthrough/ChromaKey data
 		if alphA == "PT" {
@@ -327,7 +405,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 		// Filenames - need to convert sceneData back to JSON string for legacy function
 		sceneDataJSON := sceneData.String()
-		appendFilenames(&sc, siteID, filenameRegEx, videotype, FB360, alphA, sceneDataJSON, isTransScene)
+		appendFilenames(&sc, siteID, filenameRegEx, videotype, FB360, alphA, sceneDataJSON, isTransScene, isLegacyAPI)
 
 		// Funscript data
 		if config.Config.Funscripts.ScrapeFunscripts {
@@ -336,18 +414,28 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			sc.HumanScript = false
 
 			// Check for funscript availability
-			scripts := sceneData.Get("scripts")
-			if scripts.Exists() && scripts.IsArray() {
-				scripts.ForEach(func(key, value gjson.Result) bool {
+			if isLegacyAPI {
+				// Legacy API uses "isFleshlightAvailable" boolean
+				if sceneData.Get("isFleshlightAvailable").Bool() {
 					sc.HasScriptDownload = true
-					isAi := value.Get("scriptAI").Bool()
-					if isAi {
-						sc.AiScript = true
-					} else {
-						sc.HumanScript = true
-					}
-					return true
-				})
+					// Legacy API doesn't distinguish AI vs human scripts
+					sc.HumanScript = true
+				}
+			} else {
+				// V3 API has detailed scripts array
+				scripts := sceneData.Get("scripts")
+				if scripts.Exists() && scripts.IsArray() {
+					scripts.ForEach(func(key, value gjson.Result) bool {
+						sc.HasScriptDownload = true
+						isAi := value.Get("scriptAI").Bool()
+						if isAi {
+							sc.AiScript = true
+						} else {
+							sc.HumanScript = true
+						}
+						return true
+					})
+				}
 			}
 		}
 
@@ -390,7 +478,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		return ""
 	}
 
-	fetchScenesFromAPI := func(studioCode string) {
+	fetchScenesFromAPI := func(studioCode string, isTransStudio bool, isGayStudio bool) {
 		if studioCode == "" {
 			log.Errorln("Studio code is empty, cannot fetch scenes")
 			return
@@ -398,19 +486,54 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 		page := 1
 		perPage := 36
-		hasMore := true
+		totalPages := 0
 
-		for hasMore && (!limitScraping || page == 1) {
+		// Determine project header: 1 = main site, 3 = trans, 4 = gay
+		projectHeader := "1"
+		if isGayStudio {
+			projectHeader = "4"
+		} else if isTransStudio {
+			projectHeader = "3"
+		}
+
+		for (!limitScraping || page == 1) && (totalPages == 0 || page <= totalPages) {
 			apiURL := "https://api.sexlikereal.com/v3/scenes?studios=" + studioCode + "&perPage=" + strconv.Itoa(perPage) + "&sort=mostRecent&page=" + strconv.Itoa(page)
 
-			resp, err := resty.New().R().
+			req := client.R().
 				SetHeader("User-Agent", UserAgent).
 				SetHeader("Client-Type", "web").
+				SetHeader("project", projectHeader)
+
+			reqconfig := GetCoreDomain(apiURL) + "-scraper"
+			log.Debugf("Using Header/Cookies from %s", reqconfig)
+			SetupRestyRequest(reqconfig, req)
+
+			resp, err := req.
 				Get(apiURL)
 
 			if err != nil {
 				log.Errorln("Failed to fetch API scenes for studio", studioCode, "page", page, ":", err)
 				break
+			}
+
+			// Fallback to project=0 if project=1 fails with 404
+			if resp.StatusCode() == 404 && projectHeader == "1" && page == 1 {
+				log.Infoln("Retrying studio", studioCode, "with project=0 fallback")
+				resp, err = client.R().
+					SetHeader("User-Agent", UserAgent).
+					SetHeader("Client-Type", "web").
+					SetHeader("project", "0").
+					Get(apiURL)
+
+				if err != nil {
+					log.Errorln("Failed to fetch API scenes for studio", studioCode, "with fallback:", err)
+					break
+				}
+
+				// If fallback succeeds, update projectHeader for subsequent pages
+				if resp.StatusCode() == 200 {
+					projectHeader = "0"
+				}
 			}
 
 			if resp.StatusCode() != 200 {
@@ -419,37 +542,42 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			}
 
 			apiData := resp.String()
+
+			// Extract total pages from metadata on first iteration
+			if totalPages == 0 {
+				totalPages = int(gjson.Get(apiData, "meta.pagination.totalPages").Int())
+			}
+
 			scenes := gjson.Get(apiData, "data")
 
 			if !scenes.Exists() || !scenes.IsArray() {
 				break
 			}
 
-			sceneCount := 0
 			scenes.ForEach(func(key, scene gjson.Result) bool {
-				sceneCount++
 				sceneID := scene.Get("id").String()
 				sceneLabel := scene.Get("label").String()
 				duration := int(scene.Get("fullVideoLength").Int())
 
-				// Determine if trans scene based on categories
-				isTransScene := false
+				// Determine if trans/gay scene based on categories
+				isTransScene := isTransStudio
+				isGayScene := isGayStudio
 				categories := scene.Get("categories")
 				if categories.Exists() && categories.IsArray() {
 					categories.ForEach(func(k, cat gjson.Result) bool {
 						tagName := strings.ToLower(cat.Get("tag.name").String())
 						if tagName == "trans" || tagName == "shemale" || tagName == "transgender" {
 							isTransScene = true
-							return false
+						}
+						if tagName == "gay" {
+							isGayScene = true
 						}
 						return true
 					})
 				}
 
-				// Build scene URL for knownScenes check
-				title := scene.Get("title").String()
-				cleanTitle := normalizeSLRSlug(title)
-				sceneURL := "https://www.sexlikereal.com/scenes/" + cleanTitle + "-" + sceneID
+				// Build scene URL for knownScenes check using the label from API (already URL-safe)
+				sceneURL := "https://www.sexlikereal.com/scenes/" + sceneLabel
 
 				// Handle funscript updates for existing scenes
 				if config.Config.Funscripts.ScrapeFunscripts {
@@ -503,27 +631,27 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 				if !funk.ContainsString(knownScenes, sceneURL) && sceneID != "" && sceneLabel != "" {
 					sem <- struct{}{}
 					apiWG.Add(1)
-					go func(id string, label string, trans bool, dur int) {
+					go func(id string, label string, trans bool, gay bool, dur int) {
 						defer func() { <-sem; apiWG.Done() }()
-						processSceneFromAPI(id, label, trans, dur)
-					}(sceneID, sceneLabel, isTransScene, duration)
+						processSceneFromAPI(id, label, trans, gay, dur)
+					}(sceneID, sceneLabel, isTransScene, isGayScene, duration)
 				}
 
 				return true
 			})
 
-			// Check if there are more pages
-			if sceneCount < perPage {
-				hasMore = false
-			} else {
-				page++
-			}
+			page++
 		}
 	}
 
+	// Track whether scrape was successful (studio code found and scenes fetched)
+	scrapeSuccessful := false
+
 	if singleSceneURL != "" {
-		singleSceneURL = normalizeSLRSceneURL(singleSceneURL)
+		// Detect if it's a Trans or Gay scene BEFORE normalization (which removes /trans and /gay)
 		isTransScene := strings.Contains(singleSceneURL, ".com/trans")
+		isGayScene := strings.Contains(singleSceneURL, ".com/gay")
+		singleSceneURL = normalizeSLRSceneURL(singleSceneURL)
 
 		// Extract scene ID and label from single scene URL for API processing
 		sceneID := ""
@@ -549,17 +677,21 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		if sceneID != "" && sceneLabel != "" {
 			sem <- struct{}{}
 			apiWG.Add(1)
-			go func(id string, label string, trans bool) {
+			go func(id string, label string, trans bool, gay bool) {
 				defer func() { <-sem; apiWG.Done() }()
-				processSceneFromAPI(id, label, trans, 0)
-			}(sceneID, sceneLabel, isTransScene)
+				processSceneFromAPI(id, label, trans, gay, 0)
+			}(sceneID, sceneLabel, isTransScene, isGayScene)
 		}
 
 	} else {
 		// Get studio code from URL (either from new format or map lookup) and fetch scenes via API
 		studioCode := getStudioCode(siteURL)
 		if studioCode != "" {
-			fetchScenesFromAPI(studioCode)
+			// Determine if this is a Trans or Gay studio by checking the siteURL
+			isTransStudio := strings.Contains(siteURL, "/trans")
+			isGayStudio := strings.Contains(siteURL, "/gay")
+			fetchScenesFromAPI(studioCode, isTransStudio, isGayStudio)
+			scrapeSuccessful = true
 		} else {
 			log.Errorln("Failed to get studio code from URL:", siteURL)
 		}
@@ -568,6 +700,20 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 	// Wait for all API processing to complete before finishing
 	apiWG.Wait()
 
+	// Auto-enable limit scraping after successful full scrape if config option is enabled
+	if scrapeSuccessful && !limitScraping && scraperID != "" && config.Config.Advanced.AutoLimitScraping {
+		db, _ := models.GetDB()
+		defer db.Close()
+
+		var site models.Site
+		err := db.Where(&models.Site{ID: scraperID}).First(&site).Error
+		if err == nil && !site.LimitScraping {
+			site.LimitScraping = true
+			site.Save()
+			log.Infof("Auto-enabled limit scraping for %s after successful full scrape", scraperID)
+		}
+	}
+
 	if updateSite {
 		updateSiteLastUpdate(scraperID)
 	}
@@ -575,17 +721,41 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 	return nil
 }
 
-func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *regexp.Regexp, videotype string, FB360 string, AlphA string, JsonMetadataA string, isTransScene bool) {
+func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *regexp.Regexp, videotype string, FB360 string, AlphA string, JsonMetadataA string, isTransScene bool, isLegacyAPI bool) {
 	// Only shown for logged in users so need to generate them
 	// Format: SLR_siteID_Title_<Resolutions>_SceneID_<LR/TB>_<180/360>.mp4
+
+	// Filename sanitation map
+	filenameReplacements := map[string]string{
+		":": ";",
+		"/": "⁄",
+		"|": "¦",
+		"*": "#",
+		"?": "¿",
+	}
+
+	titleSanitized := sc.Title
+	for old, new := range filenameReplacements {
+		titleSanitized = strings.ReplaceAll(titleSanitized, old, new)
+	}
+
 	if !isTransScene {
 		// Force siteID when scraping individual scenes without a custom site
 		if siteID == "" {
-			siteID = gjson.Get(JsonMetadataA, "studio.name").String()
+			if isLegacyAPI {
+				siteID = gjson.Get(JsonMetadataA, "studioName").String()
+			} else {
+				siteID = gjson.Get(JsonMetadataA, "studio.name").String()
+			}
 		}
 		resolutions := []string{"_original_"}
-		// v3 API uses trailerEncodings instead of encodings
-		encodings := gjson.Get(JsonMetadataA, "trailerEncodings.#(name=h265).videoSources.#.resolution")
+		// v3 API uses trailerEncodings, legacy API uses encodings
+		var encodings gjson.Result
+		if isLegacyAPI {
+			encodings = gjson.Get(JsonMetadataA, "encodings.#(name=h265).videoSources.#.resolution")
+		} else {
+			encodings = gjson.Get(JsonMetadataA, "trailerEncodings.#(name=h265).videoSources.#.resolution")
+		}
 		for _, name := range encodings.Array() {
 			resolution := name.String()
 			if resolution == "480" || resolution == "720" {
@@ -593,7 +763,7 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 			}
 			resolutions = append(resolutions, "_"+resolution+"p_")
 		}
-		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
+		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + titleSanitized
 
 		projSuffix := "_LR.mp4"
 		viewAngle := gjson.Get(JsonMetadataA, "viewAngle").String()
@@ -618,7 +788,7 @@ func appendFilenames(sc *models.ScrapedScene, siteID string, filenameRegEx *rege
 		}
 	} else {
 		resolutions := []string{"_6400p_", "_4096p_", "_4000p_", "_3840p_", "_3360p_", "_3160p_", "_3072p_", "_3000p_", "_2900p_", "_2880p_", "_2700p_", "_2650p_", "_2160p_", "_1920p_", "_1440p_", "_1080p_", "_original_"}
-		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + filenameRegEx.ReplaceAllString(sc.Title, "_")
+		baseName := "SLR_" + strings.TrimSuffix(siteID, " (SLR)") + "_" + titleSanitized
 		switch videotype {
 		case "360°": // Can't determine if TB or MONO so have to add both
 			for i := range resolutions {

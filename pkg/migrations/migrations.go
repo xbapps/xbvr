@@ -55,7 +55,12 @@ func (i *RequestSceneList) ToJSON() string {
 	return string(b)
 }
 
-func Migrate() {
+// getVRPornSlugToIDMap returns the hardcoded slug-to-ID mapping
+func getVRPornSlugToIDMap() (map[string]string, error) {
+	return getVRPornSlugToID(), nil
+}
+
+func Migrate(migrateTo string) {
 	tlog := common.Log.WithField("task", "migration")
 	tlog.Info("Starting database migrations...")
 	config.State.Migration.IsRunning = true
@@ -2403,8 +2408,14 @@ func Migrate() {
 
 	m := gormigrate.New(db, gormigrate.DefaultOptions, wrappedMigrations)
 
-	if err := m.Migrate(); err != nil {
-		tlog.Fatalf("Could not migrate: %v", err)
+	if migrateTo != "" {
+		if err := m.MigrateTo(migrateTo); err != nil {
+			tlog.Fatalf("Could not migrate: %v", err)
+		}
+	} else {
+		if err := m.Migrate(); err != nil {
+			tlog.Fatalf("Could not migrate: %v", err)
+		}
 	}
 	if len(retryMigration) > 0 {
 		for _, migration := range retryMigration {

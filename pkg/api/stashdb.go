@@ -707,7 +707,9 @@ func findStashStudioIds(scraper string) []string {
 	config := models.BuildActorScraperRules()
 	s := config.StashSceneMatching[scraper]
 	for _, value := range s {
-		stashIds[value.StashId] = struct{}{}
+		if value.StashId != "" {
+			stashIds[value.StashId] = struct{}{}
+		}
 	}
 
 	if len(stashIds) == 0 {

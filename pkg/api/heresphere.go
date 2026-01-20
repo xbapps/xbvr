@@ -534,6 +534,9 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 				Name: "Talent:" + scene.Cast[i].Name,
 			})
 		}
+		if scene.Cast[i].CupSize != "" {
+			addFeatureTag("Actor Cup Size " + scene.Cast[i].CupSize)
+		}
 	}
 	if (len(scene.Cast) - akaCnt) > 5 {
 		addFeatureTag("Cast: 6+")

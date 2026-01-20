@@ -36,32 +36,32 @@
     "wampy": "6.4.2"
   },
   "devDependencies": {
-    "@babel/core": "7.27.4",
-    "@babel/eslint-parser": "7.27.5",
-    "@vue/cli-plugin-babel": "5.0.8",
-    "@vue/cli-plugin-eslint": "5.0.8",
-    "@vue/cli-service": "5.0.8",
+    "@babel/core": "7.28.6",
+    "@babel/eslint-parser": "7.28.6",
+    "@vue/cli-plugin-babel": "5.0.9",
+    "@vue/cli-plugin-eslint": "5.0.9",
+    "@vue/cli-service": "5.0.9",
     "@vue/eslint-config-standard": "9.0.1",
     "buffer": "6.0.3",
-    "concurrently": "9.2.0",
-    "eslint": "9.28.0",
-    "eslint-plugin-import": "2.31.0",
-    "eslint-plugin-n": "17.21.3",
+    "concurrently": "9.2.1",
+    "eslint": "9.39.2",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-n": "17.23.2",
     "eslint-plugin-promise": "7.2.1",
     "eslint-plugin-standard": "5.0.0",
-    "eslint-plugin-vue": "10.4.0",
-    "less": "4.3.0",
+    "eslint-plugin-vue": "10.7.0",
+    "less": "4.4.2",
     "less-loader": "12.3.0",
     "sass": "1.89.2",
-    "sass-loader": "16.0.5",
+    "sass-loader": "16.0.6",
     "simple-progress-webpack-plugin": "2.0.0",
     "vue-cli-plugin-i18n": "2.3.2",
     "vue-i18n-extract": "2.0.7",
     "vue-template-compiler": "2.7.16",
-    "webpack": "5.99.9"
+    "webpack": "5.102.1"
   },
   "resolutions": {
-    "@achrinza/node-ipc": "9.2.9"
+    "@achrinza/node-ipc": "9.2.10"
   },
   "eslintConfig": {
     "root": true,

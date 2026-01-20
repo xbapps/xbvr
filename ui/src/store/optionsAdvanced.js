@@ -12,6 +12,7 @@ const state = {
     linkScenesAfterSceneScraping: true,
     useAltSrcInFileMatching: true,
     useAltSrcInScriptFilters: true,
+    autoLimitScraping: true,
     ignoreReleasedBefore: null,
     collectorConfigs: null,
   }
@@ -40,6 +41,7 @@ const actions = {
         state.advanced.linkScenesAfterSceneScraping = data.config.advanced.linkScenesAfterSceneScraping
         state.advanced.useAltSrcInFileMatching = data.config.advanced.useAltSrcInFileMatching
         state.advanced.useAltSrcInScriptFilters = data.config.advanced.useAltSrcInScriptFilters
+        state.advanced.autoLimitScraping = data.config.advanced.autoLimitScraping
         state.advanced.ignoreReleasedBefore = data.config.advanced.ignoreReleasedBefore
         state.loading = false
       })
@@ -59,6 +61,7 @@ const actions = {
         state.advanced.linkScenesAfterSceneScraping = data.linkScenesAfterSceneScraping
         state.advanced.useAltSrcInFileMatching = data.useAltSrcInFileMatching
         state.advanced.useAltSrcInScriptFilters = data.useAltSrcInScriptFilters
+        state.advanced.autoLimitScraping = data.autoLimitScraping
         state.advanced.ignoreReleasedBefore = data.ignoreReleasedBefore
         state.loading = false
       })
