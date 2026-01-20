@@ -58,7 +58,7 @@
     "vue-cli-plugin-i18n": "2.3.2",
     "vue-i18n-extract": "2.0.7",
     "vue-template-compiler": "2.7.16",
-    "webpack": "5.102.1"
+    "webpack": "5.104.1"
   },
   "resolutions": {
     "@achrinza/node-ipc": "9.2.10"
