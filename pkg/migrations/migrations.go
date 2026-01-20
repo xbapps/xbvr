@@ -55,11 +55,6 @@ func (i *RequestSceneList) ToJSON() string {
 	return string(b)
 }
 
-// getVRPornSlugToIDMap returns the hardcoded slug-to-ID mapping
-func getVRPornSlugToIDMap() (map[string]string, error) {
-	return getVRPornSlugToID(), nil
-}
-
 func Migrate(migrateTo string) {
 	tlog := common.Log.WithField("task", "migration")
 	tlog.Info("Starting database migrations...")
