@@ -61,7 +61,7 @@
     "webpack": "5.102.1"
   },
   "resolutions": {
-    "@achrinza/node-ipc": "9.2.9"
+    "@achrinza/node-ipc": "9.2.10"
   },
   "eslintConfig": {
     "root": true,
