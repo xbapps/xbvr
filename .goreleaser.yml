@@ -100,6 +100,7 @@ dockers:
     extra_files:
       - xbvr_data
       - README.md
+      - docker_start.sh
     goos: linux
     goarch: amd64
     image_templates:
@@ -118,6 +119,7 @@ dockers:
     extra_files:
       - xbvr_data
       - README.md
+      - docker_start.sh
     goos: linux
     goarch: arm64
     image_templates:
@@ -136,6 +138,7 @@ dockers:
     extra_files:
       - xbvr_data
       - README.md
+      - docker_start.sh
     goos: linux
     goarch: arm
     goarm: 7
