@@ -92,12 +92,15 @@ func SinsVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 		if len(sc.Cast) == 0 {
 			trailerURL := e.ChildAttr("div.video-player-container__player source", "src")
 			//The cast is the first part of the trailer file name in the URL
-			re := regexp.MustCompile(`https:\/\/public\.xsinsvr\.com\/video\/.+\/(?P<cast>[A-Za-z_-]+)_trailer`)
+			re := regexp.MustCompile(`https:\/\/public(?:-mojo)?\.xsinsvr\.com\/video\/.+\/(?P<cast>[A-Za-z_-]+)_trailer`)
 			r := re.FindStringSubmatch(trailerURL)
 			castIndex := re.SubexpIndex("cast")
 			//sinsVR uses _ for whitespace and - to separate cast members
-			cast := strings.Split(strings.ReplaceAll(r[castIndex], "_", " "), "-")
-			sc.Cast = append(sc.Cast, cast...)
+			cast := []string{}
+			if len(r) > castIndex {
+				cast = strings.Split(strings.ReplaceAll(r[castIndex], "_", " "), "-")
+				sc.Cast = append(sc.Cast, cast...)
+			}
 
 			// This should result in the correct model url for sinsVR but occasionally sins has yet to create the model url and will result in a 404
 			for _, name := range cast {
