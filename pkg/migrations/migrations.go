@@ -2411,6 +2411,14 @@ func Migrate(migrateTo string) {
 				return nil
 			},
 		},
+		{
+			ID: "0087-add-scraper-id-index",
+			Migrate: func(tx *gorm.DB) error {
+				// Add index on scraper_id to improve scene count query performance
+				// This prevents timeout on Scrapers page for users with large databases
+				return tx.Table("scenes").AddIndex("idx_scenes_scraper_id", "scraper_id").Error
+			},
+		},
 	}
 
 	// Wrap migrations to automatically track progress
