@@ -12,8 +12,8 @@
     "dev:ui": "cd ui && vue-cli-service build --watch --silent"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "5.15.4",
-    "@fortawesome/fontawesome-svg-core": "1.2.36",
+    "@fortawesome/fontawesome-free": "7.1.0",
+    "@fortawesome/fontawesome-svg-core": "7.1.0",
     "@mdi/font": "7.4.47",
     "buefy": "0.9.29",
     "bulma-extensions": "6.2.7",
