@@ -31,6 +31,13 @@ func SinsVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 	}
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
+		// Recover from any panic to prevent crashing the entire app
+		defer func() {
+			if r := recover(); r != nil {
+				log.Errorf("Panic recovered while scraping SinsVR scene %s: %v", e.Request.URL.String(), r)
+			}
+		}()
+
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
@@ -39,8 +46,14 @@ func SinsVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
 		// Scene ID / Title
-		sc.SiteID = strings.TrimSpace(e.ChildAttrs(`dl8-video`, "data-scene")[0])
-		sc.Title = strings.TrimSpace(e.ChildAttrs(`dl8-video`, "title")[0])
+		dataSceneAttrs := e.ChildAttrs(`dl8-video`, "data-scene")
+		titleAttrs := e.ChildAttrs(`dl8-video`, "title")
+		if len(dataSceneAttrs) == 0 || len(titleAttrs) == 0 {
+			log.Warnf("Skipping scene %s: missing dl8-video element or attributes", e.Request.URL.String())
+			return
+		}
+		sc.SiteID = strings.TrimSpace(dataSceneAttrs[0])
+		sc.Title = strings.TrimSpace(titleAttrs[0])
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
 
 		// Cover
@@ -107,11 +120,13 @@ func SinsVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 				profileUrl := `https://xsinsvr.com/model/` + strings.ToLower(strings.ReplaceAll(name, " ", "-"))
 				profileUrlResp, err := http.Head(profileUrl)
 				if err != nil {
-					log.Errorf("Method Head Failed on profileUrlResp %s with error %s", profileUrlResp, err)
-				} else if profileUrlResp.StatusCode == 200 { //The url is not valid don't bother adding it to the ActorDetails
+					log.Errorf("Method Head Failed for %s: %s", profileUrl, err)
+					continue
+				}
+				if profileUrlResp.StatusCode == 200 {
 					sc.ActorDetails[name] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: profileUrl}
 				}
-				defer profileUrlResp.Body.Close()
+				profileUrlResp.Body.Close()
 			}
 		}
 
