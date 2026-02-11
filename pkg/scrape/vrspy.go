@@ -199,10 +199,12 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 			}
 		})
 
-		// Set up CDN URL for covers and images
-		cdnSceneURL := e.Request.URL
-		cdnSceneURL.Host = "cdn." + domain
-		cdnSceneURL.Path = "/videos/" + sc.SiteID
+		// Set up CDN URL for covers and images (must copy, not alias e.Request.URL pointer)
+		cdnSceneURL := &url.URL{
+			Scheme: "https",
+			Host:   "cdn." + domain,
+			Path:   "/videos/" + sc.SiteID,
+		}
 
 		// Look for gallery images in page HTML
 		pageHTMLStr := string(e.Response.Body)
@@ -210,8 +212,8 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		// Extract cover images
 		cover := cdnSceneURL.JoinPath("images", "cover.jpg").String()
 
-		// Find cover images directly in HTML to get the correct URLs
-		coverRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/\d+/images/cover\.jpg`)
+		// Find cover images directly in HTML - scope to this scene's ID to avoid picking up related videos
+		coverRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/images/cover\.jpg`)
 
 		coverMatches := coverRegex.FindAllString(pageHTMLStr, -1)
 
@@ -229,8 +231,8 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		sc.Covers = []string{cover}
 
 		// Find gallery images
-		cdnImageRegex := regexp.MustCompile(`https://vrspy\.com/cdn-cgi/image/w=\d+/https://cdn\.vrspy\.com/(?:videos|films)/\d+/photos/([^"\s]+\.jpg)`)
-		directImageRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/\d+/photos/([^"\s?]+\.jpg)`)
+		cdnImageRegex := regexp.MustCompile(`https://vrspy\.com/cdn-cgi/image/w=\d+/https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/photos/([^"\s]+\.jpg)`)
+		directImageRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/photos/([^"\s?]+\.jpg)`)
 
 		// Extract all image filenames and their source URLs
 		type imageSource struct {
@@ -297,7 +299,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		sc.Gallery = cleanGallery
 
 		// Extract trailer URLs
-		trailerRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/\d+/trailers/\w+\.mp4\?token=[^"&]+`)
+		trailerRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/trailers/\w+\.mp4\?token=[^"&]+`)
 		trailerMatches := trailerRegex.FindAllString(pageHTMLStr, -1)
 
 		if len(trailerMatches) > 0 {
@@ -310,7 +312,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 			paramsdata := models.TrailerScrape{
 				SceneUrl:     sc.HomepageURL,
 				HtmlElement:  "body", // Search the entire body since NUXT_DATA might be in different locations
-				ExtractRegex: `(https://cdn\.vrspy\.com/(?:videos|films)/\d+/trailers/\w+\.mp4\?token=[^"&]+)`,
+				ExtractRegex: `(https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/trailers/\w+\.mp4\?token=[^"&]+)`,
 			}
 			jsonStr, _ := json.Marshal(paramsdata)
 			sc.TrailerSrc = string(jsonStr)
