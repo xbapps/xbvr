@@ -2,7 +2,7 @@ module github.com/xbapps/xbvr
 
 go 1.24.0
 
-toolchain go1.24.5
+toolchain go1.26.0
 
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
