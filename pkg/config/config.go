@@ -174,7 +174,38 @@ type ObjectConfig struct {
 			HourEnd         int  `default:"23" json:"hourEnd"`
 			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"linkScenesSchedule"`
+		AutoTagSchedule struct {
+			Enabled         bool `default:"false" json:"enabled"`
+			HourInterval    int  `default:"12" json:"hourInterval"`
+			UseRange        bool `default:"false" json:"useRange"`
+			MinuteStart     int  `default:"0" json:"minuteStart"`
+			HourStart       int  `default:"0" json:"hourStart"`
+			HourEnd         int  `default:"23" json:"hourEnd"`
+			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
+		} `json:"autoTagSchedule"`
 	} `json:"cron"`
+	AutoTag struct {
+		BreastType  bool `default:"false" json:"breastType"`
+		Age         bool `default:"false" json:"age"`
+		Height      bool `default:"false" json:"height"`
+		Nationality bool `default:"false" json:"nationality"`
+		Ethnicity   bool `default:"false" json:"ethnicity"`
+		HairColor   bool `default:"false" json:"hairColor"`
+		EyeColor    bool `default:"false" json:"eyeColor"`
+		CupSize     bool `default:"false" json:"cupSize"`
+		Resolution  bool `default:"false" json:"resolution"`
+		VideoFormat bool `default:"false" json:"videoFormat"`
+		Duration    bool `default:"false" json:"duration"`
+
+		Interracial bool `default:"false" json:"interracial"`
+		BMI         bool `default:"false" json:"bmi"`
+
+		HeightShortMax   int `default:"160" json:"heightShortMax"`
+		HeightAverageMax int `default:"175" json:"heightAverageMax"`
+
+		DurationShortMax    int `default:"15" json:"durationShortMax"`
+		DurationStandardMax int `default:"40" json:"durationStandardMax"`
+	} `json:"autoTag"`
 	Storage struct {
 		MatchOhash bool     `default:"false" json:"match_ohash"`
 		VideoExt   []string `json:"video_ext"`

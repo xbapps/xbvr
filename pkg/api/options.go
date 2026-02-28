@@ -186,6 +186,34 @@ type RequestSaveOptionsTaskSchedule struct {
 	LinkScenesHourStart    int  `json:"linkScenesHourStart"`
 	LinkScenesHourEnd      int  `json:"linkScenesHourEnd"`
 	LinkScenesStartDelay   int  `json:"linkScenesStartDelay"`
+
+	AutoTagScheduleEnabled      bool `json:"autoTagScheduleEnabled"`
+	AutoTagScheduleHourInterval int  `json:"autoTagScheduleHourInterval"`
+	AutoTagScheduleUseRange     bool `json:"autoTagScheduleUseRange"`
+	AutoTagScheduleMinuteStart  int  `json:"autoTagScheduleMinuteStart"`
+	AutoTagScheduleHourStart    int  `json:"autoTagScheduleHourStart"`
+	AutoTagScheduleHourEnd      int  `json:"autoTagScheduleHourEnd"`
+	AutoTagScheduleStartDelay   int  `json:"autoTagScheduleStartDelay"`
+
+	AutoTagBreastType  bool `json:"autoTagBreastType"`
+	AutoTagAge         bool `json:"autoTagAge"`
+	AutoTagHeight      bool `json:"autoTagHeight"`
+	AutoTagNationality bool `json:"autoTagNationality"`
+	AutoTagEthnicity   bool `json:"autoTagEthnicity"`
+	AutoTagHairColor   bool `json:"autoTagHairColor"`
+	AutoTagEyeColor    bool `json:"autoTagEyeColor"`
+	AutoTagCupSize     bool `json:"autoTagCupSize"`
+	AutoTagResolution  bool `json:"autoTagResolution"`
+	AutoTagVideoFormat bool `json:"autoTagVideoFormat"`
+	AutoTagDuration    bool `json:"autoTagDuration"`
+
+	AutoTagInterracial bool `json:"autoTagInterracial"`
+
+	AutoTagHeightShortMax   int `json:"autoTagHeightShortMax"`
+	AutoTagHeightAverageMax int `json:"autoTagHeightAverageMax"`
+
+	AutoTagDurationShortMax    int `json:"autoTagDurationShortMax"`
+	AutoTagDurationStandardMax int `json:"autoTagDurationStandardMax"`
 }
 type RequestSaveSiteMatchParams struct {
 	SiteId      string                   `json:"site"`
@@ -976,6 +1004,9 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	if r.PreviewHourEnd > 23 {
 		r.PreviewHourEnd -= 24
 	}
+	if r.AutoTagScheduleHourEnd > 23 {
+		r.AutoTagScheduleHourEnd -= 24
+	}
 
 	config.Config.Cron.RescrapeSchedule.Enabled = r.RescrapeEnabled
 	config.Config.Cron.RescrapeSchedule.HourInterval = r.RescrapeHourInterval
@@ -1024,6 +1055,34 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.Config.Cron.LinkScenesSchedule.HourStart = r.LinkScenesHourStart
 	config.Config.Cron.LinkScenesSchedule.HourEnd = r.LinkScenesHourEnd
 	config.Config.Cron.LinkScenesSchedule.RunAtStartDelay = r.LinkScenesStartDelay
+
+	config.Config.Cron.AutoTagSchedule.Enabled = r.AutoTagScheduleEnabled
+	config.Config.Cron.AutoTagSchedule.HourInterval = r.AutoTagScheduleHourInterval
+	config.Config.Cron.AutoTagSchedule.UseRange = r.AutoTagScheduleUseRange
+	config.Config.Cron.AutoTagSchedule.MinuteStart = r.AutoTagScheduleMinuteStart
+	config.Config.Cron.AutoTagSchedule.HourStart = r.AutoTagScheduleHourStart
+	config.Config.Cron.AutoTagSchedule.HourEnd = r.AutoTagScheduleHourEnd
+	config.Config.Cron.AutoTagSchedule.RunAtStartDelay = r.AutoTagScheduleStartDelay
+
+	config.Config.AutoTag.BreastType = r.AutoTagBreastType
+	config.Config.AutoTag.Age = r.AutoTagAge
+	config.Config.AutoTag.Height = r.AutoTagHeight
+	config.Config.AutoTag.Nationality = r.AutoTagNationality
+	config.Config.AutoTag.Ethnicity = r.AutoTagEthnicity
+	config.Config.AutoTag.HairColor = r.AutoTagHairColor
+	config.Config.AutoTag.EyeColor = r.AutoTagEyeColor
+	config.Config.AutoTag.CupSize = r.AutoTagCupSize
+	config.Config.AutoTag.Resolution = r.AutoTagResolution
+	config.Config.AutoTag.VideoFormat = r.AutoTagVideoFormat
+	config.Config.AutoTag.Duration = r.AutoTagDuration
+
+	config.Config.AutoTag.Interracial = r.AutoTagInterracial
+
+	config.Config.AutoTag.HeightShortMax = r.AutoTagHeightShortMax
+	config.Config.AutoTag.HeightAverageMax = r.AutoTagHeightAverageMax
+
+	config.Config.AutoTag.DurationShortMax = r.AutoTagDurationShortMax
+	config.Config.AutoTag.DurationStandardMax = r.AutoTagDurationStandardMax
 
 	config.SaveConfig()
 
