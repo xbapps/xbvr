@@ -2379,6 +2379,12 @@ func Migrate(migrateTo string) {
 				return nil
 			},
 		},
+		{
+			ID: "0087-add-is_system-to-tags",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(&models.Tag{}).Error
+			},
+		},
 	}
 
 	// Wrap migrations to automatically track progress

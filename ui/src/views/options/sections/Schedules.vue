@@ -11,6 +11,7 @@
             <b-tab-item label="Actor Rescrape"/>
             <b-tab-item label="Stashdb Rescrape"/>
             <b-tab-item :label="$t('Link Scenes')"/>
+            <b-tab-item :label="$t('Auto Tags')"/>
       </b-tabs>
       <div class="columns">
         <div class="column">
@@ -250,6 +251,205 @@
                 <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(linkScenesStartDelay) }}</div>
             </b-field>
           </div>
+           <div v-if="activeTab == 6">
+            <b-field>
+              <b-switch v-model="autoTagScheduleEnabled">Enable schedule</b-switch>
+            </b-field>
+            <b-field v-if="autoTagScheduleEnabled">
+              <b-slider v-model="autoTagScheduleHourInterval" :min="1" :max="23" :step="1" ></b-slider>
+              <div class="column is-one-third" style="margin-left:.75em">{{`Run every ${this.autoTagScheduleHourInterval} hour${this.autoTagScheduleHourInterval > 1 ? 's': ''}`}}</div>
+            </b-field>
+            <b-field>
+              <b-switch v-if="autoTagScheduleEnabled" v-model="useAutoTagScheduleTimeRange">Limit time of day</b-switch>
+            </b-field>
+            <div v-if="useAutoTagScheduleTimeRange && autoTagScheduleEnabled">
+              <b-field>
+                <b-slider v-model="autoTagScheduleTimeRange" :min="0" :max="48" :step="1" :custom-formatter="val => timeRange[val]" @input="restrictAutoTagScheduleTo24Hours">
+                  <b-slider-tick :value="0">00:00</b-slider-tick>
+                  <b-slider-tick :value="6">06:00</b-slider-tick>
+                  <b-slider-tick :value="12">12:00</b-slider-tick>
+                  <b-slider-tick :value="18">18:00</b-slider-tick>
+                  <b-slider-tick :value="24">Midnight</b-slider-tick>
+                  <b-slider-tick :value="30">06:00</b-slider-tick>
+                  <b-slider-tick :value="36">12:00</b-slider-tick>
+                  <b-slider-tick :value="42">18:00</b-slider-tick>
+                  <b-slider-tick :value="48">00:00</b-slider-tick>
+                </b-slider>
+                <div class="column is-one-third" style="margin-left:.75em">{{`${this.timeRange[this.autoTagScheduleTimeRange[0]]} - ${this.timeRange[this.autoTagScheduleTimeRange[1]]}`}}</div>
+              </b-field>
+              <b-field>
+                <b-slider v-model="autoTagScheduleMinuteStart" :min="0" :max="60" :step="1" ></b-slider>
+                <div class="column is-one-third" style="margin-left:.75em">{{ minutesStartMsg(autoTagScheduleMinuteStart) }}</div>
+              </b-field>
+            </div>
+            <br/>
+            <b-field label="Startup">
+                <b-slider v-model="autoTagScheduleStartDelay" :min="0" :max="60" :step="1" ></b-slider>
+                <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(autoTagScheduleStartDelay) }}</div>
+            </b-field>
+            <hr/>
+            <h4>{{$t("Generators")}}</h4>
+            
+            <div class="columns">
+              <div class="column">
+                <h5>{{$t("Actor Characteristics")}}</h5>
+                <b-field>
+                  <b-switch v-model="autoTagCupSize">
+                    {{$t("Breast Size")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="breastSizeTags.length === 0">{{$t("Generates: Cup: C, Cup: DD, etc.")}}</small>
+                    <b-taglist v-if="breastSizeTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in breastSizeTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+                <b-field>
+                  <b-switch v-model="autoTagBreastType">
+                    {{$t("Breast Type")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="breastTypeTags.length === 0">{{$t("Generates: Breast Type - Natural, Breast Type - Fake")}}</small>
+                    <b-taglist v-if="breastTypeTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in breastTypeTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+                <b-field>
+                  <b-switch v-model="autoTagAge">
+                    {{$t("Age")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="ageTags.length === 0">{{$t("Generates: Age: 25, Age: 30, etc.")}}</small>
+                    <b-taglist v-if="ageTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in ageTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+                <b-field>
+                  <b-switch v-model="autoTagHeight">
+                    {{$t("Height")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="heightTags.length === 0">{{$t("Generates: Height: Short/Average/Tall")}}</small>
+                    <b-taglist v-if="heightTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in heightTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+                <div v-if="autoTagHeight" style="margin-left: 2em; margin-bottom: 1em;">
+                  <b-field label="Short Max (cm)">
+                    <b-input v-model="autoTagHeightShortMax" type="number"></b-input>
+                  </b-field>
+                  <b-field label="Average Max (cm)">
+                    <b-input v-model="autoTagHeightAverageMax" type="number"></b-input>
+                  </b-field>
+                </div>
+
+                <b-field>
+                  <b-switch v-model="autoTagNationality">
+                    {{$t("Nationality")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="nationalityTags.length === 0">{{$t("Generates: Nationality: USA, etc.")}}</small>
+                    <b-taglist v-if="nationalityTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in nationalityTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+                <b-field>
+                  <b-switch v-model="autoTagEthnicity">
+                    {{$t("Ethnicity")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="ethnicityTags.length === 0">{{$t("Generates: Ethnicity: Asian, etc.")}}</small>
+                    <b-taglist v-if="ethnicityTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in ethnicityTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+                <b-field>
+                  <b-switch v-model="autoTagHairColor">
+                    {{$t("Hair Color")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="hairColorTags.length === 0">{{$t("Generates: Hair: Blonde, etc.")}}</small>
+                    <b-taglist v-if="hairColorTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in hairColorTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+                <b-field>
+                  <b-switch v-model="autoTagEyeColor">
+                    {{$t("Eye Color")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="eyeColorTags.length === 0">{{$t("Generates: Eyes: Blue, etc.")}}</small>
+                    <b-taglist v-if="eyeColorTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in eyeColorTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+              </div>
+              <div class="column">
+                <h5>{{$t("Video Quality")}}</h5>
+                <b-field>
+                  <b-switch v-model="autoTagResolution">
+                    {{$t("Resolution")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="resolutionTags.length === 0">{{$t("Generates: Res: 1080p, Res: 4K, etc.")}}</small>
+                    <b-taglist v-if="resolutionTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in resolutionTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+                <b-field>
+                  <b-switch v-model="autoTagVideoFormat">
+                    {{$t("Video Format")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="videoFormatTags.length === 0">{{$t("Generates: Format: 180°, etc.")}}</small>
+                    <b-taglist v-if="videoFormatTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in videoFormatTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+
+                <h5 style="margin-top: 1em;">{{$t("Scene Attributes")}}</h5>
+                <b-field>
+                  <b-switch v-model="autoTagDuration">
+                    {{$t("Duration")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="durationTags.length === 0">{{$t("Generates: Duration: Short/Standard/Long")}}</small>
+                    <b-taglist v-if="durationTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in durationTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+                <div v-if="autoTagDuration" style="margin-left: 2em; margin-bottom: 1em;">
+                  <b-field label="Short Max (min)">
+                    <b-input v-model="autoTagDurationShortMax" type="number"></b-input>
+                  </b-field>
+                  <b-field label="Standard Max (min)">
+                    <b-input v-model="autoTagDurationStandardMax" type="number"></b-input>
+                  </b-field>
+                </div>
+                <b-field>
+                  <b-switch v-model="autoTagInterracial">
+                    {{$t("Interracial")}}
+                    <br>
+                    <small class="has-text-grey-light" v-if="interracialTags.length === 0">{{$t("Generates: Interracial")}}</small>
+                    <b-taglist v-if="interracialTags.length > 0" style="margin-top: 5px;">
+                      <b-tag v-for="tag in interracialTags" :key="tag.id" type="is-info" class="is-light" style="cursor: pointer; margin-right: 5px; margin-bottom: 2px;" @click.native.stop.prevent="showTagScenes(tag.name)">{{tag.name}} ({{tag.count}})</b-tag>
+                    </b-taglist>
+                  </b-switch>
+                </b-field>
+              </div>
+            </div>
+
+            <hr/>
+            <h4>{{$t("Advanced Controls")}}</h4>
+            <div class="columns">
+               <div class="column">
+                  <b-button type="is-info" icon-left="play" @click="runAutoTag" :loading="isRunNowLoading" style="margin-right: 1em">Run Now</b-button>
+                  <b-button type="is-danger" icon-left="delete" @click="resetAutoTag" :loading="isResetLoading">Reset System Tags</b-button>
+               </div>
+            </div>
+            
+
+
+          </div>
             <hr/>
               <b-field grouped>
                 <b-button type="is-primary" @click="saveSettings" style="margin-right:1em">Save settings</b-button>
@@ -319,6 +519,35 @@ export default {
       lastlinkScenesTimeRange: [0,23],
       useLinkScenesTimeRange: false,      
       linkScenesStartDelay: 0,
+      autoTagScheduleEnabled: false,
+      autoTagScheduleTimeRange:[0,23],
+      autoTagScheduleHourInterval: 0,
+      autoTagScheduleMinuteStart: 0,
+      lastAutoTagScheduleTimeRange: [0,23],
+      useAutoTagScheduleTimeRange: false,
+      autoTagScheduleStartDelay: 0,
+      autoTagBreastType: false,
+
+      autoTagAge: false,
+      autoTagHeight: false,
+      autoTagNationality: false,
+      autoTagEthnicity: false,
+      autoTagHairColor: false,
+      autoTagEyeColor: false,
+      autoTagCupSize: false,
+      autoTagResolution: false,
+      autoTagVideoFormat: false,
+      autoTagDuration: false,
+
+      autoTagInterracial: false,
+      autoTagHeightShortMax: 160,
+      autoTagHeightAverageMax: 175,
+      autoTagDurationShortMax: 15,
+      autoTagDurationStandardMax: 40,
+      isRunNowLoading: false,
+      isResetLoading: false,
+      systemTags: [],
+
       timeRange: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
         '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00',
         '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
@@ -327,8 +556,22 @@ export default {
   },
   async mounted () {
     await this.loadState()
+    await this.loadSystemTags()
   },
   computed: {
+    breastSizeTags () { return this.systemTags.filter(t => t.name.startsWith('Cup:')) },
+    breastTypeTags () { return this.systemTags.filter(t => t.name.startsWith('Breast Type -')) },
+    ageTags () { return this.systemTags.filter(t => t.name.startsWith('Age:')) },
+    heightTags () { return this.systemTags.filter(t => t.name.startsWith('Height:')) },
+    nationalityTags () { return this.systemTags.filter(t => t.name.startsWith('Nationality:')) },
+    ethnicityTags () { return this.systemTags.filter(t => t.name.startsWith('Ethnicity:')) },
+    hairColorTags () { return this.systemTags.filter(t => t.name.startsWith('Hair:')) },
+    eyeColorTags () { return this.systemTags.filter(t => t.name.startsWith('Eyes:')) },
+    resolutionTags () { return this.systemTags.filter(t => t.name.startsWith('Res:')) },
+    videoFormatTags () { return this.systemTags.filter(t => t.name.startsWith('Format:')) },
+    durationTags () { return this.systemTags.filter(t => t.name.startsWith('Duration:')) },
+    interracialTags () { return this.systemTags.filter(t => t.name === 'Interracial') },
+
     stashApiKey: {
       get () {        
         return this.$store.state.optionsAdvanced.advanced.stashApiKey
@@ -364,6 +607,10 @@ export default {
       this.linkScenesTimeRange = this.restrictTo24Hours(this.linkScenesTimeRange, this.lastLinkScenesTimeRange)
       this.lastLinkScenesTimeRange = this.LinkScenesTimeRange
     },
+    restrictAutoTagScheduleTo24Hours () {
+      this.autoTagScheduleTimeRange = this.restrictTo24Hours(this.autoTagScheduleTimeRange, this.lastAutoTagScheduleTimeRange)
+      this.lastAutoTagScheduleTimeRange = this.autoTagScheduleTimeRange
+    },
     restrictTo24Hours (timeRange, lastTimeRange) {
       // check the first time is not in the second 24 hours, no need, should be in the first 24 hours
       if (timeRange[0] > 23) {
@@ -380,6 +627,53 @@ export default {
       }
       return timeRange
     },
+    async runAutoTag () {
+      this.isRunNowLoading = true
+      await ky.get('/api/task/auto-tag')
+      this.isRunNowLoading = false
+      this.$buefy.toast.open({
+        message: 'Auto-tagging started',
+        type: 'is-success'
+      })
+      setTimeout(() => { this.loadSystemTags() }, 2000)
+    },
+    async loadSystemTags () {
+      await ky.get('/api/task/system-tags')
+        .json()
+        .then(data => {
+          this.systemTags = data
+        })
+    },
+    showTagScenes (tagName) {
+      this.$store.state.sceneList.filters.cast = []
+      this.$store.state.sceneList.filters.sites = []
+      this.$store.state.sceneList.filters.tags = [tagName]
+      this.$store.state.sceneList.filters.attributes = []
+      this.$router.push({
+        name: 'scenes',
+        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
+      })
+    },
+    async resetAutoTag () {
+      this.$buefy.dialog.confirm({
+        title: 'Reset System Tags',
+        message: 'Are you sure you want to delete all system-generated tags from all scenes?',
+        confirmText: 'Reset',
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: async () => {
+          this.isResetLoading = true
+          await ky.get('/api/task/auto-tag-reset')
+          this.isResetLoading = false
+          this.$buefy.toast.open({
+            message: 'System tags reset',
+            type: 'is-success'
+          })
+          this.systemTags = []
+        }
+      })
+    },
+
     async loadState () {
       this.isLoading = true
       await ky.get('/api/options/state')
@@ -441,6 +735,37 @@ export default {
           } else {
             this.linkScenesTimeRange = [data.config.cron.linkScenesSchedule.hourStart, data.config.cron.linkScenesSchedule.hourEnd]            
           }
+
+          this.autoTagScheduleEnabled = data.config.cron.autoTagSchedule.enabled
+          this.autoTagScheduleHourInterval = data.config.cron.autoTagSchedule.hourInterval
+          this.useAutoTagScheduleTimeRange = data.config.cron.autoTagSchedule.useRange
+          this.autoTagScheduleMinuteStart = data.config.cron.autoTagSchedule.minuteStart
+
+          if (data.config.cron.autoTagSchedule.hourStart > data.config.cron.autoTagSchedule.hourEnd) {
+            this.autoTagScheduleTimeRange = [data.config.cron.autoTagSchedule.hourStart, data.config.cron.autoTagSchedule.hourEnd + 24]
+          } else {
+            this.autoTagScheduleTimeRange = [data.config.cron.autoTagSchedule.hourStart, data.config.cron.autoTagSchedule.hourEnd]
+          }
+
+          this.autoTagScheduleStartDelay = data.config.cron.autoTagSchedule.runAtStartDelay
+          this.autoTagBreastType = data.config.autoTag.breastType
+
+          this.autoTagAge = data.config.autoTag.age
+          this.autoTagHeight = data.config.autoTag.height
+          this.autoTagNationality = data.config.autoTag.nationality
+          this.autoTagEthnicity = data.config.autoTag.ethnicity
+          this.autoTagHairColor = data.config.autoTag.hairColor
+          this.autoTagEyeColor = data.config.autoTag.eyeColor
+          this.autoTagCupSize = data.config.autoTag.cupSize
+          this.autoTagResolution = data.config.autoTag.resolution
+          this.autoTagVideoFormat = data.config.autoTag.videoFormat
+          this.autoTagDuration = data.config.autoTag.duration
+
+          this.autoTagInterracial = data.config.autoTag.interracial
+          this.autoTagHeightShortMax = data.config.autoTag.heightShortMax
+          this.autoTagHeightAverageMax = data.config.autoTag.heightAverageMax
+          this.autoTagDurationShortMax = data.config.autoTag.durationShortMax
+          this.autoTagDurationStandardMax = data.config.autoTag.durationStandardMax
           
           this.rescrapeStartDelay = data.config.cron.rescrapeSchedule.runAtStartDelay
           this.rescanStartDelay = data.config.cron.rescanSchedule.runAtStartDelay          
@@ -516,7 +841,32 @@ export default {
           linkScenesMinuteStart: this.linkScenesMinuteStart,
           linkScenesHourStart: this.linkScenesTimeRange[0],
           linkScenesHourEnd: this.linkScenesTimeRange[1],
-          linkScenesStartDelay:this.linkScenesStartDelay          
+          linkScenesStartDelay:this.linkScenesStartDelay,
+          autoTagScheduleEnabled: this.autoTagScheduleEnabled,
+          autoTagScheduleHourInterval: this.autoTagScheduleHourInterval,
+          autoTagScheduleUseRange: this.useAutoTagScheduleTimeRange,
+          autoTagScheduleMinuteStart: this.autoTagScheduleMinuteStart,
+          autoTagScheduleHourStart: this.autoTagScheduleTimeRange[0],
+          autoTagScheduleHourEnd: this.autoTagScheduleTimeRange[1],
+          autoTagScheduleStartDelay:this.autoTagScheduleStartDelay,
+          autoTagBreastType: this.autoTagBreastType,
+
+          autoTagAge: this.autoTagAge,
+          autoTagHeight: this.autoTagHeight,
+          autoTagNationality: this.autoTagNationality,
+          autoTagEthnicity: this.autoTagEthnicity,
+          autoTagHairColor: this.autoTagHairColor,
+          autoTagEyeColor: this.autoTagEyeColor,
+          autoTagCupSize: this.autoTagCupSize,
+          autoTagResolution: this.autoTagResolution,
+          autoTagVideoFormat: this.autoTagVideoFormat,
+          autoTagDuration: this.autoTagDuration,
+
+          autoTagInterracial: this.autoTagInterracial,
+          autoTagHeightShortMax: parseInt(this.autoTagHeightShortMax),
+          autoTagHeightAverageMax: parseInt(this.autoTagHeightAverageMax),
+          autoTagDurationShortMax: parseInt(this.autoTagDurationShortMax),
+          autoTagDurationStandardMax: parseInt(this.autoTagDurationStandardMax)
         }
       })
         .json()
