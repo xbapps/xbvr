@@ -14,6 +14,7 @@ import (
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -27,6 +28,9 @@ const (
 func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singleScrapeAdditionalInfo string, limitScraping bool) error {
 	defer wg.Done()
 	logScrapeStart(scraperID, siteID)
+
+	// Track successful scene scrapes for auto limit scraping
+	scrapeSuccessful := false
 
 	allowedDomains := []string{domain, "www." + domain}
 	sceneCollector := createCollector(allowedDomains...)
@@ -195,10 +199,12 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 			}
 		})
 
-		// Set up CDN URL for covers and images
-		cdnSceneURL := e.Request.URL
-		cdnSceneURL.Host = "cdn." + domain
-		cdnSceneURL.Path = "/videos/" + sc.SiteID
+		// Set up CDN URL for covers and images (must copy, not alias e.Request.URL pointer)
+		cdnSceneURL := &url.URL{
+			Scheme: "https",
+			Host:   "cdn." + domain,
+			Path:   "/videos/" + sc.SiteID,
+		}
 
 		// Look for gallery images in page HTML
 		pageHTMLStr := string(e.Response.Body)
@@ -206,8 +212,8 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		// Extract cover images
 		cover := cdnSceneURL.JoinPath("images", "cover.jpg").String()
 
-		// Find cover images directly in HTML to get the correct URLs
-		coverRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/\d+/images/cover\.jpg`)
+		// Find cover images directly in HTML - scope to this scene's ID to avoid picking up related videos
+		coverRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/images/cover\.jpg`)
 
 		coverMatches := coverRegex.FindAllString(pageHTMLStr, -1)
 
@@ -225,8 +231,8 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		sc.Covers = []string{cover}
 
 		// Find gallery images
-		cdnImageRegex := regexp.MustCompile(`https://vrspy\.com/cdn-cgi/image/w=\d+/https://cdn\.vrspy\.com/(?:videos|films)/\d+/photos/([^"\s]+\.jpg)`)
-		directImageRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/\d+/photos/([^"\s]+\.jpg)`)
+		cdnImageRegex := regexp.MustCompile(`https://vrspy\.com/cdn-cgi/image/w=\d+/https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/photos/([^"\s]+\.jpg)`)
+		directImageRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/photos/([^"\s?]+\.jpg)`)
 
 		// Extract all image filenames and their source URLs
 		type imageSource struct {
@@ -261,7 +267,7 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 			}
 		}
 
-		// Deduplicate gallery images and transform to 960px in any direction
+		// Deduplicate gallery images
 		cleanGallery := make([]string, 0)
 		seenFilenames := make(map[string]bool)
 
@@ -282,19 +288,18 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 					directURL = img.fullURL
 				}
 
-				// Remove any fragments
+				// Remove any fragments and existing query params to get clean direct URL
 				directURL = strings.Split(directURL, "#")[0]
+				directURL = strings.Split(directURL, "?")[0]
 
-				// Use CloudFlare image processing to constrain to 960px max in any direction, maintaining aspect ratio
-				transformedURL := "https://vrspy.com/cdn-cgi/image/w=960,h=960,fit=scale-down,format=auto/" + directURL
-				cleanGallery = append(cleanGallery, transformedURL)
+				cleanGallery = append(cleanGallery, directURL)
 			}
 		}
 
 		sc.Gallery = cleanGallery
 
 		// Extract trailer URLs
-		trailerRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/\d+/trailers/\w+\.mp4\?token=[^"&]+`)
+		trailerRegex := regexp.MustCompile(`https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/trailers/\w+\.mp4\?token=[^"&]+`)
 		trailerMatches := trailerRegex.FindAllString(pageHTMLStr, -1)
 
 		if len(trailerMatches) > 0 {
@@ -307,23 +312,26 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 			paramsdata := models.TrailerScrape{
 				SceneUrl:     sc.HomepageURL,
 				HtmlElement:  "body", // Search the entire body since NUXT_DATA might be in different locations
-				ExtractRegex: `(https://cdn\.vrspy\.com/(?:videos|films)/\d+/trailers/\w+\.mp4\?token=[^"&]+)`,
+				ExtractRegex: `(https://cdn\.vrspy\.com/(?:videos|films)/` + sc.SiteID + `/trailers/\w+\.mp4\?token=[^"&]+)`,
 			}
 			jsonStr, _ := json.Marshal(paramsdata)
 			sc.TrailerSrc = string(jsonStr)
 		}
 
+		scrapeSuccessful = true
 		out <- sc
 	})
 
 	siteCollector.OnHTML(`body`, func(e *colly.HTMLElement) {
 		if !limitScraping {
-			// Get current page number from URL
-			currentPage := 1
-			if pageParam := e.Request.URL.Query().Get("page"); pageParam != "" {
-				if p, err := strconv.Atoi(pageParam); err == nil {
-					currentPage = p
-				}
+			// Only paginate when on /videos?sort=new pages
+			urlPath := e.Request.URL.Path
+			sortParam := e.Request.URL.Query().Get("sort")
+			pageParam := e.Request.URL.Query().Get("page")
+
+			// Only trigger pagination from /videos with sort=new
+			if urlPath != "/videos" || sortParam != "new" {
+				return
 			}
 
 			// Check if there are videos on this page
@@ -335,29 +343,40 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 			// If we found videos on this page, try the next page
 			if hasVideos {
 				var nextURL string
-				if e.Request.URL.Query().Get("page") == "" {
-					nextURL = fmt.Sprintf("%s/videos?sort=new&page=-1", baseURL)
+
+				if pageParam == "" {
+					// First page of /videos?sort=new, go to page 2
+					nextURL = fmt.Sprintf("%s/videos?sort=new&page=2", baseURL)
 				} else {
-					nextPage := currentPage + 1
-					nextURL = fmt.Sprintf("%s/videos?sort=new&page=%d", baseURL, nextPage)
+					// Already on a numbered page, increment
+					currentPage, err := strconv.Atoi(pageParam)
+					if err == nil {
+						nextURL = fmt.Sprintf("%s/videos?sort=new&page=%d", baseURL, currentPage+1)
+					}
 				}
-				siteCollector.Visit(nextURL)
+
+				if nextURL != "" {
+					siteCollector.Visit(nextURL)
+				}
 			}
 		}
 	})
 
+	// Collect scene URLs first, then scrape them after all listing pages are processed
+	sceneURLs := make([]string, 0)
+
 	siteCollector.OnHTML(`.item-wrapper .photo a`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
+		if !funk.ContainsString(knownScenes, sceneURL) && !funk.ContainsString(sceneURLs, sceneURL) {
+			sceneURLs = append(sceneURLs, sceneURL)
 		}
 	})
 
 	// Fallback selector for scene links
 	siteCollector.OnHTML(`.video-section a.photo-preview`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-		if !funk.ContainsString(knownScenes, sceneURL) {
-			sceneCollector.Visit(sceneURL)
+		if !funk.ContainsString(knownScenes, sceneURL) && !funk.ContainsString(sceneURLs, sceneURL) {
+			sceneURLs = append(sceneURLs, sceneURL)
 		}
 	})
 
@@ -372,9 +391,30 @@ func VRSpy(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<
 		log.Infof("visiting %s", singleSceneURL)
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		listingURL := baseURL + "/videos"
-		log.Infof("visiting %s", listingURL)
-		siteCollector.Visit(listingURL)
+		// Visit listing pages: homepage, /videos, then /videos?sort=new (which handles pagination)
+		siteCollector.Visit(baseURL)
+		siteCollector.Visit(baseURL + "/videos")
+		siteCollector.Visit(baseURL + "/videos?sort=new")
+		siteCollector.Wait()
+
+		// Now scrape all collected scene URLs
+		for _, sceneURL := range sceneURLs {
+			sceneCollector.Visit(sceneURL)
+		}
+	}
+
+	// Auto-enable limit scraping after successful full scrape if config option is enabled
+	if scrapeSuccessful && !limitScraping && config.Config.Advanced.AutoLimitScraping {
+		db, _ := models.GetDB()
+		defer db.Close()
+
+		var site models.Site
+		err := db.Where(&models.Site{ID: scraperID}).First(&site).Error
+		if err == nil && !site.LimitScraping {
+			site.LimitScraping = true
+			site.Save()
+			log.Infof("Auto-enabled limit scraping for %s after successful full scrape", scraperID)
+		}
 	}
 
 	if updateSite {
