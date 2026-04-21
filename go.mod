@@ -1,8 +1,6 @@
 module github.com/xbapps/xbvr
 
-go 1.24.0
-
-toolchain go1.24.5
+go 1.25.0
 
 require (
 	github.com/ProtonMail/go-appdir v1.1.0
@@ -60,7 +58,7 @@ require (
 	golang.org/x/net v0.47.0
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/sys v0.38.0
-	golang.org/x/text v0.31.0
+	golang.org/x/text v0.35.0
 	gopkg.in/gormigrate.v1 v1.6.0
 	willnorris.com/go/imageproxy v0.12.0
 )
@@ -149,7 +147,7 @@ require (
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
-	golang.org/x/image v0.18.0 // indirect
+	golang.org/x/image v0.38.0 // indirect
 	golang.org/x/term v0.37.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
