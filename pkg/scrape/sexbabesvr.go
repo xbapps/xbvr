@@ -3,6 +3,8 @@ package scrape
 import (
 	"encoding/json"
 	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -88,12 +90,31 @@ func SexBabesVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 		})
 
-		// Date
-		releaseDateText := e.ChildText(`.video-detail__description--container > div:last-of-type`)
-		tmpDate, _ := time.Parse("Jan 02, 2006", releaseDateText)
-		sc.Released = tmpDate.Format("2006-01-02")
-
-		// Duration
+		// Date and Duration from JSON-LD
+		durationRegex := regexp.MustCompile(`PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?`)
+		e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
+			jsonText := strings.TrimSpace(e.Text)
+			if jsonText != "" {
+				var jsonData map[string]interface{}
+				if err := json.Unmarshal([]byte(jsonText), &jsonData); err == nil {
+					// Duration
+					if duration, ok := jsonData["duration"].(string); ok {
+						if m := durationRegex.FindStringSubmatch(duration); len(m) == 4 {
+							hours, _ := strconv.Atoi(m[1]) // will be 0 if m[1] is empty
+							minutes, _ := strconv.Atoi(m[2])
+							seconds, _ := strconv.Atoi(m[3])
+							sc.Duration = (hours*3600 + minutes*60 + seconds) / 60
+						}
+					}
+					// Date
+					if uploadDate, ok := jsonData["uploadDate"].(string); ok {
+						if tmpDate, err := time.Parse(time.RFC3339, uploadDate); err == nil {
+							sc.Released = tmpDate.Format("2006-01-02")
+						}
+					}
+				}
+			}
+		})
 
 		// Filenames
 		// old site, needs update
