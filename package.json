@@ -51,7 +51,7 @@
     "eslint-plugin-standard": "5.0.0",
     "eslint-plugin-vue": "10.7.0",
     "less": "4.5.1",
-    "less-loader": "12.3.0",
+    "less-loader": "12.3.2",
     "sass": "1.97.2",
     "sass-loader": "16.0.6",
     "simple-progress-webpack-plugin": "2.0.0",
