@@ -18,7 +18,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/emicklei/go-restful-openapi/v2 v2.12.0
 	github.com/emicklei/go-restful/v3 v3.13.0
-	github.com/gammazero/nexus/v3 v3.2.2
+	github.com/gammazero/nexus/v3 v3.3.0
 	github.com/getlantern/systray v1.2.2
 	github.com/go-openapi/spec v0.22.4
 	github.com/go-resty/resty/v2 v2.17.2
@@ -68,6 +68,7 @@ require (
 	github.com/blevesearch/go-faiss v1.0.26 // indirect
 	github.com/blevesearch/zapx/v16 v16.2.8 // indirect
 	github.com/erraggy/oastools v1.36.1 // indirect
+	github.com/gammazero/deque v1.2.1 // indirect
 	github.com/go-openapi/swag/conv v0.25.5 // indirect
 	github.com/go-openapi/swag/jsonname v0.25.5 // indirect
 	github.com/go-openapi/swag/jsonutils v0.25.5 // indirect
@@ -123,7 +124,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -153,7 +154,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tkuchiki/go-timezone v0.2.0 // indirect
-	github.com/ugorji/go/codec v1.2.11 // indirect
+	github.com/ugorji/go/codec v1.3.1 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
