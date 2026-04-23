@@ -56,7 +56,7 @@ require (
 	github.com/xo/dburl v0.23.8
 	golang.org/x/crypto v0.50.0
 	golang.org/x/net v0.53.0
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sys v0.43.0
 	golang.org/x/text v0.36.0
 	gopkg.in/gormigrate.v1 v1.6.0
