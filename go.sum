@@ -54,6 +54,8 @@ github.com/blevesearch/bleve_index_api v1.3.0 h1:DsMpWVjFNlBw9/6pyWf59XoqcAkhHj3
 github.com/blevesearch/bleve_index_api v1.3.0/go.mod h1:xvd48t5XMeeioWQ5/jZvgLrV98flT2rdvEJ3l/ki4Ko=
 github.com/blevesearch/bleve_index_api v1.3.10 h1:a7G+IOMa2xuO6f8vtutbTsqjVLpLuCuH3uoTZHkGiYg=
 github.com/blevesearch/bleve_index_api v1.3.10/go.mod h1:xvd48t5XMeeioWQ5/jZvgLrV98flT2rdvEJ3l/ki4Ko=
+github.com/blevesearch/bleve_index_api v1.3.11 h1:x29vbV8OjWfLcrDVd7Lr1q+BkLNS0JWNEig0MCVnKH4=
+github.com/blevesearch/bleve_index_api v1.3.11/go.mod h1:xvd48t5XMeeioWQ5/jZvgLrV98flT2rdvEJ3l/ki4Ko=
 github.com/blevesearch/geo v0.2.4 h1:ECIGQhw+QALCZaDcogRTNSJYQXRtC8/m8IKiA706cqk=
 github.com/blevesearch/geo v0.2.4/go.mod h1:K56Q33AzXt2YExVHGObtmRSFYZKYGv0JEN5mdacJJR8=
 github.com/blevesearch/go-faiss v1.0.26 h1:4dRLolFgjPyjkaXwff4NfbZFdE/dfywbzDqporeQvXI=
