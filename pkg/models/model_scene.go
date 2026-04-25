@@ -920,6 +920,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "is_scripted = 1"
 		case "Is Favourite":
 			where = "scenes.favourite = 1"
+		case "Missing":
+			where = "scenes.is_accessible = 0"
 		case "Is Passthrough":
 			where = "(chroma_key <> '' or exists (select 1 from files where files.scene_id = scenes.id and files.`type` = 'video' and files.has_alpha = true))"
 		case "Is Alpha Passthrough":
