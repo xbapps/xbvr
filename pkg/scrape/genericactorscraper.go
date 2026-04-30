@@ -30,6 +30,19 @@ type outputList struct {
 var mutex sync.Mutex
 var semaphore chan struct{}
 
+// per-host throttle for actor scraper: serializes concurrent goroutine visits
+// to same host with a 200ms gap to avoid 503s on sites without an explicit
+// rate-limit entry. Scoped to actor scraping only; doesn't affect scene scrapers.
+var actorHostMutex sync.Map
+
+func actorHostThrottle(host string) func() {
+	muxAny, _ := actorHostMutex.LoadOrStore(host, &sync.Mutex{})
+	mux := muxAny.(*sync.Mutex)
+	mux.Lock()
+	time.Sleep(200 * time.Millisecond)
+	return mux.Unlock
+}
+
 func GenericActorScrapers() {
 	tlog := log.WithField("task", "scrape")
 	tlog.Infof("Scraping Actor Details from Sites")
@@ -267,6 +280,7 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 		})
 	}
 	url, _ := url.Parse(actorPage)
+	release := actorHostThrottle(url.Host)
 	if rules.IsJson {
 		ScraperRateLimiterWait(url.Host)
 		err := actorCollector.Request("GET", actorPage, nil, nil, nil)
@@ -274,6 +288,7 @@ func applyRules(actorPage string, source string, rules models.GenericScraperRule
 	} else {
 		WaitBeforeVisit(url.Host, actorCollector.Visit, actorPage)
 	}
+	release()
 	var extref models.ExternalReference
 	var extreflink models.ExternalReferenceLink
 

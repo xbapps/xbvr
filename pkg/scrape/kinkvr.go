@@ -1,11 +1,14 @@
 package scrape
 
 import (
+	"encoding/json"
+	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
-	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -16,93 +19,170 @@ func KinkVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 	siteID := "KinkVR"
 	logScrapeStart(scraperID, siteID)
 
-	sceneCollector := createCollector("kinkvr.com")
-	siteCollector := createCollector("kinkvr.com")
+	sceneCollector := createCollector("www.kink.com", "kink.com")
+	siteCollector := createCollector("www.kink.com", "kink.com")
 
-	// These cookies are needed for age verification.
-	siteCollector.OnRequest(func(r *colly.Request) {
-		r.Headers.Set("Cookie", "agreedToDisclaimer=true")
-	})
+	setAgeGateCookie := func(r *colly.Request) {
+		r.Headers.Set("Cookie", "age_gate_accepted=1")
+	}
+	sceneCollector.OnRequest(setAgeGateCookie)
+	siteCollector.OnRequest(setAgeGateCookie)
 
-	sceneCollector.OnRequest(func(r *colly.Request) {
-		r.Headers.Set("Cookie", "agreedToDisclaimer=true")
-	})
+	posterURLRegex := regexp.MustCompile(`"posterUrl":"([^"]+)"`)
+	// Recover legacy kinkvr.com asset id from new-site img paths so existing user DBs stay matched.
+	assetIDRegex := regexp.MustCompile(`(?:pov_|/galleryi[mM]age/)(\d+)_`)
+	listingPageBase := "https://www.kink.com/shoots?channelIds=kinkvr&sort=published&thirdParty=false&page="
 
 	sceneCollector.OnHTML(`html`, func(e *colly.HTMLElement) {
 		sc := models.ScrapedScene{}
 		sc.ScraperID = scraperID
 		sc.SceneType = "VR"
-		sc.Studio = "Badoink"
+		sc.Studio = "KinkVR"
 		sc.Site = siteID
-		sc.SiteID = ""
 		sc.HomepageURL = e.Request.URL.String()
+		sc.ActorDetails = make(map[string]models.ActorDetails)
 
-		// Cover Url
-		coverURL := e.ChildAttr("div#povVideoContainer dl8-video", "poster")
-		sc.Covers = append(sc.Covers, coverURL)
+		var thumbnailURL string
+		e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
+			jsonText := strings.TrimSpace(e.Text)
+			if jsonText == "" {
+				return
+			}
+			var jsonData map[string]interface{}
+			if err := json.Unmarshal([]byte(jsonText), &jsonData); err != nil {
+				return
+			}
+			if t, ok := jsonData["@type"].(string); !ok || t != "VideoObject" {
+				return
+			}
 
-		// Gallery
-		e.ForEach(`div.owl-carousel div.item`, func(id int, e *colly.HTMLElement) {
-			sc.Gallery = append(sc.Gallery, e.ChildAttr("img", "src"))
+			if name, ok := jsonData["name"].(string); ok {
+				sc.Title = strings.TrimSpace(name)
+			}
+			if desc, ok := jsonData["description"].(string); ok {
+				sc.Synopsis = strings.TrimSpace(desc)
+			}
+			if uploadDate, ok := jsonData["uploadDate"].(string); ok {
+				if tmpDate, err := time.Parse(time.RFC3339, uploadDate); err == nil {
+					sc.Released = tmpDate.Format("2006-01-02")
+				}
+			}
+			if contentURL, ok := jsonData["contentUrl"].(string); ok && contentURL != "" {
+				sc.TrailerType = "url"
+				sc.TrailerSrc = contentURL
+			}
+			if thumb, ok := jsonData["thumbnailUrl"].(string); ok {
+				thumbnailURL = thumb
+			}
+			if actors, ok := jsonData["actor"].([]interface{}); ok {
+				for _, a := range actors {
+					actor, ok := a.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					name, _ := actor["name"].(string)
+					name = strings.TrimSpace(name)
+					if name == "" {
+						continue
+					}
+					profileURL, _ := actor["url"].(string)
+					profileURL = strings.Replace(profileURL, "https://kink.com/", "https://www.kink.com/", 1)
+					if profileURL != "" {
+						profileURL += "?ageverified=g"
+					}
+					sc.Cast = append(sc.Cast, name)
+					sc.ActorDetails[name] = models.ActorDetails{
+						Source:     scraperID + " scrape",
+						ProfileUrl: profileURL,
+					}
+				}
+			}
 		})
 
-		// Incase we scrape a single scene use one of the gallery images for the cover
-		if singleSceneURL != "" {
+		var posterURL string
+		if dataSetup := e.ChildAttr(`div.kvjs-container`, "data-setup"); dataSetup != "" {
+			if m := posterURLRegex.FindStringSubmatch(dataSetup); len(m) == 2 {
+				posterURL = m[1]
+			}
+		}
+		if posterURL != "" {
+			sc.Covers = append(sc.Covers, posterURL)
+		} else if thumbnailURL != "" {
+			sc.Covers = append(sc.Covers, thumbnailURL)
+		}
+
+		e.ForEach(`#galleryImagesContainer img.gallery-img`, func(id int, e *colly.HTMLElement) {
+			if src := e.Attr("data-image-file"); src != "" {
+				sc.Gallery = append(sc.Gallery, src)
+			}
+		})
+
+		// Tags from the Categories block (visible labels, e.g. "Brunette", "Flogging")
+		e.ForEach(`a[href^="/tag/"][data-testid^="index-macros-link-"]`, func(id int, e *colly.HTMLElement) {
+			tag := strings.TrimSpace(e.Text)
+			tag = strings.TrimSuffix(tag, ",")
+			tag = strings.TrimSpace(tag)
+			if tag != "" {
+				sc.Tags = append(sc.Tags, tag)
+			}
+		})
+
+		// SiteID priority: legacy asset id from poster regex → same regex on
+		// gallery URLs → title-match against existing kinkvr scenes (preserves
+		// SceneID across the kinkvr.com → kink.com migration when no legacy id
+		// is embedded in the new page) → new shoot id from URL.
+		var siteIDStr string
+		if posterURL != "" {
+			if m := assetIDRegex.FindStringSubmatch(posterURL); len(m) == 2 {
+				siteIDStr = m[1]
+			}
+		}
+		if siteIDStr == "" {
+			for _, gURL := range sc.Gallery {
+				if m := assetIDRegex.FindStringSubmatch(gURL); len(m) == 2 {
+					siteIDStr = m[1]
+					break
+				}
+			}
+		}
+		if siteIDStr == "" && sc.Title != "" {
+			if db, err := models.GetCommonDB(); err == nil {
+				var existing models.Scene
+				db.Where("scraper_id = ? AND title = ?", scraperID, sc.Title).First(&existing)
+				if existing.ID != 0 {
+					siteIDStr = strings.TrimPrefix(existing.SceneID, scraperID+"-")
+				}
+			}
+		}
+		if siteIDStr == "" {
+			urlPath := strings.TrimSuffix(e.Request.URL.Path, "/")
+			parts := strings.Split(urlPath, "/")
+			if len(parts) > 0 {
+				siteIDStr = parts[len(parts)-1]
+			}
+		}
+		sc.SiteID = siteIDStr
+
+		if singleSceneURL != "" && len(sc.Gallery) > 0 {
 			sc.Covers = append(sc.Covers, sc.Gallery[0])
 		}
 
-		// Cast
-		sc.ActorDetails = make(map[string]models.ActorDetails)
-		e.ForEach(`table.video-description-list tbody`, func(id int, e *colly.HTMLElement) {
-			// Cast
-			e.ForEach(`tr:nth-child(1) a`, func(id int, e *colly.HTMLElement) {
-				if strings.TrimSpace(e.Text) != "" {
-					sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-					sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
-				}
-			})
-
-			// Tags
-			e.ForEach(`tr:nth-child(2) a`, func(id int, e *colly.HTMLElement) {
-				tag := strings.TrimSpace(e.Text)
-				sc.Tags = append(sc.Tags, tag)
-			})
-
-			// Date
-			tmpDate, _ := goment.New(strings.TrimSpace(e.ChildText(`tr:nth-child(3) td:last-child`)), "MMMM DD, YYYY")
-			sc.Released = tmpDate.Format("YYYY-MM-DD")
-		})
-
-		// Synposis
-		sc.Synopsis = strings.TrimSpace(e.ChildText("div.accordion-body"))
-
-		// Title
-		sc.Title = e.ChildText("h1.page-title")
-
-		// Scene ID -- Uses the ending number of the video url instead of the ID used for the directory that the video link is stored in(Maintains backwards compatibility with old scenes)
-		tmpUrlStr, _ := strings.CutSuffix(e.Request.URL.String(), "/")
-		tmp := strings.Split(tmpUrlStr, "/")
-		siteIDstr := strings.Split(tmp[len(tmp)-1], "-")
-		sc.SiteID = siteIDstr[len(siteIDstr)-1]
-
 		if sc.SiteID != "" {
 			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
-
-			// save only if we got a SceneID
 			out <- sc
 		}
 	})
 
-	siteCollector.OnHTML(`a.page-link[aria-label="Next"]:not(.disabled)`, func(e *colly.HTMLElement) {
-		if !limitScraping {
-			pageURL := e.Request.AbsoluteURL(e.Attr("href"))
-			siteCollector.Visit(pageURL)
+	var maxPage int
+	siteCollector.OnHTML(`div.page-link[data-page]`, func(e *colly.HTMLElement) {
+		if v, err := strconv.Atoi(e.Attr("data-page")); err == nil && v > maxPage {
+			maxPage = v
 		}
 	})
 
-	siteCollector.OnHTML(`div.video-grid-view a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`a[href^="/shoot/"][data-testid$="-link-5"]`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
-		// If scene exist in database, there's no need to scrape
+		// skip if exists
 		if !funk.ContainsString(knownScenes, sceneURL) {
 			sceneCollector.Visit(sceneURL)
 		}
@@ -111,7 +191,12 @@ func KinkVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit("https://kinkvr.com/videos/page1")
+		siteCollector.Visit(listingPageBase + "1")
+		if !limitScraping {
+			for p := 2; p <= maxPage; p++ {
+				siteCollector.Visit(listingPageBase + strconv.Itoa(p))
+			}
+		}
 	}
 
 	if updateSite {
@@ -122,5 +207,5 @@ func KinkVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 }
 
 func init() {
-	registerScraper("kinkvr", "KinkVR", "https://static.rlcontent.com/shared/KINK/skins/web-10/branding/favicon.png", "kinkvr.com", KinkVR)
+	registerScraper("kinkvr", "KinkVR", "https://static.rlcontent.com/shared/KINK/skins/web-10/branding/favicon.png", "kink.com", KinkVR)
 }

@@ -914,11 +914,12 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 
 	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "tmwvrnet.com"
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `div.model-page__image img`, ResultType: "attr", Attribute: "data-src", PostProcessing: []PostProcessing{{Function: "AbsoluteUrl"}}})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "start_year", Selector: `div.model-page__information span.title:contains("Debut year:") + span.value`})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `div.model-page__information span.title:contains("Hair:") + span.value`})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "eye_color", Selector: `div.model-page__information span.title:contains("Eyes:") + span.value`})
-	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `p.about`})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `meta[property="og:image"]`, ResultType: "attr", Attribute: "content"})
+	// the site emits <td> inside <dl>, which the HTML parser strips as invalid markup,
+	// leaving the value as a text-node sibling of the <dt> — extract it via DOMNextText
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "hair_color", Selector: `dt.model-profile-information-key:contains("Hair")`, PostProcessing: []PostProcessing{{Function: "DOMNextText"}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "eye_color", Selector: `dt.model-profile-information-key:contains("Eyes")`, PostProcessing: []PostProcessing{{Function: "DOMNextText"}}})
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "biography", Selector: `p.model-profile-about--desktop`})
 	scrapeRules.GenericActorScrapingConfig["tmwvrnet scrape"] = siteDetails
 
 	siteDetails = GenericScraperRuleSet{}
@@ -973,6 +974,11 @@ func (scrapeRules ActorScraperConfig) buildGenericActorScraperRules() {
 		{Function: "UnescapeString"},
 	}})
 	scrapeRules.GenericActorScrapingConfig["sexbabesvr scrape"] = siteDetails
+
+	siteDetails = GenericScraperRuleSet{}
+	siteDetails.Domain = "www.kink.com"
+	siteDetails.SiteRules = append(siteDetails.SiteRules, GenericActorScraperRule{XbvrField: "image_url", Selector: `div.kink-slider-images img`, ResultType: "attr", Attribute: "data-src", First: optional.NewInt(0)})
+	scrapeRules.GenericActorScrapingConfig["kinkvr scrape"] = siteDetails
 
 	siteDetails = GenericScraperRuleSet{}
 	siteDetails.Domain = "vrspy.com"

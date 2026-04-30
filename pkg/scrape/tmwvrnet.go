@@ -110,8 +110,8 @@ func TmwVRnet(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out ch
 		}
 	})
 
-	siteCollector.OnHTML(`div.thumb-photo`, func(e *colly.HTMLElement) {
-		sceneURL := e.Request.AbsoluteURL(e.ChildAttr(`a`, "href"))
+	siteCollector.OnHTML(`a.thumb-photo, a.thumb-video`, func(e *colly.HTMLElement) {
+		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 
 		if strings.Contains(sceneURL, "trailers") {
 			// If scene exist in database, there's no need to scrape
