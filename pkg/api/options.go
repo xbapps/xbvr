@@ -216,6 +216,10 @@ type RequestSaveOptionsStorage struct {
 	VideoExt   []string `json:"video_ext"`
 }
 
+type RequestSaveOptionsCache struct {
+	ConvertWebPToJPEG bool `json:"convertWebPToJPEG"`
+}
+
 type RequestSaveCollectorConfig struct {
 	DomainKey string                          `json:"domain_key"`
 	Headers   []scrape.ScrapeHttpKeyValue     `json:"headers"`
@@ -308,6 +312,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 	// "Cache" section endpoints
 	ws.Route(ws.DELETE("/cache/reset/{cache}").To(i.resetCache).
 		Param(ws.PathParameter("cache", "Cache to reset - possible choices are `images`, `previews`, and `searchIndex`").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.PUT("/cache/settings").To(i.saveOptionsCache).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Previews" section endpoints
@@ -566,6 +573,20 @@ func (i ConfigResource) saveOptionsFunscripts(req *restful.Request, resp *restfu
 	}
 
 	config.Config.Funscripts.ScrapeFunscripts = r.ScrapeFunscripts
+	config.SaveConfig()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}
+
+func (i ConfigResource) saveOptionsCache(req *restful.Request, resp *restful.Response) {
+	var r RequestSaveOptionsCache
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	config.Config.Cache.ConvertWebPToJPEG = r.ConvertWebPToJPEG
 	config.SaveConfig()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)

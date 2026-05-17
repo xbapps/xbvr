@@ -190,6 +190,31 @@ func setDeoPlayerHost(req *restful.Request) {
 	}
 }
 
+func getDeoThumbnailURL(req *restful.Request, coverURL string) string {
+	if coverURL == "" || !config.Config.Cache.ConvertWebPToJPEG {
+		return coverURL
+	}
+	if jpgURL, ok := webpURLToJPG(coverURL); ok {
+		return jpgURL
+	}
+	return coverURL
+}
+
+func webpURLToJPG(imageURL string) (string, bool) {
+	extEnd := len(imageURL)
+	for _, separator := range []string{"?", "#"} {
+		if idx := strings.Index(imageURL, separator); idx != -1 && idx < extEnd {
+			extEnd = idx
+		}
+	}
+
+	if extEnd < len(".webp") || !strings.EqualFold(imageURL[extEnd-len(".webp"):extEnd], ".webp") {
+		return "", false
+	}
+
+	return imageURL[:extEnd-len(".webp")] + ".jpg" + imageURL[extEnd:], true
+}
+
 func restfulAuthFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	if isDeoAuthEnabled() {
 		authState := "0"
@@ -551,7 +576,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		RatingAvg:        scene.StarRating,
 		FullVideoReady:   true,
 		FullAccess:       true,
-		ThumbnailURL:     scene.CoverURL,
+		ThumbnailURL:     getDeoThumbnailURL(req, scene.CoverURL),
 		StereoMode:       stereoMode,
 		Is3D:             true,
 		ScreenType:       screenType,
@@ -583,7 +608,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 			RatingAvg:        scene.StarRating,
 			FullVideoReady:   true,
 			FullAccess:       true,
-			ThumbnailURL:     scene.CoverURL,
+			ThumbnailURL:     getDeoThumbnailURL(req, scene.CoverURL),
 			StereoMode:       stereoMode,
 			Is3D:             true,
 			ScreenType:       screenType,
@@ -670,7 +695,7 @@ func scenesToDeoList(req *restful.Request, scenes []models.SceneSummary) []DeoLi
 		item := DeoListItem{
 			Title:        scenes[i].Title,
 			VideoLength:  scenes[i].Duration * 60,
-			ThumbnailURL: scenes[i].CoverURL,
+			ThumbnailURL: getDeoThumbnailURL(req, scenes[i].CoverURL),
 			VideoURL:     fmt.Sprintf("%v/deovr/%v", session.DeoRequestHost, scenes[i].ID),
 		}
 		list = append(list, item)

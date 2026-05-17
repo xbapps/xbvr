@@ -1,9 +1,21 @@
 package server
 
 import (
+	"bytes"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/jpeg"
+	"io"
 	"net/http"
+	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/fcjr/aia-transport-go"
+	"golang.org/x/image/webp"
+
+	"github.com/xbapps/xbvr/pkg/config"
 )
 
 // Change INCOMING response header's Cache-Control for persistent disk cache
@@ -22,6 +34,10 @@ func (s *ForceCacheTransport) RoundTrip(r *http.Request) (*http.Response, error)
 		return nil, err
 	}
 
+	if config.Config.Cache.ConvertWebPToJPEG {
+		convertWebPResponseToJPEG(resp)
+	}
+
 	// Overwrite cache behavior on 2xx responses
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		// Force cache duration in the diskCache to 5 years
@@ -29,6 +45,58 @@ func (s *ForceCacheTransport) RoundTrip(r *http.Request) (*http.Response, error)
 	}
 
 	return resp, nil
+}
+
+func convertWebPResponseToJPEG(resp *http.Response) {
+	if resp == nil || resp.Body == nil || resp.StatusCode < 200 || resp.StatusCode >= 300 || !isWebPResponse(resp) {
+		return
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	resp.Body.Close()
+
+	img, err := webp.Decode(bytes.NewReader(body))
+	if err != nil {
+		resp.Body = io.NopCloser(bytes.NewReader(body))
+		resp.ContentLength = int64(len(body))
+		return
+	}
+
+	var out bytes.Buffer
+	if err := jpeg.Encode(&out, flattenImage(img), &jpeg.Options{Quality: 90}); err != nil {
+		resp.Body = io.NopCloser(bytes.NewReader(body))
+		resp.ContentLength = int64(len(body))
+		return
+	}
+
+	resp.Body = io.NopCloser(bytes.NewReader(out.Bytes()))
+	resp.ContentLength = int64(out.Len())
+	resp.Header.Set("Content-Length", strconv.Itoa(out.Len()))
+	resp.Header.Set("Content-Type", "image/jpeg")
+	resp.Header.Del("Content-Encoding")
+}
+
+func isWebPResponse(resp *http.Response) bool {
+	contentType := strings.ToLower(resp.Header.Get("Content-Type"))
+	if strings.Contains(contentType, "image/webp") {
+		return true
+	}
+	if resp.Request != nil && resp.Request.URL != nil {
+		ext := strings.ToLower(filepath.Ext(resp.Request.URL.Path))
+		return ext == ".webp"
+	}
+	return false
+}
+
+func flattenImage(img image.Image) image.Image {
+	bounds := img.Bounds()
+	dst := image.NewRGBA(bounds)
+	draw.Draw(dst, bounds, &image.Uniform{C: color.White}, image.Point{}, draw.Src)
+	draw.Draw(dst, bounds, img, bounds.Min, draw.Over)
+	return dst
 }
 
 func NewForceCacheTransport() *ForceCacheTransport {

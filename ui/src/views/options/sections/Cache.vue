@@ -24,6 +24,18 @@
               </tr>
               <tr>
                 <td>
+                  <p><strong>Convert WebP images to JPEG</strong></p>
+                  <p>
+                    Remote WebP images are converted while XBVR stores them in the image cache. Reset images to refresh existing cached WebP entries.
+                  </p>
+                </td>
+                <td nowrap>
+                  <b-switch v-model="convertWebPToJPEG" type="is-default" @input="saveCacheSettings"></b-switch>
+                </td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>
                   <p><strong>Video previews</strong></p>
                   <p>
                     Generated on demand for local files. Remove when you want to generate previews using new settings.
@@ -83,6 +95,7 @@ export default {
       sizes: {},
       indexSceneCount: 0,
       searchInprogress: false,
+      convertWebPToJPEG: false,
     }
   },
   async mounted () {
@@ -96,8 +109,16 @@ export default {
         .json()
         .then(data => {
           this.sizes = data.currentState.cacheSize
+          this.convertWebPToJPEG = !!(data.config.cache && data.config.cache.convertWebPToJPEG)
           this.isLoading = false
         })
+    },
+    async saveCacheSettings () {
+      await ky.put('/api/options/cache/settings', {
+        json: {
+          convertWebPToJPEG: this.convertWebPToJPEG
+        }
+      })
     },
     async resetCache (kind) {
       this.isLoading = true

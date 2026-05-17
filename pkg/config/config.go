@@ -119,6 +119,9 @@ type ObjectConfig struct {
 			ExtraSnippet  bool    `default:"false" json:"extraSnippet"`
 		} `json:"preview"`
 	} `json:"library"`
+	Cache struct {
+		ConvertWebPToJPEG bool `default:"false" json:"convertWebPToJPEG"`
+	} `json:"cache"`
 	Cron struct {
 		RescrapeSchedule struct {
 			Enabled         bool `default:"true" json:"enabled"`
