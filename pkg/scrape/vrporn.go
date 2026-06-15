@@ -143,7 +143,7 @@ func VRPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 			if page < int(pages) && !limitScraping {
 				page++
 				slug := strings.TrimSuffix(strings.ReplaceAll(siteURL, "https://vrporn.com/studio/", ""), "/")
-				url := "https://vrporn.com/proxy/api/content/v1/videos/studio/" + slug + "?page=" + strconv.Itoa(page) + "&limit=32&sort=new"
+				url := "https://vrporn.com/proxy/api/content/v1/videos/studio/" + slug + "?page=" + strconv.Itoa(page) + "&limit=32&sort=new&is-ar=true"
 				WaitBeforeVisit("vrporn.com", apiCollector.Visit, url)
 			}
 		}
@@ -155,7 +155,7 @@ func VRPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 	} else {
 		slug := strings.TrimSuffix(strings.ReplaceAll(siteURL, "https://vrporn.com/studio/", ""), "/")
 		//url:="https://vrporn.com/proxy/api/content/v1/videos/studio/"+slug+"?page=1&limit=32&sort=new&is-toys=true&is-ar=true"
-		url := "https://vrporn.com/proxy/api/content/v1/videos/studio/" + slug + "?page=" + strconv.Itoa(page) + "&limit=32&sort=new"
+		url := "https://vrporn.com/proxy/api/content/v1/videos/studio/" + slug + "?page=" + strconv.Itoa(page) + "&limit=32&sort=new&is-ar=true"
 		WaitBeforeVisit("vrporn.com", apiCollector.Visit, url)
 	}
 
