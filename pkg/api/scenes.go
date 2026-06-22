@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +19,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/mozillazg/go-slugify"
 
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/tasks"
 )
@@ -142,6 +145,10 @@ func (i SceneResource) WebService() *restful.WebService {
 		Writes(models.Scene{}))
 
 	ws.Route(ws.POST("/selectscript/{scene-id}").To(i.selectScript).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Scene{}))
+
+	ws.Route(ws.POST("/{scene-id}/clear-preview").To(i.clearScenePreview).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
 
@@ -476,6 +483,52 @@ func (i SceneResource) getScene(req *restful.Request, resp *restful.Response) {
 		_ = scene.GetIfExistByPK(uint(id))
 	}
 	db.Close()
+
+	resp.WriteHeaderAndEntity(http.StatusOK, scene)
+}
+
+func (i SceneResource) clearScenePreview(req *restful.Request, resp *restful.Response) {
+	var scene models.Scene
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	sceneID := req.PathParameter("scene-id")
+	if strings.Contains(sceneID, "-") {
+		err := scene.GetIfExist(sceneID)
+		if err != nil {
+			log.Error(err)
+			resp.WriteHeader(http.StatusNotFound)
+			return
+		}
+	} else {
+		id, err := strconv.Atoi(sceneID)
+		if err != nil {
+			log.Error(err)
+			resp.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		err = scene.GetIfExistByPK(uint(id))
+		if err != nil {
+			log.Error(err)
+			resp.WriteHeader(http.StatusNotFound)
+			return
+		}
+	}
+
+	// Match the user's SQL: UPDATE scenes SET has_video_preview = 0 WHERE scene_id = '<scene_id>'
+	if err := db.Model(&models.Scene{}).Where("scene_id = ?", scene.SceneID).Update("has_video_preview", false).Error; err != nil {
+		log.Error(err)
+		resp.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	scene.HasVideoPreview = false
+
+	previewPath := filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4")
+	if _, err := os.Stat(previewPath); err == nil {
+		if err := os.Remove(previewPath); err != nil {
+			log.Warnf("failed to delete preview file %s: %v", previewPath, err)
+		}
+	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
 }

@@ -39,7 +39,7 @@
                   </template>
                 </b-carousel>
                 <div class="flexcentre">
-                <b-button class="button is-primary is-small" style="display: flex; justify-content: center;" v-on:click="setActorImage()">{{$t('Set Main Image')}}</b-button>
+                <b-button class="button is-primary is-small" style="display: flex; justify-content: center;" v-on:click="setMainActorImage()">{{$t('Set Main Image')}}</b-button>
                 <b-button v-if="images.length != 0" class="button is-primary is-small" style="display: flex; justify-content: center;margin-left: 1em;" v-on:click="deleteActorImage()">{{$t('Delete Image')}}</b-button>
                 </div>
               </b-tab-item>
@@ -92,7 +92,12 @@
                       <actor-favourite-button :actor="actor"/>&nbsp;
                       <actor-watchlist-button :actor="actor"/>&nbsp;
                       <actor-edit-button :actor="actor"/>&nbsp;
-                      <link-stashdb-button :item="actor" objectType="actor" />
+                      <link-stashdb-button :item="actor" objectType="actor" />&nbsp;
+                      <b-tooltip :label="$t('Delete actor')" position="is-left" :delay="250">
+                        <button class="button is-small is-danger is-outlined" @click="deleteActor">
+                          <b-icon pack="mdi" icon="delete-outline" size="is-small"></b-icon>
+                        </button>
+                      </b-tooltip>
                     </div>
                   </div>
                 </div>
@@ -136,6 +141,9 @@
                     <b-field v-if="measurements() != ''">
                       <strong class="attribute-heading">{{ $t('Measurements') }}:</strong> <small class="attribute-data">{{ measurements() }}</small>
                     </b-field>
+                    <b-field v-if="actor.band_size != 0 && actor.cup_size != ''">
+                      <strong class="attribute-heading">{{ $t('Bra/cup size') }}:</strong> <small class="attribute-data">{{ actor.cup_size }}</small>
+                    </b-field>
                     <b-field v-if="actor.breast_type != ''">
                       <strong class="attribute-heading">{{ $t('Breast Type') }}:</strong> <small class="attribute-data">{{ actor.breast_type }}</small>
                     </b-field>
@@ -157,28 +165,28 @@
                   <template #header>                    
                     Scenes ({{ actor.scenes.length }}) <a v-if="showOpenInNewWindow" :href='getCastScenesUrl([actor.name])' target="_blank" style="padding-left: 0.1em; border-bottom-style: none;"><b-icon pack="mdi" icon="open-in-new" size="is-small" style="background-color: hsl(0, 0%, 100%);"></b-icon></a>
                   </template>
-                  <div v-show="activeTab == 1" :class="['columns', 'is-multiline', actor.scenes.length > 6 ? 'scroll' : '']">
-                    <div :class="['column', 'is-multiline', 'is-one-third']"
+                  <div v-show="activeTab == 1" :class="['columns', 'is-multiline', 'actor-scenes', actor.scenes.length > 6 ? 'scroll' : '']" :style="actor.scenes.length > 6 ? { height: scenesScrollHeight } : null">
+                    <div :class="['column', 'is-2']"
                       v-for="(scene, idx) in actor.scenes" :key="idx" class="image-wrapper">
                       <SceneCard :item="scene" :reRead=true />
                     </div>
                   </div>
                 </b-tab-item>
                 <b-tab-item :label="$t('Akas')" :visible="akas.aka_groups != null || akas.actors != null || akas.possible_akas != null">
-                  <div v-show="activeTab == 2">
-                    <b-field :label="$t('Aka Groups')" v-if="akas.aka_groups != null &&  akas.aka_groups.length!=0">
-                      <div  class="columns is-multiline">
-                        <div :class="['column', 'is-multiline', 'is-one-third']"
+                  <div v-show="activeTab == 2" class="columns is-multiline scroll">
+                    <b-field :label="$t('Aka Groups')" v-if="akas.aka_groups != null &&  akas.aka_groups.length!=0" class="column is-full">
+                      <div class="columns is-multiline">
+                        <div :class="['column', 'is-multiline', 'is-2']"
                           v-for="(akaactor, idx) in akas.aka_groups" :key="idx" class="image-wrapper">
-                          <ActorCard :actor="akaactor"/>
+                          <ActorCard :actor="akaactor" :hideStashdb="true"/>
                         </div>
                       </div>
                     </b-field>
-                    <b-field :label="$t('Other Actors In Groups')" v-if="akas.actors != null &&  akas.actors.length!=0">
-                      <div  class="columns is-multiline">
-                        <div :class="['column', 'is-multiline', 'is-one-third']"
+                    <b-field :label="$t('Other Actors In Groups')" v-if="akas.actors != null &&  akas.actors.length!=0" class="column is-full">
+                      <div class="columns is-multiline">
+                        <div :class="['column', 'is-multiline', 'is-2']"
                           v-for="(akaactor, idx) in akas.actors" :key="idx" class="image-wrapper">
-                          <ActorCard :actor="akaactor"/>
+                          <ActorCard :actor="akaactor" :hideStashdb="true"/>
                           <b-tooltip position="is-bottom" :label="$t('Remove Cast from Aka Group. Select the Aka group and Actors to remove in the Cast Filter')" multilined :delay="200">
                             <button class="button is-small is-outlined" @click="removeFromAkaGroup(akaactor.name)" v-if="actor.name.startsWith('aka:')">
                               <b-icon pack="mdi" icon="account-minus-outline"></b-icon>
@@ -187,11 +195,11 @@
                         </div>
                       </div>
                     </b-field>
-                    <b-field :label="$t('Possible Matches')" v-if="akas.possible_akas != null &&  akas.possible_akas.length!=0">
+                    <b-field :label="$t('Possible Matches')" v-if="akas.possible_akas != null &&  akas.possible_akas.length!=0" class="column is-full">
                       <div class="columns is-multiline">
-                        <div :class="['column', 'is-multiline', 'is-one-third']"
+                        <div :class="['column', 'is-multiline', 'is-2']"
                           v-for="(akaactor, idx) in akas.possible_akas" :key="idx" class="image-wrapper">
-                          <ActorCard :actor="akaactor"/>
+                          <ActorCard :actor="akaactor" :hideStashdb="true"/>
                           <b-tooltip position="is-bottom" :label="$t('Add Cast to Aka Group. Select the Aka group and Actors to add in the Cast Filter')" multilined :delay="200">
                             <button class="button is-small is-outlined" @click="addToAkaGroup(akaactor.name)" v-if='actor.name.startsWith("aka:")'>
                               <b-icon pack="mdi" icon="account-plus-outline"></b-icon>
@@ -201,12 +209,12 @@
                       </div>
                     </b-field>
                   </div>
-                </b-tab-item>                
+                </b-tab-item>
                 <b-tab-item :visible="colleagues.length != 0" :label="`Colleagues (${colleagues.length})`">
                   <div v-show="activeTab == 3" class="columns is-multiline scroll">
-                    <div :class="['column', 'is-multiline', 'is-one-third']"
+                    <div :class="['column', 'is-multiline', 'is-2']"
                       v-for="(colleague, idx) in colleagues" :key="idx" class="image-wrapper">
-                      <ActorCard :actor="colleague" :colleague="actor.name" />
+                      <ActorCard :actor="colleague" :colleague="actor.name" :hideStashdb="true" />
                     </div>
                   </div>
                 </b-tab-item>
@@ -321,6 +329,10 @@ export default {
     showOpenInNewWindow () {
       return this.$store.state.optionsWeb.web.showOpenInNewWindow
     },
+    scenesScrollHeight () {
+      const rows = Math.ceil(this.actor.scenes.length / 4)
+      return `${rows * 11}em`
+    },
   },
   mounted () {    
       ky.get('/api/actor/countrylist')
@@ -336,10 +348,11 @@ export default {
     },  
     methods: {
     getImageURL (u, size) {
+      if (!u) return '/ui/images/blank_female_profile.png'
       if (u.startsWith('http') || u.startsWith('https')) {
         return '/img/' + size + '/' + u.replace('://', ':/')
       } else {
-        return u
+        return encodeURI(u)
       }
     },
     getIndicatorURL (idx) {      
@@ -435,40 +448,42 @@ export default {
       active +=  "-"      
       if (this.actor.end_year > 0) {
         active += this.actor.end_year 
+      } else {
+        active += "Present"
       }
       return active
     },
     measurements(){      
-      let metric_measurements=""
       let imperial_measurements=""
+      let metric_measurements=""
       if (this.actor.band_size != 0) {
-        metric_measurements=this.actor.band_size
         imperial_measurements=Math.round(this.actor.band_size / 2.54)
+        metric_measurements=this.actor.band_size
       }
       if (this.actor.cup_size != ''){
-        metric_measurements +=  this.actor.cup_size        
-        imperial_measurements += this.actor.cup_size        
+        imperial_measurements +=  this.actor.cup_size        
+        metric_measurements += this.actor.cup_size        
       }
       if (this.actor.waist_size != 0) {
-        if (metric_measurements!='') {
-          metric_measurements += '-'
+        if (imperial_measurements!='') {
           imperial_measurements += '-'
+          metric_measurements += '-'
         }
+        imperial_measurements += Math.round(this.actor.waist_size / 2.54)
         metric_measurements += this.actor.waist_size
-        imperial_measurements += Math.round(this.actor.waist_size  / 2.54)
       }
       if (this.actor.hip_size != 0) {
-        if (metric_measurements!='') {
-          metric_measurements += '-'
+        if (imperial_measurements!='') {
           imperial_measurements += '-'
+          metric_measurements += '-'
         }
-        metric_measurements += this.actor.hip_size
         imperial_measurements += Math.round(this.actor.hip_size / 2.54)
+        metric_measurements += this.actor.hip_size
       } 
-      if (metric_measurements==''){
+      if (imperial_measurements==''){
         return ''
       }
-      return imperial_measurements + " / " + metric_measurements
+      return metric_measurements + " cm / " + imperial_measurements + " inch"
     },
     joinArray(jsonArr){
       const arr = JSON.parse(jsonArr);
@@ -484,6 +499,28 @@ export default {
         this.carouselSlide=0
         this.$store.dispatch('actorList/load', { offset: this.$store.state.actorList.offset - this.$store.state.actorList.limit })
       })    
+    },
+    setMainActorImage () {
+      ky.post('/api/actor/setmainimage', {
+      json: {
+        actor_id: this.actor.id,
+        url: this.images[this.carouselSlide]
+      }}).json().then(data => {
+        this.$store.state.overlay.actordetails.actor = data
+        this.carouselSlide = 0
+        this.$store.dispatch('actorList/load', { offset: this.$store.state.actorList.offset - this.$store.state.actorList.limit })
+        this.$buefy.toast.open({ message: 'Main image saved to myfiles/actors', type: 'is-success' })
+      }).catch(() => {
+        this.$buefy.toast.open({ message: 'Failed to save main image', type: 'is-danger' })
+      })
+    },
+    deleteActor () {
+      ky.delete(`/api/actor/delete/${this.actor.id}`).json().then(() => {
+        this.$store.dispatch('actorList/load', { offset: this.$store.state.actorList.offset - this.$store.state.actorList.limit })
+        this.$store.commit('overlay/hideActorDetails')
+      }).catch(err => {
+        this.$buefy.toast.open({ message: `Failed to delete actor: ${err}`, type: 'is-danger' })
+      })
     },
     deleteActorImage (val) {
       ky.delete('/api/actor/delimage', {
@@ -666,10 +703,6 @@ export default {
   padding-top: calc(100% - 40px - 1em) !important;
 }
 
-.modal-card {
-  width: 85%;
-}
-
 .missing {
   opacity: 0.6;
 }
@@ -802,7 +835,6 @@ span.is-active img {
   max-height: 100%;
 }
 div.scroll {
-  height: 1000px;
   overflow-x: hidden;
   overflow-y: auto;
   text-align: center;
@@ -810,6 +842,7 @@ div.scroll {
 .attribute-container {  
   display: flex; 
   flex-wrap: wrap;
+  padding: 20px;
 }
 .attribute-heading {  
   width: 120px; 

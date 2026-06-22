@@ -10,7 +10,7 @@
     <div class="modal-card">
       <header class="modal-card-head">
         <p class="modal-card-title">{{ this.scene.id == 0 ? $t('Display scene details') : $t('Edit scene details') }}</p>
-        <button class="delete" @click="close" aria-label="close"></button>
+        <button class="modal-close is-large" @click="close" aria-label="close"></button>
       </header>
 
       <section class="modal-card-body">

@@ -2,7 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -10,6 +13,7 @@ import (
 
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
 )
@@ -59,6 +63,9 @@ func (i ActorResource) WebService() *restful.WebService {
 		Writes(models.Actor{}))
 
 	ws.Route(ws.POST("/setimage").To(i.setActorImage).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.Actor{}))
+	ws.Route(ws.POST("/setmainimage").To(i.setMainImage).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Actor{}))
 	ws.Route(ws.DELETE("/delimage").To(i.deleteActorImage).
@@ -525,6 +532,157 @@ func (i ActorResource) setActorImage(req *restful.Request, resp *restful.Respons
 
 	aa := models.ActionActor{ActorID: actor.ID, ActionType: "setimage", Source: "edit_actor", ChangedColumn: "image_url", NewValue: actor.ImageUrl}
 	aa.Save()
+	resp.WriteHeaderAndEntity(http.StatusOK, actor)
+}
+
+func (i ActorResource) setMainImage(req *restful.Request, resp *restful.Response) {
+	var r RequestSetActorImage
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	if r.ActorID == 0 || r.Url == "" {
+		return
+	}
+
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var actor models.Actor
+	err = actor.GetIfExistByPKWithSceneAvg(r.ActorID)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	actorsDir := filepath.Join(common.MyFilesDir, "actors")
+	_ = os.MkdirAll(actorsDir, os.ModePerm)
+
+	// Sanitize actor name for use as filename
+	safeName := strings.ReplaceAll(actor.Name, string(os.PathSeparator), "_")
+	safeName = strings.ReplaceAll(safeName, "/", "_")
+	safeName = strings.ReplaceAll(safeName, "\\", "_")
+
+	// Determine file extension from source
+	ext := ".jpg"
+	ctToExt := map[string]string{
+		"image/webp": ".webp",
+		"image/png":  ".png",
+		"image/gif":  ".gif",
+		"image/jpeg": ".jpg",
+	}
+
+	var srcReader io.ReadCloser
+	if strings.HasPrefix(r.Url, "http://") || strings.HasPrefix(r.Url, "https://") {
+		// Download from external URL with browser-like headers to avoid hotlink blocks
+		client := &http.Client{}
+		httpReq, err := http.NewRequest("GET", r.Url, nil)
+		if err != nil {
+			log.Errorf("setMainImage: failed to build request for %s: %v", r.Url, err)
+			resp.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		httpReq.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+		httpReq.Header.Set("Accept", "image/avif,image/webp,image/apng,image/*,*/*;q=0.8")
+		// Use the origin of the image URL as Referer (find slash after scheme+host)
+		if schemeEnd := strings.Index(r.Url, "://"); schemeEnd != -1 {
+			if pathStart := strings.Index(r.Url[schemeEnd+3:], "/"); pathStart != -1 {
+				httpReq.Header.Set("Referer", r.Url[:schemeEnd+3+pathStart]+"/")
+			} else {
+				httpReq.Header.Set("Referer", r.Url+"/")
+			}
+		}
+		httpResp, err := client.Do(httpReq)
+		if err != nil {
+			log.Errorf("setMainImage: failed to download %s: %v", r.Url, err)
+			resp.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		ct := httpResp.Header.Get("Content-Type")
+		if strings.Contains(ct, "text/html") {
+			httpResp.Body.Close()
+			log.Errorf("setMainImage: server returned HTML instead of image for %s (hotlink blocked?)", r.Url)
+			resp.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		// Determine extension from Content-Type
+		for mime, e := range ctToExt {
+			if strings.Contains(ct, mime) {
+				ext = e
+				break
+			}
+		}
+		srcReader = httpResp.Body
+	} else if strings.HasPrefix(r.Url, "/myfiles/") {
+		// Serve from local myfiles directory
+		localPath := filepath.Join(common.MyFilesDir, strings.TrimPrefix(r.Url, "/myfiles/"))
+		if e := filepath.Ext(localPath); e != "" {
+			ext = e
+		}
+		f, err := os.Open(localPath)
+		if err != nil {
+			log.Errorf("setMainImage: failed to open local %s: %v", localPath, err)
+			resp.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		srcReader = f
+	} else {
+		// Absolute local file path
+		if e := filepath.Ext(r.Url); e != "" {
+			ext = e
+		}
+		f, err := os.Open(r.Url)
+		if err != nil {
+			log.Errorf("setMainImage: failed to open %s: %v", r.Url, err)
+			resp.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		srcReader = f
+	}
+	defer srcReader.Close()
+
+	destPath := filepath.Join(actorsDir, safeName+ext)
+	destFile, err := os.Create(destPath)
+	if err != nil {
+		log.Errorf("setMainImage: failed to create %s: %v", destPath, err)
+		resp.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer destFile.Close()
+
+	if _, err := io.Copy(destFile, srcReader); err != nil {
+		log.Errorf("setMainImage: failed to write %s: %v", destPath, err)
+		resp.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	localURL := "/myfiles/actors/" + safeName + ext
+
+	// Remove any stale /myfiles/actors/<safeName>.* entries (different extension) from image_arr
+	if actor.ImageArr != "" && actor.ImageArr != "[]" {
+		var arr []string
+		if json.Unmarshal([]byte(actor.ImageArr), &arr) == nil {
+			prefix := "/myfiles/actors/" + safeName + "."
+			filtered := arr[:0]
+			for _, item := range arr {
+				if !strings.HasPrefix(item, prefix) {
+					filtered = append(filtered, item)
+				}
+			}
+			b, _ := json.Marshal(filtered)
+			actor.ImageArr = string(b)
+		}
+	}
+
+	actor.ImageUrl = localURL
+	actor.AddToImageArray(localURL)
+	actor.Save()
+
+	aa := models.ActionActor{ActorID: actor.ID, ActionType: "setmainimage", Source: "edit_actor", ChangedColumn: "image_url", NewValue: localURL}
+	aa.Save()
+
 	resp.WriteHeaderAndEntity(http.StatusOK, actor)
 }
 

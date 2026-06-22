@@ -17,7 +17,7 @@
         <b-tabs position="is-centered" :animated="false">
 
           <b-tab-item :label="$t('Information')">
-            <b-field grouped group-multiline style="margin-bottom: 2em;">
+            <b-field grouped group-multiline style="margin-bottom: 2em;margin-top: 2em;">
               <b-field :label="$t('Nationality')" label-position="on-border" class="field-extra">
                 <b-taginput v-model="countries" autocomplete :data="filteredCountries" @typing="getFilteredCountries" maxtags="1" :open-on-focus=true :has-counter="false">
                   <template slot-scope="props">{{ props.option }}</template>
@@ -37,7 +37,7 @@
                  <b-button :label="$t('Clear')" type="is-danger" icon-left="close" outlined @click="birthdate = null" />
                </b-datepicker>
             </b-field>
-            <b-field grouped group-multiline style="margin-bottom: 2em;">
+            <b-field grouped group-multiline style="margin-bottom: 2em;margin-top: 2em;">
               <b-field :label="$t('Eye Color')" label-position="on-border">
                 <b-input type="text" v-model="actor.eye_color" @blur="blur('eye_color')"/>
               </b-field>
@@ -45,7 +45,7 @@
                 <b-input type="text" v-model="actor.hair_color" @blur="blur('hair_color')"/>
               </b-field>
             </b-field>
-            <b-field grouped group-multiline style="margin-bottom: 2em;">
+            <b-field grouped group-multiline style="margin-bottom: 2em;margin-top: 2em;">
               <b-field v-if="useImperialEntry" :label="$t('Weight in lbs')" label-position="on-border">
                 <b-input type="number" v-model.number="actor.lbs" :placeholder="$t('Enter Weight in lbs')"  @blur="blur('weight')"/>                 
               </b-field>
@@ -62,7 +62,7 @@
                 <b-input type="number" v-model.number="actor.height"  placeholder="Height in cm" @blur="blur('height')"/>
               </b-field>
             </b-field>
-            <b-field grouped group-multiline style="margin-bottom: 2em;">
+            <b-field grouped group-multiline style="margin-bottom: 2em;margin-top: 2em;">
               <b-field :label="$t('Measurements')" label-position="on-border">
                 <b-input type="text" v-model="actor.measurements" placeholder="eg 36C-24-36" pattern="(^(\d{2})?([A-Za-z]{0,2})-(\d{2})?-(\d{2}$)?)|^[A-Z]{0,2}$" validation-message="use the format 99A-99-99"
                   @blur="blur('measurements')"/>
@@ -71,7 +71,7 @@
                 <b-input type="text" v-model="actor.breast_type" placeholder="eg Fake, Natural" @blur="blur('breast_type')"/>
               </b-field>
             </b-field>
-            <b-field grouped group-multiline style="margin-bottom: 2em;">
+            <b-field grouped group-multiline style="margin-bottom: 2em;margin-top: 2em;">
               <b-field :label="$t('Active From')" label-position="on-border">
                 <b-input type="number" v-model.number="actor.start_year" :max="new Date().getFullYear()" pattern="^[1-2]\d{1,3}$|^0$|^$"  validation-message="Up to the current year" @blur="blur('start_year')"/>
               </b-field>

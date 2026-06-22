@@ -6,9 +6,9 @@
            @click="showDetails(item)"
            @mouseover="preview = true"
            @mouseleave="preview = false">
-        <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
+        <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}?t=${Date.now()}`" :style="{objectFit: sceneCardScale}" autoplay loop muted></video>
         <div class="overlay align-bottom-left">
-          <div style="padding: 5px">
+          <div style="padding: 2px">
             <b-tag v-if="item.is_watched && !this.$store.state.optionsWeb.web.sceneWatched">
               <b-icon pack="mdi" icon="eye" size="is-small"/>
             </b-tag>
@@ -60,12 +60,12 @@
       <wishlist-button v-if="this.$store.state.optionsWeb.web.sceneWishlist && !item.is_available" :item="item"/>
       <watched-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneWatched"/>
       <edit-button :item="item" v-if="this.$store.state.optionsWeb.web.sceneEdit" />
-      <link-stashdb-button :item="item" v-if="!this.stashLinkExists" objectType="scene"/>
+      <link-stashdb-button :item="item" v-if="this.$store.state.optionsWeb.web.showStashdbLink && !this.stashLinkExists" objectType="scene"/>
 
       <span class="is-pulled-right" style="font-size:11px;text-align:right;">
         <a v-if="item.members_url != ''" :href="item.members_url" target="_blank" title="Members Link" rel="noreferrer"><b-icon pack="mdi" icon="link-lock" custom-size="mdi-18px" style="height:0.7rem"/></a>
         <a :href="item.scene_url" :class="{'has-text-white has-background-primary-dark': item.is_subscribed }" target="_blank" rel="noreferrer" style="padding:2px">{{item.site}}</a><br/>
-        <span v-if="item.release_date !== '0001-01-01T00:00:00Z'">
+        <span v-if="item.release_date !== '0001-01-01T00:00:00Z' && this.$store.state.optionsWeb.web.sceneDate">
           {{format(parseISO(item.release_date), "yyyy-MM-dd")}}
         </span>        
       </span>
@@ -278,7 +278,6 @@ export default {
   }
 
   video {
-    object-fit: cover;
     position: absolute;
     width: 100%;
     height: 100%;

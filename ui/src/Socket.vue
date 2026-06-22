@@ -73,6 +73,9 @@ export default {
       if (dataArr.argsDict.name === 'rescan') {
         this.$store.state.messages.lockRescan = dataArr.argsDict.locked
       }
+      if (dataArr.argsDict.name === 'previews') {
+        this.$store.state.messages.lockPreview = dataArr.argsDict.locked
+      }
     })
 
     ws.subscribe('state.change.optionsStorage', (arr, obj) => {
@@ -81,6 +84,14 @@ export default {
 
     ws.subscribe('options.previews.previewReady', (arr, obj) => {
       this.$store.commit('optionsPreviews/showPreview', { previewFn: arr.argsDict.previewFn })
+    })
+
+    ws.subscribe('options.previews.previewError', (arr, obj) => {
+      this.$store.commit('optionsPreviews/previewFailed', { message: arr.argsDict.message })
+    })
+
+    ws.subscribe('options.previews.previewCleared', (arr, obj) => {
+      this.$store.commit('optionsPreviews/clearPreview')
     })
 
     // Remote

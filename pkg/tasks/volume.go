@@ -117,7 +117,12 @@ func RescanVolumes(id int) {
 			if len(scenes) == 1 {
 				files[i].SceneID = scenes[0].ID
 				files[i].Save()
+				if files[i].HasAlpha {
+					scenes[0].SetAlphaChromaKey()
+					scenes[0].Save()
+				}
 				scenes[0].UpdateStatus()
+				downloadSceneCover(&scenes[0], db, tlog)
 			} else {
 				if config.Config.Storage.MatchOhash && config.Config.Advanced.StashApiKey != "" {
 					hash := files[i].OsHash
@@ -154,9 +159,14 @@ func RescanVolumes(id int) {
 								tmp, _ := json.Marshal(pfTxt)
 								scene.FilenamesArr = string(tmp)
 								scene.Save()
+								if files[i].HasAlpha {
+									scene.SetAlphaChromaKey()
+									scene.Save()
+								}
 								models.AddAction(scene.SceneID, "match", "filenames_arr", scene.FilenamesArr)
 
 								scene.UpdateStatus()
+								downloadSceneCover(&scene, db, tlog)
 								log.Infof("File %s matched to Scene %s matched using stashdb hash %s", path.Base(files[i].Filename), scene.SceneID, hash)
 							}
 						}
@@ -533,4 +543,50 @@ func ScanLocalSubtitlesFile(path string, volID uint, sceneId uint) {
 		fl.SceneID = sceneId
 	}
 	fl.Save()
+}
+
+// downloadSceneCover reads the scene's Images JSON, finds the first "cover"
+// entry, downloads the image to myfiles/covers/<scene_id>.jpg, and updates
+// cover_url in the database so the UI serves the local copy.
+func downloadSceneCover(scene *models.Scene, db *gorm.DB, tlog *logrus.Entry) {
+	if scene.Images == "" {
+		return
+	}
+
+	var images []models.Image
+	if err := json.Unmarshal([]byte(scene.Images), &images); err != nil {
+		tlog.Warnf("Cannot parse images JSON for scene %s: %v", scene.SceneID, err)
+		return
+	}
+
+	// Find the first cover image URL
+	var coverURL string
+	for _, img := range images {
+		if img.Type == "cover" && img.URL != "" {
+			coverURL = img.URL
+			break
+		}
+	}
+	if coverURL == "" {
+		return
+	}
+
+	// Skip if cover is already a local file
+	if strings.HasPrefix(scene.CoverURL, "/myfiles/") {
+		return
+	}
+
+	coversDir := filepath.Join(common.MyFilesDir, "covers")
+	_ = os.MkdirAll(coversDir, os.ModePerm)
+
+	destPath := filepath.Join(coversDir, scene.SceneID+".jpg")
+
+	if err := downloadFile(coverURL, destPath); err != nil {
+		tlog.Warnf("Failed to download cover for scene %s from %s: %v", scene.SceneID, coverURL, err)
+		return
+	}
+
+	scene.CoverURL = "/myfiles/covers/" + scene.SceneID + ".jpg"
+	db.Model(scene).Update("cover_url", scene.CoverURL)
+	tlog.Infof("Downloaded cover for scene %s", scene.SceneID)
 }

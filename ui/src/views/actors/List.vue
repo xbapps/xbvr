@@ -87,50 +87,6 @@
         <ActorCard :actor="actor"/>
       </div>
     </div>
-      <div class="columns is-gapless is-centered" v-if="hideLetters">
-        <b-radio-button v-model="jumpTo" native-value="" size="is-small"></b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="A" size="is-small">A</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="B" size="is-small">B</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="C" size="is-small">C</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="D" size="is-small">D</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="E" size="is-small">E</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="F" size="is-small">F</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="G" size="is-small">G</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="H" size="is-small">H</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="I" size="is-small">I</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="J" size="is-small">J</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="K" size="is-small">K</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="L" size="is-small">L</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="M" size="is-small">M</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="N" size="is-small">N</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="O" size="is-small">O</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="P" size="is-small">P</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="Q" size="is-small">Q/R</b-radio-button>        
-        <b-radio-button v-model="jumpTo" native-value="S" size="is-small">S</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="T" size="is-small">T</b-radio-button>
-        <b-radio-button v-model="jumpTo" native-value="U" size="is-small">U/V</b-radio-button>        
-        <b-radio-button v-model="jumpTo" native-value="W" size="is-small">W/X/Y/Z</b-radio-button>
-      </div>
-      <div class="columns is-gapless is-centered">          
-        <b-tooltip :label="$t('Press k to page back, l to page forward')" :delay="500" position="is-top">
-          <b-pagination
-            :total="total"
-            v-model="current"
-            range-before=2
-            range-after=3 
-            size="is-small"                                              
-            :per-page="limit"
-            aria-next-label="Next page"
-            aria-previous-label="Previous page"
-            aria-page-label="Page"
-            aria-current-label="Current page"
-            :page-input=true
-            @change="pageChanged"
-            debounce-page-input="250"
-            >
-        </b-pagination>
-      </b-tooltip>
-      </div>
   </div>
 </template>
 
@@ -147,6 +103,10 @@ export default {
       current: 1,      
     }
   },
+  created () {
+    const page = parseInt(this.$route.query.page) || 1
+    this.current = page
+  },
   computed: {
     cardSize: {
       get () {
@@ -156,16 +116,16 @@ export default {
         this.$store.state.actorList.filters.cardSize = value
         switch (value){
           case "1":
-            this.limit=36
+            this.limit=24
             break
           case "2":
-            this.limit=18
+            this.limit=15
             break
           case "3":
-            this.limit=10
+            this.limit=12
             break
           case "4":
-            this.limit=8
+            this.limit=6
             break
             }            
         }      
@@ -199,15 +159,15 @@ export default {
     cardSizeClass () {
       switch (this.$store.state.actorList.filters.cardSize) {
         case '1':
-          return 'is-1'
+          return 'is-2'
         case '2':
-          return 'is-2'
-        case '3':
           return 'is-one-fifth'
-        case '4':
+        case '3':
           return 'is-one-quarter'
+        case '4':
+          return 'is-one-third'
         default:
-          return 'is-2'
+          return 'is-one-fifth'
       }
     },
     isLoading () {
@@ -252,12 +212,20 @@ export default {
       this.$router.push({
         name: 'actors',
         query: {
-          q: this.$store.getters['actorList/filterQueryParams']
+          q: this.$store.getters['actorList/filterQueryParams'],
+          page: this.current
         }
       })
     },
-    async pageChanged () {      
-      this.$store.state.actorList.offset = (this.current -1) * this.$store.state.actorList.limit
+    async pageChanged () {
+      this.$store.state.actorList.offset = (this.current - 1) * this.$store.state.actorList.limit
+      this.$router.push({
+        name: 'actors',
+        query: {
+          ...this.$route.query,
+          page: this.current
+        }
+      }).catch(() => {})
       this.$store.dispatch('actorList/load', { offset: this.$store.state.actorList.offset })
     },
     nextpage () {

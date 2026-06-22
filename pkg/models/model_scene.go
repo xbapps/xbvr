@@ -300,6 +300,25 @@ func (o *Scene) PreviewExists() bool {
 	return true
 }
 
+// SetAlphaChromaKey sets a default alpha passthrough chroma key on the scene
+// if one is not already present with hasAlpha enabled.
+func (o *Scene) SetAlphaChromaKey() {
+	if o.ChromaKey != "" {
+		var ckdata map[string]interface{}
+		if err := json.Unmarshal([]byte(o.ChromaKey), &ckdata); err == nil {
+			if hasAlpha, ok := ckdata["hasAlpha"]; ok {
+				if b, ok := hasAlpha.(bool); ok && b {
+					return
+				}
+				if str, ok := hasAlpha.(string); ok && str == "true" {
+					return
+				}
+			}
+		}
+	}
+	o.ChromaKey = `{"enabled":true,"hasAlpha":true,"h":0,"opacity":0,"s":0,"threshold":0,"v":0}`
+}
+
 func (o *Scene) UpdateStatus() {
 	// Check if file with scene association exists
 	files, err := o.GetFiles()

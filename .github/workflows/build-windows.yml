@@ -1,0 +1,48 @@
+name: build-windows
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Setup MSYS2 GCC
+        uses: msys2/setup-msys2@v2
+        with:
+          path-type: inherit
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-pkg-config
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build UI
+        run: |
+          cd ui
+          yarn install --ignore-engines
+          yarn build
+
+      - name: Build Windows binary
+        shell: msys2 {0}
+        run: |
+          export CGO_ENABLED=1
+          export CC=/mingw64/bin/gcc
+          go build -tags=json1 -ldflags "-s -w -H windowsgui" -o xbvr.exe ./pkg/tray
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xbvr-windows
+          path: xbvr.exe

@@ -30,6 +30,7 @@ type ObjectConfig struct {
 		Password string `default:"" json:"password"`
 	} `json:"security"`
 	Web struct {
+		Theme                string `default:"light" json:"theme"`
 		TagSort              string `default:"by-tag-count" json:"tagSort"`
 		SceneHidden          bool   `default:"true" json:"sceneHidden"`
 		SceneWatchlist       bool   `default:"true" json:"sceneWatchlist"`
@@ -38,6 +39,7 @@ type ObjectConfig struct {
 		SceneWatched         bool   `default:"false" json:"sceneWatched"`
 		SceneEdit            bool   `default:"false" json:"sceneEdit"`
 		SceneDuration        bool   `default:"false" json:"sceneDuration"`
+		SceneDate            bool   `default:"true" json:"sceneDate"`
 		SceneCuepoint        bool   `default:"true" json:"sceneCuepoint"`
 		ShowHspFile          bool   `default:"true" json:"showHspFile"`
 		ShowSubtitlesFile    bool   `default:"true" json:"showSubtitlesFile"`
@@ -45,6 +47,7 @@ type ObjectConfig struct {
 		ShowScriptHeatmap    bool   `default:"true" json:"showScriptHeatmap"`
 		ShowAllHeatmaps      bool   `default:"false" json:"showAllHeatmaps"`
 		ShowOpenInNewWindow  bool   `default:"true" json:"showOpenInNewWindow"`
+		ShowStashdbLink      bool   `default:"true" json:"showStashdbLink"`
 		UpdateCheck          bool   `default:"true" json:"updateCheck"`
 		IsAvailOpacity       int    `default:"40" json:"isAvailOpacity"`
 		SceneCardAspectRatio string `default:"1:1" json:"sceneCardAspectRatio"`
@@ -112,11 +115,12 @@ type ObjectConfig struct {
 	Library struct {
 		Preview struct {
 			Enabled       bool    `default:"true" json:"enabled"`
-			StartTime     int     `default:"10" json:"startTime"`
 			SnippetLength float64 `default:"0.4" json:"snippetLength"`
 			SnippetAmount int     `default:"20" json:"snippetAmount"`
 			Resolution    int     `default:"400" json:"resolution"`
 			ExtraSnippet  bool    `default:"false" json:"extraSnippet"`
+			UseCUDA       bool    `default:"true" json:"useCUDA"`
+			Pitch         int     `default:"15" json:"pitch"`
 		} `json:"preview"`
 	} `json:"library"`
 	Cron struct {

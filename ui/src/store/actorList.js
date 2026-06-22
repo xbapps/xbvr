@@ -24,6 +24,8 @@ const defaultFilterState = {
   max_height: 220,  
   min_weight: 25,
   max_weight: 150,  
+  min_cup_size: 0,
+  max_cup_size: 9,
   min_count: 0,
   max_count: 150,  
   min_avail: 0,
@@ -41,7 +43,7 @@ const state = {
   isLoading: false,
   offset: 0,
   total: 0,
-  limit: 18,
+  limit: 15,
   show_actor_id: '',
   filterOpts: {
     cast: [],

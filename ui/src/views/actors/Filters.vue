@@ -121,6 +121,10 @@
           <td><b-slider :min="25" :max="150" :step="1" :tooltip="true" v-model="weights" lazy class="slider"></b-slider></td>
         </tr>
         <tr>
+          <td class="slider-title"><strong><small>{{ $t("Bra/cup size") }}:</small></strong></td>
+          <td><b-slider :min="0" :max="9" :step="1" :tooltip="true" :custom-formatter="formatCupSize" v-model="cupSizes" lazy class="slider"></b-slider></td>
+        </tr>
+        <tr>
           <td class="slider-title"><strong><small>{{ $t("Scenes") }}:</small></strong></td>
           <td><b-slider :min="0" :max="150" :step="1" :tooltip="true" v-model="scenecounts" lazy class="slider" ></b-slider></td>
         </tr>
@@ -335,6 +339,10 @@ export default {
       }
       return txt
     },
+    formatCupSize(value) {
+      const cupSizes = ['AA', 'A', 'B', 'C', 'D', 'DD', 'E', 'F', 'G', 'N']
+      return cupSizes[value] || value
+    },
     async fetchFilters() {
         this.filteredAttributes=['Loading attributes']
         ky.get('/api/actor/filters').json().then(data => {
@@ -405,6 +413,18 @@ export default {
         if (this.$store.state.actorList.filters.min_weight != value[0] || this.$store.state.actorList.filters.max_weight != value[1]){
           this.$store.state.actorList.filters.min_weight = value[0]
           this.$store.state.actorList.filters.max_weight = value[1]
+          this.reloadList()
+        }
+      }
+    },
+    cupSizes: {
+      get () {
+        return [this.$store.state.actorList.filters.min_cup_size, this.$store.state.actorList.filters.max_cup_size]
+      },
+      set (value) {
+        if (this.$store.state.actorList.filters.min_cup_size != value[0] || this.$store.state.actorList.filters.max_cup_size != value[1]){
+          this.$store.state.actorList.filters.min_cup_size = value[0]
+          this.$store.state.actorList.filters.max_cup_size = value[1]
           this.reloadList()
         }
       }

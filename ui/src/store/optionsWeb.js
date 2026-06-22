@@ -3,6 +3,7 @@ import ky from 'ky'
 const state = {
   loading: false,
   web: {
+    theme: 'light',
     tagSort: 'By Tag Count',
     sceneHidden: true,
     sceneWatchlist: true,
@@ -11,6 +12,7 @@ const state = {
     sceneWatched: false,
     sceneEdit: false,
     sceneDuration: false,
+    sceneDate: true,
     sceneCuepoint: true,
     showHspFile: true,
     showSubtitlesFile: true,
@@ -20,6 +22,7 @@ const state = {
     showScriptHeatmap: false,
     showAllHeatmaps: false,
     showOpenInNewWindow: true,
+    showStashdbLink: true,
     sceneCardAspectRatio: "1:1",
     sceneCardScaleToFit: true,
     actorCardAspectRatio: "1:1",
@@ -36,6 +39,7 @@ const actions = {
     ky.get('/api/options/state')
       .json()
       .then(data => {
+        state.web.theme = data.config.web.theme || 'light'
         state.web.tagSort = data.config.web.tagSort
         state.web.sceneHidden = data.config.web.sceneHidden
         state.web.sceneWatchlist = data.config.web.sceneWatchlist
@@ -44,6 +48,7 @@ const actions = {
         state.web.sceneWatched = data.config.web.sceneWatched
         state.web.sceneEdit = data.config.web.sceneEdit
         state.web.sceneDuration = data.config.web.sceneDuration
+        state.web.sceneDate = data.config.web.sceneDate
         state.web.sceneCuepoint = data.config.web.sceneCuepoint
         state.web.showHspFile = data.config.web.showHspFile
         state.web.showSubtitlesFile = data.config.web.showSubtitlesFile
@@ -53,6 +58,7 @@ const actions = {
         state.web.updateCheck = data.config.web.updateCheck
         state.web.isAvailOpacity = data.config.web.isAvailOpacity
         state.web.showOpenInNewWindow = data.config.web.showOpenInNewWindow
+        state.web.showStashdbLink = data.config.web.showStashdbLink !== false
         state.web.sceneCardAspectRatio = data.config.web.sceneCardAspectRatio
         state.web.sceneCardScaleToFit = data.config.web.sceneCardScaleToFit
         state.web.actorCardAspectRatio = data.config.web.actorCardAspectRatio
@@ -65,6 +71,7 @@ const actions = {
     ky.put('/api/options/interface/web', { json: { ...state.web } })
       .json()
       .then(data => {
+        state.web.theme = data.theme || 'light'
         state.web.tagSort = data.tagSort
         state.web.sceneHidden = data.sceneHidden
         state.web.sceneWatchlist = data.sceneWatchlist
@@ -73,6 +80,7 @@ const actions = {
         state.web.sceneWatched = data.sceneWatched
         state.web.sceneEdit = data.sceneEdit
         state.web.sceneDuration = data.sceneDuration
+        state.web.sceneDate = data.sceneDate
         state.web.sceneCuepoint = data.sceneCuepoint
         state.web.showHspFile = data.showHspFile
         state.web.showSubtitlesFile = data.showSubtitlesFile
@@ -82,6 +90,7 @@ const actions = {
         state.web.updateCheck = data.updateCheck
         state.web.isAvailOpacity = data.isAvailOpacity
         state.web.showOpenInNewWindow = data.showOpenInNewWindow
+        state.web.showStashdbLink = data.showStashdbLink
         state.web.sceneCardAspectRatio = data.sceneCardAspectRatio
         state.web.sceneCardScaleToFit = data.sceneCardScaleToFit
         state.web.actorCardAspectRatio = data.actorCardAspectRatio

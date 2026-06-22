@@ -15,6 +15,7 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/markphelps/optional"
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -241,6 +242,10 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 	if err == nil {
 		f.SceneID = scene.ID
 		f.Save()
+		if f.HasAlpha {
+			scene.SetAlphaChromaKey()
+			scene.Save()
+		}
 	}
 
 	// Add File to the list of Scene filenames so it will be discovered when file is moved
@@ -261,6 +266,7 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 
 	// Finally, update scene available/accessible status
 	scene.UpdateStatus()
+	deleteSceneMedia(scene)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, nil)
 }
@@ -321,6 +327,7 @@ func (i FilesResource) unmatchFile(req *restful.Request, resp *restful.Response)
 
 		// Finally, update scene available/accessible status
 		scene.UpdateStatus()
+		deleteSceneMedia(scene)
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, scene)
@@ -373,10 +380,38 @@ func removeFileByFileId(fileId uint) models.Scene {
 			if file.SceneID != 0 {
 				scene.GetIfExistByPK(file.SceneID)
 				scene.UpdateStatus()
+				deleteSceneMedia(scene)
 			}
 		}
 	} else {
 		log.Errorf("error deleting file %v", err)
 	}
 	return scene
+}
+
+func deleteSceneMedia(scene models.Scene) {
+	files, err := scene.GetFiles()
+	if err != nil {
+		return
+	}
+	videos := 0
+	for _, f := range files {
+		if f.Type == "video" {
+			videos++
+		}
+	}
+	if videos > 0 {
+		return
+	}
+
+	previewPath := filepath.Join(common.VideoPreviewDir, scene.SceneID+".mp4")
+	if err := os.Remove(previewPath); err == nil {
+		log.Infof("Deleted preview %s", previewPath)
+	}
+	for _, ext := range []string{".jpg", ".jpeg"} {
+		coverPath := filepath.Join(common.MyFilesDir, "covers", scene.SceneID+ext)
+		if err := os.Remove(coverPath); err == nil {
+			log.Infof("Deleted cover %s", coverPath)
+		}
+	}
 }

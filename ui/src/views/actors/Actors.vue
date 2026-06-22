@@ -34,16 +34,8 @@ export default {
         : 'none'
     })
     toTop.addEventListener('click', function () {
-      scrollToTop()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     })
-
-    const scrollToTop = () => {
-      const c = document.documentElement.scrollTop || document.body.scrollTop
-      if (c > 0) {
-        window.requestAnimationFrame(scrollToTop)
-        window.scrollTo(0, c - c / 16)
-      }
-    }
   },
   beforeRouteEnter (to, from, next) {
     next(vm => {
@@ -51,7 +43,10 @@ export default {
         vm.$store.commit('actorList/stateFromQuery', to.query)
       }
       vm.$store.dispatch('optionsWeb/load')
-      vm.$store.dispatch('actorList/load', { offset: 0 })
+      const page = parseInt(to.query.page) || 1
+      const limit = vm.$store.state.actorList.limit
+      const offset = (page - 1) * limit
+      vm.$store.dispatch('actorList/load', { offset })
       vm.$store.dispatch('optionsAdvanced/load')
     })
   },
@@ -59,7 +54,10 @@ export default {
     if (to.query !== undefined) {
       this.$store.commit('actorList/stateFromQuery', to.query)
     }
-    this.$store.dispatch('actorList/load', { offset: 0 })
+    const page = parseInt(to.query.page) || 1
+    const limit = this.$store.state.actorList.limit
+    const offset = (page - 1) * limit
+    this.$store.dispatch('actorList/load', { offset })
     next()
   },
   computed: {

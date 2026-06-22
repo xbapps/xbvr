@@ -141,6 +141,23 @@ func RemoveLock(lock string) {
 	common.PublishWS("lock.change", map[string]interface{}{"name": lock, "locked": false})
 }
 
+func SetStopFlag(lock string) {
+	(&KV{Key: "stop-" + lock, Value: "1"}).Save()
+}
+
+func ClearStopFlag(lock string) {
+	(&KV{Key: "stop-" + lock}).Delete()
+}
+
+func CheckStopFlag(lock string) bool {
+	db, _ := GetDB()
+	defer db.Close()
+
+	var obj KV
+	err := db.Where(&KV{Key: "stop-" + lock}).First(&obj).Error
+	return err == nil
+}
+
 func RemoveAllLocks() {
 	db, _ := GetDB()
 	defer db.Close()

@@ -49,16 +49,8 @@ export default {
       toggleBtn.style.display = show ? 'block' : 'none'
     })
     toTop.addEventListener('click', function () {
-      scrollToTop()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     })
-
-    const scrollToTop = () => {
-      const c = document.documentElement.scrollTop || document.body.scrollTop
-      if (c > 0) {
-        window.requestAnimationFrame(scrollToTop)
-        window.scrollTo(0, c - c / 16)
-      }
-    }
   },
   beforeRouteEnter (to, from, next) {
     next(vm => {
@@ -83,11 +75,12 @@ export default {
 <style scoped>
   #scrollButtons {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 8px;
     position: fixed;
     bottom: 20px;
     left: 30px;
-    width: 18.5%;
+    z-index: 1000;
   }
   #toTop, #toggleInfiniteScroll {
     display: none;
@@ -96,7 +89,8 @@ export default {
     padding: 15px;
     border-radius: 10px;
     font-size: 18px;
-    margin-right: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
   }
   #toTop:hover, #toggleInfiniteScroll:hover {
     background-color: #BDBDBD;

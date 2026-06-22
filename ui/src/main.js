@@ -23,9 +23,11 @@ Vue.config.keyCodes = {
 Vue.use(Buefy)
 Vue.use(vueDebounce)
 
-new Vue({
+const app = new Vue({
   router,
   store,
   i18n,
   render: h => h(App)
 }).$mount('#app')
+
+store.dispatch('optionsWeb/load')

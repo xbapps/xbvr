@@ -148,15 +148,11 @@
               <div v-for="(image, idx) in castimages" :key="idx" class="image-wrapper">
                 <b-tooltip  type="is-light" :label="image.actor_label"  :delay=100>
                   <vue-load-image>
-                    <img slot="image" :src="getImageURL(image.src)" alt="Image" class="thumbnail" @mouseover="showTooltip(idx)" @mouseout="hideTooltip(idx)" @click='showActorDetail([image.actor_id])' />
+                    <img slot="image" :src="getImageURL(image.src)" alt="Image" class="thumbnail" @click='showActorDetail([image.actor_id])' />
                     <img slot="preloader" :src="getImageURL('https://i.stack.imgur.com/kOnzy.gif')" style="height: 50px;display: block;margin-left:auto;margin-right: auto;" @click='showCastScenes([image.actor_name])' />
                     <img slot="error" src="/ui/images/blank_female_profile.png" width="80" @click='showActorDetail([image.actor_id])' />
                   </vue-load-image>
                 </b-tooltip>
-
-                <div v-if="image.visible" class="tooltip">
-                  <img :src="getImageURL(image.src)" alt="Tooltip Image" />
-                </div>
               </div>
             </div>
 
@@ -266,6 +262,9 @@
                       <div class="media-right">
                         <button class="button is-dark is-small is-outlined" title="Unmatch file from scene" @click='unmatchFile(f)'>
                           <b-icon pack="fas" icon="unlink" size="is-small"></b-icon>
+                        </button>&nbsp;
+                        <button class="button is-warning is-small is-outlined" title="Clear preview" @click='clearPreview' v-if="idx === 0">
+                          <b-icon pack="fas" icon="eraser" size="is-small"></b-icon>
                         </button>&nbsp;
                         <button class="button is-danger is-small is-outlined" title="Delete file from disk" @click='removeFile(f)'>
                           <b-icon pack="fas" icon="trash" size="is-small"></b-icon>
@@ -826,10 +825,34 @@ watch:{
         message: `You're about to unmatch the file <strong>${file.filename}</strong> from this scene. Afterwards, it can be matched again to this or any other scene.`,
         type: 'is-info is-wide',
         hasIcon: true,
+        customClass: 'modal-warning',
         id: 'heh',
         onConfirm: () => {
           ky.post(`/api/files/unmatch`, {json:{file_id: file.id}}).json().then(data => {
             this.$store.commit('overlay/showDetails', { scene: data })
+          })
+        }
+      })
+    },
+    clearPreview () {
+      this.$buefy.dialog.confirm({
+        title: 'Clear preview',
+        message: `You're about to clear the video preview for this scene. The preview will be regenerated the next time previews are generated.`,
+        type: 'is-warning is-wide',
+        hasIcon: true,
+        customClass: 'modal-warning',
+        onConfirm: () => {
+          ky.post(`/api/scene/${this.item.scene_id}/clear-preview`, { json: {} }).json().then(data => {
+            this.$store.commit('overlay/showDetails', { scene: data })
+            this.$buefy.toast.open({
+              message: 'Preview cleared',
+              type: 'is-success'
+            })
+          }).catch(err => {
+            this.$buefy.toast.open({
+              message: `Failed to clear preview: ${err}`,
+              type: 'is-danger'
+            })
           })
         }
       })
@@ -1242,10 +1265,6 @@ watch:{
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%) !important;
-}
-
-.modal-card {
-  width: 85%;
 }
 
 .missing {

@@ -21,7 +21,12 @@
       <actor-favourite-button :actor="actor" v-if="this.$store.state.optionsWeb.web.sceneFavourite"/>
       <actor-watchlist-button :actor="actor" v-if="this.$store.state.optionsWeb.web.sceneWatchlist"/>
       <actor-edit-button :actor="actor"/>&nbsp;
-      <link-stashdb-button :item="actor" objectType="actor" />
+      <link-stashdb-button :item="actor" objectType="actor" v-if="!hideStashdb" />
+      <b-tooltip :label="$t('Delete actor')" :delay="500">
+        <button class="button is-small is-danger is-outlined" @click.stop="deleteActor(actor)">
+          <b-icon pack="mdi" icon="delete-outline" size="is-small"></b-icon>
+        </button>
+      </b-tooltip>
       <b-tooltip :label="$t('Your rating')" :delay="500">
       <b-tag type="is-warning" v-if="actor.star_rating != 0 " size="is-small" style="height:30px;">
         <b-icon pack="mdi" icon="star" size="is-small"/>
@@ -58,10 +63,11 @@ import ActorEditButton from '../../components/ActorEditButton'
 import LinkStashdbButton from '../../components/LinkStashdbButton'
 import VueLoadImage from 'vue-load-image'
 import { tr } from 'date-fns/locale'
+import ky from 'ky'
 
 export default {
   name: 'ActorCard',
-  props: { actor: Object, colleague: String },
+  props: { actor: Object, colleague: String, hideStashdb: Boolean },
    components: {ActorFavouriteButton, ActorWatchlistButton, VueLoadImage, ActorEditButton, LinkStashdbButton},
   data () {
     return {
@@ -102,7 +108,7 @@ export default {
       if (u.startsWith('http')) {
         return '/img/700x/' + u.replace('://', ':/')
       } else {
-        return u
+        return encodeURI(u)
       }
     },
     showDetails (actor) {
@@ -114,6 +120,11 @@ export default {
         return false
       }
       return true
+    },
+    deleteActor (actor) {
+      ky.delete(`/api/actor/delete/${actor.id}`).then(() => {
+        this.$store.dispatch('actorList/load', { offset: this.$store.state.actorList.offset - this.$store.state.actorList.limit })
+      })
     },
     showColleague (main_actor, colleague) {      
       this.$store.state.sceneList.filters.cast = ["&" + main_actor , "&"+ colleague]

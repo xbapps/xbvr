@@ -176,6 +176,16 @@ func getProto(req *restful.Request) string {
 	return proto
 }
 
+// deoAbsoluteURL converts a relative URL (e.g. "/myfiles/covers/xxx.jpg")
+// to an absolute one using the host the DeoVR client connected through.
+// Absolute URLs (starting with http) are returned unchanged.
+func deoAbsoluteURL(u string) string {
+	if strings.HasPrefix(u, "/") {
+		return session.DeoRequestHost + u
+	}
+	return u
+}
+
 func setDeoPlayerHost(req *restful.Request) {
 	deoIP := req.Request.RemoteAddr
 	lastColon := strings.LastIndex(deoIP, ":")
@@ -551,7 +561,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		RatingAvg:        scene.StarRating,
 		FullVideoReady:   true,
 		FullAccess:       true,
-		ThumbnailURL:     scene.CoverURL,
+		ThumbnailURL:     deoAbsoluteURL(scene.CoverURL),
 		StereoMode:       stereoMode,
 		Is3D:             true,
 		ScreenType:       screenType,
@@ -583,7 +593,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 			RatingAvg:        scene.StarRating,
 			FullVideoReady:   true,
 			FullAccess:       true,
-			ThumbnailURL:     scene.CoverURL,
+			ThumbnailURL:     deoAbsoluteURL(scene.CoverURL),
 			StereoMode:       stereoMode,
 			Is3D:             true,
 			ScreenType:       screenType,
@@ -670,7 +680,7 @@ func scenesToDeoList(req *restful.Request, scenes []models.SceneSummary) []DeoLi
 		item := DeoListItem{
 			Title:        scenes[i].Title,
 			VideoLength:  scenes[i].Duration * 60,
-			ThumbnailURL: scenes[i].CoverURL,
+			ThumbnailURL: deoAbsoluteURL(scenes[i].CoverURL),
 			VideoURL:     fmt.Sprintf("%v/deovr/%v", session.DeoRequestHost, scenes[i].ID),
 		}
 		list = append(list, item)

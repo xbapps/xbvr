@@ -7,6 +7,13 @@
       <div class="columns">
         <div class="column">
           <section>
+            <b-field label="Theme">
+              <b-select placeholder="Select theme" v-model="theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </b-select>
+            </b-field>
+
             <b-field label="Tag Sort">
               <div class="block">
                 <b-radio v-model="tagSort" name="tagSort" native-value="by-tag-count">
@@ -61,6 +68,11 @@
               </b-switch>
             </b-field>
             <b-field>
+              <b-switch v-model="sceneDate" type="is-dark">
+                show Release Date
+              </b-switch>
+            </b-field>
+            <b-field>
               <b-switch v-model="sceneCuepoint" type="is-dark">
                 show Cuepoints button
               </b-switch>
@@ -88,6 +100,11 @@
             <b-field>
               <b-switch v-model="openInNewWindow" type="is-dark">
                 show Open Tag in New Window
+              </b-switch>
+            </b-field>
+            <b-field>
+              <b-switch v-model="showStashdbLink" type="is-dark">
+                show Link to StashDB button
               </b-switch>
             </b-field>
             <b-field label="Opacity of unavailable scenes">
@@ -152,6 +169,14 @@ export default {
     }
   },
   computed: {
+    theme: {
+      get () {
+        return this.$store.state.optionsWeb.web.theme
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.theme = value
+      }
+    },
     tagSort: {
       get () {
         return this.$store.state.optionsWeb.web.tagSort
@@ -248,6 +273,14 @@ export default {
         this.$store.state.optionsWeb.web.sceneDuration = value
       }
     },
+    sceneDate: {
+      get () {
+        return this.$store.state.optionsWeb.web.sceneDate
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.sceneDate = value
+      }
+    },
     sceneCuepoint: {
       get () {
         return this.$store.state.optionsWeb.web.sceneCuepoint
@@ -278,6 +311,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsWeb.web.showOpenInNewWindow = value
+      }
+    },
+    showStashdbLink: {
+      get () {
+        return this.$store.state.optionsWeb.web.showStashdbLink
+      },
+      set (value) {
+        this.$store.state.optionsWeb.web.showStashdbLink = value
       }
     },
     isAvailOpacity: {
