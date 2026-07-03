@@ -52,28 +52,15 @@ func SexBabesVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 			sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(e.Attr("href")))
 		})
 
-		// Synopsis
-		e.ForEach(`div.list-of-categories__p`, func(id int, e *colly.HTMLElement) {
-			synopsis := e.Text
-
-			if synopsis == "" {
-				synopsis = e.ChildText(`p.ql-align-justify`)
-
-				if synopsis == "" {
-					e.ForEach(`div`, func(id int, e *colly.HTMLElement) {
-						synopsis = synopsis + " " + strings.TrimSpace(e.Text)
-					})
-
-				}
-			}
-
-			if strings.TrimSpace(synopsis) != "" {
-				sc.Synopsis = strings.TrimSpace(synopsis)
-			}
+		// Synopsis — older scenes put the description as direct text in
+		// .sbvr-scene-about__prose; newer scenes wrap each paragraph in a
+		// child <div>. Take the whole subtree text and collapse whitespace.
+		e.ForEach(`.sbvr-scene-about__prose`, func(id int, e *colly.HTMLElement) {
+			sc.Synopsis = strings.Join(strings.Fields(e.Text), " ")
 		})
 
 		// Tags
-		e.ForEach(`.tags a.tag`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`.sbvr-scene-about__chips a.sbvr-scene-about__chip`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 
@@ -90,44 +77,83 @@ func SexBabesVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
 		})
 
-		// Date and Duration from JSON-LD
+		// Title, date, duration from JSON-LD
 		durationRegex := regexp.MustCompile(`PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?`)
 		e.ForEach(`script[type="application/ld+json"]`, func(id int, e *colly.HTMLElement) {
 			jsonText := strings.TrimSpace(e.Text)
-			if jsonText != "" {
-				var jsonData map[string]interface{}
-				if err := json.Unmarshal([]byte(jsonText), &jsonData); err == nil {
-					// Duration
-					if duration, ok := jsonData["duration"].(string); ok {
-						if m := durationRegex.FindStringSubmatch(duration); len(m) == 4 {
-							hours, _ := strconv.Atoi(m[1]) // will be 0 if m[1] is empty
-							minutes, _ := strconv.Atoi(m[2])
-							seconds, _ := strconv.Atoi(m[3])
-							sc.Duration = (hours*3600 + minutes*60 + seconds) / 60
-						}
-					}
-					// Date
-					if uploadDate, ok := jsonData["uploadDate"].(string); ok {
-						if tmpDate, err := time.Parse(time.RFC3339, uploadDate); err == nil {
-							sc.Released = tmpDate.Format("2006-01-02")
-						}
-					}
+			if jsonText == "" {
+				return
+			}
+			var jsonData map[string]interface{}
+			if err := json.Unmarshal([]byte(jsonText), &jsonData); err != nil {
+				return
+			}
+			if title, ok := jsonData["name"].(string); ok && strings.TrimSpace(title) != "" {
+				sc.Title = strings.TrimSpace(title)
+			}
+			if duration, ok := jsonData["duration"].(string); ok {
+				if m := durationRegex.FindStringSubmatch(duration); len(m) == 4 {
+					hours, _ := strconv.Atoi(m[1])
+					minutes, _ := strconv.Atoi(m[2])
+					seconds, _ := strconv.Atoi(m[3])
+					sc.Duration = (hours*3600 + minutes*60 + seconds) / 60
+				}
+			}
+			if uploadDate, ok := jsonData["uploadDate"].(string); ok {
+				if tmpDate, err := time.Parse(time.RFC3339, uploadDate); err == nil {
+					sc.Released = tmpDate.Format("2006-01-02")
 				}
 			}
 		})
 
-		// Filenames
-		// old site, needs update
-		e.ForEach(`div.modal a.vd-row`, func(id int, e *colly.HTMLElement) {
-			origURL, _ := url.Parse(e.Attr("href"))
-			base := origURL.Query().Get("response-content-disposition")
-			base = strings.ReplaceAll(base, "attachment; filename=", "")
-			base = strings.ReplaceAll(base, "\"", "")
-			base = strings.ReplaceAll(base, "_trailer", "")
-			if !funk.ContainsString(sc.Filenames, base) {
-				sc.Filenames = append(sc.Filenames, base)
+		// Original Filenames — sceneSlug + suffix from SBVR-DEBUG
+		sceneSlug := ""
+		if u, err := url.Parse(sc.HomepageURL); err == nil {
+			parts := strings.Split(strings.Trim(u.Path, "/"), "/")
+			if len(parts) > 0 {
+				sceneSlug = parts[len(parts)-1]
+			}
+		}
+		// Postfixes used by the inline player are streaming sources, never real downloads.
+		streamPostfixes := map[string]bool{}
+		e.ForEach(`dl8-video source`, func(_ int, src *colly.HTMLElement) {
+			u, err := url.Parse(src.Attr("src"))
+			if err != nil {
+				return
+			}
+			parts := strings.Split(strings.Trim(u.Path, "/"), "/")
+			if len(parts) == 0 {
+				return
+			}
+			base := parts[len(parts)-1]
+			if i := strings.Index(base, "_"); i > 0 {
+				streamPostfixes["_"+base[i+1:]] = true
 			}
 		})
+		if sceneSlug != "" {
+			if m := regexp.MustCompile(`postfixes=\[([^\]]*)\]`).FindSubmatch(e.Response.Body); len(m) == 2 {
+				for _, postfix := range strings.Split(string(m[1]), ";") {
+					postfix = strings.TrimSpace(postfix)
+					if postfix == "" || strings.Contains(postfix, "_trailer") || streamPostfixes[postfix] {
+						continue
+					}
+					// Ignore sub-1080 res
+					firstTok := strings.SplitN(strings.TrimPrefix(postfix, "_"), "_", 2)[0]
+					res := 0
+					if num, ok := strings.CutSuffix(firstTok, "k"); ok {
+						if n, err := strconv.Atoi(num); err == nil {
+							res = n * 1000
+						}
+					} else {
+						res, _ = strconv.Atoi(firstTok)
+					}
+					if res > 0 && res < 1080 {
+						continue
+					}
+					sc.Filenames = append(sc.Filenames, sceneSlug+postfix)
+				}
+			}
+		}
 
 		out <- sc
 	})
