@@ -3368,12 +3368,12 @@ browserslist@^4.28.1:
     node-releases "^2.0.27"
     update-browserslist-db "^1.2.0"
 
-buefy@0.9.29:
-  version "0.9.29"
-  resolved "https://registry.yarnpkg.com/buefy/-/buefy-0.9.29.tgz#1d1fe57a407ef7cd6e9295679371eee63d21bd0f"
-  integrity sha512-iJutB/ezTQcxqcKvKz129DzomMjNRGdy23lJBtoFQBG//2NveTcPkN/VRUF70z2WH3JB/5nmVeoxr8QOPcs42w==
+buefy@3.0.5:
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/buefy/-/buefy-3.0.5.tgz#0a1d8779fd002582d86208c5173d2d2c020bea90"
+  integrity sha512-lNLcAfWtwAdpKu4uxghNf9THGyP0c4Bg0rrDXOsRwJvQI7poNi5fXkAc3BUi7kFUExDgcw0Y2HagnbnPX+CUTw==
   dependencies:
-    bulma "0.9.4"
+    bulma "^1.0.4"
 
 buffer-from@^1.0.0:
   version "1.1.2"
@@ -3408,10 +3408,10 @@ bulma-extensions@6.2.7:
   resolved "https://registry.yarnpkg.com/bulma-extensions/-/bulma-extensions-6.2.7.tgz#f9f4d1478a7ac1606ae8db1e765aa45e3f12bb31"
   integrity sha512-y3dHsxlCYkuxUg87KKN9H4InM8NCk8tdnrlxLkYak8sd2WQdllg3wP2Nv41lj8X46uPXX2ADP0MO65LlXPHt/Q==
 
-bulma@0.9.4:
-  version "0.9.4"
-  resolved "https://registry.yarnpkg.com/bulma/-/bulma-0.9.4.tgz#0ca8aeb1847a34264768dba26a064c8be72674a1"
-  integrity sha512-86FlT5+1GrsgKbPLRRY7cGDg8fsJiP/jzTqXXVqiUZZ2aZT8uemEOHlU1CDU+TxklPEZ11HZNNWclRBBecP4CQ==
+bulma@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/bulma/-/bulma-1.0.4.tgz#942dc017a3a201fa9f0e0c8db3dd52f3cff86712"
+  integrity sha512-Ffb6YGXDiZYX3cqvSbHWqQ8+LkX6tVoTcZuVB3lm93sbAVXlO0D6QlOTMnV6g18gILpAXqkG2z9hf9z4hCjz2g==
 
 bytes@3.0.0:
   version "3.0.0"
