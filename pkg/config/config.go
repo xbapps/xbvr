@@ -174,7 +174,26 @@ type ObjectConfig struct {
 			HourEnd         int  `default:"23" json:"hourEnd"`
 			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"linkScenesSchedule"`
+		OrganizeSchedule struct {
+			Enabled         bool `default:"false" json:"enabled"`
+			HourInterval    int  `default:"24" json:"hourInterval"`
+			UseRange        bool `default:"false" json:"useRange"`
+			MinuteStart     int  `default:"0" json:"minuteStart"`
+			HourStart       int  `default:"0" json:"hourStart"`
+			HourEnd         int  `default:"23" json:"hourEnd"`
+			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
+		} `json:"organizeSchedule"`
 	} `json:"cron"`
+	Organize struct {
+		Dedup          bool   `default:"true" json:"dedup"`
+		DeferDups      bool   `default:"false" json:"deferDups"`
+		IncomingDir    string `default:"Incoming" json:"incomingDir"`
+		IncomingMinAge int    `default:"30" json:"incomingMinAge"`
+		TopFolder      string `default:"" json:"topFolder"`
+		CastGender     string `default:"female" json:"castGender"`
+		SymlinkByActor bool   `default:"false" json:"symlinkByActor"`
+		ActorFolder    string `default:"ByActor" json:"actorFolder"`
+	} `json:"organize"`
 	Storage struct {
 		MatchOhash bool     `default:"false" json:"match_ohash"`
 		VideoExt   []string `json:"video_ext"`
