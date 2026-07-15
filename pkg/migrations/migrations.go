@@ -25,6 +25,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/organize"
 	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/tasks"
 )
@@ -2385,6 +2386,18 @@ func Migrate(migrateTo string) {
 				// Add index on scraper_id to improve scene count query performance
 				// This prevents timeout on Scrapers page for users with large databases
 				return tx.Table("scenes").AddIndex("idx_scenes_scraper_id", "scraper_id").Error
+			},
+		},
+		{
+			ID: "0088-duplicate-analysis",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(organize.DuplicateDismissal{}, organize.DuplicateReport{}).Error
+			},
+		},
+		{
+			ID: "0089-duplicate-file-ignore",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(organize.DuplicateFileIgnore{}).Error
 			},
 		},
 	}
