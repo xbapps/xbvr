@@ -326,6 +326,8 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 
 	// supported attributes
 	var outAttributes []string
+	outAttributes = append(outAttributes, "Recommended To Watch")
+	outAttributes = append(outAttributes, "Recommend To Delete")
 	outAttributes = append(outAttributes, "Multiple Video Files")
 	outAttributes = append(outAttributes, "Single Video File")
 	outAttributes = append(outAttributes, "Multiple Script Files")
@@ -836,6 +838,7 @@ func (i SceneResource) rateScene(req *restful.Request, resp *restful.Response) {
 	err = scene.GetIfExistByPK(uint(sceneId))
 	if err == nil {
 		scene.StarRating = r.Rating
+		scene.StarRatingUpdatedAt = time.Now()
 		scene.Save()
 	}
 	db.Close()
