@@ -151,9 +151,8 @@ export default {
       this.data = []
       this.queryString = (
         this.file.filename
-          .replace(/\.|_|\+|-/g, ' ').replace(/\s+/g, ' ').trim()
-          .split(' ').filter(isNotCommonWord).join(' ')
-          .replace(/ s /g, '\'s '))
+          .replace(/[._+'’`-]/g, ' ').replace(/\s+/g, ' ').trim()
+          .split(' ').filter(isNotCommonWord).join(' '))
       this.loadData()
     },
     loadData: async function loadData () {
