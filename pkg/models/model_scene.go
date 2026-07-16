@@ -376,8 +376,18 @@ func (o *Scene) UpdateStatus() {
 			changed = true
 		}
 	} else {
+		if o.TotalFileSize != 0 {
+			o.TotalFileSize = 0
+			changed = true
+		}
+
 		if o.IsAvailable {
 			o.IsAvailable = false
+			changed = true
+		}
+
+		if o.IsAccessible {
+			o.IsAccessible = false
 			changed = true
 		}
 
