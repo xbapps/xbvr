@@ -80,20 +80,21 @@ type Scene struct {
 	MemberURL       string    `json:"members_url" xbvrbackup:"members_url"`
 	IsMultipart     bool      `json:"is_multipart" xbvrbackup:"is_multipart"`
 
-	StarRating     float64         `json:"star_rating" xbvrbackup:"star_rating"`
-	Favourite      bool            `json:"favourite" gorm:"default:false" xbvrbackup:"favourite"`
-	Watchlist      bool            `json:"watchlist" gorm:"default:false" xbvrbackup:"watchlist"`
-	Wishlist       bool            `json:"wishlist" gorm:"default:false" xbvrbackup:"wishlist"`
-	IsAvailable    bool            `json:"is_available" gorm:"default:false" xbvrbackup:"-"`
-	IsAccessible   bool            `json:"is_accessible" gorm:"default:false" xbvrbackup:"-"`
-	IsWatched      bool            `json:"is_watched" gorm:"default:false" xbvrbackup:"is_watched"`
-	IsScripted     bool            `json:"is_scripted" gorm:"default:false" xbvrbackup:"-"`
-	Cuepoints      []SceneCuepoint `json:"cuepoints" xbvrbackup:"-"`
-	History        []History       `json:"history" xbvrbackup:"-"`
-	AddedDate      time.Time       `json:"added_date" xbvrbackup:"added_date"`
-	LastOpened     time.Time       `json:"last_opened" xbvrbackup:"last_opened"`
-	TotalFileSize  int64           `json:"total_file_size" xbvrbackup:"-"`
-	TotalWatchTime int             `json:"total_watch_time" gorm:"default:0" xbvrbackup:"total_watch_time"`
+	StarRating          float64         `json:"star_rating" xbvrbackup:"star_rating"`
+	StarRatingUpdatedAt time.Time       `json:"star_rating_updated_at" xbvrbackup:"-"`
+	Favourite           bool            `json:"favourite" gorm:"default:false" xbvrbackup:"favourite"`
+	Watchlist           bool            `json:"watchlist" gorm:"default:false" xbvrbackup:"watchlist"`
+	Wishlist            bool            `json:"wishlist" gorm:"default:false" xbvrbackup:"wishlist"`
+	IsAvailable         bool            `json:"is_available" gorm:"default:false" xbvrbackup:"-"`
+	IsAccessible        bool            `json:"is_accessible" gorm:"default:false" xbvrbackup:"-"`
+	IsWatched           bool            `json:"is_watched" gorm:"default:false" xbvrbackup:"is_watched"`
+	IsScripted          bool            `json:"is_scripted" gorm:"default:false" xbvrbackup:"-"`
+	Cuepoints           []SceneCuepoint `json:"cuepoints" xbvrbackup:"-"`
+	History             []History       `json:"history" xbvrbackup:"-"`
+	AddedDate           time.Time       `json:"added_date" xbvrbackup:"added_date"`
+	LastOpened          time.Time       `json:"last_opened" xbvrbackup:"last_opened"`
+	TotalFileSize       int64           `json:"total_file_size" xbvrbackup:"-"`
+	TotalWatchTime      int             `json:"total_watch_time" gorm:"default:0" xbvrbackup:"total_watch_time"`
 
 	HasVideoPreview bool `json:"has_preview" gorm:"default:false" xbvrbackup:"-"`
 	// HasVideoThumbnail bool `json:"has_video_thumbnail" gorm:"default:false"`
@@ -111,6 +112,11 @@ type Scene struct {
 	ScriptPublished time.Time `json:"script_published" xbvrbackup:"script_published"`
 	AiScript        bool      `json:"ai_script" gorm:"default:false" xbvrbackup:"ai_script"`
 	HumanScript     bool      `json:"human_script" gorm:"default:false" xbvrbackup:"human_script"`
+
+	// Recommendation scores, computed by pkg/recommend and surfaced via deo playlists.
+	RecWatchScore  float64   `json:"rec_watch_score" gorm:"default:0" xbvrbackup:"-"`
+	RecDeleteScore float64   `json:"rec_delete_score" gorm:"default:0" xbvrbackup:"-"`
+	RecScoredAt    time.Time `json:"rec_scored_at" xbvrbackup:"-"`
 
 	Description string  `gorm:"-" json:"description" xbvrbackup:"-"`
 	Score       float64 `gorm:"-" json:"_score" xbvrbackup:"-"`
@@ -979,6 +985,10 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and internal_db_id = scenes.id)"
 		case "Multiple Scenes Available at an Alternate Site":
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and internal_db_id = scenes.id  group by external_source having count(*)>1)"
+		case "Recommended To Watch":
+			where = "scenes.rec_watch_score > 0"
+		case "Recommend To Delete":
+			where = "scenes.rec_delete_score > 0"
 		}
 
 		if negate {
@@ -1214,6 +1224,14 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 	case "alt_src_desc":
 		//tx = tx.Order(`(select max(er.external_date) from external_reference_links erl join external_references er on er.id=erl.external_reference_id where erl.internal_table='scenes' and erl.internal_db_id=scenes.id and er.external_source like 'alternate scene %') desc`)
 		tx = tx.Order(`(select max(erl.udf_datetime1) from external_reference_links erl where erl.internal_table='scenes' and erl.internal_db_id=scenes.id and erl.external_source like 'alternate scene %') desc`)
+	case "rec_watch_desc":
+		tx = tx.Where("scenes.rec_watch_score > 0").Order("scenes.rec_watch_score desc")
+	case "rec_watch_asc":
+		tx = tx.Where("scenes.rec_watch_score > 0").Order("scenes.rec_watch_score asc")
+	case "rec_delete_desc":
+		tx = tx.Where("scenes.rec_delete_score > 0").Order("scenes.rec_delete_score desc")
+	case "rec_delete_asc":
+		tx = tx.Where("scenes.rec_delete_score > 0").Order("scenes.rec_delete_score asc")
 	default:
 		tx = tx.Order("release_date desc")
 	}
