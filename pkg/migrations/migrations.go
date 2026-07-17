@@ -2387,6 +2387,12 @@ func Migrate(migrateTo string) {
 				return tx.Table("scenes").AddIndex("idx_scenes_scraper_id", "scraper_id").Error
 			},
 		},
+		{
+			ID: "0088-add-is_system-to-tags",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(&models.Tag{}).Error
+			},
+		},
 	}
 
 	// Wrap migrations to automatically track progress
