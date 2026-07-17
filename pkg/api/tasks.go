@@ -68,6 +68,9 @@ func (i TaskResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/system-tags").To(i.getSystemTags).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/actor-genders").To(i.getActorGenders).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.GET("/rescan/{storage-id}").To(i.rescan).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -142,6 +145,16 @@ func (i TaskResource) getSystemTags(req *restful.Request, resp *restful.Response
 	db.Where("is_system = ?", true).Order("name asc").Find(&tags)
 
 	resp.WriteHeaderAndEntity(http.StatusOK, tags)
+}
+
+func (i TaskResource) getActorGenders(req *restful.Request, resp *restful.Response) {
+	db, _ := models.GetDB()
+	defer db.Close()
+
+	var genders []string
+	db.Model(&models.Actor{}).Where("gender != ''").Pluck("DISTINCT gender", &genders)
+
+	resp.WriteHeaderAndEntity(http.StatusOK, genders)
 }
 
 func (i TaskResource) sceneRrefresh(req *restful.Request, resp *restful.Response) {

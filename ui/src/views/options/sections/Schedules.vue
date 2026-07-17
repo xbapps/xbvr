@@ -290,6 +290,24 @@
             <hr/>
             <h4>{{$t("Generators")}}</h4>
             
+            <div v-if="availableGenders.length > 0" style="margin-bottom: 1.5em;">
+              <h5>{{$t("Gender Filter")}}</h5>
+              <p class="has-text-grey" style="margin-bottom: 0.5em; font-size: 0.9em;">
+                {{$t("Only apply actor-based tags to these genders. Leave all unchecked to tag all genders.")}}
+              </p>
+              <b-field>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5em;">
+                  <b-checkbox
+                    v-for="gender in availableGenders"
+                    :key="gender"
+                    :native-value="gender"
+                    v-model="autoTagGenderFilter">
+                    {{ gender }}
+                  </b-checkbox>
+                </div>
+              </b-field>
+            </div>
+
             <div class="columns">
               <div class="column">
                 <h5>{{$t("Actor Characteristics")}}</h5>
@@ -526,6 +544,8 @@ export default {
       lastAutoTagScheduleTimeRange: [0,23],
       useAutoTagScheduleTimeRange: false,
       autoTagScheduleStartDelay: 0,
+      autoTagGenderFilter: [],
+      availableGenders: [],
       autoTagBreastType: false,
 
       autoTagAge: false,
@@ -557,6 +577,7 @@ export default {
   async mounted () {
     await this.loadState()
     await this.loadSystemTags()
+    await this.loadActorGenders()
   },
   computed: {
     breastSizeTags () { return this.systemTags.filter(t => t.name.startsWith('Cup:')) },
@@ -632,16 +653,22 @@ export default {
       await ky.get('/api/task/auto-tag')
       this.isRunNowLoading = false
       this.$buefy.toast.open({
-        message: 'Auto-tagging started',
+        message: 'Auto-tagging started in background. Reload this tab when complete to see updated tags.',
         type: 'is-success'
       })
-      setTimeout(() => { this.loadSystemTags() }, 2000)
     },
     async loadSystemTags () {
       await ky.get('/api/task/system-tags')
         .json()
         .then(data => {
           this.systemTags = data
+        })
+    },
+    async loadActorGenders () {
+      await ky.get('/api/task/actor-genders')
+        .json()
+        .then(data => {
+          this.availableGenders = data || []
         })
     },
     showTagScenes (tagName) {
@@ -762,6 +789,7 @@ export default {
           this.autoTagDuration = data.config.autoTag.duration
 
           this.autoTagInterracial = data.config.autoTag.interracial
+          this.autoTagGenderFilter = data.config.autoTag.genderFilter || []
           this.autoTagHeightShortMax = data.config.autoTag.heightShortMax
           this.autoTagHeightAverageMax = data.config.autoTag.heightAverageMax
           this.autoTagDurationShortMax = data.config.autoTag.durationShortMax
@@ -863,6 +891,7 @@ export default {
           autoTagDuration: this.autoTagDuration,
 
           autoTagInterracial: this.autoTagInterracial,
+          autoTagGenderFilter: this.autoTagGenderFilter,
           autoTagHeightShortMax: parseInt(this.autoTagHeightShortMax),
           autoTagHeightAverageMax: parseInt(this.autoTagHeightAverageMax),
           autoTagDurationShortMax: parseInt(this.autoTagDurationShortMax),

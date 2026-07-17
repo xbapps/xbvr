@@ -200,6 +200,8 @@ type ObjectConfig struct {
 		Interracial bool `default:"false" json:"interracial"`
 		BMI         bool `default:"false" json:"bmi"`
 
+		GenderFilter []string `default:"[]" json:"genderFilter"`
+
 		HeightShortMax   int `default:"160" json:"heightShortMax"`
 		HeightAverageMax int `default:"175" json:"heightAverageMax"`
 

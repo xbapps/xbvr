@@ -209,6 +209,8 @@ type RequestSaveOptionsTaskSchedule struct {
 
 	AutoTagInterracial bool `json:"autoTagInterracial"`
 
+	AutoTagGenderFilter []string `json:"autoTagGenderFilter"`
+
 	AutoTagHeightShortMax   int `json:"autoTagHeightShortMax"`
 	AutoTagHeightAverageMax int `json:"autoTagHeightAverageMax"`
 
@@ -1090,6 +1092,7 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.Config.AutoTag.Duration = r.AutoTagDuration
 
 	config.Config.AutoTag.Interracial = r.AutoTagInterracial
+	config.Config.AutoTag.GenderFilter = r.AutoTagGenderFilter
 
 	config.Config.AutoTag.HeightShortMax = r.AutoTagHeightShortMax
 	config.Config.AutoTag.HeightAverageMax = r.AutoTagHeightAverageMax
