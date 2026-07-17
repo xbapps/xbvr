@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"html"
 	"image"
 	"strconv"
 	"strings"
@@ -12,7 +11,6 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/thoas/go-funk"
-	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -39,21 +37,18 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 		sc.Site = siteID
 		sc.HomepageURL = strings.Split(e.Request.URL.String(), "?")[0]
 
-		// Scene ID - get from JavaScript
-		e.ForEach(`script[id="virtualreal_video-streaming-js-extra"]`, func(id int, e *colly.HTMLElement) {
-			var jsonObj map[string]interface{}
-			jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-12]
-			json.Unmarshal([]byte(jsonData), &jsonObj)
-
-			sc.SiteID = jsonObj["vid"].(string)
-			sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+		// Scene ID - from dl8-video custom element (new site)
+		e.ForEach(`dl8-video`, func(id int, e *colly.HTMLElement) {
+			if id == 0 {
+				sc.SiteID = e.Attr("data-video-id")
+				sc.SceneID = slugify.Slugify(sc.Site) + "-" + sc.SiteID
+			}
 		})
 
 		// Title
 		e.ForEach(`title`, func(id int, e *colly.HTMLElement) {
 			sc.Title = strings.TrimSpace(strings.Split(e.Text, "|")[0])
 			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, "▷ ", "", -1))
-			sc.Title = strings.TrimSpace(strings.Replace(sc.Title, fmt.Sprintf(" - %v.com", sc.Site), "", -1))
 		})
 
 		// Cover URLs
@@ -69,177 +64,158 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 			}
 		})
 
-		// Gallery
-		e.ForEach(`figure[itemprop="associatedMedia"] a`, func(id int, e *colly.HTMLElement) {
-			if len(sc.Covers) == 0 {
-				u := e.Request.AbsoluteURL(strings.Split(e.Attr("href"), "?")[0])
-				ctx := colly.NewContext()
-				if err := imageCollector.Request("GET", u, nil, ctx, nil); err == nil {
-					if ctx.Get("valid") != "" {
-						sc.Covers = append(sc.Covers, u)
-					}
-				}
-			} else {
-				sc.Gallery = append(sc.Gallery, e.Request.AbsoluteURL(strings.Split(e.Attr("href"), "?")[0]))
+		// Gallery (screenshots grid)
+		e.ForEach(`div.vd-screenshots__grid img`, func(id int, e *colly.HTMLElement) {
+			u := e.Request.AbsoluteURL(strings.Split(e.Attr("src"), "?")[0])
+			if u != "" {
+				sc.Gallery = append(sc.Gallery, u)
 			}
 		})
 
 		// Tags
-		e.ForEach(`div.metaSingleData a span`, func(id int, e *colly.HTMLElement) {
+		e.ForEach(`a.vd-tags__tag`, func(id int, e *colly.HTMLElement) {
 			sc.Tags = append(sc.Tags, strings.TrimSpace(e.Text))
 		})
 		if scraperID == "virtualrealgay" {
 			sc.Tags = append(sc.Tags, "Gay")
 		}
 
-		// Duration / Release date / Synopsis / Cast
-		e.ForEach(`div script[type='application/ld+json']`, func(id int, e *colly.HTMLElement) {
+		// Cast - from pornstar sections (new site)
+		sc.ActorDetails = make(map[string]models.ActorDetails)
+		e.ForEach(`div.vd-pornstar`, func(id int, e *colly.HTMLElement) {
+			name := strings.TrimSpace(e.DOM.Find("span.vd-pornstar__name").Text())
+			profileURL := e.Request.AbsoluteURL(e.DOM.Find("a.vd-pornstar__link").AttrOr("href", ""))
+			if name != "" {
+				sc.Cast = append(sc.Cast, name)
+				sc.ActorDetails[name] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: profileURL}
+			}
+		})
+
+		// Duration / Release date / Synopsis from JSON-LD VideoObject
+		e.ForEach(`script[type='application/ld+json']`, func(id int, e *colly.HTMLElement) {
 			var jsonResult map[string]interface{}
-			json.Unmarshal([]byte(e.Text), &jsonResult)
+			if err := json.Unmarshal([]byte(e.Text), &jsonResult); err != nil {
+				return
+			}
+			if jsonResult["@type"] != "VideoObject" {
+				return
+			}
 
-			duration := jsonResult["duration"].(string)
-			tmpParts := strings.Split(duration, ":")
-			if len(tmpParts) == 2 {
-				sc.Duration, _ = strconv.Atoi(tmpParts[0])
-			} else {
-				tmpParts = strings.Split(duration, "h ")
-				if len(tmpParts) == 2 {
-					hours, _ := strconv.Atoi(tmpParts[0])
-					minutes, _ := strconv.Atoi(tmpParts[1])
-					sc.Duration = hours*60 + minutes
+			// Duration: ISO 8601 e.g. "PT2406S" (total seconds)
+			if dur, ok := jsonResult["duration"].(string); ok {
+				dur = strings.TrimPrefix(dur, "PT")
+				dur = strings.TrimSuffix(dur, "S")
+				if secs, err := strconv.Atoi(dur); err == nil {
+					sc.Duration = secs / 60
 				}
 			}
 
-			sc.Released = jsonResult["datePublished"].(string)
+			// Release date: "uploadDate" ISO format, take date part only
+			if uploaded, ok := jsonResult["uploadDate"].(string); ok && len(uploaded) >= 10 {
+				sc.Released = uploaded[:10]
+			}
 
-			sc.Synopsis = html.UnescapeString(jsonResult["description"].(string))
-
-			sc.ActorDetails = make(map[string]models.ActorDetails)
-			cast, ok := jsonResult["actors"].([]interface{})
-			if ok && len(cast) > 0 {
-				for _, v := range cast {
-					m := v.(map[string]interface{})
-					sc.Cast = append(sc.Cast, m["name"].(string))
-					sc.ActorDetails[m["name"].(string)] = models.ActorDetails{Source: scraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(m["url"].(string))}
-				}
+			// Synopsis
+			if desc, ok := jsonResult["description"].(string); ok {
+				sc.Synopsis = desc
 			}
 		})
 
-		e.ForEach(`script[id="virtualreal_download-links-js-extra"]`, func(id int, e *colly.HTMLElement) {
-			if id == 0 {
-				jsonData := e.Text[strings.Index(e.Text, "{") : len(e.Text)-12]
-				fpName := gjson.Get(jsonData, "videopart").String()
+		// Download filenames - derive fpName from URL slug (new site no longer exposes JS variable)
+		urlParts := strings.Split(strings.TrimSuffix(sc.HomepageURL, "/"), "/")
+		fpName := urlParts[len(urlParts)-1]
 
-				// A couple of pages will crash the scraper (ex. url https://virtualrealporn.com/&mode=streaming)
-				if fpName == "" {
-					return
-				}
-
-				siteIDAcronym := "VRP"
-				if siteID == "VirtualRealTrans" {
-					siteIDAcronym = "VRT"
-				}
-				if siteID == "VirtualRealAmateurPorn" {
-					siteIDAcronym = "VRAM"
-				}
-				if siteID == "VirtualRealGay" {
-					siteIDAcronym = "VRG"
-				}
-				if siteID == "VirtualRealPassion" {
-					siteIDAcronym = "VRPA"
-				}
-
-				var outFilenames []string
-
-				// Playstation VR
-				outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_Trailer_PS4_180_sbs.mp4") // Trailer
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_3K_180_sbs.mp4")                 // PS4
-				outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_180_sbs.mp4")             // PS4 (older videos)
-				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_180_sbs.mp4")            // PS4 (oldest videos)
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4096x2040_180_sbs.mp4")          // PS4 Pro
-				outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_Pro_180_sbs.mp4")         // PS4 Pro (older videos)
-				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Pro_180_sbs.mp4")        // PS4 Pro (oldest videos)
-
-				// Oculus Go / Quest
-				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Trailer.mp4")       // Trailer (same for Oculus Rift (S) / Vive / Windows MR)
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4864_180x180_3dh.mp4")      // 4K+
-				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_h264P_180x180_3dh.mp4") // 4K+ (older videos)
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_30M_180x180_3dh.mp4")    // 4K HQ (same for Gear VR / Daydream and Oculus Rift (S) / Vive / Windows MR)
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_h265_180x180_3dh.mp4")   // 4K h265 (same for Oculus Rift (S) / Vive / Windows MR)
-				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_vp9_180x180_3dh.mp4")   // 4K VP9 (older videos; same for Gear VR / Daydream and Oculus Rift (S) / Vive / Windows MR)
-				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_180x180_3dh.mp4")       // 4K h264 (older videos; same for Gear VR / Daydream)
-
-				// Gear VR / Daydream
-				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_Trailer_Streaming_3dh.mp4") // Trailer
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_180x180_3dh.mp4")            // 4K (same for Smartphone)
-
-				// Smartphone
-				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Trailer_-_Smartphone.mp4") // Trailer
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_1920_180x180_3dh.mp4")             // Full HD (same for Oculus Rift (S) / Vive / Windows MR)
-				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_1920.mp4")                 // Full HD (older videos; same for Oculus Rift (S) / Vive / Windows MR)
-
-				// Oculus Rift (S) / Vive / Windows MR
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_8K_180x180_3dh.mp4")         // 5K
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_30M_180x180_3dh.mp4")     // 5K HQ
-				outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_180x180_3dh.mp4")         // 5K
-				outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_5K_180x180_3dh.mp4")     // 5K (older videos)
-				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_5K_180x180_3dh.mp4") // 5K (before site update)
-				outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_h264.mp4")           // 4K 264 (older videos)
-
-				sc.Filenames = outFilenames
+		if fpName != "" {
+			siteIDAcronym := "VRP"
+			if siteID == "VirtualRealTrans" {
+				siteIDAcronym = "VRT"
 			}
-		})
+			if siteID == "VirtualRealAmateurPorn" {
+				siteIDAcronym = "VRAM"
+			}
+			if siteID == "VirtualRealGay" {
+				siteIDAcronym = "VRG"
+			}
+			if siteID == "VirtualRealPassion" {
+				siteIDAcronym = "VRPA"
+			}
 
-		// setup  trailers
+			var outFilenames []string
+
+			// Playstation VR
+			outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_Trailer_PS4_180_sbs.mp4")
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_3K_180_sbs.mp4")
+			outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_180_sbs.mp4")
+			outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_180_sbs.mp4")
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_4096x2040_180_sbs.mp4")
+			outFilenames = append(outFilenames, siteIDAcronym+"_"+fpName+"_Pro_180_sbs.mp4")
+			outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Pro_180_sbs.mp4")
+
+			// Oculus Go / Quest
+			outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Trailer.mp4")
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_4864_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_h264P_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_30M_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_h265_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_vp9_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_180x180_3dh.mp4")
+
+			// Gear VR / Daydream
+			outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_Trailer_Streaming_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_4K_180x180_3dh.mp4")
+
+			// Smartphone
+			outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_Trailer_-_Smartphone.mp4")
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_1920_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_1920.mp4")
+
+			// Oculus Rift (S) / Vive / Windows MR
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_8K_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_30M_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+"_"+fpName+"_5K_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+"_-_"+fpName+"_-_5K_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_5K_180x180_3dh.mp4")
+			outFilenames = append(outFilenames, siteID+".com_-_"+fpName+"_-_h264.mp4")
+
+			sc.Filenames = outFilenames
+		}
+
+		// Trailer setup
+		params := models.TrailerScrape{
+			SceneUrl:       sc.HomepageURL,
+			HtmlElement:    `script[type="application/ld+json"]`,
+			ContentPath:    "trailer.contentUrl",
+			QualityPath:    "trailer.videoQuality",
+			ContentBaseUrl: URL,
+		}
+		tmp, _ := json.Marshal(params)
 		sc.TrailerType = "scrape_json"
-		var t models.TrailerScrape
-		t.SceneUrl = sc.HomepageURL
-		t.HtmlElement = `script[type="application/ld+json"]`
-		t.ContentPath = "trailer.contentUrl"
-		t.QualityPath = "trailer.videoQuality"
-		t.ContentBaseUrl = URL
-		tmp, _ := json.Marshal(t)
 		sc.TrailerSrc = string(tmp)
-
-		params := models.TrailerScrape{SceneUrl: sc.HomepageURL, HtmlElement: `script[type="application/ld+json"]`, ContentPath: "trailer.contentUrl", QualityPath: "trailer.videoQuality", ContentBaseUrl: URL}
-		strParma, _ := json.Marshal(params)
-		sc.TrailerSrc = string(strParma)
-
-		ctx := colly.NewContext()
-		ctx.Put("scene", &sc)
 
 		if sc.SceneID != "" {
 			out <- sc
 		}
 	})
 
-	siteCollector.OnHTML(`.searchBox option`, func(e *colly.HTMLElement) {
-		if !limitScraping {
-			pageURL := e.Request.AbsoluteURL(e.Attr("data-url"))
-			siteCollector.Visit(pageURL)
+	// Scene listing - new site uses a.data-title links, paginated via ?page=N on /videos/ path
+	siteCollector.OnHTML(`a.data-title`, func(e *colly.HTMLElement) {
+		sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
+
+		// On first scene of each page, queue next page (before visiting scenes)
+		if e.Index == 0 && !limitScraping {
+			page++
+			siteCollector.Visit(fmt.Sprintf("%svideos/?page=%v", URL, page))
 		}
-	})
 
-	siteCollector.OnHTML(`div.videoListContainer.paginated`, func(e *colly.HTMLElement) {
-		e.ForEach(`a.w-portfolio-item-anchor`, func(id int, e *colly.HTMLElement) {
-			if e.Request.URL.RawQuery == "videoPage="+strconv.Itoa(page) && !limitScraping {
-				// found scenes on this page, get the next page of results
-				page++
-				siteCollector.Visit(fmt.Sprintf("%s?videoPage=%v", URL, page))
-			}
-			sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
-
-			// If scene exist in database, there's no need to scrape
-			if !funk.ContainsString(knownScenes, sceneURL) {
-				sceneCollector.Visit(sceneURL)
-			}
-		})
+		if !funk.ContainsString(knownScenes, sceneURL) {
+			sceneCollector.Visit(sceneURL)
+		}
 	})
 
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit(fmt.Sprintf("%s?videoPage=%v", URL, page))
+		siteCollector.Visit(fmt.Sprintf("%svideos/?page=%v", URL, page))
 	}
 
 	if updateSite {
