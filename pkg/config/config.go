@@ -174,7 +174,37 @@ type ObjectConfig struct {
 			HourEnd         int  `default:"23" json:"hourEnd"`
 			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
 		} `json:"linkScenesSchedule"`
+		RecommendationSchedule struct {
+			Enabled         bool `default:"true" json:"enabled"`
+			HourInterval    int  `default:"24" json:"hourInterval"`
+			UseRange        bool `default:"false" json:"useRange"`
+			MinuteStart     int  `default:"0" json:"minuteStart"`
+			HourStart       int  `default:"0" json:"hourStart"`
+			HourEnd         int  `default:"23" json:"hourEnd"`
+			RunAtStartDelay int  `default:"0" json:"runAtStartDelay"`
+		} `json:"recommendationSchedule"`
 	} `json:"cron"`
+	Recommendation struct {
+		Enabled                bool    `default:"true" json:"enabled"`
+		UseLearnedModel        bool    `default:"false" json:"useLearnedModel"`
+		ModelType              string  `default:"linear" json:"modelType"`
+		UseVisualEmbeddings    bool    `default:"false" json:"useVisualEmbeddings"`
+		WatchListSize          int     `default:"30" json:"watchListSize"`
+		DeleteListSize         int     `default:"30" json:"deleteListSize"`
+		ProtectRating          float64 `default:"4" json:"protectRating"`
+		GraceDays              int     `default:"30" json:"graceDays"`
+		ExcludeRecentlyWatched bool    `default:"true" json:"excludeRecentlyWatched"`
+		DiversityDecay         float64 `default:"0.5" json:"diversityDecay"`
+		WActor                 float64 `default:"1.0" json:"wActor"`
+		WTag                   float64 `default:"0.7" json:"wTag"`
+		WSite                  float64 `default:"0.3" json:"wSite"`
+		WQuality               float64 `default:"0.2" json:"wQuality"`
+		WFreshness             float64 `default:"0.2" json:"wFreshness"`
+		WSize                  float64 `default:"0.5" json:"wSize"`
+		WVisualQuality         float64 `default:"0.5" json:"wVisualQuality"`
+		VQMaxSamples           int     `default:"6" json:"vqMaxSamples"`
+		NoiseWeight            float64 `default:"0.3" json:"noiseWeight"`
+	} `json:"recommendation"`
 	Storage struct {
 		MatchOhash bool     `default:"false" json:"match_ohash"`
 		VideoExt   []string `json:"video_ext"`

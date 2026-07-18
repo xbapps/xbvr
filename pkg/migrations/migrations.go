@@ -2387,6 +2387,92 @@ func Migrate(migrateTo string) {
 				return tx.Table("scenes").AddIndex("idx_scenes_scraper_id", "scraper_id").Error
 			},
 		},
+		{
+			ID: "0088-add-recommendation-fields",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					RecWatchScore  float64   `json:"rec_watch_score" gorm:"default:0"`
+					RecDeleteScore float64   `json:"rec_delete_score" gorm:"default:0"`
+					RecScoredAt    time.Time `json:"rec_scored_at"`
+				}
+				return tx.AutoMigrate(Scene{}).Error
+			},
+		},
+		{
+			ID: "0089-seed-recommendation-playlists",
+			Migrate: func(tx *gorm.DB) error {
+				// No Limit: the engine writes exactly Recommendation.WatchListSize scored
+				// scenes, so the list size is controlled by config, not the playlist.
+				forYou := RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Sort:         optional.NewString("rec_watch_desc"),
+				}
+				playlistForYou := models.Playlist{
+					Name:         "For You",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: true,
+					Ordering:     -46,
+					PlaylistType: "scene",
+					SearchParams: forYou.ToJSON(),
+				}
+				playlistForYou.Save()
+
+				cleanup := RequestSceneList{
+					IsAvailable:  optional.NewBool(true),
+					IsAccessible: optional.NewBool(true),
+					Sort:         optional.NewString("rec_delete_desc"),
+				}
+				playlistCleanup := models.Playlist{
+					Name:         "Cleanup",
+					IsSystem:     true,
+					IsSmart:      true,
+					IsDeoEnabled: true,
+					Ordering:     -45,
+					PlaylistType: "scene",
+					SearchParams: cleanup.ToJSON(),
+				}
+				playlistCleanup.Save()
+
+				return nil
+			},
+		},
+		{
+			ID: "0090-add-file-visual-quality",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					VisualQuality           float64 `gorm:"default:0"`
+					VisualQualitySamples    int     `gorm:"default:0"`
+					VisualQualityComputedAt time.Time
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
+		{
+			ID: "0091-add-file-visual-embedding",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					VisualEmbedding   []byte
+					VisualEmbeddingAt time.Time
+				}
+				return tx.AutoMigrate(File{}).Error
+			},
+		},
+		{
+			ID: "0092-scene-star-rating-updated-at",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					StarRatingUpdatedAt time.Time
+				}
+				if err := tx.AutoMigrate(Scene{}).Error; err != nil {
+					return err
+				}
+				// Approximate existing ratings' timestamp from updated_at so the
+				// recent-rating cleanup protection has something to work with.
+				return tx.Exec("UPDATE scenes SET star_rating_updated_at = updated_at WHERE star_rating > 0").Error
+			},
+		},
 	}
 
 	// Wrap migrations to automatically track progress

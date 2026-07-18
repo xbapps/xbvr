@@ -186,6 +186,14 @@ type RequestSaveOptionsTaskSchedule struct {
 	LinkScenesHourStart    int  `json:"linkScenesHourStart"`
 	LinkScenesHourEnd      int  `json:"linkScenesHourEnd"`
 	LinkScenesStartDelay   int  `json:"linkScenesStartDelay"`
+
+	RecommendationEnabled      bool `json:"recommendationEnabled"`
+	RecommendationHourInterval int  `json:"recommendationHourInterval"`
+	RecommendationUseRange     bool `json:"recommendationUseRange"`
+	RecommendationMinuteStart  int  `json:"recommendationMinuteStart"`
+	RecommendationHourStart    int  `json:"recommendationHourStart"`
+	RecommendationHourEnd      int  `json:"recommendationHourEnd"`
+	RecommendationStartDelay   int  `json:"recommendationStartDelay"`
 }
 type RequestSaveSiteMatchParams struct {
 	SiteId      string                   `json:"site"`
@@ -1037,6 +1045,14 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.Config.Cron.LinkScenesSchedule.HourStart = r.LinkScenesHourStart
 	config.Config.Cron.LinkScenesSchedule.HourEnd = r.LinkScenesHourEnd
 	config.Config.Cron.LinkScenesSchedule.RunAtStartDelay = r.LinkScenesStartDelay
+
+	config.Config.Cron.RecommendationSchedule.Enabled = r.RecommendationEnabled
+	config.Config.Cron.RecommendationSchedule.HourInterval = r.RecommendationHourInterval
+	config.Config.Cron.RecommendationSchedule.UseRange = r.RecommendationUseRange
+	config.Config.Cron.RecommendationSchedule.MinuteStart = r.RecommendationMinuteStart
+	config.Config.Cron.RecommendationSchedule.HourStart = r.RecommendationHourStart
+	config.Config.Cron.RecommendationSchedule.HourEnd = r.RecommendationHourEnd
+	config.Config.Cron.RecommendationSchedule.RunAtStartDelay = r.RecommendationStartDelay
 
 	config.SaveConfig()
 
