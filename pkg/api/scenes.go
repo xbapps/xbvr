@@ -3,7 +3,9 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -699,7 +701,47 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 		scenes = append(scenes, scene)
 	}
 
+	// When matching a specific file, promote scenes whose length is close to the file's.
+	// A duration match within about a minute is a strong signal that the text query alone
+	// (a cleaned-up filename) often misses.
+	if fileID := req.QueryParameter("fileId"); fileID != "" {
+		var f models.File
+		if db.Select("video_duration").Where("id = ?", fileID).First(&f).Error == nil {
+			boostByDuration(scenes, f.VideoDuration)
+			sort.SliceStable(scenes, func(a, b int) bool { return scenes[a].Score > scenes[b].Score })
+		}
+	}
+
 	resp.WriteHeaderAndEntity(http.StatusOK, ResponseGetScenes{Results: len(scenes), Scenes: scenes})
+}
+
+// Duration-match tuning for file→scene matching. Scene.Duration is stored in whole
+// minutes and File.VideoDuration in seconds, so the stored scene length can legitimately
+// differ from the true file length by up to ~a minute purely from rounding; the tolerance
+// is generous to account for that. The boost tapers linearly from durMatchMaxBoost at an
+// exact match to zero at durMatchToleranceSec. Sized against typical search scores (~0.6–1.5)
+// so a close length meaningfully promotes a candidate without blindly overriding a strong
+// text match.
+const (
+	durMatchToleranceSec = 180.0
+	durMatchMaxBoost     = 1.2
+)
+
+// boostByDuration raises the score of scenes whose length is close to fileDurationSec
+// (the duration, in seconds, of the file being matched).
+func boostByDuration(scenes []models.Scene, fileDurationSec float64) {
+	if fileDurationSec <= 0 {
+		return
+	}
+	for i := range scenes {
+		if scenes[i].Duration <= 0 {
+			continue
+		}
+		diff := math.Abs(fileDurationSec - float64(scenes[i].Duration)*60)
+		if diff < durMatchToleranceSec {
+			scenes[i].Score += durMatchMaxBoost * (1 - diff/durMatchToleranceSec)
+		}
+	}
 }
 
 func (i SceneResource) addSceneCuepoint(req *restful.Request, resp *restful.Response) {
