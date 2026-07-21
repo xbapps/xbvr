@@ -19,7 +19,8 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 	logScrapeStart(scraperID, siteID)
 	page := 1
 
-	imageCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
+	// Covers and gallery images are served from static.virtualrealhub.com (new site CDN)
+	imageCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com", "static.virtualrealhub.com")
 	sceneCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 	siteCollector := createCollector("virtualrealporn.com", "virtualrealtrans.com", "virtualrealgay.com", "virtualrealpassion.com", "virtualrealamateurporn.com")
 
@@ -64,9 +65,13 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 			}
 		})
 
-		// Gallery (screenshots grid)
-		e.ForEach(`div.vd-screenshots__grid img`, func(id int, e *colly.HTMLElement) {
-			u := e.Request.AbsoluteURL(strings.Split(e.Attr("src"), "?")[0])
+		// Gallery (screenshots grid) - full image is on the anchor href; <img> is lazy-loaded
+		e.ForEach(`a.vd-screenshots__item`, func(id int, e *colly.HTMLElement) {
+			u := e.Attr("href")
+			if u == "" {
+				u = e.Attr("data-gallery-src")
+			}
+			u = e.Request.AbsoluteURL(strings.Split(u, "?")[0])
 			if u != "" {
 				sc.Gallery = append(sc.Gallery, u)
 			}
