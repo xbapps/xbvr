@@ -20,7 +20,21 @@ import (
 
 var log = &common.Log
 
-var UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
+// UserAgent is sent by every scraper and by the HTML/JSON trailer-source scrapes.
+//
+// It must not be left on a string that studios have blocklisted. The previous value,
+// "Chrome/73.0.3683.103", is rejected outright (HTTP 403) by realjamvr.com and porncornvr.com,
+// which silently breaks both scrapers: every scheduled run fails with
+// "Error visiting https://<site>/scenes Forbidden" and no scenes are ingested.
+//
+// The block is on the EXACT literal version string, not on "old browser" heuristics. Verified
+// live: "Chrome/73.0.3683.104" (one digit different) and "Chrome/73.0.0.0" both return 200 from
+// the same host that 403s "Chrome/73.0.3683.103". Because that exact string is XBVR's shipped
+// default, every install sends it verbatim, making it a reliable fingerprint for the client -
+// which is precisely what makes it worth blocklisting. Keep this a realistic, current browser UA;
+// if a studio starts 403ing again, check for a blocklisted-fingerprint 403 before assuming the
+// site itself changed.
+var UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 func createCollector(domains ...string) *colly.Collector {
 	c := colly.NewCollector(
