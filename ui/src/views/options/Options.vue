@@ -20,6 +20,7 @@
                          @click="setActive('funscripts')"/>
             <b-menu-item :label="$t('Data import/export')" :active="active==='data-import-export'"
                          @click="setActive('data-import-export')"/>
+            <b-menu-item :label="$t('Tags')" :active="active==='data-tags'" @click="setActive('data-tags')"/>
           </b-menu-list>
           <b-menu-list :label="$t('Interfaces')">
             <b-menu-item :label="$t('Players')" :active="active==='interface_deovr'" @click="setActive('interface_deovr')"/>
@@ -40,6 +41,7 @@
           <SceneCreate v-show="active==='create-scene'"/>
           <Funscripts v-show="active==='funscripts'"/>
           <SceneDataImportExport v-show="active==='data-import-export'"/>
+          <OptionsSceneDataTags v-show="active==='data-tags'"/>
           <InterfaceWeb v-show="active==='interface_web'"/>
           <InterfaceDLNA v-show="active==='interface_dlna'"/>
           <InterfaceDeoVR v-show="active==='interface_deovr'"/>
@@ -59,6 +61,7 @@ import SceneDataScrapers from './sections/OptionsSceneDataScrapers'
 import SceneCreate from './sections/OptionsSceneCreate'
 import Funscripts from './sections/Funscripts'
 import SceneDataImportExport from './sections/OptionsSceneDataImportExport'
+import OptionsSceneDataTags from './sections/OptionsSceneDataTags'
 import InterfaceDLNA from './sections/InterfaceDLNA.vue'
 import Cache from './sections/Cache.vue'
 import Previews from './sections/Previews.vue'
@@ -68,7 +71,7 @@ import InterfaceAdvanced from './sections/InterfaceAdvanced.vue'
 import SceneMatchParams from './overlays/SceneMatchParams.vue'
 
 export default {
-  components: { Storage, SceneDataScrapers, SceneCreate, Funscripts, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews, Schedules, InterfaceAdvanced,SceneMatchParams },
+  components: { Storage, SceneDataScrapers, SceneCreate, Funscripts, SceneDataImportExport, OptionsSceneDataTags, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews, Schedules, InterfaceAdvanced,SceneMatchParams },
   data: function () {
     return {
       active: 'storage'

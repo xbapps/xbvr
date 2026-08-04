@@ -191,6 +191,15 @@ func (o *Scene) GetIfExistByPK(id uint) error {
 		Where(&Scene{ID: id}).First(o).Error
 }
 
+func (s *Scene) HasPromotedTags() bool {
+	for i := range s.Tags {
+		if s.Tags[i].IsPromoted {
+			return true
+		}
+	}
+	return false
+}
+
 func (o *Scene) GetIfExistURL(u string) error {
 	commonDb, _ := GetCommonDB()
 
@@ -979,6 +988,8 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and internal_db_id = scenes.id)"
 		case "Multiple Scenes Available at an Alternate Site":
 			where = "exists (select 1 from external_reference_links where external_source like 'alternate scene %' and internal_db_id = scenes.id  group by external_source having count(*)>1)"
+		case "Has Promoted Tag":
+			where = "exists (select 1 from scene_tags join tags on tags.id = scene_tags.tag_id where scene_tags.scene_id = scenes.id and tags.is_promoted = 1)"
 		}
 
 		if negate {
