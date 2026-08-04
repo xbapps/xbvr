@@ -94,6 +94,7 @@ func StartServer(version, commit, branch, date string) {
 	restful.Add(api.PlaylistResource{}.WebService())
 	restful.Add(api.AkaResource{}.WebService())
 	restful.Add(api.TagGroupResource{}.WebService())
+	restful.Add(api.TagResource{}.WebService())
 	restful.Add(api.ExternalReference{}.WebService())
 
 	restConfig := restfulspec.Config{
@@ -149,7 +150,8 @@ func StartServer(version, commit, branch, date string) {
 	u, _ := url.Parse("http://127.0.0.1:" + strconv.Itoa(config.Config.Server.Port))
 	p.DefaultBaseURL = u
 	r.PathPrefix("/img/").Handler(ForceShortCacheHandler(http.StripPrefix("/img", p)))
-	hmp := NewHeatmapThumbnailProxy(p, diskCache(filepath.Join(common.AppDir, "heatmapthumbnailproxy")))
+	hmp := NewHereSphereThumbnailProxy(p, diskCache(filepath.Join(common.AppDir, "herespherethumbnailproxy")))
+	r.PathPrefix("/imghs/").Handler(http.StripPrefix("/imghs", hmp))
 	r.PathPrefix("/imghm/").Handler(http.StripPrefix("/imghm", hmp))
 	downloadhandler := DownloadHandler{}
 	r.PathPrefix("/download/").Handler(http.StripPrefix("/download/", downloadhandler))

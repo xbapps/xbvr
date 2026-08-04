@@ -241,5 +241,12 @@
   "Go": "Go",
   "Limit scraping to newest scenes on the website. Turn off if you are missing scenes.": "Limit scraping to newest scenes on the website. Turn off if you are missing scenes.",
   "Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter": "Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter",
-  "Cookies/Headers":"Cookies/Headers"
+  "Cookies/Headers":"Cookies/Headers",
+  "Tags": "Tags",
+  "Tag": "Tag",
+  "Promoted": "Promoted",
+  "Promoted tags": "Promoted tags",
+  "Tags marked as promoted will be shown as a badge under the scene thumbnail.": "Tags marked as promoted will be shown as a badge under the scene thumbnail.",
+  "Search tags": "Search tags",
+  "Failed to update tag": "Failed to update tag"
 }

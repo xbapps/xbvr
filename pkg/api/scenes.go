@@ -400,6 +400,7 @@ func (i SceneResource) getFilters(req *restful.Request, resp *restful.Response) 
 	outAttributes = append(outAttributes, "Available from RealVR")
 	outAttributes = append(outAttributes, "Available from SLR")
 	outAttributes = append(outAttributes, "Multiple Scenes Available at an Alternate Site")
+	outAttributes = append(outAttributes, "Has Promoted Tag")
 	type Results struct {
 		Result string
 	}

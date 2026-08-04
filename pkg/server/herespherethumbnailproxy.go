@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"hash/fnv"
 	"image"
 	"image/draw"
 	"image/jpeg"
@@ -18,6 +19,7 @@ import (
 	"github.com/disintegration/imaging"
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
+	"github.com/xbapps/xbvr/pkg/imgbadge"
 	"github.com/xbapps/xbvr/pkg/models"
 	"willnorris.com/go/imageproxy"
 )
@@ -29,9 +31,8 @@ const heatmapMargin = 3
 const maximumHeatmaps = 20 // maximumHeatmaps*(heatmapHeight+heatmapMargin) needs to be lower than thumbnailHeight
 
 type BufferResponseWriter struct {
-	header     http.Header
-	statusCode int
-	buf        *bytes.Buffer
+	header http.Header
+	buf    *bytes.Buffer
 }
 
 func (myrw *BufferResponseWriter) Write(p []byte) (int, error) {
@@ -42,44 +43,19 @@ func (w *BufferResponseWriter) Header() http.Header {
 	return w.header
 }
 
-func (w *BufferResponseWriter) WriteHeader(statusCode int) {
-	w.statusCode = statusCode
-}
+func (w *BufferResponseWriter) WriteHeader(statusCode int) {}
 
-type HeatmapThumbnailProxy struct {
+type HereSphereThumbnailProxy struct {
 	ImageProxy *imageproxy.Proxy
 	Cache      imageproxy.Cache
 }
 
-func NewHeatmapThumbnailProxy(imageproxy *imageproxy.Proxy, cache imageproxy.Cache) *HeatmapThumbnailProxy {
-	proxy := &HeatmapThumbnailProxy{
+func NewHereSphereThumbnailProxy(imageproxy *imageproxy.Proxy, cache imageproxy.Cache) *HereSphereThumbnailProxy {
+	proxy := &HereSphereThumbnailProxy{
 		ImageProxy: imageproxy,
 		Cache:      cache,
 	}
 	return proxy
-}
-
-func getScriptFiles(urlpart string) ([]models.File, error) {
-	sceneId, err := strconv.Atoi(urlpart)
-	files := make([]models.File, 0)
-	if err != nil {
-		return files, err
-	}
-
-	var scene models.Scene
-	err = scene.GetIfExistByPK(uint(sceneId))
-	if err != nil {
-		return files, err
-	}
-
-	scriptfiles, err := scene.GetScriptFilesSorted(config.Config.Interfaces.Players.ScriptSortSeq)
-	if err != nil || len(scriptfiles) < 1 {
-		return files, fmt.Errorf("scene %d has no script files", sceneId)
-	}
-
-	files = append(files, scriptfiles...)
-
-	return files, nil
 }
 
 func getHeatmapImageForScene(fileId uint) (image.Image, error) {
@@ -99,7 +75,25 @@ func getHeatmapImageForScene(fileId uint) (image.Image, error) {
 	return heatmapImage, nil
 }
 
-func createHeatmapThumbnail(out *bytes.Buffer, r io.Reader, heatmapImages []image.Image) error {
+func promotedTagHash(tagNames []string) uint32 {
+	h := fnv.New32a()
+	for _, name := range tagNames {
+		h.Write([]byte(name))
+		h.Write([]byte{0})
+	}
+	return h.Sum32()
+}
+
+func fileIDHash(files []models.File) uint32 {
+	h := fnv.New32a()
+	for _, f := range files {
+		h.Write([]byte(strconv.FormatUint(uint64(f.ID), 10)))
+		h.Write([]byte{0})
+	}
+	return h.Sum32()
+}
+
+func createHereSphereThumbnail(out *bytes.Buffer, r io.Reader, heatmapImages []image.Image, promotedTagNames []string) error {
 	thumbnailImage, err := jpeg.Decode(r)
 
 	if err != nil {
@@ -107,6 +101,7 @@ func createHeatmapThumbnail(out *bytes.Buffer, r io.Reader, heatmapImages []imag
 	}
 
 	heatmapsHeight := len(heatmapImages) * (heatmapHeight + heatmapMargin)
+
 	rect := thumbnailImage.Bounds()
 	if rect.Dx() != thumbnailWidth || rect.Dy() != thumbnailHeight-heatmapsHeight {
 		thumbnailImage = imaging.Fill(thumbnailImage, thumbnailWidth, thumbnailHeight-heatmapsHeight, imaging.Center, imaging.Linear)
@@ -124,21 +119,33 @@ func createHeatmapThumbnail(out *bytes.Buffer, r io.Reader, heatmapImages []imag
 		draw.Draw(canvas, drawRect, heatmapImage, image.Point{}, draw.Over)
 	}
 
+	if len(promotedTagNames) > 0 {
+		if err := imgbadge.DrawPromotedBadges(canvas, promotedTagNames); err != nil {
+			return err
+		}
+	}
+
 	jpeg.Encode(out, canvas, &jpeg.Options{Quality: 90})
 	return nil
 }
 
-func (p *HeatmapThumbnailProxy) serveImageproxyResponse(w http.ResponseWriter, r *http.Request, imageURL string) {
-	proxyURL := "/700x/" + imageURL
+// requestWithPath returns a shallow copy of r whose URL.Path is replaced with
+// path, so the imageproxy can be handed a rewritten request without mutating
+// the original.
+func requestWithPath(r *http.Request, path string) *http.Request {
 	r2 := new(http.Request)
 	*r2 = *r
 	r2.URL = new(url.URL)
 	*r2.URL = *r.URL
-	r2.URL.Path = proxyURL
-	p.ImageProxy.ServeHTTP(w, r2)
+	r2.URL.Path = path
+	return r2
 }
 
-func (p *HeatmapThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p *HereSphereThumbnailProxy) serveImageproxyResponse(w http.ResponseWriter, r *http.Request, imageURL string) {
+	p.ImageProxy.ServeHTTP(w, requestWithPath(r, "/700x/"+imageURL))
+}
+
+func (p *HereSphereThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	parts := strings.SplitN(r.URL.Path, "/", 3)
 	if len(parts) != 3 {
@@ -147,22 +154,57 @@ func (p *HeatmapThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 
 	imageURL := parts[2]
-	files, err := getScriptFiles(parts[1])
+	sceneID, err := strconv.Atoi(parts[1])
 	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	var scene models.Scene
+	if err := scene.GetIfExistByPK(uint(sceneID)); err != nil {
 		p.serveImageproxyResponse(w, r, imageURL)
 		return
 	}
 
+	promotedTagNames := make([]string, 0)
+	for i := range scene.Tags {
+		if scene.Tags[i].IsPromoted {
+			promotedTagNames = append(promotedTagNames, scene.Tags[i].Name)
+		}
+	}
+
+	scriptfiles, err := scene.GetScriptFilesSorted(config.Config.Interfaces.Players.ScriptSortSeq)
+	if err != nil {
+		scriptfiles = nil
+	}
+
+	heatmapImages := make([]image.Image, 0)
+
+	for i := range scriptfiles {
+		heatmapImage, err := getHeatmapImageForScene(scriptfiles[i].ID)
+		if err == nil {
+			heatmapImages = append(heatmapImages, heatmapImage)
+			if len(heatmapImages) == maximumHeatmaps {
+				break
+			}
+		}
+	}
+
+	if len(heatmapImages) == 0 && len(promotedTagNames) == 0 {
+		p.serveImageproxyResponse(w, r, imageURL)
+		return
+	}
+
+	cacheKey := fmt.Sprintf("%d:%x:%x:%s", scene.ID, promotedTagHash(promotedTagNames), fileIDHash(scriptfiles), imageURL)
+
 	loadFromCache := true
 
-	for i := range files {
-		if files[i].RefreshHeatmapCache {
+	for i := range scriptfiles {
+		if scriptfiles[i].RefreshHeatmapCache {
 			loadFromCache = false
 			break
 		}
 	}
-
-	cacheKey := fmt.Sprintf("%d:%s", files[0].ID, imageURL)
 
 	if loadFromCache {
 		cachedContent, ok := p.Cache.Get(cacheKey)
@@ -176,61 +218,37 @@ func (p *HeatmapThumbnailProxy) ServeHTTP(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	heatmapImages := make([]image.Image, 0)
-
-	for i := range files {
-		heatmapImage, err := getHeatmapImageForScene(files[i].ID)
-		if err == nil {
-			heatmapImages = append(heatmapImages, heatmapImage)
-			if len(heatmapImages) == maximumHeatmaps {
-				break
-			}
+	if len(heatmapImages) > 0 {
+		for i := range scriptfiles {
+			file := scriptfiles[i]
+			file.RefreshHeatmapCache = false
+			file.Save()
 		}
-	}
-
-	if len(heatmapImages) == 0 {
-		p.serveImageproxyResponse(w, r, imageURL)
-		return
-	}
-
-	for i := range files {
-		file := files[i]
-		file.RefreshHeatmapCache = false
-		file.Save()
 	}
 
 	heatmapsHeight := len(heatmapImages) * (heatmapHeight + heatmapMargin)
 	proxyURL := fmt.Sprintf("/%dx%d,jpeg/%s", thumbnailWidth, thumbnailHeight-heatmapsHeight, imageURL)
-	r2 := new(http.Request)
-	*r2 = *r
-	r2.URL = new(url.URL)
-	*r2.URL = *r.URL
-	r2.URL.Path = proxyURL
 	imageproxyResponseWriter := &BufferResponseWriter{
 		header: http.Header{},
 		buf:    &bytes.Buffer{},
 	}
-	p.ImageProxy.ServeHTTP(imageproxyResponseWriter, r2)
+	p.ImageProxy.ServeHTTP(imageproxyResponseWriter, requestWithPath(r, proxyURL))
 
-	respbody, err := io.ReadAll(imageproxyResponseWriter.buf)
-	if err == nil {
-		var output bytes.Buffer
-		err = createHeatmapThumbnail(&output, bytes.NewReader(respbody), heatmapImages)
-		if err == nil {
-			p.Cache.Set(cacheKey, output.Bytes())
-			w.Header().Add("Content-Type", "image/jpeg")
-			w.Header().Add("Content-Length", fmt.Sprint(len(output.Bytes())))
-			if _, err := io.Copy(w, bytes.NewReader(output.Bytes())); err != nil {
-				log.Printf("Failed to send out response: %v", err)
-			}
-			return
-		}
-	}
+	respbody := imageproxyResponseWriter.buf.Bytes()
+
+	var output bytes.Buffer
+	err = createHereSphereThumbnail(&output, bytes.NewReader(respbody), heatmapImages, promotedTagNames)
 	if err != nil {
 		log.Printf("%v", err)
-		// serve original response
 		if _, err := io.Copy(w, bytes.NewReader(respbody)); err != nil {
 			log.Printf("Failed to send out response: %v", err)
 		}
+		return
+	}
+	p.Cache.Set(cacheKey, output.Bytes())
+	w.Header().Add("Content-Type", "image/jpeg")
+	w.Header().Add("Content-Length", fmt.Sprint(len(output.Bytes())))
+	if _, err := io.Copy(w, bytes.NewReader(output.Bytes())); err != nil {
+		log.Printf("Failed to send out response: %v", err)
 	}
 }
