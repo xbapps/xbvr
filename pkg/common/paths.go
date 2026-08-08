@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"testing"
 
 	"github.com/ProtonMail/go-appdir"
 )
@@ -57,7 +58,14 @@ func InitPaths() {
 	db_connection_pool_size := flag.Int("db_connection_pool_size", 0, "Optional: sets a limit to the number of db connections while scraping")
 	concurrentSscrapers := flag.Int("concurrent_scrapers", 0, "Optional: sets a limit to the number of concurrent scrapers")
 
-	flag.Parse()
+	// InitPaths runs from models' package init, which means it also runs inside test
+	// binaries. `go test` passes -test.* flags that this flag set does not define, and
+	// flag.Parse would abort the process before any test runs - that is why no package
+	// importing pkg/models could be tested. Under test, skip parsing and fall back to
+	// the env vars and defaults handled below.
+	if !testing.Testing() {
+		flag.Parse()
+	}
 
 	if *app_dir == "" {
 		tmp := os.Getenv("XBVR_APPDIR")
