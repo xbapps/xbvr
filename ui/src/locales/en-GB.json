@@ -179,6 +179,8 @@
   "Add Cast to Aka Group. Select the Aka group and Actors to add in the Cast Filter":"Add Cast to Aka Group. Select the Aka group and Actors to add in the Cast Filter",
   "Links":"Links",
   "Actor Scrapers":"Actor Scrapers",
+  "Restore missing actors from scene edit history": "Restore missing actors from scene edit history",
+  "When reapplying saved scene edits after scraping, recreate actors referenced by Cast edit history if they no longer exist. Disable this if you intentionally delete Romaji actors and manage localized actor names yourself.": "When reapplying saved scene edits after scraping, recreate actors referenced by Cast edit history if they no longer exist. Disable this if you intentionally delete Romaji actors and manage localized actor names yourself.",
   "Age":"Age",
   "Active":"Active",
   "Nationality":"Nationality",
