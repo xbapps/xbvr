@@ -8,6 +8,7 @@ const state = {
     showSceneSearchField: false,
     stashApiKey: '',
     scrapeActorAfterScene: 'true',
+    restoreMissingActorsFromSceneEdits: true,
     useImperialEntry: 'false',
     linkScenesAfterSceneScraping: true,
     useAltSrcInFileMatching: true,
@@ -37,6 +38,7 @@ const actions = {
         state.advanced.stashApiKey = data.config.advanced.stashApiKey
         state.advanced.scraperProxy = data.config.advanced.scraperProxy
         state.advanced.scrapeActorAfterScene = data.config.advanced.scrapeActorAfterScene
+        state.advanced.restoreMissingActorsFromSceneEdits = data.config.advanced.restoreMissingActorsFromSceneEdits
         state.advanced.useImperialEntry = data.config.advanced.useImperialEntry
         state.advanced.linkScenesAfterSceneScraping = data.config.advanced.linkScenesAfterSceneScraping
         state.advanced.useAltSrcInFileMatching = data.config.advanced.useAltSrcInFileMatching
@@ -57,6 +59,7 @@ const actions = {
         state.advanced.stashApiKey = data.stashApiKey
         state.advanced.scraperProxy = data.scraperProxy
         state.advanced.scrapeActorAfterScene = data.scrapeActorAfterScene
+        state.advanced.restoreMissingActorsFromSceneEdits = data.restoreMissingActorsFromSceneEdits
         state.advanced.useImperialEntry = data.useImperialEntry
         state.advanced.linkScenesAfterSceneScraping = data.linkScenesAfterSceneScraping
         state.advanced.useAltSrcInFileMatching = data.useAltSrcInFileMatching

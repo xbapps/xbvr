@@ -56,6 +56,13 @@
                 </b-switch>
               </b-tooltip>
             </b-field>
+            <b-field>
+              <b-tooltip :label="$t('When reapplying saved scene edits after scraping, recreate actors referenced by Cast edit history if they no longer exist. Disable this if you intentionally delete Romaji actors and manage localized actor names yourself.')" :delay="500" type="is-warning" multilined>
+                <b-switch v-model="restoreMissingActorsFromSceneEdits" type="is-default">
+                  {{ $t('Restore missing actors from scene edit history') }}
+                </b-switch>
+              </b-tooltip>
+            </b-field>
             <b-field :label="$t('Stashdb Api Key')" label-position="on-border">
               <b-input v-model="stashApiKey" placeholder="Visit https://discord.com/invite/2TsNFKt to sign up to Stashdb" type="password"></b-input>
             </b-field>
@@ -508,6 +515,14 @@ export default {
       set (value) {
         this.$store.state.optionsAdvanced.advanced.scrapeActorAfterScene = value
 
+      }
+    },
+    restoreMissingActorsFromSceneEdits: {
+      get () {
+        return this.$store.state.optionsAdvanced.advanced.restoreMissingActorsFromSceneEdits
+      },
+      set (value) {
+        this.$store.state.optionsAdvanced.advanced.restoreMissingActorsFromSceneEdits = value
       }
     },
     useAltSrcInFileMatching: {

@@ -254,8 +254,10 @@ func ReapplyEdits() {
 			}
 			// Reapply Cast edits
 			if a.ChangedColumn == "cast" {
-				var actor models.Actor
-				db.Where(&models.Actor{Name: strings.Replace(name, ".", "", -1)}).FirstOrCreate(&actor)
+				actor, found := findActorForEditReplay(db, strings.Replace(name, ".", "", -1))
+				if !found {
+					continue
+				}
 				if prefix == "-" {
 					db.Model(&scene).Association("Cast").Delete(&actor)
 				} else {
@@ -282,6 +284,19 @@ func ReapplyEdits() {
 		}
 	}
 	db.Model(&models.Scene{}).UpdateColumn("edits_applied", true)
+}
+
+func findActorForEditReplay(db *gorm.DB, name string) (models.Actor, bool) {
+	var actor models.Actor
+	query := db.Where(&models.Actor{Name: name})
+
+	if config.Config.Advanced.RestoreMissingActors {
+		query.FirstOrCreate(&actor)
+	} else if query.First(&actor).Error != nil {
+		return actor, false
+	}
+
+	return actor, actor.ID != 0
 }
 
 func ScrapeSingleScene(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo string) models.Scene {
