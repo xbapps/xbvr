@@ -17,7 +17,6 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-resty/resty/v2"
 	"github.com/jinzhu/gorm"
-	"github.com/mcuadros/go-version"
 	"github.com/pkg/errors"
 	"github.com/putdotio/go-putio"
 	"github.com/tidwall/gjson"
@@ -343,7 +342,7 @@ func (i ConfigResource) WebService() *restful.WebService {
 func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Response) {
 	out := VersionCheckResponse{LatestVersion: common.CurrentVersion, CurrentVersion: common.CurrentVersion, UpdateNotify: false}
 
-	if config.Config.Web.UpdateCheck && common.CurrentVersion != "CURRENT" {
+	if config.Config.Web.UpdateCheck && versionCore(common.CurrentVersion) != "" {
 		r, err := resty.New().R().
 			SetHeader("User-Agent", "XBVR/"+common.CurrentVersion).
 			SetHeader("Accept", "application/vnd.github.v3+json").
@@ -355,10 +354,7 @@ func (i ConfigResource) versionCheck(req *restful.Request, resp *restful.Respons
 
 		out.LatestVersion = gjson.Get(r.String(), "tag_name").String()
 
-		// Decide if UI notification is needed
-		if version.Compare(common.CurrentVersion, out.LatestVersion, "<") {
-			out.UpdateNotify = true
-		}
+		out.UpdateNotify = shouldNotifyUpdate(common.CurrentVersion, out.LatestVersion)
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, out)
