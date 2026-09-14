@@ -61,6 +61,19 @@
                   <b-button type="is-small" @click="taskRefresh">Refresh Scenes</b-button>
                 </td>
               </tr>
+              <tr>
+                <td>
+                  <p><strong>Fix inconsistencies</strong></p>
+                  <p>
+                    Finds and repairs library data that has drifted out of sync — files matched to deleted or
+                    missing scenes, and scenes whose size or availability no longer matches their files.
+                  </p>
+                </td>
+                <td nowrap><small>{{ fixStatusText }}</small></td>
+                <td>
+                  <b-button size="is-small" :loading="fixRunning" :disabled="fixRunning" @click="fixInconsistencies">Fix All</b-button>
+                </td>
+              </tr>
             </table>
           </div>
         </div>
@@ -83,11 +96,33 @@ export default {
       sizes: {},
       indexSceneCount: 0,
       searchInprogress: false,
+      fixRunning: false,
+      fixPhase: 'idle',
+      fixDone: 0,
+      fixTotal: 0,
+      fixResult: null,
+      fixPoll: null,
+    }
+  },
+  computed: {
+    fixStatusText () {
+      if (this.fixRunning && this.fixPhase === 'scanning') return 'Scanning…'
+      if (this.fixRunning && this.fixPhase === 'fixing') return `Fixing ${this.fixDone}/${this.fixTotal}…`
+      if (this.fixResult) {
+        let t = `Fixed ${this.fixResult.fixed} of ${this.fixResult.scanned}`
+        if (this.fixResult.failed) t += `, ${this.fixResult.failed} failed`
+        return t
+      }
+      return ''
     }
   },
   async mounted () {
     await this.loadState()
     this.loadSearchState()
+    this.pollFixStatus()
+  },
+  beforeDestroy () {
+    if (this.fixPoll) clearInterval(this.fixPoll)
   },
   methods: {
     async loadState () {
@@ -107,6 +142,42 @@ export default {
     },
     taskRefresh: function () {
       ky.get('/api/task/scene-refresh')
+    },
+    fixInconsistencies () {
+      this.$buefy.dialog.confirm({
+        title: 'Fix inconsistencies',
+        message: 'Scan the library and apply all fixes (re-match/unmatch orphaned files, reset stale scene status)?',
+        confirmText: 'Fix All',
+        type: 'is-warning',
+        onConfirm: async () => {
+          await ky.post('/api/inconsistencies/fixall', { json: {} })
+          this.fixRunning = true
+          this.fixPhase = 'scanning'
+          this.fixResult = null
+          this.pollFixStatus()
+        }
+      })
+    },
+    async pollFixStatus () {
+      const apply = st => {
+        this.fixRunning = st.running
+        this.fixPhase = st.phase
+        this.fixDone = st.done
+        this.fixTotal = st.total
+        if (st.result) this.fixResult = st.result
+      }
+      apply(await ky.get('/api/inconsistencies/status').json())
+      if (this.fixPoll) { clearInterval(this.fixPoll); this.fixPoll = null }
+      if (this.fixRunning) {
+        this.fixPoll = setInterval(async () => {
+          const st = await ky.get('/api/inconsistencies/status').json()
+          apply(st)
+          if (!st.running) {
+            clearInterval(this.fixPoll); this.fixPoll = null
+            await this.loadState()
+          }
+        }, 1000)
+      }
     },
     async loadSearchState () {
       this.isLoading = true
