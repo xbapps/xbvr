@@ -6741,10 +6741,10 @@ launch-editor@^2.2.1:
     chalk "^2.3.0"
     shell-quote "^1.6.1"
 
-less-loader@12.3.2:
-  version "12.3.2"
-  resolved "https://registry.yarnpkg.com/less-loader/-/less-loader-12.3.2.tgz#88dac1736b4f2e3f76db9b1617c1398ae91cd4bb"
-  integrity sha512-uLV5c702ff2jBvO7qewpkLRzkh/I9QW07ur2NKkv8TVTrtX2lrKjEbEU/LLXAn7cgpCIBbkfyUm4qYXCQs5/+w==
+less-loader@12.3.3:
+  version "12.3.3"
+  resolved "https://registry.yarnpkg.com/less-loader/-/less-loader-12.3.3.tgz#01b483a08db8813962ec72af599f751edb760142"
+  integrity sha512-F0+ErFFDj3Pt+nVrCN6VlEGEzocv9s7x/aR9v2riI+WM83UAfTYBDBjGPJnT55lBLR6JSI4fmWblt+aA2JN6/w==
 
 less@4.6.4:
   version "4.6.4"
