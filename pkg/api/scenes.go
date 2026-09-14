@@ -673,7 +673,12 @@ func (i SceneResource) searchSceneIndex(req *restful.Request, resp *restful.Resp
 	}
 
 	defer idx.Bleve.Close()
-	query := bleve.NewQueryStringQuery(q)
+	// The index analyzer splits on apostrophes ("Sister's" -> "sister", "s"), so a query
+	// keeping the apostrophe ("Sister's") or dropping it ("Sisters") never lines up with
+	// the indexed terms. Normalising apostrophes to spaces ("Sister s") matches how titles
+	// are tokenised, which is what filename-derived match queries need.
+	bleveQuery := strings.NewReplacer("'", " ", "’", " ", "`", " ").Replace(q)
+	query := bleve.NewQueryStringQuery(bleveQuery)
 
 	searchRequest := bleve.NewSearchRequest(query)
 	searchRequest.Fields = []string{"Id", "title", "cast", "site", "description"}
