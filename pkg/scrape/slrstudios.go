@@ -105,18 +105,29 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			return
 		}
 
-		// Fallback to project=0 if project=1 fails with 404
-		if resp.StatusCode() == 404 && projectHeader == "1" {
-			log.Infoln("Retrying scene", sceneID, "with project=0 fallback")
-			resp, err = client.R().
-				SetHeader("User-Agent", UserAgent).
-				SetHeader("Client-Type", "web").
-				SetHeader("project", "0").
-				Get(apiURL)
+		// 404 fallback chain: trans scenes require project=3 (gay: 4), but a
+		// scene URL without the /trans/ (or /gay/) prefix is first fetched
+		// with project=1, so retry the remaining projects before giving up.
+		if resp.StatusCode() == 404 {
+			for _, fallback := range []string{"1", "3", "4", "0"} {
+				if fallback == projectHeader {
+					continue
+				}
+				log.Infoln("Retrying scene", sceneID, "with project="+fallback+" fallback")
+				resp, err = client.R().
+					SetHeader("User-Agent", UserAgent).
+					SetHeader("Client-Type", "web").
+					SetHeader("project", fallback).
+					Get(apiURL)
 
-			if err != nil {
-				log.Errorln("Failed to fetch API data for scene", sceneID, "with fallback:", err)
-				return
+				if err != nil {
+					log.Errorln("Failed to fetch API data for scene", sceneID, "with fallback:", err)
+					return
+				}
+				if resp.StatusCode() == 200 {
+					projectHeader = fallback
+					break
+				}
 			}
 		}
 
@@ -149,6 +160,14 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 			if !sceneData.Exists() {
 				log.Errorln("No data field in API response for scene", sceneID)
 				return
+			}
+			// The API is authoritative about which project a scene belongs
+			// to; correct the flags when the scene was found under another
+			// project (e.g. a trans scene scraped via a URL without the
+			// /trans/ prefix, found through the fallback chain).
+			if proj := sceneData.Get("project").Int(); proj != 0 {
+				isTransScene = proj == 3
+				isGayScene = proj == 4
 			}
 		}
 
@@ -516,23 +535,31 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 				break
 			}
 
-			// Fallback to project=0 if project=1 fails with 404
-			if resp.StatusCode() == 404 && projectHeader == "1" && page == 1 {
-				log.Infoln("Retrying studio", studioCode, "with project=0 fallback")
-				resp, err = client.R().
-					SetHeader("User-Agent", UserAgent).
-					SetHeader("Client-Type", "web").
-					SetHeader("project", "0").
-					Get(apiURL)
+			// 404 fallback chain (see processSceneFromAPI): a studio listing
+			// fetched with the wrong project 404s, so retry the remaining
+			// projects on the first page and keep the one that succeeds.
+			if resp.StatusCode() == 404 && page == 1 {
+				for _, fallback := range []string{"1", "3", "4", "0"} {
+					if fallback == projectHeader {
+						continue
+					}
+					log.Infoln("Retrying studio", studioCode, "with project="+fallback+" fallback")
+					resp, err = client.R().
+						SetHeader("User-Agent", UserAgent).
+						SetHeader("Client-Type", "web").
+						SetHeader("project", fallback).
+						Get(apiURL)
 
-				if err != nil {
-					log.Errorln("Failed to fetch API scenes for studio", studioCode, "with fallback:", err)
-					break
-				}
+					if err != nil {
+						log.Errorln("Failed to fetch API scenes for studio", studioCode, "with fallback:", err)
+						break
+					}
 
-				// If fallback succeeds, update projectHeader for subsequent pages
-				if resp.StatusCode() == 200 {
-					projectHeader = "0"
+					// If fallback succeeds, update projectHeader for subsequent pages
+					if resp.StatusCode() == 200 {
+						projectHeader = fallback
+						break
+					}
 				}
 			}
 
