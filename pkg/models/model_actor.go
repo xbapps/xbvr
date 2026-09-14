@@ -130,10 +130,10 @@ func (i *Actor) CountActorTags() {
 	var results []CountResults
 
 	commonDb.Model(&Actor{}).
-		Select("actors.id, count as existingcnt, count(*) cnt, sum(scenes.is_available ) is_available, avail_count as existingavail").
+		Select("actors.id, actors.count as existingcnt, count(scenes.id) cnt, coalesce(sum(scenes.is_available), 0) is_available, actors.avail_count as existingavail").
 		Group("actors.id").
-		Joins("join scene_cast on scene_cast.actor_id = actors.id").
-		Joins("join scenes on scenes.id=scene_cast.scene_id and scenes.deleted_at is null").
+		Joins("left join scene_cast on scene_cast.actor_id = actors.id").
+		Joins("left join scenes on scenes.id=scene_cast.scene_id and scenes.deleted_at is null").
 		Scan(&results)
 
 	for i := range results {

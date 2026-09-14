@@ -327,10 +327,10 @@ func (i *Tag) CountTags() {
 
 	var results []CountResults
 	db.Model(&Tag{}).
-		Select("tags.id, count as existingcnt, count(*) cnt").
+		Select("tags.id, tags.count as existingcnt, count(scenes.id) cnt").
 		Group("tags.id").
-		Joins("join scene_tags on scene_tags.tag_id = tags.id").
-		Joins("join scenes on scenes.id=scene_tags.scene_id and scenes.deleted_at is null").
+		Joins("left join scene_tags on scene_tags.tag_id = tags.id").
+		Joins("left join scenes on scenes.id=scene_tags.scene_id and scenes.deleted_at is null").
 		Scan(&results)
 
 	for i := range results {
