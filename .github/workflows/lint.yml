@@ -20,7 +20,7 @@ jobs:
     - name: Install Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: '22'
+        node-version: '24'
 
     - name: Checkout code
       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
