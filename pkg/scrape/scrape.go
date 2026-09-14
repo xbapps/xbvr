@@ -34,7 +34,7 @@ var log = &common.Log
 // which is precisely what makes it worth blocklisting. Keep this a realistic, current browser UA;
 // if a studio starts 403ing again, check for a blocklisted-fingerprint 403 before assuming the
 // site itself changed.
-var UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+var UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"
 
 func createCollector(domains ...string) *colly.Collector {
 	c := colly.NewCollector(
