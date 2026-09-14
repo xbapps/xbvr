@@ -3,8 +3,6 @@ package scrape
 import (
 	"encoding/json"
 	"net/http"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -39,28 +37,7 @@ func RealJamSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 
 		// web code split
 		// PornCorn sources the scene_id from the trailer URL. RealJam sources the scene_id from the trailer data-id
-		trailerId := ""
-		if scraperID == "realjamvr" {
-			trailerId = e.ChildAttr(`div.ms-5`, "data-id")
-		} else {
-			e.ForEach(`dl8-video source[src]`, func(id int, e *colly.HTMLElement) {
-				re := regexp.MustCompile(`\/([0-9]+)\/`)
-				match := re.FindStringSubmatch(e.Attr("src"))
-				if len(match) > 0 {
-					if trailerId != "" {
-						if trailerId != match[1] {
-							// don't trust trailer files, make sure they all return the same id
-							trailerId = "mismatch"
-						}
-					}
-					_, err := strconv.Atoi(match[1])
-					if err == nil {
-						// only assign the id if it's a valid number
-						trailerId = match[1]
-					}
-				}
-			})
-		}
+		trailerId := e.ChildAttr(`div.ms-5`, "data-id")
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + trailerId
 
 		// trailer details
@@ -182,7 +159,7 @@ func RealJamSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		}
 	})
 
-	siteCollector.OnHTML(`div.panel a`, func(e *colly.HTMLElement) {
+	siteCollector.OnHTML(`div.panel a.panel-title`, func(e *colly.HTMLElement) {
 		sceneURL := e.Request.AbsoluteURL(e.Attr("href"))
 		sceneURL = strings.TrimSuffix(sceneURL, "/")
 
