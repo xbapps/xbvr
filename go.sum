@@ -245,6 +245,8 @@ github.com/lomik/go-whisper v0.0.0-20170919072952-744ab80ef70d h1:FhUvvfp8YwwGxS
 github.com/lomik/go-whisper v0.0.0-20170919072952-744ab80ef70d/go.mod h1:dH/yipmSDP5HCDBry/Qe/rvAZqB5gv/mZctVkxypWAs=
 github.com/lucasb-eyer/go-colorful v1.4.0 h1:UtrWVfLdarDgc44HcS7pYloGHJUjHV/4FwW4TvVgFr4=
 github.com/lucasb-eyer/go-colorful v1.4.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
+github.com/lucasb-eyer/go-colorful v1.4.1 h1:1EO+WB73+EH8EVbzlrG3KLAfEypQWVHIBqlTf+2hNss=
+github.com/lucasb-eyer/go-colorful v1.4.1/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
 github.com/lxn/walk v0.0.0-20210112085537-c389da54e794/go.mod h1:E23UucZGqpuUANJooIbHWCufXvOcT6E7Stq81gU+CSQ=
 github.com/lxn/win v0.0.0-20210218163916-a377121e959e/go.mod h1:KxxjdtRkfNoYDCUP5ryK7XJJNTnpC8atvtmTheChOtk=
 github.com/marcsauter/single v0.0.0-20201009143647-9f8d81240be2 h1:TyUcIW0tpCQzV4Hpe9jF3p590EQFnMQV3sv6DhoxV6Q=
