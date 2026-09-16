@@ -838,11 +838,11 @@ func addSLRScraper(id string, name string, company string, avatarURL string, cus
 	}
 
 	if masterSiteId == "" {
-		registerScraper(id, suffixedName, avatarURL, "sexlikereal.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		reregisterScraper(id, suffixedName, avatarURL, "sexlikereal.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return SexLikeReal(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, "")
 		})
 	} else {
-		registerAlternateScraper(id, suffixedName, avatarURL, "sexlikereal.com", masterSiteId, func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		reregisterAlternateScraper(id, suffixedName, avatarURL, "sexlikereal.com", masterSiteId, func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return SexLikeReal(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, masterSiteId)
 		})
 	}

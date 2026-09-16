@@ -274,7 +274,7 @@ func addVRPHubScraper(id string, name string, company string, avatarURL string, 
 		avatarURL = "https://cdn.vrphub.com/wp-content/uploads/2016/08/vrphubnew.png"
 	}
 
-	registerScraper(id, suffixedName, avatarURL, "vrphub.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+	reregisterScraper(id, suffixedName, avatarURL, "vrphub.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 		return VRPHub(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, callback)
 	})
 }

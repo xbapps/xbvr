@@ -110,7 +110,11 @@
             </b-tooltip>
           </section>
           <section v-if="customSites.length > 0" class="mt-4">
-            <h3 class="title is-6">{{ $t('Existing Custom Sites') }}</h3>
+            <h3 class="title is-6">{{ $t('Existing Custom Sites') }}
+              <b-tooltip :label="$t('Activates new sites and applies edited bindings immediately, no restart needed')" :delay="500" position="is-right">
+                <b-button size="is-small" type="is-info" @click="reloadCustomSites" :loading="reloadingCustomSites" class="ml-2">{{ $t('Reload') }}</b-button>
+              </b-tooltip>
+            </h3>
             <b-table :data="customSites" :striped="true" :narrowed="true">
               <b-table-column field="aggregator" :label="$t('Source')" v-slot="props" width="70">
                 {{ props.row.aggregator.toUpperCase() }}
@@ -129,7 +133,7 @@
                 <b-button size="is-small" type="is-danger" @click="deleteCustomSite(props.row)" class="ml-2">{{ $t('Delete') }}</b-button>
               </b-table-column>
             </b-table>
-            <p class="is-size-7 mt-2">{{ $t('Adding, editing or deleting a custom site requires an XBVR restart to take effect.') }}</p>
+            <p class="is-size-7 mt-2">{{ $t('Use Reload to activate new sites and edited bindings immediately. Deleting a custom site still requires an XBVR restart.') }}</p>
           </section>
         </div>
       </div>
@@ -313,6 +317,7 @@ export default {
       masterSiteId: '',
       customSites: [],
       editingCustomUrl: null,
+      reloadingCustomSites: false,
       kvName: "",
       headers: [],
       cookies: [],
@@ -370,7 +375,7 @@ export default {
       }).json().then((sites) => {
         self.customSites = sites
         self.clearCustomForm()
-        self.$buefy.toast.open({ message: self.$t('Custom site saved. Restart XBVR for it to take effect.'), type: 'is-success' })
+        self.$buefy.toast.open({ message: self.$t('Custom site saved. Use Reload below to activate it without restarting.'), type: 'is-success', duration: 6000 })
       }).catch(async (err) => {
         let msg = self.$t('Failed to save custom site')
         try {
@@ -419,6 +424,19 @@ export default {
       this.listOfMainSites = ''
       this.scraperFieldsValid = false
     },
+    reloadCustomSites () {
+      const self = this
+      this.reloadingCustomSites = true
+      ky.post('/api/options/custom-sites/reload').json().then((result) => {
+        self.reloadingCustomSites = false
+        self.loadCustomSites()
+        self.$store.dispatch('optionsSites/load')
+        self.$buefy.toast.open({ message: self.$t(`Reloaded custom sites: ${result.added} new, ${result.updated} updated. No restart needed.`), type: 'is-success', duration: 6000 })
+      }).catch(() => {
+        self.reloadingCustomSites = false
+        self.$buefy.toast.open({ message: self.$t('Failed to reload custom sites'), type: 'is-danger' })
+      })
+    },
     deleteCustomSite (entry) {
       const self = this
       this.$buefy.dialog.confirm({
@@ -430,7 +448,7 @@ export default {
           ky.delete('/api/options/custom-sites', { json: { url: entry.url } }).json().then((sites) => {
             self.customSites = sites
             if (self.editingCustomUrl === entry.url) { self.clearCustomForm() }
-            self.$buefy.toast.open({ message: self.$t('Custom site deleted. Restart XBVR for it to take effect.'), type: 'is-success' })
+            self.$buefy.toast.open({ message: self.$t('Custom site deleted. Restart XBVR for removal to take effect.'), type: 'is-success', duration: 6000 })
           }).catch(() => {
             self.$buefy.toast.open({ message: self.$t('Failed to delete custom site'), type: 'is-danger' })
           })

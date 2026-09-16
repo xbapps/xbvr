@@ -336,6 +336,8 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 	ws.Route(ws.DELETE("/custom-sites").To(i.deleteCustomSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.POST("/custom-sites/reload").To(i.reloadCustomSites).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Collector Config endpoints"
 	ws.Route(ws.GET("/collector-config-list").To(i.getCollectorConfigs))
@@ -1148,6 +1150,11 @@ func flattenCustomScraperGroups(scrapers map[string][]config.ScraperConfig) []Cu
 func (i ConfigResource) getCustomSites(req *restful.Request, resp *restful.Response) {
 	_, scrapers := customScraperGroups()
 	resp.WriteHeaderAndEntity(http.StatusOK, flattenCustomScraperGroups(scrapers))
+}
+
+func (i ConfigResource) reloadCustomSites(req *restful.Request, resp *restful.Response) {
+	added, updated := scrape.ReloadCustomScrapers()
+	resp.WriteHeaderAndEntity(http.StatusOK, map[string]int{"added": added, "updated": updated})
 }
 
 func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Response) {
