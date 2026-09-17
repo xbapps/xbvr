@@ -59,6 +59,7 @@ type ObjectConfig struct {
 		StashApiKey                  string    `default:"" json:"stashApiKey"`
 		ScraperProxy                 string    `default:"" json:"scraperProxy"`
 		ScrapeActorAfterScene        bool      `default:"true" json:"scrapeActorAfterScene"`
+		RestoreMissingActors         bool      `default:"true" json:"restoreMissingActorsFromSceneEdits"`
 		UseImperialEntry             bool      `default:"false" json:"useImperialEntry"`
 		ProgressTimeInterval         int       `default:"15" json:"progressTimeInterval"`
 		LinkScenesAfterSceneScraping bool      `default:"true" json:"linkScenesAfterSceneScraping"`
