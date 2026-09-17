@@ -8,11 +8,12 @@ import (
 )
 
 type Tag struct {
-	ID     uint    `gorm:"primary_key" json:"id" xbvrbackup:"-"`
-	Scenes []Scene `gorm:"many2many:scene_tags;" json:"scenes" xbvrbackup:"-"`
-	Name   string  `gorm:"index" json:"name" xbvrbackup:"name"`
-	Clean  string  `gorm:"index" json:"clean" xbvrbackup:"-"`
-	Count  int     `json:"count" xbvrbackup:"-"`
+	ID       uint    `gorm:"primary_key" json:"id" xbvrbackup:"-"`
+	Scenes   []Scene `gorm:"many2many:scene_tags;" json:"scenes" xbvrbackup:"-"`
+	Name     string  `gorm:"index" json:"name" xbvrbackup:"name"`
+	Clean    string  `gorm:"index" json:"clean" xbvrbackup:"-"`
+	Count    int     `json:"count" xbvrbackup:"-"`
+	IsSystem bool    `json:"is_system" gorm:"default:false" xbvrbackup:"-"`
 }
 
 func (t *Tag) Save() error {

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/nfnt/resize"
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/dms/dlna/dms"
 	"github.com/xbapps/xbvr/ui"
@@ -110,11 +111,21 @@ func getIconReader(fn string) (io.Reader, error) {
 func readIcon(path string, size uint) *bytes.Reader {
 	r, err := getIconReader(path)
 	if err != nil {
-		panic(err)
+		common.Log.Errorf("Failed to read DLNA icon %s: %v. Using default placeholder.", path, err)
+		// Create a 1x1 transparent image as fallback
+		img := image.NewRGBA(image.Rect(0, 0, 1, 1))
+		var buf bytes.Buffer
+		if err := png.Encode(&buf, img); err != nil {
+			common.Log.Error(err)
+			return bytes.NewReader([]byte{})
+		}
+		return bytes.NewReader(buf.Bytes())
 	}
+
 	imageData, _, err := image.Decode(r)
 	if err != nil {
-		panic(err)
+		common.Log.Error(err)
+		return bytes.NewReader([]byte{})
 	}
 	return resizeImage(imageData, size)
 }
