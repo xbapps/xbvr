@@ -7,7 +7,7 @@
       <b-tabs v-model="activeTab" size="medium" type="is-boxed" style="margin-left: 0px" id="importexporttab">
             <b-tab-item label="Scene Details"/>
             <b-tab-item label="Actor Settings"/>
-            <b-tab-item label="Create Custom Site"/>
+            <b-tab-item label="Custom Sites"/>
             <b-tab-item :label="$t('Alternate Sites')"/>
             <b-tab-item :label="$t('Proxy')"/>
             <b-tab-item :label="$t('Cookies/Headers')"/>
@@ -79,7 +79,7 @@
         <div class="column">
           <section>
             <b-field :label="$t('Scraper Url')" label-position="on-border">
-              <b-input v-model="scraperUrl" :placeholder="$t('Enter the Url to Studio Scene List')" @input="validateScraperFields()"></b-input>
+              <b-input v-model="scraperUrl" :placeholder="$t('Enter the Url to Studio Scene List')" @input="validateScraperFields()" :disabled="editingCustomUrl !== null"></b-input>
             </b-field>
             <b-field :label="$t('Name')" label-position="on-border">
               <b-input v-model="scraperName" :placeholder="$t('Enter Studio Name')" @input="validateScraperFields()"></b-input>
@@ -102,11 +102,38 @@
                   </div>
               </b-tooltip>
             </b-field>
-            <b-tooltip :label="$t('Restart XBVR to load new Sites')" :delay="500" type="is-warning">
+            <b-tooltip :label="$t('Restart XBVR to apply changes')" :delay="500" type="is-warning">
               <b-field>
-                <b-button type="is-primary" :disabled="!scraperFieldsValid" @click="saveScraper">Save</b-button>
+                <b-button type="is-primary" :disabled="!scraperFieldsValid" @click="saveScraper">{{ editingCustomUrl !== null ? $t('Save Changes') : $t('Save') }}</b-button>
+                <b-button v-if="editingCustomUrl !== null" @click="cancelCustomEdit" class="ml-2">{{ $t('Cancel') }}</b-button>
               </b-field>
             </b-tooltip>
+          </section>
+          <section v-if="customSites.length > 0" class="mt-4">
+            <h3 class="title is-6">{{ $t('Existing Custom Sites') }}
+              <b-tooltip :label="$t('Activates new sites and applies edited bindings immediately, no restart needed')" :delay="500" position="is-right">
+                <b-button size="is-small" type="is-info" @click="reloadCustomSites" :loading="reloadingCustomSites" class="ml-2">{{ $t('Reload') }}</b-button>
+              </b-tooltip>
+            </h3>
+            <b-table :data="customSites" :striped="true" :narrowed="true">
+              <b-table-column field="aggregator" :label="$t('Source')" v-slot="props" width="70">
+                {{ props.row.aggregator.toUpperCase() }}
+              </b-table-column>
+              <b-table-column field="name" :label="$t('Name')" v-slot="props">
+                {{ props.row.name }}
+              </b-table-column>
+              <b-table-column field="url" :label="$t('Url')" v-slot="props">
+                <span class="is-size-7">{{ props.row.url }}</span>
+              </b-table-column>
+              <b-table-column field="master_site_id" :label="$t('Main Site')" v-slot="props">
+                {{ masterSiteName(props.row.master_site_id) }}
+              </b-table-column>
+              <b-table-column :label="$t('Actions')" v-slot="props" width="140" numeric>
+                <b-button size="is-small" @click="editCustomSite(props.row)">{{ $t('Edit') }}</b-button>
+                <b-button size="is-small" type="is-danger" @click="deleteCustomSite(props.row)" class="ml-2">{{ $t('Delete') }}</b-button>
+              </b-table-column>
+            </b-table>
+            <p class="is-size-7 mt-2">{{ $t('Use Reload to activate new sites and edited bindings immediately. Deleting a custom site still requires an XBVR restart.') }}</p>
           </section>
         </div>
       </div>
@@ -274,6 +301,10 @@ export default {
   name: 'InterfaceAdvanced',
   mounted () {
     this.$store.dispatch('optionsAdvanced/load')
+    if (this.$store.state.optionsSites.items.length === 0) {
+      this.$store.dispatch('optionsSites/load')
+    }
+    this.loadCustomSites()
   },
   data () {
     return {
@@ -284,6 +315,9 @@ export default {
       scraperAvatar: '',
       scraperFieldsValid: false,
       masterSiteId: '',
+      customSites: [],
+      editingCustomUrl: null,
+      reloadingCustomSites: false,
       kvName: "",
       headers: [],
       cookies: [],
@@ -329,7 +363,8 @@ export default {
       }
     },
     saveScraper () {
-       ky.put('/api/options/custom-sites/create', {
+      const self = this
+      ky.put('/api/options/custom-sites/create', {
         json: {
           scraperUrl: this.scraperUrl,
           scraperName: this.scraperName,
@@ -337,8 +372,88 @@ export default {
           scraperAvatar: this.scraperAvatar,
           masterSiteId: this.masterSiteId,
         }
+      }).json().then((sites) => {
+        self.customSites = sites
+        self.clearCustomForm()
+        self.$buefy.toast.open({ message: self.$t('Custom site saved. Use Reload below to activate it without restarting.'), type: 'is-success', duration: 6000 })
+      }).catch(async (err) => {
+        let msg = self.$t('Failed to save custom site')
+        try {
+          const body = await err.response.json()
+          if (body && body.error) { msg = body.error }
+        } catch (e) {
+          // keep default message
+        }
+        self.$buefy.toast.open({ message: msg, type: 'is-danger', duration: 6000 })
       })
-
+    },
+    async loadCustomSites () {
+      try {
+        this.customSites = await ky.get('/api/options/custom-sites').json()
+      } catch (e) {
+        this.customSites = []
+      }
+    },
+    masterSiteName (siteId) {
+      if (!siteId) { return '—' }
+      const found = this.$store.state.optionsSites.items.find(site => site.id === siteId)
+      return found ? found.name : siteId
+    },
+    editCustomSite (entry) {
+      this.editingCustomUrl = entry.url
+      this.scraperUrl = entry.url
+      this.scraperName = entry.name
+      this.scraperCompany = entry.company === entry.name ? '' : entry.company
+      this.scraperAvatar = entry.avatar_url || ''
+      const masterName = entry.master_site_id
+        ? (this.$store.state.optionsSites.items.find(site => site.id === entry.master_site_id) || {}).name || ''
+        : ''
+      this.listOfMainSites = masterName
+      this.validateScraperFields()
+      window.scrollTo(0, 0)
+    },
+    cancelCustomEdit () {
+      this.clearCustomForm()
+    },
+    clearCustomForm () {
+      this.editingCustomUrl = null
+      this.scraperUrl = ''
+      this.scraperName = ''
+      this.scraperCompany = ''
+      this.scraperAvatar = ''
+      this.listOfMainSites = ''
+      this.scraperFieldsValid = false
+    },
+    reloadCustomSites () {
+      const self = this
+      this.reloadingCustomSites = true
+      ky.post('/api/options/custom-sites/reload', { json: {} }).json().then((result) => {
+        self.reloadingCustomSites = false
+        self.loadCustomSites()
+        self.$store.dispatch('optionsSites/load')
+        self.$buefy.toast.open({ message: self.$t(`Reloaded custom sites: ${result.added} new, ${result.updated} updated. No restart needed.`), type: 'is-success', duration: 6000 })
+      }).catch(() => {
+        self.reloadingCustomSites = false
+        self.$buefy.toast.open({ message: self.$t('Failed to reload custom sites'), type: 'is-danger' })
+      })
+    },
+    deleteCustomSite (entry) {
+      const self = this
+      this.$buefy.dialog.confirm({
+        title: this.$t('Delete custom site'),
+        message: `You're about to delete the custom site <strong>${entry.name}</strong> (${entry.url}). Scenes already scraped from it are kept.`,
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: function () {
+          ky.delete('/api/options/custom-sites', { json: { url: entry.url } }).json().then((sites) => {
+            self.customSites = sites
+            if (self.editingCustomUrl === entry.url) { self.clearCustomForm() }
+            self.$buefy.toast.open({ message: self.$t('Custom site deleted. Restart XBVR for removal to take effect.'), type: 'is-success', duration: 6000 })
+          }).catch(() => {
+            self.$buefy.toast.open({ message: self.$t('Failed to delete custom site'), type: 'is-danger' })
+          })
+        }
+      })
     },
    stashdb () {
       ky.get('/api/extref/stashdb/run_all')

@@ -331,6 +331,14 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.PUT("/custom-sites/create").To(i.createCustomSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	// "Custom Sites endpoints"
+	ws.Route(ws.GET("/custom-sites").To(i.getCustomSites).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.DELETE("/custom-sites").To(i.deleteCustomSite).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.POST("/custom-sites/reload").Consumes("*/*").To(i.reloadCustomSites).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	// "Collector Config endpoints"
 	ws.Route(ws.GET("/collector-config-list").To(i.getCollectorConfigs))
 	ws.Route(ws.POST("/save-collector-config").To(i.saveCollectorConfigs))
@@ -1052,38 +1060,25 @@ func (i ConfigResource) getDefaultCuepoints(req *restful.Request, resp *restful.
 	resp.WriteHeaderAndEntity(http.StatusOK, &cp)
 }
 
-func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Response) {
-	db, _ := models.GetDB()
-	defer db.Close()
+type CustomSiteEntry struct {
+	Aggregator   string `json:"aggregator"`
+	URL          string `json:"url"`
+	Name         string `json:"name"`
+	Company      string `json:"company"`
+	Avatar       string `json:"avatar_url"`
+	MasterSiteId string `json:"master_site_id"`
+}
 
-	var r RequestSCustomSiteCreate
-	err := req.ReadEntity(&r)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-	if r.Url == "" || r.Name == "" {
-		return
-	}
-	r.Url = strings.TrimSpace(r.Url)
-	r.Name = strings.TrimSpace(r.Name)
-	r.Company = strings.TrimSpace(r.Company)
-	r.Avatar = strings.TrimSpace(r.Avatar)
-	r.MasterSiteId = strings.TrimSpace(r.MasterSiteId)
-	if r.Company == "" {
-		r.Company = r.Name
-	}
+type RequestCustomSiteDelete struct {
+	Url string `json:"url"`
+}
 
+// customScraperGroups loads scrapers.json and returns the custom groups keyed by
+// aggregator, so create/update/delete share one load/save path. The caller must
+// write the groups back with saveCustomScraperGroups.
+func customScraperGroups() (config.ScraperList, map[string][]config.ScraperConfig) {
 	var scraperConfig config.ScraperList
 	scraperConfig.Load()
-
-	re := regexp.MustCompile(`^(https?://)?(www\.)?([^./]+)\.`)
-	match := re.FindStringSubmatch(r.Url)
-	if len(match) < 3 {
-		return
-	}
-
-	r.Url = strings.TrimSuffix(r.Url, "/")
 
 	scrapers := make(map[string][]config.ScraperConfig)
 	scrapers["povr"] = scraperConfig.CustomScrapers.PovrScrapers
@@ -1092,6 +1087,98 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 	scrapers["vrphub"] = scraperConfig.CustomScrapers.VrphubScrapers
 	scrapers["vrporn"] = scraperConfig.CustomScrapers.VrpornScrapers
 	scrapers["realvr"] = scraperConfig.CustomScrapers.RealVRScrapers
+	return scraperConfig, scrapers
+}
+
+func saveCustomScraperGroups(scraperConfig config.ScraperList, scrapers map[string][]config.ScraperConfig) error {
+	scraperConfig.CustomScrapers.PovrScrapers = scrapers["povr"]
+	scraperConfig.CustomScrapers.SlrScrapers = scrapers["slr"]
+	scraperConfig.CustomScrapers.StashDbScrapers = scrapers["stashdb"]
+	scraperConfig.CustomScrapers.VrphubScrapers = scrapers["vrphub"]
+	scraperConfig.CustomScrapers.VrpornScrapers = scrapers["vrporn"]
+	scraperConfig.CustomScrapers.RealVRScrapers = scrapers["realvr"]
+	fName := filepath.Join(common.AppDir, "scrapers.json")
+	list, err := json.MarshalIndent(scraperConfig, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(fName, list, 0644)
+}
+
+// customAggregatorForURL maps a studio URL to its aggregator group. Custom sites
+// are only supported on aggregator domains, anything else is rejected.
+func customAggregatorForURL(url string) (string, bool) {
+	re := regexp.MustCompile(`^(https?://)?(www\.)?([^./]+)\.`)
+	match := re.FindStringSubmatch(url)
+	if len(match) < 4 {
+		return "", false
+	}
+	switch match[3] {
+	case "povr":
+		return "povr", true
+	case "sexlikereal":
+		return "slr", true
+	case "stashdb":
+		return "stashdb", true
+	case "vrphub":
+		return "vrphub", true
+	case "vrporn":
+		return "vrporn", true
+	case "realvr":
+		return "realvr", true
+	}
+	return "", false
+}
+
+func flattenCustomScraperGroups(scrapers map[string][]config.ScraperConfig) []CustomSiteEntry {
+	entries := []CustomSiteEntry{}
+	for _, key := range []string{"slr", "vrporn", "povr", "vrphub", "stashdb", "realvr"} {
+		for _, site := range scrapers[key] {
+			entries = append(entries, CustomSiteEntry{
+				Aggregator:   key,
+				URL:          site.URL,
+				Name:         site.Name,
+				Company:      site.Company,
+				Avatar:       site.AvatarUrl,
+				MasterSiteId: site.MasterSiteId,
+			})
+		}
+	}
+	return entries
+}
+
+func (i ConfigResource) getCustomSites(req *restful.Request, resp *restful.Response) {
+	_, scrapers := customScraperGroups()
+	resp.WriteHeaderAndEntity(http.StatusOK, flattenCustomScraperGroups(scrapers))
+}
+
+func (i ConfigResource) reloadCustomSites(req *restful.Request, resp *restful.Response) {
+	added, updated := scrape.ReloadCustomScrapers()
+	resp.WriteHeaderAndEntity(http.StatusOK, map[string]int{"added": added, "updated": updated})
+}
+
+func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Response) {
+	var r RequestSCustomSiteCreate
+	err := req.ReadEntity(&r)
+	if err != nil {
+		log.Error(err)
+		resp.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(r.Url) == "" || strings.TrimSpace(r.Name) == "" {
+		resp.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	r.Url = strings.TrimSuffix(strings.TrimSpace(r.Url), "/")
+	r.Name = strings.TrimSpace(r.Name)
+	r.Company = strings.TrimSpace(r.Company)
+	r.Avatar = strings.TrimSpace(r.Avatar)
+	r.MasterSiteId = strings.TrimSpace(r.MasterSiteId)
+	if r.Company == "" {
+		r.Company = r.Name
+	}
+
+	scraperConfig, scrapers := customScraperGroups()
 
 	exists := false
 	for key, group := range scrapers {
@@ -1106,34 +1193,63 @@ func (i ConfigResource) createCustomSite(req *restful.Request, resp *restful.Res
 		}
 	}
 
+	aggregator := ""
 	if !exists {
-		scraper := config.ScraperConfig{URL: r.Url, Name: r.Name, Company: r.Company, AvatarUrl: r.Avatar, MasterSiteId: r.MasterSiteId}
-		switch match[3] {
-		case "povr":
-			scrapers["povr"] = append(scrapers["povr"], scraper)
-		case "sexlikereal":
-			scrapers["slr"] = append(scrapers["slr"], scraper)
-		case "stashdb":
-			scrapers["stashdb"] = append(scrapers["stashdb"], scraper)
-		case "vrphub":
-			scrapers["vrphub"] = append(scrapers["vrphub"], scraper)
-		case "vrporn":
-			scrapers["vrporn"] = append(scrapers["vrporn"], scraper)
-		case "realvr":
-			scrapers["realvr"] = append(scrapers["realvr"], scraper)
+		var ok bool
+		aggregator, ok = customAggregatorForURL(r.Url)
+		if !ok {
+			resp.WriteHeaderAndEntity(http.StatusBadRequest, map[string]string{"error": "URL must be on a supported aggregator site (sexlikereal.com, vrporn.com, povr.com, vrphub.com, stashdb.org, realvr.com)"})
+			return
 		}
+		scraper := config.ScraperConfig{URL: r.Url, Name: r.Name, Company: r.Company, AvatarUrl: r.Avatar, MasterSiteId: r.MasterSiteId}
+		scrapers[aggregator] = append(scrapers[aggregator], scraper)
 	}
-	scraperConfig.CustomScrapers.PovrScrapers = scrapers["povr"]
-	scraperConfig.CustomScrapers.SlrScrapers = scrapers["slr"]
-	scraperConfig.CustomScrapers.StashDbScrapers = scrapers["stashdb"]
-	scraperConfig.CustomScrapers.VrphubScrapers = scrapers["vrphub"]
-	scraperConfig.CustomScrapers.VrpornScrapers = scrapers["vrporn"]
-	scraperConfig.CustomScrapers.RealVRScrapers = scrapers["realvr"]
-	fName := filepath.Join(common.AppDir, "scrapers.json")
-	list, _ := json.MarshalIndent(scraperConfig, "", "  ")
-	os.WriteFile(fName, list, 0644)
 
-	resp.WriteHeader(http.StatusOK)
+	if err := saveCustomScraperGroups(scraperConfig, scrapers); err != nil {
+		log.Error(err)
+		resp.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, flattenCustomScraperGroups(scrapers))
+}
+
+func (i ConfigResource) deleteCustomSite(req *restful.Request, resp *restful.Response) {
+	var r RequestCustomSiteDelete
+	err := req.ReadEntity(&r)
+	if err != nil || strings.TrimSpace(r.Url) == "" {
+		resp.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	target := strings.TrimSuffix(strings.TrimSpace(r.Url), "/")
+
+	scraperConfig, scrapers := customScraperGroups()
+
+	found := false
+	for key, group := range scrapers {
+		kept := group[:0]
+		for _, site := range group {
+			if site.URL == target {
+				found = true
+				continue
+			}
+			kept = append(kept, site)
+		}
+		scrapers[key] = kept
+	}
+
+	if !found {
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	if err := saveCustomScraperGroups(scraperConfig, scrapers); err != nil {
+		log.Error(err)
+		resp.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, flattenCustomScraperGroups(scrapers))
 }
 func (i ConfigResource) saveOptionsStorage(req *restful.Request, resp *restful.Response) {
 	var r RequestSaveOptionsStorage

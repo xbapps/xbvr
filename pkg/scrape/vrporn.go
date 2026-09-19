@@ -180,11 +180,11 @@ func addVRPornScraper(id string, name string, company string, avatarURL string, 
 	}
 
 	if masterSiteId == "" {
-		registerScraper(id, suffixedName, avatarURL, "vrporn.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		reregisterScraper(id, suffixedName, avatarURL, "vrporn.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return VRPorn(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, "")
 		})
 	} else {
-		registerAlternateScraper(id, suffixedName, avatarURL, "vrporn.com", masterSiteId, func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		reregisterAlternateScraper(id, suffixedName, avatarURL, "vrporn.com", masterSiteId, func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return VRPorn(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, masterSiteId)
 		})
 	}

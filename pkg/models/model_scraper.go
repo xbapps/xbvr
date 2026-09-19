@@ -84,6 +84,15 @@ func GetScrapers() []Scraper {
 	return scrapers
 }
 
+func GetScraperByID(id string) (Scraper, bool) {
+	for i := range scrapers {
+		if scrapers[i].ID == id {
+			return scrapers[i], true
+		}
+	}
+	return Scraper{}, false
+}
+
 func RegisterScraper(id string, name string, avatarURL string, domain string, f ScraperFunc, masterSiteId string) {
 	s := Scraper{}
 	s.ID = id
@@ -92,6 +101,27 @@ func RegisterScraper(id string, name string, avatarURL string, domain string, f 
 	s.Domain = domain
 	s.Scrape = f
 	s.MasterSiteId = masterSiteId
+	scrapers = append(scrapers, s)
+}
+
+// ReregisterScraper replaces the entry with the same ID in place, or appends
+// it when absent. Used by custom-site reload so edited bindings take effect
+// without a restart; the startup path registers into an empty list, where
+// this is identical to RegisterScraper.
+func ReregisterScraper(id string, name string, avatarURL string, domain string, f ScraperFunc, masterSiteId string) {
+	s := Scraper{}
+	s.ID = id
+	s.Name = name
+	s.AvatarURL = avatarURL
+	s.Domain = domain
+	s.Scrape = f
+	s.MasterSiteId = masterSiteId
+	for i := range scrapers {
+		if scrapers[i].ID == id {
+			scrapers[i] = s
+			return
+		}
+	}
 	scrapers = append(scrapers, s)
 }
 

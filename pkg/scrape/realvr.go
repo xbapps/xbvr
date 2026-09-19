@@ -24,11 +24,11 @@ func addRealVRScraper(id string, name string, company string, avatarURL string, 
 	siteURL += "/videos/1?order=newest"
 
 	if masterSiteId == "" {
-		registerScraper(id, suffixedName, avatarURL, "realvr.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		reregisterScraper(id, suffixedName, avatarURL, "realvr.com", func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, "", false)
 		})
 	} else {
-		registerAlternateScraper(id, suffixedName, avatarURL, "realvr.com", masterSiteId, func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+		reregisterAlternateScraper(id, suffixedName, avatarURL, "realvr.com", masterSiteId, func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return BadoinkSite(wg, updateSite, knownScenes, out, singleSceneURL, id, siteNameSuffix, company, siteURL, singeScrapeAdditionalInfo, limitScraping, masterSiteId, false)
 		})
 	}
