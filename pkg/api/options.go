@@ -336,7 +336,7 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 	ws.Route(ws.DELETE("/custom-sites").To(i.deleteCustomSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
-	ws.Route(ws.POST("/custom-sites/reload").To(i.reloadCustomSites).
+	ws.Route(ws.POST("/custom-sites/reload").Consumes("*/*").To(i.reloadCustomSites).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Collector Config endpoints"

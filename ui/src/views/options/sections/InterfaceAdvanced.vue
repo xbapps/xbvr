@@ -427,7 +427,7 @@ export default {
     reloadCustomSites () {
       const self = this
       this.reloadingCustomSites = true
-      ky.post('/api/options/custom-sites/reload').json().then((result) => {
+      ky.post('/api/options/custom-sites/reload', { json: {} }).json().then((result) => {
         self.reloadingCustomSites = false
         self.loadCustomSites()
         self.$store.dispatch('optionsSites/load')
