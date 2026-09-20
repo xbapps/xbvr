@@ -50,7 +50,7 @@
             </div>
           </b-field>
           
-          <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5">
+          <b-table :data="data" ref="table" paginated :current-page.sync="currentPage" per-page="5" :default-sort="['_score', 'desc']">
             <b-table-column field="cover_url" :label="$t('Image')" width="120" v-slot="props">
               <vue-load-image>
                 <img slot="image" :src="getImageURL(props.row.cover_url)"/>
@@ -151,9 +151,8 @@ export default {
       this.data = []
       this.queryString = (
         this.file.filename
-          .replace(/\.|_|\+|-/g, ' ').replace(/\s+/g, ' ').trim()
-          .split(' ').filter(isNotCommonWord).join(' ')
-          .replace(/ s /g, '\'s '))
+          .replace(/[._+'’`-]/g, ' ').replace(/\s+/g, ' ').trim()
+          .split(' ').filter(isNotCommonWord).join(' '))
       this.loadData()
     },
     loadData: async function loadData () {
@@ -162,7 +161,8 @@ export default {
 
       const resp = await ky.get('/api/scene/search', {
         searchParams: {
-          q: this.queryString
+          q: this.queryString,
+          fileId: this.toInt(this.file.id)
         },
         timeout: 60000
       }).json()

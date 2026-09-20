@@ -73,12 +73,19 @@ Ask your questions and suggest features on [Discord](https://discord.gg/wdCHXAG)
 
 Make sure you have following installed:
 
-- Go 1.24
+- Go 1.25 or newer (`go.mod` requires 1.25.0, CI builds with 1.26.x)
 - Node.js 22.x
-- Yarn 1.17.x
-- air (run `go install github.com/cosmtrek/air@latest` outside project directory)
+- Yarn 1.x
+- A C compiler — the SQLite driver is cgo-based. On Debian/Ubuntu `sudo apt install build-essential`, on macOS `xcode-select --install`, on Windows a MinGW-w64 toolchain.
+- air (run `go install github.com/air-verse/air@latest` outside project directory)
 
 Once all of the above is installed, running `yarn dev` from project directory launches file-watchers providing livereload for both Go and JavaScript.
+
+To build the binary by hand, cgo and the `json1` build tag are both required:
+
+```
+CGO_ENABLED=1 go build -tags=json1 -o dist/xbvr main.go
+```
 
 ## Development in Gitpod
 
@@ -100,6 +107,27 @@ Ready to get started?
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/xbapps/xbvr)
 
+## Tests
+
+```
+go test -tags=json1 -vet=off ./...
+```
+
+`-tags=json1` is needed for the SQLite driver. `-vet=off` is currently needed because `go test` runs `go vet` first, and several pre-existing vet findings fail the build before any test gets to run.
+
+Scraper tests live in `pkg/scrape`:
+
+- `registry_test.go` runs by default and needs no network. It checks that scraper registration is intact — unique IDs, populated fields, and that every site listed in the bundled `scrapers.json` actually registers a scraper. This catches a site silently disappearing from the UI.
+- `live_test.go` makes real requests to the sites, so it is excluded unless you build with `-tags=scrapelive`. It catches what a site redesign does: selectors stop matching, the scraper emits nothing, and no error is raised anywhere.
+
+```
+export XBVR_SCRAPE_TARGETS=~/xbvr-scrape-targets.json
+go test -tags='json1 scrapelive' -vet=off ./pkg/scrape/ -run TestLiveScrape -v
+```
+
+`XBVR_SCRAPE_TARGETS` points at a JSON file kept outside the repository, listing one `{"scraper": "<id>", "url": "<scene url>"}` object per scraper you want covered. It is deliberately not checked in — the URLs are user-specific, and saved page fixtures would carry scene and performer names into the repo.
+
+If you fix a scraper after a site change, adding a target entry for it is the cheapest way to find out when that site changes again.
 
 ### How To
 
@@ -139,15 +167,15 @@ esc - closes details pane
 #### using Command Line Arguments/Environment Variables
 | Command line parameter | Environment Variable | Type | Description |
 |------------------------|--------------|------|-------------|
-| `--enableLocalStorage` | | boolean | Use local folder to store application data|
+| `--localstorage` | | boolean | Use local folder to store application data|
 |	`--app_dir` | XBVR_APPDIR | String | path to the application directory|
 |	`--cache_dir` | XBVR_CACHEDIR | String | path to the temporary scraper cache directory|
 |	`--imgproxy_dir` | XBVR_IMAGEPROXYDIR | String | path to the imageproxy directory|
 |	`--search_dir` | XBVR_SEARCHDIR | String | path to the Search Index directory|
 |	`--preview_dir` | XBVR_VIDEOPREVIEWDIR | String | path to the Scraper Cache directory|
-|	`--scriptsheatmap_dir` | XBVR_SCRIPTHEATMAPDIR | String| path to the scripts_heatmap directory|
+|	`--scripts_heatmap_dir` | XBVR_SCRIPTHEATMAPDIR | String| path to the scripts_heatmap directory|
 |	`--myfiles_dir` | XBVR_MYFILESDIR | String | path to the myfiles directory for serving users own content (eg images|
-|	`--databaseurl` | DATABASE_URL | String | override default database path|
+|	`--database_url` | DATABASE_URL | String | override default database path|
 |	`--web_port` | XBVR_WEB_PORT | Int | override default Web Page port 9999|
 |	`--ws_addr` | XBVR_WS_ADDR | String | override default Websocket address from the default 0.0.0.0:9998|
 |	`--db_connection_pool_size` | DB_CONNECTION_POOL_SIZE | Int | sets the connection pool size for mariadb databases|
