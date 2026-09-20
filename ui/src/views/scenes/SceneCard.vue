@@ -9,6 +9,10 @@
         <video v-if="preview && item.has_preview" :src="`/api/dms/preview/${item.scene_id}`" autoplay loop></video>
         <div class="overlay align-bottom-left">
           <div style="padding: 5px">
+            <span class="promoted-tags" :class="promotedSizeClass" ref="promotedTags">
+              <b-tag type="is-primary" v-for="(tag, idx) in promotedTags" :key="tag.id" class="promoted-tag" v-show="idx < visiblePromotedCount"><b-icon pack="mdi" icon="label" size="is-small" style="margin-right:0.3em"/>{{ tag.name }}</b-tag>
+              <b-tag v-if="morePromotedCount > 0" type="is-primary" class="promoted-tag promoted-more" :title="hiddenPromotedTags.map(t => t.name).join(', ')"><b-icon pack="mdi" icon="label" size="is-small" style="margin-right:0.3em"/>+{{morePromotedCount}}</b-tag>
+            </span>
             <b-tag v-if="item.is_watched && !this.$store.state.optionsWeb.web.sceneWatched">
               <b-icon pack="mdi" icon="eye" size="is-small"/>
             </b-tag>
@@ -109,6 +113,8 @@ export default {
       parseISO,
       alternateSources: [],
       stashLinkExists: false,
+      visiblePromotedCount: 999,
+      promotedResizeTimer: null,
     }
   },
   computed: {
@@ -174,6 +180,34 @@ export default {
         return "cover"
       }
     },
+    promotedTags () {
+      if (this.item.tags == null) { return [] }
+      return this.item.tags.filter(t => t.is_promoted)
+    },
+    promotedSizeClass () {
+      switch (this.$store.state.sceneList.filters.cardSize) {
+        case '1': return 'promoted-size-xs'
+        case '2': return 'promoted-size-s'
+        case '3': return 'promoted-size-m'
+        case '4': return 'promoted-size-l'
+        default:  return 'promoted-size-s'
+      }
+    },
+    promotedMaxWidth () {
+      switch (this.$store.state.sceneList.filters.cardSize) {
+        case '1': return 80
+        case '2': return 130
+        case '3': return 200
+        case '4': return 280
+        default:  return 130
+      }
+    },
+    morePromotedCount () {
+      return Math.max(0, this.promotedTags.length - this.visiblePromotedCount)
+    },
+    hiddenPromotedTags () {
+      return this.promotedTags.slice(this.visiblePromotedCount)
+    },
     async getAlternateSceneSourcesWithTitles() {
       this.stashLinkExists = false
       try {
@@ -208,7 +242,76 @@ export default {
       }
     }
   },
+  watch: {
+    promotedTags () {
+      this.measurePromotedTags()
+    },
+    '$store.state.sceneList.filters.cardSize' () {
+      this.measurePromotedTags()
+    }
+  },
+  mounted () {
+    this.measurePromotedTags()
+    window.addEventListener('resize', this.onPromotedResize)
+  },
+  beforeDestroy () {
+    window.removeEventListener('resize', this.onPromotedResize)
+  },
   methods: {
+    onPromotedResize () {
+      if (this.promotedResizeTimer) { clearTimeout(this.promotedResizeTimer) }
+      this.promotedResizeTimer = setTimeout(() => this.measurePromotedTags(), 100)
+    },
+    measurePromotedTags () {
+      this.$nextTick(() => this.measurePromotedPass(0))
+    },
+    measurePromotedPass (iteration) {
+      if (iteration > 5) { return }
+      const span = this.$refs.promotedTags
+      if (!span) { this.visiblePromotedCount = 0; return }
+      const tags = Array.from(span.querySelectorAll('.promoted-tag')).filter(el => !el.classList.contains('promoted-more'))
+      if (tags.length === 0) { this.visiblePromotedCount = 0; return }
+      const card = span.closest('.card-image')
+      if (!card) { return }
+      const available = Math.min(this.promotedMaxWidth, card.clientWidth - 10)
+      if (available <= 0) { return }
+      span.style.maxWidth = available + 'px'
+
+      const hidden = tags.map(t => t.style.display)
+      tags.forEach(t => { t.style.display = '' })
+      const widths = tags.map(t => t.getBoundingClientRect().width)
+      const gaps = []
+      for (let i = 0; i < tags.length - 1; i++) {
+        gaps.push(tags[i + 1].getBoundingClientRect().left - tags[i].getBoundingClientRect().right)
+      }
+      const more = span.querySelector('.promoted-more')
+      const moreW = more ? more.getBoundingClientRect().width : 47
+      const moreGap = more ? (more.getBoundingClientRect().left - tags[tags.length - 1].getBoundingClientRect().right) : 4
+      tags.forEach((t, i) => { t.style.display = hidden[i] })
+
+      const prefixW = [0]
+      for (const w of widths) { prefixW.push(prefixW[prefixW.length - 1] + w) }
+      const prefixG = [0]
+      for (const g of gaps) { prefixG.push(prefixG[prefixG.length - 1] + g) }
+      const totalW = prefixW[tags.length] + prefixG[tags.length - 1]
+      let count
+      if (totalW <= available) {
+        count = tags.length
+      } else {
+        count = 0
+        if (moreW <= available) {
+          for (let k = 1; k <= tags.length; k++) {
+            const required = prefixW[k] + (k >= 2 ? prefixG[k - 2] : 0) + moreGap + moreW
+            if (required > available) { break }
+            count = k
+          }
+        }
+      }
+      if (count !== this.visiblePromotedCount) {
+        this.visiblePromotedCount = count
+        this.$nextTick(() => this.measurePromotedPass(iteration + 1))
+      }
+    },
     getImageURL (u) {
         if (u.startsWith('http') == false) {
         return u
@@ -323,6 +426,28 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .promoted-tags {
+    display: inline-block;
+    vertical-align: middle;
+    white-space: nowrap;
+    pointer-events: auto;
+  }
+
+  .promoted-tags.promoted-size-xs { max-width: 80px; }
+  .promoted-tags.promoted-size-s  { max-width: 130px; }
+  .promoted-tags.promoted-size-m  { max-width: 200px; }
+  .promoted-tags.promoted-size-l  { max-width: 280px; }
+
+  .promoted-tag {
+    font-weight: bold;
+    margin-right: 0.2em;
+    margin-bottom: 0.2em;
+  }
+
+  .promoted-more {
+    opacity: 0.65;
   }
 
 .heatmapFunscript {

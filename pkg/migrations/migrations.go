@@ -847,6 +847,23 @@ func Migrate(migrateTo string) {
 				return tx.AutoMigrate(File{}).Error
 			},
 		},
+		{
+			ID: "0088-tag-is-promoted",
+			Migrate: func(tx *gorm.DB) error {
+				type Tag struct {
+					IsPromoted bool
+				}
+				return tx.AutoMigrate(Tag{}).Error
+			},
+		},
+		{
+			ID: "0089-add-scene-tags-tag-id-index",
+			Migrate: func(tx *gorm.DB) error {
+				// Add index on tag_id to improve tag scene count query performance
+				// This prevents timeout on Options Tags page for users with large databases
+				return tx.Table("scene_tags").AddIndex("idx_scene_tags_tag_id", "tag_id").Error
+			},
+		},
 
 		// ===============================================================================================
 		// Put DB Schema migrations above this line and migrations that rely on the updated schema below

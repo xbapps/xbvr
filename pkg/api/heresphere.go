@@ -700,9 +700,10 @@ func (i HeresphereResource) getHeresphereScene(req *restful.Request, resp *restf
 
 	if scene.IsScripted {
 		title = scene.GetFunscriptTitle()
-		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
-			thumbnailURL = getProto(req) + "://" + req.Request.Host + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
-		}
+	}
+
+	if (scene.IsScripted && config.Config.Interfaces.DeoVR.RenderHeatmaps) || scene.HasPromotedTags() {
+		thumbnailURL = getProto(req) + "://" + req.Request.Host + "/imghs/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
 	}
 
 	if scene.Watchlist {
