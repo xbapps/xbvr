@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/blevesearch/bleve/v2"
@@ -150,6 +151,9 @@ func (i SceneResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/edit/{scene-id}").To(i.editScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
+
+	ws.Route(ws.POST("/filenames/{scene-id}").To(i.appendSceneFilenames).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/toggle").To(i.toggleList).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -978,6 +982,98 @@ func (i SceneResource) editScene(req *restful.Request, resp *restful.Response) {
 
 		resp.WriteHeaderAndEntity(http.StatusOK, scene)
 	}
+}
+
+type RequestAppendSceneFilenames struct {
+	Filenames []string `json:"filenames"`
+}
+
+// appendFilenamesMutex serializes additive filename writes so concurrent
+// appends cannot interleave their read-modify-write and lose entries.
+var appendFilenamesMutex sync.Mutex
+
+// mergeSceneFilenames merges names into the JSON-encoded filenames array,
+// skipping blanks and exact-match duplicates. It returns the merged list and
+// whether anything was added. Uses encoding/json like the scan matcher write
+// path so escaping stays identical.
+func mergeSceneFilenames(existingJSON string, names []string) (merged []string, changed bool, err error) {
+	merged = []string{}
+	if strings.TrimSpace(existingJSON) != "" {
+		if err := json.Unmarshal([]byte(existingJSON), &merged); err != nil {
+			return nil, false, err
+		}
+	}
+	for _, name := range names {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+		dup := false
+		for _, e := range merged {
+			if e == name {
+				dup = true
+				break
+			}
+		}
+		if !dup {
+			merged = append(merged, name)
+			changed = true
+		}
+	}
+	return merged, changed, nil
+}
+
+func (i SceneResource) appendSceneFilenames(req *restful.Request, resp *restful.Response) {
+	sceneId, err := strconv.Atoi(req.PathParameter("scene-id"))
+	if err != nil {
+		resp.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var r RequestAppendSceneFilenames
+	if err := req.ReadEntity(&r); err != nil {
+		resp.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if r.Filenames == nil {
+		resp.WriteHeaderAndEntity(http.StatusBadRequest, map[string]string{"error": "filenames is required"})
+		return
+	}
+
+	appendFilenamesMutex.Lock()
+	defer appendFilenamesMutex.Unlock()
+
+	var scene models.Scene
+	db, _ := models.GetDB()
+	defer db.Close()
+	if err := scene.GetIfExistByPK(uint(sceneId)); err != nil {
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	merged, changed, err := mergeSceneFilenames(scene.FilenamesArr, r.Filenames)
+	if err != nil {
+		log.Error(err)
+		resp.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if changed {
+		encoded, err := json.Marshal(merged)
+		if err != nil {
+			log.Error(err)
+			resp.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		scene.FilenamesArr = string(encoded)
+		scene.Save()
+		models.AddAction(scene.SceneID, "edit", "filenames_arr", scene.FilenamesArr)
+
+		scenes := []models.Scene{scene}
+		tasks.IndexScenes(&scenes)
+	}
+
+	resp.WriteHeaderAndEntity(http.StatusOK, merged)
 }
 
 func getTagDifferences(arr1, arr2 []models.Tag) []string {
