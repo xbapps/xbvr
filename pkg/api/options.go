@@ -36,6 +36,21 @@ type NewVolumeRequest struct {
 	Token string `json:"token"`
 }
 
+// resolveVolumePath validates a local storage path, returning its absolute
+// form. Any stat failure (missing path, not a directory, permission denied)
+// is an error: callers must not touch the FileInfo when err != nil, it is
+// nil for every failure mode except a successful stat of a non-directory.
+func resolveVolumePath(path string) (string, error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+	if !fi.IsDir() {
+		return "", errors.New("path is not a directory")
+	}
+	return filepath.Abs(path)
+}
+
 type VersionCheckResponse struct {
 	CurrentVersion string `json:"current_version"`
 	LatestVersion  string `json:"latest_version"`
@@ -644,13 +659,12 @@ func (i ConfigResource) addStorage(req *restful.Request, resp *restful.Response)
 
 	switch r.Type {
 	case "local":
-		if fi, err := os.Stat(r.Path); os.IsNotExist(err) || !fi.IsDir() {
+		path, err := resolveVolumePath(r.Path)
+		if err != nil {
 			tlog.Error("Path does not exist or is not a directory")
 			APIError(req, resp, 400, errors.New("Path does not exist or is not a directory"))
 			return
 		}
-
-		path, _ := filepath.Abs(r.Path)
 
 		var vol []models.Volume
 		db.Where(&models.Volume{Path: path}).Find(&vol)
