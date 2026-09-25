@@ -130,7 +130,7 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 				if site.ID == scraper.ID {
 					wg.Add(1)
 					go func(scraper models.Scraper) {
-						scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, site.LimitScraping)
+						runScraperSafe(&wg, scraper, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, site.LimitScraping)
 						var site models.Site
 						err := site.GetIfExist(scraper.ID)
 						if err != nil {
@@ -152,7 +152,9 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 			for _, scraper := range scrapers {
 				if toScrape == scraper.ID {
 					wg.Add(1)
-					go scraper.Scrape(&wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, false)
+					go func(scraper models.Scraper) {
+						runScraperSafe(&wg, scraper, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, false)
+					}(scraper)
 				}
 			}
 		} else {
@@ -162,6 +164,19 @@ func runScrapers(knownScenes []string, toScrape string, updateSite bool, collect
 
 	wg.Wait(0)
 	return nil
+}
+
+// runScraperSafe runs one scraper, converting a panic (bad page content, a
+// library bug — see #2279) into a logged skip so a single site can never
+// kill the whole server. wg.Done stays deferred by Scrape itself, which runs
+// during unwind, so the batch counter is unaffected.
+func runScraperSafe(wg *models.ScrapeWG, scraper models.Scraper, updateSite bool, knownScenes []string, collectedScenes chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("scraper %s panicked and was skipped: %v", scraper.ID, r)
+		}
+	}()
+	scraper.Scrape(wg, updateSite, knownScenes, collectedScenes, singleSceneURL, singeScrapeAdditionalInfo, limitScraping)
 }
 
 func sceneSliceAppender(collectedScenes *[]models.ScrapedScene, scenes <-chan models.ScrapedScene) {
