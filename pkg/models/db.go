@@ -35,6 +35,28 @@ func GetDBConn() *dburl.URL {
 	return dbConn
 }
 
+// sqliteWriteDSN appends per-connection pragmas so concurrent scrapers ride
+// out lock contention instead of dying with "database is locked" (#2139).
+// The driver's default 5s busy_timeout is too short when dozens of scrapers
+// pile up, and delete-mode readers block the writer wholesale; WAL removes
+// the reader/writer conflict and 30s covers writer queues. mattn/go-sqlite3
+// applies these to every pooled connection, unlike PRAGMAs issued after open.
+func sqliteWriteDSN(dsn string) string {
+	sep := "?"
+	if strings.Contains(dsn, "?") {
+		sep = "&"
+	}
+	return dsn + sep + "_busy_timeout=30000&_journal_mode=WAL&_synchronous=NORMAL"
+}
+
+func openDB() (*gorm.DB, error) {
+	dsn := dbConn.DSN
+	if dbConn.Driver == "sqlite3" {
+		dsn = sqliteWriteDSN(dsn)
+	}
+	return gorm.Open(dbConn.Driver, dsn)
+}
+
 func SaveWithRetry(db *gorm.DB, i interface{}) error {
 	var err error
 	err = retry.Do(
@@ -45,6 +67,10 @@ func SaveWithRetry(db *gorm.DB, i interface{}) error {
 			}
 			return nil
 		},
+		retry.Attempts(30),
+		retry.Delay(time.Second),
+		retry.MaxDelay(15*time.Second),
+		retry.DelayType(retry.BackOffDelay),
 	)
 
 	if err != nil {
@@ -64,7 +90,7 @@ func GetDB() (*gorm.DB, error) {
 
 	err = retry.Do(
 		func() error {
-			db, err = gorm.Open(dbConn.Driver, dbConn.DSN)
+			db, err = openDB()
 			db.LogMode(common.EnvConfig.DebugSQL)
 			if err != nil {
 				return err
@@ -92,7 +118,7 @@ func GetCommonDB() (*gorm.DB, error) {
 	}
 	err = retry.Do(
 		func() error {
-			commonConnection, err = gorm.Open(dbConn.Driver, dbConn.DSN)
+			commonConnection, err = openDB()
 			commonConnection.LogMode(common.EnvConfig.DebugSQL)
 			commonConnection.DB().SetConnMaxIdleTime(4 * time.Minute)
 			if common.DBConnectionPoolSize > 0 {
