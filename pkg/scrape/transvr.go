@@ -8,7 +8,6 @@ import (
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
-	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -59,10 +58,8 @@ func TransVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out cha
 		// Synopsis
 		sc.Synopsis = strings.TrimSpace(e.ChildText(`div.trailerpage_description p`))
 
-		// Date
-		dateString := strings.Replace(e.ChildText(`div.set_meta`), "Added ", "", -1)
-		tmpDate, _ := goment.New(dateString, "MMMM D, YYYY")
-		sc.Released = tmpDate.Format("YYYY-MM-DD")
+		// Date — guarded: malformed page content must yield "" (see #2279)
+		sc.Released = parseGroobyDate(e.ChildText(`div.set_meta`))
 
 		// Duration
 		r := regexp.MustCompile(`(?:(\d{2}):)?(\d{2}):(\d{2})`)
