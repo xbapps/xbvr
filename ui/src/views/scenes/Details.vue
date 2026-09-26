@@ -854,6 +854,7 @@ watch:{
         }
       }).json().then(data => {
           this.$store.commit('overlay/showDetails', { scene: data })
+          this.$store.commit('sceneList/updateScene', data)
       })
     },
     getImageURL (u, size) {

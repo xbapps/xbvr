@@ -505,6 +505,21 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 
 	title := scene.Title
 
+	// Funscript speed in the title, plus heatmap thumbnails (upstream #622).
+	// The speed prefix costs DeoVR's local-script matching, so it stays
+	// behind the FunscriptSpeeds option; heatmaps behind RenderHeatmaps.
+	thumbnailURL := scene.CoverURL
+	if scene.IsScripted {
+		if config.Config.Interfaces.DeoVR.FunscriptSpeeds {
+			title = fmt.Sprintf("%d - %s", scene.FunscriptSpeed, title)
+		} else {
+			title = scene.GetFunscriptTitle()
+		}
+		if config.Config.Interfaces.DeoVR.RenderHeatmaps {
+			thumbnailURL = session.DeoRequestHost + "/imghm/" + fmt.Sprint(scene.ID) + "/" + strings.Replace(scene.CoverURL, "://", ":/", -1)
+		}
+	}
+
 	// Passthrough
 	var ckdata map[string]interface{}
 	//	nochromaKey := `{"enabled":false,"hasAlpha":false,"h":0,"opacity":0,"s":0,"threshold":0,"v":0}`
@@ -551,7 +566,7 @@ func (i DeoVRResource) getDeoScene(req *restful.Request, resp *restful.Response)
 		RatingAvg:        scene.StarRating,
 		FullVideoReady:   true,
 		FullAccess:       true,
-		ThumbnailURL:     scene.CoverURL,
+		ThumbnailURL:     thumbnailURL,
 		StereoMode:       stereoMode,
 		Is3D:             true,
 		ScreenType:       screenType,

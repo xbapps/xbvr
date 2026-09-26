@@ -169,6 +169,20 @@ func RescanVolumes(id int) {
 			}
 		}
 
+		tlog.Infof("Generating funscript speeds")
+		GenerateFunscriptSpeeds(tlog)
+
+		// Update scene statuses
+		tlog.Infof("Update status of Scenes")
+		db.Model(&models.Scene{}).Find(&scenes)
+
+		for i := range scenes {
+			scenes[i].UpdateStatus()
+			if (i % 70) == 0 {
+				tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+			}
+		}
+
 		tlog.Infof("Generating heatmaps")
 
 		GenerateHeatmaps(tlog)

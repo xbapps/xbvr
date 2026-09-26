@@ -24,7 +24,9 @@ const defaultFilterState = {
   cuepoint: [],
   attributes: [],
   volume: 0,
-  sort: 'release_desc'
+  sort: 'release_desc',
+  minFunscript: null,
+  maxFunscript: null
 }
 
 const state = {

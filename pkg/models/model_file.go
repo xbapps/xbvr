@@ -40,6 +40,7 @@ type File struct {
 	HasAlpha             bool    `json:"has_alpha" xbvrbackup:"has_alpha"`
 
 	HasHeatmap          bool `json:"has_heatmap" xbvrbackup:"-"`
+	FunscriptSpeed      int  `json:"funscript_speed" gorm:"default:0" xbvrbackup:"-"`
 	IsSelectedScript    bool `json:"is_selected_script" xbvrbackup:"is_selected_script"`
 	IsExported          bool `json:"is_exported" xbvrbackup:"-"`
 	RefreshHeatmapCache bool `json:"refresh_heatmap_cache" xbvrbackup:"-"`
