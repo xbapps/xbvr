@@ -99,6 +99,7 @@ type RequestSaveOptionsDeoVR struct {
 	RemoteEnabled           bool   `json:"remote_enabled"`
 	TrackWatchTime          bool   `json:"track_watch_time"`
 	RenderHeatmaps          bool   `json:"render_heatmaps"`
+	FunscriptSpeeds         bool   `json:"funscript_speeds"`
 	AllowFileDeletes        bool   `json:"allow_file_deletes"`
 	AllowRatingUpdates      bool   `json:"allow_rating_updates"`
 	AllowFavoriteUpdates    bool   `json:"allow_favorite_updates"`
@@ -578,6 +579,7 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.DeoVR.Enabled = r.Enabled
 	config.Config.Interfaces.DeoVR.AuthEnabled = r.AuthEnabled
 	config.Config.Interfaces.DeoVR.RenderHeatmaps = r.RenderHeatmaps
+	config.Config.Interfaces.DeoVR.FunscriptSpeeds = r.FunscriptSpeeds
 	config.Config.Interfaces.DeoVR.RemoteEnabled = r.RemoteEnabled
 	config.Config.Interfaces.DeoVR.TrackWatchTime = r.TrackWatchTime
 	config.Config.Interfaces.DeoVR.Username = r.Username

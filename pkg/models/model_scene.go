@@ -88,6 +88,7 @@ type Scene struct {
 	IsAccessible   bool            `json:"is_accessible" gorm:"default:false" xbvrbackup:"-"`
 	IsWatched      bool            `json:"is_watched" gorm:"default:false" xbvrbackup:"is_watched"`
 	IsScripted     bool            `json:"is_scripted" gorm:"default:false" xbvrbackup:"-"`
+	FunscriptSpeed int             `json:"funscript_speed" gorm:"default:0" xbvrbackup:"-"`
 	Cuepoints      []SceneCuepoint `json:"cuepoints" xbvrbackup:"-"`
 	History        []History       `json:"history" xbvrbackup:"-"`
 	AddedDate      time.Time       `json:"added_date" xbvrbackup:"added_date"`
@@ -271,6 +272,37 @@ func (o *Scene) GetScriptFilesSorted(sort string) ([]File, error) {
 	return files, nil
 }
 
+func (o *Scene) GetScriptSpeed() (int, error) {
+	fmt.Printf("getting script speed for %s", o.Title)
+	files, err := o.GetScriptFiles()
+	if err != nil {
+		return 0, err
+	}
+	if len(files) == 0 {
+		return 0, fmt.Errorf("no scripts found for %s", o.Title)
+	}
+	return files[0].FunscriptSpeed, nil
+}
+
+func (o *Scene) GetScriptSpeedFromFiles(files []File) int {
+	var newestScriptDate time.Time
+	var newestScript File
+
+	for j := range files {
+		if files[j].Type == "script" {
+			if files[j].Exists() && files[j].IsSelectedScript {
+				return files[j].FunscriptSpeed
+			}
+			if files[j].Exists() && (files[j].CreatedTime.After(newestScriptDate) || newestScriptDate.IsZero()) {
+				newestScriptDate = files[j].CreatedTime
+				newestScript = files[j]
+			}
+		}
+	}
+
+	return newestScript.FunscriptSpeed
+}
+
 func (o *Scene) GetHSPFiles() ([]File, error) {
 	commonDb, _ := GetCommonDB()
 
@@ -313,6 +345,7 @@ func (o *Scene) UpdateStatus() {
 
 	if len(files) > 0 {
 		var newestFileDate time.Time
+		var newestScriptDate time.Time
 		var totalFileSize int64
 		anyVideoAccessible := false
 
@@ -324,6 +357,10 @@ func (o *Scene) UpdateStatus() {
 
 				if files[j].Exists() && (files[j].CreatedTime.After(newestFileDate) || newestFileDate.IsZero()) {
 					newestFileDate = files[j].CreatedTime
+				}
+
+				if files[j].Exists() && (files[j].CreatedTime.After(newestScriptDate) || newestScriptDate.IsZero()) {
+					newestScriptDate = files[j].CreatedTime
 				}
 			}
 
@@ -352,6 +389,12 @@ func (o *Scene) UpdateStatus() {
 
 		if scripts == 0 && o.IsScripted {
 			o.IsScripted = false
+			o.FunscriptSpeed = 0
+			changed = true
+		}
+
+		if !newestScriptDate.Equal(o.AddedDate) || o.FunscriptSpeed == 0 && o.IsScripted {
+			o.FunscriptSpeed = o.GetScriptSpeedFromFiles(files)
 			changed = true
 		}
 
@@ -393,6 +436,7 @@ func (o *Scene) UpdateStatus() {
 
 		if o.IsScripted {
 			o.IsScripted = false
+			o.FunscriptSpeed = 0
 			changed = true
 		}
 	}
@@ -681,6 +725,8 @@ type RequestSceneList struct {
 	Volume       optional.Int      `json:"volume"`
 	Released     optional.String   `json:"releaseMonth"`
 	Sort         optional.String   `json:"sort"`
+	MinFunscript optional.Int      `json:"minFunscript"`
+	MaxFunscript optional.Int      `json:"maxFunscript"`
 }
 
 type ResponseSceneList struct {
@@ -784,6 +830,14 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 
 	if r.IsWatched.Present() {
 		tx = tx.Where("is_watched = ?", r.IsWatched.OrElse(true))
+	}
+
+	if r.MinFunscript.Present() {
+		tx = tx.Where("funscript_speed > ?", r.MinFunscript.OrElse(0))
+	}
+
+	if r.MaxFunscript.Present() {
+		tx = tx.Where("funscript_speed < ?", r.MaxFunscript.OrElse(0))
 	}
 
 	if r.Volume.Present() && r.Volume.OrElse(0) != 0 {
@@ -1215,6 +1269,10 @@ func queryScenes(db *gorm.DB, r RequestSceneList) (*gorm.DB, *gorm.DB) {
 		tx = tx.Order("scene_id desc")
 	case "site_asc":
 		tx = tx.Order("scenes.site")
+	case "funscript_speed_desc":
+		tx = tx.Order("funscript_speed desc")
+	case "funscript_speed_asc":
+		tx = tx.Order("funscript_speed asc")
 	case "random":
 		if dbConn.Driver == "mysql" {
 			tx = tx.Order("rand()")

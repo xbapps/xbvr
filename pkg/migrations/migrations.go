@@ -22,6 +22,8 @@ import (
 	"github.com/tidwall/gjson"
 	"gopkg.in/gormigrate.v1"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
@@ -2385,6 +2387,50 @@ func Migrate(migrateTo string) {
 				// Add index on scraper_id to improve scene count query performance
 				// This prevents timeout on Scrapers page for users with large databases
 				return tx.Table("scenes").AddIndex("idx_scenes_scraper_id", "scraper_id").Error
+			},
+		},
+		{
+			// Funscript speed columns (upstream #622). Numbered after the
+			// current tip (the PR's 0028/0029 slots are long taken).
+			ID: "0088-file-funscript-speed",
+			Migrate: func(tx *gorm.DB) error {
+				type File struct {
+					FunscriptSpeed int `json:"funscript_speed" gorm:"default:0"`
+				}
+				err := tx.AutoMigrate(File{}).Error
+				if err != nil {
+					return err
+				}
+				tlog := common.Log.WithFields(logrus.Fields{"task": "migrate"})
+				tasks.GenerateFunscriptSpeeds(tlog)
+				return nil
+			},
+		},
+		{
+			ID: "0089-scene-funscript-speed",
+			Migrate: func(tx *gorm.DB) error {
+				type Scene struct {
+					FunscriptSpeed int `json:"funscript_speed" gorm:"default:0"`
+				}
+				err := tx.AutoMigrate(Scene{}).Error
+				if err != nil {
+					return err
+				}
+
+				var scenes []models.Scene
+
+				tx.Model(&models.Scene{}).Find(&scenes)
+
+				tlog := common.Log.WithFields(logrus.Fields{"task": "migrate"})
+
+				for i := range scenes {
+					scenes[i].UpdateStatus()
+					if (i % 70) == 0 {
+						tlog.Infof("Update status of Scenes (%v/%v)", i+1, len(scenes))
+					}
+				}
+
+				return nil
 			},
 		},
 	}
