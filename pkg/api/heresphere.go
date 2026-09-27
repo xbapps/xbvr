@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	restfulspec "github.com/emicklei/go-restful-openapi/v2"
@@ -795,6 +796,7 @@ func ProcessHeresphereUpdates(scene *models.Scene, requestData HereSphereAuthReq
 	}
 	if requestData.Rating != nil && *requestData.Rating != scene.StarRating && config.Config.Interfaces.Heresphere.AllowRatingUpdates {
 		scene.StarRating = *requestData.Rating
+		scene.StarRatingUpdatedAt = time.Now()
 		scene.Save()
 	}
 

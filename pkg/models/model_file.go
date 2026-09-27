@@ -39,6 +39,17 @@ type File struct {
 	VideoProjection      string  `json:"projection" xbvrbackup:"projection"`
 	HasAlpha             bool    `json:"has_alpha" xbvrbackup:"has_alpha"`
 
+	// No-reference visual quality (median native-resolution Laplacian edge-energy
+	// over frames sampled every 5 min), computed by pkg/recommend for files that
+	// enter the recommendation lists. Higher = crisper/more detail.
+	VisualQuality           float64   `json:"visual_quality" gorm:"default:0" xbvrbackup:"-"`
+	VisualQualitySamples    int       `json:"visual_quality_samples" gorm:"default:0" xbvrbackup:"-"`
+	VisualQualityComputedAt time.Time `json:"visual_quality_computed_at" xbvrbackup:"-"`
+
+	// Visual embedding (CNN descriptor of one frame), used as learned-ranker features.
+	VisualEmbedding   []byte    `json:"-" xbvrbackup:"-"`
+	VisualEmbeddingAt time.Time `json:"-" xbvrbackup:"-"`
+
 	HasHeatmap          bool `json:"has_heatmap" xbvrbackup:"-"`
 	IsSelectedScript    bool `json:"is_selected_script" xbvrbackup:"is_selected_script"`
 	IsExported          bool `json:"is_exported" xbvrbackup:"-"`
