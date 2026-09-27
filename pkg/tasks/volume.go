@@ -281,7 +281,7 @@ func scanLocalVolume(vol models.Volume, db *gorm.DB, tlog *logrus.Entry) {
 
 			ffdata, err := ffprobe.GetProbeData(path, time.Second*5)
 			if err != nil {
-				tlog.Error("Error running ffprobe", path, err)
+				tlog.Errorf("Error running ffprobe on %s, error: %s", path, err)
 			} else {
 				vs := ffdata.GetFirstVideoStream()
 				if vs == nil {
