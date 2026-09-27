@@ -26,7 +26,7 @@
     </div>
     <b-table :data="scraperList" ref="scraperTable">
       <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="80" sortable>
-          <span><b-switch v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
+          <span><b-switch :key="props.row.id" v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
       </b-table-column>
       <b-table-column field="icon" width="50" v-slot="props" cell-class="narrow">
             <span class="image is-32x32">
@@ -59,17 +59,17 @@
       </b-table-column>
       <b-table-column field="limit_scraping" :label="$t('Limit Scraping')" v-slot="props" width="60" sortable>
         <b-tooltip class="is-info" :label="$t('Limit scraping to newest scenes on the website. Turn off if you are missing scenes.')" :delay="250" >
-          <span><b-switch v-model ="props.row.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: props.row.id})"/></span>
+          <span><b-switch :key="props.row.id" v-model ="props.row.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: props.row.id})"/></span>
         </b-tooltip>
       </b-table-column>
       <b-table-column field="subscribed" :label="$t('Subscribed')" v-slot="props" width="60" sortable>
         <b-tooltip class="is-info" :label="$t('Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter')" :delay="250" >
-          <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
+          <span v-if="props.row.master_site_id==''"><b-switch :key="props.row.id" v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
         </b-tooltip>
       </b-table-column>
       <b-table-column field="scrape_stash" :label="$t('Scrape Stash')" v-slot="props" width="60" sortable>
         <b-tooltip class="is-info" :label="$t('Enables scraping Stashdb for Actors')" :delay="250" >
-          <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.scrape_stash" @input="$store.dispatch('optionsSites/toggleScrapeStash', {id: props.row.id})"/></span>
+          <span v-if="props.row.master_site_id==''"><b-switch :key="props.row.id" v-model ="props.row.scrape_stash" @input="$store.dispatch('optionsSites/toggleScrapeStash', {id: props.row.id})"/></span>
         </b-tooltip>
       </b-table-column>
       <b-table-column field="scene_count" :label="$t('Scenes')" v-slot="props" width="40" sortable numeric>
