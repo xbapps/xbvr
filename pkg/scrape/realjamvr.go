@@ -39,6 +39,7 @@ func RealJamSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		// PornCorn sources the scene_id from the trailer URL. RealJam sources the scene_id from the trailer data-id
 		trailerId := e.ChildAttr(`div.ms-5`, "data-id")
 		sc.SceneID = slugify.Slugify(sc.Site) + "-" + trailerId
+		sc.SiteID = trailerId
 
 		// trailer details
 		sc.TrailerType = "scrape_html"
@@ -47,20 +48,15 @@ func RealJamSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 		sc.TrailerSrc = string(strParams)
 
 		// Cast
-		// RealJamVR & PornCorn web code split
+		// Both sites share the same template: cast links are direct children of the
+		// "Starring:" block (div.mb-1). The old PornCorn selector, div.scene-view > a,
+		// matched nothing because the anchors are nested inside .mb-1, which silently
+		// dropped the whole cast.
 		sc.ActorDetails = make(map[string]models.ActorDetails)
-
-		if scraperID == "realjamvr" {
-			e.ForEach(`div.mb-1 > a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
-				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-				sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
-			})
-		} else {
-			e.ForEach(`div.scene-view > a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
-				sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
-				sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
-			})
-		}
+		e.ForEach(`div.mb-1 > a[href^='/actor/']`, func(id int, e *colly.HTMLElement) {
+			sc.Cast = append(sc.Cast, strings.TrimSpace(e.Text))
+			sc.ActorDetails[strings.TrimSpace(e.Text)] = models.ActorDetails{Source: sc.ScraperID + " scrape", ProfileUrl: e.Request.AbsoluteURL(e.Attr("href"))}
+		})
 		// Released
 		e.ForEach(`.bi-calendar3`, func(id int, e *colly.HTMLElement) {
 			p := e.DOM.Parent().Next()

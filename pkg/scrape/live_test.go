@@ -16,6 +16,13 @@
 //	  {"scraper": "povr-single_scene", "url": "https://.../vr-porn/<slug>/", "skipCast": true}
 //	]
 //
+// RealJamVR and PornCornVR both run through the same scraper function (RealJamSite),
+// so a single template change breaks both at once - it is cheap to carry one target
+// for each and catches cast regressions like the 2025 div.scene-view > a selector bug:
+//
+//	  {"scraper": "realjamvr", "url": "https://realjamvr.com/scene/<slug>/"},
+//	  {"scraper": "porncornvr", "url": "https://porncornvr.com/scene/<slug>/"},
+//
 // What this catches is the failure mode a site redesign produces: every selector stops
 // matching, the scraper emits nothing, and no error is raised anywhere. Assertions stay
 // deliberately shape-based (non-empty, plausible range) rather than comparing to exact
