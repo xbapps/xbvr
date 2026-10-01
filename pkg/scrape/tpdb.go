@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/models"
 )
@@ -29,7 +28,7 @@ func ScrapeTPDB(knownScenes []string, out *[]models.ScrapedScene, apiToken strin
 	sceneType := subMatches[1] // "scenes" or "jav"
 	sceneSlug := subMatches[2] // the title or identifier
 
-	r, _ := resty.New().R().
+	r, _ := NewRestyClient().R().
 		SetAuthToken(apiToken).
 		Get(fmt.Sprintf("https://api.theporndb.net/%s/%s", sceneType, sceneSlug))
 

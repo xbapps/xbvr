@@ -27,7 +27,7 @@ func FuckPassVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out 
 	sceneCollector := createCollector("www.fuckpassvr.com")
 	siteCollector := createCollector("www.fuckpassvr.com")
 
-	client := resty.New()
+	client := NewRestyClient()
 	client.SetHeader("User-Agent", UserAgent)
 	client.SetTimeout(5 * time.Second)
 	warmBase := imgProxyBase()

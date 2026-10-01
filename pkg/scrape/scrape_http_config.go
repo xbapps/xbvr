@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -48,6 +49,19 @@ func SetupHtmlRequest(kvKey string, req *http.Request) *http.Request {
 	}
 	return req
 }
+
+// NewRestyClient returns a resty client honoring the configured scraper
+// proxy (Advanced.ScraperProxy, Options → Advanced). Colly collectors get
+// the same treatment in createCollector; without this, resty-based engines
+// silently bypass the proxy.
+func NewRestyClient() *resty.Client {
+	c := resty.New()
+	if p := config.Config.Advanced.ScraperProxy; p != "" {
+		c.SetProxy(p)
+	}
+	return c
+}
+
 func SetupRestyRequest(kvKey string, req *resty.Request) *resty.Request {
 	conf := GetScrapeHttpConfig(kvKey)
 	for _, header := range conf.Headers {
