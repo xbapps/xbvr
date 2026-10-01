@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
@@ -31,7 +30,7 @@ func UpCloseVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out c
 
 		if len(apiKey) > 0 && len(applicationID) > 0 {
 			pageTotal := 1
-			client := resty.New()
+			client := NewRestyClient()
 
 			for page := 0; page < pageTotal; page++ {
 

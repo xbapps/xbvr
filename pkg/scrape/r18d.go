@@ -17,7 +17,7 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 		sc := models.ScrapedScene{}
 		sc.SceneType = "VR"
 
-		req := resty.New().R()
+		req := NewRestyClient().R()
 		req.SetHeader("User-Agent", UserAgent)
 		res := getByContentId(req, v)
 

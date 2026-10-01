@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -69,7 +68,7 @@ func SexLikeReal(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 	sem := make(chan struct{}, 8) // hard-coded concurrency limit
 
 	// Create reusable HTTP client
-	client := resty.New()
+	client := NewRestyClient()
 
 	// RegEx Patterns
 	filenameRegEx := regexp.MustCompile(`[?:]`)

@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/gosimple/slug"
 	"github.com/thoas/go-funk"
@@ -30,7 +29,7 @@ func BaberoticaVR(wg *models.ScrapeWG, updateSite bool, knownScenes []string, ou
 		out <- sc
 	})
 
-	resp, err := resty.New().R().
+	resp, err := NewRestyClient().R().
 		SetHeader("User-Agent", UserAgent).
 		SetDoNotParseResponse(true).
 		Get("https://baberoticavr.com/feed/csv/")

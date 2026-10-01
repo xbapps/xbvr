@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/nleeper/goment"
 	"github.com/thoas/go-funk"
@@ -184,7 +183,7 @@ func BadoinkSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out
 					if trailerURL, err := url.Parse(origURL); err == nil {
 						trailerPath := filepath.Join(common.CacheDir, filepath.Base(trailerURL.Path))
 						// 200kB should be enough to include the relevant metadata
-						if r, err := resty.New().R().SetOutput(trailerPath).SetHeader("Range", "bytes=0-200000").Get(trailerURL.String()); err == nil {
+						if r, err := NewRestyClient().R().SetOutput(trailerPath).SetHeader("Range", "bytes=0-200000").Get(trailerURL.String()); err == nil {
 							if probeData, err := ffprobe.GetProbeData(trailerPath, time.Second*10); err == nil {
 								if creationTime, err := goment.New(probeData.Format.Tags.CreationTime); err == nil {
 									sc.Released = creationTime.Format("YYYY-MM-DD")

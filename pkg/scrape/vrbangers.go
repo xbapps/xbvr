@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/mozillazg/go-slugify"
 	"github.com/nleeper/goment"
@@ -39,7 +38,7 @@ func VRBangersSite(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		//https://content.vrbangers.com
 		contentURL := strings.Replace(URL, "//", "//content.", 1)
 
-		r, _ := resty.New().R().
+		r, _ := NewRestyClient().R().
 			SetHeader("User-Agent", UserAgent).
 			Get("https://content." + sc.Site + ".com/api/content/v1/videos/" + content_id)
 

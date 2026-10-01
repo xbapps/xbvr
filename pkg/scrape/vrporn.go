@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/gocolly/colly/v2"
 	"github.com/thoas/go-funk"
 	"github.com/tidwall/gjson"
@@ -111,7 +110,7 @@ func VRPorn(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan
 			sc.TrailerSrc = string(strParams)
 
 			// gallery
-			r, _ := resty.New().R().Get("https://vrporn.com/proxy/api/content/v1/videos/" + sc.SiteID + "/gallery")
+			r, _ := NewRestyClient().R().Get("https://vrporn.com/proxy/api/content/v1/videos/" + sc.SiteID + "/gallery")
 			galleryJson := r.String()
 			images := gjson.Get(galleryJson, "data")
 			images.ForEach(func(_, image gjson.Result) bool {
