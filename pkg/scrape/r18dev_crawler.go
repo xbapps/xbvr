@@ -469,6 +469,11 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, manual boo
 		if id := gjson.Get(body, "maker_id").Int(); r18devForeignMakers[id] {
 			return sc, fmt.Sprintf("foreign import (maker %d)", id), true
 		}
+		// Physical discs (mono) are listed next to the digital releases: PVBIKMVR, PVTMVR, ... are
+		// disc versions of bibi scenes under other IDs, QVRT is TMA's disc-only line (dead 2021)
+		if svc := gjson.Get(body, "service_code").String(); svc != "" && svc != "digital" {
+			return sc, fmt.Sprintf("physical release (%s)", svc), true
+		}
 	}
 	if r18devExcludedLabels[gjson.Get(body, "label_id").Int()] {
 		return sc, "excluded label", true
