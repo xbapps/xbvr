@@ -29,12 +29,61 @@
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
     </div>
+    <b-collapse v-if="jav && modeList.length" :open.sync="modesOpen" animation="slide" class="quality-modes">
+      <template #trigger="props">
+        <a class="has-text-grey">
+          <b-icon :icon="props.open ? 'menu-down' : 'menu-right'" size="is-small"/>
+          {{$t('Quality modes: every studio, by video quality')}}
+        </a>
+      </template>
+      <div class="card">
+        <div class="card-content">
+          <div v-for="m in modeList" :key="m.id" class="quality-mode">
+            <div class="quality-mode-row">
+              <b-switch v-model="m.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: m.id})"/>
+              <span class="avatar-text">{{ m.avatar_text }}</span>
+              <strong class="quality-mode-name">{{ m.sitename }}</strong>
+              <span class="has-text-grey is-size-7 quality-mode-last">
+                <span v-if="runningScrapers.includes(m.id)" class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+                <span v-else-if="m.last_update !== '0001-01-01T00:00:00Z'">{{$t('Last scrape')}}: {{formatCompactTimeAgo(m.last_update)}}</span>
+              </span>
+              <b-tooltip class="is-info" :label="$t('Limit scraping to newest scenes on the website. Turn off if you are missing scenes.')" :delay="250">
+                <b-switch size="is-small" v-model="m.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: m.id})">{{$t('Limit Scraping')}}</b-switch>
+              </b-tooltip>
+              <span class="tag is-info is-light is-medium"><strong>{{ m.scene_count }}</strong></span>
+              <b-dropdown aria-role="list" position="is-bottom-left">
+                <template slot="trigger">
+                  <b-icon icon="dots-vertical mdi-18px"></b-icon>
+                </template>
+                <b-dropdown-item aria-role="listitem" @click="taskScrape(m.id)">{{$t('Run this scraper')}}</b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="taskScrapeScene(m.id)">{{$t('Scrape Single Scene')}}</b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(m.name, m.id)">{{$t('Force update scenes')}}</b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="deleteScenes(m)">{{$t('Delete scraped scenes')}}</b-dropdown-item>
+              </b-dropdown>
+            </div>
+            <p v-if="m.avatar_text === '8KVR'" class="quality-mode-note">
+              <span style="color: red; font-weight: bold;">Disables studio mode:</span>
+              scrapes every scene in R18.dev's <span style="font-family: monospace;color:#7957d5">8KVR</span> category, any studio (about 5,000 scenes).
+              <br>
+              Turning it on switches off every studio scraper and <span style="font-family: monospace;color:#7957d5">4K60+</span>. Turning it off switches your studio scrapers back on.
+            </p>
+            <p v-else class="quality-mode-note">
+              <span style="color: red; font-weight: bold;">Disables studio mode. Warning: ~20,000 scenes.</span>
+              Scrapes every <span style="font-family: monospace;color:#7957d5">High-Quality VR</span> scene (4K60 and up), any studio. At one scene every 2 seconds the first run takes 11+ hours.
+              <br>
+              Turning it on switches off every studio scraper and <span style="font-family: monospace;color:#7957d5">8KVR</span>. Turning it off switches your studio scrapers back on.
+            </p>
+          </div>
+        </div>
+      </div>
+    </b-collapse>
     <b-table :data="scraperList" ref="scraperTable">
       <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="80" sortable>
           <span><b-switch v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
       </b-table-column>
       <b-table-column field="icon" width="50" v-slot="props" cell-class="narrow">
-            <span class="image is-32x32">
+            <span v-if="avatarText(props.row.id)" class="avatar-text">{{ avatarText(props.row.id) }}</span>
+            <span v-else class="image is-32x32">
               <vue-load-image>
                 <img slot="image" :src="getImageURL(props.row.avatar_url ? props.row.avatar_url : '/ui/images/blank.png')"/>
                 <img slot="preloader" src="/ui/images/blank.png"/>
@@ -199,14 +248,19 @@ export default {
       scraperwarning2: '',
       showAllScrapers: true,
       r18devInfo: {},
+      modesOpen: false,
     }
   },
   mounted () {
     if (this.jav) {
-      ky.get('/api/options/r18dev-scrapers').json().then(list => {
+      const info = ky.get('/api/options/r18dev-scrapers').json().then(list => {
         const info = {}
         list.forEach(s => { info[s.id] = s })
         this.r18devInfo = info
+      })
+      // the quality modes stay folded away unless one of them is on
+      Promise.all([info, this.$store.dispatch('optionsSites/load')]).then(() => {
+        this.modesOpen = this.$store.state.optionsSites.items.some(i => i.is_enabled && this.isMode(i.id))
       })
     }
     this.$store.dispatch('optionsSites/load')
@@ -230,7 +284,7 @@ export default {
       this.scraperwarning = "Take care to only use scene urls for the " + scraper + " Scraper"
       this.scraperwarning2 = ""
       if (scraper.startsWith('r18dev-')) {
-        this.scraperwarning = "Use an r18.dev or dmm.co.jp scene URL. The scene goes to whichever JAV scraper covers its label or maker"
+        this.scraperwarning = "Use an r18.dev or dmm.co.jp scene URL. The scene goes to whichever JAV scraper covers its label, maker or category, or to Other Studios (R18.dev) when none does"
       }
       switch (scraper) {
         case 'wankzvr':
@@ -405,6 +459,14 @@ export default {
       }
       this.navigateToStudio(row.name)
     },
+    isMode(id) {
+      const info = this.r18devInfo[id]
+      return !!(info && info.exclusive)
+    },
+    avatarText(id) {
+      const info = this.r18devInfo[id]
+      return info ? info.avatar_text : ''
+    },
     siteList(id) {
       const info = this.r18devInfo[id]
       return info && info.sites ? info.sites : []
@@ -499,6 +561,8 @@ export default {
       // so the JAV tab's extra columns go on copies.
       items = items.filter(item => item.id.startsWith('r18dev-') === this.jav);
       if (this.jav) {
+        // quality modes (8KVR, 4K60+) have their own fold-out above the table
+        items = items.filter(item => !this.isMode(item.id));
         items = items.map(item => Object.assign({}, item, {
           xbvr_sites: this.siteList(item.id).join(', '),
           xbvr_old_sites: this.oldSiteList(item.id).join(', ')
@@ -514,6 +578,15 @@ export default {
     },
     items () {
       return this.$store.state.optionsSites.items
+    },
+    modeList () {
+      if (!this.jav) return []
+      return this.$store.state.optionsSites.items
+        .filter(item => this.isMode(item.id))
+        .map(item => {
+          const m = /(.*)\s+\((.+)\)$/.exec(item.name)
+          return Object.assign({}, item, { sitename: m ? m[1] : item.name, avatar_text: this.avatarText(item.id) })
+        })
     },
     runningScrapers () {
       this.$store.dispatch('optionsSites/load')
@@ -564,6 +637,42 @@ export default {
 
   .invisible {
     display: none;
+  }
+
+  /* 8KVR / 4K60+: XBVR purple text instead of an avatar image */
+  .avatar-text {
+    display: inline-block;
+    min-width: 3.2em;
+    color: #7957d5;
+    font-weight: bold;
+    font-size: 0.85em;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .quality-modes {
+    margin-bottom: 1em;
+  }
+
+  .quality-mode + .quality-mode {
+    margin-top: 1em;
+  }
+
+  .quality-mode-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75em;
+  }
+
+  .quality-mode-last {
+    flex: 1;
+  }
+
+  .quality-mode-note {
+    font-size: 0.75em;
+    margin-top: 0.25em;
+    margin-left: 3.5em;
   }
 
   .scraping-container {

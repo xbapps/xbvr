@@ -162,6 +162,10 @@ export default {
       if (this.scrapeUrl.toLowerCase().includes("stashdb.org")) {
         site = "single_scene-stashdb"
       }
+      if (this.scrapeUrl.toLowerCase().includes("r18.dev") || this.scrapeUrl.toLowerCase().includes("dmm.co.jp")) {
+        // JAV: the R18.dev crawler hands the scene to the scraper that covers it
+        site = "r18dev-single_scene"
+      }
       if (site == "") {
         this.$buefy.toast.open({message: `No scrapers exist for this domain`, type: 'is-danger', duration: 5000})      
         return
@@ -197,7 +201,13 @@ export default {
       } else {
         this.$buefy.toast.open({message: `Scene scraping in progress`, type: 'is-warning', duration: 5000})
       }
-      ky.post(`/api/task/singlescrape`, {timeout: false, json: { site: site, sceneurl: this.scrapeUrl, additionalinfo: this.additionalInfo}})
+      let sceneUrl = this.scrapeUrl
+      const dmm = site === "r18dev-single_scene" && sceneUrl.match(/dmm\.co\.jp\/.*[/?&]cid=([a-z0-9_]+)/i)
+      if (dmm) {
+        // scenes are saved under their r18.dev URL, which is what the scene popup looks up
+        sceneUrl = "https://r18.dev/videos/vod/movies/detail/-/id=" + dmm[1].toLowerCase() + "/"
+      }
+      ky.post(`/api/task/singlescrape`, {timeout: false, json: { site: site, sceneurl: sceneUrl, additionalinfo: this.additionalInfo}})
       .json()
       .then(data => { 
         if (data.status == 'OK') {          
