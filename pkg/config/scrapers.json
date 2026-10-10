@@ -547,6 +547,16 @@
           "sites_display": "PXVR (PXVRG/PXVRW)"
         },
         {
+          "id": "ajvr",
+          "name": "Alice JAPAN VR",
+          "company": "Alice JAPAN",
+          "avatar_url": "https://stashdb.org/images/0042b2cb-d3a4-4218-a360-43e937c12fd1",
+          "sources": [
+            { "type": "label", "id": 26056 }
+          ],
+          "sites": [ "AJVR" ]
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",

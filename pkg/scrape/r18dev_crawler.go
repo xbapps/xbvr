@@ -55,10 +55,11 @@ var r18devForeignMakers = map[int64]bool{
 // rescrape button, and never checked by the comma box (ScrapeR18D).
 // Not every compilation has category 6003, KMP's "VR BEST" series (vrkm01903) doesn't.
 var r18devCompilationCategories = []int64{
-	6003, // Compilation
-	6608, // Actress Best Compilation
-	6609, // More Than 16 Hours Of Footage
-	7267, // Set Items (SOD's SETH sets: 16 to 30 hours of best-of)
+	6003,   // Compilation
+	6608,   // Actress Best Compilation
+	6609,   // More Than 16 Hours Of Footage
+	7267,   // Set Items (SOD's SETH sets: 16 to 30 hours of best-of)
+	300129, // Fuku Bukuro, lucky bag sets (ajvrbx00004mtn has nothing else that says compilation)
 }
 
 // A cast this big is a compilation whatever the categories say: hnvr00132 is 58 actresses spliced
@@ -74,7 +75,9 @@ var r18devCompilationSeries = map[int64]bool{
 // that doesn't always carry a compilation category or the SODSTAR Compilation series (1sodsvr00003
 // has the series but no 6003, 1sodsvr00004 has 6003 but no series).
 var r18devCompilationPrefixes = map[string]bool{
-	"SODSVR": true,
+	"SODSVR":   true,
+	"AJVRBX":   true, // Alice JAPAN VR boxes: 16h+ sets and lucky bags
+	"AJVRBEST": true, // Alice JAPAN VR best-ofs
 }
 
 // r18devIsCompilation returns why a scene counts as a compilation, or "".
