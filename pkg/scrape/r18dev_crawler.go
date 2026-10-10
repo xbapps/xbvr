@@ -66,11 +66,13 @@ var r18devCompilationCategories = []int64{
 const r18devCompilationCast = 42
 
 var r18devCompilationSeries = map[int64]bool{
-	217739: true, // VR BEST (K M Produce)
+	217739:  true, // VR BEST (K M Produce)
+	4594464: true, // SODSTAR Compilation (SOD Create, 1sodsvr00003: Hibiki Natsume, 8 titles, no 6003)
 }
 
 // DVD prefixes that are nothing but compilations. SOD's SODSVR (1sodsvr) is a run of 3DSVR best-ofs
-// that doesn't always carry a compilation category or its compilation series (4594464).
+// that doesn't always carry a compilation category or the SODSTAR Compilation series (1sodsvr00003
+// has the series but no 6003, 1sodsvr00004 has 6003 but no series).
 var r18devCompilationPrefixes = map[string]bool{
 	"SODSVR": true,
 }
