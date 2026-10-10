@@ -87,25 +87,21 @@ To build the binary by hand, cgo and the `json1` build tag are both required:
 CGO_ENABLED=1 go build -tags=json1 -o dist/xbvr main.go
 ```
 
-## Development in Gitpod
+## Development in GitHub Codespaces
 
-This project is configured for use in Gitpod. It will provide you with a pre-built development environment with all the tools needed to compile XBVR.
+This project includes a dev container config (`.devcontainer/devcontainer.json`) with everything needed to compile XBVR: Go, Node, Yarn, a C toolchain for SQLite, and `air` for hot reload.
 
-When the workspace loads, `yarn dev` runs and it will build and start XBVR automatically. Every time you make a change to a file, watchers will automatically compile the relevant code.
+When the codespace opens, `yarn dev` runs in a terminal and builds and starts XBVR automatically. Watchers recompile when you change a file.
 
-Once XBVR is compiled and starts, a preview panel will open in the IDE. As you modify go files, the preview panel will reload with the latest changes. If you make changes to Vue, you'll need to reload the browser to load the updated JavaScript.
+Once XBVR starts, port 9999 opens in a preview panel inside the editor. Go changes rebuild and restart the server automatically; after Vue changes, reload the preview to pick up the new JavaScript.
 
-Currently, it's only possible to test XBVR core and Browser applications using Gitpod. Because DLNA requires a local network, you won't be able to connect to the DLNA server running in Gitpod. For most people, this is fine.
+DLNA needs a local network, so you won't be able to connect to the DLNA server running in a codespace. For most people, this is fine.
 
-sqlite3 is included in the terminal. The XBVR database is located at /home/gitpod/.config/xbvr/main.db
+`sqlite3` is available in the terminal. The XBVR database is at `~/.config/xbvr/main.db`. To browse it, run `sqlite_web ~/.config/xbvr/main.db`.
 
-sqlite-web is also included. To browse the db, you can run `sqlite_web /home/gitpod/.config/xbvr/main.db`.
+Codespaces is built into GitHub: it can fork this repo into your account, push changes, and open pull requests. Personal accounts get free monthly usage.
 
-Gitpod has GitHub integration and, once authorized, can fork this repo into your account, push/pull changes, and create pull requests.
-
-Ready to get started?
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/xbapps/xbvr)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/xbapps/xbvr)
 
 ## Tests
 
