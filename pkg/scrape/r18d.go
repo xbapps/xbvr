@@ -42,6 +42,7 @@ var r18dActressOverrides = map[int64]string{
 	// 1234567: "GivenName FamilyName",
 	1112912: "Yomogi Mochino",
 	1115109: "Baku Minase", // 皆瀬獏 (みなせばく), no image to split by
+	1096319: "Hono Wakamiya", // わか菜ほの (Hono Wakana), same actress, filed under her earlier name [vt-idiot]
 }
 
 func r18dActressName(actress gjson.Result) string {
