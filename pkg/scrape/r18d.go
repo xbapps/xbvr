@@ -19,6 +19,7 @@ import (
 
 var r18dTagOverrides = map[int64]string{
 	// Clutter/Junk
+	617:  "", // Three Dimensional (3D) - old VR scenes (HNVR-001, 2017), redundant
 	4025: "", // Featured Actress (単体作品)
 	6548: "", // Exclusive Distribution (独占配信)
 	6793: "", // VR Exclusive (VR専用)
