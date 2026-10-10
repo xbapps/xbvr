@@ -48,6 +48,7 @@ const r18devCatForeign = 4022 // Foreign Imports (洋ピン・海外輸入)
 var r18devForeignMakers = map[int64]bool{
 	300246: true, // SLRORIGINALS (h_1539slr)
 	40392:  true, // Imagine VR, label 26092 VIRTUAL REAL PORN (h_1274vrp)
+	300187: true, // HAYABUSA / ICHIBAN VR (h_1533hay, h_1533kashi, h_1533mig, h_1533niji)
 }
 
 // Compilations. Dropped when crawling a source, let through for "Scrape single scene" / the
