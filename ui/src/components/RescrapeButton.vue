@@ -23,8 +23,13 @@ export default {
         await this.delay(200);
         ky.get(`/api/task/scrape?site=${this.item.scraper_id}`)
       } else {
-        if (this.item.scene_url.toLowerCase().includes("dmm.co.jp")) {
-          ky.post('/api/task/scrape-javr', { json: { s: "r18d", q: this.item.scene_id } })
+        const url = this.item.scene_url.toLowerCase()
+        if (url.includes("dmm.co.jp") || url.includes("r18.dev")) {
+          // JAV scraped through the import box: look it up by its FANZA content ID when the URL has
+          // one, and write the result back to this scene's ID (split scenes: VRKM-139_split1)
+          const m = url.match(/(?:[/?&]cid=|\/id=)([a-z0-9_]+)/)
+          const query = m ? m[1] : this.item.scene_id
+          ky.post('/api/task/scrape-javr', { json: { s: "r18d", q: query, target: this.item.scene_id } })
         } else {
 
           const sites = await ky.get('/api/options/sites').json()

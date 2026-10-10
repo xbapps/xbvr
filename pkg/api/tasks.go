@@ -15,6 +15,7 @@ import (
 type RequestScrapeJAVR struct {
 	Scraper string `json:"s"`
 	Query   string `json:"q"`
+	Target  string `json:"target"` // optional: write the result to this scene ID (rescrape button, split scenes)
 }
 
 type RequestScrapeTPDB struct {
@@ -214,7 +215,7 @@ func (i TaskResource) scrapeJAVR(req *restful.Request, resp *restful.Response) {
 	}
 
 	if r.Query != "" {
-		go tasks.ScrapeJAVR(r.Query, r.Scraper)
+		go tasks.ScrapeJAVR(r.Query, r.Scraper, r.Target)
 	}
 }
 
