@@ -24,7 +24,6 @@ const (
 	r18devPageSize    = 100
 	r18devDelay       = 1 * time.Second
 	r18devCatVR       = 6793 // VR Exclusive, required
-	r18devCatCompil   = 6003 // compilation, skipped by the crawler
 	r18devMakerGlobal = 40150
 	r18devCoverDays   = 30 // check covers for scenes released in the last N days (or not released yet)
 )
@@ -33,6 +32,30 @@ const (
 // 26286 = OVVR (SD card releases, compilations), shows up under S1, MOODYZ, Idea Pocket, AQUA, ...
 var r18devExcludedLabels = map[int64]bool{
 	26286: true,
+}
+
+// Compilations. Dropped when crawling a source, let through for "Scrape single scene" / the
+// rescrape button, and never checked by the comma box (ScrapeR18D).
+// Not every compilation has category 6003, KMP's "VR BEST" series (vrkm01903) doesn't.
+var r18devCompilationCategories = []int64{
+	6003, // Compilation
+	6609, // More Than 16 Hours Of Footage
+}
+var r18devCompilationSeries = map[int64]bool{
+	217739: true, // VR BEST (K M Produce)
+}
+
+// r18devIsCompilation returns why a scene counts as a compilation, or "".
+func r18devIsCompilation(body string, cats map[int64]bool) string {
+	for _, id := range r18devCompilationCategories {
+		if cats[id] {
+			return fmt.Sprintf("compilation (category %d)", id)
+		}
+	}
+	if id := gjson.Get(body, "series_id").Int(); r18devCompilationSeries[id] {
+		return fmt.Sprintf("compilation (series %d)", id)
+	}
+	return ""
 }
 
 type r18devListItem struct {
@@ -252,7 +275,8 @@ func r18devSaveRejected(scraperID string, rejected map[string]bool) {
 
 // r18devBuildScene turns detail JSON into a scene for this scraper, or returns a reason to skip.
 // reject = true means the content ID should never be fetched again (not VR, compilation, ...).
-func r18devBuildScene(c *r18devClient, body string, scraperID string) (sc models.ScrapedScene, skip string, reject bool) {
+// allowCompilations is set for single scene scrapes and for updating a scene that's already ours.
+func r18devBuildScene(c *r18devClient, body string, scraperID string, allowCompilations bool) (sc models.ScrapedScene, skip string, reject bool) {
 	cats := map[int64]bool{}
 	for _, cat := range gjson.Get(body, "categories").Array() {
 		cats[cat.Get("id").Int()] = true
@@ -260,8 +284,10 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string) (sc models
 	if !cats[r18devCatVR] {
 		return sc, "not VR", true
 	}
-	if cats[r18devCatCompil] {
-		return sc, "compilation", true
+	if !allowCompilations {
+		if why := r18devIsCompilation(body, cats); why != "" {
+			return sc, why, true
+		}
 	}
 	if r18devExcludedLabels[gjson.Get(body, "label_id").Int()] {
 		return sc, "excluded label", true
@@ -403,7 +429,8 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			continue
 		}
 
-		sc, why, reject := r18devBuildScene(client, body, scraperID)
+		// Compilations only get through when someone asked for this scene, or it's already ours
+		sc, why, reject := r18devBuildScene(client, body, scraperID, singleSceneURL != "" || updateSceneID != "")
 		if why != "" {
 			if reject {
 				rejected[key] = true
