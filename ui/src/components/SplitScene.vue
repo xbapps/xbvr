@@ -1,6 +1,6 @@
 <template>
   <div class="modal-card split-card">
-    <header class="modal-card-head">
+    <header class="modal-card-head split-mhead">
       <p class="modal-card-title">
         <b-icon pack="mdi" icon="call-split" custom-class="split-green"/> Split scene
       </p>
@@ -13,7 +13,7 @@
         <div class="split-head">
           <img v-if="scene.cover_url" :src="imageURL(scene.cover_url)" class="split-cover">
           <div>
-            <p class="has-text-weight-bold">{{ scene.title }}</p>
+            <p class="has-text-weight-bold split-title">{{ scene.title }}</p>
             <p class="is-size-7">{{ castNames }} &middot; {{ scene.studio }} &middot; {{ scene.duration }} min &middot; {{ rows.length }} filenames, {{ matchedCount }} matched files</p>
             <div class="split-parts-row">
               <label class="label">Number of parts</label>
@@ -86,8 +86,9 @@
         <p class="split-label">New scenes <span class="split-hint">&#8596; scroll</span></p>
         <div class="split-pane split-cards">
           <div v-for="n in parts" :key="'c' + n" class="split-scard">
-            <p><b>{{ scene.scene_id }}<span class="split-green">_split{{ n }}</span></b> <span class="tag is-small split-tag">split javr</span></p>
             <div class="split-trow">
+              <p class="split-cid"><b>{{ scene.scene_id }}<span class="split-green">_split{{ n }}</span></b> <span class="tag is-small split-tag">split javr</span></p>
+              <star-rating v-model="cards[n].star_rating" :rating="cards[n].star_rating" :increment="0.5" :star-size="16" :show-rating="false"/>
               <div class="buttons are-small">
                 <a :class="['button', 'is-small', 'is-danger', { 'is-outlined': !cards[n].favourite }]" @click="cards[n].favourite = !cards[n].favourite" title="Favorite">
                   <b-icon pack="mdi" :icon="cards[n].favourite ? 'heart' : 'heart-outline'" size="is-small"/></a>
@@ -96,10 +97,9 @@
                 <a :class="['button', 'is-small', 'is-warning', { 'is-outlined': !cards[n].hidden }]" @click="cards[n].hidden = !cards[n].hidden" title="Hidden">
                   <b-icon pack="mdi" icon="eye-off" size="is-small"/></a>
               </div>
-              <star-rating v-model="cards[n].star_rating" :rating="cards[n].star_rating" :increment="0.5" :star-size="16" :show-rating="false"/>
             </div>
             <label class="label is-small">Title</label>
-            <textarea class="textarea is-small" rows="2" v-model="cards[n].title"></textarea>
+            <input class="input is-small" type="text" v-model="cards[n].title">
             <div class="split-crow">
               <div>
                 <label class="label is-small">Minutes</label>
@@ -442,13 +442,32 @@ export default {
 .split-green, .split-card >>> .split-green {
   color: #2dc560;
 }
+.split-mhead {
+  padding: 8px 16px;
+}
+.split-mhead .modal-card-title {
+  font-size: 1.1rem;
+  line-height: 1.2;
+  margin: 0 !important;
+}
+.split-body {
+  padding: 10px 16px;
+}
 .split-head {
   display: flex;
-  gap: 18px;
-  margin-bottom: 8px;
+  gap: 14px;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+/* the details overlay is inside .content, whose p and label margins would pad everything out */
+.split-head p, .split-scard p, .split-label {
+  margin-bottom: 0 !important;
+}
+.split-title {
+  margin: 0 0 2px;
 }
 .split-cover {
-  width: 130px;
+  width: 110px;
   height: auto;
   align-self: flex-start;
   border-radius: 4px;
@@ -458,7 +477,7 @@ export default {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin: 6px 0 2px;
+  margin: 4px 0 2px;
 }
 .split-parts-row .label {
   margin: 0 6px 0 0;
@@ -488,11 +507,11 @@ export default {
   list-style: disc;
 }
 .split-label {
-  font-size: 0.8em;
+  font-size: 0.75em;
   color: #7a7a7a;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin: 8px 0 4px;
+  margin: 6px 0 3px;
 }
 .split-hint {
   text-transform: none;
@@ -531,6 +550,14 @@ export default {
 }
 .split-files table {
   margin-bottom: 0;
+  font-size: 0.8rem;
+}
+.split-files td, .split-files th {
+  padding: 0.2em 0.5em;
+}
+.split-files .tag {
+  font-size: 0.7rem;
+  height: 1.7em;
 }
 .split-col {
   text-align: center !important;
@@ -568,28 +595,34 @@ export default {
   overflow-x: scroll;
   overflow-y: hidden;
   display: flex;
-  gap: 12px;
-  padding: 10px;
+  gap: 10px;
+  padding: 8px;
 }
 .split-scard {
-  flex: 0 0 330px;
+  flex: 0 0 440px;
   border: 1px solid #dbdbdb;
   border-top: 4px solid #2dc560;
   border-radius: 4px;
-  padding: 10px 12px;
+  padding: 6px 10px 8px;
 }
 .split-scard .label {
-  margin: 6px 0 2px;
+  margin: 4px 0 1px !important;
 }
-.split-scard .textarea {
-  min-height: 0;
-  resize: none;
+.split-scard .help {
+  margin-top: 1px;
 }
+/* id + tag, stars, then the three toggles in the top right corner */
 .split-trow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 6px;
+  gap: 10px;
+}
+.split-cid {
+  margin: 0;
+  white-space: nowrap;
+}
+.split-trow .vue-star-rating {
+  margin-left: auto;
 }
 .split-trow .buttons {
   margin: 0;
