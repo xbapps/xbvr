@@ -60,6 +60,9 @@ type R18devScraperConfig struct {
 	Sources   []R18devSource `json:"sources"`
 	Sites     []string       `json:"sites"`
 	OldSites  []string       `json:"old_sites,omitempty"`
+	// SitesDisplay replaces the comma list of Sites in the XBVR "Site" column, e.g. "PXVR (PXVRG/PXVRW)".
+	// Sites still decides what clicking the row filters on.
+	SitesDisplay string `json:"sites_display,omitempty"`
 	// Quality modes: AvatarText is shown instead of an avatar image (8KVR, 4K60+). Enabling an
 	// Exclusive scraper turns every other R18.dev scraper off, see scrape.R18devSiteToggled.
 	AvatarText string `json:"avatar_text,omitempty"`

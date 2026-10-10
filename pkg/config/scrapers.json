@@ -535,6 +535,18 @@
           "old_sites": [ "TMVR", "TJVR", "CBIKMV" ]
         },
         {
+          "id": "pboxvr",
+          "name": "P-BOX VR",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/b3b3f1fd-fb01-474c-ba49-937b4d15c2c8",
+          "sources": [
+            { "type": "studio", "id": 40534 },
+            { "type": "label", "id": 46146 }
+          ],
+          "sites": [ "PXVR", "PXVRG", "PXVRW" ],
+          "sites_display": "PXVR (PXVRG/PXVRW)"
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",

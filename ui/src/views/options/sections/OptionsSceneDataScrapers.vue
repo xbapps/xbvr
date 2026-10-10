@@ -564,7 +564,7 @@ export default {
         // quality modes (8KVR, 4K60+) have their own fold-out above the table
         items = items.filter(item => !this.isMode(item.id));
         items = items.map(item => Object.assign({}, item, {
-          xbvr_sites: this.siteList(item.id).join(', '),
+          xbvr_sites: (this.r18devInfo[item.id] && this.r18devInfo[item.id].sites_display) || this.siteList(item.id).join(', '),
           xbvr_old_sites: this.oldSiteList(item.id).join(', ')
         }));
       }

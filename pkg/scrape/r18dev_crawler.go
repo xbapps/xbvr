@@ -762,12 +762,13 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 
 // R18devScraperInfo is what the Scrapers (JAV) tab shows next to the normal site row.
 type R18devScraperInfo struct {
-	ID      string                `json:"id"` // XBVR site / scraper ID, r18dev-...
-	Name    string                `json:"name"`
-	Company string                `json:"company"`
-	Custom  bool                  `json:"custom"`
-	Sources []config.R18devSource `json:"sources"`
-	Sites   []string              `json:"sites"`
+	ID           string                `json:"id"` // XBVR site / scraper ID, r18dev-...
+	Name         string                `json:"name"`
+	Company      string                `json:"company"`
+	Custom       bool                  `json:"custom"`
+	Sources      []config.R18devSource `json:"sources"`
+	Sites        []string              `json:"sites"`
+	SitesDisplay string                `json:"sites_display,omitempty"`
 	// Quality modes (8KVR, 4K60+): text instead of an avatar image, and enabling one turns every
 	// other R18.dev Scraper off
 	AvatarText string   `json:"avatar_text,omitempty"`
@@ -895,7 +896,7 @@ func addR18devScraper(cfg config.R18devScraperConfig, custom bool) {
 	r18devRegistered = append(r18devRegistered, R18devScraperInfo{
 		ID: r18devSiteID(cfg), Name: cfg.Name, Company: cfg.Company, Custom: custom,
 		Sources: cfg.Sources, Sites: cfg.Sites, OldSites: cfg.OldSites,
-		AvatarText: cfg.AvatarText, Exclusive: cfg.Exclusive,
+		AvatarText: cfg.AvatarText, Exclusive: cfg.Exclusive, SitesDisplay: cfg.SitesDisplay,
 	})
 	registerScraper(r18devSiteID(cfg), name, cfg.AvatarUrl, "r18.dev",
 		func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
