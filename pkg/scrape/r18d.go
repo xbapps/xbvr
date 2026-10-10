@@ -50,9 +50,16 @@ var r18dActressOverrides = map[int64]string{
 	1065803: "Nozomi Mare",   // 希のぞみ (まれのぞみ), R18.dev romaji says "Nozomi"
 }
 
+// A "kanji" name written in Latin letters is how FANZA spells it, case included: AIKA, RISA, miru,
+// Hazel Moore. Their name_romaji can be missing, re-cased ("Risa") or rebuilt from the katakana.
+var r18dLatinName = regexp.MustCompile(`^[A-Za-z][A-Za-z .'-]*$`)
+
 func r18dActressName(actress gjson.Result) string {
 	if fixed, ok := r18dActressOverrides[actress.Get("id").Int()]; ok {
 		return fixed
+	}
+	if kanji := strings.Join(strings.Fields(actress.Get("name_kanji").String()), " "); r18dLatinName.MatchString(kanji) {
+		return kanji
 	}
 
 	// Fields + Join: some names have a line break inside ("Mitsuha\n(Mitsuha Kikukawa)", 1038713)
