@@ -14,7 +14,8 @@
       "slr": [],
       "vrporn": [],
       "vrphub": [],
-      "realvr": []
+      "realvr": [],
+      "r18dev": []
     },
     "xbvr": {
       "povr": [
@@ -497,6 +498,17 @@
           "url": "https://realvr.com/vrpornstudio/passthroughvr-33",
           "name": "PassthroughVR",
           "company": "Badoink"
+        }
+      ],
+      "r18dev": [
+        {
+          "id": "kmpvr",
+          "name": "KMPVR",
+          "company": "K M Produce",
+          "avatar_url": "",
+          "sources": [
+            { "type": "label", "id": 25637 }
+          ]
         }
       ]
     }

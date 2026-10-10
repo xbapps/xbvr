@@ -21,20 +21,22 @@ type ScraperList struct {
 	XbvrScrapers   XbvrScrapers   `json:"xbvr"`
 }
 type XbvrScrapers struct {
-	PovrScrapers    []ScraperConfig `json:"povr"`
-	SlrScrapers     []ScraperConfig `json:"slr"`
-	StashDbScrapers []ScraperConfig `json:"stashdb"`
-	RealVRScrapers  []ScraperConfig `json:"realvr"`
-	VrpornScrapers  []ScraperConfig `json:"vrporn"`
-	VrphubScrapers  []ScraperConfig `json:"vrphub"`
+	PovrScrapers    []ScraperConfig       `json:"povr"`
+	SlrScrapers     []ScraperConfig       `json:"slr"`
+	StashDbScrapers []ScraperConfig       `json:"stashdb"`
+	RealVRScrapers  []ScraperConfig       `json:"realvr"`
+	VrpornScrapers  []ScraperConfig       `json:"vrporn"`
+	VrphubScrapers  []ScraperConfig       `json:"vrphub"`
+	R18devScrapers  []R18devScraperConfig `json:"r18dev"`
 }
 type CustomScrapers struct {
-	PovrScrapers    []ScraperConfig `json:"povr"`
-	SlrScrapers     []ScraperConfig `json:"slr"`
-	StashDbScrapers []ScraperConfig `json:"stashdb"`
-	RealVRScrapers  []ScraperConfig `json:"realvr"`
-	VrpornScrapers  []ScraperConfig `json:"vrporn"`
-	VrphubScrapers  []ScraperConfig `json:"vrphub"`
+	PovrScrapers    []ScraperConfig       `json:"povr"`
+	SlrScrapers     []ScraperConfig       `json:"slr"`
+	StashDbScrapers []ScraperConfig       `json:"stashdb"`
+	RealVRScrapers  []ScraperConfig       `json:"realvr"`
+	VrpornScrapers  []ScraperConfig       `json:"vrporn"`
+	VrphubScrapers  []ScraperConfig       `json:"vrphub"`
+	R18devScrapers  []R18devScraperConfig `json:"r18dev"`
 }
 type ScraperConfig struct {
 	ID           string `json:"-"`
@@ -44,6 +46,22 @@ type ScraperConfig struct {
 	AvatarUrl    string `json:"avatar_url"`
 	FileID       string `json:"id,omitempty"`
 	MasterSiteId string `json:"master_site_id,omitempty"`
+}
+
+// R18devScraperConfig is one JAV "Scraper" built from R18.dev list sources (labels and/or makers).
+// The XBVR site ID is "r18dev-" + ID.
+type R18devScraperConfig struct {
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	Company   string         `json:"company"`
+	AvatarUrl string         `json:"avatar_url"`
+	Sources   []R18devSource `json:"sources"`
+}
+
+// R18devSource is one R18.dev list: Type is "label" or "studio" (R18.dev's name for a maker).
+type R18devSource struct {
+	Type string `json:"type"`
+	ID   int64  `json:"id"`
 }
 
 var loadLock sync.Mutex
@@ -72,6 +90,10 @@ func (o *ScraperList) Load() error {
 	//	overwrite the local files offical list
 	o.XbvrScrapers = officalScrapers.XbvrScrapers
 	o.Warnings = officalScrapers.Warnings
+	if o.CustomScrapers.R18devScrapers == nil {
+		// older scrapers.json files have no r18dev key; write [] instead of null
+		o.CustomScrapers.R18devScrapers = []R18devScraperConfig{}
+	}
 
 	SetSiteId(&o.XbvrScrapers.PovrScrapers, "")
 	SetSiteId(&o.XbvrScrapers.SlrScrapers, "")
