@@ -507,6 +507,9 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, manual boo
 func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool, cfg config.R18devScraperConfig) error {
 	defer wg.Done()
 	scraperID := r18devSiteID(cfg)
+	if len(cfg.Sources) == 0 && singleSceneURL == "" {
+		return nil // Other Studios: only ever scrapes single scenes
+	}
 	logScrapeStart(scraperID, cfg.Name)
 	defer logScrapeFinished(scraperID, cfg.Name)
 
@@ -518,6 +521,7 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 
 	// What to look at: every source, or the one scene from the rescrape button
 	var items []r18devListItem
+	listFailed := false
 	if singleSceneURL != "" {
 		cid := r18devContentIDFromURL(singleSceneURL)
 		if cid == "" {
@@ -530,6 +534,7 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		for _, src := range cfg.Sources {
 			list, err := client.listSource(src, limitScraping)
 			if err != nil {
+				listFailed = true
 				log.Errorf("[%s] %s %d: %v", scraperID, src.Type, src.ID, err)
 			}
 			log.Infof("[%s] %s %d: %d scenes listed", scraperID, src.Type, src.ID, len(list))
@@ -540,7 +545,7 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		}
 	}
 
-	var nKnown, nForeign, nRejected, nNew, nUpdated, nSkipped, nErrors int
+	var nKnown, nForeign, nRejected, nNew, nUpdated, nSkipped, nErrors, nAdopted int
 	newRejects := map[string]int{} // reason -> count, for the summary
 	seen := map[string]bool{}
 	todo := 0
@@ -573,6 +578,19 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 				continue
 			}
 			if !needsUpdate && singleSceneURL == "" {
+				// Orphans (scraped by URL before a scraper covered them, or their scraper is gone) go
+				// to this scraper: its sources list them. Only the owner changes, nothing is fetched.
+				for _, r := range rows {
+					if r18devIsOrphan(r.ScraperID) {
+						if err := r18devAdopt(r.SceneID, scraperID); err != nil {
+							log.Errorf("[%s] adopting %s: %v", scraperID, r.SceneID, err)
+						} else {
+							log.Infof("[%s] %s adopted from %s", scraperID, r.SceneID, r.ScraperID)
+							r.ScraperID = scraperID
+							nAdopted++
+						}
+					}
+				}
 				nKnown++
 				continue
 			}
@@ -624,8 +642,9 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 
 		if singleSceneURL != "" {
 			// Every R18.dev Scraper claims the r18.dev domain, so "Scrape a scene" picks one of them
-			// more or less at random. Hand the scene to the Scraper that actually covers it.
-			if owner := r18devOwner(body); owner != "" && owner != scraperID {
+			// more or less at random. Hand the scene to the Scraper that actually covers it, or to
+			// Other Studios when none does.
+			if owner := r18devSingleOwner(body); owner != scraperID {
 				log.Infof("[%s] %s belongs to %s", scraperID, it.ContentID, owner)
 				sc.ScraperID = owner
 			}
@@ -635,6 +654,9 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			for _, r := range updateRows {
 				u := sc
 				u.SceneID, u.SiteID = r.SceneID, r.SceneID
+				if !r18devIsOrphan(r.ScraperID) {
+					u.ScraperID = r.ScraperID // a scene with a real owner stays with it
+				}
 				nUpdated++
 				out <- u
 			}
@@ -662,7 +684,7 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		} else {
 			nNew++
 		}
-		e := &r18devExisting{SceneID: sc.SceneID, ScraperID: scraperID, Studio: sc.Studio, ReleaseDate: sc.Released}
+		e := &r18devExisting{SceneID: sc.SceneID, ScraperID: sc.ScraperID, Studio: sc.Studio, ReleaseDate: sc.Released}
 		idx.bySceneID[sc.SceneID] = e
 		idx.byContentID[key] = append(idx.byContentID[key], e)
 		out <- sc
@@ -677,12 +699,22 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		nNewRejects += n
 	}
 	sort.Strings(reasons)
-	log.Infof("[%s] done: %d new, %d updated, %d already scraped, %d belong to other scrapers, %d rejected (%d this run: %s), %d skipped for now (cover not ready / gone), %d errors. %d requests.",
-		scraperID, nNew, nUpdated, nKnown, nForeign, nRejected, nNewRejects, strings.Join(reasons, ", "), nSkipped, nErrors, client.requests)
+	log.Infof("[%s] done: %d new, %d updated, %d already scraped (%d of them adopted), %d belong to other scrapers, %d rejected (%d this run: %s), %d skipped for now (cover not ready / gone), %d errors. %d requests.",
+		scraperID, nNew, nUpdated, nKnown, nAdopted, nForeign, nRejected, nNewRejects, strings.Join(reasons, ", "), nSkipped, nErrors, client.requests)
 
 	if client.rateLimited {
 		log.Errorf("[%s] stopped early: R18.dev is still rate limiting (HTTP 429) after %d tries. Whatever wasn't fetched gets picked up on the next run.", scraperID, r18devTries)
 		return nil
+	}
+	if singleSceneURL == "" && !limitScraping && !listFailed && nErrors == 0 && config.Config.Advanced.AutoLimitScraping {
+		// Same as SLR: after a clean full run, only page 1 of each source from now on
+		db, _ := models.GetCommonDB()
+		var site models.Site
+		if db.Where(&models.Site{ID: scraperID}).First(&site).Error == nil && !site.LimitScraping {
+			site.LimitScraping = true
+			site.Save()
+			log.Infof("[%s] Auto-enabled limit scraping after a full scrape", scraperID)
+		}
 	}
 	if updateSite && singleSceneURL == "" {
 		updateSiteLastUpdate(scraperID)
@@ -692,13 +724,17 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 
 // R18devScraperInfo is what the Scrapers (JAV) tab shows next to the normal site row.
 type R18devScraperInfo struct {
-	ID       string                `json:"id"` // XBVR site / scraper ID, r18dev-...
-	Name     string                `json:"name"`
-	Company  string                `json:"company"`
-	Custom   bool                  `json:"custom"`
-	Sources  []config.R18devSource `json:"sources"`
-	Sites    []string              `json:"sites"`
-	OldSites []string              `json:"old_sites"`
+	ID      string                `json:"id"` // XBVR site / scraper ID, r18dev-...
+	Name    string                `json:"name"`
+	Company string                `json:"company"`
+	Custom  bool                  `json:"custom"`
+	Sources []config.R18devSource `json:"sources"`
+	Sites   []string              `json:"sites"`
+	// Quality modes (8KVR, 4K60+): text instead of an avatar image, and enabling one turns every
+	// other R18.dev Scraper off
+	AvatarText string   `json:"avatar_text,omitempty"`
+	Exclusive  bool     `json:"exclusive"`
+	OldSites   []string `json:"old_sites"`
 }
 
 var r18devRegistered []R18devScraperInfo
@@ -708,23 +744,106 @@ func R18devScrapers() []R18devScraperInfo {
 	return r18devRegistered
 }
 
-// r18devOwner returns the site ID of the Scraper whose sources cover this scene's label or maker, or "".
-func r18devOwner(body string) string {
-	label, maker := gjson.Get(body, "label_id").Int(), gjson.Get(body, "maker_id").Int()
+// r18devSingleSceneID owns scenes scraped by URL that no registered Scraper covers, like
+// slr-single_scene. It has no sources and no Site row (InitSites skips *-single_scene).
+const r18devSingleSceneID = "r18dev-single_scene"
+
+func r18devIsRegistered(id string) bool {
 	for _, info := range r18devRegistered {
-		for _, src := range info.Sources {
-			if (src.Type == "label" && label != 0 && src.ID == label) || (src.Type == "studio" && maker != 0 && src.ID == maker) {
-				return info.ID
-			}
+		if info.ID == id {
+			return true
 		}
 	}
-	return ""
+	return false
+}
+
+// r18devIsOrphan: an R18.dev scene owned by Other Studios, or by a Scraper that no longer exists
+// (custom one removed from scrapers.json). The next Scraper that lists it takes it over.
+func r18devIsOrphan(scraperID string) bool {
+	return scraperID == r18devSingleSceneID || (r18devIsOurs(scraperID) && !r18devIsRegistered(scraperID))
+}
+
+// r18devCoverRank returns how specifically sources cover a scene: 0 label, 1 maker, 2 category,
+// -1 not at all.
+func r18devCoverRank(sources []config.R18devSource, label, maker int64, cats map[int64]bool) int {
+	best := -1
+	for _, src := range sources {
+		rank := -1
+		switch {
+		case src.Type == "label" && label != 0 && src.ID == label:
+			rank = 0
+		case src.Type == "studio" && maker != 0 && src.ID == maker:
+			rank = 1
+		case src.Type == "category" && cats[src.ID]:
+			rank = 2
+		}
+		if rank >= 0 && (best < 0 || rank < best) {
+			best = rank
+		}
+	}
+	return best
+}
+
+// r18devOwner picks the Scraper a single scene belongs to, or "": enabled Scrapers first, then label
+// over maker over category, then official over custom (registration order). A quality mode only
+// takes scenes while it's on; when it gets turned on later, its crawl adopts them.
+func r18devOwner(body string, enabled map[string]bool) string {
+	label, maker := gjson.Get(body, "label_id").Int(), gjson.Get(body, "maker_id").Int()
+	cats := map[int64]bool{}
+	for _, cat := range gjson.Get(body, "categories").Array() {
+		cats[cat.Get("id").Int()] = true
+	}
+	owner, ownerScore := "", 0
+	for _, info := range r18devRegistered {
+		rank := r18devCoverRank(info.Sources, label, maker, cats)
+		if rank < 0 || (info.Exclusive && !enabled[info.ID]) {
+			continue
+		}
+		score := rank
+		if !enabled[info.ID] {
+			score += 10
+		}
+		if owner == "" || score < ownerScore {
+			owner, ownerScore = info.ID, score
+		}
+	}
+	return owner
+}
+
+// r18devSingleOwner is r18devOwner with the current enabled state, falling back to Other Studios.
+func r18devSingleOwner(body string) string {
+	enabled := map[string]bool{}
+	var sites []models.Site
+	db, _ := models.GetCommonDB()
+	db.Where("id LIKE ?", "r18dev-%").Find(&sites)
+	for _, st := range sites {
+		enabled[st.ID] = st.IsEnabled
+	}
+	if owner := r18devOwner(body, enabled); owner != "" {
+		return owner
+	}
+	return r18devSingleSceneID
+}
+
+// r18devAdopt hands a scene to another Scraper without touching anything else.
+func r18devAdopt(sceneID string, scraperID string) error {
+	db, _ := models.GetCommonDB()
+	var site models.Site
+	db.Where(&models.Site{ID: scraperID}).First(&site)
+	return db.Model(&models.Scene{}).Where("scene_id = ?", sceneID).
+		UpdateColumns(map[string]interface{}{"scraper_id": scraperID, "is_subscribed": site.Subscribed}).Error
 }
 
 func addR18devScraper(cfg config.R18devScraperConfig, custom bool) {
 	if cfg.ID == "" || len(cfg.Sources) == 0 {
 		log.Warnf("R18.dev scraper %q skipped: needs an id and at least one source", cfg.Name)
 		return
+	}
+	for _, src := range cfg.Sources {
+		if src.Type != "label" && src.Type != "studio" && src.Type != "category" {
+			log.Warnf("R18.dev scraper %q skipped: source type %q, must be label, studio or category", cfg.Name, src.Type)
+			return
+		}
 	}
 	name := cfg.Name + " (R18.dev)"
 	if custom {
@@ -733,6 +852,7 @@ func addR18devScraper(cfg config.R18devScraperConfig, custom bool) {
 	r18devRegistered = append(r18devRegistered, R18devScraperInfo{
 		ID: r18devSiteID(cfg), Name: cfg.Name, Company: cfg.Company, Custom: custom,
 		Sources: cfg.Sources, Sites: cfg.Sites, OldSites: cfg.OldSites,
+		AvatarText: cfg.AvatarText, Exclusive: cfg.Exclusive,
 	})
 	registerScraper(r18devSiteID(cfg), name, cfg.AvatarUrl, "r18.dev",
 		func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
@@ -749,4 +869,9 @@ func init() {
 	for _, cfg := range scrapers.CustomScrapers.R18devScrapers {
 		addR18devScraper(cfg, true)
 	}
+	other := config.R18devScraperConfig{ID: strings.TrimPrefix(r18devSingleSceneID, "r18dev-"), Name: "Other Studios"}
+	registerScraper(r18devSingleSceneID, "Other Studios (R18.dev)", "", "r18.dev",
+		func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+			return R18devCrawler(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, limitScraping, other)
+		})
 }

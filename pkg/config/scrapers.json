@@ -521,6 +521,30 @@
             { "type": "label", "id": 25913 }
           ],
           "sites": [ "HNVR" ]
+        },
+        {
+          "id": "8kvr",
+          "name": "8KVR",
+          "company": "",
+          "avatar_url": "",
+          "avatar_text": "8KVR",
+          "exclusive": true,
+          "sources": [
+            { "type": "category", "id": 307935 }
+          ],
+          "sites": []
+        },
+        {
+          "id": "hqvr",
+          "name": "High-Quality VR",
+          "company": "",
+          "avatar_url": "",
+          "avatar_text": "4K60+",
+          "exclusive": true,
+          "sources": [
+            { "type": "category", "id": 6925 }
+          ],
+          "sites": []
         }
       ]
     }

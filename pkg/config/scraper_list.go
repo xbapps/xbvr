@@ -60,9 +60,14 @@ type R18devScraperConfig struct {
 	Sources   []R18devSource `json:"sources"`
 	Sites     []string       `json:"sites"`
 	OldSites  []string       `json:"old_sites,omitempty"`
+	// Quality modes: AvatarText is shown instead of an avatar image (8KVR, 4K60+). Enabling an
+	// Exclusive scraper turns every other R18.dev scraper off, see scrape.R18devSiteToggled.
+	AvatarText string `json:"avatar_text,omitempty"`
+	Exclusive  bool   `json:"exclusive,omitempty"`
 }
 
-// R18devSource is one R18.dev list: Type is "label" or "studio" (R18.dev's name for a maker).
+// R18devSource is one R18.dev list: Type is "label", "studio" (R18.dev's name for a maker) or
+// "category" (8KVR is category 307935).
 type R18devSource struct {
 	Type string `json:"type"`
 	ID   int64  `json:"id"`

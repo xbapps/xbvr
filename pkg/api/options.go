@@ -423,6 +423,9 @@ func (i ConfigResource) toggleSiteField(req *restful.Request, resp *restful.Resp
 		db.Model(&models.Scene{}).Where("scrape_stash = ?", site.ID).Update("scrape_stash", site.LimitScraping)
 	}
 	site.Save()
+	if field == "IsEnabled" {
+		scrape.R18devSiteToggled(site.ID, site.IsEnabled) // quality modes and studio Scrapers exclude each other
+	}
 
 	i.listSitesWithDB(req, resp, db)
 }
