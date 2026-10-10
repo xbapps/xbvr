@@ -43,6 +43,10 @@ var r18dActressOverrides = map[int64]string{
 	1112912: "Yomogi Mochino",
 	1115109: "Baku Minase",   // 皆瀬獏 (みなせばく), no image to split by
 	1096319: "Hono Wakamiya", // わか菜ほの (Hono Wakana), same actress, filed under her earlier name [vt-idiot]
+	1069632: "miru",          // always lowercase [vt-idiot]
+	1049866: "Hana Taira",    // 平花 (たいらはな), R18.dev romaji says "Heika"
+	1067505: "Hana Kotone",   // 琴音華 (ことねはな), R18.dev romaji says "Kotoneka"
+	1065803: "Nozomi Mare",   // 希のぞみ (まれのぞみ), R18.dev romaji says "Nozomi"
 }
 
 func r18dActressName(actress gjson.Result) string {
@@ -50,7 +54,8 @@ func r18dActressName(actress gjson.Result) string {
 		return fixed
 	}
 
-	name := strings.TrimSpace(html.UnescapeString(actress.Get("name_romaji").String()))
+	// Fields + Join: some names have a line break inside ("Mitsuha\n(Mitsuha Kikukawa)", 1038713)
+	name := strings.Join(strings.Fields(html.UnescapeString(actress.Get("name_romaji").String())), " ")
 	if name == "" || strings.Contains(name, " ") {
 		return name // empty, or already "FirstName LastName"
 	}
