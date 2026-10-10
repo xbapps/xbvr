@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -119,6 +120,13 @@ func validateSplit(scene *models.Scene, r *RequestSplitScene) error {
 	return nil
 }
 
+// splitReleaseDate: same day as the original, plus a second per position counted from the highest
+// part (index 0 = highest part = +1s). Part 1 ends up newest, so newest-first lists the parts in
+// order, and the original sorts after all of them. Kept through rescrapes by a "release_date" edit.
+func splitReleaseDate(original time.Time, indexFromHighest int) time.Time {
+	return original.Add(time.Duration(indexFromHighest+1) * time.Second)
+}
+
 // splitCopiesAction: which of the original's edits get copied to each split. The split writes its
 // own filenames, title and duration; the multipart flag is not copied at all.
 func splitCopiesAction(column string) bool {
@@ -195,6 +203,10 @@ func (i SceneResource) splitScene(req *restful.Request, resp *restful.Response) 
 	var tag models.Tag
 	db.Where(&models.Tag{Name: splitTag}).FirstOrCreate(&tag)
 
+	// Highest part first: it gets created first and the smallest release date offset, so part 1
+	// ends up newest and newest-first sorts list the parts as 1, 2, 3, ...
+	sort.SliceStable(r.Parts, func(a, b int) bool { return r.Parts[a].Number > r.Parts[b].Number })
+
 	partOf := map[string]int{} // filename -> index in r.Parts
 	for pi, p := range r.Parts {
 		for _, f := range p.Filenames {
@@ -251,6 +263,7 @@ func (i SceneResource) splitScene(req *restful.Request, resp *restful.Response) 
 		ns.NeedsUpdate = false
 		ns.EditsApplied = true
 		ns.AddedDate = time.Now()
+		ns.ReleaseDate = splitReleaseDate(orig.ReleaseDate, pi)
 		if err := tx.Create(&ns).Error; err != nil {
 			abort(err)
 			return
@@ -283,6 +296,7 @@ func (i SceneResource) splitScene(req *restful.Request, resp *restful.Response) 
 			{"duration", fmt.Sprint(p.Duration)},
 			{"filenames_arr", string(namesJSON)},
 			{"tags", "+" + splitTag},
+			{"release_date", ns.ReleaseDate.Format(time.RFC3339)},
 		} {
 			if err := addAction(sceneID, a[0], a[1]); err != nil {
 				abort(err)

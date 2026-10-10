@@ -277,6 +277,11 @@ func ReapplyEdits() {
 		case "release_date_text":
 			dt, _ := time.Parse("2006-01-02", a.NewValue)
 			db.Model(&scene).Update("release_date", dt)
+		case "release_date":
+			// full timestamp (JAV split scenes: same day, a few seconds apart to keep the parts in order)
+			if dt, err := time.Parse(time.RFC3339, a.NewValue); err == nil {
+				db.Model(&scene).Update("release_date", dt)
+			}
 		default:
 			db.Model(&scene).Update(a.ChangedColumn, a.NewValue)
 		}
