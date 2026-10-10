@@ -3,6 +3,7 @@ package scrape
 import (
 	"html"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -35,8 +36,6 @@ var r18dTagOverrides = map[int64]string{
 var r18dActressOverrides = map[int64]string{
 	// 1234567: "GivenName FamilyName",
 	1112912: "Yomogi Mochino",
-	1092214: "Hinata Tachibana",
-	1092211: "Yuri Adachi",
 }
 
 func r18dActressName(actress gjson.Result) string {
@@ -50,21 +49,51 @@ func r18dActressName(actress gjson.Result) string {
 	}
 
 	// Actresses who never had an official English name on R18.com (or a fix added by R18.dev themselves, Ozakierika is now correctly Erika Ozaki) come back from R18.dev as one word, family name first: 藍瀬ミナ (あいせみな) -> "Aisemina".
-	// The image filename sometimes still has the split ("aise_mina.jpg"). If the filename with the underscore stripped match the name exactly, rebuild it as "First/GivenName Last/FamilyName" -> "Mina Aise".
-	// Anything that doesn't match exactly is left alone.
+	// The image filename sometimes still has the split ("aise_mina.jpg"). If the filename with the underscore stripped match the name, rebuild it as "First/GivenName Last/FamilyName" -> "Mina Aise".
+	// Filenames can have a number on the end ("adati_yuri2.jpg") and are often Kunrei-shiki while name_romaji is Hepburn: "adati" vs "Adachi", "tatibana" vs "Tachibana". Both sides are compared in Kunrei-shiki, the split point comes from the filename, the spelling from name_romaji -> "Yuri Adachi".
+	// Anything that still doesn't match is left alone.
 	img := path.Base(actress.Get("image_url").String())
 	img = strings.TrimSuffix(img, path.Ext(img))
+	img = strings.TrimRight(img, "0123456789")
 	parts := strings.Split(img, "_")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return name // no clean family_given split (AIKA, JULIA, no image...)
 	}
 
-	if !strings.EqualFold(parts[0]+parts[1], name) {
-		return name // letters don't match (romanization differs, etc.)
+	family, given := r18dKunrei(parts[0]), r18dKunrei(parts[1])
+	lower := strings.ToLower(name)
+	if r18dKunrei(lower) != family+given {
+		return name // letters don't match (some other romanization difference, etc.)
 	}
 
-	return r18dCapitalize(parts[1]) + " " + r18dCapitalize(parts[0])
+	for i := 1; i < len(lower); i++ {
+		if r18dKunrei(lower[:i]) == family && r18dKunrei(lower[i:]) == given {
+			return r18dCapitalize(lower[i:]) + " " + r18dCapitalize(lower[:i])
+		}
+	}
+	return name
+}
+
+// Hepburn -> Kunrei-shiki, only the spellings that differ in names. Already Kunrei-shiki text has none of these, so it comes back unchanged.
+// shi -> si, sha -> sya, chi -> ti, cha -> tya, tsu -> tu, fu -> hu, ji -> zi, ja -> zya (matcha -> mattya works out on its own)
+var r18dHepburnRe = regexp.MustCompile(`(sh|ch|j)([aiueo])|tsu|fu`)
+
+func r18dKunrei(s string) string {
+	return r18dHepburnRe.ReplaceAllStringFunc(strings.ToLower(s), func(m string) string {
+		switch m {
+		case "tsu":
+			return "tu"
+		case "fu":
+			return "hu"
+		}
+		cons, vowel := m[:len(m)-1], m[len(m)-1:]
+		c := map[string]string{"sh": "s", "ch": "t", "j": "z"}[cons]
+		if vowel == "i" {
+			return c + "i"
+		}
+		return c + "y" + vowel
+	})
 }
 
 func r18dCapitalize(s string) string {
