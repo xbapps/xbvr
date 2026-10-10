@@ -69,6 +69,12 @@ var r18devCompilationSeries = map[int64]bool{
 	217739: true, // VR BEST (K M Produce)
 }
 
+// DVD prefixes that are nothing but compilations. SOD's SODSVR (1sodsvr) is a run of 3DSVR best-ofs
+// that doesn't always carry a compilation category or its compilation series (4594464).
+var r18devCompilationPrefixes = map[string]bool{
+	"SODSVR": true,
+}
+
 // r18devIsCompilation returns why a scene counts as a compilation, or "".
 func r18devIsCompilation(body string, cats map[int64]bool) string {
 	for _, id := range r18devCompilationCategories {
@@ -81,6 +87,9 @@ func r18devIsCompilation(body string, cats map[int64]bool) string {
 	}
 	if n := len(gjson.Get(body, "actresses").Array()); n >= r18devCompilationCast {
 		return fmt.Sprintf("compilation (%d actresses)", n)
+	}
+	if p := r18devDisplayPrefix(r18devDisplayID(gjson.Get(body, "content_id").String())); r18devCompilationPrefixes[p] {
+		return fmt.Sprintf("compilation (prefix %s)", p)
 	}
 	return ""
 }
