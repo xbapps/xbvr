@@ -39,6 +39,13 @@ var r18devExcludedLabels = map[int64]bool{
 	26286: true,
 }
 
+// Makers that are never scraped: Western studios re-released on FANZA, censored. XBVR scrapes
+// them from their own sites already.
+var r18devExcludedMakers = map[int64]bool{
+	300246: true, // SLRORIGINALS (h_1539slr)
+	40392:  true, // Imagine VR, label 26092 VIRTUAL REAL PORN (h_1274vrp)
+}
+
 // Compilations. Dropped when crawling a source, let through for "Scrape single scene" / the
 // rescrape button, and never checked by the comma box (ScrapeR18D).
 // Not every compilation has category 6003, KMP's "VR BEST" series (vrkm01903) doesn't.
@@ -412,6 +419,9 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, allowCompi
 	}
 	if r18devExcludedLabels[gjson.Get(body, "label_id").Int()] {
 		return sc, "excluded label", true
+	}
+	if r18devExcludedMakers[gjson.Get(body, "maker_id").Int()] {
+		return sc, "excluded maker", true
 	}
 
 	// NOW PRINTING on a recent / upcoming scene: wait for the real cover. Old scenes can have
