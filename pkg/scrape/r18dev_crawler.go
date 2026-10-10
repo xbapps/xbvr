@@ -47,6 +47,11 @@ var r18devCompilationCategories = []int64{
 	6608, // Actress Best Compilation
 	6609, // More Than 16 Hours Of Footage
 }
+
+// A cast this big is a compilation whatever the categories say: hnvr00132 is 58 actresses spliced
+// from other releases, tagged like an original. A real orgy (hnvr00180) is about 12.
+const r18devCompilationCast = 42
+
 var r18devCompilationSeries = map[int64]bool{
 	217739: true, // VR BEST (K M Produce)
 }
@@ -60,6 +65,9 @@ func r18devIsCompilation(body string, cats map[int64]bool) string {
 	}
 	if id := gjson.Get(body, "series_id").Int(); r18devCompilationSeries[id] {
 		return fmt.Sprintf("compilation (series %d)", id)
+	}
+	if n := len(gjson.Get(body, "actresses").Array()); n >= r18devCompilationCast {
+		return fmt.Sprintf("compilation (%d actresses)", n)
 	}
 	return ""
 }

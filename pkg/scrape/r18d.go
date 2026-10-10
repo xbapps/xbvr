@@ -101,8 +101,9 @@ func r18dKunrei(s string) string {
 	})
 }
 
-// "[VR] " in front of titles, sometimes missing its "[" (hnvr00132, hnvr00149: "VR] Naked Kendo ...")
-var r18dVRPrefix = regexp.MustCompile(`^\[?VR\]\s*`)
+// "[VR] " in front of titles, sometimes missing its "[" (hnvr00132, hnvr00149: "VR] Naked Kendo ..."),
+// sometimes "(VR) " (84vrkm00139)
+var r18dVRPrefix = regexp.MustCompile(`^(\[?VR\]|\(VR\))\s*`)
 
 // r18dTagUncredited tags scenes R18.dev lists with no actresses at all (hnvr00149), so they can be
 // found and filled in by hand.
