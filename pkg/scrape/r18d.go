@@ -34,6 +34,7 @@ var r18dTagOverrides = map[int64]string{
 // Remove this map and the lookup at the top of r18dActressName to drop overrides entirely. Could be moved out to a JSON list like scrapers.json, with the priority flipped (user decision).
 var r18dActressOverrides = map[int64]string{
 	// 1234567: "GivenName FamilyName",
+	1112912: "Yomogi Mochino",
 }
 
 func r18dActressName(actress gjson.Result) string {
