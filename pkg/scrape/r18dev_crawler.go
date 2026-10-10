@@ -2,8 +2,10 @@ package scrape
 
 import (
 	"fmt"
+	"net/http"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -22,8 +24,11 @@ import (
 const (
 	r18devBaseURL     = "https://r18.dev/videos/vod/movies"
 	r18devPageSize    = 100
-	r18devDelay       = 1 * time.Second
-	r18devCatVR       = 6793 // VR Exclusive, required
+	r18devDelay       = 2 * time.Second // between R18.dev requests; raised for the rest of a run after a 429
+	r18devMaxDelay    = 5 * time.Second
+	r18devDmmDelay    = 1 * time.Second // between DMM cover checks
+	r18devTries       = 3               // per request, when R18.dev answers 429
+	r18devCatVR       = 6793            // VR Exclusive, required
 	r18devMakerGlobal = 40150
 	r18devCoverDays   = 30 // check covers for scenes released in the last N days (or not released yet)
 )
@@ -39,6 +44,7 @@ var r18devExcludedLabels = map[int64]bool{
 // Not every compilation has category 6003, KMP's "VR BEST" series (vrkm01903) doesn't.
 var r18devCompilationCategories = []int64{
 	6003, // Compilation
+	6608, // Actress Best Compilation
 	6609, // More Than 16 Hours Of Footage
 }
 var r18devCompilationSeries = map[int64]bool{
@@ -88,16 +94,57 @@ func r18devContentIDFromCover(u string) string {
 	return r18devStripReissue(strings.ToLower(m[1]))
 }
 
-// One shared pace for every R18.dev scraper: XBVR runs scrapers in parallel, R18.dev should
-// still only see one request per r18devDelay from us.
+// One shared pace per host for every R18.dev scraper: XBVR runs scrapers in parallel, but
+// R18.dev should still only see one request per delay from us, and everyone waits out a 429.
+type r18devPacer struct {
+	lock         sync.Mutex
+	delay        time.Duration
+	last         time.Time
+	blockedUntil time.Time
+}
+
+func (p *r18devPacer) wait() {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	next := p.last.Add(p.delay)
+	if p.blockedUntil.After(next) {
+		next = p.blockedUntil
+	}
+	if d := time.Until(next); d > 0 {
+		time.Sleep(d)
+	}
+	p.last = time.Now()
+}
+
+// reset puts the pace back to normal at the start of a run, unless a back off is still running.
+func (p *r18devPacer) reset(delay time.Duration) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	if time.Now().After(p.blockedUntil) {
+		p.delay = delay
+	}
+}
+
+// backOff blocks every R18.dev request for d and slows the pace down a notch.
+func (p *r18devPacer) backOff(d time.Duration) time.Duration {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	p.blockedUntil = time.Now().Add(d)
+	if p.delay < r18devMaxDelay {
+		p.delay += 500 * time.Millisecond
+	}
+	return p.delay
+}
+
 var (
-	r18devPaceLock sync.Mutex
-	r18devLastReq  time.Time
+	r18devPace    = &r18devPacer{delay: r18devDelay}
+	r18devDmmPace = &r18devPacer{delay: r18devDmmDelay}
 )
 
 type r18devClient struct {
-	http     *resty.Client
-	requests int
+	http        *resty.Client
+	requests    int
+	rateLimited bool // R18.dev kept answering 429 after every retry: stop this run
 }
 
 func newR18devClient() *r18devClient {
@@ -110,19 +157,44 @@ func newR18devClient() *r18devClient {
 	return &r18devClient{http: c}
 }
 
-func (c *r18devClient) pace() {
-	r18devPaceLock.Lock()
-	defer r18devPaceLock.Unlock()
-	if wait := r18devDelay - time.Since(r18devLastReq); wait > 0 {
-		time.Sleep(wait)
+// r18devRetryAfter reads a Retry-After header (seconds or an HTTP date). Without one, wait
+// 30s per try: the 429s seen so far clear up on their own within about 30s.
+func r18devRetryAfter(res *resty.Response, try int) time.Duration {
+	d := time.Duration(30*try) * time.Second
+	if h := res.Header().Get("Retry-After"); h != "" {
+		if secs, err := strconv.Atoi(strings.TrimSpace(h)); err == nil {
+			d = time.Duration(secs) * time.Second
+		} else if t, err := http.ParseTime(h); err == nil {
+			d = time.Until(t)
+		}
 	}
-	r18devLastReq = time.Now()
-	c.requests++
+	if d < 5*time.Second {
+		d = 5 * time.Second
+	}
+	if d > 5*time.Minute {
+		d = 5 * time.Minute
+	}
+	return d
 }
 
+// get fetches an R18.dev URL. A 429 is retried after a back off; if R18.dev is still saying
+// no after r18devTries, rateLimited is set and the caller should stop.
 func (c *r18devClient) get(url string) (*resty.Response, error) {
-	c.pace()
-	return c.http.R().Get(url)
+	for try := 1; ; try++ {
+		r18devPace.wait()
+		c.requests++
+		res, err := c.http.R().Get(url)
+		if err != nil || res.StatusCode() != 429 {
+			return res, err
+		}
+		if try == r18devTries {
+			c.rateLimited = true
+			return res, err
+		}
+		wait := r18devRetryAfter(res, try)
+		delay := r18devPace.backOff(wait)
+		log.Warnf("R18.dev rate limit (HTTP 429), waiting %s, then one request every %s", wait.Round(time.Second), delay)
+	}
 }
 
 // listPage fetches one page of a label / studio list. Returns the items and total_results.
@@ -188,7 +260,8 @@ func (c *r18devClient) coverReady(url string) bool {
 	if url == "" {
 		return false
 	}
-	c.pace()
+	r18devDmmPace.wait()
+	c.requests++
 	res, err := c.http.R().Head(url)
 	if err != nil {
 		return false
@@ -350,6 +423,7 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	defer logScrapeFinished(scraperID, cfg.Name)
 
 	client := newR18devClient()
+	r18devPace.reset(r18devDelay)
 	idx := r18devLoadIndex()
 	rejected := r18devLoadRejected(scraperID)
 	rejectedBefore := len(rejected)
@@ -372,13 +446,20 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			}
 			log.Infof("[%s] %s %d: %d scenes listed", scraperID, src.Type, src.ID, len(list))
 			items = append(items, list...)
+			if client.rateLimited {
+				break
+			}
 		}
 	}
 
-	var nKnown, nForeign, nRejected, nNew, nUpdated, nSkipped int
+	var nKnown, nForeign, nRejected, nNew, nUpdated, nSkipped, nErrors int
+	newRejects := map[string]int{} // reason -> count, for the summary
 	seen := map[string]bool{}
 	todo := 0
 	for _, it := range items {
+		if client.rateLimited {
+			break
+		}
 		key := r18devStripReissue(it.ContentID)
 		if key == "" || seen[key] {
 			continue
@@ -417,14 +498,17 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			log.Infof("[%s] %d scenes fetched so far", scraperID, todo)
 		}
 		body, err := client.detail(it.ContentID)
-		if err != nil {
-			log.Errorf("[%s] %s: %v", scraperID, it.ContentID, err)
-			continue
-		}
-		if body == "" && it.ContentID != key {
+		if err == nil && body == "" && it.ContentID != key {
 			body, err = client.detail(key) // reissue gone, try the original
 		}
-		if body == "" || err != nil {
+		if err != nil {
+			nErrors++
+			if !client.rateLimited {
+				log.Errorf("[%s] %s: %v", scraperID, it.ContentID, err)
+			}
+			continue
+		}
+		if body == "" {
 			nSkipped++
 			continue
 		}
@@ -435,6 +519,8 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			if reject {
 				rejected[key] = true
 				nRejected++
+				newRejects[why]++
+				log.Infof("[%s] %s rejected: %s", scraperID, it.ContentID, why)
 			} else {
 				nSkipped++
 				log.Debugf("[%s] %s skipped: %s", scraperID, it.ContentID, why)
@@ -475,9 +561,19 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	if len(rejected) != rejectedBefore || singleSceneURL != "" {
 		r18devSaveRejected(scraperID, rejected)
 	}
-	log.Infof("[%s] done: %d new, %d updated, %d already scraped, %d belong to other scrapers, %d rejected (not VR / compilation / excluded), %d skipped for now. %d requests.",
-		scraperID, nNew, nUpdated, nKnown, nForeign, nRejected, nSkipped, client.requests)
+	reasons, nNewRejects := make([]string, 0, len(newRejects)), 0
+	for why, n := range newRejects {
+		reasons = append(reasons, fmt.Sprintf("%d %s", n, why))
+		nNewRejects += n
+	}
+	sort.Strings(reasons)
+	log.Infof("[%s] done: %d new, %d updated, %d already scraped, %d belong to other scrapers, %d rejected (%d this run: %s), %d skipped for now (cover not ready / gone), %d errors. %d requests.",
+		scraperID, nNew, nUpdated, nKnown, nForeign, nRejected, nNewRejects, strings.Join(reasons, ", "), nSkipped, nErrors, client.requests)
 
+	if client.rateLimited {
+		log.Errorf("[%s] stopped early: R18.dev is still rate limiting (HTTP 429) after %d tries. Whatever wasn't fetched gets picked up on the next run.", scraperID, r18devTries)
+		return nil
+	}
 	if updateSite && singleSceneURL == "" {
 		updateSiteLastUpdate(scraperID)
 	}
