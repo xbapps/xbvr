@@ -128,6 +128,28 @@ func splitCopiesAction(column string) bool {
 	return true
 }
 
+type RequestSplitFiles struct {
+	Names []string `json:"names"`
+}
+
+// splitUnmatchedFiles: unmatched files with exactly these names, so the split dialog can show the
+// length of a part that was only added by name.
+func (i SceneResource) splitUnmatchedFiles(req *restful.Request, resp *restful.Response) {
+	var r RequestSplitFiles
+	if err := req.ReadEntity(&r); err != nil || len(r.Names) == 0 {
+		resp.WriteHeaderAndEntity(http.StatusOK, []models.File{})
+		return
+	}
+	db, _ := models.GetDB()
+	defer db.Close()
+	var files []models.File
+	db.Where("scene_id = 0 AND filename IN (?)", r.Names).Find(&files)
+	if files == nil {
+		files = []models.File{}
+	}
+	resp.WriteHeaderAndEntity(http.StatusOK, files)
+}
+
 func (i SceneResource) splitScene(req *restful.Request, resp *restful.Response) {
 	fail := func(code int, msg string) {
 		log.Error("split scene: " + msg)
@@ -264,13 +286,36 @@ func (i SceneResource) splitScene(req *restful.Request, resp *restful.Response) 
 		}
 	}
 
-	// Matched files go with the split their name was assigned to
+	// Matched files go with the split their name was assigned to. Unmatched files with exactly that
+	// name (a part only added in the dialog, ...uhqe4.mp4) get matched to it right away instead of
+	// waiting for the next rescan.
+	// UpdateColumn everywhere: gorm v1's Update also re-saves preloaded associations, which would put
+	// the original's files straight back on it.
 	for _, f := range orig.Files {
 		if pi, ok := partOf[path.Base(f.Filename)]; ok {
-			if err := tx.Model(&models.File{}).Where("id = ?", f.ID).Update("scene_id", newIDs[pi]).Error; err != nil {
+			if err := tx.Model(&models.File{}).Where("id = ?", f.ID).UpdateColumn("scene_id", newIDs[pi]).Error; err != nil {
 				abort(err)
 				return
 			}
+		}
+	}
+	for pi, p := range r.Parts {
+		if len(p.Filenames) == 0 {
+			continue
+		}
+		// plus the .funscript / .hsp / .srt / .cmscript XBVR matches through an .mp4 name
+		names := append([]string{}, p.Filenames...)
+		for _, f := range p.Filenames {
+			if strings.HasSuffix(strings.ToLower(f), ".mp4") {
+				base := f[:len(f)-len(".mp4")]
+				for _, e := range []string{".funscript", ".hsp", ".srt", ".cmscript"} {
+					names = append(names, base+e)
+				}
+			}
+		}
+		if err := tx.Model(&models.File{}).Where("scene_id = 0 AND filename IN (?)", names).UpdateColumn("scene_id", newIDs[pi]).Error; err != nil {
+			abort(err)
+			return
 		}
 	}
 
@@ -281,7 +326,7 @@ func (i SceneResource) splitScene(req *restful.Request, resp *restful.Response) 
 		keep = []string{}
 	}
 	keepJSON, _ := json.Marshal(keep)
-	if err := tx.Model(&orig).Update("filenames_arr", string(keepJSON)).Error; err != nil {
+	if err := tx.Model(&models.Scene{}).Where("id = ?", orig.ID).UpdateColumn("filenames_arr", string(keepJSON)).Error; err != nil {
 		abort(err)
 		return
 	}
@@ -291,17 +336,17 @@ func (i SceneResource) splitScene(req *restful.Request, resp *restful.Response) 
 	}
 
 	if r.Original == "hide" {
-		if err := tx.Model(&orig).Update("is_hidden", true).Error; err != nil {
+		if err := tx.Model(&models.Scene{}).Where("id = ?", orig.ID).UpdateColumn("is_hidden", true).Error; err != nil {
 			abort(err)
 			return
 		}
 	} else {
 		// Same as Delete Scene: unmatch its files, mark the scene deleted
-		if err := tx.Model(&models.File{}).Where("scene_id = ?", orig.ID).Update("scene_id", 0).Error; err != nil {
+		if err := tx.Model(&models.File{}).Where("scene_id = ?", orig.ID).UpdateColumn("scene_id", 0).Error; err != nil {
 			abort(err)
 			return
 		}
-		if err := tx.Delete(&orig).Error; err != nil {
+		if err := tx.Where("id = ?", orig.ID).Delete(&models.Scene{}).Error; err != nil {
 			abort(err)
 			return
 		}

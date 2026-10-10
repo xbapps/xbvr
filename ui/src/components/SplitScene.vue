@@ -15,16 +15,16 @@
           <div>
             <p class="has-text-weight-bold">{{ scene.title }}</p>
             <p class="is-size-7">{{ castNames }} &middot; {{ scene.studio }} &middot; {{ scene.duration }} min &middot; {{ rows.length }} filenames, {{ matchedCount }} matched files</p>
-            <div class="field is-grouped split-parts-row">
+            <div class="split-parts-row">
               <label class="label">Number of parts</label>
               <b-select size="is-small" v-model.number="partCount" @input="resetDefaults">
                 <option v-for="n in partChoices" :key="n" :value="n">{{ n }}</option>
               </b-select>
+              <span v-for="n in partCount" :key="'p' + n" class="split-pill" :class="{ on: enabled[n] }">
+                <input type="checkbox" v-model="enabled[n]" @change="resetDefaults"> _split{{ n }}
+              </span>
             </div>
-            <p class="is-size-7">Untick a part to skip its number (part 1 + part 3 is fine).</p>
-            <span v-for="n in partCount" :key="'p' + n" class="split-pill" :class="{ on: enabled[n] }">
-              <input type="checkbox" v-model="enabled[n]" @change="resetDefaults"> _split{{ n }}
-            </span>
+            <p class="is-size-7 has-text-grey">Untick a part to skip its number (part 1 + part 3 is fine). Changing parts resets the choices below.</p>
           </div>
         </div>
 
@@ -47,7 +47,8 @@
               <template v-for="g in groups">
                 <tr :key="'v' + g.video.name" :class="['split-video', { 'split-nameonly': !g.video.file }]">
                   <td><b-icon pack="mdi" :icon="g.video.file ? 'file-video-outline' : 'file-hidden'" size="is-small"/> {{ g.video.name }}</td>
-                  <td class="split-dur"><span v-if="g.video.file">{{ fmtDur(g.video.file.duration) }}</span><span v-else class="tag is-light">name only</span></td>
+                  <td class="split-dur"><span v-if="g.video.file">{{ fmtDur(g.video.file.duration) }}</span><span v-else class="tag is-light">name only</span>
+                    <span v-if="g.video.pending" class="tag is-info is-light" title="A file with this name exists but isn't matched to any scene. The split matches it.">not matched yet</span></td>
                   <td v-for="n in parts" :key="'vr' + n" class="split-col"><input type="radio" :checked="assign[g.video.name] === n" @change="setAssign(g.video.name, n)"></td>
                   <td class="split-col"><input type="radio" :checked="assign[g.video.name] === 0" @change="setAssign(g.video.name, 0)"></td>
                   <td><span v-if="assign[g.video.name] === null" class="tag is-danger is-light">pick a split</span></td>
@@ -103,11 +104,12 @@
               <div>
                 <label class="label is-small">Minutes</label>
                 <input class="input is-small" type="number" min="0" :value="minutes(n)" @input="cards[n].duration = $event.target.value" style="width:80px">
-                <p class="help">{{ cards[n].duration === null ? 'from ' + videosIn(n).length + ' matched video' + (videosIn(n).length === 1 ? '' : 's') : 'set by hand' }}</p>
+                <p class="help">{{ cards[n].duration === null ? 'from ' + videosIn(n).length + ' video' + (videosIn(n).length === 1 ? '' : 's') : 'set by hand' }}</p>
               </div>
               <div class="split-will">
                 <label class="label is-small">Will match</label>
-                <code v-for="f in namesIn(n)" :key="f">{{ f }}</code>
+                <code v-for="f in shownNamesIn(n)" :key="f">{{ f }}</code>
+                <p v-if="lockedIn(n)" class="help">+ {{ lockedIn(n) }} file{{ lockedIn(n) === 1 ? '' : 's' }} via .mp4</p>
                 <p v-if="!namesIn(n).length" class="help has-text-danger">nothing yet</p>
               </div>
             </div>
@@ -157,6 +159,7 @@ export default {
       busy: false,
       scene: null,
       extraNames: [],
+      unmatched: {}, // filename -> unmatched file with exactly that name
       newName: '',
       partCount: 2,
       enabled: {},
@@ -169,6 +172,7 @@ export default {
   async mounted () {
     try {
       this.scene = await ky.get(`/api/scene/${this.item.id}`).json()
+      await this.lookupUnmatched(this.rows.filter(r => !r.file).map(r => r.name))
     } catch (e) {
       this.$buefy.toast.open({ message: 'Could not load the scene', type: 'is-danger' })
       this.$emit('close')
@@ -210,9 +214,9 @@ export default {
       const names = Array.from(new Set(listed.concat(Object.keys(byName), this.extraNames))).filter(n => n)
       names.sort(natural)
       return names.map(n => {
-        const f = byName[n]
+        const f = byName[n] || this.unmatched[n]
         const video = f ? f.type === 'video' : !SIDE_EXT.includes(ext(n))
-        return { name: n, file: f || null, video: video }
+        return { name: n, file: f || null, video: video, pending: !byName[n] && !!f }
       })
     },
     videoRows () {
@@ -333,6 +337,22 @@ export default {
     namesIn (n) {
       return this.rows.filter(r => this.effective(r.name) === n).map(r => r.name)
     },
+    // Videos and freely assigned files; files that come along through their .mp4 are only counted
+    shownNamesIn (n) {
+      return this.namesIn(n).filter(f => !(this.sideInfo[f] && this.sideInfo[f].locked))
+    },
+    lockedIn (n) {
+      return this.namesIn(n).filter(f => this.sideInfo[f] && this.sideInfo[f].locked).length
+    },
+    async lookupUnmatched (names) {
+      if (!names.length) return
+      try {
+        const files = await ky.post('/api/scene/split/unmatched-files', { json: { names: names } }).json()
+        for (const f of files) {
+          if (!this.unmatched[f.filename]) this.$set(this.unmatched, f.filename, f)
+        }
+      } catch (e) {}
+    },
     videosIn (n) {
       return this.rows.filter(r => r.video && r.file && this.effective(r.name) === n)
     },
@@ -350,6 +370,7 @@ export default {
       if (!n || this.rows.some(r => r.name === n)) { this.newName = ''; return }
       this.extraNames.push(n)
       this.newName = ''
+      this.lookupUnmatched([n])
       this.$nextTick(() => {
         if (this.sideInfo[n]) {
           this.$set(this.assign, n, this.sideInfo[n].video ? undefined : null)
@@ -411,7 +432,8 @@ export default {
 .split-body {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  /* safety net for very short windows; normally only the two panes scroll */
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -425,17 +447,20 @@ export default {
   margin-bottom: 8px;
 }
 .split-cover {
-  width: 190px;
+  width: 130px;
   height: auto;
   align-self: flex-start;
   border-radius: 4px;
 }
 .split-parts-row {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  margin: 8px 0 4px !important;
+  gap: 6px;
+  margin: 6px 0 2px;
 }
 .split-parts-row .label {
-  margin: 0 12px 0 0;
+  margin: 0 6px 0 0;
 }
 .split-pill {
   display: inline-flex;
@@ -443,15 +468,19 @@ export default {
   gap: 6px;
   border: 1px solid #dbdbdb;
   border-radius: 4px;
-  padding: 2px 10px;
-  margin: 4px 6px 0 0;
+  padding: 1px 8px;
+  font-size: 0.85em;
 }
 .split-pill.on {
   border-color: #2dc560;
   background: #e6f8ec;
 }
 .split-warn {
-  margin-bottom: 6px !important;
+  margin-bottom: 4px !important;
+  font-size: 0.72rem;
+}
+.split-warn .message-body {
+  padding: 6px 12px;
 }
 .split-warn ul {
   margin: 0 0 0 1.2em;
@@ -490,7 +519,7 @@ export default {
 }
 .split-files {
   flex: 1;
-  min-height: 120px;
+  min-height: 150px;
   overflow-y: scroll;
 }
 .split-files thead th {

@@ -131,6 +131,9 @@ func (i SceneResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/delete").To(i.deleteScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.POST("/split/unmatched-files").To(i.splitUnmatchedFiles).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.POST("/split").To(i.splitScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(ResponseSplitScene{}))
