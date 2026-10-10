@@ -26,9 +26,9 @@ const (
 	r18devPageSize    = 100
 	r18devDelay       = 2 * time.Second // between R18.dev requests; raised for the rest of a run after a 429
 	r18devMaxDelay    = 5 * time.Second
-	r18devDmmDelay    = 1 * time.Second // between DMM cover checks
-	r18devTries       = 3               // per request, when R18.dev answers 429
-	r18devCatVR       = 6793            // VR Exclusive, required
+	r18devDmmDelay    = 250 * time.Millisecond // between DMM image checks (a CDN, ~10 per scene)
+	r18devTries       = 3                      // per request, when R18.dev answers 429
+	r18devCatVR       = 6793                   // VR Exclusive, required
 	r18devMakerGlobal = 40150
 	r18devCoverDays   = 30 // check covers for scenes released in the last N days (or not released yet)
 )
@@ -143,6 +143,7 @@ var (
 
 type r18devClient struct {
 	http        *resty.Client
+	img         *resty.Client // DMM image checks: doesn't follow redirects
 	requests    int
 	rateLimited bool // R18.dev kept answering 429 after every retry: stop this run
 }
@@ -154,7 +155,16 @@ func newR18devClient() *r18devClient {
 	if config.Config.Advanced.ScraperProxy != "" {
 		c.SetProxy(config.Config.Advanced.ScraperProxy)
 	}
-	return &r18devClient{http: c}
+	img := resty.New()
+	img.SetHeader("User-Agent", UserAgent)
+	img.SetTimeout(30 * time.Second)
+	img.SetRedirectPolicy(resty.RedirectPolicyFunc(func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}))
+	if config.Config.Advanced.ScraperProxy != "" {
+		img.SetProxy(config.Config.Advanced.ScraperProxy)
+	}
+	return &r18devClient{http: c, img: img}
 }
 
 // r18devRetryAfter reads a Retry-After header (seconds or an HTTP date). Without one, wait
@@ -269,6 +279,35 @@ func (c *r18devClient) coverReady(url string) bool {
 	return res.StatusCode() == 200
 }
 
+// imageGone is true for DMM images that are delisted: a 302 to now_printing.jpg (hnvr00037's
+// gallery) or a 404. Errors on our end count as "not gone", nothing gets dropped for those.
+func (c *r18devClient) imageGone(url string) bool {
+	r18devDmmPace.wait()
+	c.requests++
+	res, err := c.img.R().Head(url)
+	if err != nil {
+		return false
+	}
+	switch res.StatusCode() {
+	case 404:
+		return true
+	case 301, 302, 303, 307, 308:
+		return strings.Contains(res.Header().Get("Location"), "now_printing")
+	}
+	return false
+}
+
+// liveGallery drops every gallery image DMM has delisted.
+func (c *r18devClient) liveGallery(gallery []string) []string {
+	live := make([]string, 0, len(gallery))
+	for _, u := range gallery {
+		if !c.imageGone(u) {
+			live = append(live, u)
+		}
+	}
+	return live
+}
+
 func r18devSiteID(cfg config.R18devScraperConfig) string {
 	return "r18dev-" + strings.ToLower(cfg.ID)
 }
@@ -375,6 +414,9 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, allowCompi
 	}
 
 	sc = r18dSceneFromJSON(body)
+	if c != nil {
+		sc.Gallery = c.liveGallery(sc.Gallery)
+	}
 	contentID := sc.SiteID
 	dvdID := gjson.Get(body, "dvd_id").String()
 	if dvdID == "----" {
