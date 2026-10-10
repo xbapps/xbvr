@@ -505,12 +505,34 @@
           "id": "kmpvr",
           "name": "KMPVR",
           "company": "K M Produce",
-          "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/e/e6/K.M.Produce_logo.png",
+          "avatar_url": "https://stashdb.org/images/fc581e4e-8dab-4f8c-ad5a-4c3b4c2f70d6",
           "sources": [
             { "type": "label", "id": 25637 }
           ],
           "sites": [ "VRKM" ],
           "old_sites": [ "KMVR", "EXVR" ]
+        },
+        {
+          "id": "kmpvr-color",
+          "name": "KMPVR-Color-",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/9782a468-9b27-4143-8092-ddf9b1470d7f",
+          "sources": [
+            { "type": "studio", "id": 46628 }
+          ],
+          "sites": [ "SAVR" ],
+          "old_sites": [ "KBVR" ]
+        },
+        {
+          "id": "kmpvr-bibi",
+          "name": "KMPVR-bibi-",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/0a01b658-4a0a-490a-927e-c8936565b93b",
+          "sources": [
+            { "type": "studio", "id": 40404 }
+          ],
+          "sites": [ "BIBIVR" ],
+          "old_sites": [ "TMVR", "TJVR" ]
         },
         {
           "id": "hnvr",
