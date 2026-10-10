@@ -535,8 +535,10 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		}
 		seen[key] = true
 
-		// Write guard 1: already in XBVR under this content ID
-		updateSceneID := ""
+		// Write guard 1: already in XBVR under this content ID. Several of our scenes can share one
+		// content ID (split scenes, VRKM-139_split1 .. _split4): each one that needs it gets updated
+		// under its own scene ID.
+		var updateRows []*r18devExisting
 		if rows := idx.byContentID[key]; len(rows) > 0 {
 			foreign, needsUpdate := false, false
 			for _, r := range rows {
@@ -555,7 +557,11 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 				nKnown++
 				continue
 			}
-			updateSceneID = rows[0].SceneID
+			for _, r := range rows {
+				if r.NeedsUpdate || singleSceneURL != "" {
+					updateRows = append(updateRows, r)
+				}
+			}
 		}
 		if rejected[key] {
 			nRejected++
@@ -583,7 +589,7 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		}
 
 		// Compilations only get through when someone asked for this scene, or it's already ours
-		sc, why, reject := r18devBuildScene(client, body, scraperID, singleSceneURL != "" || updateSceneID != "")
+		sc, why, reject := r18devBuildScene(client, body, scraperID, singleSceneURL != "" || len(updateRows) > 0)
 		if why != "" {
 			if reject {
 				rejected[key] = true
@@ -606,9 +612,16 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			}
 		}
 
-		if updateSceneID != "" {
-			sc.SceneID, sc.SiteID = updateSceneID, updateSceneID
-		} else if e := idx.bySceneID[sc.SceneID]; e != nil && !r18devIsOurs(e.ScraperID) {
+		if len(updateRows) > 0 {
+			for _, r := range updateRows {
+				u := sc
+				u.SceneID, u.SiteID = r.SceneID, r.SceneID
+				nUpdated++
+				out <- u
+			}
+			continue
+		}
+		if e := idx.bySceneID[sc.SceneID]; e != nil && !r18devIsOurs(e.ScraperID) {
 			// Write guard 2: the scene ID is taken by a scene that isn't ours
 			sameScene := strings.EqualFold(e.Studio, sc.Studio) || (e.ReleaseDate != "" && e.ReleaseDate == sc.Released)
 			if sameScene {
