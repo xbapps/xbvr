@@ -26,9 +26,9 @@ const (
 	r18devPageSize    = 100
 	r18devDelay       = 2 * time.Second // between R18.dev requests; raised for the rest of a run after a 429
 	r18devMaxDelay    = 5 * time.Second
-	r18devDmmDelay    = 250 * time.Millisecond // between DMM image checks (a CDN, ~10 per scene)
-	r18devTries       = 3                      // per request, when R18.dev answers 429
-	r18devCatVR       = 6793                   // VR Exclusive, required
+	r18devDmmDelay    = 1 * time.Second // between DMM image checks
+	r18devTries       = 3               // per request, when R18.dev answers 429
+	r18devCatVR       = 6793            // VR Exclusive, required
 	r18devMakerGlobal = 40150
 	r18devCoverDays   = 30 // check covers for scenes released in the last N days (or not released yet)
 )
@@ -264,48 +264,49 @@ func (c *r18devClient) detail(contentID string) (string, error) {
 	return res.String(), nil
 }
 
-// coverReady is false while DMM serves its "NOW PRINTING" placeholder, which comes back as a
-// 404 with an image body at the same URL the real cover will use later.
-func (c *r18devClient) coverReady(url string) bool {
-	if url == "" {
-		return false
-	}
-	r18devDmmPace.wait()
-	c.requests++
-	res, err := c.http.R().Head(url)
-	if err != nil {
-		return false
-	}
-	return res.StatusCode() == 200
-}
+// r18devNoCover is what XBVR's own "Create custom scene" uses as a cover when there isn't one
+// (pkg/api/scenes.go). Scene create / update needs a cover URL, and the "Has Image" filter
+// treats this one as no image, so delisted scenes can be found and given a cover by hand.
+const r18devNoCover = "http://localhost/dont_cause_errors"
 
-// imageGone is true for DMM images that are delisted: a 302 to now_printing.jpg (hnvr00037's
-// gallery) or a 404. Errors on our end count as "not gone", nothing gets dropped for those.
-func (c *r18devClient) imageGone(url string) bool {
+// imageGone checks a DMM image without following redirects. Gone means NOW PRINTING:
+//   - a 404, which is how DMM serves the placeholder for upcoming scenes (with an image body)
+//   - a redirect to now_printing.jpg, which is how DMM serves delisted images (hnvr00037)
+//
+// Any other redirect counts as there.
+func (c *r18devClient) imageGone(url string) (bool, error) {
 	r18devDmmPace.wait()
 	c.requests++
 	res, err := c.img.R().Head(url)
 	if err != nil {
-		return false
+		return false, err
 	}
 	switch res.StatusCode() {
 	case 404:
-		return true
+		return true, nil
 	case 301, 302, 303, 307, 308:
-		return strings.Contains(res.Header().Get("Location"), "now_printing")
+		return strings.Contains(res.Header().Get("Location"), "now_printing"), nil
 	}
-	return false
+	return false, nil
 }
 
-// liveGallery drops every gallery image DMM has delisted.
-func (c *r18devClient) liveGallery(gallery []string) []string {
-	live := make([]string, 0, len(gallery))
-	for _, u := range gallery {
-		if !c.imageGone(u) {
-			live = append(live, u)
-		}
+// coverReady is false while the cover is NOW PRINTING, or when it can't be checked.
+func (c *r18devClient) coverReady(url string) bool {
+	if url == "" {
+		return false
 	}
-	return live
+	gone, err := c.imageGone(url)
+	return err == nil && !gone
+}
+
+// galleryGone checks only the first gallery image. Delisted scenes lose the whole gallery
+// (hnvr00037: all 10 now_printing), so one request per scene is enough.
+func (c *r18devClient) galleryGone(gallery []string) bool {
+	if len(gallery) == 0 {
+		return false
+	}
+	gone, err := c.imageGone(gallery[0])
+	return err == nil && gone
 }
 
 func r18devSiteID(cfg config.R18devScraperConfig) string {
@@ -405,17 +406,35 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, allowCompi
 		return sc, "excluded label", true
 	}
 
-	// NOW PRINTING: only recent / upcoming scenes; old ones can have permanent 404 covers
+	// NOW PRINTING on a recent / upcoming scene: wait for the real cover. Old scenes can have
+	// permanent NOW PRINTING covers (delisted) and still get scraped, see below.
+	coverChecked := false
 	released := gjson.Get(body, "release_date").String()
 	if t, err := time.Parse("2006-01-02", released); err == nil && time.Since(t) < r18devCoverDays*24*time.Hour {
 		if !c.coverReady(gjson.Get(body, "jacket_full_url").String()) {
 			return sc, "cover not ready yet", false
 		}
+		coverChecked = true
 	}
 
 	sc = r18dSceneFromJSON(body)
-	if c != nil {
-		sc.Gallery = c.liveGallery(sc.Gallery)
+	if c != nil && !coverChecked {
+		// Older scenes only: an upcoming scene's gallery can still be NOW PRINTING and show up later.
+		// Delisted: drop the gallery, and check the cover too (it may be gone with it).
+		// No gallery at all: the cover is the only image, check it.
+		noGallery := len(sc.Gallery) == 0
+		if c.galleryGone(sc.Gallery) {
+			sc.Gallery = nil
+			noGallery = true
+		}
+		if noGallery && len(sc.Covers) > 0 && sc.Covers[0] != "" {
+			if gone, err := c.imageGone(sc.Covers[0]); err == nil && gone {
+				sc.Covers = []string{r18devNoCover}
+			}
+		}
+	}
+	if len(sc.Covers) == 0 || sc.Covers[0] == "" {
+		sc.Covers = []string{r18devNoCover}
 	}
 	contentID := sc.SiteID
 	dvdID := gjson.Get(body, "dvd_id").String()
