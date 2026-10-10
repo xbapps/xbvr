@@ -123,7 +123,8 @@
         <b>{{ scene.scene_id }} after the split:</b>
         <label class="split-orig"><input type="radio" value="hide" v-model="original"> Hide it</label>
         <label class="split-orig"><input type="radio" value="delete" v-model="original"> Delete it</label>
-        <p class="help">Hide keeps the "none" filenames. Delete works like Delete Scene; "none" filenames stop matching.</p>
+        <span class="split-permanent">This makes your split permanent</span>
+        <p class="help">Hide keeps the "none" filenames, and the split can be undone later. Delete works like Delete Scene; "none" filenames stop matching.</p>
       </div>
       <div>
         <button class="button" @click="$emit('close')">Cancel</button>
@@ -347,7 +348,7 @@ export default {
     async lookupUnmatched (names) {
       if (!names.length) return
       try {
-        const files = await ky.post('/api/scene/split/unmatched-files', { json: { names: names } }).json()
+        const files = await ky.post('/api/scene/javsplit/unmatched-files', { json: { names: names } }).json()
         for (const f of files) {
           if (!this.unmatched[f.filename]) this.$set(this.unmatched, f.filename, f)
         }
@@ -397,7 +398,7 @@ export default {
       }
       this.busy = true
       try {
-        const res = await ky.post('/api/scene/split', { json: payload, timeout: false }).json()
+        const res = await ky.post('/api/scene/javsplit', { json: payload, timeout: false }).json()
         this.$buefy.toast.open({ message: `Split ${this.scene.scene_id} into ${res.scenes.length} scenes`, type: 'is-success' })
         this.$emit('close')
         this.$store.dispatch('sceneList/load', { offset: 0 })
@@ -618,6 +619,11 @@ export default {
 }
 .split-orig input {
   accent-color: #2dc560;
+}
+.split-permanent {
+  margin-left: 6px;
+  font-size: 0.8em;
+  color: #f14668;
 }
 .split-go {
   background: #2dc560;

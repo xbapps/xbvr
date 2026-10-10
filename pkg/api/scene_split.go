@@ -16,6 +16,7 @@ import (
 )
 
 // Splitting a JAV scene into parts: VRKM-139 -> VRKM-139_split1, VRKM-139_split2, ...
+// API: /api/scene/javsplit (+ /unmatched-files, /status/{id}, /undo in scene_split_undo.go)
 //
 // How it stays put through rescans and rescrapes:
 //   - Every filename belongs to exactly one scene, because XBVR leaves a file unmatched when two
@@ -175,6 +176,10 @@ func (i SceneResource) splitScene(req *restful.Request, resp *restful.Response) 
 	db, _ := models.GetDB()
 	defer db.Close()
 
+	if existing := liveSplitsOf(db, orig.SceneID); len(existing) > 0 {
+		fail(http.StatusConflict, orig.SceneID+" is already split ("+existing[0].SceneID+", ...), undo that first")
+		return
+	}
 	for _, p := range r.Parts {
 		id := splitSceneID(orig.SceneID, p.Number)
 		var existing models.Scene
