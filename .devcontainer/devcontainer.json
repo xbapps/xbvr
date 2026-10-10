@@ -8,7 +8,9 @@
   },
   "containerEnv": {
     // vue-cli 5 / webpack needs this on Node 17+
-    "NODE_OPTIONS": "--openssl-legacy-provider"
+    "NODE_OPTIONS": "--openssl-legacy-provider",
+    // don't stall postCreateCommand on Corepack's "download yarn?" prompt
+    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
   },
   // One-time setup: CGO toolchain + sqlite CLI, air (Go hot reload), sqlite-web, UI deps
   "postCreateCommand": "sudo apt-get update && sudo apt-get install -y build-essential sqlite3 && go install github.com/air-verse/air@latest && pip install --user sqlite-web && yarn config set ignore-engines true && yarn install",
