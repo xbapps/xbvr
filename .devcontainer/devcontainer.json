@@ -1,0 +1,28 @@
+{
+  "name": "XBVR",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": { "version": "1.25" },
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    "ghcr.io/devcontainers/features/python:1": {}
+  },
+  "containerEnv": {
+    // vue-cli 5 / webpack needs this on Node 17+
+    "NODE_OPTIONS": "--openssl-legacy-provider"
+  },
+  // One-time setup: CGO toolchain + sqlite CLI, air (Go hot reload), sqlite-web, UI deps
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y build-essential sqlite3 && go install github.com/air-verse/air@latest && pip install --user sqlite-web && yarn config set ignore-engines true && yarn install",
+  // Runs in a visible terminal every time you connect: builds UI + Go and restarts on changes
+  "postAttachCommand": "yarn dev",
+  "forwardPorts": [9999],
+  "portsAttributes": {
+    "9999": { "label": "XBVR", "onAutoForward": "openPreview" },
+    "9998": { "label": "XBVR (9998)", "onAutoForward": "ignore" },
+    "1338": { "label": "DLNA", "onAutoForward": "ignore" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["golang.go", "Vue.volar"]
+    }
+  }
+}
