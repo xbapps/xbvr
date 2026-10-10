@@ -35,6 +35,7 @@ var r18dTagOverrides = map[int64]string{
 var r18dActressOverrides = map[int64]string{
 	// 1234567: "GivenName FamilyName",
 	1112912: "Yomogi Mochino",
+	1092214: "Hinata Tachibana",
 }
 
 func r18dActressName(actress gjson.Result) string {
