@@ -2,7 +2,7 @@
   <div class="content">
     <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
     <template v-if="jav">
-      <h3 class="title">{{$t('LEGACY: Import Japanese Adult VR (JAVR) Scene')}}</h3>
+      <h3 class="title">{{$t('Manual: Import Japanese Adult VR (JAVR) Scene')}}</h3>
       <JAVRImport/>
       <br>
     </template>
@@ -74,7 +74,7 @@
           <span><b-switch v-model ="props.row.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: props.row.id})"/></span>
         </b-tooltip>
       </b-table-column>
-      <b-table-column field="subscribed" :label="$t('Subscribed')" v-slot="props" width="60" sortable>
+      <b-table-column field="subscribed" :label="$t('Subscribed')" :visible="!jav" v-slot="props" width="60" sortable>
         <b-tooltip class="is-info" :label="$t('Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter')" :delay="250" >
           <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
         </b-tooltip>
@@ -133,7 +133,7 @@
       </div>
         <div class="column buttons" align="right">
           <a class="button is-small" v-on:click="toggleAllLimitScraping()">{{$t('Toggle Limit Scraping of all visible sites')}}</a>
-          <a class="button is-small" v-on:click="toggleAllSubscriptions()">{{$t('Toggle Subscriptions of all visible sites')}}</a>
+          <a v-if="!jav" class="button is-small" v-on:click="toggleAllSubscriptions()">{{$t('Toggle Subscriptions of all visible sites')}}</a>
         </div>
     </div>
 
