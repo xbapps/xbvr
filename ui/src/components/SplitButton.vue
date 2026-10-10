@@ -3,7 +3,7 @@
     <a v-if="status.can_split" class="button is-small split-button" @click="open = true" title="Split scene into parts">
       <b-icon pack="mdi" icon="call-split" size="is-small"/>
     </a>
-    <a v-if="status.can_undo" class="button is-small split-button" @click="undo" :title="'Undo the split of ' + status.original_scene_id">
+    <a v-if="status.can_undo" class="button is-small merge-button" @click="undo" :title="'Merge the splits of ' + status.original_scene_id + ' back together'">
       <b-icon pack="mdi" icon="call-merge" size="is-small"/>
     </a>
     <b-modal v-if="status.can_split" :active.sync="open" has-modal-card trap-focus :width="1100" :can-cancel="['escape', 'x']" custom-class="split-scene-modal" aria-role="dialog" aria-modal>
@@ -53,11 +53,11 @@ export default {
     undo () {
       const st = this.status
       this.$buefy.dialog.confirm({
-        title: 'Undo split',
+        title: 'Merge splits back together',
         message: `Put <strong>${st.original_scene_id}</strong> back together?<br><br>` +
           `${st.splits.join(', ')} get deleted. Their files and filenames go back to ${st.original_scene_id}, ` +
           `which is shown again. Edits made to the split scenes are lost.`,
-        confirmText: 'Undo split',
+        confirmText: 'Merge',
         type: 'is-warning',
         hasIcon: true,
         onConfirm: async () => {
@@ -87,5 +87,17 @@ export default {
 .split-button:hover {
   background-color: #2dc560;
   color: #fff;
+}
+/* Merge (undo split): the yellow that goes with the split green. #ffff99 is too light for an
+   outline on white, so it's the fill, with a dark icon. */
+.merge-button {
+  background-color: #ffff99;
+  border-color: #e0d84a;
+  color: #363636;
+}
+.merge-button:hover {
+  background-color: #f5f06e;
+  border-color: #c9c03a;
+  color: #363636;
 }
 </style>
