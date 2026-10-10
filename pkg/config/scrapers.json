@@ -523,6 +523,16 @@
           "sites": [ "HNVR" ]
         },
         {
+          "id": "sodvr",
+          "name": "SOD VR",
+          "company": "SOD Create",
+          "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/2/25/Soft_On_Demand_logo.svg",
+          "sources": [
+            { "type": "label", "id": 25739 }
+          ],
+          "sites": [ "3DSVR" ]
+        },
+        {
           "id": "8kvr",
           "name": "8KVR",
           "company": "",
