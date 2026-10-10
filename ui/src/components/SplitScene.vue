@@ -2,7 +2,7 @@
   <div class="modal-card split-card">
     <header class="modal-card-head split-mhead">
       <p class="modal-card-title">
-        <b-icon pack="mdi" icon="call-split" custom-class="split-green"/> Split scene
+        <b-icon pack="mdi" icon="call-split" custom-class="split-green"/><span>Split scene</span>
       </p>
       <button class="delete" aria-label="close" @click="$emit('close')"></button>
     </header>
@@ -415,8 +415,10 @@ export default {
 </script>
 
 <style>
+/* The scene details overlay underneath is 85% of the window. This is 90% of that, so 5% of the
+   scene shows on each side. */
 .split-scene-modal .modal-content, .split-scene-modal .animation-content {
-  width: min(1100px, 96vw) !important;
+  width: 76.5vw !important;
   max-width: none !important;
 }
 </style>
@@ -446,6 +448,9 @@ export default {
   padding: 8px 16px;
 }
 .split-mhead .modal-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 1.1rem;
   line-height: 1.2;
   margin: 0 !important;
