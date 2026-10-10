@@ -114,98 +114,18 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 			continue
 		}
 
-		sc := models.ScrapedScene{}
-		sc.SceneType = "VR"
-
 		JsonMetadata := res.String()
-		content_id := gjson.Get(JsonMetadata, "content_id").String()
-		sc.HomepageURL = "https://r18.dev/videos/vod/movies/detail/-/id=" + content_id + "/"
+		sc := r18dSceneFromJSON(JsonMetadata)
 
-		// Title
-		if gjson.Get(JsonMetadata, "title_en_is_machine_translation").String() == "false" {
-			sc.Title = strings.Replace(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "title_en").String())), "[VR] ", "", -1)
-		} else {
-			sc.Title = gjson.Get(JsonMetadata, "content_id").String()
-			sc.Synopsis = gjson.Get(JsonMetadata, "title_en").String()
-		}
-
-		// Studio
-		sc.Studio = gjson.Get(JsonMetadata, "maker_name_en").String()
-
-		// Date
-		sc.Released = gjson.Get(JsonMetadata, "release_date").String()
-
-		// Time
-		tmpDuration, err := strconv.Atoi(gjson.Get(JsonMetadata, "runtime_mins").String())
-		if err == nil {
-			sc.Duration = tmpDuration
-		}
-
-		// Covers
-		coverimgs := gjson.Get(JsonMetadata, "jacket_full_url")
-		sc.Covers = append(sc.Covers, strings.TrimSpace(html.UnescapeString(coverimgs.String())))
-
-		// Gallery
-		galleryimgs := gjson.Get(JsonMetadata, "gallery.#.image_full")
-		for _, name := range galleryimgs.Array() {
-			sc.Gallery = append(sc.Gallery, strings.TrimSpace(html.UnescapeString(name.String())))
-		}
-
-		// Cast
-		for _, actress := range gjson.Get(JsonMetadata, "actresses").Array() {
-			if name := r18dActressName(actress); name != "" {
-				sc.Cast = append(sc.Cast, name)
-			}
-		}
-
-		quality := "VR"
-		for _, cat := range gjson.Get(JsonMetadata, "categories").Array() {
-			id := cat.Get("id").Int()
-
-			switch {
-			case id == r18dCat8KVR:
-				quality = "8K"
-			case id == r18dCatHQVR && quality != "8K":
-				quality = "HQ"
-			}
-
-			name := strings.TrimSpace(html.UnescapeString(cat.Get("name_en").String()))
-			if repl, ok := r18dTagOverrides[id]; ok {
-				if repl == "" {
-					continue
-				}
-				name = repl
-			}
-			sc.Tags = append(sc.Tags, name)
-		}
-		sc.Tags = append(sc.Tags, "JAVR")
-		sc.Tags = append(sc.Tags, "R18.dev")
-
-		// Scene ID and Site
+		// Scene ID and Site (comma box keeps its original behavior)
 		dvdID := gjson.Get(JsonMetadata, "dvd_id").String()
 		if dvdID == "----" || dvdID == "" {
-			sc.SceneID = content_id
-			sc.SiteID = content_id
+			sc.SceneID = sc.SiteID // content ID
 			sc.Site = gjson.Get(JsonMetadata, "label_name_en").String()
 		} else {
 			sc.SceneID = dvdID
 			sc.SiteID = dvdID
 			sc.Site = strings.Split(dvdID, "-")[0]
-		}
-
-		// Filler Filenames
-		resolutions := []string{"vmb"}
-		if quality == "HQ" {
-			resolutions = []string{"vrv1uhqe"}
-		} else if quality == "8K" {
-			resolutions = []string{"vrv1uhqf", "vrv18khia"}
-		}
-		for r := range resolutions {
-			parts := []string{"", "1", "2", "3"}
-			for p := range parts {
-				fn := content_id + resolutions[r] + parts[p] + ".mp4"
-				sc.Filenames = append(sc.Filenames, fn)
-			}
 		}
 
 		if sc.SceneID != "" {
@@ -214,6 +134,95 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 		}
 	}
 	return nil
+}
+
+// r18dSceneFromJSON builds a scene from R18.dev detail JSON: title, studio, dates, images, cast,
+// tags and filler filenames. Shared by the comma-box scraper and the R18.dev crawler; callers set
+// SceneID / SiteID / Site (SiteID is pre-filled with the content ID).
+func r18dSceneFromJSON(JsonMetadata string) models.ScrapedScene {
+	sc := models.ScrapedScene{}
+	sc.SceneType = "VR"
+
+	content_id := gjson.Get(JsonMetadata, "content_id").String()
+	sc.SiteID = content_id
+	sc.HomepageURL = "https://r18.dev/videos/vod/movies/detail/-/id=" + content_id + "/"
+
+	// Title
+	if gjson.Get(JsonMetadata, "title_en_is_machine_translation").String() == "false" {
+		sc.Title = strings.Replace(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "title_en").String())), "[VR] ", "", -1)
+	} else {
+		sc.Title = gjson.Get(JsonMetadata, "content_id").String()
+		sc.Synopsis = gjson.Get(JsonMetadata, "title_en").String()
+	}
+
+	// Studio
+	sc.Studio = gjson.Get(JsonMetadata, "maker_name_en").String()
+
+	// Date
+	sc.Released = gjson.Get(JsonMetadata, "release_date").String()
+
+	// Time
+	tmpDuration, err := strconv.Atoi(gjson.Get(JsonMetadata, "runtime_mins").String())
+	if err == nil {
+		sc.Duration = tmpDuration
+	}
+
+	// Covers
+	coverimgs := gjson.Get(JsonMetadata, "jacket_full_url")
+	sc.Covers = append(sc.Covers, strings.TrimSpace(html.UnescapeString(coverimgs.String())))
+
+	// Gallery
+	galleryimgs := gjson.Get(JsonMetadata, "gallery.#.image_full")
+	for _, name := range galleryimgs.Array() {
+		sc.Gallery = append(sc.Gallery, strings.TrimSpace(html.UnescapeString(name.String())))
+	}
+
+	// Cast
+	for _, actress := range gjson.Get(JsonMetadata, "actresses").Array() {
+		if name := r18dActressName(actress); name != "" {
+			sc.Cast = append(sc.Cast, name)
+		}
+	}
+
+	quality := "VR"
+	for _, cat := range gjson.Get(JsonMetadata, "categories").Array() {
+		id := cat.Get("id").Int()
+
+		switch {
+		case id == r18dCat8KVR:
+			quality = "8K"
+		case id == r18dCatHQVR && quality != "8K":
+			quality = "HQ"
+		}
+
+		name := strings.TrimSpace(html.UnescapeString(cat.Get("name_en").String()))
+		if repl, ok := r18dTagOverrides[id]; ok {
+			if repl == "" {
+				continue
+			}
+			name = repl
+		}
+		sc.Tags = append(sc.Tags, name)
+	}
+	sc.Tags = append(sc.Tags, "JAVR")
+	sc.Tags = append(sc.Tags, "R18.dev")
+
+	// Filler Filenames
+	resolutions := []string{"vmb"}
+	if quality == "HQ" {
+		resolutions = []string{"vrv1uhqe"}
+	} else if quality == "8K" {
+		resolutions = []string{"vrv1uhqf", "vrv18khia"}
+	}
+	for r := range resolutions {
+		parts := []string{"", "1", "2", "3"}
+		for p := range parts {
+			fn := content_id + resolutions[r] + parts[p] + ".mp4"
+			sc.Filenames = append(sc.Filenames, fn)
+		}
+	}
+
+	return sc
 }
 
 func getByContentId(client *resty.Client, content_id string) (*resty.Response, error) {
