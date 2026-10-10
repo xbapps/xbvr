@@ -19,9 +19,13 @@ import (
 
 var r18dTagOverrides = map[int64]string{
 	// Clutter/Junk
+	501:  "", // Female Porn Star (AV女優)
 	617:  "", // Three Dimensional (3D) - old VR scenes (HNVR-001, 2017), redundant
 	4025: "", // Featured Actress (単体作品)
 	6548: "", // Exclusive Distribution (独占配信)
+	6561: "", // Special Offers And Set Products (特典付き・セット商品)
+	6565: "", // Sale (limited time) (期間限定セール)
+	6566: "", // FANZA Exclusive
 	6793: "", // VR Exclusive (VR専用)
 	6925: "", // High-Quality VR (ハイクオリティVR) - still used for FANZA filenames/quality below
 
@@ -95,6 +99,17 @@ func r18dKunrei(s string) string {
 		}
 		return c + "y" + vowel
 	})
+}
+
+// "[VR] " in front of titles, sometimes missing its "[" (hnvr00132, hnvr00149: "VR] Naked Kendo ...")
+var r18dVRPrefix = regexp.MustCompile(`^\[?VR\]\s*`)
+
+// r18dTagUncredited tags scenes R18.dev lists with no actresses at all (hnvr00149), so they can be
+// found and filled in by hand.
+func r18dTagUncredited(sc *models.ScrapedScene) {
+	if len(sc.Cast) == 0 {
+		sc.Tags = append(sc.Tags, "uncredited javr")
+	}
 }
 
 func r18dCapitalize(s string) string {
@@ -180,11 +195,12 @@ func r18dSceneFromJSON(JsonMetadata string) models.ScrapedScene {
 	sc.HomepageURL = "https://r18.dev/videos/vod/movies/detail/-/id=" + content_id + "/"
 
 	// Title
+	title := r18dVRPrefix.ReplaceAllString(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "title_en").String())), "")
 	if gjson.Get(JsonMetadata, "title_en_is_machine_translation").String() == "false" {
-		sc.Title = strings.Replace(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "title_en").String())), "[VR] ", "", -1)
+		sc.Title = title
 	} else {
 		sc.Title = gjson.Get(JsonMetadata, "content_id").String()
-		sc.Synopsis = gjson.Get(JsonMetadata, "title_en").String()
+		sc.Synopsis = title
 	}
 
 	// Studio
@@ -215,6 +231,7 @@ func r18dSceneFromJSON(JsonMetadata string) models.ScrapedScene {
 			sc.Cast = append(sc.Cast, name)
 		}
 	}
+	r18dTagUncredited(&sc)
 
 	quality := "VR"
 	for _, cat := range gjson.Get(JsonMetadata, "categories").Array() {
