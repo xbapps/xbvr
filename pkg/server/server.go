@@ -65,6 +65,10 @@ func StartServer(version, commit, branch, date string) {
 		config.State.Migration.IsRunning = true
 		migrations.ProcessCustomSceneRemappingFiles()
 		migrations.Migrate("")
+		// On a fresh database every migration runs, and an old one deletes the site rows it
+		// doesn't recognize ("KMPVR (R18.dev)", "PassthroughVR (RealVR)", ...) after InitSites
+		// below already created them. Create them again once the migrations are done.
+		models.InitSites()
 		config.CompleteMigration()
 	}()
 
