@@ -877,6 +877,11 @@ func addR18devScraper(cfg config.R18devScraperConfig, custom bool) {
 		log.Warnf("R18.dev scraper %q skipped: needs an id and at least one source", cfg.Name)
 		return
 	}
+	if id := r18devSiteID(cfg); id == r18devSingleSceneID || r18devIsRegistered(id) {
+		// Built-in scrapers are registered first, so a custom one with the same id loses
+		log.Warnf("R18.dev scraper %q skipped: id %q is already taken", cfg.Name, cfg.ID)
+		return
+	}
 	for _, src := range cfg.Sources {
 		if src.Type != "label" && src.Type != "studio" && src.Type != "category" {
 			log.Warnf("R18.dev scraper %q skipped: source type %q, must be label, studio or category", cfg.Name, src.Type)
