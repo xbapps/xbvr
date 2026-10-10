@@ -14,6 +14,8 @@
           <b-menu-list :label="$t('Scene data')">
             <b-menu-item :label="$t('Scrapers')" :active="active==='data-scrapers'"
                          @click="setActive('data-scrapers')"/>
+            <b-menu-item :label="$t('Scrapers (JAV)')" :active="active==='data-scrapers-jav'"
+                         @click="setActive('data-scrapers-jav')"/>
             <b-menu-item :label="$t('Create/Import scene')" :active="active==='create-scene'"
                          @click="setActive('create-scene')"/>
             <b-menu-item :label="$t('Funscripts')" :active="active==='funscripts'"
@@ -37,6 +39,7 @@
           <Previews v-show="active==='previews'"/>
           <Schedules v-show="active==='schedules'"/>
           <SceneDataScrapers v-show="active==='data-scrapers'"/>
+          <SceneDataScrapers v-show="active==='data-scrapers-jav'" jav/>
           <SceneCreate v-show="active==='create-scene'"/>
           <Funscripts v-show="active==='funscripts'"/>
           <SceneDataImportExport v-show="active==='data-import-export'"/>

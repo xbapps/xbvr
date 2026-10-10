@@ -247,6 +247,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/sites").To(i.listSites).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/r18dev-scrapers").To(i.listR18devScrapers).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.PUT("/sites/{site}").To(i.toggleSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -364,6 +367,15 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 	db, _ := models.GetDB()
 	defer db.Close()
 	i.listSitesWithDB(req, resp, db)
+}
+
+// listR18devScrapers returns the extra info the Scrapers (JAV) tab shows for R18.dev Scrapers.
+func (i ConfigResource) listR18devScrapers(req *restful.Request, resp *restful.Response) {
+	list := scrape.R18devScrapers()
+	if list == nil {
+		list = []scrape.R18devScraperInfo{}
+	}
+	resp.WriteHeaderAndEntity(http.StatusOK, list)
 }
 
 func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {

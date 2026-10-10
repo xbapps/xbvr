@@ -528,6 +528,15 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			continue
 		}
 
+		if singleSceneURL != "" {
+			// Every R18.dev Scraper claims the r18.dev domain, so "Scrape a scene" picks one of them
+			// more or less at random. Hand the scene to the Scraper that actually covers it.
+			if owner := r18devOwner(body); owner != "" && owner != scraperID {
+				log.Infof("[%s] %s belongs to %s", scraperID, it.ContentID, owner)
+				sc.ScraperID = owner
+			}
+		}
+
 		if updateSceneID != "" {
 			sc.SceneID, sc.SiteID = updateSceneID, updateSceneID
 		} else if e := idx.bySceneID[sc.SceneID]; e != nil && !r18devIsOurs(e.ScraperID) {
@@ -580,6 +589,37 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	return nil
 }
 
+// R18devScraperInfo is what the Scrapers (JAV) tab shows next to the normal site row.
+type R18devScraperInfo struct {
+	ID       string                `json:"id"` // XBVR site / scraper ID, r18dev-...
+	Name     string                `json:"name"`
+	Company  string                `json:"company"`
+	Custom   bool                  `json:"custom"`
+	Sources  []config.R18devSource `json:"sources"`
+	Sites    []string              `json:"sites"`
+	OldSites []string              `json:"old_sites"`
+}
+
+var r18devRegistered []R18devScraperInfo
+
+// R18devScrapers lists the registered R18.dev Scrapers, official ones first.
+func R18devScrapers() []R18devScraperInfo {
+	return r18devRegistered
+}
+
+// r18devOwner returns the site ID of the Scraper whose sources cover this scene's label or maker, or "".
+func r18devOwner(body string) string {
+	label, maker := gjson.Get(body, "label_id").Int(), gjson.Get(body, "maker_id").Int()
+	for _, info := range r18devRegistered {
+		for _, src := range info.Sources {
+			if (src.Type == "label" && label != 0 && src.ID == label) || (src.Type == "studio" && maker != 0 && src.ID == maker) {
+				return info.ID
+			}
+		}
+	}
+	return ""
+}
+
 func addR18devScraper(cfg config.R18devScraperConfig, custom bool) {
 	if cfg.ID == "" || len(cfg.Sources) == 0 {
 		log.Warnf("R18.dev scraper %q skipped: needs an id and at least one source", cfg.Name)
@@ -589,6 +629,10 @@ func addR18devScraper(cfg config.R18devScraperConfig, custom bool) {
 	if custom {
 		name = cfg.Name + " (Custom R18.dev)"
 	}
+	r18devRegistered = append(r18devRegistered, R18devScraperInfo{
+		ID: r18devSiteID(cfg), Name: cfg.Name, Company: cfg.Company, Custom: custom,
+		Sources: cfg.Sources, Sites: cfg.Sites, OldSites: cfg.OldSites,
+	})
 	registerScraper(r18devSiteID(cfg), name, cfg.AvatarUrl, "r18.dev",
 		func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
 			return R18devCrawler(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, limitScraping, cfg)

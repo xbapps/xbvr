@@ -50,12 +50,16 @@ type ScraperConfig struct {
 
 // R18devScraperConfig is one JAV "Scraper" built from R18.dev list sources (labels and/or makers).
 // The XBVR site ID is "r18dev-" + ID.
+// Sites / OldSites are display only: the DVD prefixes this Scraper is expected to put in the scene "Site"
+// field, current ones first, dead ones the sources still carry in OldSites.
 type R18devScraperConfig struct {
 	ID        string         `json:"id"`
 	Name      string         `json:"name"`
 	Company   string         `json:"company"`
 	AvatarUrl string         `json:"avatar_url"`
 	Sources   []R18devSource `json:"sources"`
+	Sites     []string       `json:"sites"`
+	OldSites  []string       `json:"old_sites,omitempty"`
 }
 
 // R18devSource is one R18.dev list: Type is "label" or "studio" (R18.dev's name for a maker).

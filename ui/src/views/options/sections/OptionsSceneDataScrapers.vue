@@ -1,9 +1,14 @@
 <template>
   <div class="content">
     <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
+    <template v-if="jav">
+      <h3 class="title">{{$t('Import Japanese Adult VR (JAVR) Scene')}}</h3>
+      <JAVRImport/>
+      <br>
+    </template>
     <div class="columns">
       <div class="column">
-        <h3 class="title">{{$t('Scrape scenes from studios')}}</h3>
+        <h3 class="title">{{jav ? $t('Scrape JAV scenes from R18.dev') : $t('Scrape scenes from studios')}}</h3>
       </div>
       <div class="column buttons" align="right">
         <b-dropdown aria-role="list" position="is-bottom-left">
@@ -39,11 +44,18 @@
       </b-table-column>
       <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">
         <b-tooltip class="is-warning" :active="props.row.has_scraper == false" :label="$t('Scraper does not exist')"  :delay="250" >
-          <a @click="navigateToStudio(props.row.name)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
+          <a @click="navigateToRow(props.row)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
         </b-tooltip>
+        <b-tag v-if="jav && props.row.source.startsWith('Custom')" size="is-small">{{$t('Custom')}}</b-tag>
       </b-table-column>
-      <b-table-column field="source" :label="$t('Source')" sortable searchable v-slot="props">
+      <b-table-column field="source" :label="$t('Source')" :visible="!jav" sortable searchable v-slot="props">
         {{ props.row.source }}
+      </b-table-column>
+      <b-table-column field="xbvr_sites" label='XBVR "Site"' :visible="jav" sortable searchable v-slot="props">
+        <b-tooltip :label="$t('DVD prefixes this scraper puts in the scene Site field')" :delay="250">
+          <span>{{ props.row.xbvr_sites }}</span>
+          <span v-if="props.row.xbvr_old_sites" class="has-text-grey is-size-7"> (Old: {{ props.row.xbvr_old_sites }})</span>
+        </b-tooltip>
       </b-table-column>
       <b-table-column field="last_update" :label="$t('Last scrape')" sortable v-slot="props" cell-class="no-wrap">
             <span :class="[runningScrapers.includes(props.row.id) ? 'invisible' : '']">
@@ -73,7 +85,7 @@
         </b-tooltip>
       </b-table-column>
       <b-table-column field="scene_count" :label="$t('Scenes')" v-slot="props" width="40" sortable numeric>
-        <a @click="navigateToStudio(props.row.name)" style="cursor: pointer;">
+        <a @click="navigateToRow(props.row)" style="cursor: pointer;">
           <span class="tag is-info is-light is-medium"><strong>{{ props.row.scene_count }}</strong></span>
         </a>
       </b-table-column>
@@ -107,7 +119,7 @@
           </b-dropdown>
         </div>
       </b-table-column>
-      <b-table-column field="master_site_id" :label="$t('Main Site')" v-slot="props" width="60" sortable>
+      <b-table-column field="master_site_id" :label="$t('Main Site')" :visible="!jav" v-slot="props" width="60" sortable>
         <span>
           <a @click="editMatchParams(props.row)" title="Edit Scene Matching Parameters" v-if="props.row.master_site_id != ''"> 
             <b-icon pack="mdi" icon="cog-outline" size="is-small"/>
@@ -164,10 +176,15 @@
 import ky from 'ky'
 import VueLoadImage from 'vue-load-image'
 import { formatDistanceToNow, parseISO } from 'date-fns'
+import JAVRImport from './JAVRImport'
 
 export default {
   name: 'OptionsSites',
-  components: { VueLoadImage },
+  components: { VueLoadImage, JAVRImport },
+  props: {
+    // true: the Scrapers (JAV) tab, only R18.dev scrapers (site ID r18dev-...). false: everything else.
+    jav: { type: Boolean, default: false }
+  },
   data () {
     return {
       javrQuery: '',
@@ -181,9 +198,17 @@ export default {
       scraperwarning: '',
       scraperwarning2: '',
       showAllScrapers: true,
+      r18devInfo: {},
     }
   },
   mounted () {
+    if (this.jav) {
+      ky.get('/api/options/r18dev-scrapers').json().then(list => {
+        const info = {}
+        list.forEach(s => { info[s.id] = s })
+        this.r18devInfo = info
+      })
+    }
     this.$store.dispatch('optionsSites/load')
     this.$store.dispatch('optionsAdvanced/load')
     this.$store.dispatch('optionsWeb/load')
@@ -204,6 +229,9 @@ export default {
       this.additionalInfo = [{fieldName: "scene_url", fieldPrompt: "Scene Url", placeholder: "Enter the url for a VR Scene", fieldValue: '', required: true, type: 'url'}]      
       this.scraperwarning = "Take care to only use scene urls for the " + scraper + " Scraper"
       this.scraperwarning2 = ""
+      if (scraper.startsWith('r18dev-')) {
+        this.scraperwarning = "Use an r18.dev or dmm.co.jp scene URL. The scene goes to whichever JAV scraper covers its label or maker"
+      }
       switch (scraper) {
         case 'wankzvr':
         case 'milfvr':
@@ -366,6 +394,34 @@ export default {
       }
       return  this.scraperList.find(element => element.id === siteId).name;
     },
+    navigateToRow(row) {
+      if (this.jav) {
+        // R18.dev scenes use the DVD prefix as their Site, not the scraper name
+        const sites = this.siteList(row.id).concat(this.oldSiteList(row.id))
+        if (sites.length > 0) {
+          this.navigateToSites(sites)
+          return
+        }
+      }
+      this.navigateToStudio(row.name)
+    },
+    siteList(id) {
+      const info = this.r18devInfo[id]
+      return info && info.sites ? info.sites : []
+    },
+    oldSiteList(id) {
+      const info = this.r18devInfo[id]
+      return info && info.old_sites ? info.old_sites : []
+    },
+    navigateToSites(sites) {
+      this.$store.state.sceneList.filters.sites = sites
+      this.$store.state.sceneList.filters.tags = []
+      this.$store.state.sceneList.filters.attributes = []
+      this.$router.push({
+        name: 'scenes',
+        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
+      })
+    },
     navigateToStudio(studioName) {
       // Handle different scraper types:
       // - Built-in scrapers (e.g., "AstroDomina (SLR)"): scenes use just "AstroDomina"
@@ -387,13 +443,7 @@ export default {
       }
 
       // Set the site filter and navigate to scenes page
-      this.$store.state.sceneList.filters.sites = [siteName]
-      this.$store.state.sceneList.filters.tags = []
-      this.$store.state.sceneList.filters.attributes = []
-      this.$router.push({
-        name: 'scenes',
-        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
-      })
+      this.navigateToSites([siteName])
     },
     toggleEnabledFilter() {
       this.showAllScrapers = !this.showAllScrapers
@@ -443,6 +493,16 @@ export default {
           items[i].sitename = m[1];
           items[i].source = m[2];
         }
+      }
+
+      // R18.dev scrapers live on their own tab. The store items are shared with the other tab,
+      // so the JAV tab's extra columns go on copies.
+      items = items.filter(item => item.id.startsWith('r18dev-') === this.jav);
+      if (this.jav) {
+        items = items.map(item => Object.assign({}, item, {
+          xbvr_sites: this.siteList(item.id).join(', '),
+          xbvr_old_sites: this.oldSiteList(item.id).join(', ')
+        }));
       }
 
       // Filter by enabled status if the filter is active
