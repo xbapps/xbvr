@@ -505,7 +505,7 @@
           "id": "kmpvr",
           "name": "KMPVR",
           "company": "K M Produce",
-          "avatar_url": "",
+          "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/e/e6/K.M.Produce_logo.png",
           "sources": [
             { "type": "label", "id": 25637 }
           ],
