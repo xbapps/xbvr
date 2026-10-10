@@ -2,13 +2,13 @@
   <div class="content">
     <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
     <template v-if="jav">
-      <h3 class="title">{{$t('Import Japanese Adult VR (JAVR) Scene')}}</h3>
+      <h3 class="title">{{$t('LEGACY: Import Japanese Adult VR (JAVR) Scene')}}</h3>
       <JAVRImport/>
       <br>
     </template>
     <div class="columns">
       <div class="column">
-        <h3 class="title">{{jav ? $t('Scrape JAV scenes from R18.dev') : $t('Scrape scenes from studios')}}</h3>
+        <h3 class="title">{{jav ? $t('EXPERIMENTAL: Scrape JAV scenes from R18.dev') : $t('Scrape scenes from studios')}}</h3>
       </div>
       <div class="column buttons" align="right">
         <b-dropdown aria-role="list" position="is-bottom-left">
