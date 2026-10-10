@@ -249,24 +249,50 @@ func (c *r18devClient) listPage(srcType string, id int64, page int) ([]r18devLis
 	return items, int(gjson.Get(body, "total_results").Int()), nil
 }
 
-// listSource fetches every page of one source (only page 1 when limitScraping is set).
+// listSource fetches every page of one source. With limitScraping:
+//   - pages 1 and 2
+//   - more pages while they're still inside the cover window: a preorder skipped for its NOW
+//     PRINTING cover drifts down the list as newer preorders get listed (on the High-Quality VR
+//     category a page is only about 11 days of releases)
+//   - the last page: scenes with no release date sort last
 func (c *r18devClient) listSource(src config.R18devSource, limitScraping bool) ([]r18devListItem, error) {
 	items, total, err := c.listPage(src.Type, src.ID, 1)
 	if err != nil {
 		return nil, err
 	}
 	pages := (total + r18devPageSize - 1) / r18devPageSize
-	if limitScraping {
-		pages = 1
-	}
-	for p := 2; p <= pages; p++ {
+	cutoff := time.Now().AddDate(0, 0, -(r18devCoverDays + 7)).Format("2006-01-02")
+	prev := items
+	p := 2
+	for ; p <= pages; p++ {
+		if limitScraping && p > 2 && !r18devPageRecent(prev, cutoff) {
+			break
+		}
 		more, _, err := c.listPage(src.Type, src.ID, p)
+		if err != nil {
+			return items, err
+		}
+		items = append(items, more...)
+		prev = more
+	}
+	if p <= pages {
+		more, _, err := c.listPage(src.Type, src.ID, pages)
 		if err != nil {
 			return items, err
 		}
 		items = append(items, more...)
 	}
 	return items, nil
+}
+
+// r18devPageRecent: the oldest scene on a list page (lists are newest first) was released on or
+// after cutoff (YYYY-MM-DD). A page ending in a scene with no date is the end of the dated part.
+func r18devPageRecent(page []r18devListItem, cutoff string) bool {
+	if len(page) == 0 {
+		return false
+	}
+	d := page[len(page)-1].ReleaseDate
+	return len(d) >= 10 && d[:10] >= cutoff
 }
 
 // detail fetches the detail JSON for a content ID. Returns "" on 404.
