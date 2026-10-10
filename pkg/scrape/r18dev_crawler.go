@@ -39,9 +39,13 @@ var r18devExcludedLabels = map[int64]bool{
 	26286: true,
 }
 
-// Makers that are never scraped: Western studios re-released on FANZA, censored. XBVR scrapes
-// them from their own sites already.
-var r18devExcludedMakers = map[int64]bool{
+// Foreign imports: Western studios re-released on FANZA, censored, which XBVR scrapes from their
+// own sites already. Treated like compilations: dropped when crawling, let through when someone
+// asks for the scene. Category 4022 catches them; the makers are a backstop in case a scene is
+// missing the category.
+const r18devCatForeign = 4022 // Foreign Imports (洋ピン・海外輸入)
+
+var r18devForeignMakers = map[int64]bool{
 	300246: true, // SLRORIGINALS (h_1539slr)
 	40392:  true, // Imagine VR, label 26092 VIRTUAL REAL PORN (h_1274vrp)
 }
@@ -403,8 +407,9 @@ func r18devSaveRejected(scraperID string, rejected map[string]bool) {
 
 // r18devBuildScene turns detail JSON into a scene for this scraper, or returns a reason to skip.
 // reject = true means the content ID should never be fetched again (not VR, compilation, ...).
-// allowCompilations is set for single scene scrapes and for updating a scene that's already ours.
-func r18devBuildScene(c *r18devClient, body string, scraperID string, allowCompilations bool) (sc models.ScrapedScene, skip string, reject bool) {
+// manual is set for single scene scrapes and for updating a scene that's already ours: compilations
+// and foreign imports get through.
+func r18devBuildScene(c *r18devClient, body string, scraperID string, manual bool) (sc models.ScrapedScene, skip string, reject bool) {
 	cats := map[int64]bool{}
 	for _, cat := range gjson.Get(body, "categories").Array() {
 		cats[cat.Get("id").Int()] = true
@@ -412,16 +417,19 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, allowCompi
 	if !cats[r18devCatVR] {
 		return sc, "not VR", true
 	}
-	if !allowCompilations {
+	if !manual {
 		if why := r18devIsCompilation(body, cats); why != "" {
 			return sc, why, true
+		}
+		if cats[r18devCatForeign] {
+			return sc, fmt.Sprintf("foreign import (category %d)", r18devCatForeign), true
+		}
+		if id := gjson.Get(body, "maker_id").Int(); r18devForeignMakers[id] {
+			return sc, fmt.Sprintf("foreign import (maker %d)", id), true
 		}
 	}
 	if r18devExcludedLabels[gjson.Get(body, "label_id").Int()] {
 		return sc, "excluded label", true
-	}
-	if r18devExcludedMakers[gjson.Get(body, "maker_id").Int()] {
-		return sc, "excluded maker", true
 	}
 
 	// NOW PRINTING on a recent / upcoming scene: wait for the real cover. Old scenes can have
