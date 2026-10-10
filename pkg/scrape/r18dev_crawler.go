@@ -58,6 +58,7 @@ var r18devCompilationCategories = []int64{
 	6003, // Compilation
 	6608, // Actress Best Compilation
 	6609, // More Than 16 Hours Of Footage
+	7267, // Set Items (SOD's SETH sets: 16 to 30 hours of best-of)
 }
 
 // A cast this big is a compilation whatever the categories say: hnvr00132 is 58 actresses spliced
