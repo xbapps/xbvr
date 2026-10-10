@@ -45,6 +45,11 @@ var r18devExcludedLabels = map[int64]bool{
 // missing the category.
 const r18devCatForeign = 4022 // Foreign Imports (洋ピン・海外輸入)
 
+// Real JAV that FANZA tagged 4022 anyway (a Western performer in a Japanese studio's release)
+var r18devForeignImportExceptions = map[string]bool{
+	"rvr00064": true, // ROOKIE, Lily Hart [vt-idiot]
+}
+
 var r18devForeignMakers = map[int64]bool{
 	300246: true, // SLRORIGINALS (h_1539slr)
 	40392:  true, // Imagine VR, label 26092 VIRTUAL REAL PORN (h_1274vrp)
@@ -463,7 +468,7 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, manual boo
 		if why := r18devIsCompilation(body, cats); why != "" {
 			return sc, why, true
 		}
-		if cats[r18devCatForeign] {
+		if cats[r18devCatForeign] && !r18devForeignImportExceptions[r18devStripReissue(strings.ToLower(gjson.Get(body, "content_id").String()))] {
 			return sc, fmt.Sprintf("foreign import (category %d)", r18devCatForeign), true
 		}
 		if id := gjson.Get(body, "maker_id").Int(); r18devForeignMakers[id] {
