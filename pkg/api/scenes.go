@@ -131,6 +131,10 @@ func (i SceneResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/delete").To(i.deleteScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.POST("/split").To(i.splitScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseSplitScene{}))
+
 	ws.Route(ws.POST("/{scene-id}/cuepoint").To(i.addSceneCuepoint).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
