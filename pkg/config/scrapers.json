@@ -511,6 +511,16 @@
           ],
           "sites": [ "VRKM" ],
           "old_sites": [ "KMVR", "EXVR" ]
+        },
+        {
+          "id": "hnvr",
+          "name": "Hon Naka VR",
+          "company": "Hon Naka",
+          "avatar_url": "",
+          "sources": [
+            { "type": "label", "id": 25913 }
+          ],
+          "sites": [ "HNVR" ]
         }
       ]
     }
