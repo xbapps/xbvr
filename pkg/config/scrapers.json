@@ -853,6 +853,29 @@
           "sites_display": "CCVR"
         },
         {
+          "id": "hisokavr",
+          "name": "HisokaVR",
+          "company": "密",
+          "tooltip": "密 (Hisoka)",
+          "avatar_url": "",
+          "sources": [
+            { "type": "label", "id": 2068266 }
+          ],
+          "sites": [ "HSKVR" ]
+        },
+        {
+          "id": "deepsvr",
+          "name": "Deep's VR",
+          "company": "Deep's",
+          "tooltip": "ディープスVR",
+          "avatar_url": "",
+          "sources": [
+            { "type": "label", "id": 2064792 }
+          ],
+          "sites": [ "DSUVR" ],
+          "old_sites": [ "DPSVR" ]
+        },
+        {
           "id": "maxavr",
           "name": "MAX-A VR",
           "company": "MAX-A",
