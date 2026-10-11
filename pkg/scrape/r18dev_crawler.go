@@ -993,6 +993,7 @@ func addR18devScraper(cfg config.R18devScraperConfig, custom bool) {
 	name := cfg.Name + " (R18.dev)"
 	if custom {
 		name = cfg.Name + " (Custom R18.dev)"
+		r18devLoadedCustom[strings.ToLower(cfg.ID)] = cfg
 	}
 	r18devRegistered = append(r18devRegistered, R18devScraperInfo{
 		ID: r18devSiteID(cfg), Name: cfg.Name, Company: cfg.Company, Custom: custom,

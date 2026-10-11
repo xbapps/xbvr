@@ -8,6 +8,7 @@
             <b-tab-item label="Scene Details"/>
             <b-tab-item label="Actor Settings"/>
             <b-tab-item label="Create Custom Site"/>
+            <b-tab-item :label="$t('Create Custom Site (JAV)')"/>
             <b-tab-item :label="$t('Alternate Sites')"/>
             <b-tab-item :label="$t('Proxy')"/>
             <b-tab-item :label="$t('Cookies/Headers')"/>
@@ -111,7 +112,16 @@
         </div>
       </div>
 
+      <!-- Custom R18.dev (JAV) Scrapers -->
       <div class="columns" v-if="activeTab == 3">
+        <div class="column">
+          <section>
+            <R18devCustomScraper/>
+          </section>
+        </div>
+      </div>
+
+      <div class="columns" v-if="activeTab == 4">
         <div class="column">
           <section>
             <b-field>
@@ -167,7 +177,7 @@
       </div>
 
       <!-- Proxy for scraper-->
-      <div class="columns" v-if="activeTab == 4">
+      <div class="columns" v-if="activeTab == 5">
         <div class="column">
           <section>
             <b-field :label="$t('Proxy')" label-position="on-border">
@@ -181,7 +191,7 @@
       </div>
 
       <!-- Headers/Cookies tab -->
-      <div class="columns" v-if="activeTab == 5">
+      <div class="columns" v-if="activeTab == 6">
         <div class="column">
           <section>            
             <b-field>
@@ -270,8 +280,10 @@
 
 <script>
 import ky from 'ky'
+import R18devCustomScraper from './R18devCustomScraper.vue'
 export default {
   name: 'InterfaceAdvanced',
+  components: { R18devCustomScraper },
   mounted () {
     this.$store.dispatch('optionsAdvanced/load')
   },

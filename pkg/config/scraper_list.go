@@ -28,6 +28,8 @@ type XbvrScrapers struct {
 	VrpornScrapers  []ScraperConfig       `json:"vrporn"`
 	VrphubScrapers  []ScraperConfig       `json:"vrphub"`
 	R18devScrapers  []R18devScraperConfig `json:"r18dev"`
+	// R18devSuggestions are offered in "Create Custom Site (JAV)", never loaded as Scrapers
+	R18devSuggestions []R18devSuggestion `json:"r18dev_suggestions,omitempty"`
 }
 type CustomScrapers struct {
 	PovrScrapers    []ScraperConfig       `json:"povr"`
@@ -70,6 +72,15 @@ type R18devScraperConfig struct {
 	// Exclusive scraper turns every other R18.dev scraper off, see scrape.R18devSiteToggled.
 	AvatarText string `json:"avatar_text,omitempty"`
 	Exclusive  bool   `json:"exclusive,omitempty"`
+}
+
+// R18devSuggestion is a studio not shipped as a preset (dead, junk, niche), offered as a ready-made
+// custom Scraper. Scenes and State are what the card shows.
+type R18devSuggestion struct {
+	R18devScraperConfig
+	Scenes int    `json:"scenes"`         // VR scenes left after the compilation rules
+	State  string `json:"state"`          // "Dead since 2023-06"
+	Note   string `json:"note,omitempty"` // why it isn't a preset, when that's not just "dead"
 }
 
 // R18devSource is one R18.dev list: Type is "label", "studio" (R18.dev's name for a maker) or

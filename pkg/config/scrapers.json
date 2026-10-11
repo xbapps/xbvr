@@ -758,6 +758,110 @@
           ],
           "sites": []
         }
+      ],
+      "r18dev_suggestions": [
+        {
+          "id": "casanova",
+          "name": "CasanovA",
+          "company": "CasanovA",
+          "avatar_url": "https://stashdb.org/images/f0350ad1-7c12-4946-83d7-7af72d4ae336",
+          "sources": [
+            { "type": "studio", "id": 46483 }
+          ],
+          "sites": [ "CAFR", "CACA", "CAMI", "CAPI", "CABE", "CASMANI", "CASP", "CAREM", "CAIM" ],
+          "sites_display": "(CAFR, CACA, more)",
+          "scenes": 1472,
+          "state": "Dead since 2023-06",
+          "note": "bad stitching, re-framed fisheye"
+        },
+        {
+          "id": "vonevr",
+          "name": "V:one VR",
+          "company": "V:one",
+          "avatar_url": "https://stashdb.org/images/59a5e348-7fb5-420a-8d98-dcba3bacf4b5",
+          "sources": [
+            { "type": "studio", "id": 46496 }
+          ],
+          "sites": [ "GOPJ", "VOVS", "VOVR", "MOHV" ],
+          "sites_display": "GOPJ (+VOVS +VOVR +MOHV)",
+          "scenes": 886,
+          "state": "Dead since 2024-08"
+        },
+        {
+          "id": "vrproducevr",
+          "name": "V&R Produce",
+          "company": "V&R Produce",
+          "avatar_url": "https://stashdb.org/images/72332c72-457a-4d41-ae32-787699b8998b",
+          "sources": [
+            { "type": "label", "id": 26125 }
+          ],
+          "sites": [ "VRVR", "VRVRW", "VRVRP" ],
+          "sites_display": "VRVR (+VRVRW +VRVRP)",
+          "scenes": 149,
+          "state": "Dead since 2021-04"
+        },
+        {
+          "id": "radicalkmpvr",
+          "name": "RADICAL-KMPVR-",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/4cf49831-74af-4c32-acb3-f09d85594036",
+          "sources": [
+            { "type": "studio", "id": 40600 }
+          ],
+          "sites": [ "MANIVR", "MNSVR" ],
+          "sites_display": "MANIVR (+MNSVR)",
+          "scenes": 45,
+          "state": "Dead since 2021-09"
+        },
+        {
+          "id": "bazookavr",
+          "name": "BAZOOKA VR",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/f510de2f-6eb7-44a5-b237-2b879fa88f36",
+          "sources": [
+            { "type": "label", "id": 25972 }
+          ],
+          "sites": [ "BZVR" ],
+          "scenes": 42,
+          "state": "Dead since 2018-11"
+        },
+        {
+          "id": "scoopvr",
+          "name": "SCOOP VR",
+          "company": "Scoop",
+          "avatar_url": "https://stashdb.org/images/cea00552-d578-47dc-859c-288ef77d71ff",
+          "sources": [
+            { "type": "label", "id": 25910 }
+          ],
+          "sites": [ "SCVR" ],
+          "scenes": 32,
+          "state": "Last release 2023-05"
+        },
+        {
+          "id": "avervr",
+          "name": "AverVR",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/dbdc9f36-fe8a-4596-906e-97ee9f0c500f",
+          "sources": [
+            { "type": "label", "id": 2062780 }
+          ],
+          "sites": [ "AVERV" ],
+          "scenes": 14,
+          "state": "Dead since 2021-05"
+        },
+        {
+          "id": "realvrneo",
+          "name": "REAL VR-Neo-",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/844de2a4-57fa-4168-9472-109e20e9410f",
+          "sources": [
+            { "type": "studio", "id": 300153 }
+          ],
+          "sites": [ "KBVR" ],
+          "sites_display": "KBVR (047 to 050)",
+          "scenes": 4,
+          "state": "Dead since 2020-12"
+        }
       ]
     }
   }

@@ -250,6 +250,18 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/r18dev-scrapers").To(i.listR18devScrapers).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	// Custom R18.dev Scrapers ("Create Custom Site (JAV)" tab), loaded at the next start
+	ws.Route(ws.GET("/r18dev-custom").To(i.listR18devCustom).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.PUT("/r18dev-custom").To(i.saveR18devCustom).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.DELETE("/r18dev-custom/{id}").To(i.deleteR18devCustom).
+		Param(ws.PathParameter("id", "custom scraper ID, without r18dev-").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.GET("/r18dev-preview").To(i.previewR18devList).
+		Param(ws.QueryParameter("url", "R18.dev studio / label / category list link").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.PUT("/sites/{site}").To(i.toggleSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
