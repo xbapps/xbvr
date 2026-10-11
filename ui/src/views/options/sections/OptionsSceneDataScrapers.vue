@@ -68,8 +68,8 @@
               Turning it on switches off every studio scraper and <span style="font-family: monospace;color:#7957d5">4K60+</span>. Turning it off switches your studio scrapers back on.
             </p>
             <p v-else class="quality-mode-note">
-              <span style="color: red; font-weight: bold;">Disables studio mode. Warning: ~20,000 scenes.</span>
-              Scrapes every <span style="font-family: monospace;color:#7957d5">High-Quality VR</span> scene (4K60 and up), any studio. At one scene every 2 seconds the first run takes 11+ hours.
+              <span style="color: red; font-weight: bold;">Disables studio mode. Warning: ~17,000 scenes.</span>
+              Scrapes every <span style="font-family: monospace;color:#7957d5">High-Quality VR</span> scene (4K60 and up), any studio. At one scene every 2 seconds the first run takes 9+ hours.
               <br>
               Turning it on switches off every studio scraper and <span style="font-family: monospace;color:#7957d5">8KVR</span>. Turning it off switches your studio scrapers back on.
             </p>

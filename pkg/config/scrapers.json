@@ -777,6 +777,82 @@
           "sites": [ "DPVR" ]
         },
         {
+          "id": "mrmichiru",
+          "name": "Mr.michiru VR",
+          "company": "Mr.michiru",
+          "avatar_url": "https://stashdb.org/images/6122f6b3-3615-4911-964d-91bf38366d20",
+          "sources": [
+            { "type": "label", "id": 2062550 }
+          ],
+          "sites": [ "MTVR" ]
+        },
+        {
+          "id": "das",
+          "name": "Das ! VR",
+          "company": "ダスッ！",
+          "tooltip": "ダスッ！VR",
+          "avatar_url": "https://stashdb.org/images/156363d5-ef0a-4e2b-967c-dd3fe224a508",
+          "sources": [
+            { "type": "label", "id": 25813 }
+          ],
+          "sites": [ "DSVR" ]
+        },
+        {
+          "id": "saboten",
+          "name": "SabotenVR",
+          "company": "さぼてんVR",
+          "tooltip": "さぼてんVR (CactusVR)",
+          "avatar_url": "https://cdn.faleno.net/group/wp-content/uploads/2026/04/sabotenvr_rogo.jpg",
+          "sources": [
+            { "type": "studio", "id": 313638 }
+          ],
+          "sites": [ "SBGVR" ]
+        },
+        {
+          "id": "staringcrew",
+          "name": "Staring Crew",
+          "company": "ガン見隊",
+          "tooltip": "ガン見隊",
+          "avatar_url": "https://manji-group.com/_nuxt/img/800a8b3.png",
+          "sources": [
+            { "type": "studio", "id": 6675 }
+          ],
+          "sites": [ "GUNM" ]
+        },
+        {
+          "id": "cosmoplanetsvr",
+          "name": "Cosmo Planets VR",
+          "company": "Cosmo Planets",
+          "avatar_url": "https://stashdb.org/images/cba23b32-7335-478f-b15f-b3ae52a63ef7",
+          "sources": [
+            { "type": "label", "id": 46151 }
+          ],
+          "sites": [ "COSVR", "COSBVR", "COSVRW" ],
+          "sites_display": "COSVR"
+        },
+        {
+          "id": "falenovr",
+          "name": "FALENO VR",
+          "company": "FALENO",
+          "avatar_url": "https://stashdb.org/images/6d35c7a4-0e8b-4c6d-927b-ade2bfb91083?size=full",
+          "sources": [
+            { "type": "label", "id": 2068176 }
+          ],
+          "sites": [ "FAVR" ]
+        },
+        {
+          "id": "chinchinvr",
+          "name": "ChinChinVR",
+          "company": "ちんちんVR",
+          "tooltip": "ちんちんVR",
+          "avatar_url": "https://stashdb.org/images/0257a444-0a67-48f9-ab11-b6421d5be6a2",
+          "sources": [
+            { "type": "studio", "id": 40388 }
+          ],
+          "sites": [ "CCVR", "CCUG", "CCIO" ],
+          "sites_display": "CCVR"
+        },
+        {
           "id": "maxavr",
           "name": "MAX-A VR",
           "company": "MAX-A",
