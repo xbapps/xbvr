@@ -589,6 +589,27 @@
           "sites": [ "MDVR" ]
         },
         {
+          "id": "ipvr",
+          "name": "Idea Pocket VR",
+          "company": "Idea Pocket",
+          "avatar_url": "https://stashdb.org/images/f36668fb-df27-4d43-bd60-b2f812067128",
+          "sources": [
+            { "type": "label", "id": 25881 }
+          ],
+          "sites": [ "IPVR" ]
+        },
+        {
+          "id": "crystalvr",
+          "name": "CRYSTAL VR",
+          "company": "CRYSTAL VR",
+          "avatar_url": "https://stashdb.org/images/2f8e9c37-0f00-455e-9856-d7967bfd3a45",
+          "sources": [
+            { "type": "studio", "id": 46522 }
+          ],
+          "sites": [ "CRVR" ],
+          "old_sites": [ "DAVR", "NTVR" ]
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",
