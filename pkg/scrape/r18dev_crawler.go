@@ -138,6 +138,7 @@ var r18devCompilationContentIDs = map[string]bool{
 	// Mr.michiru VR
 	"1mtvr00017": true, // MR.michiru VRベスト 240分
 	// Idea Pocket
+	"ipvr00264": true, // 天井特化アングルBEST 痴女的騎乗位SP17本番, 199 min, 17 actresses
 	"ipvr00332": true, // 天井特化アングルBEST ALL8K 17本番, 755 min, 13 actresses
 }
 
