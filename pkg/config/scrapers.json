@@ -568,6 +568,16 @@
           "sites": [ "TMAVR" ]
         },
         {
+          "id": "s1vr",
+          "name": "S1 VR",
+          "company": "S1 NO.1 STYLE",
+          "avatar_url": "https://stashdb.org/images/21e999c6-856d-4e7d-bc6a-9d4ba5941f7f",
+          "sources": [
+            { "type": "label", "id": 25838 }
+          ],
+          "sites": [ "SIVR" ]
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",
