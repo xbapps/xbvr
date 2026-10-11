@@ -578,6 +578,16 @@
           "sites": [ "SIVR" ]
         },
         {
+          "id": "moodyzvr",
+          "name": "MOODYZ VR",
+          "company": "MOODYZ",
+          "avatar_url": "https://stashdb.org/images/577e973d-4de9-4f28-9f94-652d61c46265",
+          "sources": [
+            { "type": "label", "id": 25848 }
+          ],
+          "sites": [ "MDVR" ]
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",
