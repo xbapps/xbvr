@@ -99,7 +99,31 @@ var r18devCompilationPrefixes = map[string]bool{
 	"AJVRBX":   true, // Alice JAPAN VR boxes: 16h+ sets and lucky bags
 	"AJVRBEST": true, // Alice JAPAN VR best-ofs
 	"NKOVR":    true, // Cute Meat Paradise VR omnibuses (series 4226325), no compilation category
+	"MAXAVRF":  true, // MAX-A VR lucky bags (18 hours), 2 of 6 have no category and no Japanese title
 	"NKBVR":    true, // Cute Meat Paradise VR best-ofs (ULTRA BEST, 313 and 529 min)
+}
+
+// Known compilations no rule catches: no compilation category, series or prefix, and a title that
+// doesn't give it away to a machine. Content IDs without reissue suffix. Checked by vt-idiot (who
+// recognizes the scenes in their galleries) unless marked "title only".
+var r18devCompilationContentIDs = map[string]bool{
+	// TMA: "Over 4 Hours" is all they carry
+	"55tmavr00178": true, // エリア最強No.1！ VR BEST (the series also has the real TMAVR-128)
+	"55tmavr00180": true, // 401 min, 9 actresses (TMA preset content ID until c2a286c)
+	"55tmavr00181": true, // 301 min, 18 actresses
+	// MAX-A: "N作品完全収録" (N titles, complete) and "BEST NNN分"; the galleries are the covers of
+	// the included titles
+	"maxvr00140":  true, // 友田彩也香6作品完全収録560分
+	"maxvr00139":  true, // 彩乃なな6作品完全収録540分 (title only)
+	"maxvrh00032": true, // 涼宮琴音5作品完全収録280分 Vol.2 (title only)
+	"maxvrh00026": true, // 涼宮琴音3作品完全収録253分 Vol.1 (title only)
+	"maxvr00136":  true, // ショートカットBEST 完全収録330分
+	"maxvr00087":  true, // 働く綺麗なお姉さんBEST 210分
+	"maxvr00075":  true, // 超美尻BEST 226分
+	"maxvr00070":  true, // 限界接写観察BEST 183分
+	"maxvr00046":  true, // 仕事中に社内で中出しBEST
+	"maxvr00042":  true, // 妹BEST
+	"maxvr00039":  true, // イチャらぶBEST
 }
 
 // r18devIsCompilation returns why a scene counts as a compilation, or "".
@@ -115,8 +139,12 @@ func r18devIsCompilation(body string, cats map[int64]bool) string {
 	if n := len(gjson.Get(body, "actresses").Array()); n >= r18devCompilationCast {
 		return fmt.Sprintf("compilation (%d actresses)", n)
 	}
-	if p := r18devDisplayPrefix(r18devDisplayID(gjson.Get(body, "content_id").String())); r18devCompilationPrefixes[p] {
+	cid := strings.ToLower(gjson.Get(body, "content_id").String())
+	if p := r18devDisplayPrefix(r18devDisplayID(cid)); r18devCompilationPrefixes[p] {
 		return fmt.Sprintf("compilation (prefix %s)", p)
+	}
+	if r18devCompilationContentIDs[r18devStripReissue(cid)] {
+		return "compilation (known)"
 	}
 	return ""
 }

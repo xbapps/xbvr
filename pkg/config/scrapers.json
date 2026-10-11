@@ -564,7 +564,7 @@
           "sources": [
             { "type": "label", "id": 25624 }
           ],
-          "content_ids": [ "55tmavr00179", "55tmavr00180", "55tmavr00182" ],
+          "content_ids": [ "55tmavr00179", "55tmavr00182" ],
           "sites": [ "TMAVR" ]
         },
         {
@@ -703,6 +703,19 @@
           ],
           "sites": [ "AQUCO", "AQUMA", "AQULA", "AQUBE", "AQUMAM", "AQUBL", "AQUGA", "AQUGL", "AQUFRO", "AQUST" ],
           "sites_display": "AQU++"
+        },
+        {
+          "id": "maxavr",
+          "name": "MAX-A VR",
+          "company": "MAX-A",
+          "avatar_url": "https://stashdb.org/images/b16599cd-23d6-4f34-b0e4-0bc41aa6c266",
+          "sources": [
+            { "type": "label", "id": 25859 },
+            { "type": "label", "id": 26423 },
+            { "type": "label", "id": 26318 }
+          ],
+          "sites": [ "MAXVR", "MAXVRH", "MAXVRG" ],
+          "sites_display": "MAXVR"
         },
         {
           "id": "premiumvr",
