@@ -135,6 +135,8 @@ var r18devCompilationContentIDs = map[string]bool{
 	"prvr00997": true, // 30タイトル大放出BEST
 	"cjvr00995": true, // 乳首舐め手コキVRベスト, 18 actresses
 	"cjvr00996": true, // 初8K BEST 厳選7作品
+	// Mr.michiru VR
+	"1mtvr00017": true, // MR.michiru VRベスト 240分
 }
 
 // r18devIsCompilation returns why a scene counts as a compilation, or "".

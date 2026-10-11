@@ -142,6 +142,7 @@ func R18devCheckCustom(cfg *config.R18devScraperConfig, official []config.R18dev
 	cfg.Company = strings.TrimSpace(cfg.Company)
 	cfg.AvatarUrl = strings.TrimSpace(cfg.AvatarUrl)
 	cfg.SitesDisplay = strings.TrimSpace(cfg.SitesDisplay)
+	cfg.Tooltip = strings.TrimSpace(cfg.Tooltip)
 	if cfg.ID == "" {
 		cfg.ID = R18devSlug(cfg.Name)
 	}

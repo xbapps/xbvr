@@ -138,6 +138,8 @@ export default {
       sites: [],
       sitesDisplay: '',
       contentIds: [],
+      tooltip: '', // not in the form: kept from a suggestion or a saved scraper
+      oldSites: [], // same
       extraUrls: [],
       previews: {}, // link -> preview, or {error}
       saving: false,
@@ -233,7 +235,9 @@ export default {
             sources: this.sources,
             sites: this.sites,
             sites_display: this.sitesDisplay,
-            content_ids: this.contentIds
+            content_ids: this.contentIds,
+            tooltip: this.tooltip,
+            old_sites: this.oldSites
           }
         }
       }).json().then(saved => {
@@ -254,6 +258,8 @@ export default {
       this.sites = [...(s.sites || [])]
       this.sitesDisplay = s.sites_display || ''
       this.contentIds = [...(s.content_ids || [])]
+      this.tooltip = s.tooltip || ''
+      this.oldSites = [...(s.old_sites || [])]
       const links = (s.sources || []).map(r18devListURL)
       this.extraUrls = links.slice(1)
       this.url = links[0] || ''
@@ -277,6 +283,8 @@ export default {
       this.sites = []
       this.sitesDisplay = ''
       this.contentIds = []
+      this.tooltip = ''
+      this.oldSites = []
       this.extraUrls = []
       this.url = ''
     },

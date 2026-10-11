@@ -809,17 +809,6 @@
           "sites": [ "SBGVR" ]
         },
         {
-          "id": "staringcrew",
-          "name": "Staring Crew",
-          "company": "ガン見隊",
-          "tooltip": "ガン見隊",
-          "avatar_url": "https://manji-group.com/_nuxt/img/800a8b3.png",
-          "sources": [
-            { "type": "studio", "id": 6675 }
-          ],
-          "sites": [ "GUNM" ]
-        },
-        {
           "id": "cosmoplanetsvr",
           "name": "Cosmo Planets VR",
           "company": "Cosmo Planets",
@@ -841,39 +830,17 @@
           "sites": [ "FAVR" ]
         },
         {
-          "id": "chinchinvr",
-          "name": "ChinChinVR",
-          "company": "ちんちんVR",
-          "tooltip": "ちんちんVR",
-          "avatar_url": "https://stashdb.org/images/0257a444-0a67-48f9-ab11-b6421d5be6a2",
-          "sources": [
-            { "type": "studio", "id": 40388 }
-          ],
-          "sites": [ "CCVR", "CCUG", "CCIO" ],
-          "sites_display": "CCVR"
-        },
-        {
-          "id": "hisokavr",
-          "name": "HisokaVR",
-          "company": "密",
-          "tooltip": "密 (Hisoka)",
+          "id": "huntervr",
+          "name": "HunterVR",
+          "company": "HHH Group",
+          "tooltip": "HHH-VR: Hunter, お夜食カンパニー (Oyashoku Company), Royal, Jackpot System and friends",
           "avatar_url": "",
           "sources": [
-            { "type": "label", "id": 2068266 }
+            { "type": "label", "id": 25855 }
           ],
-          "sites": [ "HSKVR" ]
-        },
-        {
-          "id": "deepsvr",
-          "name": "Deep's VR",
-          "company": "Deep's",
-          "tooltip": "ディープスVR",
-          "avatar_url": "",
-          "sources": [
-            { "type": "label", "id": 2064792 }
-          ],
-          "sites": [ "DSUVR" ],
-          "old_sites": [ "DPSVR" ]
+          "sites": [ "HUNVR", "OYCVR", "ROYVR", "AOHVR" ],
+          "old_sites": [ "JPSVR", "APVR", "MLVR", "GDHVR", "HUNVRA", "HUNVRB", "HUNVRC", "HBVR" ],
+          "sites_display": "HUNVR (+OYCVR, more)"
         },
         {
           "id": "maxavr",
@@ -945,6 +912,61 @@
       ],
       "r18dev_suggestions": [
         {
+          "id": "staringcrew",
+          "name": "Staring Crew",
+          "company": "ガン見隊",
+          "tooltip": "ガン見隊",
+          "avatar_url": "https://manji-group.com/_nuxt/img/800a8b3.png",
+          "sources": [
+            { "type": "studio", "id": 6675 }
+          ],
+          "sites": [ "GUNM" ],
+          "scenes": 54,
+          "state": "Active since 2017-08"
+        },
+        {
+          "id": "chinchinvr",
+          "name": "ChinChinVR",
+          "company": "ちんちんVR",
+          "tooltip": "ちんちんVR",
+          "avatar_url": "https://stashdb.org/images/0257a444-0a67-48f9-ab11-b6421d5be6a2",
+          "sources": [
+            { "type": "studio", "id": 40388 }
+          ],
+          "sites": [ "CCVR", "CCUG", "CCIO" ],
+          "sites_display": "CCVR",
+          "scenes": 95,
+          "state": "Active since 2018-02"
+        },
+        {
+          "id": "deepsvr",
+          "name": "Deep's VR",
+          "company": "Deep's",
+          "tooltip": "ディープスVR",
+          "avatar_url": "https://stashdb.org/images/802de626-bea1-48fb-92d2-f5382853a409",
+          "sources": [
+            { "type": "label", "id": 2064792 }
+          ],
+          "sites": [ "DSUVR" ],
+          "old_sites": [ "DPSVR" ],
+          "sites_display": "DSUVR (+DPSVR)",
+          "scenes": 19,
+          "state": "Active since 2022-12"
+        },
+        {
+          "id": "hisokavr",
+          "name": "HisokaVR",
+          "company": "密",
+          "tooltip": "密 (Hisoka)",
+          "avatar_url": "",
+          "sources": [
+            { "type": "label", "id": 2068266 }
+          ],
+          "sites": [ "HSKVR" ],
+          "scenes": 7,
+          "state": "Active since 2026-07"
+        },
+        {
           "id": "casanova",
           "name": "CasanovA",
           "company": "CasanovA",
@@ -970,6 +992,18 @@
           "sites_display": "GOPJ (+VOVS +VOVR +MOHV)",
           "scenes": 886,
           "state": "Dead since 2024-08"
+        },
+        {
+          "id": "teppanvr",
+          "name": "TEPPAN VR",
+          "company": "TEPPAN",
+          "avatar_url": "https://stashdb.org/images/cc5fa1d2-50c8-4be1-ad6f-8d03a8d9dab0",
+          "sources": [
+            { "type": "label", "id": 25976 }
+          ],
+          "sites": [ "TPVR" ],
+          "scenes": 238,
+          "state": "Dead since 2021-10"
         },
         {
           "id": "vrproducevr",
