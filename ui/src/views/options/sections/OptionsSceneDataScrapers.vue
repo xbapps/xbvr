@@ -92,7 +92,10 @@
             </span>
       </b-table-column>
       <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">
-        <b-tooltip class="is-warning" :active="props.row.has_scraper == false" :label="$t('Scraper does not exist')"  :delay="250" >
+        <b-tooltip v-if="props.row.has_scraper != false && r18devTooltip(props.row.id)" :label="r18devTooltip(props.row.id)" :delay="250">
+          <a @click="navigateToRow(props.row)" class="has-text-link" style="cursor: pointer;">{{ props.row.sitename }}</a>
+        </b-tooltip>
+        <b-tooltip v-else class="is-warning" :active="props.row.has_scraper == false" :label="$t('Scraper does not exist')"  :delay="250" >
           <a @click="navigateToRow(props.row)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
         </b-tooltip>
         <b-tag v-if="jav && props.row.source.startsWith('Custom')" size="is-small">{{$t('Custom')}}</b-tag>
@@ -101,7 +104,7 @@
         {{ props.row.source }}
       </b-table-column>
       <b-table-column field="xbvr_sites" label='XBVR "Site"' :visible="jav" sortable searchable v-slot="props">
-        <b-tooltip :label="$t('DVD prefixes this scraper puts in the scene Site field')" :delay="250">
+        <b-tooltip :label="$t('The DVD ID prefixes you can expect this scraper to add scenes with')" :delay="250">
           <span>{{ props.row.xbvr_sites }}</span>
           <span v-if="props.row.xbvr_old_sites" class="has-text-grey is-size-7"> (Old: {{ props.row.xbvr_old_sites }})</span>
         </b-tooltip>
@@ -462,6 +465,10 @@ export default {
     isMode(id) {
       const info = this.r18devInfo[id]
       return !!(info && info.exclusive)
+    },
+    r18devTooltip(id) {
+      const info = this.r18devInfo[id]
+      return info && info.tooltip ? info.tooltip : ''
     },
     avatarText(id) {
       const info = this.r18devInfo[id]

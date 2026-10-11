@@ -65,6 +65,8 @@ type R18devScraperConfig struct {
 	// SitesDisplay replaces the comma list of Sites in the XBVR "Site" column, e.g. "PXVR (PXVRG/PXVRW)".
 	// Sites still decides what clicking the row filters on.
 	SitesDisplay string `json:"sites_display,omitempty"`
+	// Tooltip on the Studio name in the Scrapers (JAV) table, e.g. an English name for "Fitch肉感VR"
+	Tooltip string `json:"tooltip,omitempty"`
 	// ContentIDs are crawled on top of the sources: scenes no source lists, e.g. TMAVR releases with
 	// no label (55tmavr00179). Once a scene is in XBVR it costs nothing.
 	ContentIDs []string `json:"content_ids,omitempty"`

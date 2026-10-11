@@ -726,13 +726,24 @@
         },
         {
           "id": "kirakiravr",
-          "name": "kira*kira VR",
-          "company": "kira*kira",
+          "name": "kira☆kira-VR",
+          "company": "kira☆kira",
           "avatar_url": "https://stashdb.org/images/5bde4708-c09e-4d69-b2b7-e70a6422b12c",
           "sources": [
             { "type": "label", "id": 25904 }
           ],
           "sites": [ "KIVR" ]
+        },
+        {
+          "id": "fitch",
+          "name": "Fitch肉感VR",
+          "company": "Fitch",
+          "tooltip": "Fitch Flesh Fantasy VR",
+          "avatar_url": "https://stashdb.org/images/b09f57b4-ceff-449e-ad00-ee96e3708f2e",
+          "sources": [
+            { "type": "label", "id": 26267 }
+          ],
+          "sites": [ "FCVR" ]
         },
         {
           "id": "maxavr",
