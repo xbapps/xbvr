@@ -45,8 +45,9 @@ func r18devStripReissue(contentID string) string {
 //   - uppercase (ftvr-007, 3dsvr-0140 exist)
 //   - never letters right after the dash: WVR6-D071 -> WVR6D-071, YP-Y003 -> YPY-003
 //   - add the dash if missing: CAFR009 -> CAFR-009
-//   - 4 digit numbers stay as printed (SOD: 3DSVR-0137), anything else becomes at least 3 digits
-//     (MIVR-00077 -> MIVR-077, ZVR-01 -> ZVR-001)
+//   - at least 3 digits: MIVR-00077 -> MIVR-077, ZVR-01 -> ZVR-001, AVVR-0400 -> AVVR-400.
+//     SOD is the exception, see r18devFourDigits: 3DSVR-0137 stays
+//     (VRKM-1662 and 3DSVR-2015 are real 4 digit numbers, nothing to trim)
 //   - trailing part letters stay: OYCVR-025A
 //
 // Anything that doesn't fit those shapes is returned uppercased and otherwise untouched.
@@ -69,11 +70,19 @@ func r18devNormalizeDVDID(dvdID string) string {
 		head, num, suffix = m[1], m[2], m[3]
 	}
 
-	width := 3
-	if len(num) == 4 {
-		width = 4
+	return head + "-" + r18devPadNumber(num, r18devNumberWidth(head)) + suffix
+}
+
+// r18devFourDigits: prefixes numbered with 4 digits, leading zeros included. SOD prints them on the
+// cover (3DSVR-0137). Everyone else R18.dev pads to 4 (AVVR-0400, VRM-0008, KPVR-0001) gets 3:
+// AVVR covers carry no number at all, VRM only ever reached 8.
+var r18devFourDigits = map[string]bool{"3DSVR": true, "SODVR": true}
+
+func r18devNumberWidth(prefix string) int {
+	if r18devFourDigits[strings.ToUpper(prefix)] {
+		return 4
 	}
-	return head + "-" + r18devPadNumber(num, width) + suffix
+	return 3
 }
 
 // r18devDisplayID builds a DVD-ID style ID from a FANZA content ID, for titles and the Site field.
@@ -120,7 +129,7 @@ func r18devDisplayID(contentID string) string {
 			}
 		}
 	}
-	return strings.ToUpper(prefix) + "-" + r18devPadNumber(num, 3) + strings.ToUpper(suffix)
+	return strings.ToUpper(prefix) + "-" + r18devPadNumber(num, r18devNumberWidth(prefix)) + strings.ToUpper(suffix)
 }
 
 // r18devDisplayPrefix returns the part of a DVD-ID style ID before the last dash (VRKM-139 -> VRKM).
