@@ -746,6 +746,16 @@
           "sites": [ "FCVR" ]
         },
         {
+          "id": "docerovr",
+          "name": "DOC ERO VR",
+          "company": "DOC",
+          "avatar_url": "https://stashdb.org/images/55b43ee7-5db8-4e33-8a0b-ad0274913250",
+          "sources": [
+            { "type": "label", "id": 2066504 }
+          ],
+          "sites": [ "DEVR" ]
+        },
+        {
           "id": "maxavr",
           "name": "MAX-A VR",
           "company": "MAX-A",
