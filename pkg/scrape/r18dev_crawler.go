@@ -105,7 +105,7 @@ var r18devCompilationPrefixes = map[string]bool{
 
 // Known compilations no rule catches: no compilation category, series or prefix, and a title that
 // doesn't give it away to a machine. Content IDs without reissue suffix. Checked by vt-idiot (who
-// recognizes the scenes in their galleries) unless marked "title only".
+// recognizes the scenes in their galleries).
 var r18devCompilationContentIDs = map[string]bool{
 	// TMA: "Over 4 Hours" is all they carry
 	"55tmavr00178": true, // エリア最強No.1！ VR BEST (the series also has the real TMAVR-128)
@@ -114,9 +114,9 @@ var r18devCompilationContentIDs = map[string]bool{
 	// MAX-A: "N作品完全収録" (N titles, complete) and "BEST NNN分"; the galleries are the covers of
 	// the included titles
 	"maxvr00140":  true, // 友田彩也香6作品完全収録560分
-	"maxvr00139":  true, // 彩乃なな6作品完全収録540分 (title only)
-	"maxvrh00032": true, // 涼宮琴音5作品完全収録280分 Vol.2 (title only)
-	"maxvrh00026": true, // 涼宮琴音3作品完全収録253分 Vol.1 (title only)
+	"maxvr00139":  true, // 彩乃なな6作品完全収録540分
+	"maxvrh00032": true, // 涼宮琴音5作品完全収録280分 Vol.2
+	"maxvrh00026": true, // 涼宮琴音3作品完全収録253分 Vol.1
 	"maxvr00136":  true, // ショートカットBEST 完全収録330分
 	"maxvr00087":  true, // 働く綺麗なお姉さんBEST 210分
 	"maxvr00075":  true, // 超美尻BEST 226分

@@ -705,6 +705,16 @@
           "sites_display": "AQU++"
         },
         {
+          "id": "attackersvr",
+          "name": "Attackers VR",
+          "company": "Attackers",
+          "avatar_url": "https://stashdb.org/images/69e83a81-8489-4bfe-8e75-48ff85dc1ccb",
+          "sources": [
+            { "type": "label", "id": 26350 }
+          ],
+          "sites": [ "ATVR" ]
+        },
+        {
           "id": "maxavr",
           "name": "MAX-A VR",
           "company": "MAX-A",
