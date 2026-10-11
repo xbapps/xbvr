@@ -70,6 +70,25 @@ const r18devCompilationCast = 42
 var r18devCompilationSeries = map[int64]bool{
 	217739:  true, // VR BEST (K M Produce)
 	4594464: true, // SODSTAR Compilation (SOD Create, 1sodsvr00003: Hibiki Natsume, 8 titles, no 6003)
+	// Found in the R18.dev dump (2026-10-06): series with compilations no other rule catches.
+	// Presets first. P-BOX: 11 of them, 4593912 has no compilation tag at all (10 to 15 hour
+	// single actress "Complete" sets)
+	4593912: true, // 極上コンプリートベスト (P-BOX), pxvr00322
+	4506443: true, // 厳選プレイ ベスト (P-BOX), pxvr00442
+	4530833: true, // サクッと即ヌキ！ (P-BOX one coin best-ofs), pxvr00441
+	4592760: true, // 長尺お買い得ベスト (P-BOX), pxvr00395
+	223560:  true, // Koala VR Best Highlights, kiwvrb00033 (518 min, title doesn't say best)
+	222196:  true, // Koala Best of VR, h_1248kolvrb00003
+	4587288: true, // 淫らな熟女たち...VRベスト (AQUA), aquma00140
+	223655:  true, // Overwhelmingly Acclaimed Porn No. 1 BEST (KMP), 84kmvr00701
+	221488:  true, // Sai Super Best (KMPVR-Color), h_1241savr00013
+	// Studios that aren't presets (yet), or suggestions
+	4037700: true, // BEST Lucky Grab Bag (CASANOVA), h_1116cafuku00010
+	4084826: true, // Nagae STYLEVR Fan Thanksgiving Day 1st Anniversary Best, ngvr00029
+	4117984: true, // HHH Best, hhhvr00007 (880 min)
+	4333702: true, // 制服美少女BEST (MAX-A), maxvr00133
+	217973:  true, // Best ** (V One VR), h_1127vorm00006
+	204621:  true, // SCOOP SUPER BEST, h_565scvr00016
 }
 
 // DVD prefixes that are nothing but compilations. SOD's SODSVR (1sodsvr) is a run of 3DSVR best-ofs
