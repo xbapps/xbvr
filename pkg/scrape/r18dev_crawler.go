@@ -126,6 +126,9 @@ var r18devCompilationContentIDs = map[string]bool{
 	"maxvr00039":  true, // イチャらぶBEST
 	"maxvr00092":  true, // 241 min, 19 actresses, no title
 	"maxvr00132":  true, // 即ハメAV面接官になれるVR 270分, no actresses credited
+	// E-BODY: no compilation category on either
+	"ebvr00119": true, // 15SEX 680分...8KVRベスト, 11 actresses
+	"ebvr00997": true, // 28女体 500分, 28 actresses
 }
 
 // r18devIsCompilation returns why a scene counts as a compilation, or "".

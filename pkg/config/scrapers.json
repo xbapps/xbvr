@@ -715,6 +715,16 @@
           "sites": [ "ATVR" ]
         },
         {
+          "id": "ebodyvr",
+          "name": "E-BODY VR",
+          "company": "E-BODY",
+          "avatar_url": "https://stashdb.org/images/991c7b6b-06e3-42db-b04d-905bdb995221",
+          "sources": [
+            { "type": "label", "id": 25903 }
+          ],
+          "sites": [ "EBVR" ]
+        },
+        {
           "id": "maxavr",
           "name": "MAX-A VR",
           "company": "MAX-A",
