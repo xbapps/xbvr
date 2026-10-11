@@ -630,6 +630,17 @@
           "sites": [ "KAVR" ]
         },
         {
+          "id": "waapvr",
+          "name": "WAAP VR",
+          "company": "WAAP Group",
+          "avatar_url": "https://stashdb.org/images/e3d75dd7-97d3-4034-9db9-7169bcd7c88a",
+          "sources": [
+            { "type": "label", "id": 26078 }
+          ],
+          "sites": [ "WPVR", "DTVR", "FRNVR" ],
+          "sites_display": "WPVR (+DTVR +FRNVR)"
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",
@@ -643,7 +654,7 @@
           "id": "sodvr",
           "name": "SOD VR",
           "company": "SOD Create",
-          "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/2/25/Soft_On_Demand_logo.svg",
+          "avatar_url": "https://stashdb.org/images/7bf0ea95-6ad4-4487-a4ec-f0cf15535103",
           "sources": [
             { "type": "label", "id": 25739 }
           ],
