@@ -63,6 +63,9 @@ type R18devScraperConfig struct {
 	// SitesDisplay replaces the comma list of Sites in the XBVR "Site" column, e.g. "PXVR (PXVRG/PXVRW)".
 	// Sites still decides what clicking the row filters on.
 	SitesDisplay string `json:"sites_display,omitempty"`
+	// ContentIDs are crawled on top of the sources: scenes no source lists, e.g. TMAVR releases with
+	// no label (55tmavr00179). Once a scene is in XBVR it costs nothing.
+	ContentIDs []string `json:"content_ids,omitempty"`
 	// Quality modes: AvatarText is shown instead of an avatar image (8KVR, 4K60+). Enabling an
 	// Exclusive scraper turns every other R18.dev scraper off, see scrape.R18devSiteToggled.
 	AvatarText string `json:"avatar_text,omitempty"`

@@ -554,7 +554,7 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, manual boo
 func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool, cfg config.R18devScraperConfig) error {
 	defer wg.Done()
 	scraperID := r18devSiteID(cfg)
-	if len(cfg.Sources) == 0 && singleSceneURL == "" {
+	if len(cfg.Sources) == 0 && len(cfg.ContentIDs) == 0 && singleSceneURL == "" {
 		return nil // Other Studios: only ever scrapes single scenes
 	}
 	logScrapeStart(scraperID, cfg.Name)
@@ -588,6 +588,13 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			items = append(items, list...)
 			if client.rateLimited {
 				break
+			}
+		}
+		// Scenes no list carries (no label, maker not VR-only): checked on every run like the rest,
+		// but once they're in XBVR (or rejected) they cost no request
+		for _, cid := range cfg.ContentIDs {
+			if cid = strings.ToLower(strings.TrimSpace(cid)); cid != "" {
+				items = append(items, r18devListItem{ContentID: cid})
 			}
 		}
 	}
@@ -883,8 +890,8 @@ func r18devAdopt(sceneID string, scraperID string) error {
 }
 
 func addR18devScraper(cfg config.R18devScraperConfig, custom bool) {
-	if cfg.ID == "" || len(cfg.Sources) == 0 {
-		log.Warnf("R18.dev scraper %q skipped: needs an id and at least one source", cfg.Name)
+	if cfg.ID == "" || (len(cfg.Sources) == 0 && len(cfg.ContentIDs) == 0) {
+		log.Warnf("R18.dev scraper %q skipped: needs an id and at least one source or content ID", cfg.Name)
 		return
 	}
 	if id := r18devSiteID(cfg); id == r18devSingleSceneID || r18devIsRegistered(id) {
