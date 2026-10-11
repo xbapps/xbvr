@@ -606,8 +606,17 @@
           "sources": [
             { "type": "studio", "id": 46522 }
           ],
-          "sites": [ "CRVR" ],
-          "old_sites": [ "DAVR", "NTVR" ]
+          "sites": [ "CRVR" ]
+        },
+        {
+          "id": "madonnavr",
+          "name": "MadonnaVR",
+          "company": "MADONNA",
+          "avatar_url": "https://stashdb.org/images/400058d3-3f19-4c81-b12a-201eb18bb817",
+          "sources": [
+            { "type": "label", "id": 26284 }
+          ],
+          "sites": [ "JUVR" ]
         },
         {
           "id": "hnvr",
