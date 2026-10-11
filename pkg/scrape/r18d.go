@@ -34,7 +34,8 @@ var r18dTagOverrides = map[int64]string{
 	4121: "drunk girl", // shows up as "D***k Girl"
 	6949: "abuse",      // shows up as "A***e" (罵倒), R18.dev's page shows "Abuse"
 	5064: "hypnotism",  // shows up as "H*******m" (催眠), unconfirmed against old R18.com scrapes
-	29:   "gang bang",  // shows up as "G*******g", no name_ja, last used 2022-04
+	29:   "gang bang",  // shows up as "G*******g", no name_ja, last used 2022-04, likely an old R18.com tag?
+	4058: "shotacon",   // Claude you prude
 }
 
 // Actress names
