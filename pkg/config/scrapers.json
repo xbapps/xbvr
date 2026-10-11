@@ -670,8 +670,8 @@
           "sources": [
             { "type": "studio", "id": 300566 }
           ],
-          "sites": [ "NKKVR", "NKWMR", "NKOVR", "NKBVR" ],
-          "sites_display": "NKKVR (+NKWMR +NKOVR +NKBVR)"
+          "sites": [ "NKKVR", "NKWMR", "NKBVR" ],
+          "sites_display": "NKKVR (+NKWMR +NKBVR)"
         },
         {
           "id": "nhvr",
