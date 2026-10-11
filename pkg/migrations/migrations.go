@@ -2387,6 +2387,12 @@ func Migrate(migrateTo string) {
 				return tx.Table("scenes").AddIndex("idx_scenes_scraper_id", "scraper_id").Error
 			},
 		},
+		{
+			ID: "0088-r18dev-contents-sources",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(&models.R18devContent{}, &models.R18devSource{}).Error
+			},
+		},
 	}
 
 	// Wrap migrations to automatically track progress

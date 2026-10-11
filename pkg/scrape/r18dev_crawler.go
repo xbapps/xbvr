@@ -265,16 +265,24 @@ func (c *r18devClient) listPage(srcType string, id int64, page int) ([]r18devLis
 	return items, int(gjson.Get(body, "total_results").Int()), nil
 }
 
-// listSource fetches every page of one source. With limitScraping:
+// listSource fetches every page of one source and returns the items and the list's scene count.
+// With limitScraping:
+//   - page 1. Scenes never get removed from R18.dev, so when the count is still knownTotal (from
+//     the last clean run) nothing is new: stop there (unchanged = true)
 //   - pages 1 and 2
 //   - more pages while they're still inside the cover window: a preorder skipped for its NOW
 //     PRINTING cover drifts down the list as newer preorders get listed (on the High-Quality VR
 //     category a page is only about 11 days of releases)
 //   - the last page: scenes with no release date sort last
-func (c *r18devClient) listSource(src config.R18devSource, limitScraping bool) ([]r18devListItem, error) {
-	items, total, err := c.listPage(src.Type, src.ID, 1)
+//
+// knownTotal -1 = never counted.
+func (c *r18devClient) listSource(src config.R18devSource, limitScraping bool, knownTotal int) (items []r18devListItem, total int, unchanged bool, err error) {
+	items, total, err = c.listPage(src.Type, src.ID, 1)
 	if err != nil {
-		return nil, err
+		return nil, 0, false, err
+	}
+	if limitScraping && knownTotal >= 0 && total == knownTotal {
+		return items, total, true, nil
 	}
 	pages := (total + r18devPageSize - 1) / r18devPageSize
 	cutoff := time.Now().AddDate(0, 0, -(r18devCoverDays + 7)).Format("2006-01-02")
@@ -286,7 +294,7 @@ func (c *r18devClient) listSource(src config.R18devSource, limitScraping bool) (
 		}
 		more, _, err := c.listPage(src.Type, src.ID, p)
 		if err != nil {
-			return items, err
+			return items, total, false, err
 		}
 		items = append(items, more...)
 		prev = more
@@ -294,11 +302,11 @@ func (c *r18devClient) listSource(src config.R18devSource, limitScraping bool) (
 	if p <= pages {
 		more, _, err := c.listPage(src.Type, src.ID, pages)
 		if err != nil {
-			return items, err
+			return items, total, false, err
 		}
 		items = append(items, more...)
 	}
-	return items, nil
+	return items, total, false, nil
 }
 
 // r18devPageRecent: the oldest scene on a list page (lists are newest first) was released on or
@@ -416,34 +424,67 @@ func r18devLoadIndex() *r18devIndex {
 	return idx
 }
 
-// ---- rejected content IDs (not VR, compilation, excluded label), remembered between runs ----
+// ---- remembered between runs: rejected / pending content IDs, list sizes (r18dev_* tables) ----
 
-func r18devRejectedKey(scraperID string) string {
-	return "r18dev-rejected-" + scraperID
-}
-
-func r18devLoadRejected(scraperID string) map[string]bool {
+// r18devLoadRejected: content IDs no R18.dev Scraper fetches again (not VR, compilation, ...).
+// Shared by every Scraper: a reject is a property of the scene, not of who listed it.
+func r18devLoadRejected() map[string]bool {
 	rejected := map[string]bool{}
-	var kv models.KV
 	db, _ := models.GetCommonDB()
-	if db.Where(&models.KV{Key: r18devRejectedKey(scraperID)}).First(&kv).Error == nil {
-		for _, cid := range strings.Split(kv.Value, ",") {
-			if cid != "" {
-				rejected[cid] = true
-			}
-		}
+	var rows []models.R18devContent
+	db.Select("content_id").Where("state = ?", models.R18devRejected).Find(&rows)
+	for _, r := range rows {
+		rejected[r.ContentID] = true
 	}
 	return rejected
 }
 
-func r18devSaveRejected(scraperID string, rejected map[string]bool) {
-	list := make([]string, 0, len(rejected))
-	for cid := range rejected {
-		list = append(list, cid)
+// r18devLoadPending: content IDs this Scraper skipped for a NOW PRINTING cover. They get looked
+// at on every run, even when no list changed.
+func r18devLoadPending(scraperID string) []string {
+	db, _ := models.GetCommonDB()
+	var rows []models.R18devContent
+	db.Select("content_id").Where("state = ? AND scraper_id = ?", models.R18devPending, scraperID).Order("content_id").Find(&rows)
+	cids := make([]string, 0, len(rows))
+	for _, r := range rows {
+		cids = append(cids, r.ContentID)
 	}
-	sort.Strings(list)
-	kv := models.KV{Key: r18devRejectedKey(scraperID), Value: strings.Join(list, ",")}
-	kv.Save()
+	return cids
+}
+
+func r18devMark(contentID string, state string, reason string, scraperID string) {
+	db, _ := models.GetCommonDB()
+	row := models.R18devContent{ContentID: contentID, State: state, Reason: reason, ScraperID: scraperID, CheckedAt: time.Now()}
+	if err := db.Save(&row).Error; err != nil {
+		log.Errorf("[%s] saving %s as %s: %v", scraperID, contentID, state, err)
+	}
+}
+
+func r18devUnmark(contentID string) {
+	db, _ := models.GetCommonDB()
+	db.Where("content_id = ?", contentID).Delete(&models.R18devContent{})
+}
+
+func r18devSourceKey(src config.R18devSource) string {
+	return fmt.Sprintf("%s:%d", src.Type, src.ID)
+}
+
+// r18devLoadSource: the scene count of a list after the last clean run, -1 if never.
+func r18devLoadSource(src config.R18devSource) (total int, checked time.Time) {
+	db, _ := models.GetCommonDB()
+	var row models.R18devSource
+	if db.Where(&models.R18devSource{Key: r18devSourceKey(src)}).First(&row).Error != nil {
+		return -1, time.Time{}
+	}
+	return row.Total, row.CheckedAt
+}
+
+func r18devSaveSource(key string, total int) {
+	db, _ := models.GetCommonDB()
+	row := models.R18devSource{Key: key, Total: total, CheckedAt: time.Now()}
+	if err := db.Save(&row).Error; err != nil {
+		log.Errorf("saving R18.dev list size %s: %v", key, err)
+	}
 }
 
 // ---- scene building ----
@@ -563,12 +604,14 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	client := newR18devClient()
 	r18devPace.reset(r18devDelay)
 	idx := r18devLoadIndex()
-	rejected := r18devLoadRejected(scraperID)
-	rejectedBefore := len(rejected)
+	rejected := r18devLoadRejected()
 
 	// What to look at: every source, or the one scene from the rescrape button
 	var items []r18devListItem
 	listFailed := false
+	totals := map[string]int{}      // list sizes, saved after a clean run
+	knownTotals := map[string]int{} // and what they were after the last one
+	pending := map[string]bool{}
 	if singleSceneURL != "" {
 		cid := r18devContentIDFromURL(singleSceneURL)
 		if cid == "" {
@@ -576,19 +619,32 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			return nil
 		}
 		items = append(items, r18devListItem{ContentID: cid})
-		delete(rejected, cid) // explicit request: try again
+		delete(rejected, r18devStripReissue(cid)) // explicit request: try again
 	} else {
 		for _, src := range cfg.Sources {
-			list, err := client.listSource(src, limitScraping)
+			known, checked := r18devLoadSource(src)
+			knownTotals[r18devSourceKey(src)] = known
+			list, total, unchanged, err := client.listSource(src, limitScraping, known)
 			if err != nil {
 				listFailed = true
 				log.Errorf("[%s] %s %d: %v", scraperID, src.Type, src.ID, err)
+			} else {
+				totals[r18devSourceKey(src)] = total
 			}
-			log.Infof("[%s] %s %d: %d scenes listed", scraperID, src.Type, src.ID, len(list))
+			if unchanged {
+				log.Infof("[%s] %s %d: nothing new on R18.dev since %s (%d scenes)", scraperID, src.Type, src.ID, checked.Format("2006-01-02 15:04"), total)
+			} else {
+				log.Infof("[%s] %s %d: %d scenes listed", scraperID, src.Type, src.ID, len(list))
+			}
 			items = append(items, list...)
 			if client.rateLimited {
 				break
 			}
+		}
+		// NOW PRINTING covers from earlier runs: no list has to change for those to be ready
+		for _, cid := range r18devLoadPending(scraperID) {
+			pending[cid] = true
+			items = append(items, r18devListItem{ContentID: cid})
 		}
 		// Scenes no list carries (no label, maker not VR-only): checked on every run like the rest,
 		// but once they're in XBVR (or rejected) they cost no request
@@ -602,6 +658,13 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	var nKnown, nForeign, nRejected, nNew, nUpdated, nSkipped, nErrors, nAdopted int
 	newRejects := map[string]int{} // reason -> count, for the summary
 	seen := map[string]bool{}
+	// a pending content ID that's dealt with (in XBVR now, rejected, gone) stops being pending
+	settle := func(cid string) {
+		if pending[cid] {
+			r18devUnmark(cid)
+			delete(pending, cid)
+		}
+	}
 	todo := 0
 	for _, it := range items {
 		if client.rateLimited {
@@ -629,6 +692,7 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 			}
 			if foreign {
 				nForeign++ // someone else's scene (old R18.com, JavDatabase, comma box, ...): hands off
+				settle(it.ContentID)
 				continue
 			}
 			if !needsUpdate && singleSceneURL == "" {
@@ -646,6 +710,7 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 					}
 				}
 				nKnown++
+				settle(it.ContentID)
 				continue
 			}
 			for _, r := range rows {
@@ -654,8 +719,9 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 				}
 			}
 		}
-		if rejected[key] {
+		if rejected[key] && len(updateRows) == 0 {
 			nRejected++
+			settle(it.ContentID)
 			continue
 		}
 
@@ -676,6 +742,7 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		}
 		if body == "" {
 			nSkipped++
+			settle(it.ContentID)
 			continue
 		}
 
@@ -684,14 +751,24 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		if why != "" {
 			if reject {
 				rejected[key] = true
+				r18devMark(key, models.R18devRejected, why, scraperID)
+				delete(pending, it.ContentID) // the row is the reject now
 				nRejected++
 				newRejects[why]++
 				log.Infof("[%s] %s rejected: %s", scraperID, it.ContentID, why)
 			} else {
 				nSkipped++
+				if singleSceneURL == "" && !pending[it.ContentID] {
+					r18devMark(it.ContentID, models.R18devPending, why, scraperID)
+					pending[it.ContentID] = true
+				}
 				log.Debugf("[%s] %s skipped: %s", scraperID, it.ContentID, why)
 			}
 			continue
+		}
+		settle(it.ContentID)
+		if singleSceneURL != "" {
+			r18devUnmark(key) // asked for by URL: no longer rejected, whatever it was before
 		}
 
 		if singleSceneURL != "" {
@@ -744,8 +821,14 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 		out <- sc
 	}
 
-	if len(rejected) != rejectedBefore || singleSceneURL != "" {
-		r18devSaveRejected(scraperID, rejected)
+	if singleSceneURL == "" && !listFailed && nErrors == 0 && !client.rateLimited {
+		// Clean run: everything on these lists is in XBVR, rejected or pending now
+		for _, src := range cfg.Sources {
+			k := r18devSourceKey(src)
+			if total, ok := totals[k]; ok && total != knownTotals[k] {
+				r18devSaveSource(k, total)
+			}
+		}
 	}
 	reasons, nNewRejects := make([]string, 0, len(newRejects)), 0
 	for why, n := range newRejects {
