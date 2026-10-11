@@ -124,18 +124,15 @@ func r18devPreview(c *r18devClient, src config.R18devSource) (R18devListPreview,
 	return p, nil
 }
 
-// r18devLooksLikeBestOf: title words that mark a best-of or lucky bag. Only used to pick the
-// preview's newest scene, never to drop anything.
-var r18devBestOfWords = []string{"best", "ベスト", "総集編", "福袋"}
+// r18devBestOfTitle: title words that mark a best-of or lucky bag. Only used to pick the preview's
+// newest scene, never to drop anything. Besides the words: 10 to 999 "works" (厳選20作品, but not
+// "SODVR1000作品突破記念") and 1000+ minutes (収録分数1300分超, CAFUKU lucky bags whose title says
+// neither BEST nor 福袋). Against the R18.dev dump: 1,382 dropped compilations match, and of the
+// scenes we keep, 195 do, nearly all of them best-ofs no rule catches.
+var r18devBestOfTitle = regexp.MustCompile(`(?i)best|ベスト|総集編|福袋|ギフト|(^|[^0-9０-９])[0-9０-９]{2,3}作品|[0-9０-９][0-9０-９,，]{3,}分`)
 
 func r18devLooksLikeBestOf(title string) bool {
-	t := strings.ToLower(title)
-	for _, w := range r18devBestOfWords {
-		if strings.Contains(t, w) {
-			return true
-		}
-	}
-	return false
+	return r18devBestOfTitle.MatchString(title)
 }
 
 // R18devCheckCustom cleans up a custom Scraper from the form and says what's wrong with it, if anything.
