@@ -41,15 +41,10 @@ var r18devExcludedLabels = map[int64]bool{
 
 // Foreign imports: Western studios re-released on FANZA, censored, which XBVR scrapes from their
 // own sites already. Treated like compilations: dropped when crawling, let through when someone
-// asks for the scene. Category 4022 catches them; the makers are a backstop in case a scene is
-// missing the category.
+// asks for the scene. Dropped by maker, not by the Foreign Imports category (4022): the category
+// is also on real JAV (rvr00064 ROOKIE, wavr00112 Wanz Factory) and misses 12 of SLR's 48. A 4022
+// scene from any other maker only gets logged, so a new Western studio shows up in the log.
 const r18devCatForeign = 4022 // Foreign Imports (洋ピン・海外輸入)
-
-// Real JAV that FANZA tagged 4022 anyway (a Western performer in a Japanese studio's release)
-var r18devForeignImportExceptions = map[string]bool{
-	"rvr00064":  true, // ROOKIE, Lily Hart [vt-idiot]
-	"wavr00112": true, // Wanz Factory, Karina Nishida, uncredited [vt-idiot]
-}
 
 var r18devForeignMakers = map[int64]bool{
 	300246: true, // SLRORIGINALS (h_1539slr)
@@ -469,11 +464,11 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, manual boo
 		if why := r18devIsCompilation(body, cats); why != "" {
 			return sc, why, true
 		}
-		if cats[r18devCatForeign] && !r18devForeignImportExceptions[r18devStripReissue(strings.ToLower(gjson.Get(body, "content_id").String()))] {
-			return sc, fmt.Sprintf("foreign import (category %d)", r18devCatForeign), true
-		}
 		if id := gjson.Get(body, "maker_id").Int(); r18devForeignMakers[id] {
 			return sc, fmt.Sprintf("foreign import (maker %d)", id), true
+		} else if cats[r18devCatForeign] {
+			log.Infof("[%s] %s has Foreign Imports (%d) but maker %d (%s) isn't on the foreign maker list. Kept.",
+				scraperID, gjson.Get(body, "content_id").String(), r18devCatForeign, id, gjson.Get(body, "maker_name_en").String())
 		}
 		// Physical discs (mono) are listed next to the digital releases: PVBIKMVR, PVTMVR, ... are
 		// disc versions of bibi scenes under other IDs, QVRT is TMA's disc-only line (dead 2021)
