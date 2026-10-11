@@ -705,6 +705,16 @@
           "sites_display": "AQU++"
         },
         {
+          "id": "premiumvr",
+          "name": "PREMIUM VR",
+          "company": "PREMIUM",
+          "avatar_url": "https://stashdb.org/images/69f1ac4e-5c18-41f8-b1fd-ce8bad954503",
+          "sources": [
+            { "type": "label", "id": 8591 }
+          ],
+          "sites": [ "PRVR" ]
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",
