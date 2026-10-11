@@ -58,6 +58,10 @@ var r18dActressOverrides = map[int64]string{
 // Hazel Moore. Their name_romaji can be missing, re-cased ("Risa") or rebuilt from the katakana.
 var r18dLatinName = regexp.MustCompile(`^[A-Za-z][A-Za-z .'-]*$`)
 
+// "Name (Alias)" stays as R18.dev has it, except when the alias is the same name again:
+// "Blake Blossom (Blake Blossom)", "Rei Mizuna (Rei Mizuna)" (みづなれい / みずなれい).
+var r18dSameAlias = regexp.MustCompile(`^(.+) \((.+)\)$`)
+
 func r18dActressName(actress gjson.Result) string {
 	if fixed, ok := r18dActressOverrides[actress.Get("id").Int()]; ok {
 		return fixed
@@ -68,6 +72,9 @@ func r18dActressName(actress gjson.Result) string {
 
 	// Fields + Join: some names have a line break inside ("Mitsuha\n(Mitsuha Kikukawa)", 1038713)
 	name := strings.Join(strings.Fields(html.UnescapeString(actress.Get("name_romaji").String())), " ")
+	if m := r18dSameAlias.FindStringSubmatch(name); m != nil && strings.EqualFold(m[1], m[2]) {
+		name = m[1]
+	}
 	if name == "" || strings.Contains(name, " ") {
 		return name // empty, or already "FirstName LastName"
 	}
