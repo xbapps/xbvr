@@ -756,6 +756,17 @@
           "sites": [ "DEVR" ]
         },
         {
+          "id": "chijoheaven",
+          "name": "Chijo Heaven VR",
+          "company": "痴女ヘブン",
+          "tooltip": "Slut Heaven VR",
+          "avatar_url": "https://stashdb.org/images/0dbd97cc-08bb-4bb5-bfbb-f17733ce6307",
+          "sources": [
+            { "type": "label", "id": 2062846 }
+          ],
+          "sites": [ "CJVR" ]
+        },
+        {
           "id": "maxavr",
           "name": "MAX-A VR",
           "company": "MAX-A",

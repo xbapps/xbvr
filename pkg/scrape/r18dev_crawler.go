@@ -129,6 +129,12 @@ var r18devCompilationContentIDs = map[string]bool{
 	// E-BODY: no compilation category on either
 	"ebvr00119": true, // 15SEX 680分...8KVRベスト, 11 actresses
 	"ebvr00997": true, // 28女体 500分, 28 actresses
+	// PREMIUM and Chijo Heaven number their best-ofs down from 999 (no rule for that: a real
+	// "special 987" is always possible)
+	"prvr00996": true, // BEST OF 星奈あい 17SEX
+	"prvr00997": true, // 30タイトル大放出BEST
+	"cjvr00995": true, // 乳首舐め手コキVRベスト, 18 actresses
+	"cjvr00996": true, // 初8K BEST 厳選7作品
 }
 
 // r18devIsCompilation returns why a scene counts as a compilation, or "".
