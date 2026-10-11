@@ -22,15 +22,16 @@ import (
 // that aren't already in XBVR.
 
 const (
-	r18devBaseURL     = "https://r18.dev/videos/vod/movies"
-	r18devPageSize    = 100
-	r18devDelay       = 2 * time.Second // between R18.dev requests; raised for the rest of a run after a 429
-	r18devMaxDelay    = 5 * time.Second
-	r18devDmmDelay    = 1 * time.Second // between DMM image checks
-	r18devTries       = 3               // per request, when R18.dev answers 429
-	r18devCatVR       = 6793            // VR Exclusive, required
-	r18devMakerGlobal = 40150
-	r18devCoverDays   = 30 // check covers for scenes released in the last N days (or not released yet)
+	r18devBaseURL          = "https://r18.dev/videos/vod/movies"
+	r18devPageSize         = 100
+	r18devDelay            = 2 * time.Second // between R18.dev requests; raised for the rest of a run after a 429
+	r18devMaxDelay         = 5 * time.Second
+	r18devDmmDelay         = 1 * time.Second // between DMM image checks
+	r18devTries            = 3               // per request, when R18.dev answers 429
+	r18devCatVR            = 6793            // VR Exclusive, required
+	r18devMakerGlobal      = 40150
+	r18devMakerGlobalAnnex = 6755 // also on the 3D熟道 label, also DPVR numbers
+	r18devCoverDays        = 30   // check covers for scenes released in the last N days (or not released yet)
 )
 
 // Labels that are never scraped, even when a maker source pulls them in.
@@ -635,7 +636,7 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, manual boo
 		display = r18devStripReissue(contentID)
 	}
 	sc.Site = r18devDisplayPrefix(display)
-	if gjson.Get(body, "maker_id").Int() == r18devMakerGlobal {
+	if m := gjson.Get(body, "maker_id").Int(); m == r18devMakerGlobal || m == r18devMakerGlobalAnnex {
 		// Global Media "3D Mature" reuses KMP's DPVR numbers; keep the raw content ID in the title
 		display = r18devStripReissue(contentID)
 	}
@@ -867,6 +868,14 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 				continue
 			}
 			log.Infof("[%s] %s: scene ID %s belongs to a different scene, using %s", scraperID, it.ContentID, sc.SceneID, raw)
+			sc.SceneID, sc.SiteID = raw, raw
+		} else if e != nil && !strings.EqualFold(e.Studio, sc.Studio) && (e.ReleaseDate == "" || e.ReleaseDate != sc.Released) {
+			// Write guard 3: one of ours, but a different scene under the same dvd_id (no content ID
+			// of it matched above). Global Media's DPVR-001 (143dpvr00001) vs KMP's DPVR-001
+			// (84dpvr00001), PRVR-001 (h_720prvr00001) vs PREMIUM's. Keep both, the newcomer under
+			// its content ID. Same studio or release date: the same scene with a new content ID, update it.
+			raw := r18devStripReissue(key)
+			log.Infof("[%s] %s: scene ID %s is %s's %s, using %s", scraperID, it.ContentID, sc.SceneID, e.Studio, e.SceneID, raw)
 			sc.SceneID, sc.SiteID = raw, raw
 		}
 
