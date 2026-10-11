@@ -152,6 +152,17 @@ func (o *ScraperList) Load() error {
 	return nil
 }
 
+// Save writes the list to scrapers.json in the app dir.
+func (o *ScraperList) Save() error {
+	loadLock.Lock()
+	defer loadLock.Unlock()
+	list, err := json.MarshalIndent(o, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(common.AppDir, "scrapers.json"), list, 0644)
+}
+
 func RemoveCustomListNowOffical(customSiteList []ScraperConfig, officalSiteList []ScraperConfig) []ScraperConfig {
 	newList := []ScraperConfig{}
 	for _, customSite := range customSiteList {

@@ -28,6 +28,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/migrations"
 	"github.com/xbapps/xbvr/pkg/models"
+	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/session"
 	"github.com/xbapps/xbvr/pkg/tasks"
 	"github.com/xbapps/xbvr/ui"
@@ -69,6 +70,7 @@ func StartServer(version, commit, branch, date string) {
 		// doesn't recognize ("KMPVR (R18.dev)", "PassthroughVR (RealVR)", ...) after InitSites
 		// below already created them. Create them again once the migrations are done.
 		models.InitSites()
+		scrape.R18devRetireCovered()
 		config.CompleteMigration()
 	}()
 

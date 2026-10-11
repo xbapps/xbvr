@@ -195,6 +195,18 @@ func R18devCheckCustom(cfg *config.R18devScraperConfig, official []config.R18dev
 	if len(cfg.Sources) == 0 && len(cfg.ContentIDs) == 0 {
 		return fmt.Errorf("add at least one R18.dev list link")
 	}
+	// it would only be retired at the next start
+	if by := r18devCoveredBy(*cfg, official); by != nil {
+		names := []string{}
+		for _, o := range official {
+			for _, id := range by {
+				if r18devSiteID(o) == id {
+					names = append(names, o.Name)
+				}
+			}
+		}
+		return fmt.Errorf("XBVR already ships %s, which crawls all of that: turn it on in Options -> Scrapers (JAV) instead", strings.Join(names, " + "))
+	}
 	// Quality modes are for presets only
 	cfg.AvatarText, cfg.Exclusive = "", false
 	return nil

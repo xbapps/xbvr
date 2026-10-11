@@ -1,15 +1,11 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/emicklei/go-restful/v3"
 
-	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
@@ -35,11 +31,7 @@ type requestR18devCustomSave struct {
 }
 
 func writeR18devScraperList(list config.ScraperList) error {
-	data, err := json.MarshalIndent(list, "", "  ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(filepath.Join(common.AppDir, "scrapers.json"), data, 0644)
+	return list.Save()
 }
 
 func (i ConfigResource) listR18devCustom(req *restful.Request, resp *restful.Response) {

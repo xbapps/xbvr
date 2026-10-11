@@ -1078,6 +1078,13 @@ func init() {
 		addR18devScraper(cfg, false)
 	}
 	for _, cfg := range scrapers.CustomScrapers.R18devScrapers {
+		// a custom one with a preset's ID is skipped by addR18devScraper and never retired: its Site
+		// row is the preset's
+		if by := r18devCoveredBy(cfg, scrapers.XbvrScrapers.R18devScrapers); by != nil && !r18devIsRegistered(r18devSiteID(cfg)) {
+			r18devRetired[r18devSiteID(cfg)] = by
+			log.Infof("Custom JAV scraper %s not loaded: covered by %s", cfg.Name, strings.Join(by, ", "))
+			continue
+		}
 		addR18devScraper(cfg, true)
 	}
 	other := config.R18devScraperConfig{ID: strings.TrimPrefix(r18devSingleSceneID, "r18dev-"), Name: "Other Studios"}
