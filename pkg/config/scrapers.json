@@ -694,6 +694,17 @@
           "sites": [ "URVRSP" ]
         },
         {
+          "id": "aquavr",
+          "name": "AQUA",
+          "company": "AQUA",
+          "avatar_url": "https://stashdb.org/images/6acd4e15-ef95-4317-9446-1434fb412fa8",
+          "sources": [
+            { "type": "studio", "id": 301709 }
+          ],
+          "sites": [ "AQUCO", "AQUMA", "AQULA", "AQUBE", "AQUMAM", "AQUBL", "AQUGA", "AQUGL", "AQUFRO", "AQUST" ],
+          "sites_display": "AQU++"
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",
