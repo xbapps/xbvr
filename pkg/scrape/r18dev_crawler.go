@@ -80,6 +80,7 @@ var r18devCompilationPrefixes = map[string]bool{
 	"AJVRBX":   true, // Alice JAPAN VR boxes: 16h+ sets and lucky bags
 	"AJVRBEST": true, // Alice JAPAN VR best-ofs
 	"NKOVR":    true, // Cute Meat Paradise VR omnibuses (series 4226325), no compilation category
+	"NKBVR":    true, // Cute Meat Paradise VR best-ofs (ULTRA BEST, 313 and 529 min)
 }
 
 // r18devIsCompilation returns why a scene counts as a compilation, or "".
