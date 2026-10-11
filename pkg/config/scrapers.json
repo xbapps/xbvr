@@ -510,7 +510,7 @@
             { "type": "label", "id": 25637 }
           ],
           "sites": [ "VRKM" ],
-          "old_sites": [ "KMVR", "EXVR" ]
+          "old_sites": [ "KMVR", "EXVR", "KBVR" ]
         },
         {
           "id": "kmpvr-color",
