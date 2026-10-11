@@ -663,9 +663,9 @@
           "sites_display": "VRPRD (+PRDKOVR)"
         },
         {
-          "id": "nikukyunvr",
-          "name": "Nikukyun Paradise VR",
-          "company": "Nikukyun Paradise VR",
+          "id": "cutemeatvr",
+          "name": "Cute Meat Paradise VR",
+          "company": "Cute Meat Paradise VR",
           "avatar_url": "https://stashdb.org/images/56669efd-a7d2-40ad-9774-cfa8b91b8885",
           "sources": [
             { "type": "studio", "id": 300566 }
@@ -682,6 +682,16 @@
             { "type": "label", "id": 25893 }
           ],
           "sites": [ "NHVR" ]
+        },
+        {
+          "id": "unfinishedvr",
+          "name": "unfinished VR",
+          "company": "unfinished",
+          "avatar_url": "https://stashdb.org/images/47c386b0-9bde-4adf-8b4e-347a418d0e92",
+          "sources": [
+            { "type": "label", "id": 26271 }
+          ],
+          "sites": [ "URVRSP" ]
         },
         {
           "id": "hnvr",
