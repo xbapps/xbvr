@@ -47,7 +47,8 @@ const r18devCatForeign = 4022 // Foreign Imports (洋ピン・海外輸入)
 
 // Real JAV that FANZA tagged 4022 anyway (a Western performer in a Japanese studio's release)
 var r18devForeignImportExceptions = map[string]bool{
-	"rvr00064": true, // ROOKIE, Lily Hart [vt-idiot]
+	"rvr00064":  true, // ROOKIE, Lily Hart [vt-idiot]
+	"wavr00112": true, // Wanz Factory, Karina Nishida, uncredited [vt-idiot]
 }
 
 var r18devForeignMakers = map[int64]bool{
