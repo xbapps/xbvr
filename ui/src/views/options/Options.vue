@@ -33,7 +33,7 @@
       </div>
 
       <div class="column">
-        <div style="padding-top:2em">
+        <div :style="active === 'data-scrapers-jav' ? '' : 'padding-top:2em'">
           <Storage v-show="active==='storage'"/>
           <Cache v-show="active==='cache'"/>
           <Previews v-show="active==='previews'"/>
