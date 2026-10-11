@@ -888,7 +888,10 @@ func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, o
 	}
 
 	if singleSceneURL == "" && !listFailed && nErrors == 0 && !client.rateLimited {
-		// Clean run: everything on these lists is in XBVR, rejected or pending now
+		// Clean run: save the list sizes, so the next Limit Scraping run can stop at page 1 when they
+		// haven't changed. After a full run everything on these lists is in XBVR, rejected or pending.
+		// After a Limit Scraping run only the recent pages are; like every other scraper, the back
+		// catalog takes one run with Limit Scraping off.
 		for _, src := range cfg.Sources {
 			k := r18devSourceKey(src)
 			if total, ok := totals[k]; ok && total != knownTotals[k] {
