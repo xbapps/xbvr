@@ -124,6 +124,8 @@ var r18devCompilationContentIDs = map[string]bool{
 	"maxvr00046":  true, // 仕事中に社内で中出しBEST
 	"maxvr00042":  true, // 妹BEST
 	"maxvr00039":  true, // イチャらぶBEST
+	"maxvr00092":  true, // 241 min, 19 actresses, no title
+	"maxvr00132":  true, // 即ハメAV面接官になれるVR 270分, no actresses credited
 }
 
 // r18devIsCompilation returns why a scene counts as a compilation, or "".
