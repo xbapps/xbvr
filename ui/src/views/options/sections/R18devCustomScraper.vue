@@ -33,12 +33,15 @@
             <span class="has-text-danger">{{ previews[u].error }}</span>
           </template>
           <template v-else-if="previews[u]">
-            <img v-if="previews[u].newest.thumb" :src="getImageURL(previews[u].newest.thumb)" class="thumb">
+            <img v-if="previews[u].newest.thumb" :src="getImageURL(previews[u].newest.thumb)" class="thumb"
+                 @mouseenter="showCover(previews[u].newest.content_id)" @mouseleave="hideCover">
             <span>
-              <b>{{ previews[u].type }} {{ previews[u].id }}</b>:
-              {{ previews[u].total.toLocaleString() }} {{ $t('scenes') }}<template v-if="previews[u].newest.display_id">,
-              {{ $t('newest') }} {{ previews[u].newest.display_id }} ({{ previews[u].newest.released }})</template><template v-if="previews[u].maker">,
-              {{ previews[u].maker }}</template>
+              <b>{{ previews[u].type }} {{ previews[u].id }}<template v-if="previews[u].maker">: {{ previews[u].maker }}</template></b><br>
+              {{ previews[u].total.toLocaleString() }} {{ $t('scenes') }}<br>
+              <template v-if="previews[u].newest.display_id">{{ $t('latest') }} {{ previews[u].newest.display_id }} ({{ previews[u].newest.released }})<br></template>
+              <small><span class="has-text-primary">{{ $t('best guess at the newest scene this would scrape') }}</span><br>
+              {{ $t('preorders and compilations skipped') }}<br>
+              {{ $t('hover for full cover image') }}</small>
             </span>
           </template>
           <span v-else class="has-text-grey">{{ $t('Checking') }} {{ u }} ...</span>
@@ -105,6 +108,12 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Full cover on hover: hotlinked straight from DMM, never stored -->
+    <div v-if="cover" class="cover-overlay">
+      <img v-show="coverLoaded" :src="cover" @load="coverLoaded = true" @error="coverFallback">
+      <span v-if="!coverLoaded" class="tag is-dark">{{ $t('Loading cover') }} ...</span>
+    </div>
   </div>
 </template>
 
@@ -132,7 +141,10 @@ export default {
       extraUrls: [],
       previews: {}, // link -> preview, or {error}
       saving: false,
-      timer: null
+      timer: null,
+      cover: '', // full cover URL while hovering a preview thumbnail
+      coverCid: '',
+      coverLoaded: false
     }
   },
   computed: {
@@ -162,6 +174,21 @@ export default {
     this.load()
   },
   methods: {
+    // awsimgsrc serves the full size jacket (2184x1365 for VR), pics.dmm.co.jp tops out at 800 wide
+    showCover (cid) {
+      if (!cid) return
+      this.coverCid = cid
+      this.coverLoaded = false
+      this.cover = `https://awsimgsrc.dmm.com/dig/digital/video/${cid}/${cid}pl.jpg`
+    },
+    coverFallback () {
+      const small = `https://pics.dmm.co.jp/digital/video/${this.coverCid}/${this.coverCid}pl.jpg`
+      this.cover = this.cover === small ? '' : small
+    },
+    hideCover () {
+      this.cover = ''
+      this.coverLoaded = false
+    },
     getImageURL (u) {
       return u.startsWith('http') ? '/img/120x/' + u.replace('://', ':/') : u
     },
@@ -318,9 +345,27 @@ export default {
   align-items: center;
   gap: 0.5rem;
   min-height: 1.5rem;
+  margin-bottom: 0.25rem;
 }
 .thumb {
-  height: 40px;
+  width: 120px;
+  height: auto;
+  cursor: zoom-in;
+}
+.cover-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+/* the size of the scene details modal, never past the image's own size */
+.cover-overlay img {
+  max-width: 85vw;
+  max-height: 85vh;
+  box-shadow: 0 8px 32px rgba(10, 10, 10, 0.5);
 }
 .id-line {
   margin: -0.6rem 0 0.75rem;

@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/tidwall/gjson"
 	"github.com/xbapps/xbvr/pkg/config"
@@ -64,8 +65,11 @@ type R18devListPreview struct {
 
 // R18devPreview fetches page 1 of a list (one request, through the same pacing as the crawler).
 func R18devPreview(src config.R18devSource) (R18devListPreview, error) {
+	return r18devPreview(newR18devClient(), src)
+}
+
+func r18devPreview(c *r18devClient, src config.R18devSource) (R18devListPreview, error) {
 	p := R18devListPreview{Type: src.Type, ID: src.ID, Prefixes: []string{}}
-	c := newR18devClient()
 	link := fmt.Sprintf("%s/list2/json?id=%d&type=%s&page=1", r18devBaseURL, src.ID, src.Type)
 	res, err := c.get(link)
 	if err != nil {
@@ -78,6 +82,11 @@ func R18devPreview(src config.R18devSource) (R18devListPreview, error) {
 	p.Total = int(gjson.Get(body, "total_results").Int())
 
 	counts := map[string]int{}
+	// Newest: a best guess at the newest scene the Scraper would take, from page 1 alone (no detail
+	// requests). Lists are newest first; preorders (NOW PRINTING covers) and anything that looks like
+	// a compilation are passed over. Display only, it decides nothing about scraping.
+	today := time.Now().Format("2006-01-02")
+	picked := false
 	for i, r := range gjson.Get(body, "results").Array() {
 		cid := strings.ToLower(r.Get("content_id").String())
 		display := ""
@@ -86,15 +95,23 @@ func R18devPreview(src config.R18devSource) (R18devListPreview, error) {
 		} else {
 			display = r18devDisplayID(cid)
 		}
+		prefix := r18devDisplayPrefix(display)
+		released := strings.TrimSpace(strings.Split(r.Get("release_date").String(), " ")[0])
 		if i == 0 {
 			p.Maker = r.Get("maker_name_en").String()
+		}
+		bestOf := r18devCompilationPrefixes[prefix] || r18devLooksLikeBestOf(r.Get("title_ja").String())
+		good := released != "" && released <= today && !bestOf
+		if i == 0 || (good && !picked) {
+			// the first scene stands in until a good one turns up
 			p.Newest.ContentID = cid
 			p.Newest.DisplayID = display
-			p.Newest.Released = strings.TrimSpace(strings.Split(r.Get("release_date").String(), " ")[0])
+			p.Newest.Released = released
 			p.Newest.Thumb = r.Get("jacket_thumb_url").String()
+			picked = good
 		}
-		if prefix := r18devDisplayPrefix(display); prefix != "" && !r18devCompilationPrefixes[prefix] {
-			counts[prefix]++
+		if prefix != "" && !bestOf {
+			counts[prefix]++ // CAFUKU lucky bags don't make it a CasanovA prefix
 		}
 	}
 	for prefix := range counts {
@@ -105,6 +122,20 @@ func R18devPreview(src config.R18devSource) (R18devListPreview, error) {
 		return counts[a] > counts[b] || (counts[a] == counts[b] && a < b)
 	})
 	return p, nil
+}
+
+// r18devLooksLikeBestOf: title words that mark a best-of or lucky bag. Only used to pick the
+// preview's newest scene, never to drop anything.
+var r18devBestOfWords = []string{"best", "ベスト", "総集編", "福袋"}
+
+func r18devLooksLikeBestOf(title string) bool {
+	t := strings.ToLower(title)
+	for _, w := range r18devBestOfWords {
+		if strings.Contains(t, w) {
+			return true
+		}
+	}
+	return false
 }
 
 // R18devCheckCustom cleans up a custom Scraper from the form and says what's wrong with it, if anything.
