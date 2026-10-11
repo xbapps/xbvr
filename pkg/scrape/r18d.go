@@ -72,6 +72,7 @@ var r18dActressOverrides = map[int64]string{
 	1104165: "Suzu Azuma",      // あずま鈴
 	1113768: "Mika Otoyui",     // 乙結美華 (おとゆいみか)
 	1088447: "Miyu Otori",      // 鳳みゆ (おおとりみゆ), first credited 2023 [vt-idiot]
+	1087774: "Karen Otori",     // 鳳カレン (おおとりかれん), the filename split gives "Karen Ootori" [vt-idiot]
 }
 
 // A "kanji" name written in Latin letters is how FANZA spells it, case included: AIKA, RISA, miru,

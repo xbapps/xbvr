@@ -137,6 +137,8 @@ var r18devCompilationContentIDs = map[string]bool{
 	"cjvr00996": true, // 初8K BEST 厳選7作品
 	// Mr.michiru VR
 	"1mtvr00017": true, // MR.michiru VRベスト 240分
+	// Idea Pocket
+	"ipvr00332": true, // 天井特化アングルBEST ALL8K 17本番, 755 min, 13 actresses
 }
 
 // r18devIsCompilation returns why a scene counts as a compilation, or "".
