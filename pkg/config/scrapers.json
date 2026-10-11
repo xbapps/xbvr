@@ -641,6 +641,49 @@
           "sites_display": "WPVR (+DTVR +FRNVR)"
         },
         {
+          "id": "koalavr",
+          "name": "Koala VR",
+          "company": "Koala VR",
+          "avatar_url": "https://stashdb.org/images/e650a57b-e4a6-4f46-935b-433f2ea78508",
+          "sources": [
+            { "type": "studio", "id": 46629 }
+          ],
+          "sites": [ "KIWVR", "KIOVR" ],
+          "sites_display": "KIWVR (+KIOVR)"
+        },
+        {
+          "id": "vrparadise",
+          "name": "VR PARADISE",
+          "company": "VR PARADISE",
+          "avatar_url": "https://stashdb.org/images/1ce44e1a-07be-4d1c-97ac-bff9903b0c2d",
+          "sources": [
+            { "type": "studio", "id": 308609 }
+          ],
+          "sites": [ "VRPRD", "PRDKOVR" ],
+          "sites_display": "VRPRD (+PRDKOVR)"
+        },
+        {
+          "id": "nikukyunvr",
+          "name": "Nikukyun Paradise VR",
+          "company": "Nikukyun Paradise VR",
+          "avatar_url": "https://stashdb.org/images/56669efd-a7d2-40ad-9774-cfa8b91b8885",
+          "sources": [
+            { "type": "studio", "id": 300566 }
+          ],
+          "sites": [ "NKKVR", "NKWMR", "NKOVR", "NKBVR" ],
+          "sites_display": "NKKVR (+NKWMR +NKOVR +NKBVR)"
+        },
+        {
+          "id": "nhvr",
+          "name": "Natural High VR",
+          "company": "Natural High",
+          "avatar_url": "https://stashdb.org/images/5f8b402a-b0d0-4d50-9917-1ed99a788a6f",
+          "sources": [
+            { "type": "label", "id": 25893 }
+          ],
+          "sites": [ "NHVR" ]
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",
