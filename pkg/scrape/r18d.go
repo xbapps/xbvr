@@ -30,9 +30,11 @@ var r18dTagOverrides = map[int64]string{
 	6925: "", // High-Quality VR (ハイクオリティVR) - still used for FANZA filenames/quality below
 
 	// Censored/Renames
-	1018: "schoolgirl",   // JSON dump from R18's final days shows "女子校生" replaced with "Academy Uniform" instead of "Schoolgirl" - r18.dev seems to follow the same mapping for FANZA category 1018 - get your credit card compliance puritanism out of my porn, I don't need "Academy Uniform" and "Uniform" tagged together lmao
-	4121: "drunk girl",   // shows up as "D***k Girl"
-	6949: "verbal abuse", // shows up as "A***e" (罵倒: berating, name-calling)
+	1018: "schoolgirl", // JSON dump from R18's final days shows "女子校生" replaced with "Academy Uniform" instead of "Schoolgirl" - r18.dev seems to follow the same mapping for FANZA category 1018 - get your credit card compliance puritanism out of my porn, I don't need "Academy Uniform" and "Uniform" tagged together lmao
+	4121: "drunk girl", // shows up as "D***k Girl"
+	6949: "abuse",      // shows up as "A***e" (罵倒), R18.dev's page shows "Abuse"
+	5064: "hypnotism",  // shows up as "H*******m" (催眠), unconfirmed against old R18.com scrapes
+	29:   "gang bang",  // shows up as "G*******g", no name_ja, last used 2022-04
 }
 
 // Actress names
