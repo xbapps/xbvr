@@ -58,6 +58,8 @@ var r18dActressOverrides = map[int64]string{
 	1108973: "Maria Valentine",              // マリアバレンタイン, her filename is given_family (maria_barentain.jpg)
 	1093154: "Urara Akane (Urara Nikaidou)", // あかね麗（二階堂麗）, x.com/Urara_akane [vt-idiot]
 	1094418: "Rita Minase",                  // 水瀬りた, kana says みずせ, x.com/minase_rita says Minase [vt-idiot]
+	1098546: "Miu Aona (Shizuku Aonami)",    // 碧那美海（碧波しずく）, renamed early 2026
+	1109347: "Miu Aona (Shizuku Aonami)",    // 碧那美海, her new ID after the rename, same as 1098546 [vt-idiot]
 	// No image to split by, all of them first credited 2024 or later (never on R18.com)
 	1104678: "Ruru Haruno",     // 春乃るる
 	1101130: "Erisa Kamishiro", // 神代えりさ
