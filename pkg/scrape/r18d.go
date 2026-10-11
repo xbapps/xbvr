@@ -54,6 +54,21 @@ var r18dActressOverrides = map[int64]string{
 	1065803: "Nozomi Mare",   // 希のぞみ (まれのぞみ), R18.dev romaji says "Nozomi"
 	1056062: "Aina Shinkawa", // 新川愛七 (しんかわあいな), R18.dev romaji says "Ai Shinkawa 7"
 	1043426: "Nana Hoshino",  // 星野七 (ほしのなな), R18.dev romaji says "Hoshino 7"
+	// Name doesn't match her filename, or only one of two names does
+	1108973: "Maria Valentine",              // マリアバレンタイン, her filename is given_family (maria_barentain.jpg)
+	1093154: "Urara Akane (Urara Nikaidou)", // あかね麗（二階堂麗）, x.com/Urara_akane [vt-idiot]
+	1094418: "Rita Minase",                  // 水瀬りた, kana says みずせ, x.com/minase_rita says Minase [vt-idiot]
+	// No image to split by, all of them first credited 2024 or later (never on R18.com)
+	1104678: "Ruru Haruno",     // 春乃るる
+	1101130: "Erisa Kamishiro", // 神代えりさ
+	1101619: "Yura Asakura",    // 朝倉ゆら
+	1111906: "Mana Mochida",    // 濡田まな
+	1109402: "Marino Azusa",    // 梓まりの
+	1100292: "Fuuka Azuma",     // 東ふうか
+	1105378: "Natsu Ayase",     // 綾瀬なつ
+	1092658: "Tsukasa Fujino",  // 藤野つかさ
+	1104165: "Suzu Azuma",      // あずま鈴
+	1113768: "Mika Otoyui",     // 乙結美華 (おとゆいみか)
 }
 
 // A "kanji" name written in Latin letters is how FANZA spells it, case included: AIKA, RISA, miru,
@@ -112,8 +127,12 @@ func r18dActressName(actress gjson.Result) string {
 // shi -> si, sha -> sya, chi -> ti, cha -> tya, tsu -> tu, fu -> hu, ji -> zi, ja -> zya (matcha -> mattya works out on its own)
 var r18dHepburnRe = regexp.MustCompile(`(sh|ch|j)([aiueo])|tsu|fu`)
 
+// Some filenames write ぢ / づ the Nihon-shiki way, as di / du ("haduki_mayu.jpg" for Hazukimayu). Kunrei-shiki
+// and Hepburn both write them zi / zu, so di and du become zi and zu on both sides.
+var r18dNihonShiki = strings.NewReplacer("di", "zi", "du", "zu", "dy", "zy")
+
 func r18dKunrei(s string) string {
-	return r18dHepburnRe.ReplaceAllStringFunc(strings.ToLower(s), func(m string) string {
+	return r18dNihonShiki.Replace(r18dHepburnRe.ReplaceAllStringFunc(strings.ToLower(s), func(m string) string {
 		switch m {
 		case "tsu":
 			return "tu"
@@ -126,7 +145,7 @@ func r18dKunrei(s string) string {
 			return c + "i"
 		}
 		return c + "y" + vowel
-	})
+	}))
 }
 
 // "[VR] " in front of titles, sometimes missing its "[" (hnvr00132, hnvr00149: "VR] Naked Kendo ..."),
