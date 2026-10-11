@@ -725,6 +725,16 @@
           "sites": [ "EBVR" ]
         },
         {
+          "id": "kirakiravr",
+          "name": "kira*kira VR",
+          "company": "kira*kira",
+          "avatar_url": "https://stashdb.org/images/5bde4708-c09e-4d69-b2b7-e70a6422b12c",
+          "sources": [
+            { "type": "label", "id": 25904 }
+          ],
+          "sites": [ "KIVR" ]
+        },
+        {
           "id": "maxavr",
           "name": "MAX-A VR",
           "company": "MAX-A",
