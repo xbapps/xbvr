@@ -619,6 +619,17 @@
           "sites": [ "JUVR" ]
         },
         {
+          "id": "kawaiivr",
+          "name": "kawaii* VR",
+          "company": "kawaii",
+          "avatar_url": "https://stashdb.org/images/3175a851-7814-48f3-9fe8-d3cf1424f810",
+          "sources": [
+            { "type": "label", "id": 25966 }
+          ],
+          "content_ids": [ "kavr00034" ],
+          "sites": [ "KAVR" ]
+        },
+        {
           "id": "hnvr",
           "name": "Hon Naka VR",
           "company": "Hon Naka",
