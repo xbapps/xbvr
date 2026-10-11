@@ -767,6 +767,16 @@
           "sites": [ "CJVR" ]
         },
         {
+          "id": "gme3dmature",
+          "name": "GME 3D Mature",
+          "company": "Global Media Entertainment",
+          "avatar_url": "http://www.gme-inc.net/img/label/557807.gif",
+          "sources": [
+            { "type": "label", "id": 25836 }
+          ],
+          "sites": [ "DPVR" ]
+        },
+        {
           "id": "maxavr",
           "name": "MAX-A VR",
           "company": "MAX-A",

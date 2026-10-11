@@ -22,16 +22,14 @@ import (
 // that aren't already in XBVR.
 
 const (
-	r18devBaseURL          = "https://r18.dev/videos/vod/movies"
-	r18devPageSize         = 100
-	r18devDelay            = 2 * time.Second // between R18.dev requests; raised for the rest of a run after a 429
-	r18devMaxDelay         = 5 * time.Second
-	r18devDmmDelay         = 1 * time.Second // between DMM image checks
-	r18devTries            = 3               // per request, when R18.dev answers 429
-	r18devCatVR            = 6793            // VR Exclusive, required
-	r18devMakerGlobal      = 40150
-	r18devMakerGlobalAnnex = 6755 // also on the 3D熟道 label, also DPVR numbers
-	r18devCoverDays        = 30   // check covers for scenes released in the last N days (or not released yet)
+	r18devBaseURL   = "https://r18.dev/videos/vod/movies"
+	r18devPageSize  = 100
+	r18devDelay     = 2 * time.Second // between R18.dev requests; raised for the rest of a run after a 429
+	r18devMaxDelay  = 5 * time.Second
+	r18devDmmDelay  = 1 * time.Second // between DMM image checks
+	r18devTries     = 3               // per request, when R18.dev answers 429
+	r18devCatVR     = 6793            // VR Exclusive, required
+	r18devCoverDays = 30              // check covers for scenes released in the last N days (or not released yet)
 )
 
 // Labels that are never scraped, even when a maker source pulls them in.
@@ -101,6 +99,7 @@ var r18devCompilationPrefixes = map[string]bool{
 	"AJVRBEST": true, // Alice JAPAN VR best-ofs
 	"NKOVR":    true, // Cute Meat Paradise VR omnibuses (series 4226325), no compilation category
 	"MAXAVRF":  true, // MAX-A VR lucky bags (18 hours), 2 of 6 have no category and no Japanese title
+	"DPVRS":    true, // GME 3D Mature value 2-packs (お得な2本パック), 7 of 15 without Set Item
 	"NKBVR":    true, // Cute Meat Paradise VR best-ofs (ULTRA BEST, 313 and 529 min)
 }
 
@@ -636,10 +635,6 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, manual boo
 		display = r18devStripReissue(contentID)
 	}
 	sc.Site = r18devDisplayPrefix(display)
-	if m := gjson.Get(body, "maker_id").Int(); m == r18devMakerGlobal || m == r18devMakerGlobalAnnex {
-		// Global Media "3D Mature" reuses KMP's DPVR numbers; keep the raw content ID in the title
-		display = r18devStripReissue(contentID)
-	}
 
 	// Title: display ID + English title; machine translated titles stay in the synopsis
 	if gjson.Get(body, "title_en_is_machine_translation").String() == "false" && sc.Title != "" && sc.Title != contentID {
