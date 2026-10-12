@@ -52,8 +52,8 @@ var r18dActressOverrides = map[int64]string{
 	1049866: "Hana Taira",    // 平花 (たいらはな), R18.dev romaji says "Heika"
 	1067505: "Hana Kotone",   // 琴音華 (ことねはな), R18.dev romaji says "Kotoneka"
 	1065803: "Nozomi Mare",   // 希のぞみ (まれのぞみ), R18.dev romaji says "Nozomi"
-	1056062: "Aina Shinkawa", // 新川愛七 (しんかわあいな), R18.dev romaji says "Ai Shinkawa 7"
-	1043426: "Nana Hoshino",  // 星野七 (ほしのなな), R18.dev romaji says "Hoshino 7"
+	1056062: "Aina Shinkawa", // 新川愛七 (しんかわあいな), R18.com said "Ai Shinkawa 7", the 7 stays out [vt-idiot]
+	1043426: "Nana Hoshino",  // 星野七 (ほしのなな), R18.com said "Hoshino 7", the 7 stays out [vt-idiot]
 	// Name doesn't match her filename, or only one of two names does
 	1108973: "Maria Valentine",              // マリアバレンタイン, her filename is given_family (maria_barentain.jpg)
 	1093154: "Urara Akane (Urara Nikaidou)", // あかね麗（二階堂麗）, x.com/Urara_akane [vt-idiot]
