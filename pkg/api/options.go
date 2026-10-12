@@ -258,6 +258,10 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.DELETE("/r18dev-custom/{id}").To(i.deleteR18devCustom).
 		Param(ws.PathParameter("id", "custom scraper ID, without r18dev-").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.GET("/r18dev-japanese").To(i.getR18devJapanese).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.PUT("/r18dev-japanese").To(i.setR18devJapanese).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
 	ws.Route(ws.GET("/r18dev-preview").To(i.previewR18devList).
 		Param(ws.QueryParameter("url", "R18.dev studio / label / category list link").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags))

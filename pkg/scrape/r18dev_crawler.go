@@ -642,7 +642,9 @@ func r18devBuildScene(c *r18devClient, body string, scraperID string, manual boo
 	sc.Site = r18devDisplayPrefix(display)
 
 	// Title: display ID + English title; machine translated titles stay in the synopsis
-	if gjson.Get(body, "title_en_is_machine_translation").String() == "false" && sc.Title != "" && sc.Title != contentID {
+	if r18dJapaneseTitle(body) != "" {
+		sc.Title = display + " " + sc.Title // Japanese Mode
+	} else if gjson.Get(body, "title_en_is_machine_translation").String() == "false" && sc.Title != "" && sc.Title != contentID {
 		sc.Title = display + " " + sc.Title
 	} else {
 		sc.Title = display

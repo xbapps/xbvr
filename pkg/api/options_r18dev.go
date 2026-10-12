@@ -134,3 +134,24 @@ func (i ConfigResource) deleteR18devCustom(req *restful.Request, resp *restful.R
 	log.Infof("Custom R18.dev scraper r18dev-%s deleted, its scenes stay", id)
 	resp.WriteHeader(http.StatusOK)
 }
+
+// Japanese Mode: one switch on the Scrapers (JAV) page, kept in the config.
+type r18devJapaneseMode struct {
+	Enabled bool `json:"enabled"`
+}
+
+func (i ConfigResource) getR18devJapanese(req *restful.Request, resp *restful.Response) {
+	resp.WriteHeaderAndEntity(http.StatusOK, r18devJapaneseMode{config.Config.ScraperSettings.Javr.JapaneseMode})
+}
+
+func (i ConfigResource) setR18devJapanese(req *restful.Request, resp *restful.Response) {
+	var r r18devJapaneseMode
+	if err := req.ReadEntity(&r); err != nil {
+		resp.WriteErrorString(http.StatusBadRequest, err.Error())
+		return
+	}
+	config.Config.ScraperSettings.Javr.JapaneseMode = r.Enabled
+	config.SaveConfig()
+	log.Infof("JAV Japanese Mode %s", map[bool]string{true: "on", false: "off"}[r.Enabled])
+	resp.WriteHeaderAndEntity(http.StatusOK, r)
+}

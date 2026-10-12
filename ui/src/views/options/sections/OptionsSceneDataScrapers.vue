@@ -29,6 +29,26 @@
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
     </div>
+    <b-collapse v-if="jav" :open.sync="japaneseOpen" animation="slide" class="quality-modes">
+      <template #trigger="props">
+        <a class="has-text-grey">
+          <b-icon :icon="props.open ? 'menu-down' : 'menu-right'" size="is-small"/>
+          {{$t('Japanese mode: actress names and titles in Japanese')}}
+        </a>
+      </template>
+      <div class="card">
+        <div class="card-content">
+          <div class="quality-mode-row">
+            <b-switch v-model="japaneseMode" @input="saveJapaneseMode"/>
+            <strong class="quality-mode-name">{{$t('Japanese Mode')}}</strong>
+          </div>
+          <p class="quality-mode-note">
+            <span style="color: red; font-weight: bold;">WARNING:</span>
+            Actress names and scene titles will be scraped as is in Japanese (JAV titles are LONG). The English title goes in the scene's description instead. Tags stay English. Applies as scenes are scraped or rescraped; force update each studio to switch existing scenes. Your old Romaji actors stay until you merge or delete them.
+          </p>
+        </div>
+      </div>
+    </b-collapse>
     <b-collapse v-if="jav && modeList.length" :open.sync="modesOpen" animation="slide" class="quality-modes">
       <template #trigger="props">
         <a class="has-text-grey">
@@ -252,6 +272,8 @@ export default {
       showAllScrapers: true,
       r18devInfo: {},
       modesOpen: false,
+      japaneseMode: false,
+      japaneseOpen: false,
     }
   },
   mounted () {
@@ -260,6 +282,11 @@ export default {
         const info = {}
         list.forEach(s => { info[s.id] = s })
         this.r18devInfo = info
+      })
+      // Japanese Mode, like the quality modes, stays folded away unless it's on
+      ky.get('/api/options/r18dev-japanese').json().then(r => {
+        this.japaneseMode = r.enabled
+        this.japaneseOpen = r.enabled
       })
       // the quality modes stay folded away unless one of them is on
       Promise.all([info, this.$store.dispatch('optionsSites/load')]).then(() => {
@@ -271,6 +298,11 @@ export default {
     this.$store.dispatch('optionsWeb/load')
   },
   methods: {
+    saveJapaneseMode (enabled) {
+      ky.put('/api/options/r18dev-japanese', { json: { enabled } }).json().then(r => {
+        this.japaneseMode = r.enabled
+      })
+    },
     getImageURL (u) {
       if (u.startsWith('http')) {
         return '/img/128x/' + u.replace('://', ':/')

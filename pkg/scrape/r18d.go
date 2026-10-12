@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
@@ -85,6 +86,12 @@ var r18dLatinName = regexp.MustCompile(`^[A-Za-z][A-Za-z .'-]*$`)
 var r18dSameAlias = regexp.MustCompile(`^(.+) \((.+)\)$`)
 
 func r18dActressName(actress gjson.Result) string {
+	// Japanese Mode: the name as FANZA has it, none of the fixes below
+	if r18dJapaneseMode() {
+		if kanji := r18dCleanJa(actress.Get("name_kanji").String()); kanji != "" {
+			return kanji
+		}
+	}
 	if fixed, ok := r18dActressOverrides[actress.Get("id").Int()]; ok {
 		return fixed
 	}
@@ -228,12 +235,47 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 			sc.Site = strings.Split(dvdID, "-")[0]
 		}
 
+		if r18dJapaneseTitle(JsonMetadata) != "" {
+			// Japanese titles get the DVD ID in front, like the crawler's
+			display := r18devDisplayID(gjson.Get(JsonMetadata, "content_id").String())
+			if dvdID != "" && dvdID != "----" {
+				display = r18devNormalizeDVDID(dvdID)
+			}
+			if display == "" {
+				display = sc.SceneID
+			}
+			sc.Title = display + " " + sc.Title
+		}
+
 		if sc.SceneID != "" {
 			log.Infoln("Scraping [" + sc.SceneID + "] " + sc.Title)
 			*out = append(*out, sc)
 		}
 	}
 	return nil
+}
+
+// Japanese Mode (Scrapers (JAV) page): actress names and scene titles come in as FANZA has them,
+// the English title goes in the description. Tags stay English.
+func r18dJapaneseMode() bool {
+	return config.Config.ScraperSettings.Javr.JapaneseMode
+}
+
+var r18dDoubleSpace = regexp.MustCompile(` {2,}`)
+
+// r18dCleanJa is all the cleanup Japanese text gets: HTML entities (&lt;音&gt;), ASCII whitespace at
+// the ends (" ミラMilk"), doubled ASCII spaces. Full-width spaces are Japanese typography and stay.
+func r18dCleanJa(s string) string {
+	return r18dDoubleSpace.ReplaceAllString(strings.Trim(html.UnescapeString(s), " \t\r\n"), " ")
+}
+
+// r18dJapaneseTitle returns the Japanese title in Japanese Mode, "" otherwise or when R18.dev has
+// none (old R18.com scenes with only an English title keep the usual one).
+func r18dJapaneseTitle(JsonMetadata string) string {
+	if !r18dJapaneseMode() {
+		return ""
+	}
+	return r18dCleanJa(gjson.Get(JsonMetadata, "title_ja").String())
 }
 
 // r18dSceneFromJSON builds a scene from R18.dev detail JSON: title, studio, dates, images, cast,
@@ -249,7 +291,11 @@ func r18dSceneFromJSON(JsonMetadata string) models.ScrapedScene {
 
 	// Title
 	title := r18dVRPrefix.ReplaceAllString(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "title_en").String())), "")
-	if gjson.Get(JsonMetadata, "title_en_is_machine_translation").String() == "false" {
+	if ja := r18dJapaneseTitle(JsonMetadata); ja != "" {
+		// Japanese Mode: the Japanese title, the English one (machine translated or not) as the description
+		sc.Title = ja
+		sc.Synopsis = title
+	} else if gjson.Get(JsonMetadata, "title_en_is_machine_translation").String() == "false" {
 		sc.Title = title
 	} else {
 		sc.Title = gjson.Get(JsonMetadata, "content_id").String()

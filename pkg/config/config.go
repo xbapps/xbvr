@@ -185,6 +185,9 @@ type ObjectConfig struct {
 		} `json:"tmwvrnet"`
 		Javr struct {
 			JavrScraper string `default:"javdatabase" json:"javrScraper"`
+			// Japanese Mode (Scrapers (JAV) page): R18.dev actress names and scene titles as FANZA has
+			// them in Japanese, the English title goes in the description
+			JapaneseMode bool `default:"false" json:"japaneseMode"`
 		} `json:"javr"`
 	} `json:"scraper_settings"`
 }
