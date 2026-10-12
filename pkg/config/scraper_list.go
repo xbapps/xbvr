@@ -21,20 +21,24 @@ type ScraperList struct {
 	XbvrScrapers   XbvrScrapers   `json:"xbvr"`
 }
 type XbvrScrapers struct {
-	PovrScrapers    []ScraperConfig `json:"povr"`
-	SlrScrapers     []ScraperConfig `json:"slr"`
-	StashDbScrapers []ScraperConfig `json:"stashdb"`
-	RealVRScrapers  []ScraperConfig `json:"realvr"`
-	VrpornScrapers  []ScraperConfig `json:"vrporn"`
-	VrphubScrapers  []ScraperConfig `json:"vrphub"`
+	PovrScrapers    []ScraperConfig       `json:"povr"`
+	SlrScrapers     []ScraperConfig       `json:"slr"`
+	StashDbScrapers []ScraperConfig       `json:"stashdb"`
+	RealVRScrapers  []ScraperConfig       `json:"realvr"`
+	VrpornScrapers  []ScraperConfig       `json:"vrporn"`
+	VrphubScrapers  []ScraperConfig       `json:"vrphub"`
+	R18devScrapers  []R18devScraperConfig `json:"r18dev"`
+	// R18devSuggestions are offered in "Create Custom Site (JAV)", never loaded as Scrapers
+	R18devSuggestions []R18devSuggestion `json:"r18dev_suggestions,omitempty"`
 }
 type CustomScrapers struct {
-	PovrScrapers    []ScraperConfig `json:"povr"`
-	SlrScrapers     []ScraperConfig `json:"slr"`
-	StashDbScrapers []ScraperConfig `json:"stashdb"`
-	RealVRScrapers  []ScraperConfig `json:"realvr"`
-	VrpornScrapers  []ScraperConfig `json:"vrporn"`
-	VrphubScrapers  []ScraperConfig `json:"vrphub"`
+	PovrScrapers    []ScraperConfig       `json:"povr"`
+	SlrScrapers     []ScraperConfig       `json:"slr"`
+	StashDbScrapers []ScraperConfig       `json:"stashdb"`
+	RealVRScrapers  []ScraperConfig       `json:"realvr"`
+	VrpornScrapers  []ScraperConfig       `json:"vrporn"`
+	VrphubScrapers  []ScraperConfig       `json:"vrphub"`
+	R18devScrapers  []R18devScraperConfig `json:"r18dev"`
 }
 type ScraperConfig struct {
 	ID           string `json:"-"`
@@ -44,6 +48,48 @@ type ScraperConfig struct {
 	AvatarUrl    string `json:"avatar_url"`
 	FileID       string `json:"id,omitempty"`
 	MasterSiteId string `json:"master_site_id,omitempty"`
+}
+
+// R18devScraperConfig is one JAV "Scraper" built from R18.dev list sources (labels and/or makers).
+// The XBVR site ID is "r18dev-" + ID.
+// Sites / OldSites are display only: the DVD prefixes this Scraper is expected to put in the scene "Site"
+// field, current ones first, dead ones the sources still carry in OldSites.
+type R18devScraperConfig struct {
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	Company   string         `json:"company"`
+	AvatarUrl string         `json:"avatar_url"`
+	Sources   []R18devSource `json:"sources"`
+	Sites     []string       `json:"sites"`
+	OldSites  []string       `json:"old_sites,omitempty"`
+	// SitesDisplay replaces the comma list of Sites in the XBVR "Site" column, e.g. "PXVR (PXVRG/PXVRW)".
+	// Sites still decides what clicking the row filters on.
+	SitesDisplay string `json:"sites_display,omitempty"`
+	// Tooltip on the Studio name in the Scrapers (JAV) table, e.g. an English name for "Fitch肉感VR"
+	Tooltip string `json:"tooltip,omitempty"`
+	// ContentIDs are crawled on top of the sources: scenes no source lists, e.g. TMAVR releases with
+	// no label (55tmavr00179). Once a scene is in XBVR it costs nothing.
+	ContentIDs []string `json:"content_ids,omitempty"`
+	// Quality modes: AvatarText is shown instead of an avatar image (8KVR, 4K60+). Enabling an
+	// Exclusive scraper turns every other R18.dev scraper off, see scrape.R18devSiteToggled.
+	AvatarText string `json:"avatar_text,omitempty"`
+	Exclusive  bool   `json:"exclusive,omitempty"`
+}
+
+// R18devSuggestion is a studio not shipped as a preset (dead, junk, niche), offered as a ready-made
+// custom Scraper. Scenes and State are what the card shows.
+type R18devSuggestion struct {
+	R18devScraperConfig
+	Scenes int    `json:"scenes"`         // VR scenes left after the compilation rules
+	State  string `json:"state"`          // "Dead since 2023-06"
+	Note   string `json:"note,omitempty"` // why it isn't a preset, when that's not just "dead"
+}
+
+// R18devSource is one R18.dev list: Type is "label", "studio" (R18.dev's name for a maker) or
+// "category" (8KVR is category 307935).
+type R18devSource struct {
+	Type string `json:"type"`
+	ID   int64  `json:"id"`
 }
 
 var loadLock sync.Mutex
@@ -72,6 +118,10 @@ func (o *ScraperList) Load() error {
 	//	overwrite the local files offical list
 	o.XbvrScrapers = officalScrapers.XbvrScrapers
 	o.Warnings = officalScrapers.Warnings
+	if o.CustomScrapers.R18devScrapers == nil {
+		// older scrapers.json files have no r18dev key; write [] instead of null
+		o.CustomScrapers.R18devScrapers = []R18devScraperConfig{}
+	}
 
 	SetSiteId(&o.XbvrScrapers.PovrScrapers, "")
 	SetSiteId(&o.XbvrScrapers.SlrScrapers, "")
@@ -100,6 +150,17 @@ func (o *ScraperList) Load() error {
 	}
 
 	return nil
+}
+
+// Save writes the list to scrapers.json in the app dir.
+func (o *ScraperList) Save() error {
+	loadLock.Lock()
+	defer loadLock.Unlock()
+	list, err := json.MarshalIndent(o, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(common.AppDir, "scrapers.json"), list, 0644)
 }
 
 func RemoveCustomListNowOffical(customSiteList []ScraperConfig, officalSiteList []ScraperConfig) []ScraperConfig {

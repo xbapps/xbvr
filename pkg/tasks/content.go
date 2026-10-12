@@ -277,6 +277,11 @@ func ReapplyEdits() {
 		case "release_date_text":
 			dt, _ := time.Parse("2006-01-02", a.NewValue)
 			db.Model(&scene).Update("release_date", dt)
+		case "release_date":
+			// full timestamp (JAV split scenes: same day, a few seconds apart to keep the parts in order)
+			if dt, err := time.Parse(time.RFC3339, a.NewValue); err == nil {
+				db.Model(&scene).Update("release_date", dt)
+			}
 		default:
 			db.Model(&scene).Update(a.ChangedColumn, a.NewValue)
 		}
@@ -379,7 +384,9 @@ func Scrape(toScrape string, singleSceneURL string, singeScrapeAdditionalInfo st
 	}
 }
 
-func ScrapeJAVR(queryString string, scraper string) {
+// ScrapeJAVR runs the manual JAV import box. target, if set, is the scene ID the (single) result is
+// written to, so a rescrape always lands on the scene it came from (split scenes: VRKM-139_split1).
+func ScrapeJAVR(queryString string, scraper string, target string) {
 	if !models.CheckLock("scrape") {
 		models.CreateLock("scrape")
 		defer models.RemoveLock("scrape")
@@ -407,12 +414,21 @@ func ScrapeJAVR(queryString string, scraper string) {
 			scrape.ScrapeJavDB(&collectedScenes, queryString)
 		}
 
+		if target != "" && len(collectedScenes) == 1 {
+			collectedScenes[0].SceneID = target
+			collectedScenes[0].SiteID = target
+		}
+
 		if len(collectedScenes) > 0 {
 			db, _ := models.GetDB()
 			for i := range collectedScenes {
 				models.SceneCreateUpdateFromExternal(db, collectedScenes[i])
 			}
 			db.Close()
+
+			// Same as the other scrapers: put edits back on scenes that were just overwritten
+			tlog.Infof("Reapplying edits")
+			ReapplyEdits()
 
 			tlog.Infof("Updating tag counts")
 			CountTags()

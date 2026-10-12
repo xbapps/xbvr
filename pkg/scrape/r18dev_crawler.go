@@ -1,0 +1,1220 @@
+package scrape
+
+import (
+	"fmt"
+	"net/http"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/config"
+	"github.com/xbapps/xbvr/pkg/models"
+)
+
+// R18.dev crawler: one XBVR scraper per entry in the "r18dev" section of scrapers.json.
+// Each entry is a list of R18.dev sources (labels and/or makers), crawled through the same
+// list2 JSON endpoint the R18.dev site uses. Detail JSON is only fetched for content IDs
+// that aren't already in XBVR.
+
+const (
+	r18devBaseURL   = "https://r18.dev/videos/vod/movies"
+	r18devPageSize  = 100
+	r18devDelay     = 2 * time.Second // between R18.dev requests; raised for the rest of a run after a 429
+	r18devMaxDelay  = 5 * time.Second
+	r18devDmmDelay  = 1 * time.Second // between DMM image checks
+	r18devTries     = 3               // per request, when R18.dev answers 429
+	r18devCatVR     = 6793            // VR Exclusive, required
+	r18devCoverDays = 30              // check covers for scenes released in the last N days (or not released yet)
+)
+
+// Labels that are never scraped, even when a maker source pulls them in.
+// 26286 = OVVR (SD card releases, compilations), shows up under S1, MOODYZ, Idea Pocket, AQUA, ...
+var r18devExcludedLabels = map[int64]bool{
+	26286: true,
+}
+
+// Foreign imports: Western studios re-released on FANZA, censored, which XBVR scrapes from their
+// own sites already. Treated like compilations: dropped when crawling, let through when someone
+// asks for the scene. Dropped by maker, not by the Foreign Imports category (4022): the category
+// is also on real JAV (rvr00064 ROOKIE, wavr00112 Wanz Factory) and misses 12 of SLR's 48. A 4022
+// scene from any other maker only gets logged, so a new Western studio shows up in the log.
+const r18devCatForeign = 4022 // Foreign Imports (洋ピン・海外輸入)
+
+var r18devForeignMakers = map[int64]bool{
+	300246: true, // SLRORIGINALS (h_1539slr)
+	40392:  true, // Imagine VR, label 26092 VIRTUAL REAL PORN (h_1274vrp)
+	300187: true, // HAYABUSA / ICHIBAN VR (h_1533hay, h_1533kashi, h_1533mig, h_1533niji)
+}
+
+// Compilations. Dropped when crawling a source, let through for "Scrape single scene" / the
+// rescrape button, and never checked by the comma box (ScrapeR18D).
+// Not every compilation has category 6003, KMP's "VR BEST" series (vrkm01903) doesn't.
+var r18devCompilationCategories = []int64{
+	6003,   // Compilation
+	6608,   // Actress Best Compilation
+	6609,   // More Than 16 Hours Of Footage
+	7267,   // Set Items (SOD's SETH sets: 16 to 30 hours of best-of)
+	300129, // Fuku Bukuro, lucky bag sets (ajvrbx00004mtn has nothing else that says compilation)
+}
+
+// A cast this big is a compilation whatever the categories say: hnvr00132 is 58 actresses spliced
+// from other releases, tagged like an original. A real orgy (hnvr00180) is about 12.
+const r18devCompilationCast = 42
+
+var r18devCompilationSeries = map[int64]bool{
+	217739:  true, // VR BEST (K M Produce)
+	4594464: true, // SODSTAR Compilation (SOD Create, 1sodsvr00003: Hibiki Natsume, 8 titles, no 6003)
+	// Found in the R18.dev dump (2026-10-06): series with compilations no other rule catches.
+	// Presets first. P-BOX: 11 of them, 4593912 has no compilation tag at all (10 to 15 hour
+	// single actress "Complete" sets)
+	4593912: true, // 極上コンプリートベスト (P-BOX), pxvr00322
+	4506443: true, // 厳選プレイ ベスト (P-BOX), pxvr00442
+	4530833: true, // サクッと即ヌキ！ (P-BOX one coin best-ofs), pxvr00441
+	4592760: true, // 長尺お買い得ベスト (P-BOX), pxvr00395
+	223560:  true, // Koala VR Best Highlights, kiwvrb00033 (518 min, title doesn't say best)
+	222196:  true, // Koala Best of VR, h_1248kolvrb00003
+	4587288: true, // 淫らな熟女たち...VRベスト (AQUA), aquma00140
+	223655:  true, // Overwhelmingly Acclaimed Porn No. 1 BEST (KMP), 84kmvr00701
+	221488:  true, // Sai Super Best (KMPVR-Color), h_1241savr00013
+	// Studios that aren't presets (yet), or suggestions
+	4037700: true, // BEST Lucky Grab Bag (CASANOVA), h_1116cafuku00010
+	4084826: true, // Nagae STYLEVR Fan Thanksgiving Day 1st Anniversary Best, ngvr00029
+	4117984: true, // HHH Best, hhhvr00007 (880 min)
+	4333702: true, // 制服美少女BEST (MAX-A), maxvr00133
+	217973:  true, // Best ** (V One VR), h_1127vorm00006
+	204621:  true, // SCOOP SUPER BEST, h_565scvr00016
+}
+
+// DVD prefixes that are nothing but compilations. SOD's SODSVR (1sodsvr) is a run of 3DSVR best-ofs
+// that doesn't always carry a compilation category or the SODSTAR Compilation series (1sodsvr00003
+// has the series but no 6003, 1sodsvr00004 has 6003 but no series).
+var r18devCompilationPrefixes = map[string]bool{
+	"SODSVR":   true,
+	"AJVRBX":   true, // Alice JAPAN VR boxes: 16h+ sets and lucky bags
+	"AJVRBEST": true, // Alice JAPAN VR best-ofs
+	"NKOVR":    true, // Cute Meat Paradise VR omnibuses (series 4226325), no compilation category
+	"MAXAVRF":  true, // MAX-A VR lucky bags (18 hours), 2 of 6 have no category and no Japanese title
+	"DPVRS":    true, // GME 3D Mature value 2-packs (お得な2本パック), 7 of 15 without Set Item
+	"NKBVR":    true, // Cute Meat Paradise VR best-ofs (ULTRA BEST, 313 and 529 min)
+}
+
+// Known compilations no rule catches: no compilation category, series or prefix, and a title that
+// doesn't give it away to a machine. Content IDs without reissue suffix. Checked by vt-idiot (who
+// recognizes the scenes in their galleries).
+var r18devCompilationContentIDs = map[string]bool{
+	// TMA: "Over 4 Hours" is all they carry
+	"55tmavr00178": true, // エリア最強No.1！ VR BEST (the series also has the real TMAVR-128)
+	"55tmavr00180": true, // 401 min, 9 actresses (TMA preset content ID until c2a286c)
+	"55tmavr00181": true, // 301 min, 18 actresses
+	// MAX-A: "N作品完全収録" (N titles, complete) and "BEST NNN分"; the galleries are the covers of
+	// the included titles
+	"maxvr00140":  true, // 友田彩也香6作品完全収録560分
+	"maxvr00139":  true, // 彩乃なな6作品完全収録540分
+	"maxvrh00032": true, // 涼宮琴音5作品完全収録280分 Vol.2
+	"maxvrh00026": true, // 涼宮琴音3作品完全収録253分 Vol.1
+	"maxvr00136":  true, // ショートカットBEST 完全収録330分
+	"maxvr00087":  true, // 働く綺麗なお姉さんBEST 210分
+	"maxvr00075":  true, // 超美尻BEST 226分
+	"maxvr00070":  true, // 限界接写観察BEST 183分
+	"maxvr00046":  true, // 仕事中に社内で中出しBEST
+	"maxvr00042":  true, // 妹BEST
+	"maxvr00039":  true, // イチャらぶBEST
+	"maxvr00092":  true, // 241 min, 19 actresses, no title
+	"maxvr00132":  true, // 即ハメAV面接官になれるVR 270分, no actresses credited
+	// E-BODY: no compilation category on either
+	"ebvr00119": true, // 15SEX 680分...8KVRベスト, 11 actresses
+	"ebvr00997": true, // 28女体 500分, 28 actresses
+	// PREMIUM and Chijo Heaven number their best-ofs down from 999 (no rule for that: a real
+	// "special 987" is always possible)
+	"prvr00996": true, // BEST OF 星奈あい 17SEX
+	"prvr00997": true, // 30タイトル大放出BEST
+	"cjvr00995": true, // 乳首舐め手コキVRベスト, 18 actresses
+	"cjvr00996": true, // 初8K BEST 厳選7作品
+	// Mr.michiru VR
+	"1mtvr00017": true, // MR.michiru VRベスト 240分
+	// Idea Pocket
+	"ipvr00264": true, // 天井特化アングルBEST 痴女的騎乗位SP17本番, 199 min, 17 actresses
+	"ipvr00332": true, // 天井特化アングルBEST ALL8K 17本番, 755 min, 13 actresses
+	// BEST in the Japanese title but no compilation category, series or cast size that gives it away.
+	// Picked one by one by vt-idiot from the R18.dev dump (2026-10-06). No title rule on purpose: "BEST"
+	// is also on real scenes (TEPPAN's BESTサイズ, SAVR-1009 ベストプレイス).
+	// AQUA
+	"aquma00052": true, // 美少女達のシコシコオナニーサポート4時間ベスト
+	"aquma00126": true, // 一週間射精管理生活4時間ベスト
+	"aquma00134": true, // おっぱい山脈に怯えろ 心と巨乳が震えるぱふぱふ4時間ベスト！
+	"aquma00136": true, // 下半身愛好家も唸る極上のムチムチパンスト4時間ベスト！
+	"aquma00141": true, // オイルで光り輝く女体の神秘！ヌルテカ4時間ベスト！
+	// KMPVR
+	"84kmvr00734": true, // KMVR-734 超ご奉仕BESTデリヘル嬢に10本番＋1
+	"84kmvr00754": true, // KMVR-754 KMPVR神7BEST～可愛さからエロさまで全てが神級の7人収録～
+	"84kmvr00792": true, // KMVR-792 4KHQ美少女PREMIUM BEST 支持率の高い'可愛い子'だけを厳選
+	"84kmvr00813": true, // KMVR-813 HAPPY Valentine BEST ～名作のイチャLOVE揃えちゃいました～
+	"84kmvr00814": true, // KMVR-814 唾を飲むほどの国宝級贅沢BODYが集結！イイカラダのイイオンナBEST！
+	"84kmvr00826": true, // KMVR-826 痴女専門VR BEST ～圧倒的痴女たちのテクニック体験～
+	"84kmvr00830": true, // KMVR-830 カワイイ顔こそが一番ヌケる！「顔の可愛さ」のみにこだわった超S級最強美女BEST！HQ高画質スペシャル愛蔵版！
+	"84kmvr00860": true, // KMVR-860 射精管理 4KHQ BEST 焦らしに焦らしに焦らされて最高の射精を「絶対イッちゃダメ！」我慢させられ続け僕は射精してし
+	"84kmvr00874": true, // KMVR-874 着衣SEX BEST ～男達はなぜ着衣セックスにこんなにも惹かれ興奮するのか～
+	"84kmvr00876": true, // KMVR-876 枢木あおいKMPVR SPECIALコンプリートBEST全16タイトル！！
+	"84kmvr00883": true, // KMVR-883 美谷朱里 KMP VR SPECIALコンプリートBEST
+	"84kmvr00943": true, // KMVR-943 ちっぱい！いっぱい！夢いっぱい！発育途上のつるぺたおっぱいが大集結！ちっぱいSUPER BEST！！
+	"84kmvr00991": true, // KMVR-991 目の前で揺れ弾む！！色、形、触り心地、全てが神レベル 神乳特化 BEST
+	"84vrkm00005": true, // VRKM-005 めちゃ可愛い彼女と二人の部屋で毎日ヤリまくり...だがそれがいい BEST
+	"84vrkm00166": true, // VRKM-166 豪華女優15名の美尻をまとめたフェチVR 尻をひたすら堪能するBEST
+	"vrkm00608":   true, // VRKM-608 天真爛漫な淫乱小悪魔'はままお'完全版！！潮吹きQueen浜崎真緒BEST
+	"vrkm01168":   true, // サキュバスVRシリーズ ノーカット5作品＋完全撮りおろし特典 弥生みづき「サキュバスの射精管理VR」 スペシャルBEST
+	"vrkm01754":   true, // 超厳選 麗しい和服美女ノーカット15時間overベスト
+	// KMPVR-bibi-
+	"h_1285bikmvr00068": true, // BIKMVR-068 どぴゅっ×7人65射 連続射精！！BEST200分！！
+	"h_1285bikmvr00150": true, // BIKMVR-150 巨乳BEST ～極パイの世界へようこそ～
+	"h_1285cbikmv00006": true, // CBIKMV-006 超豪華令和風俗BEST！！ 4KHQ令和史上最も売れた風俗VRを体験！！
+	"h_1285cbikmv00016": true, // CBIKMV-016 「私...もう少しだけ大人になりたいな...だからさ...」女子校生生姦射精BEST！
+	"h_1285cbikmv00027": true, // CBIKMV-027 W共演BEST ～2人いればエロさ倍増スペシャル～
+	"h_1285cbikmv00048": true, // CBIKMV-048 むっちむちの肉感BEST 巨乳×巨尻×豊満 人気女優が一挙集結
+	// MadonnaVR
+	"juvr00107": true, // JUVR-107 全タイトルSEXシーンノーカット収録！！ 人妻・熟女No.1メーカーMadonna専属女優ベスト465分
+	"juvr00132": true, // ハイクオリティ高画質で全SEXノーカット収録！！Madonna3P4PハーレムSEX452分ベスト
+	"juvr00148": true, // 底なしのエロスを堪能できる濃密FUCK300分！！無自覚ボディタッチ妻たちと唾液だらだら密着ベロチューSEXベスト
+	"juvr00154": true, // 残業続きで出会いの全く無い僕に起きた奇跡 業務中のご褒美SEXベスト322分
+	"juvr00173": true, // ベッドの上の天使降臨身動き取れない僕にとことん尽くしてくれる介護SEX BEST！！濃縮307分
+	"juvr00180": true, // 湯煙に紛れて晒す魅惑の痴態...欲求不満な人妻たちと夜通し戯れる温泉不倫旅行ベスト452分
+	"juvr00189": true, // 本番NGデリヘル嬢と予想外に相性抜群！！お店に内緒でこっそり中出しBEST373分
+	// S1 VR
+	"sivr00249": true, // 形良し！大きさ良し！感度良し！VRとの相性抜群！まさに神乳 S1美巨乳ベスト
+	// TMA VR
+	"55tmavr00100": true, // TMAVR-100 濃厚密着！高画質対面座位PREMIUM BEST 29人
+	"55tmavr00105": true, // TMAVR-105 蓮実クレア SPECIAL VR BEST
+	"55tmavr00108": true, // TMAVR-108 覆いかぶさり騎乗位PREMIUM BEST
+	"55tmavr00145": true, // TMAVR-145 TMA天井特化アングルベスト
+	"55tmavr00149": true, // TMAVR-149 人妻不倫旅行記録VR BEST
+	"55tmavr00152": true, // TMAVR-152 日焼け美少女VR BEST
+	"55tmavr00159": true, // TMAVR-159 女子●生トイレレ●プVR BEST
+	"55tmavr00165": true, // 爆乳コスプレイヤー彼女と個人撮影オフパコ性交 BEST
+	"55tmavr00169": true, // 童貞を煽るメスガキ誘惑VR BEST
+	"55tmavr00172": true, // お兄ちゃん大好きな妹誘惑VR BEST
+	"55tmavr00175": true, // パパ活巨乳素人VR BEST
+	"55tmavr00185": true, // 日焼け跡の美少女BEST VR
+	"55tmavr00189": true, // TMAコスプレ美少女BEST VR
+	"55tmavr00194": true, // 童貞を挑発するメスガキVR BEST
+	"55tmavr00197": true, // 美少女ハーレム乱交VR BEST
+	"55tmavr00200": true, // 美TMA VR巨乳BEST
+	"55tmavr00202": true, // マセガキ美少女の誘惑BEST
+	"55tmavr00207": true, // 工藤ララ VR BEST
+	"55tmavr00210": true, // VtuberコスプレVR BEST
+	"55tmavr00226": true, // 夏休みに出会った日焼け美少女VR BEST
+	"55tmavr00231": true, // 裏オプ標準！？最後までできちゃう性風俗VR BEST
+	"55tmavr00233": true, // 巨乳パイズリVR BEST
+	"55tmavr00237": true, // 由良かな VR BEST
+	"55tmavr00239": true, // 日焼け美少女3P VR BEST
+	"55tmavr00242": true, // スク水日焼け美少女わいせつイタズラ VR BEST
+	"55tmavr00244": true, // 息子のチ●ポに依存する母親近親相姦 VR BEST
+	"55tmavr00246": true, // 田舎に帰省した時だけ僕と内緒SEXする日焼け美少女 VR BEST
+	"55tmavr00249": true, // VIP専用店在籍巨乳バニーガール VR BEST
+	"55tmavr00260": true, // 可愛さカースト上位のエロカワ女子校生VR BEST
+	"55tmavr00263": true, // パンチラ誘惑美少女VR BEST
+	"55tmavr00267": true, // 僕を甘やかす母親近親相姦VR BEST
+	"55tmavr00272": true, // スク水日焼け美少女との生中出しVR BEST
+	"55tmavr00275": true, // 全員Gカップ以上！神乳！巨乳VR BEST
+	"55tmavr00278": true, // ゼロ距離イチャイチャ密着！対面座位VR BEST
+	"55tmavr00281": true, // 未成熟140cm台の低身長合法ロ●美少女VR BEST
+	"55tmavr00283": true, // 小さい子のパイパンま●こにまたがられる騎乗位 VR BEST
+	// kawaii* VR
+	"kavr00054": true, // KAVR-054 初！kawaii* VRベスト 23人240分
+	"kavr00115": true, // KAVR-115 コーナー丸ごとノーカット収録！！常に上下左右から挟み撃ちされ痴女られる贅沢サンドイッチ逆3Pベスト511分
+	"kavr00339": true, // kawaii＊ HQVRベスト エロカワ美少女図鑑vol.1 没入感最高MAX835分 伊藤舞雪、新井リマ、花柳杏奈、乙
+	// V:one VR
+	"h_1127vosm00003": true, // VOSM-003 極上8人の全てを！風俗ありエステありラブイチャあり ULTRA BEST
+	"h_1127vosm00028": true, // VOSM-028 HQ作品のみ収録 巨乳エステ嬢達が魅せる！スペシャルコース BEST
+	"h_1127vosm00031": true, // VOSM-031 HQ作品のみ収録 拒絶不可能 女子校生を徹底的に辱める恥辱SEX BEST
+	// Lesre! (no preset: 4K60+ / 8K modes and customs)
+	"lzvr00004": true, // レズれ！VR オールノーカットBEST 見せつけられる体感レズSEX
+	// Salome Prologue (no preset: 4K60+ / 8K modes and customs)
+	"h_1419spvr00021": true, // SPVR-021 女王様10人 調教BEST
+	"h_1419spvr00022": true, // SPVR-022 女王様10人 調教BEST Vol.2
+	"spvr00023":       true, // SPVR-023 サロメVR全編完全ノーカット収録869分全タイトルコンプリートBEST
+	// Stealth (no preset: 4K60+ / 8K modes and customs)
+	"h_1383slvr00024": true, // SLVR-024 電車で、図書館で、保健室でひたすら覗き続ける。女子校生を監視BEST
+	// WANZ VR (no preset: 4K60+ / 8K modes and customs)
+	"wavr00062": true, // WAVR-062 THE BEST ワンズファクトリーVR 超豪華・人気AV女優8人出演！成りあがりAV男優体験VR 完全版！！ 未公開映
+	// THE BEST OF 3DVR (twin / triple packs) (no preset: 4K60+ / 8K modes and customs)
+	"h_1423vrtb00001": true, // VRTB-001 THE BEST OF 3DVR 新放課後美少女回春リフレクソロジー TWIN PARK（ツインパック）Vol.001＆
+	"h_1423vrtb00002": true, // VRTB-002 THE BEST OF 3DVR 新少子化対策法可決！初対面でいきなり恋に落ち即子作り！恥じらい初SEX TWIN PA
+	"h_1423vrtb00003": true, // VRTB-003 THE BEST OF 3DVR 異世界転生したらエッチな世界だった件 TRIPLE PACK（トリプルパック） 君色華
+	"h_1423vrtb00004": true, // VRTB-004 THE BEST OF 3DVR 清楚で可愛い僕の妹が突然ギャルビッチ化していた件。 イクイク早漏妹と排卵日子作り生活
+	"h_1423vrtb00005": true, // VRTB-005 THE BEST OF 3DVR キス我慢決定戦 THE・DOCUMENTーザ・ドキュメントー 制限時間90分ほぼノーカ
+	"h_1423vrtb00006": true, // VRTB-006 THE BEST OF 3DVR 新人限定ベロチュウ舐めまくり制服リフレ TWIN PACK（ツインパック）桃尻かのん
+	"h_1423vrtb00007": true, // VRTB-007 THE BEST OF 3DVR 俺の厨二病ノートから理想のカノジョが出てきた件！ TWIN PACK（ツインパック）
+	"h_1423vrtb00008": true, // VRTB-008 THE BEST OF 3DVR 新少子化対策法可決！初対面でいきなり恋に落ち即子作り！恥じらい初SEX TRIPLE
+	"h_1423vrtb00009": true, // VRTB-009 THE BEST OF 3DVR 新放課後美少女回春リフレクソロジー TWIN PACK（ツインパック）Vol.003＆
+	"h_1423vrtb00010": true, // VRTB-010 THE BEST OF 3DVRキス我慢決定戦 THE・DOCUMENTーザ・ドキュメントー 制限時間90分ほぼノーカッ
+	"h_1423vrtb00011": true, // VRTB-011 THE BEST OF 3DVR 新放課後美少女回春リフレクソロジー TWIN PACK（ツインパック）Vol.005＆
+	// ハンラシン, label 2066111 (no preset: 4K60+ / 8K modes and customs)
+	"h_1763hrav00025": true, // ハンラシンTHE BEST VR 淫語と接写で射精に導く絶頂のオナ指示109分！
+	"h_1763hrav00026": true, // ハンラシンTHE BEST VR 危険すぎる悩殺ギリギリアングルで魅せる最強絶景至近距離オナニー104分！
+	"h_1763hrav00031": true, // ハンラシンTHE BEST VR 超M字拘束で鬼イカせ！ドMマゾイキ狂い連続絶頂VR！
+	"h_1763hrav00032": true, // ハンラシンTHE BEST VR 極舐め！超接写絶頂フェラチオVR！
+}
+
+// r18devIsCompilation returns why a scene counts as a compilation, or "".
+func r18devIsCompilation(body string, cats map[int64]bool) string {
+	for _, id := range r18devCompilationCategories {
+		if cats[id] {
+			return fmt.Sprintf("compilation (category %d)", id)
+		}
+	}
+	if id := gjson.Get(body, "series_id").Int(); r18devCompilationSeries[id] {
+		return fmt.Sprintf("compilation (series %d)", id)
+	}
+	if n := len(gjson.Get(body, "actresses").Array()); n >= r18devCompilationCast {
+		return fmt.Sprintf("compilation (%d actresses)", n)
+	}
+	cid := strings.ToLower(gjson.Get(body, "content_id").String())
+	if p := r18devDisplayPrefix(r18devDisplayID(cid)); r18devCompilationPrefixes[p] {
+		return fmt.Sprintf("compilation (prefix %s)", p)
+	}
+	if r18devCompilationContentIDs[r18devStripReissue(cid)] {
+		return "compilation (known)"
+	}
+	return ""
+}
+
+type r18devListItem struct {
+	ContentID   string
+	DvdID       string
+	ReleaseDate string
+}
+
+// Content ID from the URLs XBVR scenes carry: R18.dev (id=, combined=) and FANZA / DMM (cid=)
+var r18devURLContentIDRe = regexp.MustCompile(`(?i)(?:[/?&]cid=|/id=|/combined=)([a-z0-9_]+)`)
+
+// Content ID from a DMM image URL: .../digital/video/<cid>/<cid>pl.jpg
+var r18devCoverContentIDRe = regexp.MustCompile(`(?i)/digital/video/([a-z0-9_]+)/`)
+
+// r18devContentIDFromURL returns the content ID in an R18.dev or DMM scene URL, lowercased and
+// without a reissue suffix, or "" if there isn't one.
+func r18devContentIDFromURL(u string) string {
+	m := r18devURLContentIDRe.FindStringSubmatch(u)
+	if m == nil {
+		return ""
+	}
+	return r18devStripReissue(strings.ToLower(m[1]))
+}
+
+func r18devContentIDFromCover(u string) string {
+	m := r18devCoverContentIDRe.FindStringSubmatch(u)
+	if m == nil {
+		return ""
+	}
+	return r18devStripReissue(strings.ToLower(m[1]))
+}
+
+// One shared pace per host for every R18.dev scraper: XBVR runs scrapers in parallel, but
+// R18.dev should still only see one request per delay from us, and everyone waits out a 429.
+type r18devPacer struct {
+	lock         sync.Mutex
+	delay        time.Duration
+	last         time.Time
+	blockedUntil time.Time
+}
+
+func (p *r18devPacer) wait() {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	next := p.last.Add(p.delay)
+	if p.blockedUntil.After(next) {
+		next = p.blockedUntil
+	}
+	if d := time.Until(next); d > 0 {
+		time.Sleep(d)
+	}
+	p.last = time.Now()
+}
+
+// reset puts the pace back to normal at the start of a run, unless a back off is still running.
+func (p *r18devPacer) reset(delay time.Duration) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	if time.Now().After(p.blockedUntil) {
+		p.delay = delay
+	}
+}
+
+// backOff blocks every R18.dev request for d and slows the pace down a notch.
+func (p *r18devPacer) backOff(d time.Duration) time.Duration {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	p.blockedUntil = time.Now().Add(d)
+	if p.delay < r18devMaxDelay {
+		p.delay += 500 * time.Millisecond
+	}
+	return p.delay
+}
+
+var (
+	r18devPace    = &r18devPacer{delay: r18devDelay}
+	r18devDmmPace = &r18devPacer{delay: r18devDmmDelay}
+)
+
+type r18devClient struct {
+	http        *resty.Client
+	img         *resty.Client // DMM image checks: doesn't follow redirects
+	requests    int
+	rateLimited bool // R18.dev kept answering 429 after every retry: stop this run
+}
+
+func newR18devClient() *r18devClient {
+	c := resty.New()
+	c.SetHeader("User-Agent", UserAgent)
+	c.SetTimeout(30 * time.Second)
+	if config.Config.Advanced.ScraperProxy != "" {
+		c.SetProxy(config.Config.Advanced.ScraperProxy)
+	}
+	img := resty.New()
+	img.SetHeader("User-Agent", UserAgent)
+	img.SetTimeout(30 * time.Second)
+	img.SetRedirectPolicy(resty.RedirectPolicyFunc(func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}))
+	if config.Config.Advanced.ScraperProxy != "" {
+		img.SetProxy(config.Config.Advanced.ScraperProxy)
+	}
+	return &r18devClient{http: c, img: img}
+}
+
+// r18devRetryAfter reads a Retry-After header (seconds or an HTTP date). Without one, wait
+// 30s per try: the 429s seen so far clear up on their own within about 30s.
+func r18devRetryAfter(res *resty.Response, try int) time.Duration {
+	d := time.Duration(30*try) * time.Second
+	if h := res.Header().Get("Retry-After"); h != "" {
+		if secs, err := strconv.Atoi(strings.TrimSpace(h)); err == nil {
+			d = time.Duration(secs) * time.Second
+		} else if t, err := http.ParseTime(h); err == nil {
+			d = time.Until(t)
+		}
+	}
+	if d < 5*time.Second {
+		d = 5 * time.Second
+	}
+	if d > 5*time.Minute {
+		d = 5 * time.Minute
+	}
+	return d
+}
+
+// get fetches an R18.dev URL. A 429 is retried after a back off; if R18.dev is still saying
+// no after r18devTries, rateLimited is set and the caller should stop.
+func (c *r18devClient) get(url string) (*resty.Response, error) {
+	for try := 1; ; try++ {
+		r18devPace.wait()
+		c.requests++
+		res, err := c.http.R().Get(url)
+		if err != nil || res.StatusCode() != 429 {
+			return res, err
+		}
+		if try == r18devTries {
+			c.rateLimited = true
+			return res, err
+		}
+		wait := r18devRetryAfter(res, try)
+		delay := r18devPace.backOff(wait)
+		log.Warnf("R18.dev rate limit (HTTP 429), waiting %s, then one request every %s", wait.Round(time.Second), delay)
+	}
+}
+
+// listPage fetches one page of a label / studio list. Returns the items and total_results.
+func (c *r18devClient) listPage(srcType string, id int64, page int) ([]r18devListItem, int, error) {
+	url := fmt.Sprintf("%s/list2/json?id=%d&type=%s&page=%d", r18devBaseURL, id, srcType, page)
+	res, err := c.get(url)
+	if err != nil {
+		return nil, 0, err
+	}
+	if res.StatusCode() != 200 {
+		return nil, 0, fmt.Errorf("HTTP %d for %s", res.StatusCode(), url)
+	}
+	body := res.String()
+	var items []r18devListItem
+	for _, r := range gjson.Get(body, "results").Array() {
+		items = append(items, r18devListItem{
+			ContentID:   strings.ToLower(r.Get("content_id").String()),
+			DvdID:       r.Get("dvd_id").String(),
+			ReleaseDate: r.Get("release_date").String(),
+		})
+	}
+	return items, int(gjson.Get(body, "total_results").Int()), nil
+}
+
+// listSource fetches every page of one source and returns the items and the list's scene count.
+// With limitScraping:
+//   - page 1. Scenes never get removed from R18.dev, so when the count is still knownTotal (from
+//     the last clean run) nothing is new: stop there (unchanged = true)
+//   - pages 1 and 2
+//   - more pages while they're still inside the cover window: a preorder skipped for its NOW
+//     PRINTING cover drifts down the list as newer preorders get listed (on the High-Quality VR
+//     category a page is only about 11 days of releases)
+//   - the last page: scenes with no release date sort last
+//
+// knownTotal -1 = never counted.
+func (c *r18devClient) listSource(src config.R18devSource, limitScraping bool, knownTotal int) (items []r18devListItem, total int, unchanged bool, err error) {
+	items, total, err = c.listPage(src.Type, src.ID, 1)
+	if err != nil {
+		return nil, 0, false, err
+	}
+	if limitScraping && knownTotal >= 0 && total == knownTotal {
+		return items, total, true, nil
+	}
+	pages := (total + r18devPageSize - 1) / r18devPageSize
+	cutoff := time.Now().AddDate(0, 0, -(r18devCoverDays + 7)).Format("2006-01-02")
+	prev := items
+	p := 2
+	for ; p <= pages; p++ {
+		if limitScraping && p > 2 && !r18devPageRecent(prev, cutoff) {
+			break
+		}
+		more, _, err := c.listPage(src.Type, src.ID, p)
+		if err != nil {
+			return items, total, false, err
+		}
+		items = append(items, more...)
+		prev = more
+	}
+	if p <= pages {
+		more, _, err := c.listPage(src.Type, src.ID, pages)
+		if err != nil {
+			return items, total, false, err
+		}
+		items = append(items, more...)
+	}
+	return items, total, false, nil
+}
+
+// r18devPageRecent: the oldest scene on a list page (lists are newest first) was released on or
+// after cutoff (YYYY-MM-DD). A page ending in a scene with no date is the end of the dated part.
+func r18devPageRecent(page []r18devListItem, cutoff string) bool {
+	if len(page) == 0 {
+		return false
+	}
+	d := page[len(page)-1].ReleaseDate
+	return len(d) >= 10 && d[:10] >= cutoff
+}
+
+// detail fetches the detail JSON for a content ID. Returns "" on 404.
+func (c *r18devClient) detail(contentID string) (string, error) {
+	res, err := c.get(r18devBaseURL + "/detail/-/combined=" + contentID + "/json")
+	if err != nil {
+		return "", err
+	}
+	if res.StatusCode() == 404 {
+		return "", nil
+	}
+	if res.StatusCode() != 200 {
+		return "", fmt.Errorf("HTTP %d for %s", res.StatusCode(), contentID)
+	}
+	return res.String(), nil
+}
+
+// r18devNoCover is what XBVR's own "Create custom scene" uses as a cover when there isn't one
+// (pkg/api/scenes.go). Scene create / update needs a cover URL, and the "Has Image" filter
+// treats this one as no image, so delisted scenes can be found and given a cover by hand.
+const r18devNoCover = "http://localhost/dont_cause_errors"
+
+// imageGone checks a DMM image without following redirects. Gone means NOW PRINTING:
+//   - a 404, which is how DMM serves the placeholder for upcoming scenes (with an image body)
+//   - a redirect to now_printing.jpg, which is how DMM serves delisted images (hnvr00037)
+//
+// Any other redirect counts as there.
+func (c *r18devClient) imageGone(url string) (bool, error) {
+	r18devDmmPace.wait()
+	c.requests++
+	res, err := c.img.R().Head(url)
+	if err != nil {
+		return false, err
+	}
+	switch res.StatusCode() {
+	case 404:
+		return true, nil
+	case 301, 302, 303, 307, 308:
+		return strings.Contains(res.Header().Get("Location"), "now_printing"), nil
+	}
+	return false, nil
+}
+
+// coverReady is false while the cover is NOW PRINTING, or when it can't be checked.
+func (c *r18devClient) coverReady(url string) bool {
+	if url == "" {
+		return false
+	}
+	gone, err := c.imageGone(url)
+	return err == nil && !gone
+}
+
+// galleryGone checks only the first gallery image. Delisted scenes lose the whole gallery
+// (hnvr00037: all 10 now_printing), so one request per scene is enough.
+func (c *r18devClient) galleryGone(gallery []string) bool {
+	if len(gallery) == 0 {
+		return false
+	}
+	gone, err := c.imageGone(gallery[0])
+	return err == nil && gone
+}
+
+func r18devSiteID(cfg config.R18devScraperConfig) string {
+	return "r18dev-" + strings.ToLower(cfg.ID)
+}
+
+func r18devIsOurs(scraperID string) bool {
+	return strings.HasPrefix(scraperID, "r18dev-")
+}
+
+// ---- existing scenes, for the write guards ----
+
+type r18devExisting struct {
+	SceneID     string
+	ScraperID   string
+	Studio      string
+	ReleaseDate string
+	NeedsUpdate bool
+}
+
+type r18devIndex struct {
+	byContentID map[string][]*r18devExisting
+	bySceneID   map[string]*r18devExisting
+}
+
+func r18devLoadIndex() *r18devIndex {
+	idx := &r18devIndex{byContentID: map[string][]*r18devExisting{}, bySceneID: map[string]*r18devExisting{}}
+	db, _ := models.GetCommonDB()
+	var scenes []models.Scene
+	db.Select("scene_id, scraper_id, scene_url, cover_url, studio, release_date, needs_update").Find(&scenes)
+	for _, s := range scenes {
+		e := &r18devExisting{SceneID: s.SceneID, ScraperID: s.ScraperId, Studio: s.Studio, NeedsUpdate: s.NeedsUpdate}
+		if !s.ReleaseDate.IsZero() {
+			e.ReleaseDate = s.ReleaseDate.Format("2006-01-02")
+		}
+		idx.bySceneID[s.SceneID] = e
+		seen := map[string]bool{}
+		for _, cid := range []string{r18devContentIDFromURL(s.SceneURL), r18devContentIDFromCover(s.CoverURL)} {
+			if cid != "" && !seen[cid] {
+				seen[cid] = true
+				idx.byContentID[cid] = append(idx.byContentID[cid], e)
+			}
+		}
+	}
+	return idx
+}
+
+// ---- remembered between runs: rejected / pending content IDs, list sizes (r18dev_* tables) ----
+
+// r18devLoadRejected: content IDs no R18.dev Scraper fetches again (not VR, compilation, ...).
+// Shared by every Scraper: a reject is a property of the scene, not of who listed it.
+func r18devLoadRejected() map[string]bool {
+	rejected := map[string]bool{}
+	db, _ := models.GetCommonDB()
+	var rows []models.R18devContent
+	db.Select("content_id").Where("state = ?", models.R18devRejected).Find(&rows)
+	for _, r := range rows {
+		rejected[r.ContentID] = true
+	}
+	return rejected
+}
+
+// r18devLoadPending: content IDs this Scraper skipped for a NOW PRINTING cover. They get looked
+// at on every run, even when no list changed.
+func r18devLoadPending(scraperID string) []string {
+	db, _ := models.GetCommonDB()
+	var rows []models.R18devContent
+	db.Select("content_id").Where("state = ? AND scraper_id = ?", models.R18devPending, scraperID).Order("content_id").Find(&rows)
+	cids := make([]string, 0, len(rows))
+	for _, r := range rows {
+		cids = append(cids, r.ContentID)
+	}
+	return cids
+}
+
+func r18devMark(contentID string, state string, reason string, scraperID string) {
+	db, _ := models.GetCommonDB()
+	row := models.R18devContent{ContentID: contentID, State: state, Reason: reason, ScraperID: scraperID, CheckedAt: time.Now()}
+	if err := db.Save(&row).Error; err != nil {
+		log.Errorf("[%s] saving %s as %s: %v", scraperID, contentID, state, err)
+	}
+}
+
+func r18devUnmark(contentID string) {
+	db, _ := models.GetCommonDB()
+	db.Where("content_id = ?", contentID).Delete(&models.R18devContent{})
+}
+
+func r18devSourceKey(src config.R18devSource) string {
+	return fmt.Sprintf("%s:%d", src.Type, src.ID)
+}
+
+// r18devLoadSource: the scene count of a list after the last clean run, -1 if never.
+func r18devLoadSource(src config.R18devSource) (total int, checked time.Time) {
+	db, _ := models.GetCommonDB()
+	var row models.R18devSource
+	if db.Where(&models.R18devSource{Key: r18devSourceKey(src)}).First(&row).Error != nil {
+		return -1, time.Time{}
+	}
+	return row.Total, row.CheckedAt
+}
+
+func r18devSaveSource(key string, total int) {
+	db, _ := models.GetCommonDB()
+	row := models.R18devSource{Key: key, Total: total, CheckedAt: time.Now()}
+	if err := db.Save(&row).Error; err != nil {
+		log.Errorf("saving R18.dev list size %s: %v", key, err)
+	}
+}
+
+// ---- scene building ----
+
+// r18devBuildScene turns detail JSON into a scene for this scraper, or returns a reason to skip.
+// reject = true means the content ID should never be fetched again (not VR, compilation, ...).
+// manual is set for single scene scrapes and for updating a scene that's already ours: compilations
+// and foreign imports get through.
+func r18devBuildScene(c *r18devClient, body string, scraperID string, manual bool) (sc models.ScrapedScene, skip string, reject bool) {
+	cats := map[int64]bool{}
+	for _, cat := range gjson.Get(body, "categories").Array() {
+		cats[cat.Get("id").Int()] = true
+	}
+	if !cats[r18devCatVR] {
+		return sc, "not VR", true
+	}
+	if !manual {
+		if why := r18devIsCompilation(body, cats); why != "" {
+			return sc, why, true
+		}
+		if id := gjson.Get(body, "maker_id").Int(); r18devForeignMakers[id] {
+			return sc, fmt.Sprintf("foreign import (maker %d)", id), true
+		} else if cats[r18devCatForeign] {
+			log.Infof("[%s] %s has Foreign Imports (%d) but maker %d (%s) isn't on the foreign maker list. Kept.",
+				scraperID, gjson.Get(body, "content_id").String(), r18devCatForeign, id, gjson.Get(body, "maker_name_en").String())
+		}
+		// Physical discs (mono) are listed next to the digital releases: PVBIKMVR, PVTMVR, ... are
+		// disc versions of bibi scenes under other IDs, QVRT is TMA's disc-only line (dead 2021)
+		if svc := gjson.Get(body, "service_code").String(); svc != "" && svc != "digital" {
+			return sc, fmt.Sprintf("physical release (%s)", svc), true
+		}
+	}
+	if r18devExcludedLabels[gjson.Get(body, "label_id").Int()] {
+		return sc, "excluded label", true
+	}
+
+	// NOW PRINTING on a recent / upcoming scene: wait for the real cover. Old scenes can have
+	// permanent NOW PRINTING covers (delisted) and still get scraped, see below.
+	coverChecked := false
+	released := gjson.Get(body, "release_date").String()
+	if t, err := time.Parse("2006-01-02", released); err == nil && time.Since(t) < r18devCoverDays*24*time.Hour {
+		if !c.coverReady(gjson.Get(body, "jacket_full_url").String()) {
+			return sc, "cover not ready yet", false
+		}
+		coverChecked = true
+	}
+
+	sc = r18dSceneFromJSON(body)
+	if c != nil && !coverChecked {
+		// Older scenes only: an upcoming scene's gallery can still be NOW PRINTING and show up later.
+		// Delisted: drop the gallery, and check the cover too (it may be gone with it).
+		// No gallery at all: the cover is the only image, check it.
+		noGallery := len(sc.Gallery) == 0
+		if c.galleryGone(sc.Gallery) {
+			sc.Gallery = nil
+			noGallery = true
+		}
+		if noGallery && len(sc.Covers) > 0 && sc.Covers[0] != "" {
+			if gone, err := c.imageGone(sc.Covers[0]); err == nil && gone {
+				sc.Covers = []string{r18devNoCover}
+			}
+		}
+	}
+	if len(sc.Covers) == 0 || sc.Covers[0] == "" {
+		sc.Covers = []string{r18devNoCover}
+	}
+	contentID := sc.SiteID
+	dvdID := gjson.Get(body, "dvd_id").String()
+	if dvdID == "----" {
+		dvdID = ""
+	}
+
+	sc.ScraperID = scraperID
+	sc.SceneID = r18devSceneID(contentID, dvdID)
+	sc.SiteID = sc.SceneID
+	if sc.Studio == "" {
+		sc.Studio = gjson.Get(body, "maker_name_ja").String()
+	}
+
+	// Display ID: the normalized dvd_id, else built from the content ID
+	display := ""
+	if dvdID != "" {
+		display = r18devNormalizeDVDID(dvdID)
+	} else {
+		display = r18devDisplayID(contentID)
+	}
+	if display == "" {
+		display = r18devStripReissue(contentID)
+	}
+	sc.Site = r18devDisplayPrefix(display)
+
+	// Title: display ID + English title; machine translated titles stay in the synopsis
+	if r18dJapaneseTitle(body) != "" {
+		sc.Title = display + " " + sc.Title // Japanese Mode
+	} else if gjson.Get(body, "title_en_is_machine_translation").String() == "false" && sc.Title != "" && sc.Title != contentID {
+		sc.Title = display + " " + sc.Title
+	} else {
+		sc.Title = display
+	}
+	return sc, "", false
+}
+
+// ---- the scraper ----
+
+// R18devCrawler is the scraper function registered for every r18dev entry in scrapers.json.
+func R18devCrawler(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool, cfg config.R18devScraperConfig) error {
+	defer wg.Done()
+	scraperID := r18devSiteID(cfg)
+	if len(cfg.Sources) == 0 && len(cfg.ContentIDs) == 0 && singleSceneURL == "" {
+		return nil // Other Studios: only ever scrapes single scenes
+	}
+	logScrapeStart(scraperID, cfg.Name)
+	defer logScrapeFinished(scraperID, cfg.Name)
+
+	client := newR18devClient()
+	r18devPace.reset(r18devDelay)
+	idx := r18devLoadIndex()
+	rejected := r18devLoadRejected()
+
+	// What to look at: every source, or the one scene from the rescrape button
+	var items []r18devListItem
+	listFailed := false
+	totals := map[string]int{}      // list sizes, saved after a clean run
+	knownTotals := map[string]int{} // and what they were after the last one
+	pending := map[string]bool{}
+	if singleSceneURL != "" {
+		cid := r18devContentIDFromURL(singleSceneURL)
+		if cid == "" {
+			log.Errorf("[%s] no content ID in %s", scraperID, singleSceneURL)
+			return nil
+		}
+		items = append(items, r18devListItem{ContentID: cid})
+		delete(rejected, r18devStripReissue(cid)) // explicit request: try again
+	} else {
+		for _, src := range cfg.Sources {
+			known, checked := r18devLoadSource(src)
+			knownTotals[r18devSourceKey(src)] = known
+			list, total, unchanged, err := client.listSource(src, limitScraping, known)
+			if err != nil {
+				listFailed = true
+				log.Errorf("[%s] %s %d: %v", scraperID, src.Type, src.ID, err)
+			} else {
+				totals[r18devSourceKey(src)] = total
+			}
+			if unchanged {
+				log.Infof("[%s] %s %d: nothing new on R18.dev since %s (%d scenes)", scraperID, src.Type, src.ID, checked.Format("2006-01-02 15:04"), total)
+			} else {
+				log.Infof("[%s] %s %d: %d scenes listed", scraperID, src.Type, src.ID, len(list))
+			}
+			items = append(items, list...)
+			if client.rateLimited {
+				break
+			}
+		}
+		// NOW PRINTING covers from earlier runs: no list has to change for those to be ready
+		for _, cid := range r18devLoadPending(scraperID) {
+			pending[cid] = true
+			items = append(items, r18devListItem{ContentID: cid})
+		}
+		// Scenes no list carries (no label, maker not VR-only): checked on every run like the rest,
+		// but once they're in XBVR (or rejected) they cost no request
+		for _, cid := range cfg.ContentIDs {
+			if cid = strings.ToLower(strings.TrimSpace(cid)); cid != "" {
+				items = append(items, r18devListItem{ContentID: cid})
+			}
+		}
+	}
+
+	var nKnown, nForeign, nRejected, nNew, nUpdated, nSkipped, nErrors, nAdopted int
+	newRejects := map[string]int{} // reason -> count, for the summary
+	seen := map[string]bool{}
+	// a pending content ID that's dealt with (in XBVR now, rejected, gone) stops being pending
+	settle := func(cid string) {
+		if pending[cid] {
+			r18devUnmark(cid)
+			delete(pending, cid)
+		}
+	}
+	todo := 0
+	for _, it := range items {
+		if client.rateLimited {
+			break
+		}
+		key := r18devStripReissue(it.ContentID)
+		if key == "" || seen[key] {
+			continue
+		}
+		seen[key] = true
+
+		// Write guard 1: already in XBVR under this content ID. Several of our scenes can share one
+		// content ID (split scenes, VRKM-139_split1 .. _split4): each one that needs it gets updated
+		// under its own scene ID.
+		var updateRows []*r18devExisting
+		if rows := idx.byContentID[key]; len(rows) > 0 {
+			foreign, needsUpdate := false, false
+			for _, r := range rows {
+				if !r18devIsOurs(r.ScraperID) {
+					foreign = true
+				}
+				if r.NeedsUpdate {
+					needsUpdate = true
+				}
+			}
+			if foreign {
+				nForeign++ // someone else's scene (old R18.com, JavDatabase, comma box, ...): hands off
+				settle(it.ContentID)
+				continue
+			}
+			if !needsUpdate && singleSceneURL == "" {
+				// Orphans (scraped by URL before a scraper covered them, or their scraper is gone) go
+				// to this scraper: its sources list them. Only the owner changes, nothing is fetched.
+				for _, r := range rows {
+					if r18devIsOrphan(r.ScraperID) {
+						if err := r18devAdopt(r.SceneID, scraperID); err != nil {
+							log.Errorf("[%s] adopting %s: %v", scraperID, r.SceneID, err)
+						} else {
+							log.Infof("[%s] %s adopted from %s", scraperID, r.SceneID, r.ScraperID)
+							r.ScraperID = scraperID
+							nAdopted++
+						}
+					}
+				}
+				nKnown++
+				settle(it.ContentID)
+				continue
+			}
+			for _, r := range rows {
+				if r.NeedsUpdate || singleSceneURL != "" {
+					updateRows = append(updateRows, r)
+				}
+			}
+		}
+		if rejected[key] && len(updateRows) == 0 {
+			nRejected++
+			settle(it.ContentID)
+			continue
+		}
+
+		todo++
+		if todo%25 == 0 {
+			log.Infof("[%s] %d scenes fetched so far", scraperID, todo)
+		}
+		body, err := client.detail(it.ContentID)
+		if err == nil && body == "" && it.ContentID != key {
+			body, err = client.detail(key) // reissue gone, try the original
+		}
+		if err != nil {
+			nErrors++
+			if !client.rateLimited {
+				log.Errorf("[%s] %s: %v", scraperID, it.ContentID, err)
+			}
+			continue
+		}
+		if body == "" {
+			nSkipped++
+			settle(it.ContentID)
+			continue
+		}
+
+		// Compilations only get through when someone asked for this scene, or it's already ours
+		sc, why, reject := r18devBuildScene(client, body, scraperID, singleSceneURL != "" || len(updateRows) > 0)
+		if why != "" {
+			if reject {
+				rejected[key] = true
+				r18devMark(key, models.R18devRejected, why, scraperID)
+				delete(pending, it.ContentID) // the row is the reject now
+				nRejected++
+				newRejects[why]++
+				log.Infof("[%s] %s rejected: %s", scraperID, it.ContentID, why)
+			} else {
+				nSkipped++
+				if singleSceneURL == "" && !pending[it.ContentID] {
+					r18devMark(it.ContentID, models.R18devPending, why, scraperID)
+					pending[it.ContentID] = true
+				}
+				log.Debugf("[%s] %s skipped: %s", scraperID, it.ContentID, why)
+			}
+			continue
+		}
+		settle(it.ContentID)
+		if singleSceneURL != "" {
+			r18devUnmark(key) // asked for by URL: no longer rejected, whatever it was before
+		}
+
+		if singleSceneURL != "" {
+			// Every R18.dev Scraper claims the r18.dev domain, so "Scrape a scene" picks one of them
+			// more or less at random. Hand the scene to the Scraper that actually covers it, or to
+			// Other Studios when none does.
+			if owner := r18devSingleOwner(body); owner != scraperID {
+				log.Infof("[%s] %s belongs to %s", scraperID, it.ContentID, owner)
+				sc.ScraperID = owner
+			}
+		}
+
+		if len(updateRows) > 0 {
+			for _, r := range updateRows {
+				u := sc
+				u.SceneID, u.SiteID = r.SceneID, r.SceneID
+				if !r18devIsOrphan(r.ScraperID) {
+					u.ScraperID = r.ScraperID // a scene with a real owner stays with it
+				}
+				nUpdated++
+				out <- u
+			}
+			continue
+		}
+		if e := idx.bySceneID[sc.SceneID]; e != nil && !r18devIsOurs(e.ScraperID) {
+			// Write guard 2: the scene ID is taken by a scene that isn't ours
+			sameScene := strings.EqualFold(e.Studio, sc.Studio) || (e.ReleaseDate != "" && e.ReleaseDate == sc.Released)
+			if sameScene {
+				nForeign++ // same scene under another scraper (content ID changed, etc.): hands off
+				continue
+			}
+			// Different scene with a clashing dvd_id: fall back to the unique content ID
+			raw := r18devStripReissue(key)
+			if e2 := idx.bySceneID[raw]; e2 != nil && !r18devIsOurs(e2.ScraperID) {
+				nForeign++
+				continue
+			}
+			log.Infof("[%s] %s: scene ID %s belongs to a different scene, using %s", scraperID, it.ContentID, sc.SceneID, raw)
+			sc.SceneID, sc.SiteID = raw, raw
+		} else if e != nil && !strings.EqualFold(e.Studio, sc.Studio) && (e.ReleaseDate == "" || e.ReleaseDate != sc.Released) {
+			// Write guard 3: one of ours, but a different scene under the same dvd_id (no content ID
+			// of it matched above). Global Media's DPVR-001 (143dpvr00001) vs KMP's DPVR-001
+			// (84dpvr00001), PRVR-001 (h_720prvr00001) vs PREMIUM's. Keep both, the newcomer under
+			// its content ID. Same studio or release date: the same scene with a new content ID, update it.
+			raw := r18devStripReissue(key)
+			log.Infof("[%s] %s: scene ID %s is %s's %s, using %s", scraperID, it.ContentID, sc.SceneID, e.Studio, e.SceneID, raw)
+			sc.SceneID, sc.SiteID = raw, raw
+		}
+
+		if e := idx.bySceneID[sc.SceneID]; e != nil {
+			nUpdated++
+		} else {
+			nNew++
+		}
+		e := &r18devExisting{SceneID: sc.SceneID, ScraperID: sc.ScraperID, Studio: sc.Studio, ReleaseDate: sc.Released}
+		idx.bySceneID[sc.SceneID] = e
+		idx.byContentID[key] = append(idx.byContentID[key], e)
+		out <- sc
+	}
+
+	if singleSceneURL == "" && !listFailed && nErrors == 0 && !client.rateLimited {
+		// Clean run: save the list sizes, so the next Limit Scraping run can stop at page 1 when they
+		// haven't changed. After a full run everything on these lists is in XBVR, rejected or pending.
+		// After a Limit Scraping run only the recent pages are; like every other scraper, the back
+		// catalog takes one run with Limit Scraping off.
+		for _, src := range cfg.Sources {
+			k := r18devSourceKey(src)
+			if total, ok := totals[k]; ok && total != knownTotals[k] {
+				r18devSaveSource(k, total)
+			}
+		}
+	}
+	reasons, nNewRejects := make([]string, 0, len(newRejects)), 0
+	for why, n := range newRejects {
+		reasons = append(reasons, fmt.Sprintf("%d %s", n, why))
+		nNewRejects += n
+	}
+	sort.Strings(reasons)
+	log.Infof("[%s] done: %d new, %d updated, %d already scraped (%d of them adopted), %d belong to other scrapers, %d rejected (%d this run: %s), %d skipped for now (cover not ready / gone), %d errors. %d requests.",
+		scraperID, nNew, nUpdated, nKnown, nAdopted, nForeign, nRejected, nNewRejects, strings.Join(reasons, ", "), nSkipped, nErrors, client.requests)
+
+	if client.rateLimited {
+		log.Errorf("[%s] stopped early: R18.dev is still rate limiting (HTTP 429) after %d tries. Whatever wasn't fetched gets picked up on the next run.", scraperID, r18devTries)
+		return nil
+	}
+	if singleSceneURL == "" && !limitScraping && !listFailed && nErrors == 0 && config.Config.Advanced.AutoLimitScraping {
+		// Same as SLR: after a clean full run, only page 1 of each source from now on
+		db, _ := models.GetCommonDB()
+		var site models.Site
+		if db.Where(&models.Site{ID: scraperID}).First(&site).Error == nil && !site.LimitScraping {
+			site.LimitScraping = true
+			site.Save()
+			log.Infof("[%s] Auto-enabled limit scraping after a full scrape", scraperID)
+		}
+	}
+	if updateSite && singleSceneURL == "" {
+		updateSiteLastUpdate(scraperID)
+	}
+	return nil
+}
+
+// R18devScraperInfo is what the Scrapers (JAV) tab shows next to the normal site row.
+type R18devScraperInfo struct {
+	ID           string                `json:"id"` // XBVR site / scraper ID, r18dev-...
+	Name         string                `json:"name"`
+	Company      string                `json:"company"`
+	Custom       bool                  `json:"custom"`
+	Sources      []config.R18devSource `json:"sources"`
+	Sites        []string              `json:"sites"`
+	SitesDisplay string                `json:"sites_display,omitempty"`
+	Tooltip      string                `json:"tooltip,omitempty"`
+	// Quality modes (8KVR, 4K60+): text instead of an avatar image, and enabling one turns every
+	// other R18.dev Scraper off
+	AvatarText string   `json:"avatar_text,omitempty"`
+	Exclusive  bool     `json:"exclusive"`
+	OldSites   []string `json:"old_sites"`
+}
+
+var r18devRegistered []R18devScraperInfo
+
+// R18devScrapers lists the registered R18.dev Scrapers, official ones first.
+func R18devScrapers() []R18devScraperInfo {
+	return r18devRegistered
+}
+
+// r18devSingleSceneID owns scenes scraped by URL that no registered Scraper covers, like
+// slr-single_scene. It has no sources and no Site row (InitSites skips *-single_scene).
+const r18devSingleSceneID = "r18dev-single_scene"
+
+func r18devIsRegistered(id string) bool {
+	for _, info := range r18devRegistered {
+		if info.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// r18devIsOrphan: an R18.dev scene owned by Other Studios, or by a Scraper that no longer exists
+// (custom one removed from scrapers.json). The next Scraper that lists it takes it over.
+func r18devIsOrphan(scraperID string) bool {
+	return scraperID == r18devSingleSceneID || (r18devIsOurs(scraperID) && !r18devIsRegistered(scraperID))
+}
+
+// r18devCoverRank returns how specifically sources cover a scene: 0 label, 1 maker, 2 category,
+// -1 not at all.
+func r18devCoverRank(sources []config.R18devSource, label, maker int64, cats map[int64]bool) int {
+	best := -1
+	for _, src := range sources {
+		rank := -1
+		switch {
+		case src.Type == "label" && label != 0 && src.ID == label:
+			rank = 0
+		case src.Type == "studio" && maker != 0 && src.ID == maker:
+			rank = 1
+		case src.Type == "category" && cats[src.ID]:
+			rank = 2
+		}
+		if rank >= 0 && (best < 0 || rank < best) {
+			best = rank
+		}
+	}
+	return best
+}
+
+// r18devOwner picks the Scraper a single scene belongs to, or "": enabled Scrapers first, then label
+// over maker over category, then official over custom (registration order). A quality mode only
+// takes scenes while it's on; when it gets turned on later, its crawl adopts them.
+func r18devOwner(body string, enabled map[string]bool) string {
+	label, maker := gjson.Get(body, "label_id").Int(), gjson.Get(body, "maker_id").Int()
+	cats := map[int64]bool{}
+	for _, cat := range gjson.Get(body, "categories").Array() {
+		cats[cat.Get("id").Int()] = true
+	}
+	owner, ownerScore := "", 0
+	for _, info := range r18devRegistered {
+		rank := r18devCoverRank(info.Sources, label, maker, cats)
+		if rank < 0 || (info.Exclusive && !enabled[info.ID]) {
+			continue
+		}
+		score := rank
+		if !enabled[info.ID] {
+			score += 10
+		}
+		if owner == "" || score < ownerScore {
+			owner, ownerScore = info.ID, score
+		}
+	}
+	return owner
+}
+
+// r18devSingleOwner is r18devOwner with the current enabled state, falling back to Other Studios.
+func r18devSingleOwner(body string) string {
+	enabled := map[string]bool{}
+	var sites []models.Site
+	db, _ := models.GetCommonDB()
+	db.Where("id LIKE ?", "r18dev-%").Find(&sites)
+	for _, st := range sites {
+		enabled[st.ID] = st.IsEnabled
+	}
+	if owner := r18devOwner(body, enabled); owner != "" {
+		return owner
+	}
+	return r18devSingleSceneID
+}
+
+// r18devAdopt hands a scene to another Scraper without touching anything else.
+func r18devAdopt(sceneID string, scraperID string) error {
+	db, _ := models.GetCommonDB()
+	var site models.Site
+	db.Where(&models.Site{ID: scraperID}).First(&site)
+	return db.Model(&models.Scene{}).Where("scene_id = ?", sceneID).
+		UpdateColumns(map[string]interface{}{"scraper_id": scraperID, "is_subscribed": site.Subscribed}).Error
+}
+
+func addR18devScraper(cfg config.R18devScraperConfig, custom bool) {
+	if cfg.ID == "" || (len(cfg.Sources) == 0 && len(cfg.ContentIDs) == 0) {
+		log.Warnf("R18.dev scraper %q skipped: needs an id and at least one source or content ID", cfg.Name)
+		return
+	}
+	if id := r18devSiteID(cfg); id == r18devSingleSceneID || r18devIsRegistered(id) {
+		// Built-in scrapers are registered first, so a custom one with the same id loses
+		log.Warnf("R18.dev scraper %q skipped: id %q is already taken", cfg.Name, cfg.ID)
+		return
+	}
+	for _, src := range cfg.Sources {
+		if src.Type != "label" && src.Type != "studio" && src.Type != "category" {
+			log.Warnf("R18.dev scraper %q skipped: source type %q, must be label, studio or category", cfg.Name, src.Type)
+			return
+		}
+	}
+	name := cfg.Name + " (R18.dev)"
+	if custom {
+		name = cfg.Name + " (Custom R18.dev)"
+		r18devLoadedCustom[strings.ToLower(cfg.ID)] = cfg
+	}
+	r18devRegistered = append(r18devRegistered, R18devScraperInfo{
+		ID: r18devSiteID(cfg), Name: cfg.Name, Company: cfg.Company, Custom: custom,
+		Sources: cfg.Sources, Sites: cfg.Sites, OldSites: cfg.OldSites,
+		AvatarText: cfg.AvatarText, Exclusive: cfg.Exclusive, SitesDisplay: cfg.SitesDisplay, Tooltip: cfg.Tooltip,
+	})
+	registerScraper(r18devSiteID(cfg), name, cfg.AvatarUrl, "r18.dev",
+		func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+			return R18devCrawler(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, limitScraping, cfg)
+		})
+}
+
+func init() {
+	var scrapers config.ScraperList
+	scrapers.Load()
+	for _, cfg := range scrapers.XbvrScrapers.R18devScrapers {
+		addR18devScraper(cfg, false)
+	}
+	for _, cfg := range scrapers.CustomScrapers.R18devScrapers {
+		// a custom one with a preset's ID is skipped by addR18devScraper and never retired: its Site
+		// row is the preset's
+		if by := r18devCoveredBy(cfg, scrapers.XbvrScrapers.R18devScrapers); by != nil && !r18devIsRegistered(r18devSiteID(cfg)) {
+			r18devRetired[r18devSiteID(cfg)] = by
+			log.Infof("Custom JAV scraper %s not loaded: covered by %s", cfg.Name, strings.Join(by, ", "))
+			continue
+		}
+		addR18devScraper(cfg, true)
+	}
+	other := config.R18devScraperConfig{ID: strings.TrimPrefix(r18devSingleSceneID, "r18dev-"), Name: "Other Studios"}
+	registerScraper(r18devSingleSceneID, "Other Studios (R18.dev)", "", "r18.dev",
+		func(wg *models.ScrapeWG, updateSite bool, knownScenes []string, out chan<- models.ScrapedScene, singleSceneURL string, singeScrapeAdditionalInfo string, limitScraping bool) error {
+			return R18devCrawler(wg, updateSite, knownScenes, out, singleSceneURL, singeScrapeAdditionalInfo, limitScraping, other)
+		})
+}

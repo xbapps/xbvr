@@ -2,115 +2,232 @@ package scrape
 
 import (
 	"html"
+	"path"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/gjson"
+	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
+// Tags
+// R18.dev category ID -> re-write
+// "" = drop
+
+var r18dTagOverrides = map[int64]string{
+	// Clutter/Junk
+	501:  "", // Female Porn Star (AV女優)
+	617:  "", // Three Dimensional (3D) - old VR scenes (HNVR-001, 2017), redundant
+	4025: "", // Featured Actress (単体作品)
+	6548: "", // Exclusive Distribution (独占配信)
+	6561: "", // Special Offers And Set Products (特典付き・セット商品)
+	6565: "", // Sale (limited time) (期間限定セール)
+	6566: "", // FANZA Exclusive
+	6793: "", // VR Exclusive (VR専用)
+	6925: "", // High-Quality VR (ハイクオリティVR) - still used for FANZA filenames/quality below
+
+	// Censored/Renames
+	1018: "schoolgirl", // JSON dump from R18's final days shows "女子校生" replaced with "Academy Uniform" instead of "Schoolgirl" - r18.dev seems to follow the same mapping for FANZA category 1018 - get your credit card compliance puritanism out of my porn, I don't need "Academy Uniform" and "Uniform" tagged together lmao
+	4121: "drunk girl", // shows up as "D***k Girl"
+	6949: "abuse",      // shows up as "A***e" (罵倒), R18.dev's page shows "Abuse"
+	5064: "hypnotism",  // shows up as "H*******m" (催眠), unconfirmed against old R18.com scrapes
+	29:   "gang bang",  // shows up as "G*******g", no name_ja, last used 2022-04, likely an old R18.com tag?
+	4058: "shotacon",   // Claude you prude
+}
+
+// Actress names
+
+// R18.dev actress ID -> name. Wins over everything else. This potential bodge is only for names the filename fix described later cannot handle.
+// Remove this map and the lookup at the top of r18dActressName to drop overrides entirely. Could be moved out to a JSON list like scrapers.json, with the priority flipped (user decision).
+var r18dActressOverrides = map[int64]string{
+	// 1234567: "GivenName FamilyName",
+	1112912: "Yomogi Mochino",
+	1115109: "Baku Minase",   // 皆瀬獏 (みなせばく), no image to split by
+	1096319: "Hono Wakamiya", // わか菜ほの (Hono Wakana), same actress, filed under her earlier name [vt-idiot]
+	1069632: "miru",          // always lowercase [vt-idiot]
+	1056315: "maki",          // lowercase, like her kanji field [vt-idiot]
+	1049866: "Hana Taira",    // 平花 (たいらはな), R18.dev romaji says "Heika"
+	1067505: "Hana Kotone",   // 琴音華 (ことねはな), R18.dev romaji says "Kotoneka"
+	1065803: "Nozomi Mare",   // 希のぞみ (まれのぞみ), R18.dev romaji says "Nozomi"
+	1056062: "Aina Shinkawa", // 新川愛七 (しんかわあいな), R18.com said "Ai Shinkawa 7", the 7 stays out [vt-idiot]
+	1043426: "Nana Hoshino",  // 星野七 (ほしのなな), R18.com said "Hoshino 7", the 7 stays out [vt-idiot]
+	// Name doesn't match her filename, or only one of two names does
+	1108973: "Maria Valentine",              // マリアバレンタイン, her filename is given_family (maria_barentain.jpg)
+	1093154: "Urara Akane (Urara Nikaidou)", // あかね麗（二階堂麗）, x.com/Urara_akane [vt-idiot]
+	1094418: "Rita Minase",                  // 水瀬りた, kana says みずせ, x.com/minase_rita says Minase [vt-idiot]
+	1083817: "Yuu Manase (Yuri Manase)",     // 愛瀬ゆう（愛瀬ゆうり）, image still under her old name (manase_yuuri.jpg) [vt-idiot]
+	1098546: "Miu Aona (Shizuku Aonami)",    // 碧那美海（碧波しずく）, renamed early 2026
+	1109347: "Miu Aona (Shizuku Aonami)",    // 碧那美海, her new ID after the rename, same as 1098546 [vt-idiot]
+	// No image to split by, all of them first credited 2024 or later (never on R18.com)
+	1104678: "Ruru Haruno",     // 春乃るる
+	1101130: "Erisa Kamishiro", // 神代えりさ
+	1101619: "Yura Asakura",    // 朝倉ゆら
+	1111906: "Mana Mochida",    // 濡田まな
+	1109402: "Marino Azusa",    // 梓まりの
+	1100292: "Fuuka Azuma",     // 東ふうか
+	1105378: "Natsu Ayase",     // 綾瀬なつ
+	1092658: "Tsukasa Fujino",  // 藤野つかさ
+	1104165: "Suzu Azuma",      // あずま鈴
+	1113768: "Mika Otoyui",     // 乙結美華 (おとゆいみか)
+	1088447: "Miyu Otori",      // 鳳みゆ (おおとりみゆ), first credited 2023 [vt-idiot]
+	1087774: "Karen Otori",     // 鳳カレン (おおとりかれん), the filename split gives "Karen Ootori" [vt-idiot]
+}
+
+// A "kanji" name written in Latin letters is how FANZA spells it, case included: AIKA, RISA, miru,
+// Hazel Moore. Their name_romaji can be missing, re-cased ("Risa") or rebuilt from the katakana.
+var r18dLatinName = regexp.MustCompile(`^[A-Za-z][A-Za-z .'-]*$`)
+
+// "Name (Alias)" stays as R18.dev has it, except when the alias is the same name again:
+// "Blake Blossom (Blake Blossom)", "Rei Mizuna (Rei Mizuna)" (みづなれい / みずなれい).
+var r18dSameAlias = regexp.MustCompile(`^(.+) \((.+)\)$`)
+
+func r18dActressName(actress gjson.Result) string {
+	// Japanese Mode: the name as FANZA has it, none of the fixes below
+	if r18dJapaneseMode() {
+		if kanji := r18dCleanJa(actress.Get("name_kanji").String()); kanji != "" {
+			return kanji
+		}
+	}
+	if fixed, ok := r18dActressOverrides[actress.Get("id").Int()]; ok {
+		return fixed
+	}
+	if kanji := strings.Join(strings.Fields(actress.Get("name_kanji").String()), " "); r18dLatinName.MatchString(kanji) {
+		return kanji
+	}
+
+	// Fields + Join: some names have a line break inside ("Mitsuha\n(Mitsuha Kikukawa)", 1038713)
+	name := strings.Join(strings.Fields(html.UnescapeString(actress.Get("name_romaji").String())), " ")
+	if m := r18dSameAlias.FindStringSubmatch(name); m != nil && strings.EqualFold(m[1], m[2]) {
+		name = m[1]
+	}
+	if name == "" || strings.Contains(name, " ") {
+		return name // empty, or already "FirstName LastName"
+	}
+
+	// Actresses who never had an official English name on R18.com (or a fix added by R18.dev themselves, Ozakierika is now correctly Erika Ozaki) come back from R18.dev as one word, family name first: 藍瀬ミナ (あいせみな) -> "Aisemina".
+	// The image filename sometimes still has the split ("aise_mina.jpg"). If the filename with the underscore stripped match the name, rebuild it as "First/GivenName Last/FamilyName" -> "Mina Aise".
+	// Filenames can have a number on the end ("adati_yuri2.jpg") and are often Kunrei-shiki while name_romaji is Hepburn: "adati" vs "Adachi", "tatibana" vs "Tachibana". Both sides are compared in Kunrei-shiki, the split point comes from the filename, the spelling from name_romaji -> "Yuri Adachi".
+	// Anything that still doesn't match is left alone.
+	img := path.Base(actress.Get("image_url").String())
+	img = strings.TrimSuffix(img, path.Ext(img))
+	img = strings.TrimRight(img, "0123456789")
+	parts := strings.Split(img, "_")
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return name // no clean family_given split (AIKA, JULIA, no image...)
+	}
+
+	family, given := r18dKunrei(parts[0]), r18dKunrei(parts[1])
+	lower := strings.ToLower(name)
+	if r18dKunrei(lower) != family+given {
+		return name // letters don't match (some other romanization difference, etc.)
+	}
+
+	for i := 1; i < len(lower); i++ {
+		if r18dKunrei(lower[:i]) == family && r18dKunrei(lower[i:]) == given {
+			return r18dCapitalize(lower[i:]) + " " + r18dCapitalize(lower[:i])
+		}
+	}
+	return name
+}
+
+// Hepburn -> Kunrei-shiki, only the spellings that differ in names. Already Kunrei-shiki text has none of these, so it comes back unchanged.
+// shi -> si, sha -> sya, chi -> ti, cha -> tya, tsu -> tu, fu -> hu, ji -> zi, ja -> zya (matcha -> mattya works out on its own)
+var r18dHepburnRe = regexp.MustCompile(`(sh|ch|j)([aiueo])|tsu|fu`)
+
+// Some filenames write ぢ / づ the Nihon-shiki way, as di / du ("haduki_mayu.jpg" for Hazukimayu). Kunrei-shiki
+// and Hepburn both write them zi / zu, so di and du become zi and zu on both sides.
+var r18dNihonShiki = strings.NewReplacer("di", "zi", "du", "zu", "dy", "zy")
+
+func r18dKunrei(s string) string {
+	return r18dNihonShiki.Replace(r18dHepburnRe.ReplaceAllStringFunc(strings.ToLower(s), func(m string) string {
+		switch m {
+		case "tsu":
+			return "tu"
+		case "fu":
+			return "hu"
+		}
+		cons, vowel := m[:len(m)-1], m[len(m)-1:]
+		c := map[string]string{"sh": "s", "ch": "t", "j": "z"}[cons]
+		if vowel == "i" {
+			return c + "i"
+		}
+		return c + "y" + vowel
+	}))
+}
+
+// "[VR] " in front of titles, sometimes missing its "[" (hnvr00132, hnvr00149: "VR] Naked Kendo ..."),
+// sometimes "(VR) " (84vrkm00139)
+var r18dVRPrefix = regexp.MustCompile(`^(\[?VR\]|\(VR\))\s*`)
+
+// r18dTagUncredited tags scenes R18.dev lists with no actresses at all (hnvr00149), so they can be
+// found and filled in by hand.
+func r18dTagUncredited(sc *models.ScrapedScene) {
+	if len(sc.Cast) == 0 {
+		sc.Tags = append(sc.Tags, "uncredited javr")
+	}
+}
+
+func r18dCapitalize(s string) string {
+	s = strings.ToLower(s)
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+const (
+	r18dCatHQVR = 6925
+	r18dCat8KVR = 307935
+)
+
 func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
-	scenes := strings.Split(queryString, ",")
+	client := resty.New()
+	first := true
+	for _, v := range strings.Split(queryString, ",") {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		if !first {
+			time.Sleep(1 * time.Second)
+		}
+		first = false
 
-	for _, v := range scenes {
-		sc := models.ScrapedScene{}
-		sc.SceneType = "VR"
-
-		req := resty.New().R()
-		req.SetHeader("User-Agent", UserAgent)
-		res := getByContentId(req, v)
-
+		res, err := getByContentId(client, v)
+		if err != nil {
+			log.Errorln("Failed to fetch R18.dev data for", v, ":", err)
+			continue
+		}
 		if res.StatusCode() == 404 {
-			res = getByDVDId(req, v)
-
-			if res.StatusCode() == 200 {
-				content_id := gjson.Get(res.String(), "content_id").String()
-				res = getByContentId(req, content_id)
-			} else {
-				return nil
+			res, err = getByDVDId(client, v)
+			if err != nil || res.StatusCode() != 200 {
+				log.Errorln("R18.dev: no match for", v, "by content ID or DVD ID")
+				continue
 			}
+			content_id := gjson.Get(res.String(), "content_id").String()
+			res, err = getByContentId(client, content_id)
+			if err != nil {
+				log.Errorln("Failed to fetch R18.dev data for", content_id, ":", err)
+				continue
+			}
+		}
+		if res.StatusCode() != 200 {
+			log.Errorln("R18.dev returned", res.StatusCode(), "for", v)
+			continue
 		}
 
 		JsonMetadata := res.String()
+		sc := r18dSceneFromJSON(JsonMetadata)
 
-		content_id := gjson.Get(JsonMetadata, "content_id").String()
-		sc.HomepageURL = "https://www.dmm.co.jp/en/digital/videoa/-/detail/=/cid=" + content_id + "/"
-
-		// Title
-		if gjson.Get(JsonMetadata, "title_en_is_machine_translation").String() == "false" {
-			sc.Title = strings.Replace(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "title_en").String())), "[VR] ", "", -1)
-		} else {
-			sc.Title = gjson.Get(JsonMetadata, "content_id").String()
-			sc.Synopsis = gjson.Get(JsonMetadata, "title_en").String()
-		}
-
-		// Studio
-		sc.Studio = gjson.Get(JsonMetadata, "maker_name_en").String()
-
-		// Date
-		sc.Released = gjson.Get(JsonMetadata, "release_date").String()
-
-		// Time
-		tmpDuration, err := strconv.Atoi(gjson.Get(JsonMetadata, "runtime_mins").String())
-		if err == nil {
-			sc.Duration = tmpDuration
-		}
-
-		// Covers
-		coverimgs := gjson.Get(JsonMetadata, "jacket_full_url")
-		sc.Covers = append(sc.Covers, strings.TrimSpace(html.UnescapeString(coverimgs.String())))
-
-		// Gallery
-		galleryimgs := gjson.Get(JsonMetadata, "gallery.#.image_full")
-		for _, name := range galleryimgs.Array() {
-			sc.Gallery = append(sc.Gallery, strings.TrimSpace(html.UnescapeString(name.String())))
-		}
-
-		// Cast
-		actornames := gjson.Get(JsonMetadata, "actresses.#.name_romaji")
-		for _, name := range actornames.Array() {
-			sc.Cast = append(sc.Cast, strings.TrimSpace(html.UnescapeString(name.String())))
-		}
-
-		// Tags
-		// Skipping some very generic and useless tags
-		skiptags := map[string]bool{
-			"Featured Actress":       true,
-			"VR Exclusive":           true,
-			"High-Quality VR":        true,
-			"Exclusive Distribution": true,
-		}
-
-		// JSON dump from R18's final days shows "女子校生" replaced with "Academy Uniform" instead of "Schoolgirl" - r18.dev seems to follow the same mapping for FANZA category 1018 - get your credit card compliance puritanism out of my porn, I don't need "Academy Uniform" and "Uniform" tagged together lmao
-		joshikosei := "Academy Uniform"
-
-		taglist := gjson.Get(JsonMetadata, "categories.#.name_en")
-		quality := "VR"
-		has8KVR := false
-		for _, name := range taglist.Array() {
-			if name.Str == "8KVR" {
-				has8KVR = true
-				quality = "8K"
-			} else if name.Str == "High-Quality VR" && !has8KVR {
-				quality = "HQ"
-			}
-			if !skiptags[name.Str] {
-				if name.Str == joshikosei {
-					sc.Tags = append(sc.Tags, "schoolgirl")
-				} else {
-					sc.Tags = append(sc.Tags, strings.TrimSpace(html.UnescapeString(name.String())))
-				}
-			}
-		}
-		sc.Tags = append(sc.Tags, "JAVR")
-		sc.Tags = append(sc.Tags, "R18.dev")
-
-		// Scene ID and Site
+		// Scene ID and Site (comma box keeps its original behavior)
 		dvdID := gjson.Get(JsonMetadata, "dvd_id").String()
 		if dvdID == "----" || dvdID == "" {
-			sc.SceneID = content_id
-			sc.SiteID = content_id
+			sc.SceneID = sc.SiteID // content ID
 			sc.Site = gjson.Get(JsonMetadata, "label_name_en").String()
 		} else {
 			sc.SceneID = dvdID
@@ -118,36 +235,150 @@ func ScrapeR18D(out *[]models.ScrapedScene, queryString string) error {
 			sc.Site = strings.Split(dvdID, "-")[0]
 		}
 
-		// Filler Filenames
-		resolutions := []string{"vmb"}
-		if quality == "HQ" {
-			resolutions = []string{"vrv1uhqe"}
-		} else if quality == "8K" {
-			resolutions = []string{"vrv1uhqf", "vrv18khia"}
-		}
-		for r := range resolutions {
-			parts := []string{"", "1", "2", "3"}
-			for p := range parts {
-				fn := content_id + resolutions[r] + parts[p] + ".mp4"
-				sc.Filenames = append(sc.Filenames, fn)
+		if r18dJapaneseTitle(JsonMetadata) != "" {
+			// Japanese titles get the DVD ID in front, like the crawler's
+			display := r18devDisplayID(gjson.Get(JsonMetadata, "content_id").String())
+			if dvdID != "" && dvdID != "----" {
+				display = r18devNormalizeDVDID(dvdID)
 			}
+			if display == "" {
+				display = sc.SceneID
+			}
+			sc.Title = display + " " + sc.Title
 		}
 
 		if sc.SceneID != "" {
+			log.Infoln("Scraping [" + sc.SceneID + "] " + sc.Title)
 			*out = append(*out, sc)
 		}
 	}
 	return nil
 }
 
-func getByContentId(req *resty.Request, content_id string) *resty.Response {
-	res, _ := req.Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + content_id + "/json")
-
-	return res
+// Japanese Mode (Scrapers (JAV) page): actress names and scene titles come in as FANZA has them,
+// the English title goes in the description. Tags stay English.
+func r18dJapaneseMode() bool {
+	return config.Config.ScraperSettings.Javr.JapaneseMode
 }
 
-func getByDVDId(req *resty.Request, dvd_id string) *resty.Response {
-	res, _ := req.Get("https://r18.dev/videos/vod/movies/detail/-/dvd_id=" + dvd_id + "/json")
+var r18dDoubleSpace = regexp.MustCompile(` {2,}`)
 
-	return res
+// r18dCleanJa is all the cleanup Japanese text gets: HTML entities (&lt;音&gt;), ASCII whitespace at
+// the ends (" ミラMilk"), doubled ASCII spaces. Full-width spaces are Japanese typography and stay.
+func r18dCleanJa(s string) string {
+	return r18dDoubleSpace.ReplaceAllString(strings.Trim(html.UnescapeString(s), " \t\r\n"), " ")
+}
+
+// r18dJapaneseTitle returns the Japanese title in Japanese Mode, "" otherwise or when R18.dev has
+// none (old R18.com scenes with only an English title keep the usual one).
+func r18dJapaneseTitle(JsonMetadata string) string {
+	if !r18dJapaneseMode() {
+		return ""
+	}
+	return r18dCleanJa(gjson.Get(JsonMetadata, "title_ja").String())
+}
+
+// r18dSceneFromJSON builds a scene from R18.dev detail JSON: title, studio, dates, images, cast,
+// tags and filler filenames. Shared by the comma-box scraper and the R18.dev crawler; callers set
+// SceneID / SiteID / Site (SiteID is pre-filled with the content ID).
+func r18dSceneFromJSON(JsonMetadata string) models.ScrapedScene {
+	sc := models.ScrapedScene{}
+	sc.SceneType = "VR"
+
+	content_id := gjson.Get(JsonMetadata, "content_id").String()
+	sc.SiteID = content_id
+	sc.HomepageURL = "https://r18.dev/videos/vod/movies/detail/-/id=" + content_id + "/"
+
+	// Title
+	title := r18dVRPrefix.ReplaceAllString(strings.TrimSpace(html.UnescapeString(gjson.Get(JsonMetadata, "title_en").String())), "")
+	if ja := r18dJapaneseTitle(JsonMetadata); ja != "" {
+		// Japanese Mode: the Japanese title, the English one (machine translated or not) as the description
+		sc.Title = ja
+		sc.Synopsis = title
+	} else if gjson.Get(JsonMetadata, "title_en_is_machine_translation").String() == "false" {
+		sc.Title = title
+	} else {
+		sc.Title = gjson.Get(JsonMetadata, "content_id").String()
+		sc.Synopsis = title
+	}
+
+	// Studio
+	sc.Studio = gjson.Get(JsonMetadata, "maker_name_en").String()
+
+	// Date
+	sc.Released = gjson.Get(JsonMetadata, "release_date").String()
+
+	// Time
+	tmpDuration, err := strconv.Atoi(gjson.Get(JsonMetadata, "runtime_mins").String())
+	if err == nil {
+		sc.Duration = tmpDuration
+	}
+
+	// Covers
+	coverimgs := gjson.Get(JsonMetadata, "jacket_full_url")
+	sc.Covers = append(sc.Covers, strings.TrimSpace(html.UnescapeString(coverimgs.String())))
+
+	// Gallery
+	galleryimgs := gjson.Get(JsonMetadata, "gallery.#.image_full")
+	for _, name := range galleryimgs.Array() {
+		sc.Gallery = append(sc.Gallery, strings.TrimSpace(html.UnescapeString(name.String())))
+	}
+
+	// Cast
+	for _, actress := range gjson.Get(JsonMetadata, "actresses").Array() {
+		if name := r18dActressName(actress); name != "" {
+			sc.Cast = append(sc.Cast, name)
+		}
+	}
+	r18dTagUncredited(&sc)
+
+	quality := "VR"
+	for _, cat := range gjson.Get(JsonMetadata, "categories").Array() {
+		id := cat.Get("id").Int()
+
+		switch {
+		case id == r18dCat8KVR:
+			quality = "8K"
+		case id == r18dCatHQVR && quality != "8K":
+			quality = "HQ"
+		}
+
+		name := strings.TrimSpace(html.UnescapeString(cat.Get("name_en").String()))
+		if repl, ok := r18dTagOverrides[id]; ok {
+			if repl == "" {
+				continue
+			}
+			name = repl
+		}
+		sc.Tags = append(sc.Tags, name)
+	}
+	sc.Tags = append(sc.Tags, "JAVR")
+	sc.Tags = append(sc.Tags, "R18.dev")
+
+	// Filler Filenames
+	resolutions := []string{"vmb"}
+	if quality == "HQ" {
+		resolutions = []string{"vrv1uhqe"}
+	} else if quality == "8K" {
+		resolutions = []string{"vrv1uhqf", "vrv18khia"}
+	}
+	for r := range resolutions {
+		parts := []string{"", "1", "2", "3"}
+		for p := range parts {
+			fn := content_id + resolutions[r] + parts[p] + ".mp4"
+			sc.Filenames = append(sc.Filenames, fn)
+		}
+	}
+
+	return sc
+}
+
+func getByContentId(client *resty.Client, content_id string) (*resty.Response, error) {
+	return client.R().SetHeader("User-Agent", UserAgent).
+		Get("https://r18.dev/videos/vod/movies/detail/-/combined=" + content_id + "/json")
+}
+
+func getByDVDId(client *resty.Client, dvd_id string) (*resty.Response, error) {
+	return client.R().SetHeader("User-Agent", UserAgent).
+		Get("https://r18.dev/videos/vod/movies/detail/-/dvd_id=" + dvd_id + "/json")
 }

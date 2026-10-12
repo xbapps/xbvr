@@ -1,9 +1,14 @@
 <template>
   <div class="content">
     <b-loading :is-full-page="true" :active.sync="isLoading"></b-loading>
+    <template v-if="jav">
+      <h3 class="title">{{$t('Manual: Import Japanese Adult VR (JAVR) Scene')}}</h3>
+      <JAVRImport/>
+      <br>
+    </template>
     <div class="columns">
       <div class="column">
-        <h3 class="title">{{$t('Scrape scenes from studios')}}</h3>
+        <h3 class="title">{{jav ? $t('EXPERIMENTAL: Scrape JAV scenes from R18.dev') : $t('Scrape scenes from studios')}}</h3>
       </div>
       <div class="column buttons" align="right">
         <b-dropdown aria-role="list" position="is-bottom-left">
@@ -24,12 +29,81 @@
         <a class="button is-primary" v-on:click="taskScrape('_enabled')">{{$t('Run selected scrapers')}}</a>
       </div>
     </div>
+    <b-collapse v-if="jav" :open.sync="japaneseOpen" animation="slide" class="quality-modes">
+      <template #trigger="props">
+        <a class="has-text-grey">
+          <b-icon :icon="props.open ? 'menu-down' : 'menu-right'" size="is-small"/>
+          {{$t('Japanese mode: actress names and titles in Japanese')}}
+        </a>
+      </template>
+      <div class="card">
+        <div class="card-content">
+          <div class="quality-mode-row">
+            <b-switch v-model="japaneseMode" @input="saveJapaneseMode"/>
+            <strong class="quality-mode-name">{{$t('Japanese Mode')}}</strong>
+          </div>
+          <p class="quality-mode-note">
+            <span style="color: red; font-weight: bold;">WARNING:</span>
+            Actress names and scene titles will be scraped as is in Japanese (JAV titles are LONG). The English title goes in the scene's description instead. Tags stay English. Applies as scenes are scraped or rescraped; force update each studio to switch existing scenes. Your old Romaji actors stay until you merge or delete them.
+          </p>
+        </div>
+      </div>
+    </b-collapse>
+    <b-collapse v-if="jav && modeList.length" :open.sync="modesOpen" animation="slide" class="quality-modes">
+      <template #trigger="props">
+        <a class="has-text-grey">
+          <b-icon :icon="props.open ? 'menu-down' : 'menu-right'" size="is-small"/>
+          {{$t('Quality modes: every studio, by video quality')}}
+        </a>
+      </template>
+      <div class="card">
+        <div class="card-content">
+          <div v-for="m in modeList" :key="m.id" class="quality-mode">
+            <div class="quality-mode-row">
+              <b-switch v-model="m.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: m.id})"/>
+              <span class="avatar-text">{{ m.avatar_text }}</span>
+              <strong class="quality-mode-name">{{ m.sitename }}</strong>
+              <span class="has-text-grey is-size-7 quality-mode-last">
+                <span v-if="runningScrapers.includes(m.id)" class="loading-dots"><span>.</span><span>.</span><span>.</span></span>
+                <span v-else-if="m.last_update !== '0001-01-01T00:00:00Z'">{{$t('Last scrape')}}: {{formatCompactTimeAgo(m.last_update)}}</span>
+              </span>
+              <b-tooltip class="is-info" :label="$t('Limit scraping to newest scenes on the website. Turn off if you are missing scenes.')" :delay="250">
+                <b-switch size="is-small" v-model="m.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: m.id})">{{$t('Limit Scraping')}}</b-switch>
+              </b-tooltip>
+              <span class="tag is-info is-light is-medium"><strong>{{ m.scene_count }}</strong></span>
+              <b-dropdown aria-role="list" position="is-bottom-left">
+                <template slot="trigger">
+                  <b-icon icon="dots-vertical mdi-18px"></b-icon>
+                </template>
+                <b-dropdown-item aria-role="listitem" @click="taskScrape(m.id)">{{$t('Run this scraper')}}</b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="taskScrapeScene(m.id)">{{$t('Scrape Single Scene')}}</b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="forceSiteUpdate(m.name, m.id)">{{$t('Force update scenes')}}</b-dropdown-item>
+                <b-dropdown-item aria-role="listitem" @click="deleteScenes(m)">{{$t('Delete scraped scenes')}}</b-dropdown-item>
+              </b-dropdown>
+            </div>
+            <p v-if="m.avatar_text === '8KVR'" class="quality-mode-note">
+              <span style="color: red; font-weight: bold;">Disables studio mode:</span>
+              scrapes every scene in R18.dev's <span style="font-family: monospace;color:#7957d5">8KVR</span> category, any studio (about 5,000 scenes).
+              <br>
+              Turning it on switches off every studio scraper and <span style="font-family: monospace;color:#7957d5">4K60+</span>. Turning it off switches your studio scrapers back on.
+            </p>
+            <p v-else class="quality-mode-note">
+              <span style="color: red; font-weight: bold;">Disables studio mode. Warning: ~17,000 scenes.</span>
+              Scrapes every <span style="font-family: monospace;color:#7957d5">High-Quality VR</span> scene (4K60 and up), any studio. At one scene every 2 seconds the first run takes 9+ hours.
+              <br>
+              Turning it on switches off every studio scraper and <span style="font-family: monospace;color:#7957d5">8KVR</span>. Turning it off switches your studio scrapers back on.
+            </p>
+          </div>
+        </div>
+      </div>
+    </b-collapse>
     <b-table :data="scraperList" ref="scraperTable">
       <b-table-column field="is_enabled" :label="$t('Enabled')" v-slot="props" width="80" sortable>
           <span><b-switch v-model ="props.row.is_enabled" @input="$store.dispatch('optionsSites/toggleSite', {id: props.row.id})"/></span>
       </b-table-column>
       <b-table-column field="icon" width="50" v-slot="props" cell-class="narrow">
-            <span class="image is-32x32">
+            <span v-if="avatarText(props.row.id)" class="avatar-text">{{ avatarText(props.row.id) }}</span>
+            <span v-else class="image is-32x32">
               <vue-load-image>
                 <img slot="image" :src="getImageURL(props.row.avatar_url ? props.row.avatar_url : '/ui/images/blank.png')"/>
                 <img slot="preloader" src="/ui/images/blank.png"/>
@@ -38,12 +112,22 @@
             </span>
       </b-table-column>
       <b-table-column field="sitename" :label="$t('Studio')" sortable searchable v-slot="props">
-        <b-tooltip class="is-warning" :active="props.row.has_scraper == false" :label="$t('Scraper does not exist')"  :delay="250" >
-          <a @click="navigateToStudio(props.row.name)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
+        <b-tooltip v-if="props.row.has_scraper != false && r18devTooltip(props.row.id)" :label="r18devTooltip(props.row.id)" :delay="250">
+          <a @click="navigateToRow(props.row)" class="has-text-link" style="cursor: pointer;">{{ props.row.sitename }}</a>
         </b-tooltip>
+        <b-tooltip v-else class="is-warning" :active="props.row.has_scraper == false" :label="$t('Scraper does not exist')"  :delay="250" >
+          <a @click="navigateToRow(props.row)" :class="[props.row.has_scraper ? 'has-text-link' : 'has-text-danger']" style="cursor: pointer;">{{ props.row.sitename }}</a>
+        </b-tooltip>
+        <b-tag v-if="jav && props.row.source.startsWith('Custom')" size="is-small">{{$t('Custom')}}</b-tag>
       </b-table-column>
-      <b-table-column field="source" :label="$t('Source')" sortable searchable v-slot="props">
+      <b-table-column field="source" :label="$t('Source')" :visible="!jav" sortable searchable v-slot="props">
         {{ props.row.source }}
+      </b-table-column>
+      <b-table-column field="xbvr_sites" label='XBVR "Site"' :visible="jav" sortable searchable v-slot="props">
+        <b-tooltip :label="$t('The DVD ID prefixes you can expect this scraper to add scenes with')" :delay="250">
+          <span>{{ props.row.xbvr_sites }}</span>
+          <span v-if="props.row.xbvr_old_sites" class="has-text-grey is-size-7"> (Old: {{ props.row.xbvr_old_sites }})</span>
+        </b-tooltip>
       </b-table-column>
       <b-table-column field="last_update" :label="$t('Last scrape')" sortable v-slot="props" cell-class="no-wrap">
             <span :class="[runningScrapers.includes(props.row.id) ? 'invisible' : '']">
@@ -62,7 +146,7 @@
           <span><b-switch v-model ="props.row.limit_scraping" @input="$store.dispatch('optionsSites/toggleLimitScraping', {id: props.row.id})"/></span>
         </b-tooltip>
       </b-table-column>
-      <b-table-column field="subscribed" :label="$t('Subscribed')" v-slot="props" width="60" sortable>
+      <b-table-column field="subscribed" :label="$t('Subscribed')" :visible="!jav" v-slot="props" width="60" sortable>
         <b-tooltip class="is-info" :label="$t('Highlights this studio in the scene view and includes scenes in the &quot;Has subscription&quot; attribute filter')" :delay="250" >
           <span v-if="props.row.master_site_id==''"><b-switch v-model ="props.row.subscribed" @input="$store.dispatch('optionsSites/toggleSubscribed', {id: props.row.id})"/></span>
         </b-tooltip>
@@ -73,7 +157,7 @@
         </b-tooltip>
       </b-table-column>
       <b-table-column field="scene_count" :label="$t('Scenes')" v-slot="props" width="40" sortable numeric>
-        <a @click="navigateToStudio(props.row.name)" style="cursor: pointer;">
+        <a @click="navigateToRow(props.row)" style="cursor: pointer;">
           <span class="tag is-info is-light is-medium"><strong>{{ props.row.scene_count }}</strong></span>
         </a>
       </b-table-column>
@@ -107,7 +191,7 @@
           </b-dropdown>
         </div>
       </b-table-column>
-      <b-table-column field="master_site_id" :label="$t('Main Site')" v-slot="props" width="60" sortable>
+      <b-table-column field="master_site_id" :label="$t('Main Site')" :visible="!jav" v-slot="props" width="60" sortable>
         <span>
           <a @click="editMatchParams(props.row)" title="Edit Scene Matching Parameters" v-if="props.row.master_site_id != ''"> 
             <b-icon pack="mdi" icon="cog-outline" size="is-small"/>
@@ -121,7 +205,7 @@
       </div>
         <div class="column buttons" align="right">
           <a class="button is-small" v-on:click="toggleAllLimitScraping()">{{$t('Toggle Limit Scraping of all visible sites')}}</a>
-          <a class="button is-small" v-on:click="toggleAllSubscriptions()">{{$t('Toggle Subscriptions of all visible sites')}}</a>
+          <a v-if="!jav" class="button is-small" v-on:click="toggleAllSubscriptions()">{{$t('Toggle Subscriptions of all visible sites')}}</a>
         </div>
     </div>
 
@@ -164,10 +248,15 @@
 import ky from 'ky'
 import VueLoadImage from 'vue-load-image'
 import { formatDistanceToNow, parseISO } from 'date-fns'
+import JAVRImport from './JAVRImport'
 
 export default {
   name: 'OptionsSites',
-  components: { VueLoadImage },
+  components: { VueLoadImage, JAVRImport },
+  props: {
+    // true: the Scrapers (JAV) tab, only R18.dev scrapers (site ID r18dev-...). false: everything else.
+    jav: { type: Boolean, default: false }
+  },
   data () {
     return {
       javrQuery: '',
@@ -181,14 +270,39 @@ export default {
       scraperwarning: '',
       scraperwarning2: '',
       showAllScrapers: true,
+      r18devInfo: {},
+      modesOpen: false,
+      japaneseMode: false,
+      japaneseOpen: false,
     }
   },
   mounted () {
+    if (this.jav) {
+      const info = ky.get('/api/options/r18dev-scrapers').json().then(list => {
+        const info = {}
+        list.forEach(s => { info[s.id] = s })
+        this.r18devInfo = info
+      })
+      // Japanese Mode, like the quality modes, stays folded away unless it's on
+      ky.get('/api/options/r18dev-japanese').json().then(r => {
+        this.japaneseMode = r.enabled
+        this.japaneseOpen = r.enabled
+      })
+      // the quality modes stay folded away unless one of them is on
+      Promise.all([info, this.$store.dispatch('optionsSites/load')]).then(() => {
+        this.modesOpen = this.$store.state.optionsSites.items.some(i => i.is_enabled && this.isMode(i.id))
+      })
+    }
     this.$store.dispatch('optionsSites/load')
     this.$store.dispatch('optionsAdvanced/load')
     this.$store.dispatch('optionsWeb/load')
   },
   methods: {
+    saveJapaneseMode (enabled) {
+      ky.put('/api/options/r18dev-japanese', { json: { enabled } }).json().then(r => {
+        this.japaneseMode = r.enabled
+      })
+    },
     getImageURL (u) {
       if (u.startsWith('http')) {
         return '/img/128x/' + u.replace('://', ':/')
@@ -204,6 +318,9 @@ export default {
       this.additionalInfo = [{fieldName: "scene_url", fieldPrompt: "Scene Url", placeholder: "Enter the url for a VR Scene", fieldValue: '', required: true, type: 'url'}]      
       this.scraperwarning = "Take care to only use scene urls for the " + scraper + " Scraper"
       this.scraperwarning2 = ""
+      if (scraper.startsWith('r18dev-')) {
+        this.scraperwarning = "Use an r18.dev or dmm.co.jp scene URL. The scene goes to whichever JAV scraper covers its label, maker or category, or to Other Studios (R18.dev) when none does"
+      }
       switch (scraper) {
         case 'wankzvr':
         case 'milfvr':
@@ -366,6 +483,46 @@ export default {
       }
       return  this.scraperList.find(element => element.id === siteId).name;
     },
+    navigateToRow(row) {
+      if (this.jav) {
+        // R18.dev scenes use the DVD prefix as their Site, not the scraper name
+        const sites = this.siteList(row.id).concat(this.oldSiteList(row.id))
+        if (sites.length > 0) {
+          this.navigateToSites(sites)
+          return
+        }
+      }
+      this.navigateToStudio(row.name)
+    },
+    isMode(id) {
+      const info = this.r18devInfo[id]
+      return !!(info && info.exclusive)
+    },
+    r18devTooltip(id) {
+      const info = this.r18devInfo[id]
+      return info && info.tooltip ? info.tooltip : ''
+    },
+    avatarText(id) {
+      const info = this.r18devInfo[id]
+      return info ? info.avatar_text : ''
+    },
+    siteList(id) {
+      const info = this.r18devInfo[id]
+      return info && info.sites ? info.sites : []
+    },
+    oldSiteList(id) {
+      const info = this.r18devInfo[id]
+      return info && info.old_sites ? info.old_sites : []
+    },
+    navigateToSites(sites) {
+      this.$store.state.sceneList.filters.sites = sites
+      this.$store.state.sceneList.filters.tags = []
+      this.$store.state.sceneList.filters.attributes = []
+      this.$router.push({
+        name: 'scenes',
+        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
+      })
+    },
     navigateToStudio(studioName) {
       // Handle different scraper types:
       // - Built-in scrapers (e.g., "AstroDomina (SLR)"): scenes use just "AstroDomina"
@@ -387,13 +544,7 @@ export default {
       }
 
       // Set the site filter and navigate to scenes page
-      this.$store.state.sceneList.filters.sites = [siteName]
-      this.$store.state.sceneList.filters.tags = []
-      this.$store.state.sceneList.filters.attributes = []
-      this.$router.push({
-        name: 'scenes',
-        query: { q: this.$store.getters['sceneList/filterQueryParams'] }
-      })
+      this.navigateToSites([siteName])
     },
     toggleEnabledFilter() {
       this.showAllScrapers = !this.showAllScrapers
@@ -445,6 +596,18 @@ export default {
         }
       }
 
+      // R18.dev scrapers live on their own tab. The store items are shared with the other tab,
+      // so the JAV tab's extra columns go on copies.
+      items = items.filter(item => item.id.startsWith('r18dev-') === this.jav);
+      if (this.jav) {
+        // quality modes (8KVR, 4K60+) have their own fold-out above the table
+        items = items.filter(item => !this.isMode(item.id));
+        items = items.map(item => Object.assign({}, item, {
+          xbvr_sites: (this.r18devInfo[item.id] && this.r18devInfo[item.id].sites_display) || this.siteList(item.id).join(', '),
+          xbvr_old_sites: this.oldSiteList(item.id).join(', ')
+        }));
+      }
+
       // Filter by enabled status if the filter is active
       if (!this.showAllScrapers) {
         items = items.filter(item => item.is_enabled === true);
@@ -454,6 +617,15 @@ export default {
     },
     items () {
       return this.$store.state.optionsSites.items
+    },
+    modeList () {
+      if (!this.jav) return []
+      return this.$store.state.optionsSites.items
+        .filter(item => this.isMode(item.id))
+        .map(item => {
+          const m = /(.*)\s+\((.+)\)$/.exec(item.name)
+          return Object.assign({}, item, { sitename: m ? m[1] : item.name, avatar_text: this.avatarText(item.id) })
+        })
     },
     runningScrapers () {
       this.$store.dispatch('optionsSites/load')
@@ -504,6 +676,42 @@ export default {
 
   .invisible {
     display: none;
+  }
+
+  /* 8KVR / 4K60+: XBVR purple text instead of an avatar image */
+  .avatar-text {
+    display: inline-block;
+    min-width: 3.2em;
+    color: #7957d5;
+    font-weight: bold;
+    font-size: 0.85em;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .quality-modes {
+    margin-bottom: 1em;
+  }
+
+  .quality-mode + .quality-mode {
+    margin-top: 1em;
+  }
+
+  .quality-mode-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75em;
+  }
+
+  .quality-mode-last {
+    flex: 1;
+  }
+
+  .quality-mode-note {
+    font-size: 0.75em;
+    margin-top: 0.25em;
+    margin-left: 3.5em;
   }
 
   .scraping-container {

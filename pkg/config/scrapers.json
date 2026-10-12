@@ -14,7 +14,8 @@
       "slr": [],
       "vrporn": [],
       "vrphub": [],
-      "realvr": []
+      "realvr": [],
+      "r18dev": []
     },
     "xbvr": {
       "povr": [
@@ -497,6 +498,587 @@
           "url": "https://realvr.com/vrpornstudio/passthroughvr-33",
           "name": "PassthroughVR",
           "company": "Badoink"
+        }
+      ],
+      "r18dev": [
+        {
+          "id": "kmpvr",
+          "name": "KMPVR",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/fc581e4e-8dab-4f8c-ad5a-4c3b4c2f70d6",
+          "sources": [
+            { "type": "label", "id": 25637 }
+          ],
+          "sites": [ "VRKM" ],
+          "old_sites": [ "KMVR", "EXVR", "KBVR" ]
+        },
+        {
+          "id": "kmpvr-color",
+          "name": "KMPVR-Color-",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/9782a468-9b27-4143-8092-ddf9b1470d7f",
+          "sources": [
+            { "type": "studio", "id": 46628 }
+          ],
+          "sites": [ "SAVR" ],
+          "old_sites": [ "KBVR" ]
+        },
+        {
+          "id": "kmpvr-bibi",
+          "name": "KMPVR-bibi-",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/0a01b658-4a0a-490a-927e-c8936565b93b",
+          "sources": [
+            { "type": "studio", "id": 40404 }
+          ],
+          "sites": [ "BIBIVR" ],
+          "old_sites": [ "TMVR", "TJVR", "CBIKMV" ]
+        },
+        {
+          "id": "pboxvr",
+          "name": "P-BOX VR",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/b3b3f1fd-fb01-474c-ba49-937b4d15c2c8",
+          "sources": [
+            { "type": "studio", "id": 40534 },
+            { "type": "label", "id": 46146 }
+          ],
+          "sites": [ "PXVR", "PXVRG", "PXVRW" ],
+          "sites_display": "PXVR (PXVRG/PXVRW)"
+        },
+        {
+          "id": "ajvr",
+          "name": "Alice JAPAN VR",
+          "company": "Alice JAPAN",
+          "avatar_url": "https://stashdb.org/images/0042b2cb-d3a4-4218-a360-43e937c12fd1",
+          "sources": [
+            { "type": "label", "id": 26056 }
+          ],
+          "sites": [ "AJVR" ]
+        },
+        {
+          "id": "tmavr",
+          "name": "TMA VR",
+          "company": "TMA",
+          "avatar_url": "https://stashdb.org/images/d183d950-0355-4c6e-81a3-eb2bf5ed26c3",
+          "sources": [
+            { "type": "label", "id": 25624 }
+          ],
+          "content_ids": [ "55tmavr00179", "55tmavr00182" ],
+          "sites": [ "TMAVR" ]
+        },
+        {
+          "id": "s1vr",
+          "name": "S1 VR",
+          "company": "S1 NO.1 STYLE",
+          "avatar_url": "https://stashdb.org/images/21e999c6-856d-4e7d-bc6a-9d4ba5941f7f",
+          "sources": [
+            { "type": "label", "id": 25838 }
+          ],
+          "sites": [ "SIVR" ]
+        },
+        {
+          "id": "moodyzvr",
+          "name": "MOODYZ VR",
+          "company": "MOODYZ",
+          "avatar_url": "https://stashdb.org/images/577e973d-4de9-4f28-9f94-652d61c46265",
+          "sources": [
+            { "type": "label", "id": 25848 }
+          ],
+          "content_ids": [ "mdvr00051" ],
+          "sites": [ "MDVR" ]
+        },
+        {
+          "id": "ipvr",
+          "name": "Idea Pocket VR",
+          "company": "Idea Pocket",
+          "avatar_url": "https://stashdb.org/images/f36668fb-df27-4d43-bd60-b2f812067128",
+          "sources": [
+            { "type": "label", "id": 25881 }
+          ],
+          "sites": [ "IPVR" ]
+        },
+        {
+          "id": "crystalvr",
+          "name": "CRYSTAL VR",
+          "company": "CRYSTAL VR",
+          "avatar_url": "https://stashdb.org/images/2f8e9c37-0f00-455e-9856-d7967bfd3a45",
+          "sources": [
+            { "type": "studio", "id": 46522 }
+          ],
+          "sites": [ "CRVR" ]
+        },
+        {
+          "id": "madonnavr",
+          "name": "MadonnaVR",
+          "company": "MADONNA",
+          "avatar_url": "https://stashdb.org/images/400058d3-3f19-4c81-b12a-201eb18bb817",
+          "sources": [
+            { "type": "label", "id": 26284 }
+          ],
+          "sites": [ "JUVR" ]
+        },
+        {
+          "id": "kawaiivr",
+          "name": "kawaii* VR",
+          "company": "kawaii",
+          "avatar_url": "https://stashdb.org/images/3175a851-7814-48f3-9fe8-d3cf1424f810",
+          "sources": [
+            { "type": "label", "id": 25966 }
+          ],
+          "content_ids": [ "kavr00034" ],
+          "sites": [ "KAVR" ]
+        },
+        {
+          "id": "waapvr",
+          "name": "WAAP VR",
+          "company": "WAAP Group",
+          "avatar_url": "https://stashdb.org/images/e3d75dd7-97d3-4034-9db9-7169bcd7c88a",
+          "sources": [
+            { "type": "label", "id": 26078 }
+          ],
+          "sites": [ "WPVR", "DTVR", "FRNVR" ],
+          "sites_display": "WPVR (+DTVR +FRNVR)"
+        },
+        {
+          "id": "koalavr",
+          "name": "Koala VR",
+          "company": "Koala VR",
+          "avatar_url": "https://stashdb.org/images/e650a57b-e4a6-4f46-935b-433f2ea78508",
+          "sources": [
+            { "type": "studio", "id": 46629 }
+          ],
+          "sites": [ "KIWVR", "KIOVR" ],
+          "sites_display": "KIWVR (+KIOVR)"
+        },
+        {
+          "id": "vrparadise",
+          "name": "VR PARADISE",
+          "company": "VR PARADISE",
+          "avatar_url": "https://stashdb.org/images/1ce44e1a-07be-4d1c-97ac-bff9903b0c2d",
+          "sources": [
+            { "type": "studio", "id": 308609 }
+          ],
+          "sites": [ "VRPRD", "PRDKOVR" ],
+          "sites_display": "VRPRD (+PRDKOVR)"
+        },
+        {
+          "id": "cutemeatvr",
+          "name": "Cute Meat Paradise VR",
+          "company": "Cute Meat Paradise VR",
+          "avatar_url": "https://stashdb.org/images/56669efd-a7d2-40ad-9774-cfa8b91b8885",
+          "sources": [
+            { "type": "studio", "id": 300566 }
+          ],
+          "sites": [ "NKKVR", "NKWMR" ],
+          "sites_display": "NKKVR (+NKWMR)"
+        },
+        {
+          "id": "nhvr",
+          "name": "Natural High VR",
+          "company": "Natural High",
+          "avatar_url": "https://stashdb.org/images/5f8b402a-b0d0-4d50-9917-1ed99a788a6f",
+          "sources": [
+            { "type": "label", "id": 25893 }
+          ],
+          "sites": [ "NHVR" ]
+        },
+        {
+          "id": "unfinishedvr",
+          "name": "unfinished VR",
+          "company": "unfinished",
+          "avatar_url": "https://stashdb.org/images/47c386b0-9bde-4adf-8b4e-347a418d0e92",
+          "sources": [
+            { "type": "label", "id": 26271 }
+          ],
+          "sites": [ "URVRSP" ]
+        },
+        {
+          "id": "aquavr",
+          "name": "AQUA",
+          "company": "AQUA",
+          "avatar_url": "https://stashdb.org/images/6acd4e15-ef95-4317-9446-1434fb412fa8",
+          "sources": [
+            { "type": "studio", "id": 301709 }
+          ],
+          "sites": [ "AQUCO", "AQUMA", "AQULA", "AQUBE", "AQUMAM", "AQUBL", "AQUGA", "AQUGL", "AQUFRO", "AQUST" ],
+          "sites_display": "AQU++"
+        },
+        {
+          "id": "attackersvr",
+          "name": "Attackers VR",
+          "company": "Attackers",
+          "avatar_url": "https://stashdb.org/images/69e83a81-8489-4bfe-8e75-48ff85dc1ccb",
+          "sources": [
+            { "type": "label", "id": 26350 }
+          ],
+          "sites": [ "ATVR" ]
+        },
+        {
+          "id": "ebodyvr",
+          "name": "E-BODY VR",
+          "company": "E-BODY",
+          "avatar_url": "https://stashdb.org/images/991c7b6b-06e3-42db-b04d-905bdb995221",
+          "sources": [
+            { "type": "label", "id": 25903 }
+          ],
+          "sites": [ "EBVR" ]
+        },
+        {
+          "id": "kirakiravr",
+          "name": "kira☆kira-VR",
+          "company": "kira☆kira",
+          "avatar_url": "https://stashdb.org/images/5bde4708-c09e-4d69-b2b7-e70a6422b12c",
+          "sources": [
+            { "type": "label", "id": 25904 }
+          ],
+          "sites": [ "KIVR" ]
+        },
+        {
+          "id": "fitch",
+          "name": "Fitch肉感VR",
+          "company": "Fitch",
+          "tooltip": "Fitch Flesh Fantasy VR",
+          "avatar_url": "https://stashdb.org/images/b09f57b4-ceff-449e-ad00-ee96e3708f2e",
+          "sources": [
+            { "type": "label", "id": 26267 }
+          ],
+          "sites": [ "FCVR" ]
+        },
+        {
+          "id": "docerovr",
+          "name": "DOC ERO VR",
+          "company": "DOC",
+          "avatar_url": "https://stashdb.org/images/55b43ee7-5db8-4e33-8a0b-ad0274913250",
+          "sources": [
+            { "type": "label", "id": 2066504 }
+          ],
+          "sites": [ "DEVR" ]
+        },
+        {
+          "id": "chijoheaven",
+          "name": "Chijo Heaven VR",
+          "company": "痴女ヘブン",
+          "tooltip": "Slut Heaven VR",
+          "avatar_url": "https://stashdb.org/images/0dbd97cc-08bb-4bb5-bfbb-f17733ce6307",
+          "sources": [
+            { "type": "label", "id": 2062846 }
+          ],
+          "sites": [ "CJVR" ]
+        },
+        {
+          "id": "gme3dmature",
+          "name": "GME 3D Mature",
+          "company": "Global Media Entertainment",
+          "avatar_url": "http://www.gme-inc.net/img/label/557807.gif",
+          "sources": [
+            { "type": "label", "id": 25836 }
+          ],
+          "sites": [ "DPVR" ]
+        },
+        {
+          "id": "mrmichiru",
+          "name": "Mr.michiru VR",
+          "company": "Mr.michiru",
+          "avatar_url": "https://stashdb.org/images/6122f6b3-3615-4911-964d-91bf38366d20",
+          "sources": [
+            { "type": "label", "id": 2062550 }
+          ],
+          "sites": [ "MTVR" ]
+        },
+        {
+          "id": "das",
+          "name": "Das ! VR",
+          "company": "ダスッ！",
+          "tooltip": "ダスッ！VR",
+          "avatar_url": "https://stashdb.org/images/156363d5-ef0a-4e2b-967c-dd3fe224a508",
+          "sources": [
+            { "type": "label", "id": 25813 }
+          ],
+          "sites": [ "DSVR" ]
+        },
+        {
+          "id": "saboten",
+          "name": "SabotenVR",
+          "company": "さぼてんVR",
+          "tooltip": "さぼてんVR (CactusVR)",
+          "avatar_url": "https://cdn.faleno.net/group/wp-content/uploads/2026/04/sabotenvr_rogo.jpg",
+          "sources": [
+            { "type": "studio", "id": 313638 }
+          ],
+          "sites": [ "SBGVR" ]
+        },
+        {
+          "id": "cosmoplanetsvr",
+          "name": "Cosmo Planets VR",
+          "company": "Cosmo Planets",
+          "avatar_url": "https://stashdb.org/images/cba23b32-7335-478f-b15f-b3ae52a63ef7",
+          "sources": [
+            { "type": "label", "id": 46151 }
+          ],
+          "sites": [ "COSVR", "COSBVR", "COSVRW" ],
+          "sites_display": "COSVR"
+        },
+        {
+          "id": "falenovr",
+          "name": "FALENO VR",
+          "company": "FALENO",
+          "avatar_url": "https://stashdb.org/images/6d35c7a4-0e8b-4c6d-927b-ade2bfb91083?size=full",
+          "sources": [
+            { "type": "label", "id": 2068176 }
+          ],
+          "sites": [ "FAVR" ]
+        },
+        {
+          "id": "huntervr",
+          "name": "HunterVR",
+          "company": "HHH Group",
+          "tooltip": "HHH-VR: Hunter, お夜食カンパニー (Oyashoku Company), Royal, Jackpot System and friends",
+          "avatar_url": "https://stashdb.org/images/9f62e231-54dd-4313-beb0-eabfc22b6ee3",
+          "sources": [
+            { "type": "label", "id": 25855 }
+          ],
+          "sites": [ "HUNVR", "OYCVR", "ROYVR", "AOHVR" ],
+          "old_sites": [ "JPSVR", "APVR", "MLVR", "GDHVR", "HUNVRA", "HUNVRB", "HUNVRC", "HBVR" ],
+          "sites_display": "HUNVR (+OYCVR, more)"
+        },
+        {
+          "id": "maxavr",
+          "name": "MAX-A VR",
+          "company": "MAX-A",
+          "avatar_url": "https://stashdb.org/images/b16599cd-23d6-4f34-b0e4-0bc41aa6c266",
+          "sources": [
+            { "type": "label", "id": 25859 },
+            { "type": "label", "id": 26423 },
+            { "type": "label", "id": 26318 }
+          ],
+          "sites": [ "MAXVR", "MAXVRH", "MAXVRG" ],
+          "sites_display": "MAXVR"
+        },
+        {
+          "id": "premiumvr",
+          "name": "PREMIUM VR",
+          "company": "PREMIUM",
+          "avatar_url": "https://stashdb.org/images/69f1ac4e-5c18-41f8-b1fd-ce8bad954503",
+          "sources": [
+            { "type": "label", "id": 8591 }
+          ],
+          "sites": [ "PRVR" ]
+        },
+        {
+          "id": "hnvr",
+          "name": "Hon Naka VR",
+          "company": "Hon Naka",
+          "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/5/57/%E6%9C%AC%E4%B8%AD_logo.png",
+          "sources": [
+            { "type": "label", "id": 25913 }
+          ],
+          "sites": [ "HNVR" ]
+        },
+        {
+          "id": "sodvr",
+          "name": "SOD VR",
+          "company": "SOD Create",
+          "avatar_url": "https://stashdb.org/images/7bf0ea95-6ad4-4487-a4ec-f0cf15535103",
+          "sources": [
+            { "type": "label", "id": 25739 }
+          ],
+          "sites": [ "3DSVR" ]
+        },
+        {
+          "id": "8kvr",
+          "name": "8KVR",
+          "company": "",
+          "avatar_url": "",
+          "avatar_text": "8KVR",
+          "exclusive": true,
+          "sources": [
+            { "type": "category", "id": 307935 }
+          ],
+          "sites": []
+        },
+        {
+          "id": "hqvr",
+          "name": "High-Quality VR",
+          "company": "",
+          "avatar_url": "",
+          "avatar_text": "4K60+",
+          "exclusive": true,
+          "sources": [
+            { "type": "category", "id": 6925 }
+          ],
+          "sites": []
+        }
+      ],
+      "r18dev_suggestions": [
+        {
+          "id": "staringcrew",
+          "name": "Staring Crew",
+          "company": "ガン見隊",
+          "tooltip": "ガン見隊",
+          "avatar_url": "https://manji-group.com/_nuxt/img/800a8b3.png",
+          "sources": [
+            { "type": "studio", "id": 6675 }
+          ],
+          "sites": [ "GUNM" ],
+          "scenes": 54,
+          "state": "Active since 2017-08"
+        },
+        {
+          "id": "chinchinvr",
+          "name": "ChinChinVR",
+          "company": "ちんちんVR",
+          "tooltip": "ちんちんVR",
+          "avatar_url": "https://stashdb.org/images/0257a444-0a67-48f9-ab11-b6421d5be6a2",
+          "sources": [
+            { "type": "studio", "id": 40388 }
+          ],
+          "sites": [ "CCVR", "CCUG", "CCIO" ],
+          "sites_display": "CCVR",
+          "scenes": 95,
+          "state": "Active since 2018-02"
+        },
+        {
+          "id": "deepsvr",
+          "name": "Deep's VR",
+          "company": "Deep's",
+          "tooltip": "ディープスVR",
+          "avatar_url": "https://stashdb.org/images/802de626-bea1-48fb-92d2-f5382853a409",
+          "sources": [
+            { "type": "label", "id": 2064792 }
+          ],
+          "sites": [ "DSUVR" ],
+          "old_sites": [ "DPSVR" ],
+          "sites_display": "DSUVR (+DPSVR)",
+          "scenes": 19,
+          "state": "Active since 2022-12"
+        },
+        {
+          "id": "hisokavr",
+          "name": "HisokaVR",
+          "company": "密",
+          "tooltip": "密 (Hisoka)",
+          "avatar_url": "",
+          "sources": [
+            { "type": "label", "id": 2068266 }
+          ],
+          "sites": [ "HSKVR" ],
+          "scenes": 7,
+          "state": "Active since 2026-07"
+        },
+        {
+          "id": "casanova",
+          "name": "CasanovA",
+          "company": "CasanovA",
+          "avatar_url": "https://stashdb.org/images/f0350ad1-7c12-4946-83d7-7af72d4ae336",
+          "sources": [
+            { "type": "studio", "id": 46483 }
+          ],
+          "sites": [ "CAFR", "CACA", "CAMI", "CAPI", "CABE", "CASMANI", "CASP", "CAREM", "CAIM" ],
+          "sites_display": "(CAFR, CACA, more)",
+          "scenes": 1472,
+          "state": "Dead since 2023-06",
+          "note": "bad stitching, re-framed fisheye"
+        },
+        {
+          "id": "vonevr",
+          "name": "V:one VR",
+          "company": "V:one",
+          "avatar_url": "https://stashdb.org/images/59a5e348-7fb5-420a-8d98-dcba3bacf4b5",
+          "sources": [
+            { "type": "studio", "id": 46496 }
+          ],
+          "sites": [ "GOPJ", "VOVS", "VOVR", "MOHV" ],
+          "sites_display": "GOPJ (+VOVS +VOVR +MOHV)",
+          "scenes": 886,
+          "state": "Dead since 2024-08"
+        },
+        {
+          "id": "teppanvr",
+          "name": "TEPPAN VR",
+          "company": "TEPPAN",
+          "avatar_url": "https://stashdb.org/images/cc5fa1d2-50c8-4be1-ad6f-8d03a8d9dab0",
+          "sources": [
+            { "type": "label", "id": 25976 }
+          ],
+          "sites": [ "TPVR" ],
+          "scenes": 238,
+          "state": "Dead since 2021-10"
+        },
+        {
+          "id": "vrproducevr",
+          "name": "V&R Produce",
+          "company": "V&R Produce",
+          "avatar_url": "https://stashdb.org/images/72332c72-457a-4d41-ae32-787699b8998b",
+          "sources": [
+            { "type": "label", "id": 26125 }
+          ],
+          "sites": [ "VRVR", "VRVRW", "VRVRP" ],
+          "sites_display": "VRVR (+VRVRW +VRVRP)",
+          "scenes": 149,
+          "state": "Dead since 2021-04"
+        },
+        {
+          "id": "radicalkmpvr",
+          "name": "RADICAL-KMPVR-",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/4cf49831-74af-4c32-acb3-f09d85594036",
+          "sources": [
+            { "type": "studio", "id": 40600 }
+          ],
+          "sites": [ "MANIVR", "MNSVR" ],
+          "sites_display": "MANIVR (+MNSVR)",
+          "scenes": 45,
+          "state": "Dead since 2021-09"
+        },
+        {
+          "id": "bazookavr",
+          "name": "BAZOOKA VR",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/f510de2f-6eb7-44a5-b237-2b879fa88f36",
+          "sources": [
+            { "type": "label", "id": 25972 }
+          ],
+          "sites": [ "BZVR" ],
+          "scenes": 42,
+          "state": "Dead since 2018-11"
+        },
+        {
+          "id": "scoopvr",
+          "name": "SCOOP VR",
+          "company": "Scoop",
+          "avatar_url": "https://stashdb.org/images/cea00552-d578-47dc-859c-288ef77d71ff",
+          "sources": [
+            { "type": "label", "id": 25910 }
+          ],
+          "sites": [ "SCVR" ],
+          "scenes": 32,
+          "state": "Last release 2023-05"
+        },
+        {
+          "id": "avervr",
+          "name": "AverVR",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/dbdc9f36-fe8a-4596-906e-97ee9f0c500f",
+          "sources": [
+            { "type": "label", "id": 2062780 }
+          ],
+          "sites": [ "AVERV" ],
+          "scenes": 14,
+          "state": "Dead since 2021-05"
+        },
+        {
+          "id": "realvrneo",
+          "name": "REAL VR-Neo-",
+          "company": "K M Produce",
+          "avatar_url": "https://stashdb.org/images/844de2a4-57fa-4168-9472-109e20e9410f",
+          "sources": [
+            { "type": "studio", "id": 300153 }
+          ],
+          "sites": [ "KBVR" ],
+          "sites_display": "KBVR (047 to 050)",
+          "scenes": 4,
+          "state": "Dead since 2020-12"
         }
       ]
     }

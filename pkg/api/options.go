@@ -247,6 +247,25 @@ func (i ConfigResource) WebService() *restful.WebService {
 	ws.Route(ws.GET("/sites").To(i.listSites).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/r18dev-scrapers").To(i.listR18devScrapers).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	// Custom R18.dev Scrapers ("Create Custom Site (JAV)" tab), loaded at the next start
+	ws.Route(ws.GET("/r18dev-custom").To(i.listR18devCustom).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.PUT("/r18dev-custom").To(i.saveR18devCustom).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.DELETE("/r18dev-custom/{id}").To(i.deleteR18devCustom).
+		Param(ws.PathParameter("id", "custom scraper ID, without r18dev-").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.GET("/r18dev-japanese").To(i.getR18devJapanese).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.PUT("/r18dev-japanese").To(i.setR18devJapanese).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+	ws.Route(ws.GET("/r18dev-preview").To(i.previewR18devList).
+		Param(ws.QueryParameter("url", "R18.dev studio / label / category list link").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.PUT("/sites/{site}").To(i.toggleSite).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
@@ -366,6 +385,15 @@ func (i ConfigResource) listSites(req *restful.Request, resp *restful.Response) 
 	i.listSitesWithDB(req, resp, db)
 }
 
+// listR18devScrapers returns the extra info the Scrapers (JAV) tab shows for R18.dev Scrapers.
+func (i ConfigResource) listR18devScrapers(req *restful.Request, resp *restful.Response) {
+	list := scrape.R18devScrapers()
+	if list == nil {
+		list = []scrape.R18devScraperInfo{}
+	}
+	resp.WriteHeaderAndEntity(http.StatusOK, list)
+}
+
 func (i ConfigResource) toggleSite(req *restful.Request, resp *restful.Response) {
 	i.toggleSiteField(req, resp, "IsEnabled")
 }
@@ -411,6 +439,9 @@ func (i ConfigResource) toggleSiteField(req *restful.Request, resp *restful.Resp
 		db.Model(&models.Scene{}).Where("scrape_stash = ?", site.ID).Update("scrape_stash", site.LimitScraping)
 	}
 	site.Save()
+	if field == "IsEnabled" {
+		scrape.R18devSiteToggled(site.ID, site.IsEnabled) // quality modes and studio Scrapers exclude each other
+	}
 
 	i.listSitesWithDB(req, resp, db)
 }

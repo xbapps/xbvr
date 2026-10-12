@@ -131,6 +131,22 @@ func (i SceneResource) WebService() *restful.WebService {
 	ws.Route(ws.POST("/delete").To(i.deleteScene).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	// JAV scene split (only ever for JAV scenes)
+	ws.Route(ws.POST("/javsplit").To(i.splitScene).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseSplitScene{}))
+
+	ws.Route(ws.POST("/javsplit/unmatched-files").To(i.splitUnmatchedFiles).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/javsplit/status/{scene-id}").To(i.javSplitStatus).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseJavSplitStatus{}))
+
+	ws.Route(ws.POST("/javsplit/undo").To(i.javSplitUndo).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(ResponseSplitScene{}))
+
 	ws.Route(ws.POST("/{scene-id}/cuepoint").To(i.addSceneCuepoint).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.Scene{}))
