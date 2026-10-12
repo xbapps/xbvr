@@ -140,6 +140,123 @@ var r18devCompilationContentIDs = map[string]bool{
 	// Idea Pocket
 	"ipvr00264": true, // 天井特化アングルBEST 痴女的騎乗位SP17本番, 199 min, 17 actresses
 	"ipvr00332": true, // 天井特化アングルBEST ALL8K 17本番, 755 min, 13 actresses
+	// BEST in the Japanese title but no compilation category, series or cast size that gives it away.
+	// Picked one by one by vt-idiot from the R18.dev dump (2026-10-06). No title rule on purpose: "BEST"
+	// is also on real scenes (TEPPAN's BESTサイズ, SAVR-1009 ベストプレイス).
+	// AQUA
+	"aquma00052": true, // 美少女達のシコシコオナニーサポート4時間ベスト
+	"aquma00126": true, // 一週間射精管理生活4時間ベスト
+	"aquma00134": true, // おっぱい山脈に怯えろ 心と巨乳が震えるぱふぱふ4時間ベスト！
+	"aquma00136": true, // 下半身愛好家も唸る極上のムチムチパンスト4時間ベスト！
+	"aquma00141": true, // オイルで光り輝く女体の神秘！ヌルテカ4時間ベスト！
+	// KMPVR
+	"84kmvr00734": true, // KMVR-734 超ご奉仕BESTデリヘル嬢に10本番＋1
+	"84kmvr00754": true, // KMVR-754 KMPVR神7BEST～可愛さからエロさまで全てが神級の7人収録～
+	"84kmvr00792": true, // KMVR-792 4KHQ美少女PREMIUM BEST 支持率の高い'可愛い子'だけを厳選
+	"84kmvr00813": true, // KMVR-813 HAPPY Valentine BEST ～名作のイチャLOVE揃えちゃいました～
+	"84kmvr00814": true, // KMVR-814 唾を飲むほどの国宝級贅沢BODYが集結！イイカラダのイイオンナBEST！
+	"84kmvr00826": true, // KMVR-826 痴女専門VR BEST ～圧倒的痴女たちのテクニック体験～
+	"84kmvr00830": true, // KMVR-830 カワイイ顔こそが一番ヌケる！「顔の可愛さ」のみにこだわった超S級最強美女BEST！HQ高画質スペシャル愛蔵版！
+	"84kmvr00860": true, // KMVR-860 射精管理 4KHQ BEST 焦らしに焦らしに焦らされて最高の射精を「絶対イッちゃダメ！」我慢させられ続け僕は射精してし
+	"84kmvr00874": true, // KMVR-874 着衣SEX BEST ～男達はなぜ着衣セックスにこんなにも惹かれ興奮するのか～
+	"84kmvr00876": true, // KMVR-876 枢木あおいKMPVR SPECIALコンプリートBEST全16タイトル！！
+	"84kmvr00883": true, // KMVR-883 美谷朱里 KMP VR SPECIALコンプリートBEST
+	"84kmvr00943": true, // KMVR-943 ちっぱい！いっぱい！夢いっぱい！発育途上のつるぺたおっぱいが大集結！ちっぱいSUPER BEST！！
+	"84kmvr00991": true, // KMVR-991 目の前で揺れ弾む！！色、形、触り心地、全てが神レベル 神乳特化 BEST
+	"84vrkm00005": true, // VRKM-005 めちゃ可愛い彼女と二人の部屋で毎日ヤリまくり...だがそれがいい BEST
+	"84vrkm00166": true, // VRKM-166 豪華女優15名の美尻をまとめたフェチVR 尻をひたすら堪能するBEST
+	"vrkm00608":   true, // VRKM-608 天真爛漫な淫乱小悪魔'はままお'完全版！！潮吹きQueen浜崎真緒BEST
+	"vrkm01168":   true, // サキュバスVRシリーズ ノーカット5作品＋完全撮りおろし特典 弥生みづき「サキュバスの射精管理VR」 スペシャルBEST
+	"vrkm01754":   true, // 超厳選 麗しい和服美女ノーカット15時間overベスト
+	// KMPVR-bibi-
+	"h_1285bikmvr00068": true, // BIKMVR-068 どぴゅっ×7人65射 連続射精！！BEST200分！！
+	"h_1285bikmvr00150": true, // BIKMVR-150 巨乳BEST ～極パイの世界へようこそ～
+	"h_1285cbikmv00006": true, // CBIKMV-006 超豪華令和風俗BEST！！ 4KHQ令和史上最も売れた風俗VRを体験！！
+	"h_1285cbikmv00016": true, // CBIKMV-016 「私...もう少しだけ大人になりたいな...だからさ...」女子校生生姦射精BEST！
+	"h_1285cbikmv00027": true, // CBIKMV-027 W共演BEST ～2人いればエロさ倍増スペシャル～
+	"h_1285cbikmv00048": true, // CBIKMV-048 むっちむちの肉感BEST 巨乳×巨尻×豊満 人気女優が一挙集結
+	// MadonnaVR
+	"juvr00107": true, // JUVR-107 全タイトルSEXシーンノーカット収録！！ 人妻・熟女No.1メーカーMadonna専属女優ベスト465分
+	"juvr00132": true, // ハイクオリティ高画質で全SEXノーカット収録！！Madonna3P4PハーレムSEX452分ベスト
+	"juvr00148": true, // 底なしのエロスを堪能できる濃密FUCK300分！！無自覚ボディタッチ妻たちと唾液だらだら密着ベロチューSEXベスト
+	"juvr00154": true, // 残業続きで出会いの全く無い僕に起きた奇跡 業務中のご褒美SEXベスト322分
+	"juvr00173": true, // ベッドの上の天使降臨身動き取れない僕にとことん尽くしてくれる介護SEX BEST！！濃縮307分
+	"juvr00180": true, // 湯煙に紛れて晒す魅惑の痴態...欲求不満な人妻たちと夜通し戯れる温泉不倫旅行ベスト452分
+	"juvr00189": true, // 本番NGデリヘル嬢と予想外に相性抜群！！お店に内緒でこっそり中出しBEST373分
+	// S1 VR
+	"sivr00249": true, // 形良し！大きさ良し！感度良し！VRとの相性抜群！まさに神乳 S1美巨乳ベスト
+	// TMA VR
+	"55tmavr00100": true, // TMAVR-100 濃厚密着！高画質対面座位PREMIUM BEST 29人
+	"55tmavr00105": true, // TMAVR-105 蓮実クレア SPECIAL VR BEST
+	"55tmavr00108": true, // TMAVR-108 覆いかぶさり騎乗位PREMIUM BEST
+	"55tmavr00145": true, // TMAVR-145 TMA天井特化アングルベスト
+	"55tmavr00149": true, // TMAVR-149 人妻不倫旅行記録VR BEST
+	"55tmavr00152": true, // TMAVR-152 日焼け美少女VR BEST
+	"55tmavr00159": true, // TMAVR-159 女子●生トイレレ●プVR BEST
+	"55tmavr00165": true, // 爆乳コスプレイヤー彼女と個人撮影オフパコ性交 BEST
+	"55tmavr00169": true, // 童貞を煽るメスガキ誘惑VR BEST
+	"55tmavr00172": true, // お兄ちゃん大好きな妹誘惑VR BEST
+	"55tmavr00175": true, // パパ活巨乳素人VR BEST
+	"55tmavr00185": true, // 日焼け跡の美少女BEST VR
+	"55tmavr00189": true, // TMAコスプレ美少女BEST VR
+	"55tmavr00194": true, // 童貞を挑発するメスガキVR BEST
+	"55tmavr00197": true, // 美少女ハーレム乱交VR BEST
+	"55tmavr00200": true, // 美TMA VR巨乳BEST
+	"55tmavr00202": true, // マセガキ美少女の誘惑BEST
+	"55tmavr00207": true, // 工藤ララ VR BEST
+	"55tmavr00210": true, // VtuberコスプレVR BEST
+	"55tmavr00226": true, // 夏休みに出会った日焼け美少女VR BEST
+	"55tmavr00231": true, // 裏オプ標準！？最後までできちゃう性風俗VR BEST
+	"55tmavr00233": true, // 巨乳パイズリVR BEST
+	"55tmavr00237": true, // 由良かな VR BEST
+	"55tmavr00239": true, // 日焼け美少女3P VR BEST
+	"55tmavr00242": true, // スク水日焼け美少女わいせつイタズラ VR BEST
+	"55tmavr00244": true, // 息子のチ●ポに依存する母親近親相姦 VR BEST
+	"55tmavr00246": true, // 田舎に帰省した時だけ僕と内緒SEXする日焼け美少女 VR BEST
+	"55tmavr00249": true, // VIP専用店在籍巨乳バニーガール VR BEST
+	"55tmavr00260": true, // 可愛さカースト上位のエロカワ女子校生VR BEST
+	"55tmavr00263": true, // パンチラ誘惑美少女VR BEST
+	"55tmavr00267": true, // 僕を甘やかす母親近親相姦VR BEST
+	"55tmavr00272": true, // スク水日焼け美少女との生中出しVR BEST
+	"55tmavr00275": true, // 全員Gカップ以上！神乳！巨乳VR BEST
+	"55tmavr00278": true, // ゼロ距離イチャイチャ密着！対面座位VR BEST
+	"55tmavr00281": true, // 未成熟140cm台の低身長合法ロ●美少女VR BEST
+	"55tmavr00283": true, // 小さい子のパイパンま●こにまたがられる騎乗位 VR BEST
+	// kawaii* VR
+	"kavr00054": true, // KAVR-054 初！kawaii* VRベスト 23人240分
+	"kavr00115": true, // KAVR-115 コーナー丸ごとノーカット収録！！常に上下左右から挟み撃ちされ痴女られる贅沢サンドイッチ逆3Pベスト511分
+	"kavr00339": true, // kawaii＊ HQVRベスト エロカワ美少女図鑑vol.1 没入感最高MAX835分 伊藤舞雪、新井リマ、花柳杏奈、乙
+	// V:one VR
+	"h_1127vosm00003": true, // VOSM-003 極上8人の全てを！風俗ありエステありラブイチャあり ULTRA BEST
+	"h_1127vosm00028": true, // VOSM-028 HQ作品のみ収録 巨乳エステ嬢達が魅せる！スペシャルコース BEST
+	"h_1127vosm00031": true, // VOSM-031 HQ作品のみ収録 拒絶不可能 女子校生を徹底的に辱める恥辱SEX BEST
+	// Lesre! (no preset: 4K60+ / 8K modes and customs)
+	"lzvr00004": true, // レズれ！VR オールノーカットBEST 見せつけられる体感レズSEX
+	// Salome Prologue (no preset: 4K60+ / 8K modes and customs)
+	"h_1419spvr00021": true, // SPVR-021 女王様10人 調教BEST
+	"h_1419spvr00022": true, // SPVR-022 女王様10人 調教BEST Vol.2
+	"spvr00023":       true, // SPVR-023 サロメVR全編完全ノーカット収録869分全タイトルコンプリートBEST
+	// Stealth (no preset: 4K60+ / 8K modes and customs)
+	"h_1383slvr00024": true, // SLVR-024 電車で、図書館で、保健室でひたすら覗き続ける。女子校生を監視BEST
+	// WANZ VR (no preset: 4K60+ / 8K modes and customs)
+	"wavr00062": true, // WAVR-062 THE BEST ワンズファクトリーVR 超豪華・人気AV女優8人出演！成りあがりAV男優体験VR 完全版！！ 未公開映
+	// THE BEST OF 3DVR (twin / triple packs) (no preset: 4K60+ / 8K modes and customs)
+	"h_1423vrtb00001": true, // VRTB-001 THE BEST OF 3DVR 新放課後美少女回春リフレクソロジー TWIN PARK（ツインパック）Vol.001＆
+	"h_1423vrtb00002": true, // VRTB-002 THE BEST OF 3DVR 新少子化対策法可決！初対面でいきなり恋に落ち即子作り！恥じらい初SEX TWIN PA
+	"h_1423vrtb00003": true, // VRTB-003 THE BEST OF 3DVR 異世界転生したらエッチな世界だった件 TRIPLE PACK（トリプルパック） 君色華
+	"h_1423vrtb00004": true, // VRTB-004 THE BEST OF 3DVR 清楚で可愛い僕の妹が突然ギャルビッチ化していた件。 イクイク早漏妹と排卵日子作り生活
+	"h_1423vrtb00005": true, // VRTB-005 THE BEST OF 3DVR キス我慢決定戦 THE・DOCUMENTーザ・ドキュメントー 制限時間90分ほぼノーカ
+	"h_1423vrtb00006": true, // VRTB-006 THE BEST OF 3DVR 新人限定ベロチュウ舐めまくり制服リフレ TWIN PACK（ツインパック）桃尻かのん
+	"h_1423vrtb00007": true, // VRTB-007 THE BEST OF 3DVR 俺の厨二病ノートから理想のカノジョが出てきた件！ TWIN PACK（ツインパック）
+	"h_1423vrtb00008": true, // VRTB-008 THE BEST OF 3DVR 新少子化対策法可決！初対面でいきなり恋に落ち即子作り！恥じらい初SEX TRIPLE
+	"h_1423vrtb00009": true, // VRTB-009 THE BEST OF 3DVR 新放課後美少女回春リフレクソロジー TWIN PACK（ツインパック）Vol.003＆
+	"h_1423vrtb00010": true, // VRTB-010 THE BEST OF 3DVRキス我慢決定戦 THE・DOCUMENTーザ・ドキュメントー 制限時間90分ほぼノーカッ
+	"h_1423vrtb00011": true, // VRTB-011 THE BEST OF 3DVR 新放課後美少女回春リフレクソロジー TWIN PACK（ツインパック）Vol.005＆
+	// ハンラシン, label 2066111 (no preset: 4K60+ / 8K modes and customs)
+	"h_1763hrav00025": true, // ハンラシンTHE BEST VR 淫語と接写で射精に導く絶頂のオナ指示109分！
+	"h_1763hrav00026": true, // ハンラシンTHE BEST VR 危険すぎる悩殺ギリギリアングルで魅せる最強絶景至近距離オナニー104分！
+	"h_1763hrav00031": true, // ハンラシンTHE BEST VR 超M字拘束で鬼イカせ！ドMマゾイキ狂い連続絶頂VR！
+	"h_1763hrav00032": true, // ハンラシンTHE BEST VR 極舐め！超接写絶頂フェラチオVR！
 }
 
 // r18devIsCompilation returns why a scene counts as a compilation, or "".
