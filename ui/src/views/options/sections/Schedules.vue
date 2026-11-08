@@ -11,6 +11,7 @@
             <b-tab-item label="Actor Rescrape"/>
             <b-tab-item label="Stashdb Rescrape"/>
             <b-tab-item :label="$t('Link Scenes')"/>
+            <b-tab-item :label="$t('Organize files')"/>
       </b-tabs>
       <div class="columns">
         <div class="column">
@@ -250,6 +251,24 @@
                 <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(linkScenesStartDelay) }}</div>
             </b-field>
           </div>
+            <div v-if="activeTab == 6">
+              <h4>{{$t("Organize Files")}}</h4>
+              <p>Computes the reorganisation plan on a schedule (dry-run only) and logs it — nothing is
+                 moved automatically. Review and Apply from Options → Organize files. Skips while you're
+                 watching. Changes apply after a restart.</p>
+              <b-field>
+                <b-switch v-model="organizeEnabled">Enable schedule</b-switch>
+              </b-field>
+              <b-field v-if="organizeEnabled">
+                <b-slider v-model="organizeHourInterval" :min="1" :max="72" :step="1"></b-slider>
+                <div class="column is-one-third" style="margin-left:.75em">{{`Run every ${this.organizeHourInterval} hour${this.organizeHourInterval > 1 ? 's': ''}`}}</div>
+              </b-field>
+              <br/>
+              <b-field label="Startup">
+                <b-slider v-model="organizeStartDelay" :min="0" :max="60" :step="1"></b-slider>
+                <div class="column is-one-third" style="margin-left:.75em">{{ delayStartMsg(organizeStartDelay) }}</div>
+              </b-field>
+            </div>
             <hr/>
               <b-field grouped>
                 <b-button type="is-primary" @click="saveSettings" style="margin-right:1em">Save settings</b-button>
@@ -317,8 +336,11 @@ export default {
       linkScenesHourInterval: 0,
       linkScenesMinuteStart: 0,
       lastlinkScenesTimeRange: [0,23],
-      useLinkScenesTimeRange: false,      
+      useLinkScenesTimeRange: false,
       linkScenesStartDelay: 0,
+      organizeEnabled: false,
+      organizeHourInterval: 24,
+      organizeStartDelay: 0,
       timeRange: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
         '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00',
         '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
@@ -447,7 +469,12 @@ export default {
           this.previewStartDelay = data.config.cron.previewSchedule.runAtStartDelay
           this.actorRescrapeStartDelay = data.config.cron.actorRescrapeSchedule.runAtStartDelay          
           this.stashdbRescrapeStartDelay = data.config.cron.stashdbRescrapeSchedule.runAtStartDelay          
-          this.linkScenesStartDelay = data.config.cron.linkScenesSchedule.runAtStartDelay          
+          this.linkScenesStartDelay = data.config.cron.linkScenesSchedule.runAtStartDelay
+          if (data.config.cron.organizeSchedule) {
+            this.organizeEnabled = data.config.cron.organizeSchedule.enabled
+            this.organizeHourInterval = data.config.cron.organizeSchedule.hourInterval
+            this.organizeStartDelay = data.config.cron.organizeSchedule.runAtStartDelay
+          }
           this.isLoading = false
         })
     },
@@ -516,7 +543,14 @@ export default {
           linkScenesMinuteStart: this.linkScenesMinuteStart,
           linkScenesHourStart: this.linkScenesTimeRange[0],
           linkScenesHourEnd: this.linkScenesTimeRange[1],
-          linkScenesStartDelay:this.linkScenesStartDelay          
+          linkScenesStartDelay:this.linkScenesStartDelay,
+          organizeEnabled: this.organizeEnabled,
+          organizeHourInterval: this.organizeHourInterval,
+          organizeUseRange: false,
+          organizeMinuteStart: 0,
+          organizeHourStart: 0,
+          organizeHourEnd: 23,
+          organizeStartDelay: this.organizeStartDelay
         }
       })
         .json()
