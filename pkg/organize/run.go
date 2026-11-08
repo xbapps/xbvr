@@ -269,15 +269,26 @@ func processScene(db *gorm.DB, scene *models.Scene, opts Options, volRoots []str
 	}
 	fov := fovToken(existing[rep].f.VideoProjection)
 	cast := castNames(scene.Cast, opts.CastGender)
-	studio, dirName := buildDirName(scene.Site, dt, cast, title, fov, repHeight)
+	studio := sanitizeSite(scene.Site)
 	if studio == "" {
+		return nil, false
+	}
+	relPath, dirName, ok := renderTemplate(opts.NameTemplate, templateValues{
+		Studio: studio,
+		Date:   dt,
+		Cast:   strings.Join(cast, "."),
+		Title:  title,
+		FOV:    fov,
+		Height: repHeight,
+	})
+	if !ok {
 		return nil, false
 	}
 
 	plan := &scenePlan{sceneID: scene.ID, videoCount: len(existing), volumeRoot: vroot, rmdirs: map[string]bool{}}
-	// TopFolder is an optional wrapper under the storage-folder root ("" -> studio
-	// folders go directly in the root). filepath.Join drops the empty element.
-	plan.targetDir = filepath.Join(vroot, opts.TopFolder, studio, dirName)
+	// TopFolder is an optional wrapper under the storage-folder root ("" -> the
+	// template's folders go directly in the root). filepath.Join drops empty elements.
+	plan.targetDir = filepath.Join(vroot, opts.TopFolder, filepath.FromSlash(relPath))
 
 	// group by inode (hard links within scene)
 	byInode := map[[2]uint64][]int{}

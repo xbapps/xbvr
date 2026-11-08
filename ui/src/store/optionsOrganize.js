@@ -12,7 +12,8 @@ const state = {
     topFolder: '',
     castGender: 'female',
     symlinkByActor: false,
-    actorFolder: 'ByActor'
+    actorFolder: 'ByActor',
+    nameTemplate: ''
   }
 }
 

@@ -16,9 +16,19 @@
       <b-field label="Staging grace period (days)">
         <b-numberinput v-model="incomingMinAge" :min="0" :max="365" :step="1" controls-position="compact" />
       </b-field>
-      <b-field label="Top folder (wrapper under the volume root; blank = studio folders in the root)">
+      <b-field label="Top folder (wrapper under the volume root; blank = template folders in the root)">
         <b-input v-model="topFolder" placeholder="(none)" />
       </b-field>
+      <b-field label="Folder layout (blank = default)">
+        <b-input v-model="nameTemplate" placeholder="{studio}/{studio}.{date}.{cast}.{title}.XXX.{fov}.{height}p" />
+      </b-field>
+      <p class="help">
+        Tokens: <code>{studio}</code>, <code>{date}</code> (YY.MM.DD), <code>{cast}</code>,
+        <code>{title}</code>, <code>{fov}</code>, <code>{height}</code>, <code>{year}</code>,
+        <code>{yy}</code>, <code>{mm}</code>, <code>{dd}</code>. Separate folders with <code>/</code>.
+        Remove the leading <code>{studio}/</code> to skip the studio folder, or the second
+        <code>{studio}.</code> to stop the scene folder repeating the studio name.
+      </p>
       <b-field label="Cast in folder name">
         <b-select v-model="castGender" expanded>
           <option value="any">No preference (all performers)</option>
@@ -67,7 +77,7 @@
 </template>
 
 <script>
-const FIELDS = ['dedup', 'deferDups', 'incomingDir', 'incomingMinAge', 'topFolder', 'castGender', 'symlinkByActor', 'actorFolder']
+const FIELDS = ['dedup', 'deferDups', 'incomingDir', 'incomingMinAge', 'topFolder', 'nameTemplate', 'castGender', 'symlinkByActor', 'actorFolder']
 
 export default {
   name: 'Organize',
@@ -80,7 +90,8 @@ export default {
     result () { return this.$store.state.optionsOrganize.result },
     hasPreview () { return this.result && this.result.dryRun },
     layoutPreview () {
-      return (this.topFolder ? this.topFolder + '/' : '') + '{Studio}/{Studio}.{YY.MM.DD}.{Cast}.{Title}.XXX.{FOV}.{Height}p/'
+      const tmpl = this.nameTemplate || '{studio}/{studio}.{date}.{cast}.{title}.XXX.{fov}.{height}p'
+      return (this.topFolder ? this.topFolder + '/' : '') + tmpl + '/'
     },
     sampleActions () {
       if (!this.result || !this.result.actions) return '(none)'

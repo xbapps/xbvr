@@ -27,6 +27,7 @@ type RequestOrganizeConfig struct {
 	CastGender     string `json:"castGender"`
 	SymlinkByActor bool   `json:"symlinkByActor"`
 	ActorFolder    string `json:"actorFolder"`
+	NameTemplate   string `json:"nameTemplate"`
 }
 
 func (i OrganizeResource) WebService() *restful.WebService {
@@ -134,6 +135,7 @@ func optionsFromConfig(dryRun bool, limit int) organize.Options {
 		CastGender:     c.CastGender,
 		SymlinkByActor: c.SymlinkByActor,
 		ActorFolder:    c.ActorFolder,
+		NameTemplate:   c.NameTemplate,
 	}
 }
 
@@ -167,6 +169,10 @@ func (i OrganizeResource) saveConfig(req *restful.Request, resp *restful.Respons
 		resp.WriteHeaderAndEntity(http.StatusBadRequest, nil)
 		return
 	}
+	if err := organize.ValidateTemplate(r.NameTemplate); err != nil {
+		resp.WriteHeaderAndEntity(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
 	config.Config.Organize.Dedup = r.Dedup
 	config.Config.Organize.DeferDups = r.DeferDups
 	config.Config.Organize.IncomingDir = r.IncomingDir
@@ -175,6 +181,7 @@ func (i OrganizeResource) saveConfig(req *restful.Request, resp *restful.Respons
 	config.Config.Organize.CastGender = r.CastGender
 	config.Config.Organize.SymlinkByActor = r.SymlinkByActor
 	config.Config.Organize.ActorFolder = r.ActorFolder
+	config.Config.Organize.NameTemplate = r.NameTemplate
 	config.SaveConfig()
 	resp.WriteHeaderAndEntity(http.StatusOK, config.Config.Organize)
 }

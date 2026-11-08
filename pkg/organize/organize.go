@@ -3,7 +3,9 @@
 // tool, running inside xbvr so it can update the DB (and paths are already the
 // container's volume paths, so no host mapping is needed).
 //
-// Target layout: ASeries/{Studio}/{Studio}.{YY}.{MM}.{DD}.{Cast}.{Title}.XXX.{FOV}.{Height}p/
+// The target layout is a path template (Options.NameTemplate); the default is
+// {studio}/{studio}.{date}.{cast}.{title}.XXX.{fov}.{height}p, which renders as
+// ASeries/{Studio}/{Studio}.{YY}.{MM}.{DD}.{Cast}.{Title}.XXX.{FOV}.{Height}p/.
 package organize
 
 import (
@@ -55,6 +57,7 @@ type Options struct {
 	CastGender     string `json:"castGender"`     // folder-name cast preference: "any", "female", or "male"
 	SymlinkByActor bool   `json:"symlinkByActor"` // also symlink each scene dir into per-actor folders
 	ActorFolder    string `json:"actorFolder"`    // parent folder for the per-actor symlink dirs
+	NameTemplate   string `json:"nameTemplate"`   // folder path template; "" = DefaultNameTemplate
 }
 
 // Action is one planned/performed operation (for the UI preview).
@@ -216,22 +219,6 @@ func castNames(cast []models.Actor, pref string) []string {
 		}
 	}
 	return out
-}
-
-func buildDirName(site string, dt time.Time, cast []string, title, fov string, height int) (studio, dir string) {
-	studio = sanitizeSite(site)
-	segs := []string{studio, dt.Format("06.01.02")}
-	if c := strings.Join(cast, "."); c != "" {
-		segs = append(segs, c)
-	}
-	segs = append(segs, title, "XXX", fov, strconv.Itoa(height)+"p")
-	var kept []string
-	for _, s := range segs {
-		if s != "" {
-			kept = append(kept, s)
-		}
-	}
-	return studio, strings.Join(kept, ".")
 }
 
 // ---- fs helpers ----

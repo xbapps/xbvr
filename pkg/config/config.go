@@ -193,6 +193,7 @@ type ObjectConfig struct {
 		CastGender     string `default:"female" json:"castGender"`
 		SymlinkByActor bool   `default:"false" json:"symlinkByActor"`
 		ActorFolder    string `default:"ByActor" json:"actorFolder"`
+		NameTemplate   string `default:"" json:"nameTemplate"`
 	} `json:"organize"`
 	Storage struct {
 		MatchOhash bool     `default:"false" json:"match_ohash"`
