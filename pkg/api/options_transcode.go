@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -152,9 +153,9 @@ func pickTranscodeSamples(db *gorm.DB, limit int) []models.File {
 		return nil
 	}
 
-	// Take the smallest, median and largest pixel counts. Extra positions fill in if
+	// Take the smallest, median and largest pixel counts first. The quartiles fill in if
 	// those rows share a resolution or point at a missing file.
-	positions := []int{0, count / 4, count / 2, count * 3 / 4, count - 1}
+	positions := []int{0, count / 2, count - 1, count / 4, count * 3 / 4}
 	var out []models.File
 	seen := map[string]bool{}
 	for _, pos := range positions {
@@ -192,6 +193,9 @@ func pickTranscodeSamples(db *gorm.DB, limit int) []models.File {
 		seen[key] = true
 		out = append(out, file)
 	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].VideoWidth*out[i].VideoHeight < out[j].VideoWidth*out[j].VideoHeight
+	})
 	return out
 }
 

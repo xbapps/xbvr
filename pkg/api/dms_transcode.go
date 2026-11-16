@@ -252,8 +252,8 @@ func (l *limitedWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
-// ffmpegBin prefers an ffmpeg on PATH, which in the container is the build made with NVENC,
-// VAAPI, Quick Sync and x264; it falls back to the bundled download when there is none.
+// ffmpegBin prefers an ffmpeg on PATH, so an install can provide a build with the hardware
+// encoders it needs; it falls back to the bundled download when there is none.
 func ffmpegBin() string {
 	if path, err := exec.LookPath("ffmpeg"); err == nil {
 		return path
