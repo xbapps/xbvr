@@ -25,7 +25,7 @@ type DraftScene struct {
 	UpdatedAt time.Time `json:"updated_at"`
 
 	FileID    uint   `gorm:"index" json:"file_id"` // file the draft was proposed for; 0 when scraped directly
-	SourceURL string `gorm:"size:1000;index" json:"source_url"`
+	SourceURL string `gorm:"size:1000" json:"source_url"`
 	Query     string `gorm:"size:1000" json:"query"` // web search query that found the page, if any
 	Status    string `gorm:"size:20;index" json:"status"`
 
