@@ -2387,6 +2387,20 @@ func Migrate(migrateTo string) {
 				return tx.Table("scenes").AddIndex("idx_scenes_scraper_id", "scraper_id").Error
 			},
 		},
+		{
+			// 0088-0094 are claimed by other in-flight changes; starting here avoids renumbering
+			// if they land in a different order.
+			ID: "0095-llm-draft-scenes",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(models.DraftScene{}).Error
+			},
+		},
+		{
+			ID: "0096-file-match-context",
+			Migrate: func(tx *gorm.DB) error {
+				return tx.AutoMigrate(models.FileMatchContext{}).Error
+			},
+		},
 	}
 
 	// Wrap migrations to automatically track progress

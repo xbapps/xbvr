@@ -228,39 +228,10 @@ func (i FilesResource) matchFile(req *restful.Request, resp *restful.Response) {
 		return
 	}
 
-	// Assign Scene to File
-	var scene models.Scene
-	err = scene.GetIfExist(r.SceneID)
-	if err != nil {
+	if err := models.MatchFileToScene(db, r.FileID, r.SceneID); err != nil {
 		log.Error(err)
 		return
 	}
-
-	var f models.File
-	err = db.Preload("Volume").Where(&models.File{ID: r.FileID}).First(&f).Error
-	if err == nil {
-		f.SceneID = scene.ID
-		f.Save()
-	}
-
-	// Add File to the list of Scene filenames so it will be discovered when file is moved
-	var pfTxt []string
-	err = json.Unmarshal([]byte(scene.FilenamesArr), &pfTxt)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	pfTxt = append(pfTxt, f.Filename)
-	tmp, err := json.Marshal(pfTxt)
-	if err == nil {
-		scene.FilenamesArr = string(tmp)
-	}
-
-	models.AddAction(scene.SceneID, "match", "filenames_arr", scene.FilenamesArr)
-
-	// Finally, update scene available/accessible status
-	scene.UpdateStatus()
 
 	resp.WriteHeaderAndEntity(http.StatusOK, nil)
 }

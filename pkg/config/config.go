@@ -179,6 +179,36 @@ type ObjectConfig struct {
 		MatchOhash bool     `default:"false" json:"match_ohash"`
 		VideoExt   []string `json:"video_ext"`
 	} `json:"storage"`
+	LLMScraper struct {
+		// Any OpenAI-compatible chat completions endpoint: vLLM, Ollama, LM Studio, llama.cpp
+		// server, OpenAI itself. BaseURL is the part before /chat/completions, e.g.
+		// http://localhost:8000/v1.
+		BaseURL string `default:"" json:"baseUrl"`
+		Model   string `default:"" json:"model"`
+		APIKey  string `default:"" json:"apiKey"`
+		// Reasoning models spend their token budget thinking before answering; this asks the
+		// chat template not to. Only sent when enabled, since not every server accepts it.
+		DisableThinking bool `default:"true" json:"disableThinking"`
+		// json_schema constrains the output to the schema during decoding. json_object is the
+		// fallback for servers that only guarantee valid JSON. Output is validated either way.
+		StructuredOutput string `default:"json_schema" json:"structuredOutput"`
+		TimeoutSeconds   int    `default:"180" json:"timeoutSeconds"`
+		MaxPageChars     int    `default:"12000" json:"maxPageChars"`
+
+		BraveAPIKey    string  `default:"" json:"braveApiKey"`
+		ResultsPerFile int     `default:"5" json:"resultsPerFile"`
+		MinConfidence  float64 `default:"0.5" json:"minConfidence"`
+		Concurrency    int     `default:"2" json:"concurrency"`
+		// Overview, gallery and listing pages link to the scene's own page. This is how many
+		// such links the scraper follows before it stops and judges the last page it read.
+		MaxFollowRounds int `default:"2" json:"maxFollowRounds"`
+		// Pages the LLM classifies as download or piracy sites are not turned into drafts.
+		SkipDownloadSites bool `default:"true" json:"skipDownloadSites"`
+		// One domain per line or comma separated; subdomains are included.
+		BlockedDomains string `default:"" json:"blockedDomains"`
+		// Page fetches refuse private, loopback and link-local addresses unless this is set.
+		AllowPrivateNetworks bool `default:"false" json:"allowPrivateNetworks"`
+	} `json:"llmScraper"`
 	ScraperSettings struct {
 		TMWVRNet struct {
 			TmwMembersDomain string `default:"members.tmwvrnet.com" json:"tmwMembersDomain"`

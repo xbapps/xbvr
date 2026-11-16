@@ -16,6 +16,8 @@
                          @click="setActive('data-scrapers')"/>
             <b-menu-item :label="$t('Create/Import scene')" :active="active==='create-scene'"
                          @click="setActive('create-scene')"/>
+            <b-menu-item :label="$t('LLM scraper')" :active="active==='llm-scraper'"
+                         @click="setActive('llm-scraper')"/>
             <b-menu-item :label="$t('Funscripts')" :active="active==='funscripts'"
                          @click="setActive('funscripts')"/>
             <b-menu-item :label="$t('Data import/export')" :active="active==='data-import-export'"
@@ -38,6 +40,7 @@
           <Schedules v-show="active==='schedules'"/>
           <SceneDataScrapers v-show="active==='data-scrapers'"/>
           <SceneCreate v-show="active==='create-scene'"/>
+          <LLMScraper v-show="active==='llm-scraper'"/>
           <Funscripts v-show="active==='funscripts'"/>
           <SceneDataImportExport v-show="active==='data-import-export'"/>
           <InterfaceWeb v-show="active==='interface_web'"/>
@@ -57,6 +60,7 @@ import InterfaceWeb from './sections/InterfaceWeb'
 import Storage from './sections/Storage'
 import SceneDataScrapers from './sections/OptionsSceneDataScrapers'
 import SceneCreate from './sections/OptionsSceneCreate'
+import LLMScraper from './sections/LLMScraper.vue'
 import Funscripts from './sections/Funscripts'
 import SceneDataImportExport from './sections/OptionsSceneDataImportExport'
 import InterfaceDLNA from './sections/InterfaceDLNA.vue'
@@ -68,7 +72,7 @@ import InterfaceAdvanced from './sections/InterfaceAdvanced.vue'
 import SceneMatchParams from './overlays/SceneMatchParams.vue'
 
 export default {
-  components: { Storage, SceneDataScrapers, SceneCreate, Funscripts, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews, Schedules, InterfaceAdvanced,SceneMatchParams },
+  components: { Storage, SceneDataScrapers, SceneCreate, LLMScraper, Funscripts, SceneDataImportExport, InterfaceWeb, InterfaceDLNA, InterfaceDeoVR, Cache, Previews, Schedules, InterfaceAdvanced,SceneMatchParams },
   data: function () {
     return {
       active: 'storage'
