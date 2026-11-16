@@ -102,6 +102,13 @@ type ObjectConfig struct {
 			MultitrackCuepoints     bool `default:"true" json:"multitrack_cuepoints"`
 			MultitrackCastCuepoints bool `default:"true" json:"multitrack_cast_cuepoints"`
 			RetainNonHSPCuepoints   bool `default:"true" json:"retain_non_hsp_cuepoints"`
+
+			// Live transcode: stream ffmpeg encodes to HereSphere instead of the source file.
+			TranscodeEnabled     bool     `default:"false" json:"transcode_enabled"`
+			TranscodeCodecs      []string `json:"transcode_codecs"` // h264, hevc, av1; x264 forces the CPU fallback
+			TranscodeBitrateMbps int      `default:"20" json:"transcode_bitrate_mbps"`
+			TranscodeAudioKbps   int      `default:"128" json:"transcode_audio_kbps"`
+			TranscodeMaxHeight   int      `default:"0" json:"transcode_max_height"` // 0 = source resolution
 		} `json:"heresphere"`
 		Players struct {
 			VideoSortSeq    string `default:"" json:"video_sort_seq"`

@@ -22,7 +22,12 @@ const state = {
     allow_hsp_data: false,
     multitrack_cuepoints: true,
     multitrack_cast_cuepoints: true,
-    retain_non_hsp_cuepoints: true
+    retain_non_hsp_cuepoints: true,
+    transcode_enabled: false,
+    transcode_codecs: ['h264'],
+    transcode_bitrate_mbps: 20,
+    transcode_audio_kbps: 128,
+    transcode_max_height: 0
   },
   players: {
     video_sort_seq: '',
@@ -60,6 +65,11 @@ const actions = {
         state.players.subtitle_sort_seq = data.config.interfaces.players.subtitle_sort_seq
         state.heresphere.multitrack_cast_cuepoints = data.config.interfaces.heresphere.multitrack_cast_cuepoints
         state.heresphere.retain_non_hsp_cuepoints = data.config.interfaces.heresphere.retain_non_hsp_cuepoints
+        state.heresphere.transcode_enabled = data.config.interfaces.heresphere.transcode_enabled
+        state.heresphere.transcode_codecs = data.config.interfaces.heresphere.transcode_codecs || ['h264']
+        state.heresphere.transcode_bitrate_mbps = data.config.interfaces.heresphere.transcode_bitrate_mbps
+        state.heresphere.transcode_audio_kbps = data.config.interfaces.heresphere.transcode_audio_kbps
+        state.heresphere.transcode_max_height = data.config.interfaces.heresphere.transcode_max_height
         state.loading = false        
       })
   },
