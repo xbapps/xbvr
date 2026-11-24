@@ -77,6 +77,9 @@ func heresphereTranscodeMedia(req *restful.Request, file models.File, prefix, dn
 		if dnt != "" {
 			params += "&dnt=true"
 		}
+		if isDeoAuthEnabled() {
+			params += "&token=" + transcodeToken(file.ID, codec)
+		}
 		media = append(media, HeresphereMedia{
 			Name: name,
 			Sources: []HeresphereSource{{

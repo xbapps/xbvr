@@ -27,7 +27,8 @@ const state = {
     transcode_codecs: ['h264'],
     transcode_bitrate_mbps: 20,
     transcode_audio_kbps: 128,
-    transcode_max_height: 0
+    transcode_max_height: 0,
+    transcode_max_streams: 2
   },
   players: {
     video_sort_seq: '',
@@ -70,6 +71,7 @@ const actions = {
         state.heresphere.transcode_bitrate_mbps = data.config.interfaces.heresphere.transcode_bitrate_mbps
         state.heresphere.transcode_audio_kbps = data.config.interfaces.heresphere.transcode_audio_kbps
         state.heresphere.transcode_max_height = data.config.interfaces.heresphere.transcode_max_height
+        state.heresphere.transcode_max_streams = data.config.interfaces.heresphere.transcode_max_streams || 2
         state.loading = false        
       })
   },

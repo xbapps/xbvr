@@ -108,7 +108,8 @@ type ObjectConfig struct {
 			TranscodeCodecs      []string `json:"transcode_codecs"` // h264, hevc, av1; x264 forces the CPU fallback
 			TranscodeBitrateMbps int      `default:"20" json:"transcode_bitrate_mbps"`
 			TranscodeAudioKbps   int      `default:"128" json:"transcode_audio_kbps"`
-			TranscodeMaxHeight   int      `default:"0" json:"transcode_max_height"` // 0 = source resolution
+			TranscodeMaxHeight   int      `default:"0" json:"transcode_max_height"`  // 0 = source resolution
+			TranscodeMaxStreams  int      `default:"2" json:"transcode_max_streams"` // encodes at once, all players
 		} `json:"heresphere"`
 		Players struct {
 			VideoSortSeq    string `default:"" json:"video_sort_seq"`

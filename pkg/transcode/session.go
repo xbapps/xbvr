@@ -42,6 +42,9 @@ const (
 
 	stopWait       = 5 * time.Second
 	playbackBuffer = 256 << 10
+
+	// DefaultMaxEncodes is how many encodes may run at once when no limit is configured.
+	DefaultMaxEncodes = 2
 )
 
 var (
@@ -51,12 +54,16 @@ var (
 	// ErrCannotResume means a request continues a stream at a byte this server can no longer
 	// produce. A client holding parser state at that byte cannot use a different encode.
 	ErrCannotResume = errors.New("transcode: offset cannot be resumed")
+
+	// ErrBusy means the most encodes allowed at once are already running for other clients.
+	ErrBusy = errors.New("transcode: too many encodes running")
 )
 
 var (
 	errSessionStopped = errors.New("transcode: encode stopped")
 	errSuperseded     = errors.New("transcode: client replaced by a newer request")
 	errEvicted        = errors.New("transcode: position no longer buffered")
+	errHeaderMismatch = errors.New("transcode: cached header does not match the stream layout")
 )
 
 // Process is a running encoder. Wait must only be called once Stdout has been read to its end.
@@ -91,8 +98,17 @@ type Manager struct {
 	PinLifetime time.Duration
 	Logf        func(format string, args ...interface{})
 
+	// MaxEncodes returns how many encodes may run at once across all streams; zero or less
+	// means DefaultMaxEncodes. It is a function so the setting can change while running.
+	MaxEncodes func() int
+
+	// startMu makes encodes start one at a time, so each encoder is chosen knowing the GPU
+	// memory promised to the encode started before it.
+	startMu sync.Mutex
+
 	mu      sync.Mutex
 	streams map[string]*stream
+	running int // encoder processes that have not exited
 }
 
 // NewManager returns a Manager with the default timeouts.
@@ -199,7 +215,7 @@ func (m *Manager) Open(ctx context.Context, src Source, offset int64) (*Playback
 		active, gen = session, sessionGen
 	}
 
-	return &Playback{
+	playback := &Playback{
 		Kind:    kind,
 		Chunk:   chunk,
 		Seek:    l.StartSeconds(chunk),
@@ -210,18 +226,39 @@ func (m *Manager) Open(ctx context.Context, src Source, offset int64) (*Playback
 		offset:  offset,
 		pos:     position,
 		layout:  l,
-	}, nil
+	}
+	// The client can leave while its encode is starting. Detaching now starts the idle
+	// timeout, as it would have had the client left after reading.
+	if err := ctx.Err(); err != nil {
+		playback.Close()
+		return nil, err
+	}
+	return playback, nil
 }
 
 // replace stops the current encode and starts another with the request already attached, so
 // a failure of the new encoder is always delivered to it. The previous encoder has exited
-// before the new one starts, so its GPU memory is available again.
+// before the new one starts, so its GPU memory is available again. Encodes no client is
+// using are stopped first, and the start is refused with ErrBusy if the most encodes allowed
+// are still running.
 func (m *Manager) replace(st *stream, src Source, chunk int, position int64) (*encodeSession, uint64, error) {
 	if previous := st.active; previous != nil {
 		previous.stop()
 		st.active = nil
 	}
 	m.stopDetached(st)
+
+	m.startMu.Lock()
+	defer m.startMu.Unlock()
+	if !m.takeSlot() {
+		return nil, 0, ErrBusy
+	}
+	started := false
+	defer func() {
+		if !started {
+			m.releaseSlot()
+		}
+	}()
 
 	if st.planFailed.Swap(false) {
 		st.spawn = nil
@@ -245,9 +282,33 @@ func (m *Manager) replace(st *stream, src Source, chunk int, position int64) (*e
 	session := newEncodeSession(position, cancel)
 	gen, _ := session.attach(position)
 	st.active = session
+	started = true
 	go session.pump(m, st, src, process, seek)
 	go session.keepAlive(ctx)
 	return session, gen, nil
+}
+
+// takeSlot counts a new encode against the limit, or reports that the limit is reached.
+func (m *Manager) takeSlot() bool {
+	limit := DefaultMaxEncodes
+	if m.MaxEncodes != nil {
+		if n := m.MaxEncodes(); n > 0 {
+			limit = n
+		}
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.running >= limit {
+		return false
+	}
+	m.running++
+	return true
+}
+
+func (m *Manager) releaseSlot() {
+	m.mu.Lock()
+	m.running--
+	m.mu.Unlock()
 }
 
 // stopDetached ends encodes no client is using, releasing their encoder sessions. Streams
@@ -370,6 +431,8 @@ func newEncodeSession(start int64, cancel context.CancelFunc) *encodeSession {
 func (s *encodeSession) pump(m *Manager, st *stream, src Source, process *Process, seek float64) {
 	defer close(s.done)
 	defer s.cancel()
+	// Deferred last so it runs first: the slot is free by the time stop() sees done closed.
+	defer m.releaseSlot()
 
 	streamErr := s.copyOutput(st, src, process, seek)
 	if streamErr != nil {
@@ -647,6 +710,9 @@ func (p *Playback) WriteTo(ctx context.Context, w io.Writer) (int64, error) {
 		header, err := p.waitForHeader(ctx)
 		if err != nil {
 			return sent, err
+		}
+		if int64(len(header)) != p.layout.DataStart {
+			return sent, errHeaderMismatch
 		}
 		n, err := w.Write(header[p.offset:])
 		sent += int64(n)

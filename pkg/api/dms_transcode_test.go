@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"testing"
+
+	"github.com/xbapps/xbvr/pkg/config"
 )
 
 func TestParseByteRange(t *testing.T) {
@@ -97,5 +100,64 @@ func TestTranscodeClient(t *testing.T) {
 		if got := transcodeClient(req); got != c.want {
 			t.Errorf("%s: transcodeClient = %q, want %q", c.name, got, c.want)
 		}
+	}
+}
+
+func withPlayerLogin(t *testing.T, enabled bool) {
+	t.Helper()
+	saved := config.Config.Interfaces.DeoVR
+	config.Config.Interfaces.DeoVR.AuthEnabled = enabled
+	config.Config.Interfaces.DeoVR.Username = "viewer"
+	config.Config.Interfaces.DeoVR.Password = "$2a$10$stored-bcrypt-hash"
+	t.Cleanup(func() { config.Config.Interfaces.DeoVR = saved })
+}
+
+func TestTranscodeTokenNotNeededWithoutLogin(t *testing.T) {
+	withPlayerLogin(t, false)
+	if !validTranscodeToken(7, "hevc", "") {
+		t.Fatal("without the player login a transcode URL needs no token")
+	}
+}
+
+func TestTranscodeTokenRequiredWithLogin(t *testing.T) {
+	withPlayerLogin(t, true)
+	token := transcodeToken(7, "hevc")
+	cases := []struct {
+		name  string
+		id    uint
+		codec string
+		token string
+		want  bool
+	}{
+		{"issued token", 7, "hevc", token, true},
+		{"missing", 7, "hevc", "", false},
+		{"other file", 8, "hevc", token, false},
+		{"other codec", 7, "av1", token, false},
+		{"forged", 7, "hevc", strings.Repeat("0", len(token)), false},
+	}
+	for _, c := range cases {
+		if got := validTranscodeToken(c.id, c.codec, c.token); got != c.want {
+			t.Errorf("%s: valid = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+func TestTranscodeTokenChangesWithPassword(t *testing.T) {
+	withPlayerLogin(t, true)
+	before := transcodeToken(7, "hevc")
+	config.Config.Interfaces.DeoVR.Password = "$2a$10$another-hash"
+	if validTranscodeToken(7, "hevc", before) {
+		t.Fatal("a token issued under the old password must stop working")
+	}
+}
+
+func TestReleaseOnOutputWaitsForBytes(t *testing.T) {
+	released := 0
+	r := &releaseOnOutput{r: strings.NewReader("ftyp"), release: func() { released++ }}
+	if _, err := r.Read(make([]byte, 0)); err != nil || released != 0 {
+		t.Fatalf("released = %d after an empty read (err %v)", released, err)
+	}
+	if n, _ := r.Read(make([]byte, 2)); n != 2 || released != 1 {
+		t.Fatalf("released = %d after reading %d bytes, want 1", released, n)
 	}
 }

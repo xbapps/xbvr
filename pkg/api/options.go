@@ -118,6 +118,7 @@ type RequestSaveOptionsDeoVR struct {
 	TranscodeBitrateMbps    int      `json:"transcode_bitrate_mbps"`
 	TranscodeAudioKbps      int      `json:"transcode_audio_kbps"`
 	TranscodeMaxHeight      int      `json:"transcode_max_height"`
+	TranscodeMaxStreams     int      `json:"transcode_max_streams"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -608,6 +609,9 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.Heresphere.TranscodeBitrateMbps = r.TranscodeBitrateMbps
 	config.Config.Interfaces.Heresphere.TranscodeAudioKbps = r.TranscodeAudioKbps
 	config.Config.Interfaces.Heresphere.TranscodeMaxHeight = r.TranscodeMaxHeight
+	if r.TranscodeMaxStreams > 0 {
+		config.Config.Interfaces.Heresphere.TranscodeMaxStreams = r.TranscodeMaxStreams
+	}
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)

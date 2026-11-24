@@ -3,6 +3,9 @@ package api
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -32,26 +35,10 @@ func (i DMSResource) getTranscode(req *restful.Request, resp *restful.Response) 
 		return
 	}
 	id, err := strconv.Atoi(req.PathParameter("file-id"))
-	if err != nil {
+	if err != nil || id <= 0 {
 		resp.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	db, _ := models.GetDB()
-	defer db.Close()
-	var f models.File
-	if err := db.Preload("Volume").First(&f, id).Error; err != nil || f.Volume.Type != "local" {
-		resp.WriteHeader(http.StatusNotFound)
-		return
-	}
-	if _, err := os.Stat(f.GetPath()); err != nil {
-		resp.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	doNotTrack := req.QueryParameter("dnt")
-	setDeoPlayerHost(req)
-	session.TrackSessionFromFile(f, doNotTrack)
 
 	enabled := transcode.ParseCodecs(config.Config.Interfaces.Heresphere.TranscodeCodecs)
 	if len(enabled) == 0 {
@@ -72,6 +59,26 @@ func (i DMSResource) getTranscode(req *restful.Request, resp *restful.Response) 
 		resp.WriteHeader(http.StatusNotFound)
 		return
 	}
+	if !validTranscodeToken(uint(id), codec, req.QueryParameter("token")) {
+		resp.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	db, _ := models.GetDB()
+	defer db.Close()
+	var f models.File
+	if err := db.Preload("Volume").First(&f, id).Error; err != nil || f.Volume.Type != "local" {
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if _, err := os.Stat(f.GetPath()); err != nil {
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	doNotTrack := req.QueryParameter("dnt")
+	setDeoPlayerHost(req)
+	session.TrackSessionFromFile(f, doNotTrack)
 
 	if f.VideoDuration <= 0 {
 		resp.WriteHeader(http.StatusNotFound)
@@ -97,15 +104,25 @@ func (i DMSResource) getTranscode(req *restful.Request, resp *restful.Response) 
 		offset = start
 	}
 
+	// The layout is part of the key: a rescan that changes the duration changes the layout,
+	// and a stream's cached header only fits the layout it was made for.
 	source := transcode.Source{
-		Key: fmt.Sprintf("%s/%d/%s/%d/%d/%d", transcodeClient(req.Request), f.ID, codec,
-			opts.BitrateMbps, opts.AudioKbps, opts.MaxHeight),
+		Key: fmt.Sprintf("%s/%d/%s/%d/%d/%d/%d", transcodeClient(req.Request), f.ID, codec,
+			opts.BitrateMbps, opts.AudioKbps, opts.MaxHeight, layout.Total),
 		Duration: f.VideoDuration,
 		Layout:   layout,
 		Prepare:  func() (transcode.Spawner, error) { return prepareTranscode(f, codec, opts) },
 	}
 	playback, err := transcodeStreams.Open(req.Request.Context(), source, offset)
+	if err == nil {
+		defer playback.Close()
+	}
 	if errors.Is(err, transcode.ErrUnavailable) {
+		resp.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+	if errors.Is(err, transcode.ErrBusy) {
+		log.Warnf("transcode %d %s: the most streams allowed at once are already running; refusing", f.ID, codec)
 		resp.WriteHeader(http.StatusServiceUnavailable)
 		return
 	}
@@ -122,7 +139,6 @@ func (i DMSResource) getTranscode(req *restful.Request, resp *restful.Response) 
 		resp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer playback.Close()
 	log.Infof("transcode %d %s: %s range=%q chunk=%d seek=%.3f ua=%q",
 		f.ID, codec, playback.Kind, rangeHeader, playback.Chunk, playback.Seek, req.Request.UserAgent())
 
@@ -190,9 +206,30 @@ func transcodeClient(req *http.Request) string {
 }
 
 // transcodeStreams holds the running encodes for every file and codec.
-var transcodeStreams = transcode.NewManager(func(format string, args ...interface{}) {
-	log.Warnf(format, args...)
-})
+var transcodeStreams = newTranscodeManager()
+
+func newTranscodeManager() *transcode.Manager {
+	m := transcode.NewManager(func(format string, args ...interface{}) {
+		log.Warnf(format, args...)
+	})
+	m.MaxEncodes = func() int { return config.Config.Interfaces.Heresphere.TranscodeMaxStreams }
+	return m
+}
+
+// transcodeToken ties a transcode URL to the player login. While the login is on, only a
+// player that fetched the scene with it has a URL that can start encodes.
+func transcodeToken(fileID uint, codec string) string {
+	mac := hmac.New(sha256.New, []byte("xbvr transcode\x00"+config.Config.Interfaces.DeoVR.Password))
+	fmt.Fprintf(mac, "%d/%s", fileID, codec)
+	return hex.EncodeToString(mac.Sum(nil)[:16])
+}
+
+func validTranscodeToken(fileID uint, codec, token string) bool {
+	if !isDeoAuthEnabled() {
+		return true
+	}
+	return hmac.Equal([]byte(token), []byte(transcodeToken(fileID, codec)))
+}
 
 // prepareTranscode chooses the encoder for a stream. Its plan, including the output size, then
 // stays fixed for every encode of that stream, so seeks cannot change the picture format.
@@ -208,20 +245,26 @@ func prepareTranscode(f models.File, codec string, opts transcode.Options) (tran
 	}
 	path := f.GetPath()
 	return func(ctx context.Context, seekSeconds float64) (*transcode.Process, error) {
+		// Encodes start one at a time, so the next stream planned sees this one's memory as
+		// used until ffmpeg has allocated it.
+		release := plan.ReserveVRAM()
 		args := transcode.Args(ffmpegBin(), path, seekSeconds, opts, plan, -1)
 		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
+			release()
 			return nil, err
 		}
 		if err := cmd.Start(); err != nil {
+			release()
 			return nil, fmt.Errorf("starting ffmpeg: %w", err)
 		}
 		return &transcode.Process{
-			Stdout: stdout,
+			Stdout: &releaseOnOutput{r: stdout, release: release},
 			Wait: func() error {
+				defer release()
 				if err := cmd.Wait(); err != nil {
 					return fmt.Errorf("ffmpeg: %w: %s", err, strings.TrimSpace(stderr.String()))
 				}
@@ -229,6 +272,21 @@ func prepareTranscode(f models.File, codec string, opts transcode.Options) (tran
 			},
 		}, nil
 	}, nil
+}
+
+// releaseOnOutput calls release once ffmpeg writes anything. ffmpeg writes its header only after
+// opening the encoders, so by then the encode's GPU memory shows in nvidia-smi.
+type releaseOnOutput struct {
+	r       io.Reader
+	release func()
+}
+
+func (o *releaseOnOutput) Read(p []byte) (int, error) {
+	n, err := o.r.Read(p)
+	if n > 0 {
+		o.release()
+	}
+	return n, err
 }
 
 // limitedWriter stops a stream at a byte count without buffering the rest of the encode.

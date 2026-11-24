@@ -288,6 +288,10 @@
               <b-field label="Maximum height (0 = source)">
                 <b-numberinput v-model="transcodeMaxHeight" :min="0" :max="4320" :step="120" controls-position="compact"/>
               </b-field>
+              <b-field label="Most streams at once"
+                       message="Across all headsets. A stream that would go over this is refused, after any stream no headset is reading has been stopped.">
+                <b-numberinput v-model="transcodeMaxStreams" :min="1" :max="16" controls-position="compact"/>
+              </b-field>
             </div>
           </div>
           <div v-if="transcodeEnabled" class="block">
@@ -680,6 +684,14 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.heresphere.transcode_max_height = value
+      }
+    },
+    transcodeMaxStreams: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.transcode_max_streams
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.transcode_max_streams = value
       }
     },
     isLoading: function () {

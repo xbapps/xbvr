@@ -208,36 +208,41 @@ func storeHardware(ffmpegPath string, hw Hardware) {
 	hardwareCache.hw = hw
 }
 
-// DetectFresh probes again instead of using the cache, for the setup test button.
+// DetectFresh probes again instead of using the cache, for the setup test button. The probe
+// runs without the cache lock, so players keep using the previous result meanwhile.
 func DetectFresh(ffmpegPath string) Hardware {
 	ffmpegPath = resolveFFmpeg(ffmpegPath)
+	hw := probe(ffmpegPath)
 
 	hardwareCache.Lock()
 	defer hardwareCache.Unlock()
-
-	storeHardware(ffmpegPath, probe(ffmpegPath))
-	return hardwareCache.hw
+	storeHardware(ffmpegPath, hw)
+	return hw
 }
 
-// RefreshVRAM updates the cached NVENC free-memory figure before a new stream starts.
-// Encoder availability changes rarely, but the free memory can change while a stream or
-// another CUDA workload is running.
+// RefreshVRAM updates the NVENC free-memory figures before a new stream starts. Encoder
+// availability changes rarely, but the free memory can change while a stream or another CUDA
+// workload is running. Memory promised to encodes that are still starting is counted as used.
+// The result is a copy; the hw passed in, which may be the shared cached result, is unchanged.
 func RefreshVRAM(hw Hardware) Hardware {
 	if hw.Preferred.Name != BackendNVENC {
 		return hw
 	}
-	gpus := nvidiaGPUs()
+	gpus := listGPUs()
 	if len(gpus) == 0 {
 		return hw
 	}
+	pending := pendingVRAMByGPU()
 	update := func(index int) (int, bool) {
 		for _, gpu := range gpus {
 			if gpu.index == index {
-				return gpu.free, true
+				// Zero means unknown to the planner, which would skip the memory check.
+				return max(gpu.free-pending[index], 1), true
 			}
 		}
 		return 0, false
 	}
+	hw.Available = append([]Backend(nil), hw.Available...)
 	if free, ok := update(hw.Preferred.GPUIndex); ok {
 		hw.Preferred.FreeVRAMMiB = free
 	}
@@ -388,6 +393,9 @@ type nvidiaGPU struct {
 	index int
 	free  int
 }
+
+// listGPUs reads the GPUs' free memory; tests replace it.
+var listGPUs = nvidiaGPUs
 
 func nvidiaGPUs() []nvidiaGPU {
 	out, err := exec.Command("nvidia-smi", "--query-gpu=index,memory.free", "--format=csv,noheader,nounits").Output()
