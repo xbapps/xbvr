@@ -1,8 +1,12 @@
 package transcode
 
 import (
+	"fmt"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestBackendForFallsBackForCPUOnlyCodec(t *testing.T) {
@@ -96,5 +100,92 @@ func TestTestArgsIsUnpaced(t *testing.T) {
 		if !strings.Contains(args, want) {
 			t.Errorf("test args missing %q: %s", want, args)
 		}
+	}
+}
+
+// fakeProbe replaces the hardware probe with one that takes delay and labels each result
+// with how many probes have run.
+func fakeProbe(t *testing.T, delay time.Duration) *int32 {
+	t.Helper()
+	var calls int32
+	saved := probe
+	probe = func(ffmpegPath string) Hardware {
+		n := atomic.AddInt32(&calls, 1)
+		time.Sleep(delay)
+		return Hardware{FFmpeg: ffmpegPath, Notes: []string{fmt.Sprintf("probe %d", n)}}
+	}
+	resetHardwareCache()
+	t.Cleanup(func() {
+		probe = saved
+		resetHardwareCache()
+	})
+	return &calls
+}
+
+func resetHardwareCache() {
+	hardwareCache.Lock()
+	hardwareCache.key, hardwareCache.at, hardwareCache.hw, hardwareCache.refreshing = "", time.Time{}, Hardware{}, false
+	hardwareCache.Unlock()
+}
+
+func expireHardwareCache() {
+	hardwareCache.Lock()
+	hardwareCache.at = time.Now().Add(-2 * hardwareCacheTTL)
+	hardwareCache.Unlock()
+}
+
+func TestDetectProbesOnceAndCaches(t *testing.T) {
+	calls := fakeProbe(t, 0)
+	first := Detect("/bin/ffmpeg")
+	second := Detect("/bin/ffmpeg")
+	if got := atomic.LoadInt32(calls); got != 1 {
+		t.Fatalf("probes = %d, want 1", got)
+	}
+	if first.Notes[0] != "probe 1" || second.Notes[0] != "probe 1" {
+		t.Fatalf("results = %v, %v; want both from probe 1", first.Notes, second.Notes)
+	}
+}
+
+func TestDetectAnswersFromExpiredResultWhileReprobing(t *testing.T) {
+	calls := fakeProbe(t, 300*time.Millisecond)
+	Detect("/bin/ffmpeg")
+	expireHardwareCache()
+
+	start := time.Now()
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if hw := Detect("/bin/ffmpeg"); hw.Notes[0] != "probe 1" {
+				t.Errorf("expired call returned %v, want the previous result", hw.Notes)
+			}
+		}()
+	}
+	wg.Wait()
+	if elapsed := time.Since(start); elapsed > 100*time.Millisecond {
+		t.Fatalf("expired calls took %v; they waited for the probe", elapsed)
+	}
+
+	deadline := time.Now().Add(3 * time.Second)
+	for Detect("/bin/ffmpeg").Notes[0] != "probe 2" {
+		if time.Now().After(deadline) {
+			t.Fatal("background probe never replaced the expired result")
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if got := atomic.LoadInt32(calls); got != 2 {
+		t.Fatalf("probes = %d, want 2: one at first use and one refresh", got)
+	}
+}
+
+func TestDetectProbesAgainForAnotherFFmpeg(t *testing.T) {
+	calls := fakeProbe(t, 0)
+	Detect("/bin/ffmpeg")
+	if hw := Detect("/opt/ffmpeg"); hw.FFmpeg != "/opt/ffmpeg" {
+		t.Fatalf("FFmpeg = %q, want the newly requested binary", hw.FFmpeg)
+	}
+	if got := atomic.LoadInt32(calls); got != 2 {
+		t.Fatalf("probes = %d, want 2", got)
 	}
 }

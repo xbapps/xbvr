@@ -156,30 +156,56 @@ func (h Hardware) Codecs() []string {
 	return out
 }
 
+// probe runs a full hardware probe. It is a variable so tests can count and delay probes.
+var probe = probeHardware
+
 var hardwareCache struct {
 	sync.Mutex
-	key string
-	at  time.Time
-	hw  Hardware
+	key        string
+	at         time.Time
+	hw         Hardware
+	refreshing bool
 }
 
-// Detect returns the hardware encoders this machine can use. The result is cached
-// briefly because a stream request may otherwise spend time probing before playback.
+// Detect returns the hardware encoders this machine can use. A probe runs test encodes on
+// every GPU and takes seconds, and Detect is called while a player waits for a scene or a
+// stream, so only the first call for an ffmpeg binary waits for one. Later calls return the
+// last result at once; when it is older than the cache TTL, one background probe replaces it.
 func Detect(ffmpegPath string) Hardware {
 	ffmpegPath = resolveFFmpeg(ffmpegPath)
 
 	hardwareCache.Lock()
 	defer hardwareCache.Unlock()
 
-	if hardwareCache.key == ffmpegPath && time.Since(hardwareCache.at) < hardwareCacheTTL {
+	if hardwareCache.key != ffmpegPath || hardwareCache.at.IsZero() {
+		storeHardware(ffmpegPath, probe(ffmpegPath))
 		return hardwareCache.hw
 	}
+	if time.Since(hardwareCache.at) >= hardwareCacheTTL && !hardwareCache.refreshing {
+		hardwareCache.refreshing = true
+		go refreshHardware(ffmpegPath)
+	}
+	return hardwareCache.hw
+}
 
-	hw := probeHardware(ffmpegPath)
+// refreshHardware probes without holding the cache lock, so Detect keeps answering from
+// the previous result meanwhile.
+func refreshHardware(ffmpegPath string) {
+	hw := probe(ffmpegPath)
+
+	hardwareCache.Lock()
+	defer hardwareCache.Unlock()
+	hardwareCache.refreshing = false
+	if hardwareCache.key == ffmpegPath {
+		storeHardware(ffmpegPath, hw)
+	}
+}
+
+// storeHardware records a probe result. The caller holds hardwareCache's lock.
+func storeHardware(ffmpegPath string, hw Hardware) {
 	hardwareCache.key = ffmpegPath
 	hardwareCache.at = time.Now()
 	hardwareCache.hw = hw
-	return hw
 }
 
 // DetectFresh probes again instead of using the cache, for the setup test button.
@@ -189,11 +215,8 @@ func DetectFresh(ffmpegPath string) Hardware {
 	hardwareCache.Lock()
 	defer hardwareCache.Unlock()
 
-	hw := probeHardware(ffmpegPath)
-	hardwareCache.key = ffmpegPath
-	hardwareCache.at = time.Now()
-	hardwareCache.hw = hw
-	return hw
+	storeHardware(ffmpegPath, probe(ffmpegPath))
+	return hardwareCache.hw
 }
 
 // RefreshVRAM updates the cached NVENC free-memory figure before a new stream starts.

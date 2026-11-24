@@ -23,6 +23,14 @@ func transcodeOptions() transcode.Options {
 	}
 }
 
+// PrimeTranscodeHardware probes the encoders in the background at startup, so the first
+// scene a player opens does not wait for the probe.
+func PrimeTranscodeHardware() {
+	if config.Config.Interfaces.Heresphere.TranscodeEnabled {
+		go transcode.Detect(ffmpegBin())
+	}
+}
+
 // heresphereTranscodeMedia describes the live transcode streams as media entries, one per
 // enabled codec. A live stream has no file, so its size is the estimated byte count at the
 // configured bitrates.
