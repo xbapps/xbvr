@@ -193,6 +193,7 @@ type RequestSaveOptionsTaskSchedule struct {
 	OrganizeHourStart    int  `json:"organizeHourStart"`
 	OrganizeHourEnd      int  `json:"organizeHourEnd"`
 	OrganizeStartDelay   int  `json:"organizeStartDelay"`
+	OrganizeApply        bool `json:"organizeApply"`
 }
 type RequestSaveSiteMatchParams struct {
 	SiteId      string                   `json:"site"`
@@ -1049,6 +1050,7 @@ func (i ConfigResource) saveOptionsTaskSchedule(req *restful.Request, resp *rest
 	config.Config.Cron.OrganizeSchedule.HourStart = r.OrganizeHourStart
 	config.Config.Cron.OrganizeSchedule.HourEnd = r.OrganizeHourEnd
 	config.Config.Cron.OrganizeSchedule.RunAtStartDelay = r.OrganizeStartDelay
+	config.Config.Organize.ScheduleApply = r.OrganizeApply
 
 	config.SaveConfig()
 

@@ -194,6 +194,7 @@ type ObjectConfig struct {
 		SymlinkByActor bool   `default:"false" json:"symlinkByActor"`
 		ActorFolder    string `default:"ByActor" json:"actorFolder"`
 		NameTemplate   string `default:"" json:"nameTemplate"`
+		ScheduleApply  bool   `default:"false" json:"scheduleApply"`
 	} `json:"organize"`
 	Storage struct {
 		MatchOhash bool     `default:"false" json:"match_ohash"`

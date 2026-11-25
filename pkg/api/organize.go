@@ -121,8 +121,8 @@ func (i OrganizeResource) dupDisassociate(req *restful.Request, resp *restful.Re
 	resp.WriteHeaderAndEntity(http.StatusOK, map[string]int{"disassociated": n})
 }
 
-// optionsFromConfig builds run options from the persisted organize config.
-func optionsFromConfig(dryRun bool, limit int) organize.Options {
+// OrganizeOptionsFromConfig builds run options from the persisted organize config.
+func OrganizeOptionsFromConfig(dryRun bool, limit int) organize.Options {
 	c := config.Config.Organize
 	return organize.Options{
 		DryRun:         dryRun,
@@ -146,7 +146,7 @@ func (i OrganizeResource) run(req *restful.Request, resp *restful.Response) {
 		resp.WriteHeaderAndEntity(http.StatusBadRequest, nil)
 		return
 	}
-	if organize.Start(optionsFromConfig(r.DryRun, r.Limit)) {
+	if organize.Start(OrganizeOptionsFromConfig(r.DryRun, r.Limit)) {
 		resp.WriteHeaderAndEntity(http.StatusOK, map[string]string{"status": "started"})
 	} else {
 		resp.WriteHeaderAndEntity(http.StatusOK, map[string]string{"status": "already-running"})
