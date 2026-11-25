@@ -19,6 +19,7 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/session"
@@ -239,6 +240,9 @@ func validTranscodeToken(fileID uint, codec, token string) bool {
 // prepareTranscode chooses the encoder for a stream. Its plan, including the output size, then
 // stays fixed for every encode of that stream, so seeks cannot change the picture format.
 func prepareTranscode(f models.File, codec string, opts transcode.Options) (transcode.Spawner, error) {
+	if transcodeFFmpegPending() {
+		return nil, transcode.ErrUnavailable
+	}
 	hw := transcode.RefreshVRAM(transcode.Detect(ffmpegBin()))
 	plan := transcode.PlanForEncoder(codec, hw, opts, f.VideoWidth, f.VideoHeight, f.VideoAvgFrameRateVal)
 	if len(plan.Notes) > 0 {
@@ -315,9 +319,20 @@ func (l *limitedWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
-// ffmpegBin prefers an ffmpeg on PATH, so an install can provide a build with the hardware
-// encoders it needs; it falls back to the bundled download when there is none.
+// ffmpegBin returns the ffmpeg used for live transcoding: the downloaded jellyfin-ffmpeg when
+// it is selected and installed, otherwise the system ffmpeg.
 func ffmpegBin() string {
+	if useJellyfinFFmpeg() {
+		if path, ok := transcode.ManagedFFmpeg(common.BinDir); ok {
+			return path
+		}
+	}
+	return systemFFmpegBin()
+}
+
+// systemFFmpegBin prefers an ffmpeg on PATH and falls back to the one XBVR downloads for
+// previews.
+func systemFFmpegBin() string {
 	if path, err := exec.LookPath("ffmpeg"); err == nil {
 		return path
 	}

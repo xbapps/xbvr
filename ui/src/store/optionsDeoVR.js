@@ -28,7 +28,8 @@ const state = {
     transcode_bitrates_mbps: [20],
     transcode_audio_kbps: 128,
     transcode_max_height: 0,
-    transcode_max_streams: 2
+    transcode_max_streams: 2,
+    transcode_ffmpeg: 'jellyfin'
   },
   players: {
     video_sort_seq: '',
@@ -73,12 +74,13 @@ const actions = {
         state.heresphere.transcode_audio_kbps = data.config.interfaces.heresphere.transcode_audio_kbps
         state.heresphere.transcode_max_height = data.config.interfaces.heresphere.transcode_max_height
         state.heresphere.transcode_max_streams = data.config.interfaces.heresphere.transcode_max_streams || 2
+        state.heresphere.transcode_ffmpeg = data.config.interfaces.heresphere.transcode_ffmpeg || 'jellyfin'
         state.loading = false        
       })
   },
   async save ({ state }, enabled) {
     state.loading = true
-    ky.put('/api/options/interface/deovr', { json: { ...state.deovr, ...state.heresphere, ...state.players } })
+    return ky.put('/api/options/interface/deovr', { json: { ...state.deovr, ...state.heresphere, ...state.players } })
       .json()
       .then(data => {
         state.loading = false

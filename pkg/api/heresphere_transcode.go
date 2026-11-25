@@ -50,11 +50,11 @@ func transcodeBitrate(param string) (int, bool) {
 	return 0, false
 }
 
-// PrimeTranscodeHardware probes the encoders in the background at startup, so the first
-// scene a player opens does not wait for the probe.
+// PrimeTranscodeHardware gets ffmpeg ready in the background at startup, so the first scene
+// a player opens does not wait for the download or the probe.
 func PrimeTranscodeHardware() {
 	if config.Config.Interfaces.Heresphere.TranscodeEnabled {
-		transcode.Reprobe(ffmpegBin())
+		go prepareTranscodeFFmpeg()
 	}
 }
 
@@ -79,7 +79,7 @@ func transcodeStreamName(prefix, codec string, bitrateMbps int, software bool) s
 // byte count at its bitrates. prefix is empty for a scene with one file.
 func heresphereTranscodeMedia(req *restful.Request, file models.File, prefix, dnt string) []HeresphereMedia {
 	c := config.Config.Interfaces.Heresphere
-	if !c.TranscodeEnabled || file.VideoDuration <= 0 {
+	if !c.TranscodeEnabled || file.VideoDuration <= 0 || transcodeFFmpegPending() {
 		return nil
 	}
 	codecs := transcode.ParseCodecs(c.TranscodeCodecs)

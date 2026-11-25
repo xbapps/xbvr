@@ -119,6 +119,7 @@ type RequestSaveOptionsDeoVR struct {
 	TranscodeAudioKbps      int      `json:"transcode_audio_kbps"`
 	TranscodeMaxHeight      int      `json:"transcode_max_height"`
 	TranscodeMaxStreams     int      `json:"transcode_max_streams"`
+	TranscodeFFmpeg         string   `json:"transcode_ffmpeg"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -324,6 +325,9 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/transcode/test").To(i.testTranscode).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/transcode/ffmpeg").To(i.getTranscodeFFmpeg).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Funscripts" section endpoints
@@ -613,15 +617,21 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	if r.TranscodeMaxStreams > 0 {
 		config.Config.Interfaces.Heresphere.TranscodeMaxStreams = r.TranscodeMaxStreams
 	}
+	previousFFmpeg := config.Config.Interfaces.Heresphere.TranscodeFFmpeg
+	if r.TranscodeFFmpeg == config.TranscodeFFmpegSystem {
+		config.Config.Interfaces.Heresphere.TranscodeFFmpeg = config.TranscodeFFmpegSystem
+	} else {
+		config.Config.Interfaces.Heresphere.TranscodeFFmpeg = config.TranscodeFFmpegJellyfin
+	}
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)
 	}
 	config.SaveConfig()
-	// Find the encoders as soon as live transcoding is switched on, rather than when a
-	// player first asks for a scene.
-	if r.TranscodeEnabled && !wasTranscoding {
-		transcode.Reprobe(ffmpegBin())
+	// Get ffmpeg and find its encoders as soon as live transcoding is switched on or another
+	// ffmpeg is chosen, rather than when a player first asks for a scene.
+	if r.TranscodeEnabled && (!wasTranscoding || previousFFmpeg != config.Config.Interfaces.Heresphere.TranscodeFFmpeg) {
+		go prepareTranscodeFFmpeg()
 	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)

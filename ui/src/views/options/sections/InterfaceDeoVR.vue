@@ -259,9 +259,10 @@
           <p class="help">
             Adds a stream for each selected codec and bitrate to each video, encoded on the fly
             with ffmpeg and listed in HereSphere as e.g. "H264 20 Mbps (hwe)" for a hardware
-            encode, or "(swe)" for a software encode on the CPU. The hardware encoder is
-            detected when live transcode is switched on, and at startup while it is on: NVENC,
-            Intel Quick Sync, VAAPI, or x264 on the CPU. H.264 tops out at 4096x4096, so larger
+            encode, or "(swe)" for a software encode on the CPU. When live transcode is switched
+            on, XBVR downloads the jellyfin-ffmpeg build for this computer, unless the system
+            ffmpeg is chosen below. The hardware encoder is detected then, and at startup while
+            live transcode is on: NVENC, Intel Quick Sync, VAAPI, or x264 on the CPU. H.264 tops out at 4096x4096, so larger
             sources are scaled down; HEVC and AV1 handle up to 8192x8192. Very large frames may
             be limited to 30 fps.
           </p>
@@ -270,6 +271,12 @@
           </b-field>
           <div class="columns" v-if="transcodeEnabled">
             <div class="column">
+              <b-field label="ffmpeg" :message="ffmpegStatusText">
+                <b-select v-model="transcodeFFmpeg" expanded>
+                  <option value="jellyfin">Download jellyfin-ffmpeg (NVENC, Quick Sync, VAAPI and x264)</option>
+                  <option value="system">Use the system ffmpeg</option>
+                </b-select>
+              </b-field>
               <b-field label="Codecs offered to the headset">
                 <b-select v-model="transcodeCodecs" multiple expanded>
                   <option value="h264">H.264 (hardware when available)</option>
@@ -310,6 +317,9 @@
               {{ transcodeTestError }}
             </div>
             <div v-if="transcodeTestHardware" class="notification is-light">
+              <p v-if="transcodeTestHardware.ffmpeg">
+                <strong>ffmpeg:</strong> {{ transcodeTestHardware.ffmpeg }}
+              </p>
               <p>
                 <strong>Detected hardware:</strong>
                 <span v-for="(b, idx) in transcodeTestHardware.available" :key="b.name">
@@ -362,6 +372,10 @@ export default {
   name: 'InterfaceDeoVR',
   mounted () {
     this.$store.dispatch('optionsDeoVR/load')
+    this.loadFFmpegStatus()
+  },
+  beforeDestroy () {
+    clearTimeout(this.ffmpegPoll)
   },
   data () {
     return {
@@ -375,12 +389,32 @@ export default {
       transcodeTestLoading: false,
       transcodeTestHardware: null,
       transcodeTestResults: [],
-      transcodeTestError: ''
+      transcodeTestError: '',
+      ffmpegStatus: null,
+      ffmpegPoll: null
     }
   },
   methods: {
-    save () {
-      this.$store.dispatch('optionsDeoVR/save')
+    async save () {
+      await this.$store.dispatch('optionsDeoVR/save')
+      this.loadFFmpegStatus()
+    },
+    async loadFFmpegStatus () {
+      clearTimeout(this.ffmpegPoll)
+      try {
+        this.ffmpegStatus = await ky.get('/api/options/transcode/ffmpeg').json()
+      } catch (err) {
+        this.ffmpegStatus = null
+        return
+      }
+      // Follow a download until it finishes. Right after saving, the download may not have
+      // started yet, so a missing jellyfin-ffmpeg is checked again too.
+      const s = this.ffmpegStatus
+      const waiting = s.jellyfin.state === 'downloading' ||
+        (s.jellyfin.state === 'missing' && s.source === 'jellyfin' && this.transcodeEnabled)
+      if (waiting) {
+        this.ffmpegPoll = setTimeout(this.loadFFmpegStatus, 2000)
+      }
     },
     isNewBitrate (tag) {
       const text = String(tag).trim()
@@ -399,7 +433,7 @@ export default {
             sample_limit: 3,
             duration_seconds: 2
           },
-          timeout: 180000
+          timeout: 600000
         }).json()
         this.transcodeTestHardware = data.hardware
         this.transcodeTestResults = data.results || []
@@ -416,6 +450,7 @@ export default {
         this.transcodeTestError = `The transcode test did not complete: ${err.message}`
       } finally {
         this.transcodeTestLoading = false
+        this.loadFFmpegStatus()
       }
     },
     addIP (value) {
@@ -701,6 +736,38 @@ export default {
       },
       set (value) {
         this.$store.state.optionsDeoVR.heresphere.transcode_max_streams = value
+      }
+    },
+    transcodeFFmpeg: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.transcode_ffmpeg
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.transcode_ffmpeg = value
+      }
+    },
+    ffmpegStatusText () {
+      const s = this.ffmpegStatus
+      if (!s) {
+        return ''
+      }
+      const j = s.jellyfin
+      if (this.transcodeFFmpeg === 'system') {
+        return s.source === 'system' && s.in_use ? `Using ${s.in_use}` : 'Uses ffmpeg on the PATH once saved, or the one XBVR downloads for previews'
+      }
+      switch (j.state) {
+        case 'ready':
+          return `jellyfin-ffmpeg ${j.version} is installed at ${j.path}`
+        case 'downloading':
+          return j.total > 0
+            ? `Downloading jellyfin-ffmpeg ${j.version}: ${Math.floor(j.downloaded * 100 / j.total)}% of ${Math.round(j.total / 1048576)} MB`
+            : `Downloading jellyfin-ffmpeg ${j.version}`
+        case 'failed':
+          return `Could not download jellyfin-ffmpeg ${j.version} (${j.error}), so ${s.in_use} is used`
+        case 'unsupported':
+          return `jellyfin-ffmpeg has no build for ${j.platform}, so ${s.in_use} is used`
+        default:
+          return `jellyfin-ffmpeg ${j.version} for ${j.platform} is downloaded when these settings are saved`
       }
     },
     isLoading: function () {

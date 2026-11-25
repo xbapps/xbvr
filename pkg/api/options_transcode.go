@@ -17,6 +17,7 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"github.com/jinzhu/gorm"
 
+	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/transcode"
@@ -93,6 +94,12 @@ func (i ConfigResource) testTranscode(req *restful.Request, resp *restful.Respon
 		duration = 10
 	}
 
+	var notes []string
+	if useJellyfinFFmpeg() {
+		if _, err := transcode.EnsureManagedFFmpeg(common.BinDir); err != nil {
+			notes = append(notes, fmt.Sprintf("Could not get jellyfin-ffmpeg %s (%v), so %s was tested instead", transcode.JellyfinFFmpegVersion, err, systemFFmpegBin()))
+		}
+	}
 	ffmpeg := ffmpegBin()
 	hw := transcode.DetectFresh(ffmpeg)
 	// Test at the highest offered bitrate, the hardest for the encoder to keep up with.
@@ -107,7 +114,7 @@ func (i ConfigResource) testTranscode(req *restful.Request, resp *restful.Respon
 	defer db.Close()
 	samples := pickTranscodeSamples(db, limit)
 
-	out := TestTranscodeResponse{Hardware: hw}
+	out := TestTranscodeResponse{Hardware: hw, Notes: notes}
 	if len(samples) == 0 {
 		out.Notes = append(out.Notes, "No local video files with resolution metadata were found to test")
 		log.Warnf("transcode test: no samples available")
