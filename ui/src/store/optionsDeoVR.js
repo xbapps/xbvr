@@ -25,7 +25,7 @@ const state = {
     retain_non_hsp_cuepoints: true,
     transcode_enabled: false,
     transcode_codecs: ['h264'],
-    transcode_bitrate_mbps: 20,
+    transcode_bitrates_mbps: [20],
     transcode_audio_kbps: 128,
     transcode_max_height: 0,
     transcode_max_streams: 2
@@ -68,7 +68,8 @@ const actions = {
         state.heresphere.retain_non_hsp_cuepoints = data.config.interfaces.heresphere.retain_non_hsp_cuepoints
         state.heresphere.transcode_enabled = data.config.interfaces.heresphere.transcode_enabled
         state.heresphere.transcode_codecs = data.config.interfaces.heresphere.transcode_codecs || ['h264']
-        state.heresphere.transcode_bitrate_mbps = data.config.interfaces.heresphere.transcode_bitrate_mbps
+        const bitrates = data.config.interfaces.heresphere.transcode_bitrates_mbps
+        state.heresphere.transcode_bitrates_mbps = bitrates && bitrates.length ? bitrates : [20]
         state.heresphere.transcode_audio_kbps = data.config.interfaces.heresphere.transcode_audio_kbps
         state.heresphere.transcode_max_height = data.config.interfaces.heresphere.transcode_max_height
         state.heresphere.transcode_max_streams = data.config.interfaces.heresphere.transcode_max_streams || 2

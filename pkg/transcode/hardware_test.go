@@ -116,22 +116,34 @@ func fakeProbe(t *testing.T, delay time.Duration) *int32 {
 	}
 	resetHardwareCache()
 	t.Cleanup(func() {
-		probe = saved
 		resetHardwareCache()
+		probe = saved
 	})
 	return &calls
 }
 
+// resetHardwareCache waits for a running probe, then forgets every result.
 func resetHardwareCache() {
 	hardwareCache.Lock()
-	hardwareCache.key, hardwareCache.at, hardwareCache.hw, hardwareCache.refreshing = "", time.Time{}, Hardware{}, false
+	run := hardwareCache.running
+	hardwareCache.Unlock()
+	if run != nil {
+		<-run.done
+	}
+	hardwareCache.Lock()
+	hardwareCache.ffmpeg, hardwareCache.hw, hardwareCache.ok, hardwareCache.running = "", Hardware{}, false, nil
 	hardwareCache.Unlock()
 }
 
-func expireHardwareCache() {
-	hardwareCache.Lock()
-	hardwareCache.at = time.Now().Add(-2 * hardwareCacheTTL)
-	hardwareCache.Unlock()
+func waitForProbe(t *testing.T, want string) {
+	t.Helper()
+	deadline := time.Now().Add(3 * time.Second)
+	for Detect("/bin/ffmpeg").Notes[0] != want {
+		if time.Now().After(deadline) {
+			t.Fatalf("Detect never returned %s", want)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
 }
 
 func TestDetectProbesOnceAndCaches(t *testing.T) {
@@ -146,10 +158,10 @@ func TestDetectProbesOnceAndCaches(t *testing.T) {
 	}
 }
 
-func TestDetectAnswersFromExpiredResultWhileReprobing(t *testing.T) {
+func TestReprobeAnswersFromPreviousResultMeanwhile(t *testing.T) {
 	calls := fakeProbe(t, 300*time.Millisecond)
 	Detect("/bin/ffmpeg")
-	expireHardwareCache()
+	Reprobe("/bin/ffmpeg")
 
 	start := time.Now()
 	var wg sync.WaitGroup
@@ -158,24 +170,63 @@ func TestDetectAnswersFromExpiredResultWhileReprobing(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			if hw := Detect("/bin/ffmpeg"); hw.Notes[0] != "probe 1" {
-				t.Errorf("expired call returned %v, want the previous result", hw.Notes)
+				t.Errorf("call during reprobe returned %v, want the previous result", hw.Notes)
 			}
 		}()
 	}
 	wg.Wait()
 	if elapsed := time.Since(start); elapsed > 100*time.Millisecond {
-		t.Fatalf("expired calls took %v; they waited for the probe", elapsed)
+		t.Fatalf("calls during reprobe took %v; they waited for the probe", elapsed)
 	}
+	waitForProbe(t, "probe 2")
+	if got := atomic.LoadInt32(calls); got != 2 {
+		t.Fatalf("probes = %d, want 2", got)
+	}
+}
 
-	deadline := time.Now().Add(3 * time.Second)
-	for Detect("/bin/ffmpeg").Notes[0] != "probe 2" {
-		if time.Now().After(deadline) {
-			t.Fatal("background probe never replaced the expired result")
-		}
-		time.Sleep(20 * time.Millisecond)
+func TestDetectJoinsStartupProbe(t *testing.T) {
+	calls := fakeProbe(t, 200*time.Millisecond)
+	Reprobe("/bin/ffmpeg")
+
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if hw := Detect("/bin/ffmpeg"); hw.Notes[0] != "probe 1" {
+				t.Errorf("Detect returned %v, want the startup probe's result", hw.Notes)
+			}
+		}()
+	}
+	wg.Wait()
+	if got := atomic.LoadInt32(calls); got != 1 {
+		t.Fatalf("probes = %d, want 1: Detect should join the running probe", got)
+	}
+}
+
+func TestDetectFreshJoinsRunningProbe(t *testing.T) {
+	calls := fakeProbe(t, 200*time.Millisecond)
+	Reprobe("/bin/ffmpeg")
+	time.Sleep(20 * time.Millisecond)
+	if hw := DetectFresh("/bin/ffmpeg"); hw.Notes[0] != "probe 1" {
+		t.Fatalf("DetectFresh = %v, want the running probe's result", hw.Notes)
+	}
+	if got := atomic.LoadInt32(calls); got != 1 {
+		t.Fatalf("probes = %d, want 1", got)
+	}
+}
+
+func TestDetectFreshProbesAgain(t *testing.T) {
+	calls := fakeProbe(t, 0)
+	Detect("/bin/ffmpeg")
+	if hw := DetectFresh("/bin/ffmpeg"); hw.Notes[0] != "probe 2" {
+		t.Fatalf("DetectFresh = %v, want a new probe", hw.Notes)
+	}
+	if hw := Detect("/bin/ffmpeg"); hw.Notes[0] != "probe 2" {
+		t.Fatalf("Detect after DetectFresh = %v, want its result", hw.Notes)
 	}
 	if got := atomic.LoadInt32(calls); got != 2 {
-		t.Fatalf("probes = %d, want 2: one at first use and one refresh", got)
+		t.Fatalf("probes = %d, want 2", got)
 	}
 }
 

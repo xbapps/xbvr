@@ -1,6 +1,7 @@
 package transcode
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -12,6 +13,25 @@ func TestParseCodecs(t *testing.T) {
 	}
 	if got := ParseCodecs(nil); len(got) != 0 {
 		t.Errorf("empty list = %v", got)
+	}
+}
+
+func TestParseBitrates(t *testing.T) {
+	got := ParseBitrates([]int{40, 10, 0, 10, 201, 20, 60, 80})
+	if fmt.Sprint(got) != "[10 20 40 60]" {
+		t.Errorf("ParseBitrates = %v, want the first four valid values, lowest first", got)
+	}
+	if got := ParseBitrates(nil); len(got) != 0 {
+		t.Errorf("empty list = %v", got)
+	}
+}
+
+func TestStreamName(t *testing.T) {
+	cases := map[string]string{CodecH264: "H264", CodecHEVC: "HEVC", CodecAV1: "AV1", CodecX264: "x264"}
+	for codec, want := range cases {
+		if got := StreamName(codec); got != want {
+			t.Errorf("StreamName(%q) = %q, want %q", codec, got, want)
+		}
 	}
 }
 

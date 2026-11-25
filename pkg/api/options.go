@@ -115,7 +115,7 @@ type RequestSaveOptionsDeoVR struct {
 	RetainNonHSPCuepoints   bool     `json:"retain_non_hsp_cuepoints"`
 	TranscodeEnabled        bool     `json:"transcode_enabled"`
 	TranscodeCodecs         []string `json:"transcode_codecs"`
-	TranscodeBitrateMbps    int      `json:"transcode_bitrate_mbps"`
+	TranscodeBitrates       []int    `json:"transcode_bitrates_mbps"`
 	TranscodeAudioKbps      int      `json:"transcode_audio_kbps"`
 	TranscodeMaxHeight      int      `json:"transcode_max_height"`
 	TranscodeMaxStreams     int      `json:"transcode_max_streams"`
@@ -604,9 +604,10 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.Players.SubtitleSortSeq = r.SubtitleSortSeq
 	config.Config.Interfaces.Heresphere.MultitrackCastCuepoints = r.MultitrackCastCuepoints
 	config.Config.Interfaces.Heresphere.RetainNonHSPCuepoints = r.RetainNonHSPCuepoints
+	wasTranscoding := config.Config.Interfaces.Heresphere.TranscodeEnabled
 	config.Config.Interfaces.Heresphere.TranscodeEnabled = r.TranscodeEnabled
 	config.Config.Interfaces.Heresphere.TranscodeCodecs = transcode.ParseCodecs(r.TranscodeCodecs)
-	config.Config.Interfaces.Heresphere.TranscodeBitrateMbps = r.TranscodeBitrateMbps
+	config.Config.Interfaces.Heresphere.TranscodeBitrates = transcode.ParseBitrates(r.TranscodeBitrates)
 	config.Config.Interfaces.Heresphere.TranscodeAudioKbps = r.TranscodeAudioKbps
 	config.Config.Interfaces.Heresphere.TranscodeMaxHeight = r.TranscodeMaxHeight
 	if r.TranscodeMaxStreams > 0 {
@@ -617,6 +618,11 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 		config.Config.Interfaces.DeoVR.Password = string(hash)
 	}
 	config.SaveConfig()
+	// Find the encoders as soon as live transcoding is switched on, rather than when a
+	// player first asks for a scene.
+	if r.TranscodeEnabled && !wasTranscoding {
+		transcode.Reprobe(ffmpegBin())
+	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }

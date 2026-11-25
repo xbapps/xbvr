@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -46,6 +47,50 @@ func ParseCodecs(in []string) []string {
 		seen[name] = true
 		out = append(out, name)
 	}
+	return out
+}
+
+// StreamName is a codec's short name in a player's stream list, e.g. "H264".
+func StreamName(codec string) string {
+	switch codec {
+	case CodecH264:
+		return "H264"
+	case CodecHEVC:
+		return "HEVC"
+	case CodecAV1:
+		return "AV1"
+	case CodecX264:
+		return "x264"
+	}
+	return strings.ToUpper(codec)
+}
+
+const (
+	// DefaultBitrateMbps is the video bitrate offered when none is configured.
+	DefaultBitrateMbps = 20
+	// MaxBitrates is how many video bitrates can be offered for each codec.
+	MaxBitrates = 4
+
+	minBitrateMbps = 1
+	maxBitrateMbps = 200
+)
+
+// ParseBitrates returns the first MaxBitrates valid video bitrates (1-200 Mbps) without
+// repeats, lowest first. An empty result means DefaultBitrateMbps.
+func ParseBitrates(in []int) []int {
+	seen := map[int]bool{}
+	var out []int
+	for _, mbps := range in {
+		if mbps < minBitrateMbps || mbps > maxBitrateMbps || seen[mbps] {
+			continue
+		}
+		seen[mbps] = true
+		out = append(out, mbps)
+		if len(out) == MaxBitrates {
+			break
+		}
+	}
+	sort.Ints(out)
 	return out
 }
 

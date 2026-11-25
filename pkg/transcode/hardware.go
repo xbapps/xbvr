@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/xbapps/xbvr/pkg/common"
 )
 
 const (
@@ -18,7 +20,6 @@ const (
 	BackendVAAPI = "vaapi"
 	BackendCPU   = "cpu"
 
-	hardwareCacheTTL    = 2 * time.Minute
 	hardwareProbeLimit  = 20 * time.Second
 	hardwareProbeWidth  = 320
 	hardwareProbeHeight = 240
@@ -159,65 +160,82 @@ func (h Hardware) Codecs() []string {
 // probe runs a full hardware probe. It is a variable so tests can count and delay probes.
 var probe = probeHardware
 
+// probeRun is one hardware probe; done is closed once hw holds its result.
+type probeRun struct {
+	ffmpeg string
+	done   chan struct{}
+	hw     Hardware
+}
+
+// hardwareCache holds the result of the last probe. At most one probe runs at a time.
 var hardwareCache struct {
 	sync.Mutex
-	key        string
-	at         time.Time
-	hw         Hardware
-	refreshing bool
+	ffmpeg  string
+	hw      Hardware
+	ok      bool
+	running *probeRun
 }
 
-// Detect returns the hardware encoders this machine can use. A probe runs test encodes on
-// every GPU and takes seconds, and Detect is called while a player waits for a scene or a
-// stream, so only the first call for an ffmpeg binary waits for one. Later calls return the
-// last result at once; when it is older than the cache TTL, one background probe replaces it.
+// Detect returns the encoders found by the last probe of ffmpegPath. A probe runs test
+// encodes on every GPU and takes seconds, so probes run only when live transcoding is
+// switched on, at startup while it is on (both through Reprobe) and from the setup test
+// (DetectFresh). Detect waits only when there is no result for this ffmpeg binary yet,
+// joining the probe that is running or starting one.
 func Detect(ffmpegPath string) Hardware {
 	ffmpegPath = resolveFFmpeg(ffmpegPath)
-
 	hardwareCache.Lock()
-	defer hardwareCache.Unlock()
-
-	if hardwareCache.key != ffmpegPath || hardwareCache.at.IsZero() {
-		storeHardware(ffmpegPath, probe(ffmpegPath))
-		return hardwareCache.hw
+	if hardwareCache.ok && hardwareCache.ffmpeg == ffmpegPath {
+		hw := hardwareCache.hw
+		hardwareCache.Unlock()
+		return hw
 	}
-	if time.Since(hardwareCache.at) >= hardwareCacheTTL && !hardwareCache.refreshing {
-		hardwareCache.refreshing = true
-		go refreshHardware(ffmpegPath)
-	}
-	return hardwareCache.hw
+	hardwareCache.Unlock()
+	return awaitProbe(ffmpegPath)
 }
 
-// refreshHardware probes without holding the cache lock, so Detect keeps answering from
-// the previous result meanwhile.
-func refreshHardware(ffmpegPath string) {
-	hw := probe(ffmpegPath)
-
-	hardwareCache.Lock()
-	defer hardwareCache.Unlock()
-	hardwareCache.refreshing = false
-	if hardwareCache.key == ffmpegPath {
-		storeHardware(ffmpegPath, hw)
-	}
+// Reprobe probes in the background. Detect keeps returning the previous result, if there
+// is one, until the probe finishes.
+func Reprobe(ffmpegPath string) {
+	go awaitProbe(resolveFFmpeg(ffmpegPath))
 }
 
-// storeHardware records a probe result. The caller holds hardwareCache's lock.
-func storeHardware(ffmpegPath string, hw Hardware) {
-	hardwareCache.key = ffmpegPath
-	hardwareCache.at = time.Now()
-	hardwareCache.hw = hw
-}
-
-// DetectFresh probes again instead of using the cache, for the setup test button. The probe
-// runs without the cache lock, so players keep using the previous result meanwhile.
+// DetectFresh probes and returns the result, for the setup test. A probe of the same binary
+// that is already running is joined rather than repeated. Players keep using the previous
+// result meanwhile.
 func DetectFresh(ffmpegPath string) Hardware {
-	ffmpegPath = resolveFFmpeg(ffmpegPath)
-	hw := probe(ffmpegPath)
+	return awaitProbe(resolveFFmpeg(ffmpegPath))
+}
 
+// awaitProbe joins the probe running for ffmpegPath, or starts one, and returns its result.
+// A probe running for another ffmpeg binary is waited out first.
+func awaitProbe(ffmpegPath string) Hardware {
+	for {
+		hardwareCache.Lock()
+		run := hardwareCache.running
+		if run == nil {
+			run = &probeRun{ffmpeg: ffmpegPath, done: make(chan struct{})}
+			hardwareCache.running = run
+			go finishProbe(run)
+		}
+		hardwareCache.Unlock()
+		<-run.done
+		if run.ffmpeg == ffmpegPath {
+			return run.hw
+		}
+	}
+}
+
+// finishProbe runs the probe without holding the cache lock, then records its result.
+func finishProbe(run *probeRun) {
+	started := time.Now()
+	hw := probe(run.ffmpeg)
+	common.Log.Infof("transcode: encoder probe took %v: %s %v", time.Since(started).Round(time.Millisecond), hw.Preferred.Label, hw.Codecs())
 	hardwareCache.Lock()
-	defer hardwareCache.Unlock()
-	storeHardware(ffmpegPath, hw)
-	return hw
+	run.hw = hw
+	hardwareCache.ffmpeg, hardwareCache.hw, hardwareCache.ok = run.ffmpeg, hw, true
+	hardwareCache.running = nil
+	hardwareCache.Unlock()
+	close(run.done)
 }
 
 // RefreshVRAM updates the NVENC free-memory figures before a new stream starts. Encoder

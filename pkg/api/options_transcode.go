@@ -95,7 +95,9 @@ func (i ConfigResource) testTranscode(req *restful.Request, resp *restful.Respon
 
 	ffmpeg := ffmpegBin()
 	hw := transcode.DetectFresh(ffmpeg)
-	opts := transcodeOptions()
+	// Test at the highest offered bitrate, the hardest for the encoder to keep up with.
+	bitrates := transcodeBitrates()
+	opts := transcodeOptions(bitrates[len(bitrates)-1])
 
 	db, err := models.GetDB()
 	if err != nil {

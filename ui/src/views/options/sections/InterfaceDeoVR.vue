@@ -257,12 +257,13 @@
           <hr/>
           <h4>Live transcode</h4>
           <p class="help">
-            Adds one stream per selected codec to each video, encoded on the fly with ffmpeg.
-            Its size in HereSphere is an estimate for the configured bitrate, since nothing is
-            written to disk. The hardware encoder is detected automatically: NVENC, Intel
-            Quick Sync, VAAPI, or x264 on the CPU. H.264 tops out at 4096x4096, so larger
+            Adds a stream for each selected codec and bitrate to each video, encoded on the fly
+            with ffmpeg and listed in HereSphere as e.g. "H264 (stream)". Its size there is an
+            estimate for its bitrate, since nothing is written to disk. The hardware encoder is
+            detected when live transcode is switched on, and at startup while it is on: NVENC,
+            Intel Quick Sync, VAAPI, or x264 on the CPU. H.264 tops out at 4096x4096, so larger
             sources are scaled down; HEVC and AV1 handle up to 8192x8192. Very large frames may
-            be limited to 30 fps, which is shown in the stream name.
+            be limited to 30 fps.
           </p>
           <b-field label="Enable live transcode">
             <b-switch v-model="transcodeEnabled">Enabled</b-switch>
@@ -277,8 +278,10 @@
                   <option value="x264">H.264 (x264, CPU fallback)</option>
                 </b-select>
               </b-field>
-              <b-field label="Video bitrate (Mbps)">
-                <b-numberinput v-model="transcodeBitrateMbps" :min="1" :max="200" controls-position="compact"/>
+              <b-field label="Video bitrates (Mbps)"
+                       message="Each codec is offered once per bitrate, so a lighter or heavier stream can be picked in the headset. Up to 4, from 1 to 200.">
+                <b-taginput v-model="transcodeBitrates" :before-adding="isNewBitrate" :maxtags="4" :has-counter="false"
+                            placeholder="Add a bitrate, e.g. 10"/>
               </b-field>
             </div>
             <div class="column">
@@ -299,9 +302,9 @@
               Test hardware setup
             </b-button>
             <p class="help">
-              Runs a two-second unpaced encode from up to three differently sized local videos.
-              This checks the real encoder, scaling and muxing path rather than only whether
-              ffmpeg lists the encoder.
+              Detects the encoders again, then runs a two-second unpaced encode at the highest
+              bitrate from up to three differently sized local videos. This checks the real
+              encoder, scaling and muxing path rather than only whether ffmpeg lists the encoder.
             </p>
             <div v-if="transcodeTestError" class="notification is-danger is-light">
               {{ transcodeTestError }}
@@ -378,6 +381,11 @@ export default {
   methods: {
     save () {
       this.$store.dispatch('optionsDeoVR/save')
+    },
+    isNewBitrate (tag) {
+      const text = String(tag).trim()
+      const mbps = parseInt(text, 10)
+      return /^\d+$/.test(text) && mbps >= 1 && mbps <= 200 && !this.transcodeBitrates.includes(mbps)
     },
     async testTranscode () {
       this.transcodeTestLoading = true
@@ -662,12 +670,13 @@ export default {
         this.$store.state.optionsDeoVR.heresphere.transcode_codecs = value
       }
     },
-    transcodeBitrateMbps: {
+    transcodeBitrates: {
       get () {
-        return this.$store.state.optionsDeoVR.heresphere.transcode_bitrate_mbps
+        return this.$store.state.optionsDeoVR.heresphere.transcode_bitrates_mbps
       },
       set (value) {
-        this.$store.state.optionsDeoVR.heresphere.transcode_bitrate_mbps = value
+        const bitrates = [...new Set(value.map(v => parseInt(v, 10)))].filter(v => v >= 1 && v <= 200)
+        this.$store.state.optionsDeoVR.heresphere.transcode_bitrates_mbps = bitrates.sort((a, b) => a - b)
       }
     },
     transcodeAudioKbps: {

@@ -59,6 +59,11 @@ func (i DMSResource) getTranscode(req *restful.Request, resp *restful.Response) 
 		resp.WriteHeader(http.StatusNotFound)
 		return
 	}
+	bitrate, ok := transcodeBitrate(req.QueryParameter("bitrate"))
+	if !ok {
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
 	if !validTranscodeToken(uint(id), codec, req.QueryParameter("token")) {
 		resp.WriteHeader(http.StatusForbidden)
 		return
@@ -84,7 +89,7 @@ func (i DMSResource) getTranscode(req *restful.Request, resp *restful.Response) 
 		resp.WriteHeader(http.StatusNotFound)
 		return
 	}
-	opts := transcodeOptions()
+	opts := transcodeOptions(bitrate)
 	layout, err := transcode.NewLayout(f.VideoDuration, opts)
 	if err != nil {
 		log.Warnf("transcode %d: %v", f.ID, err)
