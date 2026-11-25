@@ -258,8 +258,8 @@
           <h4>Live transcode</h4>
           <p class="help">
             Adds a stream for each selected codec and bitrate to each video, encoded on the fly
-            with ffmpeg and listed in HereSphere as e.g. "H264 (stream)". Its size there is an
-            estimate for its bitrate, since nothing is written to disk. The hardware encoder is
+            with ffmpeg and listed in HereSphere as e.g. "H264 20 Mbps (hwe)" for a hardware
+            encode, or "(swe)" for a software encode on the CPU. The hardware encoder is
             detected when live transcode is switched on, and at startup while it is on: NVENC,
             Intel Quick Sync, VAAPI, or x264 on the CPU. H.264 tops out at 4096x4096, so larger
             sources are scaled down; HEVC and AV1 handle up to 8192x8192. Very large frames may

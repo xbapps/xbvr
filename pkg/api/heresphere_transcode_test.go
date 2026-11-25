@@ -11,17 +11,18 @@ func TestTranscodeStreamName(t *testing.T) {
 	cases := []struct {
 		prefix, codec string
 		mbps          int
-		multiple      bool
+		software      bool
 		want          string
 	}{
-		{"", transcode.CodecH264, 20, false, "H264 (stream)"},
-		{"", transcode.CodecHEVC, 10, true, "HEVC 10 Mbps (stream)"},
-		{"File 2/3", transcode.CodecAV1, 20, false, "File 2/3 AV1 (stream)"},
-		{"", transcode.CodecX264, 20, false, "x264 (stream)"},
+		{"", transcode.CodecH264, 20, false, "H264 20 Mbps (hwe)"},
+		{"", transcode.CodecHEVC, 10, false, "HEVC 10 Mbps (hwe)"},
+		{"File 2/3", transcode.CodecAV1, 20, false, "File 2/3 AV1 20 Mbps (hwe)"},
+		{"", transcode.CodecX264, 20, true, "x264 20 Mbps (swe)"},
+		{"", transcode.CodecH264, 5, true, "H264 5 Mbps (swe)"},
 	}
 	for _, c := range cases {
-		if got := transcodeStreamName(c.prefix, c.codec, c.mbps, c.multiple); got != c.want {
-			t.Errorf("transcodeStreamName(%q, %q, %d, %v) = %q, want %q", c.prefix, c.codec, c.mbps, c.multiple, got, c.want)
+		if got := transcodeStreamName(c.prefix, c.codec, c.mbps, c.software); got != c.want {
+			t.Errorf("transcodeStreamName(%q, %q, %d, %v) = %q, want %q", c.prefix, c.codec, c.mbps, c.software, got, c.want)
 		}
 	}
 }

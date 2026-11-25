@@ -58,15 +58,16 @@ func PrimeTranscodeHardware() {
 	}
 }
 
-// transcodeStreamName names a live stream in the player's list, e.g. "H264 (stream)". The
-// bitrate is added when more than one is offered, and prefix (the file's position) when the
-// scene has more than one file. The size HereSphere shows tells the bitrates apart too.
-func transcodeStreamName(prefix, codec string, bitrateMbps int, multipleBitrates bool) string {
-	name := transcode.StreamName(codec)
-	if multipleBitrates {
-		name += fmt.Sprintf(" %d Mbps", bitrateMbps)
+// transcodeStreamName names a live stream in the player's list, e.g. "H264 20 Mbps (hwe)" for
+// a hardware encode or "x264 20 Mbps (swe)" for a software encode on the CPU. prefix (the
+// file's position) is added when the scene has more than one file.
+func transcodeStreamName(prefix, codec string, bitrateMbps int, software bool) string {
+	name := fmt.Sprintf("%s %d Mbps", transcode.StreamName(codec), bitrateMbps)
+	if software {
+		name += " (swe)"
+	} else {
+		name += " (hwe)"
 	}
-	name += " (stream)"
 	if prefix != "" {
 		name = prefix + " " + name
 	}
@@ -130,7 +131,7 @@ func heresphereTranscodeMedia(req *restful.Request, file models.File, prefix, dn
 				params += "&token=" + transcodeToken(file.ID, codec)
 			}
 			media = append(media, HeresphereMedia{
-				Name: transcodeStreamName(prefix, codec, bitrate, len(bitrates) > 1),
+				Name: transcodeStreamName(prefix, codec, bitrate, plan.Backend.Name == transcode.BackendCPU),
 				Sources: []HeresphereSource{{
 					Resolution: StringOrInt(resolution),
 					Height:     height,
