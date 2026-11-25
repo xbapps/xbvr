@@ -18,6 +18,7 @@ var previewTask cron.EntryID
 var actorScrapeTask cron.EntryID
 var stashdbScrapeTask cron.EntryID
 var linkScenesTask cron.EntryID
+var organizeTask cron.EntryID
 
 func SetupCron() {
 	cronInstance = cron.New()
@@ -48,6 +49,9 @@ func SetupCron() {
 		log.Println(fmt.Sprintf("Setup Link Scenes Task %v", formatCronSchedule(config.CronSchedule(config.Config.Cron.LinkScenesSchedule))))
 		linkScenesTask, _ = cronInstance.AddFunc(formatCronSchedule(config.CronSchedule(config.Config.Cron.LinkScenesSchedule)), linkScenesCron)
 	}
+	if config.Config.Cron.OrganizeSchedule.Enabled {
+		setupOrganizeCron(config.CronSchedule(config.Config.Cron.OrganizeSchedule))
+	}
 	cronInstance.Start()
 
 	go tasks.CalculateCacheSizes()
@@ -69,6 +73,9 @@ func SetupCron() {
 	}
 	if config.Config.Cron.LinkScenesSchedule.RunAtStartDelay > 0 {
 		time.AfterFunc(time.Duration(config.Config.Cron.LinkScenesSchedule.RunAtStartDelay)*time.Minute, linkScenesCron)
+	}
+	if config.Config.Cron.OrganizeSchedule.RunAtStartDelay > 0 {
+		time.AfterFunc(time.Duration(config.Config.Cron.OrganizeSchedule.RunAtStartDelay)*time.Minute, organizeCron)
 	}
 
 	log.Println(fmt.Sprintf("Next Rescrape Task at %v", cronInstance.Entry(rescrapTask).Next))
