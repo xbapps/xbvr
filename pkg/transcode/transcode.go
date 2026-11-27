@@ -181,6 +181,13 @@ type Plan struct {
 
 	GOP          int  // frames between keyframes; 0 leaves it to the encoder
 	InitialBurst bool // ffmpeg can read the start of the input ahead of realtime
+
+	// Decoder is the ffmpeg decoder that decodes the source on the encoder's GPU, or empty
+	// to decode on the CPU. See WithGPUDecode.
+	Decoder string
+
+	convertOnGPU  bool // frames go through scale_cuda to become 8-bit before the encoder
+	decodeVRAMMiB int  // GPU memory the decoder needs on top of the encoder's
 }
 
 // Label names the stream for clients that show the codec and encoder.
@@ -191,10 +198,11 @@ func (p Plan) Label() string {
 	return p.Backend.LabelFor(p.Codec)
 }
 
-// vramNeedMiB estimates NVENC's VRAM for an output size. The figures come from
-// measurements on Blackwell: roughly 0.7 GB at 1080p, 0.7-1.1 GB at 4K, and about 1.1 GB
-// for HEVC at 8K. AV1 at 8K needs well over 1.8 GB and is not viable on a card with less
-// free memory. x264 and the VAAPI/QSV paths use no dedicated VRAM measurement here.
+// vramNeedMiB estimates NVENC's VRAM for an output size when the source is decoded on the CPU.
+// The figures come from measurements on Blackwell with the output blocked, as when a player
+// pauses and every frame queue in ffmpeg fills: about 0.7 GB at 1080p, 0.9-1.1 GB at 4K and
+// 1.1-1.4 GB for HEVC at 6-8K. AV1 at 8K needs well over 1.8 GB and is not viable on a card
+// with less free memory. x264 and the VAAPI/QSV paths use no dedicated VRAM measurement here.
 func vramNeedMiB(codec string, width, height int) int {
 	if codec == CodecX264 || width <= 0 || height <= 0 {
 		return 0
@@ -208,16 +216,16 @@ func vramNeedMiB(codec string, width, height int) int {
 		case CodecAV1:
 			return int(600 + mp*60)
 		case CodecHEVC:
-			return int(450 + mp*30)
+			return int(600 + mp*40)
 		default:
-			return int(500 + mp*55)
+			return int(700 + mp*45)
 		}
 	default:
 		switch codec {
 		case CodecAV1:
 			return int(900 + mp*60)
 		case CodecHEVC:
-			return int(650 + mp*15)
+			return int(650 + mp*28)
 		default:
 			return int(650 + mp*30)
 		}
@@ -386,6 +394,92 @@ func PlanForEncoder(codec string, hw Hardware, opts Options, srcWidth, srcHeight
 	return p
 }
 
+// SourceVideo is what choosing a decoder needs to know about the source's video stream.
+type SourceVideo struct {
+	Codec  string // as ffprobe names it, e.g. "hevc"
+	Width  int
+	Height int
+	PixFmt string // as ffprobe names it, e.g. "yuv420p10le"; empty when unknown
+}
+
+// sourceFormat reads the bit depth and chroma layout from an ffprobe pixel format. An unknown
+// format is treated as a 10-bit 4:2:0 source, which needs the most decoder memory of the
+// formats every NVDEC generation decodes.
+func sourceFormat(pixFmt string) (highBitDepth, chroma420 bool) {
+	switch f := strings.ToLower(strings.TrimSpace(pixFmt)); {
+	case f == "":
+		return true, true
+	case f == "yuv420p" || f == "yuvj420p" || f == "nv12":
+		return false, true
+	case strings.HasPrefix(f, "yuv420p1") || strings.HasPrefix(f, "p010") || strings.HasPrefix(f, "p012") || strings.HasPrefix(f, "p016"):
+		return true, true
+	default:
+		return false, false
+	}
+}
+
+// decodeVRAMNeedMiB estimates the GPU memory an NVDEC decode adds to an encode on the same GPU,
+// for a source of srcWidth x srcHeight decoded to outWidth x outHeight frames. The decoder keeps
+// reference surfaces at the source size, and with the output blocked ffmpeg's queues fill with
+// frames at the output size, so both sizes count. The figures come from measurements on
+// Blackwell with 4K to 8K sources: decoding 8-bit 8K to 4096x2048 adds about 1.3 GB, and
+// keeping a 6K source at full size adds about 1 GB. 10-bit frames take twice the memory.
+func decodeVRAMNeedMiB(srcWidth, srcHeight, outWidth, outHeight int, highBitDepth bool) int {
+	src := float64(srcWidth) * float64(srcHeight) / 1e6
+	out := float64(outWidth) * float64(outHeight) / 1e6
+	if highBitDepth {
+		return int(100 + src*62 + out*50)
+	}
+	return int(50 + src*31 + out*33)
+}
+
+// MayDecodeOnGPU reports whether WithGPUDecode could move decoding of a source in codec to
+// the GPU, so callers can skip reading the source's pixel format when it cannot.
+func (p Plan) MayDecodeOnGPU(codec string) bool {
+	return !p.Unavailable && p.Backend.Name == BackendNVENC &&
+		p.Backend.Decoders[strings.ToLower(strings.TrimSpace(codec))] != ""
+}
+
+// WithGPUDecode returns the plan with the source decoded on the encoder's GPU when that GPU
+// has a decoder for it and enough free memory for the decoder and encoder together. Frames
+// then stay on the GPU, and any scaling is done by the decoder, which takes most of the work
+// of a large source off the CPU. Otherwise the plan is returned unchanged and decodes on the
+// CPU. The GPU can still reject a source it has a decoder for, such as an H.264 frame wider
+// than it supports, so callers should be ready to retry with CPUDecode.
+func (p Plan) WithGPUDecode(src SourceVideo) Plan {
+	if !p.MayDecodeOnGPU(src.Codec) || src.Width <= 0 || src.Height <= 0 {
+		return p
+	}
+	highBitDepth, chroma420 := sourceFormat(src.PixFmt)
+	switch {
+	case !chroma420:
+		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; the GPU decodes only 4:2:0 video, not %s", src.PixFmt))
+		return p
+	case highBitDepth && !p.Backend.ConvertOnGPU && src.PixFmt == "":
+		p.Notes = append(p.Notes, "decoding on the CPU; the source's pixel format could not be read")
+		return p
+	case highBitDepth && !p.Backend.ConvertOnGPU:
+		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; this ffmpeg has no scale_cuda filter to convert %s on the GPU", src.PixFmt))
+		return p
+	}
+	need := decodeVRAMNeedMiB(src.Width, src.Height, p.Width, p.Height, highBitDepth)
+	if free := p.freeVRAM(); free > 0 && vramNeedMiB(p.Codec, p.Width, p.Height)+need+vramSafetyMiB > free {
+		total := vramNeedMiB(p.Codec, p.Width, p.Height) + need + vramSafetyMiB
+		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; decoding and encoding on the GPU needs about %d MiB, but %d MiB is free", total, free))
+		return p
+	}
+	p.Decoder = p.Backend.Decoders[strings.ToLower(strings.TrimSpace(src.Codec))]
+	p.convertOnGPU = p.Backend.ConvertOnGPU
+	p.decodeVRAMMiB = need
+	return p
+}
+
+// CPUDecode returns the plan with the source decoded on the CPU. The output is the same.
+func (p Plan) CPUDecode() Plan {
+	p.Decoder, p.convertOnGPU, p.decodeVRAMMiB = "", false, 0
+	return p
+}
+
 func capabilityFor(backend, codec string) capability {
 	var table map[string]capability
 	switch backend {
@@ -506,6 +600,7 @@ func inputArgs(ffmpegPath, path string, seekSeconds float64, p Plan, paced bool)
 		args = append(args, "-ss", strconv.FormatFloat(seekSeconds, 'f', 3, 64))
 	}
 	args = append(args, p.Backend.preInputArgs()...)
+	args = append(args, p.decoderArgs()...)
 	if paced {
 		if p.InitialBurst {
 			args = append(args, "-readrate", "1", "-readrate_initial_burst", strconv.Itoa(initialBurstSeconds))
@@ -514,6 +609,25 @@ func inputArgs(ffmpegPath, path string, seekSeconds float64, p Plan, paced bool)
 		}
 	}
 	args = append(args, "-i", path)
+	return args
+}
+
+// decoderArgs select the GPU decoder. Its frames stay in GPU memory, and it scales them itself
+// when the plan scales. A decoder that runs out of GPU memory keeps failing on every packet
+// without ending the encode, so decode errors stop ffmpeg (-xerror).
+func (p Plan) decoderArgs() []string {
+	if p.Decoder == "" {
+		return nil
+	}
+	gpu := strconv.Itoa(max(p.Backend.GPUIndex, 0))
+	args := []string{
+		"-xerror",
+		"-hwaccel", "cuda", "-hwaccel_device", gpu, "-hwaccel_output_format", "cuda",
+		"-c:v", p.Decoder,
+	}
+	if p.Scale && p.Width > 0 && p.Height > 0 {
+		args = append(args, "-resize", fmt.Sprintf("%dx%d", p.Width, p.Height))
+	}
 	return args
 }
 
@@ -558,13 +672,19 @@ func videoArgs(opts Options, p Plan) []string {
 	if p.FPS > 0 {
 		args = append(args, "-r", strconv.FormatFloat(p.FPS, 'f', 3, 64))
 	}
-	if p.Backend.Name != BackendVAAPI && p.Backend.Name != BackendQSV {
+	if p.Backend.Name != BackendVAAPI && p.Backend.Name != BackendQSV && p.Decoder == "" {
 		args = append(args, "-pix_fmt", "yuv420p")
 	}
 	return args
 }
 
 func videoFilter(p Plan) string {
+	if p.Decoder != "" {
+		if p.convertOnGPU {
+			return "scale_cuda=format=nv12"
+		}
+		return ""
+	}
 	var parts []string
 	if p.Scale && p.Width > 0 && p.Height > 0 {
 		parts = append(parts, fmt.Sprintf("scale=%d:%d", p.Width, p.Height))

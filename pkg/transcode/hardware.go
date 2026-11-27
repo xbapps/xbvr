@@ -37,6 +37,13 @@ type Backend struct {
 	FreeVRAMMiB int               `json:"free_vram_mib,omitempty"`
 	Notes       []string          `json:"notes,omitempty"`
 
+	// Decoders maps source codecs to the ffmpeg decoders that decode them on this backend's
+	// GPU, so the frames stay in GPU memory from the decoder to the encoder.
+	Decoders map[string]string `json:"decoders,omitempty"`
+	// ConvertOnGPU means ffmpeg has the scale_cuda filter, which turns 10-bit GPU frames into
+	// the 8-bit frames the encoders are given. Without it only 8-bit sources decode on the GPU.
+	ConvertOnGPU bool `json:"convert_on_gpu,omitempty"`
+
 	// Some Intel systems can only create a QSV device from an existing VAAPI device.
 	qsvViaVAAPI bool
 }
@@ -143,6 +150,17 @@ func (h Hardware) BackendFor(codec string) (Backend, bool) {
 		}
 	}
 	return Backend{}, false
+}
+
+// MayDecodeOnGPU reports whether an NVENC backend has a GPU decoder for sources in codec.
+func (h Hardware) MayDecodeOnGPU(codec string) bool {
+	codec = strings.ToLower(strings.TrimSpace(codec))
+	for _, b := range h.Available {
+		if b.Name == BackendNVENC && b.Decoders[codec] != "" {
+			return true
+		}
+	}
+	return false
 }
 
 // Codecs returns the codecs available through the preferred backend. It is used for
@@ -291,6 +309,51 @@ func supportsInitialBurst(ffmpegPath string) bool {
 	return err == nil && strings.Contains(string(out), "readrate_initial_burst")
 }
 
+// cuvidDecoders are the NVDEC decoders used for each source codec.
+var cuvidDecoders = map[string]string{
+	"h264": "h264_cuvid",
+	"hevc": "hevc_cuvid",
+	"av1":  "av1_cuvid",
+	"vp9":  "vp9_cuvid",
+}
+
+// cudaDecoders lists the NVDEC decoders this ffmpeg has, keyed by source codec, and whether it
+// has the scale_cuda filter. NVDEC needs the cuda hwaccel to hand its frames to the encoder
+// without copying them through system memory.
+func cudaDecoders(ffmpegPath string) (map[string]string, bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), hardwareProbeLimit)
+	defer cancel()
+	hwaccels, err := exec.CommandContext(ctx, ffmpegPath, "-hide_banner", "-hwaccels").Output()
+	if err != nil || !listsName(string(hwaccels), "cuda", 0) {
+		return nil, false
+	}
+	decoders, err := exec.CommandContext(ctx, ffmpegPath, "-hide_banner", "-decoders").Output()
+	if err != nil {
+		return nil, false
+	}
+	found := map[string]string{}
+	for codec, decoder := range cuvidDecoders {
+		if listsName(string(decoders), decoder, 1) {
+			found[codec] = decoder
+		}
+	}
+	if len(found) == 0 {
+		return nil, false
+	}
+	filters, err := exec.CommandContext(ctx, ffmpegPath, "-hide_banner", "-filters").Output()
+	return found, err == nil && listsName(string(filters), "scale_cuda", 1)
+}
+
+// listsName reports whether a line of ffmpeg's listing output has name as its field'th field.
+func listsName(out, name string, field int) bool {
+	for _, line := range strings.Split(out, "\n") {
+		if fields := strings.Fields(line); len(fields) > field && fields[field] == name {
+			return true
+		}
+	}
+	return false
+}
+
 func probeHardware(ffmpegPath string) Hardware {
 	hw := Hardware{FFmpeg: ffmpegPath, InitialBurst: supportsInitialBurst(ffmpegPath)}
 	encoders, err := listEncoders(ffmpegPath)
@@ -300,6 +363,7 @@ func probeHardware(ffmpegPath string) Hardware {
 	}
 
 	if backend, notes := probeNVENC(ffmpegPath, encoders); backend.Name != "" {
+		backend.Decoders, backend.ConvertOnGPU = cudaDecoders(ffmpegPath)
 		hw.Available = append(hw.Available, backend)
 	} else if hasAnyEncoder(encoders, "h264_nvenc", "hevc_nvenc", "av1_nvenc") {
 		hw.Notes = append(hw.Notes, notes...)

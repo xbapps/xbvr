@@ -10,13 +10,13 @@ var pendingVRAM = struct {
 	mib map[int]int
 }{mib: map[int]int{}}
 
-// ReserveVRAM counts the GPU memory this plan's encode needs as used until release is called,
+// ReserveVRAM counts the GPU memory this plan's encode (and GPU decode) needs as used until release is called,
 // which should happen once the encoder has allocated it or has exited. release may be called
 // more than once. Plans that use no NVENC memory reserve nothing.
 func (p Plan) ReserveVRAM() (release func()) {
 	need := 0
 	if p.Backend.Name == BackendNVENC {
-		need = vramNeedMiB(p.Codec, p.Width, p.Height)
+		need = vramNeedMiB(p.Codec, p.Width, p.Height) + p.decodeVRAMMiB
 	}
 	if need <= 0 {
 		return func() {}

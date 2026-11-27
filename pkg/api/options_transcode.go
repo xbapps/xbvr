@@ -43,6 +43,7 @@ type TestTranscodeResult struct {
 	Label       string              `json:"label"`
 	Encoder     string              `json:"encoder"`
 	Backend     string              `json:"backend"`
+	Decoder     string              `json:"decoder,omitempty"` // GPU decoder; empty when the CPU decoded
 	Sample      TestTranscodeSample `json:"sample"`
 	Width       int                 `json:"width"`
 	Height      int                 `json:"height"`
@@ -133,7 +134,18 @@ func (i ConfigResource) testTranscode(req *restful.Request, resp *restful.Respon
 		}
 		for _, codec := range codecs {
 			plan := transcode.PlanForEncoder(codec, hw, opts, file.VideoWidth, file.VideoHeight, file.VideoAvgFrameRateVal)
+			plan = withGPUDecode(plan, file)
 			result := runTranscodeTest(ffmpeg, file, sample, codec, plan, opts, duration)
+			if !result.Success && plan.Decoder != "" {
+				// Streams retry on the CPU when the GPU rejects a source, so the test does too.
+				failed := result.Error
+				result = runTranscodeTest(ffmpeg, file, sample, codec, plan.CPUDecode(), opts, duration)
+				note := "decoding with " + plan.Decoder + " failed, so the CPU decoded: " + failed
+				if result.Warning != "" {
+					note = result.Warning + "; " + note
+				}
+				result.Warning = note
+			}
 			out.Results = append(out.Results, result)
 			if result.Success {
 				log.Infof("transcode test %s %s %dx%d: ok at %.1fx for %.2fs", file.Filename, result.Label, result.Width, result.Height, result.Speed, duration)
@@ -214,6 +226,7 @@ func runTranscodeTest(ffmpeg string, file models.File, sample TestTranscodeSampl
 		Label:   plan.Label(),
 		Encoder: plan.Encoder,
 		Backend: plan.Backend.Name,
+		Decoder: plan.Decoder,
 		Sample:  sample,
 		Width:   plan.Width,
 		Height:  plan.Height,

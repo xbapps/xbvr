@@ -15,12 +15,15 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/emicklei/go-restful/v3"
 
 	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
+	"github.com/xbapps/xbvr/pkg/ffprobe"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/session"
 	"github.com/xbapps/xbvr/pkg/tasks"
@@ -245,6 +248,7 @@ func prepareTranscode(f models.File, codec string, opts transcode.Options) (tran
 	}
 	hw := transcode.RefreshVRAM(transcode.Detect(ffmpegBin()))
 	plan := transcode.PlanForEncoder(codec, hw, opts, f.VideoWidth, f.VideoHeight, f.VideoAvgFrameRateVal)
+	plan = withGPUDecode(plan, f)
 	if len(plan.Notes) > 0 {
 		log.Infof("transcode %d %s on %s: %s", f.ID, codec, plan.Label(), strings.Join(plan.Notes, "; "))
 	}
@@ -253,34 +257,133 @@ func prepareTranscode(f models.File, codec string, opts transcode.Options) (tran
 		return nil, transcode.ErrUnavailable
 	}
 	path := f.GetPath()
+	// A GPU that rejects the source once is not asked again for the rest of this playback.
+	var gpuDecodeFailed atomic.Bool
 	return func(ctx context.Context, seekSeconds float64) (*transcode.Process, error) {
+		p := plan
+		if gpuDecodeFailed.Load() {
+			p = plan.CPUDecode()
+		}
 		// Encodes start one at a time, so the next stream planned sees this one's memory as
 		// used until ffmpeg has allocated it.
-		release := plan.ReserveVRAM()
-		args := transcode.Args(ffmpegBin(), path, seekSeconds, opts, plan, -1)
-		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
-		stdout, err := cmd.StdoutPipe()
+		release := p.ReserveVRAM()
+		process, err := startTranscodeFFmpeg(ctx, path, seekSeconds, opts, p)
 		if err != nil {
 			release()
 			return nil, err
 		}
-		if err := cmd.Start(); err != nil {
-			release()
-			return nil, fmt.Errorf("starting ffmpeg: %w", err)
+		if p.Decoder != "" {
+			process = transcode.WithFallback(process, func(cause error) (*transcode.Process, error) {
+				if ctx.Err() != nil {
+					return nil, ctx.Err()
+				}
+				gpuDecodeFailed.Store(true)
+				log.Warnf("transcode %d %s: decoding with %s failed, decoding on the CPU instead: %v", f.ID, codec, p.Decoder, cause)
+				return startTranscodeFFmpeg(ctx, path, seekSeconds, opts, p.CPUDecode())
+			})
 		}
 		return &transcode.Process{
-			Stdout: &releaseOnOutput{r: stdout, release: release},
+			Stdout: &releaseOnOutput{r: process.Stdout, release: release},
 			Wait: func() error {
 				defer release()
-				if err := cmd.Wait(); err != nil {
-					return fmt.Errorf("ffmpeg: %w: %s", err, strings.TrimSpace(stderr.String()))
+				err := process.Wait()
+				if err != nil && p.Decoder != "" && ctx.Err() == nil && !gpuDecodeFailed.Swap(true) {
+					// A GPU decode that fails part-way, for example when another program takes
+					// the GPU memory, is not tried again; the player's next request decodes on
+					// the CPU.
+					log.Warnf("transcode %d %s: decoding with %s stopped, later encodes decode on the CPU: %v", f.ID, codec, p.Decoder, err)
 				}
-				return nil
+				return err
 			},
 		}, nil
 	}, nil
+}
+
+// startTranscodeFFmpeg starts one ffmpeg encode of path from seekSeconds.
+func startTranscodeFFmpeg(ctx context.Context, path string, seekSeconds float64, opts transcode.Options, plan transcode.Plan) (*transcode.Process, error) {
+	args := transcode.Args(ffmpegBin(), path, seekSeconds, opts, plan, -1)
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	if err := cmd.Start(); err != nil {
+		return nil, fmt.Errorf("starting ffmpeg: %w", err)
+	}
+	return &transcode.Process{
+		Stdout: stdout,
+		Wait: func() error {
+			if err := cmd.Wait(); err != nil {
+				return fmt.Errorf("ffmpeg: %w: %s", err, strings.TrimSpace(stderr.String()))
+			}
+			return nil
+		},
+	}, nil
+}
+
+// withGPUDecode moves decoding to the encoder's GPU when it can decode the file. The source's
+// pixel format, which the database does not hold, is read only when a GPU decoder exists for
+// the file's codec.
+func withGPUDecode(plan transcode.Plan, f models.File) transcode.Plan {
+	if !plan.MayDecodeOnGPU(f.VideoCodecName) {
+		return plan
+	}
+	return plan.WithGPUDecode(transcode.SourceVideo{
+		Codec:  f.VideoCodecName,
+		Width:  f.VideoWidth,
+		Height: f.VideoHeight,
+		PixFmt: sourcePixFmt(f),
+	})
+}
+
+// pixFmtLookup is one ffprobe read of a file's pixel format, shared by everyone asking for it.
+type pixFmtLookup struct {
+	once   sync.Once
+	pixFmt string
+	ok     bool
+}
+
+// sourcePixFmts holds a *pixFmtLookup per file, keyed by size and path.
+var sourcePixFmts sync.Map
+
+// sourcePixFmt returns the pixel format of the file's first video stream, or "" if ffprobe
+// cannot read it. A read that is already running for the file is waited for rather than
+// repeated, and a failed read is tried again next time.
+func sourcePixFmt(f models.File) string {
+	path := f.GetPath()
+	key := fmt.Sprintf("%d|%s", f.Size, path)
+	value, _ := sourcePixFmts.LoadOrStore(key, &pixFmtLookup{})
+	lookup := value.(*pixFmtLookup)
+	lookup.once.Do(func() {
+		data, err := ffprobe.GetProbeData(path, 10*time.Second)
+		if err != nil {
+			log.Warnf("transcode %d: could not read the pixel format: %v", f.ID, err)
+			return
+		}
+		if stream := data.GetFirstVideoStream(); stream != nil {
+			lookup.pixFmt = stream.PixFmt
+		}
+		lookup.ok = true
+	})
+	if !lookup.ok {
+		sourcePixFmts.CompareAndDelete(key, lookup)
+	}
+	return lookup.pixFmt
+}
+
+// prefetchSourcePixFmt reads a file's pixel format in the background when a player asks for
+// its scene, so a stream started soon after does not wait for ffprobe.
+func prefetchSourcePixFmt(f models.File) {
+	if !config.Config.Interfaces.Heresphere.TranscodeEnabled || f.VideoDuration <= 0 || transcodeFFmpegPending() {
+		return
+	}
+	go func() {
+		if transcode.Detect(ffmpegBin()).MayDecodeOnGPU(f.VideoCodecName) {
+			sourcePixFmt(f)
+		}
+	}()
 }
 
 // releaseOnOutput calls release once ffmpeg writes anything. ffmpeg writes its header only after

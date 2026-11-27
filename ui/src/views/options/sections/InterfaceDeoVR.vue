@@ -323,7 +323,7 @@
               <p>
                 <strong>Detected hardware:</strong>
                 <span v-for="(b, idx) in transcodeTestHardware.available" :key="b.name">
-                  <span v-if="idx > 0">, </span>{{ b.label }}<span v-if="b.device"> ({{ b.device }})</span>
+                  <span v-if="idx > 0">, </span>{{ b.label }}<span v-if="b.device"> ({{ b.device }})</span><span v-if="b.decoders"> with GPU decoding of {{ Object.keys(b.decoders).sort().join(', ') }}</span>
                 </span>
               </p>
               <p v-if="transcodeTestHardware.notes && transcodeTestHardware.notes.length">
@@ -335,6 +335,7 @@
                     <th>Stream</th>
                     <th>Sample</th>
                     <th>Output</th>
+                    <th>Decode</th>
                     <th>Result</th>
                     <th>Speed</th>
                   </tr>
@@ -344,6 +345,7 @@
                     <td>{{ r.label }}</td>
                     <td>{{ r.sample.width }}x{{ r.sample.height }}</td>
                     <td>{{ r.width }}x{{ r.height }}</td>
+                    <td>{{ r.decoder ? 'GPU' : 'CPU' }}</td>
                     <td>
                       <span :class="!r.success ? 'has-text-danger' : (r.warning ? 'has-text-warning' : 'has-text-success')">
                         {{ !r.success ? r.error : (r.warning || 'OK') }}
