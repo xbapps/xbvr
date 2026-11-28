@@ -183,12 +183,12 @@ type Plan struct {
 	GOP          int  // frames between keyframes; 0 leaves it to the encoder
 	InitialBurst bool // ffmpeg can read the start of the input ahead of realtime
 
-	// Decoder is the ffmpeg decoder that decodes the source on the encoder's GPU, or empty
-	// to decode on the CPU. See WithGPUDecode.
+	// Decoder is the ffmpeg decoder that decodes the source on the encoder's GPU (NVDEC with
+	// NVENC, Quick Sync with Quick Sync), or empty to decode on the CPU. See WithGPUDecode.
 	Decoder string
 
-	convertOnGPU     bool // frames go through scale_cuda to become 8-bit before the encoder
-	gpuDecodeVRAMMiB int  // GPU memory of the encode and its decoder when the GPU decodes
+	convertOnGPU     bool // GPU frames are converted to 8-bit NV12 before the encoder
+	gpuDecodeVRAMMiB int  // GPU memory of an NVENC encode and its decoder when the GPU decodes
 }
 
 // Label names the stream for clients that show the codec and encoder.
@@ -452,22 +452,35 @@ func gpuDecodeVRAMNeedMiB(codec string, srcWidth, srcHeight, outWidth, outHeight
 // MayDecodeOnGPU reports whether WithGPUDecode could move decoding of a source in codec to
 // the GPU, so callers can skip reading the source's pixel format when it cannot.
 func (p Plan) MayDecodeOnGPU(codec string) bool {
-	return !p.Unavailable && p.Backend.Name == BackendNVENC &&
+	return !p.Unavailable && (p.Backend.Name == BackendNVENC || p.Backend.Name == BackendQSV) &&
 		p.Backend.Decoders[strings.ToLower(strings.TrimSpace(codec))] != ""
 }
 
+// Intel GPUs decode H.264 only up to 4096x2304; larger H.264 sources are decoded on the CPU
+// rather than failing on the GPU first.
+const (
+	qsvH264MaxWidth  = 4096
+	qsvH264MaxHeight = 2304
+)
+
 // WithGPUDecode returns the plan with the source decoded on the encoder's GPU when that GPU
-// has a decoder for it and enough free memory for the decoder and encoder together. Frames
-// then stay on the GPU, and any scaling is done by the decoder, which takes most of the work
-// of a large source off the CPU. Otherwise the plan is returned unchanged and decodes on the
-// CPU. The GPU can still reject a source it has a decoder for, such as an H.264 frame wider
-// than it supports, so callers should be ready to retry with CPUDecode.
+// has a decoder for it and, with NVENC, enough free memory for the decoder and encoder
+// together. Frames then stay on the GPU and are scaled there (by NVDEC itself, or by Quick
+// Sync's video processor), which takes most of the work of a large source off the CPU.
+// Otherwise the plan is returned unchanged and decodes on the CPU. The GPU can still reject a
+// source it has a decoder for, such as a codec an older Intel GPU cannot decode or an H.264
+// frame wider than an older NVIDIA GPU supports, so callers should be ready to retry with
+// CPUDecode.
 func (p Plan) WithGPUDecode(src SourceVideo) Plan {
 	if !p.MayDecodeOnGPU(src.Codec) || src.Width <= 0 || src.Height <= 0 {
 		return p
 	}
 	highBitDepth, chroma420 := sourceFormat(src.PixFmt)
 	switch {
+	case p.Backend.Name == BackendQSV && strings.EqualFold(strings.TrimSpace(src.Codec), "h264") &&
+		(src.Width > qsvH264MaxWidth || src.Height > qsvH264MaxHeight):
+		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; Quick Sync decodes H.264 only up to %dx%d", qsvH264MaxWidth, qsvH264MaxHeight))
+		return p
 	case !chroma420:
 		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; the GPU decodes only 4:2:0 video, not %s", src.PixFmt))
 		return p
@@ -478,14 +491,20 @@ func (p Plan) WithGPUDecode(src SourceVideo) Plan {
 		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; this ffmpeg has no scale_cuda filter to convert %s on the GPU", src.PixFmt))
 		return p
 	}
-	need := gpuDecodeVRAMNeedMiB(p.Codec, src.Width, src.Height, p.Width, p.Height, highBitDepth)
-	if free := p.freeVRAM(); free > 0 && need+vramSafetyMiB > free {
-		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; decoding and encoding on the GPU needs about %d MiB, but %d MiB is free", need+vramSafetyMiB, free))
-		return p
+	if p.Backend.Name == BackendNVENC {
+		need := gpuDecodeVRAMNeedMiB(p.Codec, src.Width, src.Height, p.Width, p.Height, highBitDepth)
+		if free := p.freeVRAM(); free > 0 && need+vramSafetyMiB > free {
+			p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; decoding and encoding on the GPU needs about %d MiB, but %d MiB is free", need+vramSafetyMiB, free))
+			return p
+		}
+		p.gpuDecodeVRAMMiB = need
+		p.convertOnGPU = p.Backend.ConvertOnGPU
+	} else {
+		// Quick Sync shares system memory, so there is no GPU memory to fit. Its video
+		// processor converts only frames that need it.
+		p.convertOnGPU = highBitDepth
 	}
 	p.Decoder = p.Backend.Decoders[strings.ToLower(strings.TrimSpace(src.Codec))]
-	p.convertOnGPU = p.Backend.ConvertOnGPU
-	p.gpuDecodeVRAMMiB = need
 	return p
 }
 
@@ -627,12 +646,20 @@ func inputArgs(ffmpegPath, path string, seekSeconds float64, p Plan, paced bool)
 	return args
 }
 
-// decoderArgs select the GPU decoder. Its frames stay in GPU memory, and it scales them itself
-// when the plan scales. A decoder that runs out of GPU memory keeps failing on every packet
-// without ending the encode, so decode errors stop ffmpeg (-xerror).
+// decoderArgs select the GPU decoder, whose frames stay in GPU memory. NVDEC scales them itself
+// when the plan scales; Quick Sync frames are scaled by vpp_qsv (see videoFilter) and decoded
+// on the device preInputArgs creates. A decoder that runs out of GPU memory keeps failing on
+// every packet without ending the encode, so decode errors stop ffmpeg (-xerror).
 func (p Plan) decoderArgs() []string {
 	if p.Decoder == "" {
 		return nil
+	}
+	if p.Backend.Name == BackendQSV {
+		return []string{
+			"-xerror",
+			"-hwaccel", "qsv", "-hwaccel_device", "hw", "-hwaccel_output_format", "qsv",
+			"-c:v", p.Decoder,
+		}
 	}
 	gpu := strconv.Itoa(max(p.Backend.GPUIndex, 0))
 	args := []string{
@@ -695,6 +722,19 @@ func videoArgs(opts Options, p Plan) []string {
 
 func videoFilter(p Plan) string {
 	if p.Decoder != "" {
+		if p.Backend.Name == BackendQSV {
+			var opts []string
+			if p.Scale && p.Width > 0 && p.Height > 0 {
+				opts = append(opts, fmt.Sprintf("w=%d:h=%d", p.Width, p.Height))
+			}
+			if p.convertOnGPU {
+				opts = append(opts, "format=nv12")
+			}
+			if len(opts) == 0 {
+				return ""
+			}
+			return "vpp_qsv=" + strings.Join(opts, ":")
+		}
 		if p.convertOnGPU {
 			return "scale_cuda=format=nv12"
 		}

@@ -42,8 +42,10 @@ type Backend struct {
 	// Decoders maps source codecs to the ffmpeg decoders that decode them on this backend's
 	// GPU, so the frames stay in GPU memory from the decoder to the encoder.
 	Decoders map[string]string `json:"decoders,omitempty"`
-	// ConvertOnGPU means ffmpeg has the scale_cuda filter, which turns 10-bit GPU frames into
-	// the 8-bit frames the encoders are given. Without it only 8-bit sources decode on the GPU.
+	// ConvertOnGPU means ffmpeg has the filter that turns this backend's 10-bit GPU frames into
+	// the 8-bit frames the encoders are given: scale_cuda for NVENC, vpp_qsv for Quick Sync.
+	// Without it only 8-bit sources decode on the GPU. Quick Sync also scales with vpp_qsv, so
+	// without it nothing decodes on that GPU.
 	ConvertOnGPU bool `json:"convert_on_gpu,omitempty"`
 
 	// Some Intel systems can only create a QSV device from an existing VAAPI device.
@@ -154,11 +156,12 @@ func (h Hardware) BackendFor(codec string) (Backend, bool) {
 	return Backend{}, false
 }
 
-// MayDecodeOnGPU reports whether an NVENC backend has a GPU decoder for sources in codec.
+// MayDecodeOnGPU reports whether an NVENC or Quick Sync backend has a GPU decoder for sources
+// in codec.
 func (h Hardware) MayDecodeOnGPU(codec string) bool {
 	codec = strings.ToLower(strings.TrimSpace(codec))
 	for _, b := range h.Available {
-		if b.Name == BackendNVENC && b.Decoders[codec] != "" {
+		if (b.Name == BackendNVENC || b.Name == BackendQSV) && b.Decoders[codec] != "" {
 			return true
 		}
 	}
@@ -319,14 +322,23 @@ var cuvidDecoders = map[string]string{
 	"vp9":  "vp9_cuvid",
 }
 
-// cudaDecoders lists the NVDEC decoders this ffmpeg has, keyed by source codec, and whether it
-// has the scale_cuda filter. NVDEC needs the cuda hwaccel to hand its frames to the encoder
-// without copying them through system memory.
-func cudaDecoders(ffmpegPath string) (map[string]string, bool) {
+// qsvDecoders are the Quick Sync decoders used for each source codec. Which of these a GPU
+// can decode depends on its generation; a source it rejects is decoded on the CPU instead.
+var qsvDecoders = map[string]string{
+	"h264": "h264_qsv",
+	"hevc": "hevc_qsv",
+	"av1":  "av1_qsv",
+	"vp9":  "vp9_qsv",
+}
+
+// gpuDecoders lists which of names this ffmpeg has, keyed by source codec, and whether it has
+// filter, which converts the decoders' frames. The decoders need hwaccel to hand their frames
+// to the encoder without copying them through system memory, so without it none are listed.
+func gpuDecoders(ffmpegPath, hwaccel string, names map[string]string, filter string) (map[string]string, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), hardwareProbeLimit)
 	defer cancel()
 	hwaccels, err := exec.CommandContext(ctx, ffmpegPath, "-hide_banner", "-hwaccels").Output()
-	if err != nil || !listsName(string(hwaccels), "cuda", 0) {
+	if err != nil || !listsName(string(hwaccels), hwaccel, 0) {
 		return nil, false
 	}
 	decoders, err := exec.CommandContext(ctx, ffmpegPath, "-hide_banner", "-decoders").Output()
@@ -334,7 +346,7 @@ func cudaDecoders(ffmpegPath string) (map[string]string, bool) {
 		return nil, false
 	}
 	found := map[string]string{}
-	for codec, decoder := range cuvidDecoders {
+	for codec, decoder := range names {
 		if listsName(string(decoders), decoder, 1) {
 			found[codec] = decoder
 		}
@@ -343,7 +355,7 @@ func cudaDecoders(ffmpegPath string) (map[string]string, bool) {
 		return nil, false
 	}
 	filters, err := exec.CommandContext(ctx, ffmpegPath, "-hide_banner", "-filters").Output()
-	return found, err == nil && listsName(string(filters), "scale_cuda", 1)
+	return found, err == nil && listsName(string(filters), filter, 1)
 }
 
 // listsName reports whether a line of ffmpeg's listing output has name as its field'th field.
@@ -365,13 +377,17 @@ func probeHardware(ffmpegPath string) Hardware {
 	}
 
 	if backend, notes := probeNVENC(ffmpegPath, encoders); backend.Name != "" {
-		backend.Decoders, backend.ConvertOnGPU = cudaDecoders(ffmpegPath)
+		backend.Decoders, backend.ConvertOnGPU = gpuDecoders(ffmpegPath, "cuda", cuvidDecoders, "scale_cuda")
 		hw.Available = append(hw.Available, backend)
 	} else if hasAnyEncoder(encoders, "h264_nvenc", "hevc_nvenc", "av1_nvenc") {
 		hw.Notes = append(hw.Notes, notes...)
 	}
 
 	if backend, notes := probeQSV(ffmpegPath, encoders); backend.Name != "" {
+		// Quick Sync frames are scaled by vpp_qsv, so without it they are not decoded on the GPU.
+		if decoders, vpp := gpuDecoders(ffmpegPath, "qsv", qsvDecoders, "vpp_qsv"); vpp {
+			backend.Decoders, backend.ConvertOnGPU = decoders, true
+		}
 		hw.Available = append(hw.Available, backend)
 	} else if hasAnyEncoder(encoders, "h264_qsv", "hevc_qsv", "av1_qsv") {
 		hw.Notes = append(hw.Notes, notes...)

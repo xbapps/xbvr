@@ -282,3 +282,116 @@ func TestGPUDecodeOnASharedGPU(t *testing.T) {
 		}
 	}
 }
+
+func qsvDecodeHardware() Hardware {
+	b := Backend{
+		Name:         BackendQSV,
+		Label:        "Intel Quick Sync",
+		Encoders:     map[string]string{CodecH264: "h264_qsv", CodecHEVC: "hevc_qsv"},
+		Device:       "/dev/dri/renderD128",
+		Decoders:     map[string]string{"h264": "h264_qsv", "hevc": "hevc_qsv", "av1": "av1_qsv"},
+		ConvertOnGPU: true,
+	}
+	cpu := Backend{Name: BackendCPU, Label: "CPU (x264)", Encoders: map[string]string{CodecH264: "libx264", CodecX264: "libx264"}}
+	return Hardware{Preferred: b, Available: []Backend{b, cpu}, InitialBurst: true}
+}
+
+func TestQSVDecodeScalesInTheVideoProcessor(t *testing.T) {
+	p := planGPUDecode(CodecH264, qsvDecodeHardware(), SourceVideo{Codec: "hevc", Width: 8192, Height: 4096, PixFmt: "yuv420p"})
+	if p.Decoder != "hevc_qsv" {
+		t.Fatalf("decoder = %q, want hevc_qsv: %v", p.Decoder, p.Notes)
+	}
+	args := strings.Join(Args("ffmpeg", "/videos/scene.mp4", 30, Options{}, p, -1), " ")
+	want := "-init_hw_device qsv=hw:/dev/dri/renderD128 -filter_hw_device hw -xerror -hwaccel qsv -hwaccel_device hw -hwaccel_output_format qsv -c:v hevc_qsv"
+	if !strings.Contains(args, want) || strings.Index(args, want) > strings.Index(args, "-i /videos") {
+		t.Errorf("args should select the Quick Sync decoder on the encoder's device before the input: %s", args)
+	}
+	if !strings.Contains(args, "-vf vpp_qsv=w=4096:h=2048 ") {
+		t.Errorf("args should scale with vpp_qsv: %s", args)
+	}
+	for _, unwanted := range []string{"hwupload", "scale=", "-resize", "-pix_fmt", "format=nv12"} {
+		if strings.Contains(args, unwanted) {
+			t.Errorf("8-bit Quick Sync frames need no %s: %s", unwanted, args)
+		}
+	}
+}
+
+func TestQSVDecodeFilters(t *testing.T) {
+	hw := qsvDecodeHardware()
+	cases := []struct {
+		codec string
+		src   SourceVideo
+		want  string
+	}{
+		{CodecHEVC, SourceVideo{Codec: "hevc", Width: 7200, Height: 3600, PixFmt: "yuv420p"}, ""},
+		{CodecHEVC, SourceVideo{Codec: "hevc", Width: 7200, Height: 3600, PixFmt: "yuv420p10le"}, "vpp_qsv=format=nv12"},
+		{CodecH264, SourceVideo{Codec: "av1", Width: 8000, Height: 4000, PixFmt: "yuv420p10le"}, "vpp_qsv=w=4096:h=2048:format=nv12"},
+		{CodecH264, SourceVideo{Codec: "h264", Width: 3840, Height: 1920}, "vpp_qsv=format=nv12"},
+	}
+	for _, c := range cases {
+		p := planGPUDecode(c.codec, hw, c.src)
+		if p.Decoder == "" {
+			t.Errorf("%+v: not decoded on the GPU: %v", c.src, p.Notes)
+			continue
+		}
+		if got := videoFilter(p); got != c.want {
+			t.Errorf("%+v to %s: filter %q, want %q", c.src, c.codec, got, c.want)
+		}
+	}
+}
+
+func TestQSVCPUDecodeUploadsFrames(t *testing.T) {
+	p := planGPUDecode(CodecH264, qsvDecodeHardware(), SourceVideo{Codec: "hevc", Width: 8192, Height: 4096, PixFmt: "yuv420p"}).CPUDecode()
+	args := strings.Join(Args("ffmpeg", "/videos/scene.mp4", 0, Options{}, p, -1), " ")
+	if strings.Contains(args, "-hwaccel") || strings.Contains(args, "vpp_qsv") || strings.Contains(args, "-xerror") {
+		t.Errorf("CPU decode still selects the Quick Sync decoder: %s", args)
+	}
+	if !strings.Contains(args, "-vf scale=4096:2048,format=nv12,hwupload=extra_hw_frames=64") {
+		t.Errorf("CPU decode should scale and upload the frames: %s", args)
+	}
+}
+
+func TestQSVDecodeViaVAAPIDevice(t *testing.T) {
+	hw := qsvDecodeHardware()
+	hw.Preferred.qsvViaVAAPI = true
+	hw.Available[0] = hw.Preferred
+	p := planGPUDecode(CodecHEVC, hw, SourceVideo{Codec: "h264", Width: 3840, Height: 1920, PixFmt: "yuv420p"})
+	args := strings.Join(Args("ffmpeg", "/videos/scene.mp4", 0, Options{}, p, -1), " ")
+	want := "-init_hw_device vaapi=va:/dev/dri/renderD128 -init_hw_device qsv=hw@va -filter_hw_device hw -xerror -hwaccel qsv -hwaccel_device hw"
+	if !strings.Contains(args, want) {
+		t.Errorf("args should decode on the QSV device derived from VAAPI: %s", args)
+	}
+}
+
+func TestQSVDecodeNeedsNoVRAM(t *testing.T) {
+	hw := qsvDecodeHardware()
+	if !hw.MayDecodeOnGPU("hevc") || hw.MayDecodeOnGPU("vp9") {
+		t.Errorf("MayDecodeOnGPU: hevc %v, vp9 %v; want true, false", hw.MayDecodeOnGPU("hevc"), hw.MayDecodeOnGPU("vp9"))
+	}
+	p := planGPUDecode(CodecHEVC, hw, SourceVideo{Codec: "hevc", Width: 8192, Height: 4096, PixFmt: "yuv420p10le"})
+	if p.Decoder != "hevc_qsv" || p.gpuDecodeVRAMMiB != 0 {
+		t.Fatalf("decoder %q, VRAM %d MiB; want hevc_qsv and no VRAM: %v", p.Decoder, p.gpuDecodeVRAMMiB, p.Notes)
+	}
+	release := p.ReserveVRAM()
+	defer release()
+	if pending := pendingVRAMByGPU(); len(pending) != 0 {
+		t.Errorf("Quick Sync reserved VRAM: %v", pending)
+	}
+	if p := planGPUDecode(CodecHEVC, hw, SourceVideo{Codec: "hevc", Width: 3840, Height: 1920, PixFmt: "yuv422p10le"}); p.Decoder != "" {
+		t.Errorf("4:2:2 source decoded on the GPU with %q", p.Decoder)
+	}
+}
+
+func TestQSVDecodesLargeH264OnTheCPU(t *testing.T) {
+	hw := qsvDecodeHardware()
+	p := planGPUDecode(CodecH264, hw, SourceVideo{Codec: "h264", Width: 5760, Height: 2880, PixFmt: "yuv420p"})
+	if p.Decoder != "" || !strings.Contains(strings.Join(p.Notes, " "), "4096x2304") {
+		t.Errorf("5760x2880 H.264 on Quick Sync: decoder %q, notes %v; want the CPU and the limit explained", p.Decoder, p.Notes)
+	}
+	if p := planGPUDecode(CodecH264, hw, SourceVideo{Codec: "h264", Width: 3840, Height: 1920, PixFmt: "yuv420p"}); p.Decoder != "h264_qsv" {
+		t.Errorf("3840x1920 H.264 not decoded on Quick Sync: %v", p.Notes)
+	}
+	if p := planGPUDecode(CodecHEVC, gpuDecodeHardware(0, true), SourceVideo{Codec: "h264", Width: 5760, Height: 2880, PixFmt: "yuv420p"}); p.Decoder != "h264_cuvid" {
+		t.Errorf("the Quick Sync H.264 limit should not apply to NVDEC: %v", p.Notes)
+	}
+}
