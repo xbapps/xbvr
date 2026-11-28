@@ -94,17 +94,18 @@ func ParseBitrates(in []int) []int {
 	return out
 }
 
-// CodecLabel is the name shown to clients.
+// CodecLabel names a codec without an encoder, for streams whose encoder is not known, such
+// as one this machine cannot encode.
 func CodecLabel(codec string) string {
 	switch strings.ToLower(codec) {
 	case CodecHEVC:
-		return "HEVC (NVENC)"
+		return "HEVC"
 	case CodecAV1:
-		return "AV1 (NVENC)"
+		return "AV1"
 	case CodecX264:
 		return "H.264 (x264)"
 	default:
-		return "H.264 (NVENC)"
+		return "H.264"
 	}
 }
 

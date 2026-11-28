@@ -37,15 +37,23 @@ func TestStreamName(t *testing.T) {
 
 func TestCodecLabel(t *testing.T) {
 	cases := map[string]string{
-		CodecH264: "H.264 (NVENC)",
-		CodecHEVC: "HEVC (NVENC)",
-		CodecAV1:  "AV1 (NVENC)",
+		CodecH264: "H.264",
+		CodecHEVC: "HEVC",
+		CodecAV1:  "AV1",
 		CodecX264: "H.264 (x264)",
 	}
 	for codec, want := range cases {
 		if got := CodecLabel(codec); got != want {
 			t.Errorf("CodecLabel(%q) = %q, want %q", codec, got, want)
 		}
+	}
+}
+
+func TestUnavailableCodecNamesNoEncoder(t *testing.T) {
+	qsv := Backend{Name: BackendQSV, Label: "Intel Quick Sync", Encoders: map[string]string{CodecH264: "h264_qsv", CodecHEVC: "hevc_qsv"}}
+	p := PlanForEncoder(CodecAV1, Hardware{Preferred: qsv, Available: []Backend{qsv}}, Options{}, 1920, 1080, 30)
+	if !p.Unavailable || p.Label() != "AV1" || strings.Join(p.Notes, " ") != "AV1 is not available on this machine" {
+		t.Errorf("unavailable AV1: label %q, notes %v", p.Label(), p.Notes)
 	}
 }
 
