@@ -251,3 +251,15 @@ func TestProbeErrorNoteExplainsOldLibva(t *testing.T) {
 		t.Errorf("other errors should be passed through, got %q", got)
 	}
 }
+
+func TestProbeNVENCSkipsMachinesWithoutNVIDIA(t *testing.T) {
+	restoreGPUs, restoreDevice := listGPUs, nvidiaDevicePresent
+	defer func() { listGPUs, nvidiaDevicePresent = restoreGPUs, restoreDevice }()
+	listGPUs = func() []nvidiaGPU { return nil }
+	nvidiaDevicePresent = func() bool { return false }
+
+	b, notes := probeNVENC("/nonexistent/ffmpeg", map[string]bool{"h264_nvenc": true, "hevc_nvenc": true})
+	if b.Name != "" || len(notes) != 0 {
+		t.Errorf("no NVIDIA device: backend %q, notes %v; want nothing", b.Name, notes)
+	}
+}

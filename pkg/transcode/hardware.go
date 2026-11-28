@@ -3,8 +3,10 @@ package transcode
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -479,6 +481,20 @@ type nvidiaGPU struct {
 // listGPUs reads the GPUs' free memory; tests replace it.
 var listGPUs = nvidiaGPUs
 
+// nvidiaDevicePresent reports whether an NVIDIA GPU may be usable: always outside Linux, and on
+// Linux when NVIDIA's device node or WSL's GPU device exists. Tests replace it.
+var nvidiaDevicePresent = func() bool {
+	if runtime.GOOS != "linux" {
+		return true
+	}
+	for _, dev := range []string{"/dev/nvidiactl", "/dev/dxg"} {
+		if _, err := os.Stat(dev); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
 func nvidiaGPUs() []nvidiaGPU {
 	out, err := exec.Command("nvidia-smi", "--query-gpu=index,memory.free", "--format=csv,noheader,nounits").Output()
 	if err != nil {
@@ -518,8 +534,13 @@ func probeNVENC(ffmpegPath string, encoders map[string]bool) (Backend, []string)
 		return Backend{}, nil
 	}
 
-	gpus := nvidiaGPUs()
+	gpus := listGPUs()
 	if len(gpus) == 0 {
+		// Every jellyfin-ffmpeg build has NVENC, so on a Linux machine with no NVIDIA device
+		// there is nothing to probe or report.
+		if !nvidiaDevicePresent() {
+			return Backend{}, nil
+		}
 		// NVENC can still be present when nvidia-smi is not on PATH.
 		gpus = []nvidiaGPU{{index: 0}}
 	}
