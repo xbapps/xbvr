@@ -597,7 +597,7 @@ func probeQSV(ffmpegPath string, encoders map[string]bool) (Backend, []string) {
 		}
 	}
 	if firstErr != nil {
-		return Backend{}, []string{"Quick Sync: " + compactError(firstErr)}
+		return Backend{}, []string{"Quick Sync: " + probeErrorNote(firstErr)}
 	}
 	return Backend{}, nil
 }
@@ -638,7 +638,7 @@ func probeVAAPI(ffmpegPath string, encoders map[string]bool) (Backend, []string)
 		}
 	}
 	if firstErr != nil {
-		return Backend{}, []string{"VAAPI: " + compactError(firstErr)}
+		return Backend{}, []string{"VAAPI: " + probeErrorNote(firstErr)}
 	}
 	return Backend{}, nil
 }
@@ -672,6 +672,16 @@ func probeEncoder(ffmpegPath string, backend Backend, codec, encoder string) err
 		return fmt.Errorf("%v: %s", err, compactError(fmt.Errorf("%s", stderr.String())))
 	}
 	return nil
+}
+
+// probeErrorNote explains a failed encoder probe. jellyfin-ffmpeg is built for libva 2.21 or
+// newer and aborts when the system's libva lacks vaMapBuffer2, which it uses to copy frames
+// into GPU memory.
+func probeErrorNote(err error) string {
+	if strings.Contains(err.Error(), "vaMapBuffer2") {
+		return "this ffmpeg needs libva 2.21 or newer to send frames to the GPU, and the system's libva is older"
+	}
+	return compactError(err)
 }
 
 func compactError(err error) string {

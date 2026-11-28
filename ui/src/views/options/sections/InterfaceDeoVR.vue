@@ -260,8 +260,8 @@
             Adds a stream for each selected codec and bitrate to each video, encoded on the fly
             with ffmpeg and listed in HereSphere as e.g. "H264 20 Mbps (hwe)" for a hardware
             encode, or "(swe)" for a software encode on the CPU. When live transcode is switched
-            on, XBVR downloads the jellyfin-ffmpeg build for this computer, unless the system
-            ffmpeg is chosen below. The hardware encoder is detected then, and at startup while
+            on, XBVR downloads the jellyfin-ffmpeg build for this computer, and no streams are
+            offered until it is installed. The hardware encoder is detected then, and at startup while
             live transcode is on: NVENC, Intel Quick Sync, VAAPI, or x264 on the CPU. H.264 tops out at 4096x4096, so larger
             sources are scaled down; HEVC and AV1 handle up to 8192x8192. Very large frames may
             be limited to 30 fps.
@@ -271,11 +271,8 @@
           </b-field>
           <div class="columns" v-if="transcodeEnabled">
             <div class="column">
-              <b-field label="ffmpeg" :message="ffmpegStatusText">
-                <b-select v-model="transcodeFFmpeg" expanded>
-                  <option value="jellyfin">Download jellyfin-ffmpeg (NVENC, Quick Sync, VAAPI and x264)</option>
-                  <option value="system">Use the system ffmpeg</option>
-                </b-select>
+              <b-field label="ffmpeg">
+                <p>{{ ffmpegStatusText }}</p>
               </b-field>
               <b-field label="Codecs offered to the headset">
                 <b-select v-model="transcodeCodecs" multiple expanded>
@@ -413,7 +410,7 @@ export default {
       // started yet, so a missing jellyfin-ffmpeg is checked again too.
       const s = this.ffmpegStatus
       const waiting = s.jellyfin.state === 'downloading' ||
-        (s.jellyfin.state === 'missing' && s.source === 'jellyfin' && this.transcodeEnabled)
+        (s.jellyfin.state === 'missing' && this.transcodeEnabled)
       if (waiting) {
         this.ffmpegPoll = setTimeout(this.loadFFmpegStatus, 2000)
       }
@@ -740,23 +737,12 @@ export default {
         this.$store.state.optionsDeoVR.heresphere.transcode_max_streams = value
       }
     },
-    transcodeFFmpeg: {
-      get () {
-        return this.$store.state.optionsDeoVR.heresphere.transcode_ffmpeg
-      },
-      set (value) {
-        this.$store.state.optionsDeoVR.heresphere.transcode_ffmpeg = value
-      }
-    },
     ffmpegStatusText () {
       const s = this.ffmpegStatus
       if (!s) {
         return ''
       }
       const j = s.jellyfin
-      if (this.transcodeFFmpeg === 'system') {
-        return s.source === 'system' && s.in_use ? `Using ${s.in_use}` : 'Uses ffmpeg on the PATH once saved, or the one XBVR downloads for previews'
-      }
       switch (j.state) {
         case 'ready':
           return `jellyfin-ffmpeg ${j.version} is installed at ${j.path}`
@@ -765,9 +751,9 @@ export default {
             ? `Downloading jellyfin-ffmpeg ${j.version}: ${Math.floor(j.downloaded * 100 / j.total)}% of ${Math.round(j.total / 1048576)} MB`
             : `Downloading jellyfin-ffmpeg ${j.version}`
         case 'failed':
-          return `Could not download jellyfin-ffmpeg ${j.version} (${j.error}), so ${s.in_use} is used`
+          return `Could not download jellyfin-ffmpeg ${j.version} (${j.error}). Live transcode is off until it is installed; saving these settings tries again.`
         case 'unsupported':
-          return `jellyfin-ffmpeg has no build for ${j.platform}, so ${s.in_use} is used`
+          return `jellyfin-ffmpeg has no build for ${j.platform}, so live transcode is not available on this computer`
         default:
           return `jellyfin-ffmpeg ${j.version} for ${j.platform} is downloaded when these settings are saved`
       }

@@ -24,7 +24,8 @@ import (
 
 // JellyfinFFmpegVersion is the jellyfin-ffmpeg release downloaded for live transcoding. Its
 // portable builds include NVENC, Quick Sync, VAAPI and x264, and need only the C library and
-// the GPU drivers already on the system.
+// the GPU drivers already on the system. On Linux, VAAPI and Quick Sync also need libva 2.21
+// or newer to copy frames to the GPU.
 const JellyfinFFmpegVersion = "8.1.3-2"
 
 type jellyfinAsset struct {

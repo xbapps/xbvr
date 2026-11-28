@@ -79,7 +79,11 @@ func transcodeStreamName(prefix, codec string, bitrateMbps int, software bool) s
 // byte count at its bitrates. prefix is empty for a scene with one file.
 func heresphereTranscodeMedia(req *restful.Request, file models.File, prefix, dnt string) []HeresphereMedia {
 	c := config.Config.Interfaces.Heresphere
-	if !c.TranscodeEnabled || file.VideoDuration <= 0 || transcodeFFmpegPending() {
+	if !c.TranscodeEnabled || file.VideoDuration <= 0 {
+		return nil
+	}
+	ffmpeg, ok := liveFFmpeg()
+	if !ok {
 		return nil
 	}
 	codecs := transcode.ParseCodecs(c.TranscodeCodecs)
@@ -87,7 +91,7 @@ func heresphereTranscodeMedia(req *restful.Request, file models.File, prefix, dn
 		codecs = []string{transcode.CodecH264}
 	}
 	bitrates := transcodeBitrates()
-	hw := transcode.Detect(ffmpegBin())
+	hw := transcode.Detect(ffmpeg)
 
 	var media []HeresphereMedia
 	seenEncoder := map[string]bool{}

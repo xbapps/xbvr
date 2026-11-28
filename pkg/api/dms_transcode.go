@@ -21,12 +21,10 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 
-	"github.com/xbapps/xbvr/pkg/common"
 	"github.com/xbapps/xbvr/pkg/config"
 	"github.com/xbapps/xbvr/pkg/ffprobe"
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/session"
-	"github.com/xbapps/xbvr/pkg/tasks"
 	"github.com/xbapps/xbvr/pkg/transcode"
 )
 
@@ -243,10 +241,11 @@ func validTranscodeToken(fileID uint, codec, token string) bool {
 // prepareTranscode chooses the encoder for a stream. Its plan, including the output size, then
 // stays fixed for every encode of that stream, so seeks cannot change the picture format.
 func prepareTranscode(f models.File, codec string, opts transcode.Options) (transcode.Spawner, error) {
-	if transcodeFFmpegPending() {
+	ffmpeg, ok := liveFFmpeg()
+	if !ok {
 		return nil, transcode.ErrUnavailable
 	}
-	hw := transcode.RefreshVRAM(transcode.Detect(ffmpegBin()))
+	hw := transcode.RefreshVRAM(transcode.Detect(ffmpeg))
 	plan := transcode.PlanForEncoder(codec, hw, opts, f.VideoWidth, f.VideoHeight, f.VideoAvgFrameRateVal)
 	plan = withGPUDecode(plan, f)
 	if len(plan.Notes) > 0 {
@@ -267,7 +266,7 @@ func prepareTranscode(f models.File, codec string, opts transcode.Options) (tran
 		// Encodes start one at a time, so the next stream planned sees this one's memory as
 		// used until ffmpeg has allocated it.
 		release := p.ReserveVRAM()
-		process, err := startTranscodeFFmpeg(ctx, path, seekSeconds, opts, p)
+		process, err := startTranscodeFFmpeg(ctx, ffmpeg, path, seekSeconds, opts, p)
 		if err != nil {
 			release()
 			return nil, err
@@ -279,7 +278,7 @@ func prepareTranscode(f models.File, codec string, opts transcode.Options) (tran
 				}
 				gpuDecodeFailed.Store(true)
 				log.Warnf("transcode %d %s: decoding with %s failed, decoding on the CPU instead: %v", f.ID, codec, p.Decoder, cause)
-				return startTranscodeFFmpeg(ctx, path, seekSeconds, opts, p.CPUDecode())
+				return startTranscodeFFmpeg(ctx, ffmpeg, path, seekSeconds, opts, p.CPUDecode())
 			})
 		}
 		return &transcode.Process{
@@ -300,8 +299,8 @@ func prepareTranscode(f models.File, codec string, opts transcode.Options) (tran
 }
 
 // startTranscodeFFmpeg starts one ffmpeg encode of path from seekSeconds.
-func startTranscodeFFmpeg(ctx context.Context, path string, seekSeconds float64, opts transcode.Options, plan transcode.Plan) (*transcode.Process, error) {
-	args := transcode.Args(ffmpegBin(), path, seekSeconds, opts, plan, -1)
+func startTranscodeFFmpeg(ctx context.Context, ffmpeg, path string, seekSeconds float64, opts transcode.Options, plan transcode.Plan) (*transcode.Process, error) {
+	args := transcode.Args(ffmpeg, path, seekSeconds, opts, plan, -1)
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -376,11 +375,15 @@ func sourcePixFmt(f models.File) string {
 // prefetchSourcePixFmt reads a file's pixel format in the background when a player asks for
 // its scene, so a stream started soon after does not wait for ffprobe.
 func prefetchSourcePixFmt(f models.File) {
-	if !config.Config.Interfaces.Heresphere.TranscodeEnabled || f.VideoDuration <= 0 || transcodeFFmpegPending() {
+	if !config.Config.Interfaces.Heresphere.TranscodeEnabled || f.VideoDuration <= 0 {
+		return
+	}
+	ffmpeg, ok := liveFFmpeg()
+	if !ok {
 		return
 	}
 	go func() {
-		if transcode.Detect(ffmpegBin()).MayDecodeOnGPU(f.VideoCodecName) {
+		if transcode.Detect(ffmpeg).MayDecodeOnGPU(f.VideoCodecName) {
 			sourcePixFmt(f)
 		}
 	}()
@@ -420,26 +423,6 @@ func (l *limitedWriter) Write(p []byte) (int, error) {
 		err = io.ErrShortWrite
 	}
 	return n, err
-}
-
-// ffmpegBin returns the ffmpeg used for live transcoding: the downloaded jellyfin-ffmpeg when
-// it is selected and installed, otherwise the system ffmpeg.
-func ffmpegBin() string {
-	if useJellyfinFFmpeg() {
-		if path, ok := transcode.ManagedFFmpeg(common.BinDir); ok {
-			return path
-		}
-	}
-	return systemFFmpegBin()
-}
-
-// systemFFmpegBin prefers an ffmpeg on PATH and falls back to the one XBVR downloads for
-// previews.
-func systemFFmpegBin() string {
-	if path, err := exec.LookPath("ffmpeg"); err == nil {
-		return path
-	}
-	return tasks.GetBinPath("ffmpeg")
 }
 
 // flushWriter pushes each chunk to the client so playback starts without a server buffer delay.

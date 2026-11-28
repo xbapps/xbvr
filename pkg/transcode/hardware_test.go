@@ -240,3 +240,14 @@ func TestDetectProbesAgainForAnotherFFmpeg(t *testing.T) {
 		t.Fatalf("probes = %d, want 2", got)
 	}
 }
+
+func TestProbeErrorNoteExplainsOldLibva(t *testing.T) {
+	abort := fmt.Errorf("signal: aborted: implib-gen: libva.so.2: failed to resolve symbol 'vaMapBuffer2' via dlsym: /lib/x86_64-linux-gnu/libva.so.2: undefined symbol: vaMapBuffer2; ffmpeg: libva.so.2.init.c:290: _libva_so_2_tramp_resolve: Assertion failed.")
+	if got := probeErrorNote(abort); !strings.Contains(got, "libva 2.21") {
+		t.Errorf("note %q should name the libva version needed", got)
+	}
+	other := fmt.Errorf("exit status 1: Error while opening encoder")
+	if got := probeErrorNote(other); got != compactError(other) {
+		t.Errorf("other errors should be passed through, got %q", got)
+	}
+}

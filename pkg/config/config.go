@@ -10,12 +10,6 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 )
 
-// Sources of the ffmpeg used for live transcoding.
-const (
-	TranscodeFFmpegJellyfin = "jellyfin" // jellyfin-ffmpeg, downloaded for this platform
-	TranscodeFFmpegSystem   = "system"   // ffmpeg on PATH, or XBVR's own download
-)
-
 type CronSchedule struct {
 	Enabled         bool `default:"true" json:"enabled"`
 	HourInterval    int  `json:"hourInterval"`
@@ -114,9 +108,8 @@ type ObjectConfig struct {
 			TranscodeCodecs     []string `json:"transcode_codecs"`        // h264, hevc, av1; x264 forces the CPU fallback
 			TranscodeBitrates   []int    `json:"transcode_bitrates_mbps"` // video bitrates offered per codec; empty = 20
 			TranscodeAudioKbps  int      `default:"128" json:"transcode_audio_kbps"`
-			TranscodeMaxHeight  int      `default:"0" json:"transcode_max_height"`    // 0 = source resolution
-			TranscodeMaxStreams int      `default:"2" json:"transcode_max_streams"`   // encodes at once, all players
-			TranscodeFFmpeg     string   `default:"jellyfin" json:"transcode_ffmpeg"` // jellyfin (downloaded) or system
+			TranscodeMaxHeight  int      `default:"0" json:"transcode_max_height"`  // 0 = source resolution
+			TranscodeMaxStreams int      `default:"2" json:"transcode_max_streams"` // encodes at once, all players
 		} `json:"heresphere"`
 		Players struct {
 			VideoSortSeq    string `default:"" json:"video_sort_seq"`
