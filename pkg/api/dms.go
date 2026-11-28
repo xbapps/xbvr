@@ -37,6 +37,11 @@ func (i DMSResource) WebService() *restful.WebService {
 		ContentEncodingEnabled(false).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
+	ws.Route(ws.GET("/transcode/{file-id}").To(i.getTranscode).
+		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
+		ContentEncodingEnabled(false).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
 	ws.Route(ws.GET("/heatmap/{file-id}").To(i.getHeatmap).
 		Param(ws.PathParameter("file-id", "File ID").DataType("int")).
 		ContentEncodingEnabled(false).

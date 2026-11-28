@@ -72,6 +72,7 @@ func StartServer(version, commit, branch, date string) {
 	models.CheckVolumes()
 
 	models.InitSites()
+	api.PrimeTranscodeHardware()
 
 	restful.DefaultContainer.EnableContentEncoding(true)
 

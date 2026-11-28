@@ -254,6 +254,109 @@
               </b-tooltip>
             </div>
           </div>
+          <hr/>
+          <h4>Live transcode</h4>
+          <p class="help">
+            Adds a stream for each selected codec and bitrate to each video, encoded on the fly
+            with ffmpeg and listed in HereSphere as e.g. "H264 20 Mbps (hwe)" for a hardware
+            encode, or "(swe)" for a software encode on the CPU. When live transcode is switched
+            on, XBVR downloads the jellyfin-ffmpeg build for this computer, and no streams are
+            offered until it is installed. The hardware encoder is detected then, and at startup while
+            live transcode is on: NVENC, Intel Quick Sync, VAAPI, or x264 on the CPU. H.264 tops out at 4096x4096, so larger
+            sources are scaled down; HEVC and AV1 handle up to 8192x8192. Very large frames may
+            be limited to 30 fps.
+          </p>
+          <b-field label="Enable live transcode">
+            <b-switch v-model="transcodeEnabled">Enabled</b-switch>
+          </b-field>
+          <div class="columns" v-if="transcodeEnabled">
+            <div class="column">
+              <b-field label="ffmpeg">
+                <p>{{ ffmpegStatusText }}</p>
+              </b-field>
+              <b-field label="Codecs offered to the headset">
+                <b-select v-model="transcodeCodecs" multiple expanded>
+                  <option value="h264">H.264 (hardware when available)</option>
+                  <option value="hevc">HEVC / H.265 (hardware when available)</option>
+                  <option value="av1">AV1 (hardware when available)</option>
+                  <option value="x264">H.264 (x264, CPU fallback)</option>
+                </b-select>
+              </b-field>
+              <b-field label="Video bitrates (Mbps)"
+                       message="Each codec is offered once per bitrate, so a lighter or heavier stream can be picked in the headset. Up to 4, from 1 to 200.">
+                <b-taginput v-model="transcodeBitrates" :before-adding="isNewBitrate" :maxtags="4" :has-counter="false"
+                            placeholder="Add a bitrate, e.g. 10"/>
+              </b-field>
+            </div>
+            <div class="column">
+              <b-field label="Audio bitrate (kbps)">
+                <b-numberinput v-model="transcodeAudioKbps" :min="32" :max="512" :step="32" controls-position="compact"/>
+              </b-field>
+              <b-field label="Maximum height (0 = source)">
+                <b-numberinput v-model="transcodeMaxHeight" :min="0" :max="4320" :step="120" controls-position="compact"/>
+              </b-field>
+              <b-field label="Most streams at once"
+                       message="Across all headsets. A stream that would go over this is refused, after any stream no headset is reading has been stopped.">
+                <b-numberinput v-model="transcodeMaxStreams" :min="1" :max="16" controls-position="compact"/>
+              </b-field>
+            </div>
+          </div>
+          <div v-if="transcodeEnabled" class="block">
+            <b-button type="is-info" :loading="transcodeTestLoading" @click="testTranscode">
+              Test hardware setup
+            </b-button>
+            <p class="help">
+              Detects the encoders again, then runs a two-second unpaced encode at the highest
+              bitrate from up to three differently sized local videos. This checks the real
+              encoder, scaling and muxing path rather than only whether ffmpeg lists the encoder.
+            </p>
+            <div v-if="transcodeTestError" class="notification is-danger is-light">
+              {{ transcodeTestError }}
+            </div>
+            <div v-if="transcodeTestHardware" class="notification is-light">
+              <p v-if="transcodeTestHardware.ffmpeg">
+                <strong>ffmpeg:</strong> {{ transcodeTestHardware.ffmpeg }}
+              </p>
+              <p>
+                <strong>Detected hardware:</strong>
+                <span v-for="(b, idx) in transcodeTestHardware.available" :key="b.name">
+                  <span v-if="idx > 0">, </span>{{ b.label }}<span v-if="b.device"> ({{ b.device }})</span><span v-if="b.decoders"> with GPU decoding of {{ Object.keys(b.decoders).sort().join(', ') }}</span>
+                </span>
+              </p>
+              <p v-if="transcodeTestHardware.notes && transcodeTestHardware.notes.length">
+                <strong>Notes:</strong> {{ transcodeTestHardware.notes.join('; ') }}
+              </p>
+              <table v-if="transcodeTestResults.length" class="table is-narrow is-fullwidth">
+                <thead>
+                  <tr>
+                    <th>Stream</th>
+                    <th>Sample</th>
+                    <th>Output</th>
+                    <th>Decode</th>
+                    <th>Result</th>
+                    <th>Speed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="r in transcodeTestResults" :key="r.sample.file_id + '-' + r.codec">
+                    <td>{{ r.label }}</td>
+                    <td>{{ r.sample.width }}x{{ r.sample.height }}</td>
+                    <td>{{ r.width }}x{{ r.height }}</td>
+                    <td>{{ r.decoder ? 'GPU' : 'CPU' }}</td>
+                    <td>
+                      <span :class="!r.success ? 'has-text-danger' : (r.warning ? 'has-text-warning' : 'has-text-success')">
+                        {{ !r.success ? r.error : (r.warning || 'OK') }}
+                      </span>
+                    </td>
+                    <td>
+                      <span v-if="r.speed">{{ r.speed.toFixed(2) }}x</span>
+                      <span v-else>—</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
       </div>
       <b-field>
         <b-button type="is-primary" @click="save">Save and apply changes</b-button>
@@ -262,10 +365,16 @@
 </template>
 
 <script>
+import ky from 'ky'
+
 export default {
   name: 'InterfaceDeoVR',
   mounted () {
     this.$store.dispatch('optionsDeoVR/load')
+    this.loadFFmpegStatus()
+  },
+  beforeDestroy () {
+    clearTimeout(this.ffmpegPoll)
   },
   data () {
     return {
@@ -275,12 +384,73 @@ export default {
       selectedScriptField: 'Filename',
       selectedScriptSequence: 'Ascending',
       selectedSubtitleField: 'Filename',
-      selectedSubtitleSequence: 'Ascending'
+      selectedSubtitleSequence: 'Ascending',
+      transcodeTestLoading: false,
+      transcodeTestHardware: null,
+      transcodeTestResults: [],
+      transcodeTestError: '',
+      ffmpegStatus: null,
+      ffmpegPoll: null
     }
   },
   methods: {
-    save () {
-      this.$store.dispatch('optionsDeoVR/save')
+    async save () {
+      await this.$store.dispatch('optionsDeoVR/save')
+      this.loadFFmpegStatus()
+    },
+    async loadFFmpegStatus () {
+      clearTimeout(this.ffmpegPoll)
+      try {
+        this.ffmpegStatus = await ky.get('/api/options/transcode/ffmpeg').json()
+      } catch (err) {
+        this.ffmpegStatus = null
+        return
+      }
+      // Follow a download until it finishes. Right after saving, the download may not have
+      // started yet, so a missing jellyfin-ffmpeg is checked again too.
+      const s = this.ffmpegStatus
+      const waiting = s.jellyfin.state === 'downloading' ||
+        (s.jellyfin.state === 'missing' && this.transcodeEnabled)
+      if (waiting) {
+        this.ffmpegPoll = setTimeout(this.loadFFmpegStatus, 2000)
+      }
+    },
+    isNewBitrate (tag) {
+      const text = String(tag).trim()
+      const mbps = parseInt(text, 10)
+      return /^\d+$/.test(text) && mbps >= 1 && mbps <= 200 && !this.transcodeBitrates.includes(mbps)
+    },
+    async testTranscode () {
+      this.transcodeTestLoading = true
+      this.transcodeTestError = ''
+      this.transcodeTestHardware = null
+      this.transcodeTestResults = []
+      try {
+        const data = await ky.post('/api/options/transcode/test', {
+          json: {
+            codecs: this.transcodeCodecs,
+            sample_limit: 3,
+            duration_seconds: 2
+          },
+          timeout: 600000
+        }).json()
+        this.transcodeTestHardware = data.hardware
+        this.transcodeTestResults = data.results || []
+        const passed = this.transcodeTestResults.filter(r => r.success).length
+        const slow = this.transcodeTestResults.filter(r => r.success && r.warning).length
+        const failed = this.transcodeTestResults.length - passed
+        this.$buefy.toast.open({
+          message: failed === 0 && slow === 0
+            ? `All ${passed} transcode test(s) passed at realtime or better`
+            : `${passed} passed, ${slow} slower than realtime, ${failed} failed`,
+          type: failed === 0 && slow === 0 ? 'is-success' : 'is-warning'
+        })
+      } catch (err) {
+        this.transcodeTestError = `The transcode test did not complete: ${err.message}`
+      } finally {
+        this.transcodeTestLoading = false
+        this.loadFFmpegStatus()
+      }
     },
     addIP (value) {
       const tmp = [...this.allowedIp]
@@ -511,11 +681,81 @@ export default {
       }
     },
     retainNonHSPCuepoints: {
-      get () {        
+      get () {
         return this.$store.state.optionsDeoVR.heresphere.retain_non_hsp_cuepoints
       },
       set (value) {
         this.$store.state.optionsDeoVR.heresphere.retain_non_hsp_cuepoints = value
+      }
+    },
+    transcodeEnabled: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.transcode_enabled
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.transcode_enabled = value
+      }
+    },
+    transcodeCodecs: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.transcode_codecs
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.transcode_codecs = value
+      }
+    },
+    transcodeBitrates: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.transcode_bitrates_mbps
+      },
+      set (value) {
+        const bitrates = [...new Set(value.map(v => parseInt(v, 10)))].filter(v => v >= 1 && v <= 200)
+        this.$store.state.optionsDeoVR.heresphere.transcode_bitrates_mbps = bitrates.sort((a, b) => a - b)
+      }
+    },
+    transcodeAudioKbps: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.transcode_audio_kbps
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.transcode_audio_kbps = value
+      }
+    },
+    transcodeMaxHeight: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.transcode_max_height
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.transcode_max_height = value
+      }
+    },
+    transcodeMaxStreams: {
+      get () {
+        return this.$store.state.optionsDeoVR.heresphere.transcode_max_streams
+      },
+      set (value) {
+        this.$store.state.optionsDeoVR.heresphere.transcode_max_streams = value
+      }
+    },
+    ffmpegStatusText () {
+      const s = this.ffmpegStatus
+      if (!s) {
+        return ''
+      }
+      const j = s.jellyfin
+      switch (j.state) {
+        case 'ready':
+          return `jellyfin-ffmpeg ${j.version} is installed at ${j.path}`
+        case 'downloading':
+          return j.total > 0
+            ? `Downloading jellyfin-ffmpeg ${j.version}: ${Math.floor(j.downloaded * 100 / j.total)}% of ${Math.round(j.total / 1048576)} MB`
+            : `Downloading jellyfin-ffmpeg ${j.version}`
+        case 'failed':
+          return `Could not download jellyfin-ffmpeg ${j.version} (${j.error}). Live transcode is off until it is installed; saving these settings tries again.`
+        case 'unsupported':
+          return `jellyfin-ffmpeg has no build for ${j.platform}, so live transcode is not available on this computer`
+        default:
+          return `jellyfin-ffmpeg ${j.version} for ${j.platform} is downloaded when these settings are saved`
       }
     },
     isLoading: function () {

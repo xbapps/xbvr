@@ -28,6 +28,7 @@ import (
 	"github.com/xbapps/xbvr/pkg/models"
 	"github.com/xbapps/xbvr/pkg/scrape"
 	"github.com/xbapps/xbvr/pkg/tasks"
+	"github.com/xbapps/xbvr/pkg/transcode"
 )
 
 type NewVolumeRequest struct {
@@ -92,26 +93,32 @@ type RequestSaveOptionsDLNA struct {
 }
 
 type RequestSaveOptionsDeoVR struct {
-	Enabled                 bool   `json:"enabled"`
-	AuthEnabled             bool   `json:"auth_enabled"`
-	Username                string `json:"username"`
-	Password                string `json:"password"`
-	RemoteEnabled           bool   `json:"remote_enabled"`
-	TrackWatchTime          bool   `json:"track_watch_time"`
-	RenderHeatmaps          bool   `json:"render_heatmaps"`
-	AllowFileDeletes        bool   `json:"allow_file_deletes"`
-	AllowRatingUpdates      bool   `json:"allow_rating_updates"`
-	AllowFavoriteUpdates    bool   `json:"allow_favorite_updates"`
-	AllowHspData            bool   `json:"allow_hsp_data"`
-	AllowTagUpdates         bool   `json:"allow_tag_updates"`
-	AllowCuepointUpdates    bool   `json:"allow_cuepoint_updates"`
-	AllowWatchlistUpdates   bool   `json:"allow_watchlist_updates"`
-	MultitrackCuepoints     bool   `json:"multitrack_cuepoints"`
-	VideoSortSeq            string `json:"video_sort_seq"`
-	ScriptSortSeq           string `json:"script_sort_seq"`
-	SubtitleSortSeq         string `json:"subtitle_sort_seq"`
-	MultitrackCastCuepoints bool   `json:"multitrack_cast_cuepoints"`
-	RetainNonHSPCuepoints   bool   `json:"retain_non_hsp_cuepoints"`
+	Enabled                 bool     `json:"enabled"`
+	AuthEnabled             bool     `json:"auth_enabled"`
+	Username                string   `json:"username"`
+	Password                string   `json:"password"`
+	RemoteEnabled           bool     `json:"remote_enabled"`
+	TrackWatchTime          bool     `json:"track_watch_time"`
+	RenderHeatmaps          bool     `json:"render_heatmaps"`
+	AllowFileDeletes        bool     `json:"allow_file_deletes"`
+	AllowRatingUpdates      bool     `json:"allow_rating_updates"`
+	AllowFavoriteUpdates    bool     `json:"allow_favorite_updates"`
+	AllowHspData            bool     `json:"allow_hsp_data"`
+	AllowTagUpdates         bool     `json:"allow_tag_updates"`
+	AllowCuepointUpdates    bool     `json:"allow_cuepoint_updates"`
+	AllowWatchlistUpdates   bool     `json:"allow_watchlist_updates"`
+	MultitrackCuepoints     bool     `json:"multitrack_cuepoints"`
+	VideoSortSeq            string   `json:"video_sort_seq"`
+	ScriptSortSeq           string   `json:"script_sort_seq"`
+	SubtitleSortSeq         string   `json:"subtitle_sort_seq"`
+	MultitrackCastCuepoints bool     `json:"multitrack_cast_cuepoints"`
+	RetainNonHSPCuepoints   bool     `json:"retain_non_hsp_cuepoints"`
+	TranscodeEnabled        bool     `json:"transcode_enabled"`
+	TranscodeCodecs         []string `json:"transcode_codecs"`
+	TranscodeBitrates       []int    `json:"transcode_bitrates_mbps"`
+	TranscodeAudioKbps      int      `json:"transcode_audio_kbps"`
+	TranscodeMaxHeight      int      `json:"transcode_max_height"`
+	TranscodeMaxStreams     int      `json:"transcode_max_streams"`
 }
 
 type RequestSaveOptionsPreviews struct {
@@ -314,6 +321,12 @@ func (i ConfigResource) WebService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	ws.Route(ws.POST("/previews/test").To(i.generateTestPreview).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.POST("/transcode/test").To(i.testTranscode).
+		Metadata(restfulspec.KeyOpenAPITags, tags))
+
+	ws.Route(ws.GET("/transcode/ffmpeg").To(i.getTranscodeFFmpeg).
 		Metadata(restfulspec.KeyOpenAPITags, tags))
 
 	// "Funscripts" section endpoints
@@ -594,11 +607,25 @@ func (i ConfigResource) saveOptionsDeoVR(req *restful.Request, resp *restful.Res
 	config.Config.Interfaces.Players.SubtitleSortSeq = r.SubtitleSortSeq
 	config.Config.Interfaces.Heresphere.MultitrackCastCuepoints = r.MultitrackCastCuepoints
 	config.Config.Interfaces.Heresphere.RetainNonHSPCuepoints = r.RetainNonHSPCuepoints
+	wasTranscoding := config.Config.Interfaces.Heresphere.TranscodeEnabled
+	config.Config.Interfaces.Heresphere.TranscodeEnabled = r.TranscodeEnabled
+	config.Config.Interfaces.Heresphere.TranscodeCodecs = transcode.ParseCodecs(r.TranscodeCodecs)
+	config.Config.Interfaces.Heresphere.TranscodeBitrates = transcode.ParseBitrates(r.TranscodeBitrates)
+	config.Config.Interfaces.Heresphere.TranscodeAudioKbps = r.TranscodeAudioKbps
+	config.Config.Interfaces.Heresphere.TranscodeMaxHeight = r.TranscodeMaxHeight
+	if r.TranscodeMaxStreams > 0 {
+		config.Config.Interfaces.Heresphere.TranscodeMaxStreams = r.TranscodeMaxStreams
+	}
 	if r.Password != config.Config.Interfaces.DeoVR.Password && r.Password != "" {
 		hash, _ := bcrypt.GenerateFromPassword([]byte(r.Password), bcrypt.DefaultCost)
 		config.Config.Interfaces.DeoVR.Password = string(hash)
 	}
 	config.SaveConfig()
+	// Get jellyfin-ffmpeg and find its encoders as soon as live transcoding is switched on, or
+	// again after a failed download, rather than when a player first asks for a scene.
+	if _, installed := transcode.ManagedFFmpeg(common.BinDir); r.TranscodeEnabled && (!wasTranscoding || !installed) {
+		go prepareTranscodeFFmpeg()
+	}
 
 	resp.WriteHeaderAndEntity(http.StatusOK, r)
 }
