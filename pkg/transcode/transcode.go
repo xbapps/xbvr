@@ -449,15 +449,21 @@ func gpuDecodeVRAMNeedMiB(codec string, srcWidth, srcHeight, outWidth, outHeight
 	return int(base + src*perSrc + out*perOut)
 }
 
-// MayDecodeOnGPU reports whether WithGPUDecode could move decoding of a source in codec to
-// the GPU, so callers can skip reading the source's pixel format when it cannot.
-func (p Plan) MayDecodeOnGPU(codec string) bool {
-	return !p.Unavailable && (p.Backend.Name == BackendNVENC || p.Backend.Name == BackendQSV) &&
-		p.Backend.Decoders[strings.ToLower(strings.TrimSpace(codec))] != ""
+// MayDecodeOnGPU reports whether WithGPUDecode could move decoding of a width x height source
+// in codec to the GPU, so callers can skip reading the source's pixel format when it cannot.
+func (p Plan) MayDecodeOnGPU(codec string, width, height int) bool {
+	return !p.Unavailable && p.Backend.decodesOnGPU(codec, width, height)
+}
+
+// NeedsPixFmt reports whether choosing the GPU decoder depends on the source's pixel format.
+// NVENC needs the bit depth to size the decoder's memory; Quick Sync converts any format it
+// decodes, so an unknown one only means its frames are converted.
+func (p Plan) NeedsPixFmt() bool {
+	return p.Backend.Name == BackendNVENC
 }
 
 // Intel GPUs decode H.264 only up to 4096x2304; larger H.264 sources are decoded on the CPU
-// rather than failing on the GPU first.
+// rather than failing on the GPU first. See Backend.gpuDecodeTooLarge.
 const (
 	qsvH264MaxWidth  = 4096
 	qsvH264MaxHeight = 2304
@@ -472,13 +478,12 @@ const (
 // frame wider than an older NVIDIA GPU supports, so callers should be ready to retry with
 // CPUDecode.
 func (p Plan) WithGPUDecode(src SourceVideo) Plan {
-	if !p.MayDecodeOnGPU(src.Codec) || src.Width <= 0 || src.Height <= 0 {
+	if p.Unavailable || p.Backend.gpuDecoder(src.Codec) == "" || src.Width <= 0 || src.Height <= 0 {
 		return p
 	}
 	highBitDepth, chroma420 := sourceFormat(src.PixFmt)
 	switch {
-	case p.Backend.Name == BackendQSV && strings.EqualFold(strings.TrimSpace(src.Codec), "h264") &&
-		(src.Width > qsvH264MaxWidth || src.Height > qsvH264MaxHeight):
+	case p.Backend.gpuDecodeTooLarge(src.Codec, src.Width, src.Height):
 		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; Quick Sync decodes H.264 only up to %dx%d", qsvH264MaxWidth, qsvH264MaxHeight))
 		return p
 	case !chroma420:
@@ -504,7 +509,7 @@ func (p Plan) WithGPUDecode(src SourceVideo) Plan {
 		// processor converts only frames that need it.
 		p.convertOnGPU = highBitDepth
 	}
-	p.Decoder = p.Backend.Decoders[strings.ToLower(strings.TrimSpace(src.Codec))]
+	p.Decoder = p.Backend.gpuDecoder(src.Codec)
 	return p
 }
 

@@ -156,16 +156,36 @@ func (h Hardware) BackendFor(codec string) (Backend, bool) {
 	return Backend{}, false
 }
 
-// MayDecodeOnGPU reports whether an NVENC or Quick Sync backend has a GPU decoder for sources
-// in codec.
-func (h Hardware) MayDecodeOnGPU(codec string) bool {
-	codec = strings.ToLower(strings.TrimSpace(codec))
+// MayDecodeOnGPU reports whether an NVENC or Quick Sync backend may decode a width x height
+// source in codec on its GPU.
+func (h Hardware) MayDecodeOnGPU(codec string, width, height int) bool {
 	for _, b := range h.Available {
-		if (b.Name == BackendNVENC || b.Name == BackendQSV) && b.Decoders[codec] != "" {
+		if b.decodesOnGPU(codec, width, height) {
 			return true
 		}
 	}
 	return false
+}
+
+// gpuDecoder returns this backend's GPU decoder for sources in codec, or "".
+func (b Backend) gpuDecoder(codec string) string {
+	if b.Name != BackendNVENC && b.Name != BackendQSV {
+		return ""
+	}
+	return b.Decoders[strings.ToLower(strings.TrimSpace(codec))]
+}
+
+// decodesOnGPU reports whether this backend may decode a width x height source in codec on its
+// GPU, judged by codec and size alone.
+func (b Backend) decodesOnGPU(codec string, width, height int) bool {
+	return b.gpuDecoder(codec) != "" && !b.gpuDecodeTooLarge(codec, width, height)
+}
+
+// gpuDecodeTooLarge reports a source larger than this backend's GPU decodes: Intel GPUs decode
+// H.264 only up to 4096x2304.
+func (b Backend) gpuDecodeTooLarge(codec string, width, height int) bool {
+	return b.Name == BackendQSV && strings.EqualFold(strings.TrimSpace(codec), "h264") &&
+		(width > qsvH264MaxWidth || height > qsvH264MaxHeight)
 }
 
 // Codecs returns the codecs available through the preferred backend. It is used for

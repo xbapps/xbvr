@@ -247,7 +247,7 @@ func prepareTranscode(f models.File, codec string, opts transcode.Options) (tran
 	}
 	hw := transcode.RefreshVRAM(transcode.Detect(ffmpeg))
 	plan := transcode.PlanForEncoder(codec, hw, opts, f.VideoWidth, f.VideoHeight, f.VideoAvgFrameRateVal)
-	plan = withGPUDecode(plan, f)
+	plan = withGPUDecode(plan, f, streamPixFmtWait)
 	if len(plan.Notes) > 0 {
 		log.Infof("transcode %d %s on %s: %s", f.ID, codec, plan.Label(), strings.Join(plan.Notes, "; "))
 	}
@@ -324,22 +324,26 @@ func startTranscodeFFmpeg(ctx context.Context, ffmpeg, path string, seekSeconds 
 
 // withGPUDecode moves decoding to the encoder's GPU when it can decode the file. The source's
 // pixel format, which the database does not hold, is read only when a GPU decoder exists for
-// the file's codec.
-func withGPUDecode(plan transcode.Plan, f models.File) transcode.Plan {
-	if !plan.MayDecodeOnGPU(f.VideoCodecName) {
+// the file's codec and size, and then waited for at most wait.
+func withGPUDecode(plan transcode.Plan, f models.File, wait time.Duration) transcode.Plan {
+	if !plan.MayDecodeOnGPU(f.VideoCodecName, f.VideoWidth, f.VideoHeight) {
 		return plan
+	}
+	if !plan.NeedsPixFmt() {
+		wait = 0
 	}
 	return plan.WithGPUDecode(transcode.SourceVideo{
 		Codec:  f.VideoCodecName,
 		Width:  f.VideoWidth,
 		Height: f.VideoHeight,
-		PixFmt: sourcePixFmt(f),
+		PixFmt: sourcePixFmt(f, wait),
 	})
 }
 
 // pixFmtLookup is one ffprobe read of a file's pixel format, shared by everyone asking for it.
+// pixFmt and ok are set before done is closed.
 type pixFmtLookup struct {
-	once   sync.Once
+	done   chan struct{}
 	pixFmt string
 	ok     bool
 }
@@ -347,37 +351,71 @@ type pixFmtLookup struct {
 // sourcePixFmts holds a *pixFmtLookup per file, keyed by size and path.
 var sourcePixFmts sync.Map
 
-// pixFmtTimeout bounds one ffprobe read of a pixel format. ffprobe reads only the start of the
-// file, but on a busy network share that took more than ten seconds.
-const pixFmtTimeout = 30 * time.Second
+const (
+	// pixFmtTimeout bounds one ffprobe read of a pixel format. ffprobe reads only the start of
+	// the file, but on a busy network share that took more than ten seconds.
+	pixFmtTimeout = 30 * time.Second
+	// streamPixFmtWait is how long a stream start waits for that read. It starts when a player
+	// opens the scene, so it is usually done by the time playback starts.
+	streamPixFmtWait = 5 * time.Second
+)
 
-// sourcePixFmt returns the pixel format of the file's first video stream, or "" if ffprobe
-// cannot read it. A read that is already running for the file is waited for rather than
-// repeated, and a failed read is tried again next time.
-func sourcePixFmt(f models.File) string {
-	path := f.GetPath()
-	key := fmt.Sprintf("%d|%s", f.Size, path)
-	value, _ := sourcePixFmts.LoadOrStore(key, &pixFmtLookup{})
-	lookup := value.(*pixFmtLookup)
-	lookup.once.Do(func() {
-		data, err := ffprobe.GetProbeData(path, pixFmtTimeout)
-		if err != nil {
-			log.Warnf("transcode %d: could not read the pixel format: %v", f.ID, err)
-			return
-		}
-		if stream := data.GetFirstVideoStream(); stream != nil {
-			lookup.pixFmt = stream.PixFmt
-		}
-		lookup.ok = true
-	})
-	if !lookup.ok {
-		sourcePixFmts.CompareAndDelete(key, lookup)
+// readPixFmt reads the pixel format of a file's first video stream with ffprobe; tests replace it.
+var readPixFmt = func(path string) (string, error) {
+	data, err := ffprobe.GetProbeData(path, pixFmtTimeout)
+	if err != nil {
+		return "", err
 	}
-	return lookup.pixFmt
+	if stream := data.GetFirstVideoStream(); stream != nil {
+		return stream.PixFmt, nil
+	}
+	return "", nil
 }
 
-// prefetchSourcePixFmt reads a file's pixel format in the background when a player asks for
-// its scene, so a stream started soon after does not wait for ffprobe.
+// sourcePixFmt returns the pixel format of the file's first video stream, waiting at most wait
+// for ffprobe, or "" if it is not known by then or cannot be read. The read carries on in the
+// background after the wait, is shared by everyone asking for the file, and is tried again
+// next time if it fails.
+func sourcePixFmt(f models.File, wait time.Duration) string {
+	path := f.GetPath()
+	key := fmt.Sprintf("%d|%s", f.Size, path)
+	fresh := &pixFmtLookup{done: make(chan struct{})}
+	value, loaded := sourcePixFmts.LoadOrStore(key, fresh)
+	lookup := value.(*pixFmtLookup)
+	if !loaded {
+		go func() {
+			pixFmt, err := readPixFmt(path)
+			if err != nil {
+				log.Warnf("transcode %d: could not read the pixel format: %v", f.ID, err)
+			} else {
+				lookup.pixFmt, lookup.ok = pixFmt, true
+			}
+			close(lookup.done)
+			if !lookup.ok {
+				sourcePixFmts.CompareAndDelete(key, lookup)
+			}
+		}()
+	}
+	select {
+	case <-lookup.done:
+		return lookup.pixFmt
+	default:
+	}
+	if wait <= 0 {
+		return ""
+	}
+	timer := time.NewTimer(wait)
+	defer timer.Stop()
+	select {
+	case <-lookup.done:
+		return lookup.pixFmt
+	case <-timer.C:
+		return ""
+	}
+}
+
+// prefetchSourcePixFmt starts reading a file's pixel format in the background when a player
+// asks for its scene, so a stream started soon after does not wait for ffprobe.
 func prefetchSourcePixFmt(f models.File) {
 	if !config.Config.Interfaces.Heresphere.TranscodeEnabled || f.VideoDuration <= 0 {
 		return
@@ -387,8 +425,8 @@ func prefetchSourcePixFmt(f models.File) {
 		return
 	}
 	go func() {
-		if transcode.Detect(ffmpeg).MayDecodeOnGPU(f.VideoCodecName) {
-			sourcePixFmt(f)
+		if transcode.Detect(ffmpeg).MayDecodeOnGPU(f.VideoCodecName, f.VideoWidth, f.VideoHeight) {
+			sourcePixFmt(f, 0)
 		}
 	}()
 }

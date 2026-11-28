@@ -125,8 +125,8 @@ func (i ConfigResource) testTranscode(req *restful.Request, resp *restful.Respon
 
 	// Read the samples' pixel formats together, so later samples do not wait for ffprobe.
 	for _, file := range samples {
-		if hw.MayDecodeOnGPU(file.VideoCodecName) {
-			go sourcePixFmt(file)
+		if hw.MayDecodeOnGPU(file.VideoCodecName, file.VideoWidth, file.VideoHeight) {
+			sourcePixFmt(file, 0)
 		}
 	}
 	for _, file := range samples {
@@ -140,7 +140,7 @@ func (i ConfigResource) testTranscode(req *restful.Request, resp *restful.Respon
 		}
 		for _, codec := range codecs {
 			plan := transcode.PlanForEncoder(codec, hw, opts, file.VideoWidth, file.VideoHeight, file.VideoAvgFrameRateVal)
-			plan = withGPUDecode(plan, file)
+			plan = withGPUDecode(plan, file, pixFmtTimeout)
 			result := runTranscodeTest(ffmpeg, file, sample, codec, plan, opts, duration)
 			if !result.Success && plan.Decoder != "" {
 				// Streams retry on the CPU when the GPU rejects a source, so the test does too.

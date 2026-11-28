@@ -5,9 +5,12 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/xbapps/xbvr/pkg/config"
+	"github.com/xbapps/xbvr/pkg/models"
 )
 
 func TestParseByteRange(t *testing.T) {
@@ -159,5 +162,59 @@ func TestReleaseOnOutputWaitsForBytes(t *testing.T) {
 	}
 	if n, _ := r.Read(make([]byte, 2)); n != 2 || released != 1 {
 		t.Fatalf("released = %d after reading %d bytes, want 1", released, n)
+	}
+}
+
+func TestSourcePixFmtWaitsAtMostAndSharesTheRead(t *testing.T) {
+	restore := readPixFmt
+	defer func() { readPixFmt = restore }()
+	release := make(chan struct{})
+	var reads atomic.Int32
+	readPixFmt = func(string) (string, error) {
+		reads.Add(1)
+		<-release
+		return "yuv420p10le", nil
+	}
+	f := models.File{Path: "/videos", Filename: "slow-share.mp4", Size: 1}
+
+	start := time.Now()
+	if got := sourcePixFmt(f, 0); got != "" {
+		t.Errorf("no wait: got %q before the read finished", got)
+	}
+	if got := sourcePixFmt(f, 50*time.Millisecond); got != "" || time.Since(start) > 2*time.Second {
+		t.Errorf("bounded wait: got %q after %v", got, time.Since(start))
+	}
+	close(release)
+	if got := sourcePixFmt(f, 2*time.Second); got != "yuv420p10le" {
+		t.Errorf("after the read: got %q", got)
+	}
+	if n := reads.Load(); n != 1 {
+		t.Errorf("ffprobe ran %d times for one file, want 1", n)
+	}
+}
+
+func TestSourcePixFmtRetriesAFailedRead(t *testing.T) {
+	restore := readPixFmt
+	defer func() { readPixFmt = restore }()
+	var reads atomic.Int32
+	readPixFmt = func(string) (string, error) {
+		if reads.Add(1) == 1 {
+			return "", errors.New("process timeout exceeded")
+		}
+		return "yuv420p", nil
+	}
+	f := models.File{Path: "/videos", Filename: "flaky-share.mp4", Size: 2}
+	if got := sourcePixFmt(f, 2*time.Second); got != "" {
+		t.Errorf("failed read returned %q", got)
+	}
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		if got := sourcePixFmt(f, 2*time.Second); got == "yuv420p" {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("a failed read was not tried again (%d reads)", reads.Load())
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
 }

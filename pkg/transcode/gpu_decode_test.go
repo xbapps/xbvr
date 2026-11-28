@@ -202,10 +202,13 @@ func TestGPUDecodeExplainsCPUDecoding(t *testing.T) {
 
 func TestHardwareMayDecodeOnGPU(t *testing.T) {
 	hw := gpuDecodeHardware(0, false)
-	if !hw.MayDecodeOnGPU("HEVC") || hw.MayDecodeOnGPU("av1") {
-		t.Errorf("MayDecodeOnGPU: hevc %v, av1 %v; want true, false", hw.MayDecodeOnGPU("HEVC"), hw.MayDecodeOnGPU("av1"))
+	if !hw.MayDecodeOnGPU("HEVC", 8192, 4096) || hw.MayDecodeOnGPU("av1", 3840, 1920) {
+		t.Errorf("MayDecodeOnGPU: hevc %v, av1 %v; want true, false", hw.MayDecodeOnGPU("HEVC", 8192, 4096), hw.MayDecodeOnGPU("av1", 3840, 1920))
 	}
-	if (Hardware{}).MayDecodeOnGPU("hevc") {
+	if !hw.MayDecodeOnGPU("h264", 5760, 2880) {
+		t.Error("NVDEC should be asked to decode 5760x2880 H.264")
+	}
+	if (Hardware{}).MayDecodeOnGPU("hevc", 3840, 1920) {
 		t.Error("no hardware should decode nothing on the GPU")
 	}
 }
@@ -365,8 +368,9 @@ func TestQSVDecodeViaVAAPIDevice(t *testing.T) {
 
 func TestQSVDecodeNeedsNoVRAM(t *testing.T) {
 	hw := qsvDecodeHardware()
-	if !hw.MayDecodeOnGPU("hevc") || hw.MayDecodeOnGPU("vp9") {
-		t.Errorf("MayDecodeOnGPU: hevc %v, vp9 %v; want true, false", hw.MayDecodeOnGPU("hevc"), hw.MayDecodeOnGPU("vp9"))
+	if !hw.MayDecodeOnGPU("hevc", 8192, 4096) || hw.MayDecodeOnGPU("vp9", 3840, 1920) || hw.MayDecodeOnGPU("h264", 5760, 2880) {
+		t.Errorf("MayDecodeOnGPU: hevc %v, vp9 %v, 5760x2880 h264 %v; want true, false, false",
+			hw.MayDecodeOnGPU("hevc", 8192, 4096), hw.MayDecodeOnGPU("vp9", 3840, 1920), hw.MayDecodeOnGPU("h264", 5760, 2880))
 	}
 	p := planGPUDecode(CodecHEVC, hw, SourceVideo{Codec: "hevc", Width: 8192, Height: 4096, PixFmt: "yuv420p10le"})
 	if p.Decoder != "hevc_qsv" || p.gpuDecodeVRAMMiB != 0 {
