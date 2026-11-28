@@ -71,3 +71,35 @@ func TestRefreshVRAMLeavesItsArgumentUnchanged(t *testing.T) {
 		t.Fatalf("shared result changed to %d; it is read by other requests", got)
 	}
 }
+
+// Peaks of NVENC encodes of CPU-decoded frames with the output blocked, as when a player
+// pauses. The estimate must cover each.
+func TestEncoderEstimatesCoverMeasuredPeaks(t *testing.T) {
+	cases := []struct {
+		codec         string
+		width, height int
+		peakMiB       int
+	}{
+		{CodecH264, 1920, 1080, 664},
+		{CodecHEVC, 1920, 1080, 665},
+		{CodecAV1, 1920, 1080, 722},
+		{CodecH264, 3840, 1920, 1044},
+		{CodecHEVC, 3840, 1920, 884},
+		{CodecAV1, 3840, 1920, 1053},
+		{CodecH264, 4096, 2048, 1049},
+		{CodecHEVC, 4096, 2048, 885},
+		{CodecAV1, 4096, 2048, 1053},
+		{CodecHEVC, 5400, 2700, 1034},
+		{CodecAV1, 5400, 2700, 1467},
+		{CodecHEVC, 5760, 2880, 1100},
+		{CodecAV1, 5760, 2880, 1605},
+		{CodecHEVC, 7200, 3600, 1394},
+		{CodecAV1, 7200, 3600, 2180},
+		{CodecHEVC, 8192, 4096, 1348},
+	}
+	for _, c := range cases {
+		if est := vramNeedMiB(c.codec, c.width, c.height); est < c.peakMiB {
+			t.Errorf("%s at %dx%d: estimate %d MiB is below the measured %d MiB", c.codec, c.width, c.height, est, c.peakMiB)
+		}
+	}
+}

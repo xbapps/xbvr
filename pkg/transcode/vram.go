@@ -16,7 +16,10 @@ var pendingVRAM = struct {
 func (p Plan) ReserveVRAM() (release func()) {
 	need := 0
 	if p.Backend.Name == BackendNVENC {
-		need = vramNeedMiB(p.Codec, p.Width, p.Height) + p.decodeVRAMMiB
+		need = vramNeedMiB(p.Codec, p.Width, p.Height)
+		if p.Decoder != "" {
+			need = p.gpuDecodeVRAMMiB
+		}
 	}
 	if need <= 0 {
 		return func() {}

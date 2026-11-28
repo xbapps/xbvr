@@ -187,8 +187,8 @@ type Plan struct {
 	// to decode on the CPU. See WithGPUDecode.
 	Decoder string
 
-	convertOnGPU  bool // frames go through scale_cuda to become 8-bit before the encoder
-	decodeVRAMMiB int  // GPU memory the decoder needs on top of the encoder's
+	convertOnGPU     bool // frames go through scale_cuda to become 8-bit before the encoder
+	gpuDecodeVRAMMiB int  // GPU memory of the encode and its decoder when the GPU decodes
 }
 
 // Label names the stream for clients that show the codec and encoder.
@@ -202,8 +202,8 @@ func (p Plan) Label() string {
 // vramNeedMiB estimates NVENC's VRAM for an output size when the source is decoded on the CPU.
 // The figures come from measurements on Blackwell with the output blocked, as when a player
 // pauses and every frame queue in ffmpeg fills: about 0.7 GB at 1080p, 0.9-1.1 GB at 4K and
-// 1.1-1.4 GB for HEVC at 6-8K. AV1 at 8K needs well over 1.8 GB and is not viable on a card
-// with less free memory. x264 and the VAAPI/QSV paths use no dedicated VRAM measurement here.
+// 1.1-1.4 GB for HEVC at 6-8K. AV1 takes 1.6 GB at 6K and 2.2 GB at 7K, and more than 2.5 GB at
+// 8K. x264 and the VAAPI/QSV paths use no dedicated VRAM measurement here.
 func vramNeedMiB(codec string, width, height int) int {
 	if codec == CodecX264 || width <= 0 || height <= 0 {
 		return 0
@@ -211,22 +211,22 @@ func vramNeedMiB(codec string, width, height int) int {
 	mp := float64(width) * float64(height) / 1e6
 	switch {
 	case height <= 1080:
-		return int(450 + mp*120)
+		return int(480 + mp*120)
 	case height <= 2160:
 		switch codec {
 		case CodecAV1:
-			return int(600 + mp*60)
+			return int(620 + mp*60)
 		case CodecHEVC:
 			return int(600 + mp*40)
 		default:
-			return int(700 + mp*45)
+			return int(720 + mp*45)
 		}
 	default:
 		switch codec {
 		case CodecAV1:
 			return int(900 + mp*60)
 		case CodecHEVC:
-			return int(650 + mp*28)
+			return int(680 + mp*28)
 		default:
 			return int(650 + mp*30)
 		}
@@ -419,19 +419,34 @@ func sourceFormat(pixFmt string) (highBitDepth, chroma420 bool) {
 	}
 }
 
-// decodeVRAMNeedMiB estimates the GPU memory an NVDEC decode adds to an encode on the same GPU,
-// for a source of srcWidth x srcHeight decoded to outWidth x outHeight frames. The decoder keeps
-// reference surfaces at the source size, and with the output blocked ffmpeg's queues fill with
-// frames at the output size, so both sizes count. The figures come from measurements on
-// Blackwell with 4K to 8K sources: decoding 8-bit 8K to 4096x2048 adds about 1.3 GB, and
-// keeping a 6K source at full size adds about 1 GB. 10-bit frames take twice the memory.
-func decodeVRAMNeedMiB(srcWidth, srcHeight, outWidth, outHeight int, highBitDepth bool) int {
+// Coefficients of gpuDecodeVRAMNeedMiB for 8-bit frames: a fixed part in MiB, then MiB per
+// megapixel of the source and, by output codec, of the output.
+const (
+	gpuDecodeBaseMiB = 690.0
+	gpuDecodeSrcMiB  = 22.5
+)
+
+var gpuDecodeOutMiB = map[string]float64{CodecH264: 70.5, CodecHEVC: 42.5, CodecAV1: 74.5}
+
+// gpuDecodeVRAMNeedMiB estimates the GPU memory of an NVENC encode at outWidth x outHeight whose
+// srcWidth x srcHeight source is decoded by NVDEC on the same GPU, decoder included. The
+// decoder keeps reference surfaces at the source size, and with the output blocked, as when a
+// player pauses, ffmpeg's queues fill with frames at the output size, so both sizes count. The
+// estimates sit 5-20% above peaks measured with jellyfin-ffmpeg 8.1 on Blackwell: an 8-bit 8K
+// source took about 1.9 GB encoded as H.264 at 4096x2048 and 2.4 GB as HEVC at full size, and
+// AV1 kept at full size above 7K did not fit in 2.5 GB. 10-bit 7-8K sources did not fit in
+// 2.5 GB even at 4096x2048, so their frames are counted at twice the size.
+func gpuDecodeVRAMNeedMiB(codec string, srcWidth, srcHeight, outWidth, outHeight int, highBitDepth bool) int {
 	src := float64(srcWidth) * float64(srcHeight) / 1e6
 	out := float64(outWidth) * float64(outHeight) / 1e6
-	if highBitDepth {
-		return int(100 + src*62 + out*50)
+	base, perSrc, perOut := gpuDecodeBaseMiB, gpuDecodeSrcMiB, gpuDecodeOutMiB[codec]
+	if perOut == 0 {
+		perOut = gpuDecodeOutMiB[CodecH264]
 	}
-	return int(50 + src*31 + out*33)
+	if highBitDepth {
+		perSrc, perOut = perSrc*2, perOut*2
+	}
+	return int(base + src*perSrc + out*perOut)
 }
 
 // MayDecodeOnGPU reports whether WithGPUDecode could move decoding of a source in codec to
@@ -463,21 +478,20 @@ func (p Plan) WithGPUDecode(src SourceVideo) Plan {
 		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; this ffmpeg has no scale_cuda filter to convert %s on the GPU", src.PixFmt))
 		return p
 	}
-	need := decodeVRAMNeedMiB(src.Width, src.Height, p.Width, p.Height, highBitDepth)
-	if free := p.freeVRAM(); free > 0 && vramNeedMiB(p.Codec, p.Width, p.Height)+need+vramSafetyMiB > free {
-		total := vramNeedMiB(p.Codec, p.Width, p.Height) + need + vramSafetyMiB
-		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; decoding and encoding on the GPU needs about %d MiB, but %d MiB is free", total, free))
+	need := gpuDecodeVRAMNeedMiB(p.Codec, src.Width, src.Height, p.Width, p.Height, highBitDepth)
+	if free := p.freeVRAM(); free > 0 && need+vramSafetyMiB > free {
+		p.Notes = append(p.Notes, fmt.Sprintf("decoding on the CPU; decoding and encoding on the GPU needs about %d MiB, but %d MiB is free", need+vramSafetyMiB, free))
 		return p
 	}
 	p.Decoder = p.Backend.Decoders[strings.ToLower(strings.TrimSpace(src.Codec))]
 	p.convertOnGPU = p.Backend.ConvertOnGPU
-	p.decodeVRAMMiB = need
+	p.gpuDecodeVRAMMiB = need
 	return p
 }
 
 // CPUDecode returns the plan with the source decoded on the CPU. The output is the same.
 func (p Plan) CPUDecode() Plan {
-	p.Decoder, p.convertOnGPU, p.decodeVRAMMiB = "", false, 0
+	p.Decoder, p.convertOnGPU, p.gpuDecodeVRAMMiB = "", false, 0
 	return p
 }
 
