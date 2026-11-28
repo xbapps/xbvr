@@ -123,6 +123,12 @@ func (i ConfigResource) testTranscode(req *restful.Request, resp *restful.Respon
 		return
 	}
 
+	// Read the samples' pixel formats together, so later samples do not wait for ffprobe.
+	for _, file := range samples {
+		if hw.MayDecodeOnGPU(file.VideoCodecName) {
+			go sourcePixFmt(file)
+		}
+	}
 	for _, file := range samples {
 		sample := TestTranscodeSample{
 			FileID:   file.ID,

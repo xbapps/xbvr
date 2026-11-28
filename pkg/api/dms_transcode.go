@@ -347,6 +347,10 @@ type pixFmtLookup struct {
 // sourcePixFmts holds a *pixFmtLookup per file, keyed by size and path.
 var sourcePixFmts sync.Map
 
+// pixFmtTimeout bounds one ffprobe read of a pixel format. ffprobe reads only the start of the
+// file, but on a busy network share that took more than ten seconds.
+const pixFmtTimeout = 30 * time.Second
+
 // sourcePixFmt returns the pixel format of the file's first video stream, or "" if ffprobe
 // cannot read it. A read that is already running for the file is waited for rather than
 // repeated, and a failed read is tried again next time.
@@ -356,7 +360,7 @@ func sourcePixFmt(f models.File) string {
 	value, _ := sourcePixFmts.LoadOrStore(key, &pixFmtLookup{})
 	lookup := value.(*pixFmtLookup)
 	lookup.once.Do(func() {
-		data, err := ffprobe.GetProbeData(path, 10*time.Second)
+		data, err := ffprobe.GetProbeData(path, pixFmtTimeout)
 		if err != nil {
 			log.Warnf("transcode %d: could not read the pixel format: %v", f.ID, err)
 			return
